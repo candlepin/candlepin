@@ -36,13 +36,13 @@ build them yourself if you wish.
 
     docker run -i -P -t --rm docker.usersys.redhat.com/candlepin/candlepin-base cp-test -u
 
-  * Run the spec test suite against postgresql (or oracle):
+  * Run the spec test suite against postgresql (or oracle or mysql):
 
     docker run -i -P -t --rm docker.usersys.redhat.com/candlepin/candlepin-postgresql cp-test -r
 
   * Specify -v /home/dgoodwin/src/candlepin/:/candlepin-dev/ to use your
     current source checkout *instead* of the remote git repo. This could be
     used to run unit or functional tests against code you're working on live,
-    without having to actually configure oracle or postgresql.
+    without having to actually configure oracle, postgresql or mysql.
 
   * Specify -c REF to checkout an git reference and run tests against this.
