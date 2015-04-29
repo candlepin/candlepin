@@ -598,4 +598,80 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .addOrder(Order.asc("id"))
                 .list();
     }
+
+    /**
+     * Retrieves a list of all known product IDs.
+     *
+     * @return
+     *  the set of all known product IDs.
+     */
+    @SuppressWarnings("unchecked")
+    public Set<String> getAllKnownProductIds() {
+        // Impl note:
+        // HQL does not (properly) support unions, so we have to do this query multiple times.
+        Set<String> result = new HashSet<String>();
+
+        Query query = this.currentSession().createQuery(
+            "SELECT DISTINCT P.productId " +
+            "FROM Pool P " +
+            "WHERE NULLIF(P.productId, '') IS NOT NULL"
+        );
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT P.derivedProductId " +
+            "FROM Pool P " +
+            "WHERE NULLIF(P.derivedProductId, '') IS NOT NULL"
+        );
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT PP.productId " +
+            "FROM Pool P INNER JOIN P.providedProducts AS PP " +
+            "WHERE NULLIF(PP.productId, '') IS NOT NULL"
+        );
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT PP.productId " +
+            "FROM Pool P INNER JOIN P.derivedProvidedProducts AS PP " +
+            "WHERE NULLIF(PP.productId, '') IS NOT NULL"
+        );
+        result.addAll(query.list());
+
+
+        // TODO: These may not be necessary if the subscriptions table is empty in Hosted. Though,
+        // if they're empty, then these queries will take virtually no time to run anyway.
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT S.product.id " +
+            "FROM Subscription S " +
+            "WHERE NULLIF(S.product.id, '') IS NOT NULL"
+        );
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT S.derivedProduct.id " +
+            "FROM Subscription S " +
+            "WHERE NULLIF(S.derivedProduct.id, '') IS NOT NULL"
+        );
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT PP.id " +
+            "FROM Subscription S INNER JOIN S.providedProducts AS PP " +
+            "WHERE NULLIF(PP.id, '') IS NOT NULL"
+        );
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT PP.id " +
+            "FROM Subscription S INNER JOIN S.derivedProvidedProducts AS PP " +
+            "WHERE NULLIF(PP.id, '') IS NOT NULL"
+        );
+        result.addAll(query.list());
+
+
+        // Return!
+        return result;
+    }
 }

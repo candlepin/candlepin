@@ -990,6 +990,113 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertThat(results, Matchers.hasItems(p1Attributes, p2Attributes));
     }
 
+    @Test
+    public void testGetAllKnownProductIds() {
+        Owner owner1 = this.createOwner();
+        this.ownerCurator.create(owner1);
+
+        Owner owner2 = this.createOwner();
+        this.ownerCurator.create(owner2);
+
+        Pool p1 = TestUtil.createPool(owner1, this.generateProduct("p1", "p1"));
+        p1.setDerivedProductId("dp1");
+        for (int i = 0; i < 3; ++i) {
+            p1.addProvidedProduct(new ProvidedProduct("pp-a-" + i, "pp-a-" + i));
+        }
+
+        Set<DerivedProvidedProduct> dpp = new HashSet<DerivedProvidedProduct>();
+        for (int i = 0; i < 3; ++i) {
+            dpp.add(new DerivedProvidedProduct("dpp-a-" + i, "dpp-a-" + i, p1));
+        }
+        p1.setDerivedProvidedProducts(dpp);
+
+        Pool p2 = TestUtil.createPool(owner1, this.generateProduct("p2", "p2"));
+        p2.setDerivedProductId("dp2");
+
+        for (int i = 0; i < 3; ++i) {
+            p2.addProvidedProduct(new ProvidedProduct("pp-b-" + i, "pp-b-" + i));
+        }
+
+        dpp = new HashSet<DerivedProvidedProduct>();
+        for (int i = 0; i < 3; ++i) {
+            dpp.add(new DerivedProvidedProduct("dpp-b-" + i, "dpp-b-" + i, p2));
+        }
+        p2.setDerivedProvidedProducts(dpp);
+
+        this.poolCurator.create(p1);
+        this.poolCurator.create(p2);
+
+
+        Subscription s1 = TestUtil.createSubscription(owner1, this.generateProduct("s1", "s1"));
+        s1.setDerivedProduct(this.generateProduct("sdp1", "sdp1"));
+        s1.setProvidedProducts(this.generateProductCollection("spp-a-", 3));
+        s1.setDerivedProvidedProducts(this.generateProductCollection("sdpp-a-", 3));
+
+        Subscription s2 = TestUtil.createSubscription(owner2, this.generateProduct("s2", "s2"));
+        s2.setDerivedProduct(this.generateProduct("sdp2", "sdp2"));
+        s2.setProvidedProducts(this.generateProductCollection("spp-b-", 3));
+        s2.setDerivedProvidedProducts(this.generateProductCollection("sdpp-b-", 3));
+
+        this.subCurator.create(s1);
+        this.subCurator.create(s2);
+
+        Set<String> expected = new HashSet<String>();
+        expected.add("p1");
+        expected.add("p2");
+        expected.add("dp1");
+        expected.add("dp2");
+        expected.add("pp-a-0");
+        expected.add("pp-a-1");
+        expected.add("pp-a-2");
+        expected.add("pp-b-0");
+        expected.add("pp-b-1");
+        expected.add("pp-b-2");
+        expected.add("dpp-a-0");
+        expected.add("dpp-a-1");
+        expected.add("dpp-a-2");
+        expected.add("dpp-b-0");
+        expected.add("dpp-b-1");
+        expected.add("dpp-b-2");
+
+        expected.add("s1");
+        expected.add("s2");
+        expected.add("sdp1");
+        expected.add("sdp2");
+        expected.add("spp-a-0");
+        expected.add("spp-a-1");
+        expected.add("spp-a-2");
+        expected.add("spp-b-0");
+        expected.add("spp-b-1");
+        expected.add("spp-b-2");
+        expected.add("sdpp-a-0");
+        expected.add("sdpp-a-1");
+        expected.add("sdpp-a-2");
+        expected.add("sdpp-b-0");
+        expected.add("sdpp-b-1");
+        expected.add("sdpp-b-2");
+
+        Set<String> result = this.poolCurator.getAllKnownProductIds();
+
+        assertEquals(expected, result);
+    }
+
+    private Product generateProduct(String id, String name) {
+        Product product = TestUtil.createProduct(id, name);
+        this.productCurator.create(product);
+
+        return product;
+    }
+
+    private Set<Product> generateProductCollection(String prefix, int count) {
+        Set<Product> products = new HashSet<Product>();
+
+        for (int i = 0; i < count; ++i) {
+            products.add(this.generateProduct(prefix + i, prefix + i));
+        }
+
+        return products;
+    }
+
     private Pool createPool(Owner o, String subId) {
         Pool pool = TestUtil.createPool(o, product);
         pool.setSourceSubscription(new SourceSubscription(subId, "master"));
