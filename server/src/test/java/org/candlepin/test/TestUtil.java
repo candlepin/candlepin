@@ -22,6 +22,7 @@ import org.candlepin.model.Branding;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.Content;
 import org.candlepin.model.DerivedProductPoolAttribute;
 import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Entitlement;
@@ -107,6 +108,21 @@ public class TestUtil {
 
     public static int randomInt() {
         return Math.abs(RANDOM.nextInt());
+    }
+
+    public static Content createContent(String id) {
+        String name = "test-content-" + randomInt();
+
+        return new Content(
+            name,
+            name,
+            name,
+            "test-type",
+            "test-vendor",
+            "https://test.url.com",
+            "https://gpg.test.url.com",
+            "x86"
+        );
     }
 
     public static Product createProduct(String id, String name) {
