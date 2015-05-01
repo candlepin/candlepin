@@ -21,12 +21,14 @@ import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.model.User;
 import org.candlepin.model.UserCurator;
+import org.candlepin.pinsetter.tasks.PopulateHostedDBTask;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
 
 import com.google.inject.Inject;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,6 +112,14 @@ public class AdminResource {
     @Path("queues")
     public List<QueueStatus> getQueueStats() {
         return dispatcher.getQueueInfo();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("pophosteddb")
+    public JobDetail populatedHostedDB() {
+        // TODO: Remove this method once we no longer need the task.
+        return PopulateHostedDBTask.createAsyncTask();
     }
 
 }
