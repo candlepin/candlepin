@@ -18,11 +18,9 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -43,7 +41,6 @@ import java.util.Map.Entry;
 public class PopulateHostedDBTaskTest extends DatabaseTestFixture {
 
     @Test
-    @SuppressWarnings("checkstyle:methodlength")
     public void testExecute() throws Exception {
         // Setup
         JobExecutionContext jec = mock(JobExecutionContext.class);
@@ -148,35 +145,20 @@ public class PopulateHostedDBTaskTest extends DatabaseTestFixture {
         task.execute(jec);
 
         // Verify
-        // verify(productCuratorSpy, times(7)).createOrUpdate(any(Product.class));
-        // verify(contentCuratorSpy, times(12)).createOrUpdate(any(Content.class));
-
-        verify(jec).setResult(
-            eq("Finished populating Hosted DB. Received 7 product(s) and 12 content")
-        );
+        verify(jec).setResult(eq("Finished populating Hosted DB. Received 7 product(s) and 12 content"));
 
         for (Entry<String, Product> entry : productMap.entrySet()) {
             Product existing = this.productCurator.find(entry.getKey());
 
-            assertNotNull(
-                "Product database entry missing for product id: " + entry.getKey(), existing
-            );
-
-            assertEquals(
-                "Product mismatch for product id: " + entry.getKey(), entry.getValue(), existing
-            );
+            assertNotNull("Product database entry missing for product id: " + entry.getKey(), existing);
+            assertEquals("Product mismatch for product id: " + entry.getKey(), entry.getValue(), existing);
 
             for (ProductContent pc : entry.getValue().getProductContent()) {
                 Content expected = pc.getContent();
                 Content content = this.contentCurator.find(expected.getId());
 
-                assertNotNull(
-                    "Content database entry missing for content id: " + expected.getId(), content
-                );
-
-                assertEquals(
-                    "Content mismatch for product id: " + expected.getId(), expected, content
-                );
+                assertNotNull("Content database entry missing for content id: " + expected.getId(), content);
+                assertEquals("Content mismatch for product id: " + expected.getId(), expected, content);
             }
         }
 
