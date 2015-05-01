@@ -24,6 +24,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.resource.ConsumerResource;
 
@@ -32,6 +33,8 @@ import org.junit.Test;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+
+import java.util.Collection;
 
 /**
  * HypervisorUpdateJobTest
@@ -82,6 +85,8 @@ public class HypervisorUpdateJobTest {
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
+        when(consumerCurator.getHostConsumersMap(eq(owner), any(Collection.class)))
+            .thenReturn(new VirtConsumerMap());
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
         job.execute(ctx);
@@ -99,7 +104,9 @@ public class HypervisorUpdateJobTest {
         Consumer hypervisor = new Consumer();
         String hypervisorId = "uuid_999";
         hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
-        when(consumerCurator.getHypervisor(eq(hypervisorId), eq(owner))).thenReturn(hypervisor);
+        VirtConsumerMap vcm = new VirtConsumerMap();
+        vcm.add(hypervisorId, hypervisor);
+        when(consumerCurator.getHostConsumersMap(eq(owner), any(Collection.class))).thenReturn(vcm);
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
@@ -107,8 +114,8 @@ public class HypervisorUpdateJobTest {
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
         job.execute(ctx);
-        verify(consumerResource).updateConsumer(eq(hypervisor.getUuid()), any(Consumer.class));
-
+        verify(consumerResource).performConsumerUpdates(any(Consumer.class), eq(hypervisor),
+                any(VirtConsumerMap.class), any(VirtConsumerMap.class), eq(false));
     }
 
     @Test

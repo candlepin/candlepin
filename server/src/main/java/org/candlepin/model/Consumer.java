@@ -230,7 +230,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.ensureUUID();
         this.entitlements = new HashSet<Entitlement>();
         this.checkIns = new HashSet<CheckIn>();
-        this.facts = new HashMap<String, String>();
+//        this.facts = new HashMap<String, String>();
     }
 
     /**

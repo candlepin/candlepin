@@ -288,20 +288,6 @@ describe 'Hypervisor Resource', :type => :virt do
     end.should raise_exception(RestClient::BadRequest)
   end
 
-  # simple end to end test
-  it 'should allow virt-who to report hypervisor data' do
-    virtwho = create_virtwho_client(@user)
-    json ="{\"hypervisors\":" +
-          "[{" +
-          "\"name\" : \"hypervisor_999\"," +
-          "\"hypervisorId\" : {\"hypervisorId\":\"uuid_999\"}," +
-          "\"guestIds\" : [{\"guestId\" : \"guestId_1_999\"}]" +
-          "}]}";
-    job_detail = JSON.parse(virtwho.hypervisor_update(@owner['key'], json))
-    job_detail['state'].should == 'CREATED'
-    job_detail['id'].should start_with('hypervisor_update_')
-  end
-
   def create_virtwho_client(user)
     consumer = user.register(random_string("virt-who"), :system, nil, {},
         nil, nil, [], [{:productId => 'installedprod',

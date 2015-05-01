@@ -7,10 +7,10 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
     <changeSet id="20150416090438-1" author="wpoteat" dbms="mysql">
-        <comment>Use MEDIUMBLOB instead of BLOB for job_data column.</comment>
+        <comment>Use LONGBLOB instead of BLOB for job_data column.</comment>
         <modifyDataType tableName="QRTZ_JOB_DETAILS"
             columnName="job_data"
-            newDataType="MEDIUMBLOB"/>
+            newDataType="LONGBLOB"/>
     </changeSet>
 
 </databaseChangeLog>

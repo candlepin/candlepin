@@ -339,16 +339,21 @@ public class ConsumerResource {
 
         if (consumer != null) {
             IdentityCertificate idcert = consumer.getIdCert();
-            Date expire = idcert.getSerial().getExpiration();
-            int days = config.getInt(ConfigProperties.IDENTITY_CERT_EXPIRY_THRESHOLD, 90);
-            Date futureExpire = Util.addDaysToDt(days);
-            // if expiration is within 90 days, regenerate it
-            log.debug("Threshold [{}] expires on [{}] futureExpire [{}]", days, expire, futureExpire);
+            if (idcert != null) {
+                Date expire = idcert.getSerial().getExpiration();
+                int days = config.getInt(
+                        ConfigProperties.IDENTITY_CERT_EXPIRY_THRESHOLD, 90);
+                Date futureExpire = Util.addDaysToDt(days);
+                // if expiration is within 90 days, regenerate it
+                log.debug("Threshold [{}] expires on [{}] futureExpire [{}]",
+                        days, expire, futureExpire);
 
-            if (expire.before(futureExpire)) {
-                log.info("Regenerating identity certificate for consumer: {}, expiry: {}",
-                    uuid, expire);
-                consumer = this.regenerateIdentityCertificates(uuid);
+                if (expire.before(futureExpire)) {
+                    log.info(
+                            "Regenerating identity certificate for consumer: {}, expiry: {}",
+                            uuid, expire);
+                    consumer = this.regenerateIdentityCertificates(uuid);
+                }
             }
 
             // enrich with subscription data

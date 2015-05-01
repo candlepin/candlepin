@@ -312,7 +312,7 @@ public class HypervisorResource {
         HypervisorId hypervisorId = new HypervisorId(consumer, incHypervisorId);
         consumer.setHypervisorId(hypervisorId);
         // Create Consumer
-        return consumerResource.create(consumer, principal, null, owner.getKey(), null, false);
+        return consumerResource.create(consumer, principal, null, owner.getKey(), null, true);
     }
 
 }

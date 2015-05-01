@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20150430115844-1" author="wpoteat" dbms="mysql">
+        <comment>Add field for result data</comment>
+        <addColumn tableName="CP_JOB">
+            <column name="resultdata" type="LONGBLOB"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20150430115844-2" author="wpoteat" dbms="oracle, hsqldb">
+        <comment>Add field for result data</comment>
+        <addColumn tableName="cp_job">
+            <column name="resultdata" type="BLOB"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20150430115844-1" author="wpoteat" dbms="postgresql">
+        <comment>Add field for result data</comment>
+        <addColumn tableName="cp_job">
+            <column name="resultdata" type="BYTEA"/>
+        </addColumn>
+    </changeSet>
+
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

@@ -142,16 +142,18 @@ public class HypervisorUpdateJob extends UniqueByOwnerJob {
                 Consumer incoming = incomingHosts.get(hypervisorId);
                 if (knownHost == null) {
                     if (!create) {
-                        throw new Exception("Unable to find hypervisor with id " +
+                        result.failed(hypervisorId, "Unable to find hypervisor with id " +
                                             hypervisorId + " in org " + ownerKey);
                     }
-                    log.info("Registering new host consumer for hypervisor ID: {}", hypervisorId);
-                    Consumer newHost = createConsumerForHypervisorId(hypervisorId, owner, principal);
-                    consumerResource.performConsumerUpdates(incoming, newHost, guestConsumersMap,
-                            guestHypervisorConsumers, false);
-                    consumerResource.create(newHost, principal, null, owner.getKey(), null, false);
-                    hypervisorConsumersMap.add(hypervisorId, newHost);
-                    result.created(newHost);
+                    else {
+                        log.info("Registering new host consumer for hypervisor ID: {}", hypervisorId);
+                        Consumer newHost = createConsumerForHypervisorId(hypervisorId, owner, principal);
+                        consumerResource.performConsumerUpdates(incoming, newHost, guestConsumersMap,
+                                guestHypervisorConsumers, false);
+                        consumerResource.create(newHost, principal, null, owner.getKey(), null, false);
+                        hypervisorConsumersMap.add(hypervisorId, newHost);
+                        result.created(newHost);
+                    }
                 }
                 else if (consumerResource.performConsumerUpdates(incoming, knownHost,
                         guestConsumersMap, guestHypervisorConsumers, false)) {

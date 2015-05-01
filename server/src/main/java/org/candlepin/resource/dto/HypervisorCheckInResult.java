@@ -16,6 +16,7 @@ package org.candlepin.resource.dto;
 
 import org.candlepin.model.Consumer;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,7 +31,7 @@ import java.util.Set;
  *     failed: a list of strings formated as '{host_virt_id}: Error message'.
  * </pre>
  */
-public class HypervisorCheckInResult {
+public class HypervisorCheckInResult implements Serializable{
 
     private Set<Consumer> created;
     private Set<Consumer> updated;
