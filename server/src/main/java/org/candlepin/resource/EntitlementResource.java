@@ -28,10 +28,10 @@ import org.candlepin.model.Cdn;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.Enforcer;
@@ -55,7 +55,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -280,6 +279,7 @@ public class EntitlementResource {
     @Path("{dbid}/upstream_cert")
     public String getUpstreamCert(
         @PathParam("dbid") String entitlementId) {
+
         Entitlement ent = entitlementCurator.find(entitlementId);
         if (ent == null) {
             throw new NotFoundException(i18n.tr(
@@ -300,25 +300,16 @@ public class EntitlementResource {
             ent = entitlementCurator.findUpstreamEntitlementForStack(
                 entPool.getSourceConsumer(),
                 entPool.getSourceStackId());
-
-            log.debug("Found entitlement: {}", ent);
         }
 
-        if (ent == null || ent.getCertificates().size() < 1) {
-            log.debug("No cert found");
-
+        if (ent == null || ent.getPool() == null || ent.getPool().getCertificate() == null) {
             throw new NotFoundException(
-                i18n.tr("Unable to find upstream certificate for entitlement: {0}",
-                    entitlementId));
+                i18n.tr("Unable to find upstream certificate for entitlement: {0}", entitlementId)
+            );
         }
 
-        String output = null;
-        for (EntitlementCertificate cert : ent.getCertificates()) {
-            output = cert.getCert() + cert.getKey();
-            break;
-        }
-
-        return output;
+        SubscriptionsCertificate cert = ent.getPool().getCertificate();
+        return cert.getCert() + cert.getKey();
     }
 
     /**

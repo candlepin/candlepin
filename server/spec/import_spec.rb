@@ -294,8 +294,10 @@ describe 'Import', :serial => true do
     sub = sublist.find_all {
       |s| s.product.id.start_with?("prod2")
     }
+
     # use sub.first.id because find_all returns an array, but there
     # can only be one, HIGHLANDER!
+    sub.length.should == 1
     cert = @cp.get_subscription_cert sub.first.id
     cert[0..26].should == "-----BEGIN CERTIFICATE-----"
     cert.include?("-----BEGIN RSA PRIVATE KEY-----").should == true
@@ -331,8 +333,6 @@ describe 'Import', :serial => true do
     pool = @cp.list_pools(:owner => @import_owner.id,
       :product => @cp_export.products[:product3].id)[0]
     pool.should_not be_nil
-
-    pp pool
 
     pool["derivedProductId"].should == @cp_export.products[:derived_product].id
     pool["derivedProvidedProducts"].length.should == 1

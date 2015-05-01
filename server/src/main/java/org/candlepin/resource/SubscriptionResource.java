@@ -72,6 +72,57 @@ public class SubscriptionResource {
         this.i18n = i18n;
     }
 
+
+    /**
+     * Retrieves the master pool generated from the specified subscription. If an appropriate master
+     * pool cannot be found, this method throws a NotFoundException.
+     *
+     * @param subscriptionId
+     *  The subscription ID for which to retrieve the master pool
+     *
+     * @throws NotFoundException
+     *  if an appropriate master pool cannot be found.
+     *
+     * @return
+     *  the master pool for the given subscription
+     */
+    protected Pool getMasterPoolForSubscription(String subscriptionId) {
+        Pool pool = this.poolManager.getMasterPoolBySubscriptionId(subscriptionId);
+
+        if (pool == null) {
+            throw new NotFoundException(
+                i18n.tr("A subscription with the ID \"{0}\" could not be found.", subscriptionId)
+            );
+        }
+
+        return pool;
+    }
+
+    /**
+     * Retrieves the subscription certificate for the given subscription ID. If the subscription
+     * cannot be found or does not have a certificate, this method throws a NotFoundException.
+     *
+     * @param subscriptionId
+     *  The subscription ID for which to retrieve a subscription certificate
+     *
+     * @throws NotFoundException
+     *  if the subscription cannot be found or the subscription does not have a certificate
+     *
+     * @return
+     *  the certificate associated with the specified subscription
+     */
+    protected SubscriptionsCertificate getSubscriptionCertificate(String subscriptionId) {
+        Pool pool = this.getMasterPoolForSubscription(subscriptionId);
+
+        if (pool.getCertificate() == null) {
+            throw new NotFoundException(
+                i18n.tr("A certificate was not found for subscription \"{0}\"", subscriptionId)
+            );
+        }
+
+        return pool.getCertificate();
+    }
+
     /**
      * Retrieves a list of Subscriptions
      *
@@ -123,13 +174,7 @@ public class SubscriptionResource {
     @Path("/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Subscription getSubscription(@PathParam("subscription_id") String subscriptionId) {
-        Pool pool = this.poolManager.getMasterPoolBySubscriptionId(subscriptionId);
-
-        if (pool == null) {
-            throw new NotFoundException(
-                i18n.tr("A subscription with the ID \"{0}\" could not be found.", subscriptionId)
-            );
-        }
+        Pool pool = this.getMasterPoolForSubscription(subscriptionId);
 
         return this.poolManager.fabricateSubscriptionFromPool(pool);
     }
@@ -150,8 +195,9 @@ public class SubscriptionResource {
     @Produces({ MediaType.TEXT_PLAIN })
     public String getSubCertAsPem(
         @PathParam("subscription_id") String subscriptionId) {
-        SubscriptionsCertificate subCert = getSubCertWorker(subscriptionId);
-        return subCert.getCert() + subCert.getKey();
+
+        SubscriptionsCertificate cert = this.getSubscriptionCertificate(subscriptionId);
+        return cert.getCert() + cert.getKey();
     }
 
     /**
@@ -166,20 +212,8 @@ public class SubscriptionResource {
     @Produces({ MediaType.APPLICATION_JSON})
     public SubscriptionsCertificate getSubCert(
         @PathParam("subscription_id") String subscriptionId) {
-        SubscriptionsCertificate subCert = getSubCertWorker(subscriptionId);
-        return subCert;
-    }
 
-    private SubscriptionsCertificate getSubCertWorker(String subscriptionId) {
-        Subscription sub = verifyAndFind(subscriptionId);
-        SubscriptionsCertificate subCert = sub.getCertificate();
-        if (subCert == null) {
-            log.debug("No cert found for subscription: {}", subscriptionId);
-
-            throw new BadRequestException(
-                i18n.tr("no certificate for subscription {0}", subscriptionId));
-        }
-        return subCert;
+        return this.getSubscriptionCertificate(subscriptionId);
     }
 
     /**
@@ -245,14 +279,4 @@ public class SubscriptionResource {
         }
     }
 
-    private Subscription verifyAndFind(String subscriptionId) {
-        Subscription subscription = subService.getSubscription(subscriptionId);
-
-        if (subscription == null) {
-            throw new NotFoundException(
-                i18n.tr("Subscription with id {0} could not be found.", subscriptionId));
-        }
-
-        return subscription;
-    }
 }

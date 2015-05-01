@@ -26,11 +26,11 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
+import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.service.ProductServiceAdapter;
@@ -45,9 +45,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import java.util.HashSet;
 import java.util.Locale;
-import java.util.Set;
+
+
 
 /**
  * EntitlementResourceTest
@@ -87,13 +87,11 @@ public class EntitlementResourceTest {
         Entitlement e = TestUtil.createEntitlement();
         e.setId("entitlementID");
 
-        EntitlementCertificate entitlementCert = new EntitlementCertificate();
-        entitlementCert.setCert("HELLO");
-        entitlementCert.setKey("CERT");
+        SubscriptionsCertificate subcert = new SubscriptionsCertificate();
+        subcert.setCert("HELLO");
+        subcert.setKey("CERT");
 
-        Set<EntitlementCertificate> certs = new HashSet<EntitlementCertificate>();
-        certs.add(entitlementCert);
-        e.setCertificates(certs);
+        e.getPool().setCertificate(subcert);
 
         when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
 
@@ -118,13 +116,11 @@ public class EntitlementResourceTest {
         Entitlement parentEnt = TestUtil.createEntitlement();
         parentEnt.setId("parentEnt");
 
-        EntitlementCertificate entitlementCert = new EntitlementCertificate();
-        entitlementCert.setCert("HELLO");
-        entitlementCert.setKey("CERT");
+        SubscriptionsCertificate subcert = new SubscriptionsCertificate();
+        subcert.setCert("HELLO");
+        subcert.setKey("CERT");
 
-        Set<EntitlementCertificate> certs = new HashSet<EntitlementCertificate>();
-        certs.add(entitlementCert);
-        parentEnt.setCertificates(certs);
+        parentEnt.getPool().setCertificate(subcert);
 
         when(entitlementCurator.findUpstreamEntitlementForStack(consumer, "mystack"))
             .thenReturn(parentEnt);
