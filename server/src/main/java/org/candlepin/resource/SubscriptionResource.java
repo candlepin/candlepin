@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
@@ -132,7 +133,13 @@ public class SubscriptionResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Subscription> getSubscriptions() {
-        return subService.getSubscriptions();
+        List<Subscription> subscriptions = new LinkedList<Subscription>();
+
+        for (Pool pool : this.poolManager.listMasterPools()) {
+            subscriptions.add(this.poolManager.fabricateSubscriptionFromPool(pool));
+        }
+
+        return subscriptions;
     }
 
     /**
@@ -231,20 +238,17 @@ public class SubscriptionResource {
         @Context HttpServletResponse response) {
 
         if (email == null) {
-            throw new BadRequestException(i18n.tr(
-                    "email is required for notification"));
+            throw new BadRequestException(i18n.tr("email is required for notification"));
         }
 
         if (emailLocale == null) {
-            throw new BadRequestException(i18n.tr(
-                    "email locale is required for notification"));
+            throw new BadRequestException(i18n.tr("email locale is required for notification"));
         }
 
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
 
         if (consumer == null) {
-            throw new BadRequestException(i18n.tr("No such unit: {0}",
-                consumerUuid));
+            throw new BadRequestException(i18n.tr("No such unit: {0}", consumerUuid));
         }
 
         this.subService.activateSubscription(consumer, email, emailLocale);

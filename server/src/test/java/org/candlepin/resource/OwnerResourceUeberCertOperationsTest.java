@@ -38,7 +38,6 @@ import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.User;
-import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ServiceLevelValidator;
@@ -61,7 +60,6 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;
     @Inject private ProductCurator productCurator;
     @Inject private PoolCurator poolCurator;
-    @Inject private SubscriptionServiceAdapter subAdapter;
     @Inject private ConsumerCurator consumerCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private EntitlementCurator entitlementCurator;
@@ -97,7 +95,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
 
         or = new OwnerResource(ownerCurator,
             null, null, consumerCurator, null, i18n, null, null, null,
-            null, null, poolManager, null, null, null, subAdapter,
+            null, null, poolManager, null, null, null,
             null, consumerTypeCurator, entCertCurator, entitlementCurator,
             ueberCertGenerator, null, null, contentOverrideValidator,
             serviceLevelValidator, null, null, null, null, null);

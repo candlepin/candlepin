@@ -160,7 +160,7 @@ public class PoolManagerTest {
 
         this.principal = TestUtil.createOwnerPrincipal();
         this.manager = spy(new CandlepinPoolManager(
-            mockPoolCurator, mockSubAdapter, mockProductCurator, entCertAdapterMock, mockEventSink,
+            mockPoolCurator, mockProductCurator, entCertAdapterMock, mockEventSink,
             eventFactory, mockConfig, enforcerMock, poolRulesMock, entitlementCurator,
             consumerCuratorMock, certCuratorMock, complianceRules, autobindRules,
             activationKeyRules, productCuratorMock, contentCuratorMock)
@@ -205,7 +205,7 @@ public class PoolManagerTest {
         // Make sure that only the floating pool was regenerated
         expectedFloating.add(floating);
         verify(this.manager)
-            .updateFloatingPools(eq(mockSubAdapter), eq(expectedFloating), eq(true), any(Set.class));
+            .updateFloatingPools(eq(expectedFloating), eq(true), any(Set.class));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -235,7 +235,7 @@ public class PoolManagerTest {
         // Make sure that only the floating pool was regenerated
         expectedModified.add(p);
         verify(this.manager)
-            .updateFloatingPools(eq(mockSubAdapter), eq(new LinkedList()), eq(true), any(Set.class));
+            .updateFloatingPools(eq(new LinkedList()), eq(true), any(Set.class));
         verify(this.manager)
             .updatePoolsForSubscription(eq(expectedModified), eq(sub), eq(false), any(Set.class));
     }

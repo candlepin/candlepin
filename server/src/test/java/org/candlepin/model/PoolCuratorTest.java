@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -86,7 +87,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
                 (String) null, TestUtil.createDate(20450, 3, 2), true);
         assertEquals(0, results.size());
-
     }
 
     @Test
@@ -1013,6 +1013,80 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Pool pool = TestUtil.createPool(o, product);
         pool.setSourceSubscription(new SourceSubscription(subId, "master"));
         return poolCurator.create(pool);
+    }
+
+    protected List<Pool> setupMasterPoolsTests() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+        this.ownerCurator.create(owner1);
+        this.ownerCurator.create(owner2);
+
+        LinkedList<Pool> list = new LinkedList<Pool>();
+
+        Product prod1 = TestUtil.createProduct(owner1);
+        Product prod2 = TestUtil.createProduct(owner2);
+        Product prod3 = TestUtil.createProduct(owner1);
+        Product prod4 = TestUtil.createProduct(owner2);
+        Product prod5 = TestUtil.createProduct(owner1);
+        this.productCurator.create(prod1);
+        this.productCurator.create(prod2);
+        this.productCurator.create(prod3);
+        this.productCurator.create(prod4);
+        this.productCurator.create(prod5);
+
+        Pool p1 = TestUtil.createPool(owner1, prod1);
+        p1.setSourceSubscription(new SourceSubscription("sub1", "master"));
+        list.add(p1);
+
+        Pool p2 = TestUtil.createPool(owner2, prod2);
+        p2.setSourceSubscription(new SourceSubscription("sub2", "master"));
+        list.add(p2);
+
+        Pool p3 = TestUtil.createPool(owner1, prod3);
+        p3.setSourceSubscription(new SourceSubscription("sub1", "asd"));
+        list.add(p3);
+
+        Pool p4 = TestUtil.createPool(owner2, prod4);
+        p4.setSourceSubscription(new SourceSubscription("sub2", "asd"));
+        list.add(p4);
+
+        Pool p5 = TestUtil.createPool(owner1, prod5);
+        p5.setSourceSubscription(new SourceSubscription("sub3", "asd"));
+        list.add(p5);
+
+        this.poolCurator.create(p1);
+        this.poolCurator.create(p2);
+        this.poolCurator.create(p3);
+        this.poolCurator.create(p4);
+        this.poolCurator.create(p5);
+
+        return list;
+    }
+
+    @Test
+    public void testGetMasterPoolBySubscriptionId() {
+        List<Pool> pools = this.setupMasterPoolsTests();
+
+        Pool actual = this.poolCurator.getMasterPoolBySubscriptionId("sub1");
+        assertEquals(pools.get(0), actual);
+
+        actual = this.poolCurator.getMasterPoolBySubscriptionId("sub2");
+        assertEquals(pools.get(1), actual);
+
+        actual = this.poolCurator.getMasterPoolBySubscriptionId("sub3");
+        assertEquals(null, actual);
+    }
+
+    @Test
+    public void testListMasterPools() {
+        List<Pool> pools = this.setupMasterPoolsTests();
+        List<Pool> expected = new LinkedList<Pool>();
+
+        expected.add(pools.get(0));
+        expected.add(pools.get(1));
+
+        List<Pool> actual = this.poolCurator.listMasterPools();
+        assertEquals(expected, actual);
     }
 
 }

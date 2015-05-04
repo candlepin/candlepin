@@ -151,7 +151,7 @@ public interface PoolManager {
 
     Pool setPoolQuantity(Pool pool, long set);
 
-    void regenerateDirtyEntitlements(SubscriptionServiceAdapter subAdapter, List<Entitlement> entitlements);
+    void regenerateDirtyEntitlements(List<Entitlement> entitlements);
 
     Entitlement adjustEntitlementQuantity(Consumer consumer, Entitlement entitlement,
         Integer quantity) throws EntitlementRefusedException;
@@ -291,4 +291,12 @@ public interface PoolManager {
      *  the master pool associated with the specified subscription.
      */
     Pool getMasterPoolBySubscriptionId(String subscriptionId);
+
+    /**
+     * Retrieves a list consisting of all known master pools.
+     *
+     * @return
+     *  a list of known master pools
+     */
+    List<Pool> listMasterPools();
 }

@@ -180,8 +180,7 @@ public class ConsumerResourceTest {
             .thenThrow(new IOException());
 
         CandlepinPoolManager poolManager = new CandlepinPoolManager(null,
-            mockedSubscriptionServiceAdapter, null,
-            mockedEntitlementCertServiceAdapter, null, null,
+            null, mockedEntitlementCertServiceAdapter, null, null,
             new CandlepinCommonTestConfig(), null, null,
             mockedEntitlementCurator, mockedConsumerCurator, null, null, null,
             mockedActivationKeyRules, null, null);

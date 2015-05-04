@@ -117,7 +117,6 @@ public class CandlepinPoolManager implements PoolManager {
      */
     @Inject
     public CandlepinPoolManager(PoolCurator poolCurator,
-        SubscriptionServiceAdapter subAdapter,
         ProductCurator productCurator,
         EntitlementCertServiceAdapter entCertAdapter, EventSink sink,
         EventFactory eventFactory, Configuration config, Enforcer enforcer,
@@ -192,7 +191,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // TODO: break this call into smaller pieces.  There may be lots of floating pools
         List<Pool> floatingPools = poolCurator.getOwnersFloatingPools(owner);
-        updateFloatingPools(subAdapter, floatingPools, lazy, changedProducts);
+        updateFloatingPools(floatingPools, lazy, changedProducts);
     }
 
     /**
@@ -631,8 +630,7 @@ public class CandlepinPoolManager implements PoolManager {
      * @return
      */
     @Transactional
-    void updateFloatingPools(SubscriptionServiceAdapter subAdapter,
-            List<Pool> floatingPools, boolean lazy, Set<Product> changedProducts) {
+    void updateFloatingPools(List<Pool> floatingPools, boolean lazy, Set<Product> changedProducts) {
         /*
          * Rules need to determine which pools have changed, but the Java must
          * send out the events. Create an event for each pool that could change,
@@ -1530,8 +1528,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public void regenerateDirtyEntitlements(SubscriptionServiceAdapter subAdapter,
-        List<Entitlement> entitlements) {
+    public void regenerateDirtyEntitlements(List<Entitlement> entitlements) {
 
         List<Entitlement> dirtyEntitlements = new ArrayList<Entitlement>();
         for (Entitlement e : entitlements) {
@@ -1546,7 +1543,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public Refresher getRefresher(SubscriptionServiceAdapter subAdapter) {
-        return new Refresher(this, subAdapter, true);
+        return this.getRefresher(subAdapter, true);
     }
 
     @Override
@@ -1736,6 +1733,11 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public Pool getMasterPoolBySubscriptionId(String subscriptionId) {
         return this.poolCurator.getMasterPoolBySubscriptionId(subscriptionId);
+    }
+
+    @Override
+    public List<Pool> listMasterPools() {
+        return this.poolCurator.listMasterPools();
     }
 
     @Override

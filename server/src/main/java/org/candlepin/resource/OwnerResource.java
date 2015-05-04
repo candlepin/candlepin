@@ -83,7 +83,6 @@ import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.OwnerServiceAdapter;
-import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
@@ -147,7 +146,6 @@ public class OwnerResource {
     private SubscriptionCurator subscriptionCurator;
     private ActivationKeyCurator activationKeyCurator;
     private StatisticCurator statisticCurator;
-    private SubscriptionServiceAdapter subService;
     private OwnerServiceAdapter ownerService;
     private ConsumerCurator consumerCurator;
     private I18n i18n;
@@ -192,7 +190,6 @@ public class OwnerResource {
         ExporterMetadataCurator exportCurator,
         OwnerInfoCurator ownerInfoCurator,
         ImportRecordCurator importRecordCurator,
-        SubscriptionServiceAdapter subService,
         PermissionBlueprintCurator permCurator,
         ConsumerTypeCurator consumerTypeCurator,
         EntitlementCertificateCurator entitlementCertCurator,
@@ -205,7 +202,8 @@ public class OwnerResource {
         OwnerServiceAdapter ownerService,
         ProductCurator productCurator,
         Configuration config,
-        ContentCurator contentCurator, PoolCurator poolCurator) {
+        ContentCurator contentCurator,
+        PoolCurator poolCurator) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -222,7 +220,6 @@ public class OwnerResource {
         this.importRecordCurator = importRecordCurator;
         this.poolManager = poolManager;
         this.eventAdapter = eventAdapter;
-        this.subService = subService;
         this.permissionCurator = permCurator;
         this.consumerTypeCurator = consumerTypeCurator;
         this.entitlementCertCurator = entitlementCertCurator;
