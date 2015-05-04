@@ -484,7 +484,6 @@ public class MultiOrgUpgradeTask {
 
         while (subscriptiondata.next()) {
             String subid = subscriptiondata.getString(1);
-            String subuuid = this.generateUUID();
 
             // Update any master pools which make use of this subscription information
             this.executeUpdate(
@@ -515,7 +514,7 @@ public class MultiOrgUpgradeTask {
                 "        WHERE owner_id = ? AND product_id = S.derivedproduct_id), " +
                 "    cdn_id " +
                 "FROM cp_subscription S WHERE id = ?",
-                subuuid, orgid, orgid, orgid, subid
+                subid, orgid, orgid, orgid, subid
             );
 
             ResultSet sourcesub = this.executeQuery(
@@ -529,7 +528,7 @@ public class MultiOrgUpgradeTask {
                     "INSERT INTO cpo_pool_source_sub " +
                     "  (id, subscription_id, subscription_sub_key, pool_id, created, updated)" +
                     "VALUES(?, ?, ?, ?, ?, ?)",
-                    this.generateUUID(), subuuid, sourcesub.getString(3),
+                    this.generateUUID(), subid, sourcesub.getString(3),
                     sourcesub.getString(4), sourcesub.getDate(5), sourcesub.getDate(6)
                 );
             }
@@ -559,7 +558,7 @@ public class MultiOrgUpgradeTask {
                 this.executeUpdate(
                     "INSERT INTO cpo_subscription_branding(subscription_id, branding_id) " +
                     "VALUES(?, ?)",
-                    subuuid, brandinguuid
+                    subid, brandinguuid
                 );
             }
 
@@ -570,7 +569,7 @@ public class MultiOrgUpgradeTask {
                 "SELECT ?, (SELECT uuid FROM cpo_products " +
                 "    WHERE owner_id = ? AND product_id = S.product_id) " +
                 "FROM cp_subscription_products S WHERE subscription_id = ?",
-                subuuid, orgid, subid
+                subid, orgid, subid
             );
 
             this.executeUpdate(
@@ -578,7 +577,7 @@ public class MultiOrgUpgradeTask {
                 "SELECT ?, (SELECT uuid FROM cpo_products " +
                 "    WHERE owner_id = ? AND product_id = S.product_id) " +
                 "FROM cp_sub_derivedprods S WHERE subscription_id = ?",
-                subuuid, orgid, subid
+                subid, orgid, subid
             );
         }
 
