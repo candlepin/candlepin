@@ -410,6 +410,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         return (this.getProduct() != null ? this.getProduct().getName() : null);
     }
 
+    public String getDerivedProductName() {
+        return (this.getDerivedProduct() != null ? this.getDerivedProduct().getName() : null);
+    }
     /**
      * Return the contract for this pool's subscription.
      *
@@ -869,6 +872,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     public Set<ProductAttribute> getProductAttributes() {
         return this.getProduct() != null ?
             this.getProduct().getAttributes() :
+            new HashSet<ProductAttribute>();
+    }
+
+    public Set<ProductAttribute> getDerivedProductAttributes() {
+        return this.getDerivedProduct() != null ?
+            this.getDerivedProduct().getAttributes() :
             new HashSet<ProductAttribute>();
     }
 
