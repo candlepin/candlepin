@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20150424150412-1" author="mstead">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists columnName="ownerid" tableName="cp_job"/>
+            </not>
+        </preConditions>
+        <comment>Add ownerid to cp_job</comment>
+        <addColumn tableName="cp_job">
+            <column name="ownerid" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

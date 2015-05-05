@@ -14,6 +14,7 @@
  */
 package org.candlepin.auth;
 
+import org.candlepin.auth.permissions.CheckJobStatusPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.UserUserPermission;
 import org.candlepin.model.Owner;
@@ -44,16 +45,11 @@ public class UserPrincipal extends Principal {
             this.permissions.addAll(permissions);
         }
 
-        addPermissionToManageSelf();
-    }
+        // User principals should have an implicit permission to view their own data.
+        addPermission(new UserUserPermission(username));
 
-
-    /*
-     * User principals should have an implicit permission to view their own
-     * data.
-     */
-    private void addPermissionToManageSelf() {
-        this.permissions.add(new UserUserPermission(username));
+        // Allow users to check the status of their own jobs.
+        addPermission(new CheckJobStatusPermission(getData(), getOwnerKeys()));
     }
 
     public String getUsername() {

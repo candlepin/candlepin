@@ -15,11 +15,14 @@
 package org.candlepin.pinsetter.tasks;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.controller.Entitler;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
 import org.candlepin.pinsetter.core.model.JobStatus;
 
 import org.junit.Before;
@@ -42,12 +45,16 @@ import java.util.List;
  */
 public class EntitleByProductsJobTest {
 
+    private Consumer consumer;
     private String consumerUuid;
     private Entitler e;
 
     @Before
     public void init() {
         consumerUuid = "49bd6a8f-e9f8-40cc-b8d7-86cafd687a0e";
+        consumer = new Consumer("Test Consumer", "test-consumer", new Owner("test-owner"),
+            new ConsumerType("system"));
+        consumer.setUuid(consumerUuid);
         e = mock(Entitler.class);
     }
 
@@ -55,7 +62,7 @@ public class EntitleByProductsJobTest {
     public void bindByProductsSetup() {
         String[] pids = {"pid1", "pid2", "pid3"};
 
-        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumerUuid, null, null);
+        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumer, null, null);
         assertNotNull(detail);
         String[] resultpids = (String[]) detail.getJobDataMap().get("product_ids");
         assertEquals("pid2", resultpids[1]);
@@ -67,7 +74,7 @@ public class EntitleByProductsJobTest {
     public void bindByProductsExec() throws JobExecutionException {
         String[] pids = {"pid1", "pid2", "pid3"};
 
-        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumerUuid, null, null);
+        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumer, null, null);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
@@ -93,7 +100,7 @@ public class EntitleByProductsJobTest {
     @Test
     public void serializeJobDataMapForProducts() throws IOException {
         String[] pids = {"pid1", "pid2", "pid3"};
-        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumerUuid, null, null);
+        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumer, null, null);
         serialize(detail.getJobDataMap());
     }
 

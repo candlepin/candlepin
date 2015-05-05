@@ -46,6 +46,7 @@ public class JobStatus extends AbstractHibernateObject {
 
     public static final String TARGET_TYPE = "target_type";
     public static final String TARGET_ID = "target_id";
+    public static final String OWNER_ID = "owner_id";
     public static final int RESULT_COL_LENGTH = 255;
 
     /**
@@ -95,6 +96,9 @@ public class JobStatus extends AbstractHibernateObject {
     @Size(max = 255)
     private String targetId;
 
+    @Size(max = 255)
+    private String ownerId;
+
     @Column(length = 255)
     private Class<? extends KingpinJob> jobClass;
 
@@ -108,6 +112,7 @@ public class JobStatus extends AbstractHibernateObject {
         this.id = jobDetail.getKey().getName();
         this.jobGroup = jobDetail.getKey().getGroup();
         this.state = waiting ? JobState.WAITING : JobState.CREATED;
+        this.ownerId = this.getOwnerId(jobDetail);
         this.targetType = getTargetType(jobDetail);
         this.targetId = getTargetId(jobDetail);
         this.principalName = getPrincipalName(jobDetail);
@@ -126,6 +131,10 @@ public class JobStatus extends AbstractHibernateObject {
 
     private String getTargetId(JobDetail jobDetail) {
         return (String) jobDetail.getJobDataMap().get(TARGET_ID);
+    }
+
+    private String getOwnerId(JobDetail jobDetail) {
+        return (String) jobDetail.getJobDataMap().get(OWNER_ID);
     }
 
     @SuppressWarnings("unchecked")
@@ -214,6 +223,10 @@ public class JobStatus extends AbstractHibernateObject {
 
     public String getPrincipalName() {
         return this.principalName;
+    }
+
+    public String getOwnerId() {
+        return this.ownerId;
     }
 
     @XmlTransient

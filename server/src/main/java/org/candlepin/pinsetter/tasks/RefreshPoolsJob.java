@@ -115,6 +115,7 @@ public class RefreshPoolsJob extends UniqueByOwnerJob {
      */
     public static JobDetail forOwner(Owner owner, Boolean lazy) {
         JobDataMap map = new JobDataMap();
+        map.put(JobStatus.OWNER_ID, owner.getKey());
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, owner.getKey());
         map.put(LAZY_REGEN, lazy);

@@ -97,6 +97,7 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
     public static JobDetail healEntireOrg(String ownerId, Date entitleDate) {
         JobDataMap map = new JobDataMap();
         map.put("ownerId", ownerId);
+        map.put(JobStatus.OWNER_ID, ownerId);
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, ownerId);
         map.put("entitle_date", entitleDate);
