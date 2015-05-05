@@ -1113,6 +1113,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.cdn = cdn;
     }
 
+    @XmlTransient
     public SubscriptionsCertificate getCertificate() {
         return this.cert;
     }
