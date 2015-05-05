@@ -108,7 +108,7 @@ class Candlepin
   def hypervisor_update(owner, json_data, create_missing=nil)
     path = get_path("hypervisors") + "/#{owner}"
     unless create_missing.nil?
-      path << "&create_missing=#{create_missing}"
+      path << "?create_missing=#{create_missing}"
     end
     job_detail = post_text_return_json(path, json_data)
     return job_detail
@@ -1041,8 +1041,10 @@ class Candlepin
     get "/jobs?owner=#{owner_key}"
   end
 
-  def get_job(job_id)
-    get "/jobs/#{job_id}"
+  def get_job(job_id, result_data=false)
+    url = "/jobs/#{job_id}"
+    url += "?result_data=true" if result_data
+    get url
   end
 
   def cancel_job(job_id)

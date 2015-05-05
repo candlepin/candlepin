@@ -225,6 +225,12 @@ public class HypervisorResource {
             subResource = SubResource.HYPERVISOR) String ownerKey,
         @QueryParam("create_missing") @DefaultValue("true") boolean createMissing) {
 
+        if (hypervisorJson == null || hypervisorJson.isEmpty()) {
+            log.debug("Host/Guest mapping provided during hypervisor update was null.");
+            throw new BadRequestException(
+                i18n.tr("Host to guest mapping was not provided for hypervisor update."));
+        }
+
         log.info("Hypervisor update by principal: " + principal);
         Owner owner = this.getOwner(ownerKey);
 
