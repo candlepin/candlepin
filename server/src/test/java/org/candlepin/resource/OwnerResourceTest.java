@@ -892,8 +892,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void undoImportforOwnerWithNoImports() {
         Owner owner1 = new Owner("owner-with-no-imports", "foo");
         ownerResource.createOwner(owner1);
-        ownerResource.undoImports(owner1.getKey(),
-            new UserPrincipal("JarjarBinks", null, true));
+        ownerResource.undoImports(owner1.getKey(), new UserPrincipal("JarjarBinks", null, true));
     }
 
     @Test(expected = BadRequestException.class)
@@ -1014,31 +1013,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals("test_file.zip", ir.getFileName());
         assertEquals(owner, ir.getOwner());
         assertEquals(ImportRecord.Status.SUCCESS, ir.getStatus());
-    }
-
-    @Test
-    public void testImportRecordDeleteWithLogging()
-        throws IOException, ImporterException {
-        EventSink es = mock(EventSink.class);
-        ExporterMetadataCurator ec = mock(ExporterMetadataCurator.class);
-        SubscriptionCurator sc = mock(SubscriptionCurator.class);
-        OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, sc,
-            null, null, null, i18n, es, null, null, null, null, this.poolManager, ec,
-            null, importRecordCurator, null, null, null, null,
-            null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, null, null);
-
-        ExporterMetadata metadata = new ExporterMetadata();
-        when(ec.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner))
-            .thenReturn(metadata);
-        when(sc.listByOwner(owner)).thenReturn(new ArrayList<Subscription>());
-
-        thisOwnerResource.undoImports(owner.getKey(),
-            new UserPrincipal("JarJarBinks", null, true));
-        List<ImportRecord> records = importRecordCurator.findRecords(owner);
-        assertTrue(records.size() == 1);
-        ImportRecord ir = records.get(0);
-        assertTrue(ir.getStatus() == ImportRecord.Status.DELETE);
     }
 
     @Test

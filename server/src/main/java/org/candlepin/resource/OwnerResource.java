@@ -78,6 +78,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.pinsetter.tasks.HealEntireOrgJob;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
+import org.candlepin.pinsetter.tasks.UndoImportsJob;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resteasy.parameter.CandlepinParam;
@@ -141,6 +142,10 @@ import javax.ws.rs.core.MultivaluedMap;
 @Path("/owners")
 public class OwnerResource {
 
+    private static Logger log = LoggerFactory.getLogger(OwnerResource.class);
+
+    private static final int FEED_LIMIT = 1000;
+
     private OwnerCurator ownerCurator;
     private OwnerInfoCurator ownerInfoCurator;
     private SubscriptionCurator subscriptionCurator;
@@ -152,7 +157,6 @@ public class OwnerResource {
     private EventSink sink;
     private EventFactory eventFactory;
     private EventAdapter eventAdapter;
-    private static Logger log = LoggerFactory.getLogger(OwnerResource.class);
     private EventCurator eventCurator;
     private Importer importer;
     private ExporterMetadataCurator exportCurator;
@@ -172,7 +176,7 @@ public class OwnerResource {
     private ContentCurator contentCurator;
     private PoolCurator poolCurator;
 
-    private static final int FEED_LIMIT = 1000;
+
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator,
@@ -1236,43 +1240,15 @@ public class OwnerResource {
     @Path("{owner_key}/imports")
     @Produces(MediaType.APPLICATION_JSON)
     public JobDetail undoImports(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @Context Principal principal) {
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey, @Context Principal principal) {
 
         Owner owner = findOwner(ownerKey);
 
-        ExporterMetadata metadata = exportCurator.lookupByTypeAndOwner(
-            ExporterMetadata.TYPE_PER_USER, owner
-        );
-
-        if (metadata == null) {
+        if (this.exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner) == null) {
             throw new NotFoundException("No import found for owner " + ownerKey);
         }
 
-        log.info("Deleting all pools from manifests for owner: {}", ownerKey);
-
-        Set<String> subscriptions = new HashSet<String>();
-
-        List<Pool> pools = this.poolManager.listPoolsByOwner(owner);
-        for (Pool pool : pools) {
-            if (pool.getUpstreamPoolId() != null) {
-                subscriptions.add(pool.getSubscriptionId());
-            }
-        }
-
-        this.poolManager.deletePoolsForSubscriptions(subscriptions);
-
-        // Clear out upstream ID so owner can import from other distributors:
-        UpstreamConsumer uc = owner.getUpstreamConsumer();
-        owner.setUpstreamConsumer(null);
-
-        exportCurator.delete(metadata);
-        this.recordManifestDeletion(owner, principal.getUsername(), uc);
-
-        // Refresh pools to cleanup entitlements
-        // TODO: The above does all the revocation of entitlements, which should be in
-        // an async job whose status is returned here.
-        return RefreshPoolsJob.forOwner(owner, false);
+        return UndoImportsJob.forOwner(owner, false);
     }
 
     /**
@@ -1646,8 +1622,7 @@ public class OwnerResource {
         this.importRecordCurator.create(record);
     }
 
-    private void recordManifestDeletion(Owner owner, String username,
-        UpstreamConsumer uc) {
+    private void recordManifestDeletion(Owner owner, String username, UpstreamConsumer uc) {
         ImportRecord record = new ImportRecord(owner);
         record.setGeneratedBy(username);
         record.setGeneratedDate(new Date());
@@ -1658,8 +1633,7 @@ public class OwnerResource {
         this.importRecordCurator.create(record);
     }
 
-    private ImportUpstreamConsumer createImportUpstreamConsumer(Owner owner,
-        UpstreamConsumer uc) {
+    private ImportUpstreamConsumer createImportUpstreamConsumer(Owner owner, UpstreamConsumer uc) {
         ImportUpstreamConsumer iup = null;
         if (uc == null) {
             uc = owner.getUpstreamConsumer();
