@@ -769,6 +769,14 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * @return
      *  the top-level product for this pool.
      */
+    /*
+     * We skip this when serializing, it wasn't originally available in early versions,
+     * and the required info was exposed via other getters. (id, name, attributes)
+     * We must maintain API compatability for those so to avoid sending a big chunk
+     * of duplicated data, we'll skip serialization of the actual product reference.
+     * (perhaps to be revisited in a v2.0 API)
+     */
+    @XmlTransient
     public Product getProduct() {
         return this.product;
     }
