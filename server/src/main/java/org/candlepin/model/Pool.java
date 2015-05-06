@@ -105,7 +105,18 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         ENTITLEMENT_DERIVED,
         STACK_DERIVED,
         BONUS,
-        UNMAPPED_GUEST
+        UNMAPPED_GUEST;
+
+        public boolean isDerivedType() {
+            switch (this) {
+                case ENTITLEMENT_DERIVED:
+                case STACK_DERIVED:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
     }
 
     @Id

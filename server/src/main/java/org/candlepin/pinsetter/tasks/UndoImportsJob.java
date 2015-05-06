@@ -43,9 +43,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.sql.SQLException;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
@@ -121,18 +119,14 @@ public class UndoImportsJob extends UniqueByOwnerJob {
                 return;
             }
 
-            log.info("Deleting all pools from manifests for owner: {}", ownerKey);
-
-            Set<String> subscriptions = new HashSet<String>();
+            log.info("Deleting all pools originating from manifests for owner/org: {}", ownerKey);
 
             List<Pool> pools = this.poolManager.listPoolsByOwner(owner);
             for (Pool pool : pools) {
-                if (pool.getUpstreamPoolId() != null) {
-                    subscriptions.add(pool.getSubscriptionId());
+                if (pool.getSourceSubscription() != null && !pool.getType().isDerivedType()) {
+                    this.poolManager.deletePool(pool);
                 }
             }
-
-            this.poolManager.deletePoolsForSubscriptions(subscriptions);
 
             // Clear out upstream ID so owner can import from other distributors:
             UpstreamConsumer uc = owner.getUpstreamConsumer();
@@ -141,10 +135,6 @@ public class UndoImportsJob extends UniqueByOwnerJob {
             this.exportCurator.delete(metadata);
             this.recordManifestDeletion(owner, principal.getUsername(), uc);
 
-
-            // Refresh pools (is this still necessary...?)
-            // Assume that we verified the request in the resource layer:
-            this.poolManager.getRefresher(subAdapter, lazy).setUnitOfWork(unitOfWork).add(owner).run();
             context.setResult("Imported pools removed for owner " + owner.getDisplayName());
         }
         catch (PersistenceException e) {
