@@ -151,7 +151,7 @@ public class CandlepinPoolManager implements PoolManager {
         log.info("Refreshing pools for owner: {}", owner);
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
 
-        log.debug("Found " + subs.size() + " existing subscriptions.");
+        log.debug("Found {} existing subscriptions.", subs.size());
 
         SubscriptionReconciler reconciler = new SubscriptionReconciler();
         reconciler.reconcile(owner, subs, poolCurator);
@@ -171,7 +171,7 @@ public class CandlepinPoolManager implements PoolManager {
             // Remove expired subscriptions
             if (isExpired(sub)) {
                 deletedSubs.add(subId);
-                log.info("Skipping expired subscription: " + sub);
+                log.info("Skipping expired subscription: {}", sub);
                 continue;
             }
 

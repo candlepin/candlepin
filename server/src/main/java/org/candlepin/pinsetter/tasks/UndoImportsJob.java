@@ -110,7 +110,6 @@ public class UndoImportsJob extends UniqueByOwnerJob {
                 return;
             }
 
-
             // Remove imports
             ExporterMetadata metadata = this.exportCurator.lookupByTypeAndOwner(
                 ExporterMetadata.TYPE_PER_USER, owner

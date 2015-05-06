@@ -22,34 +22,30 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Refresher;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
-import org.candlepin.model.ImportUpstreamConsumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
-import org.candlepin.pinsetter.core.RetryJobException;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.xnap.commons.i18n.I18n;
@@ -57,7 +53,7 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.sql.SQLException;
 import java.io.IOException;
-import java.util.LinkedList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -66,18 +62,22 @@ import java.util.Locale;
 /**
  * UndoImportsJobTest
  */
-@RunWith(MockitoJUnitRunner.class)
 public class UndoImportsJobTest extends DatabaseTestFixture {
 
     @Inject protected I18n i18n;
-    @Mock protected CandlepinPoolManager poolManager;
-    @Inject protected OwnerCurator ownerCurator;
-    @Mock protected SubscriptionServiceAdapter subAdapter;
-    @Mock protected Refresher refresher;
-    @Mock protected ExporterMetadataCurator exportCurator;
-    @Inject protected ImportRecordCurator importRecordCurator;
 
-    @Mock protected JobExecutionContext jobContext;
+    @Inject protected CandlepinPoolManager poolManagerBase;
+    @Inject protected ImportRecordCurator importRecordCurator;
+    @Inject protected ExporterMetadataCurator exportCuratorBase;
+    @Inject protected ConsumerTypeCurator consumerTypeCurator;
+
+    protected CandlepinPoolManager poolManager;
+    protected OwnerCurator ownerCurator;
+    protected SubscriptionServiceAdapter subAdapter;
+    protected Refresher refresher;
+    protected ExporterMetadataCurator exportCurator;
+
+    protected JobExecutionContext jobContext;
     protected JobDataMap jobDataMap;
 
     protected UndoImportsJob undoImportsJob;
@@ -88,14 +88,14 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     public void setUp() {
         this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
 
-        // Reset mocks/spys
-        reset(this.poolManager);
-        reset(this.ownerCurator);
-        reset(this.subAdapter);
-        reset(this.refresher);
-        reset(this.exportCurator);
+        // Reset mocks/spys/objects
+        this.poolManager = mock(CandlepinPoolManager.class);
+        this.ownerCurator = mock(OwnerCurator.class);
+        this.subAdapter = mock(SubscriptionServiceAdapter.class);
+        this.refresher = mock(Refresher.class);
+        this.exportCurator = mock(ExporterMetadataCurator.class);
 
-        reset(this.jobContext);
+        this.jobContext = mock(JobExecutionContext.class);
         this.jobDataMap = new JobDataMap();
 
         // Setup common behavior
@@ -104,7 +104,6 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         when(this.refresher.setUnitOfWork(any(UnitOfWork.class))).thenReturn(this.refresher);
         when(this.refresher.add(any(Owner.class))).thenReturn(this.refresher);
 
-
         this.undoImportsJob = new UndoImportsJob(
             this.i18n, this.ownerCurator, this.poolManager, this.subAdapter,
             this.exportCurator, this.importRecordCurator
@@ -112,33 +111,83 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testImportRecordDeleteWithLogging()
-        throws JobExecutionException, IOException, ImporterException, InterruptedException {
+    public void testUndoImport() throws JobExecutionException, IOException, ImporterException {
+        // We need proper curators for this test
+        this.poolManager = this.poolManagerBase;
+        this.ownerCurator = super.ownerCurator;
+        this.exportCurator = this.exportCuratorBase;
 
-        Owner owner = TestUtil.createOwner();
-        this.ownerCurator.create(owner);
+        this.undoImportsJob = new UndoImportsJob(
+            this.i18n, this.ownerCurator, this.poolManager, this.subAdapter,
+            this.exportCurator, this.importRecordCurator
+        );
 
+        // Create owner w/upstream consumer
+        Owner owner1 = TestUtil.createOwner();
+        Owner owner2 = TestUtil.createOwner();
+        ConsumerType type = new ConsumerType("system");
+        UpstreamConsumer uc1 = new UpstreamConsumer("uc1", null, type, "uc1");
+        UpstreamConsumer uc2 = new UpstreamConsumer("uc2", null, type, "uc2");
+        this.consumerTypeCurator.create(type);
+        this.ownerCurator.create(owner1);
+        this.ownerCurator.create(owner2);
+        owner1.setUpstreamConsumer(uc1);
+        owner1.setUpstreamConsumer(uc2);
+        this.ownerCurator.merge(owner1);
+        this.ownerCurator.merge(owner2);
+
+        // Create metadata
+        ExporterMetadata metadata1 = new ExporterMetadata(ExporterMetadata.TYPE_PER_USER, new Date(), owner1);
+        ExporterMetadata metadata2 = new ExporterMetadata(ExporterMetadata.TYPE_PER_USER, new Date(), owner2);
+        this.exportCurator.create(metadata1);
+        this.exportCurator.create(metadata2);
+
+        // Create pools w/upstream pool IDs
+        Product prod1 = TestUtil.createProduct("prod1", "prod1", owner1);
+        Product prod2 = TestUtil.createProduct("prod2", "prod2", owner1);
+        Product prod3 = TestUtil.createProduct("prod3", "prod3", owner2);
+        this.productCurator.create(prod1);
+        this.productCurator.create(prod2);
+        this.productCurator.create(prod3);
+
+        Pool pool1 = TestUtil.createPool(owner1, prod1);
+        Pool pool2 = TestUtil.createPool(owner1, prod2);
+        Pool pool3 = TestUtil.createPool(owner2, prod3);
+        this.poolManager.createPool(pool1);
+        this.poolManager.createPool(pool2);
+        this.poolManager.createPool(pool3);
+
+        // Verify initial state
+        assertEquals(2, this.poolManager.listPoolsByOwner(owner1).size());
+        assertEquals(1, this.poolManager.listPoolsByOwner(owner2).size());
+        assertEquals(metadata1, exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner1));
+        assertEquals(metadata2, exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner2));
+        assertEquals(0, this.importRecordCurator.findRecords(owner1).size());
+        assertEquals(0, this.importRecordCurator.findRecords(owner2).size());
+
+        // Execute job
         Principal principal = new UserPrincipal("JarJarBinks", null, true);
-        ExporterMetadata metadata = new ExporterMetadata();
 
         this.jobDataMap.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
-        this.jobDataMap.put(JobStatus.TARGET_ID, owner.getKey());
+        this.jobDataMap.put(JobStatus.TARGET_ID, owner1.getKey());
         this.jobDataMap.put(PinsetterJobListener.PRINCIPAL_KEY, principal);
-
-        when(this.ownerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
-
-        when(this.exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner))
-            .thenReturn(metadata);
-
-        when(this.poolManager.listPoolsByOwner(owner)).thenReturn(new LinkedList<Pool>());
 
         this.undoImportsJob.toExecute(this.jobContext);
 
+        // Verify deletions
+        assertEquals(1, this.poolManager.listPoolsByOwner(owner1).size());
+        assertEquals(pool2, this.poolManager.listPoolsByOwner(owner1).get(0));
+        assertEquals(1, this.poolManager.listPoolsByOwner(owner2).size());
+        assertEquals(pool3, this.poolManager.listPoolsByOwner(owner2).get(0));
+        assertNull(exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner1));
+        assertEquals(metadata2, exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner2));
+        assertNull(owner1.getUpstreamConsumer());
 
-        List<ImportRecord> records = importRecordCurator.findRecords(owner);
+        List<ImportRecord> records = this.importRecordCurator.findRecords(owner1);
         assertEquals(1, records.size());
-        ImportRecord ir = records.get(0);
-        assertEquals(ImportRecord.Status.DELETE, ir.getStatus());
+        assertEquals(ImportRecord.Status.DELETE, records.get(0).getStatus());
+
+        assertEquals(0, this.importRecordCurator.findRecords(owner2).size());
     }
 
     @Test

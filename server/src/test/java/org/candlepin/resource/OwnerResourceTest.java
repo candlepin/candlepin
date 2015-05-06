@@ -41,8 +41,6 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EventCurator;
-import org.candlepin.model.ExporterMetadata;
-import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;

@@ -96,13 +96,13 @@ public class DatabaseTestFixture {
     @Rule
     public static CandlepinLiquibaseResource liquibase = new CandlepinLiquibaseResource();
 
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private PoolCurator poolCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private SubscriptionCurator subCurator;
-    @Inject private CertificateSerialCurator certSerialCurator;
+    @Inject protected OwnerCurator ownerCurator;
+    @Inject protected ProductCurator productCurator;
+    @Inject protected PoolCurator poolCurator;
+    @Inject protected ConsumerCurator consumerCurator;
+    @Inject protected ConsumerTypeCurator consumerTypeCurator;
+    @Inject protected SubscriptionCurator subCurator;
+    @Inject protected CertificateSerialCurator certSerialCurator;
     @Inject protected ContentCurator contentCurator;
     @Inject protected SubscriptionServiceAdapter subAdapter;
 
