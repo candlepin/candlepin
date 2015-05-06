@@ -34,7 +34,7 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-import java.util.Collection;
+import java.util.Set;
 
 /**
  * HypervisorUpdateJobTest
@@ -85,7 +85,7 @@ public class HypervisorUpdateJobTest {
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        when(consumerCurator.getHostConsumersMap(eq(owner), any(Collection.class)))
+        when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class)))
             .thenReturn(new VirtConsumerMap());
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
@@ -106,7 +106,7 @@ public class HypervisorUpdateJobTest {
         hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
         VirtConsumerMap vcm = new VirtConsumerMap();
         vcm.add(hypervisorId, hypervisor);
-        when(consumerCurator.getHostConsumersMap(eq(owner), any(Collection.class))).thenReturn(vcm);
+        when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class))).thenReturn(vcm);
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal);
         JobExecutionContext ctx = mock(JobExecutionContext.class);

@@ -44,9 +44,6 @@ import javax.xml.bind.annotation.XmlTransient;
 /**
  * Represents the current status for a long-running job.
  */
-/**
- * Represents the current status for a long-running job.
- */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity

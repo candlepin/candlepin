@@ -59,7 +59,6 @@ import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -165,11 +164,11 @@ public class HypervisorResourceTest {
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
 
         when(consumerCurator.getHostConsumersMap(any(Owner.class),
-                any(Collection.class))).
+                any(Set.class))).
                 thenReturn(new VirtConsumerMap());
-        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
-        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
 
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
@@ -220,11 +219,11 @@ public class HypervisorResourceTest {
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
         // Force update
         when(consumerCurator.getHostConsumersMap(any(Owner.class),
-                any(Collection.class))).
+                any(Set.class))).
                 thenReturn(mockHypervisorConsumerMap(hypervisorId, existing));
-        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
                 thenReturn(new VirtConsumerMap());
-        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
 
 
@@ -249,11 +248,11 @@ public class HypervisorResourceTest {
             new GuestId("GUEST_B")));
 
         when(consumerCurator.getHostConsumersMap(any(Owner.class),
-                any(Collection.class))).
+                any(Set.class))).
                 thenReturn(new VirtConsumerMap());
-        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
-        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
 
         when(consumerTypeCurator.lookupByLabel(
@@ -290,11 +289,11 @@ public class HypervisorResourceTest {
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
 
         when(consumerCurator.getHostConsumersMap(any(Owner.class),
-                any(Collection.class))).
+                any(Set.class))).
                 thenReturn(new VirtConsumerMap());
-        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
-        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
 
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);

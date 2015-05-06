@@ -41,15 +41,15 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -125,7 +125,7 @@ public class HypervisorResource {
         VirtConsumerMap hypervisorConsumersMap =
                 consumerCurator.getHostConsumersMap(owner, hostGuestMap.keySet());
 
-        List<String> allGuestIds = new LinkedList<String>();
+        Set<String> allGuestIds = new HashSet<String>();
         for (Entry<String, List<GuestId>> hostEntry : hostGuestMap.entrySet()) {
             for (GuestId gid : hostEntry.getValue()) {
                 allGuestIds.add(gid.getGuestId());
@@ -237,31 +237,6 @@ public class HypervisorResource {
         return HypervisorUpdateJob.forOwner(owner, hypervisorJson, createMissing, principal);
     }
 
-    @PUT
-    @Produces(MediaType.APPLICATION_JSON)
-    @Transactional
-    @Path("/consumers")
-    public List<Consumer> consumerJsonGenerate() {
-        Owner o = getOwner("admin");
-        List<Consumer> consumers = new ArrayList<Consumer>();
-        Consumer consumer = null;
-        for (int i = 0; i < 2000; i++) {
-            consumer = new Consumer();
-            consumer.setName("hypervisor_" + i);
-            consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
-            consumer.setFact("uname.machine", "x86_64");
-            consumer.setHypervisorId(new HypervisorId("uuid_" + i));
-            for (int j = 0; j <= 12; j++) {
-                consumer.addGuestId(new GuestId("guestId_" + i + "_" + j));
-            }
-            consumer.setFact("virt.is_guest", "false");
-            consumer.setFact("cpu.cpu_socket(s)", "1");
-            consumer.setOwner(o);
-            consumers.add(consumer);
-        }
-        return consumers;
-    }
-
     /*
      * Get the owner or bust
      */
@@ -318,7 +293,7 @@ public class HypervisorResource {
         HypervisorId hypervisorId = new HypervisorId(consumer, incHypervisorId);
         consumer.setHypervisorId(hypervisorId);
         // Create Consumer
-        return consumerResource.create(consumer, principal, null, owner.getKey(), null, true);
+        return consumerResource.create(consumer, principal, null, owner.getKey(), null, false);
     }
 
 }

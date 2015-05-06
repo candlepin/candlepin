@@ -8,7 +8,7 @@
 
     <changeSet id="20150430115844-1" author="wpoteat" dbms="mysql">
         <comment>Add field for result data</comment>
-        <addColumn tableName="CP_JOB">
+        <addColumn tableName="cp_job">
             <column name="resultdata" type="LONGBLOB"/>
         </addColumn>
     </changeSet>

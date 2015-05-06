@@ -28,7 +28,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.resource.ConsumerResource;
-import org.candlepin.resource.dto.HypervisorCheckInResult;
+import org.candlepin.resource.dto.HypervisorUpdateResult;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -48,8 +48,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -95,7 +97,7 @@ public class HypervisorUpdateJob extends UniqueByOwnerJob {
             Boolean create = map.getBoolean(CREATE);
             Principal principal = (Principal) map.get(PRINCIPAL);
 
-            HypervisorCheckInResult result = new HypervisorCheckInResult();
+            HypervisorUpdateResult result = new HypervisorUpdateResult();
 
             Owner owner = ownerCurator.lookupByKey(ownerKey);
             if (owner == null) {
@@ -107,8 +109,8 @@ public class HypervisorUpdateJob extends UniqueByOwnerJob {
             HypervisorList hypervisors = (HypervisorList) Util.fromJson(json, HypervisorList.class);
             log.info("Hypervisor consumers for create/update: " + hypervisors.getHypervisors().size());
 
-            List<String> hosts = new ArrayList<String>();
-            List<String> guests = new ArrayList<String>();
+            Set<String> hosts = new HashSet<String>();
+            Set<String> guests = new HashSet<String>();
             Map<String, Consumer> incomingHosts = new HashMap<String, Consumer>();
 
             for (Consumer hypervisor : hypervisors.getHypervisors()) {

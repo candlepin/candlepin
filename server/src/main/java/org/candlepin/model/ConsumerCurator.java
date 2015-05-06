@@ -27,17 +27,25 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
+import org.hibernate.EntityMode;
+import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
+import org.hibernate.criterion.CriteriaQuery;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.engine.spi.TypedValue;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.type.CompositeType;
+import org.hibernate.type.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -60,6 +68,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     private static final int MAX_FACT_STR_LENGTH = 255;
     private static final int NAME_LENGTH = 250;
+    private static final int MAX_IN_QUERY_LENGTH = 500;
     private static Logger log = LoggerFactory.getLogger(ConsumerCurator.class);
 
     public ConsumerCurator() {
@@ -184,7 +193,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @Transactional
     public VirtConsumerMap getGuestConsumersMap(Owner owner,
-            List<String> guestIds) {
+            Set<String> guestIds) {
         VirtConsumerMap guestConsumersMap = new VirtConsumerMap();
         if (guestIds.size() == 0) {
             return guestConsumersMap;
@@ -205,10 +214,23 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         // each guest ID.
 
         Query q = currentSession().createSQLQuery(sql);
-        q.setParameterList("guestids", possibleGuestIds);
-        q.setParameter("ownerid", owner.getId());
-        List<String> consumerUuids = q.list();
+        List<String> consumerUuids = new ArrayList<String>();
 
+        int fromIndex = 0;
+        int toIndex = fromIndex + MAX_IN_QUERY_LENGTH;
+        int count = 0;
+
+        while (fromIndex < possibleGuestIds.size()) {
+            if (toIndex > possibleGuestIds.size()) {
+                toIndex = possibleGuestIds.size();
+            }
+            List<String> subList = possibleGuestIds.subList(fromIndex, toIndex);
+            q.setParameterList("guestids", subList);
+            q.setParameter("ownerid", owner.getId());
+            consumerUuids.addAll(q.list());
+            fromIndex = toIndex;
+            toIndex += MAX_IN_QUERY_LENGTH;
+        }
         if (consumerUuids == null || consumerUuids.size() == 0) {
             return guestConsumersMap;
         }
@@ -465,22 +487,31 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return host consumers who most recently reported the given guestIds (if any)
      */
     @Transactional
-    public VirtConsumerMap getGuestsHostMap(Owner owner, List<String> guestIds) {
-        Disjunction guestIdCrit = Restrictions.disjunction();
-        for (String possibleId : Util.getPossibleUuids(guestIds.toArray(
-                new String [guestIds.size()]))) {
-            guestIdCrit.add(Restrictions.eq("guestId", possibleId).ignoreCase());
-        }
-        Criteria crit = currentSession()
-            .createCriteria(GuestId.class)
-            .createAlias("consumer", "gconsumer")
-            .createAlias("gconsumer.guestIdsCheckIns", "checkins")
-            .add(Restrictions.eq("gconsumer.owner", owner))
-            .addOrder(Order.desc("checkins.updated"))
-            .setProjection(Projections.property("consumer"));
+    public VirtConsumerMap getGuestsHostMap(Owner owner, Set<String> guestIds) {
+        List<Consumer> hypervisors = new ArrayList<Consumer>();
+        int fromIndex = 0;
+        int toIndex = fromIndex + MAX_IN_QUERY_LENGTH;
 
-        // Note: may contain duplicates but is sorted so they appear later:
-        List<Consumer> hypervisors = crit.add(guestIdCrit).list();
+        Object[] ids = Util.getPossibleUuids(guestIds.toArray(new String [guestIds.size()])).toArray();
+
+        while (fromIndex < ids.length) {
+            if (toIndex >= ids.length) {
+                toIndex = ids.length;
+            }
+            Criteria crit = currentSession()
+                .createCriteria(GuestId.class)
+                .createAlias("consumer", "gconsumer")
+                .createAlias("gconsumer.guestIdsCheckIns", "checkins")
+                .add(Restrictions.eq("gconsumer.owner", owner))
+                .addOrder(Order.desc("checkins.updated"))
+                .setProjection(Projections.property("consumer"));
+
+            // Note: may contain duplicates but is sorted so they appear later:
+            crit.add(new InExpressionIgnoringCase("guestId", Arrays.copyOfRange(ids, fromIndex, toIndex)));
+            hypervisors.addAll(crit.list());
+            fromIndex = toIndex;
+            toIndex += MAX_IN_QUERY_LENGTH;
+        }
         VirtConsumerMap result = new VirtConsumerMap();
         for (Consumer hypervisor : hypervisors) {
             for (GuestId gid : hypervisor.getGuestIds()) {
@@ -560,8 +591,23 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @Transactional
     public VirtConsumerMap getHostConsumersMap(Owner owner,
-            Collection<String> hypervisorIds) {
-        List<Consumer> results = getHypervisorsBulk(hypervisorIds, owner.getKey());
+            Set<String> hypervisorIds) {
+        List<String> idList = new ArrayList<String>();
+        idList.addAll(hypervisorIds);
+        List<Consumer> results = new ArrayList<Consumer>();
+        int fromIndex = 0;
+        int toIndex = fromIndex + MAX_IN_QUERY_LENGTH;
+
+        while (fromIndex < idList.size()) {
+            if (toIndex > idList.size()) {
+                toIndex = idList.size();
+            }
+            List<String> subList = idList.subList(fromIndex, toIndex);
+            log.debug("getHostConsumersMap - sub id list size: " + subList.size());
+            results.addAll(getHypervisorsBulk(subList, owner.getKey()));
+            fromIndex = toIndex;
+            toIndex += MAX_IN_QUERY_LENGTH;
+        }
         VirtConsumerMap hypervisorMap = new VirtConsumerMap();
         for (Consumer c : results) {
             hypervisorMap.add(c.getHypervisorId().getHypervisorId(), c);
@@ -699,4 +745,88 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
             .list();
     }
+
+    /**
+     * InExpressionIgnoringCase
+     *
+     * Allows Criterion for case insensitive comparison to list of values
+     *
+     * @author wpoteat
+     */
+    public class InExpressionIgnoringCase implements Criterion {
+
+        private final String propertyName;
+        private final Object[] values;
+
+        public InExpressionIgnoringCase(final String propertyName, final Object[] values) {
+            this.propertyName = propertyName;
+            this.values = values;
+        }
+
+        public String toSqlString(final Criteria criteria, final CriteriaQuery criteriaQuery)
+            throws HibernateException {
+            final String[] columns = criteriaQuery.findColumns(this.propertyName, criteria);
+            final String[] wrappedLowerColumns = wrapLower(columns);
+            if (criteriaQuery.getFactory().getDialect().supportsRowValueConstructorSyntaxInInList() ||
+                    columns.length <= 1) {
+
+                String singleValueParam = StringHelper.repeat("lower(?), ", columns.length - 1) + "lower(?)";
+                if (columns.length > 1) {
+                    singleValueParam = '(' + singleValueParam + ')';
+                }
+                final String params = this.values.length > 0 ? StringHelper.repeat(singleValueParam + ", ",
+                        this.values.length - 1) + singleValueParam : "";
+                String cols = StringHelper.join(", ", wrappedLowerColumns);
+                if (columns.length > 1) {
+                    cols = '(' + cols + ')';
+                }
+                return cols + " in (" + params + ')';
+            }
+            else {
+                String cols = " ( " + StringHelper.join(" = lower(?) and ",
+                        wrappedLowerColumns) + "= lower(?) ) ";
+                cols = this.values.length > 0 ? StringHelper.repeat(cols + "or ",
+                        this.values.length - 1) + cols : "";
+                cols = " ( " + cols + " ) ";
+                return cols;
+            }
+        }
+
+        public TypedValue[] getTypedValues(final Criteria criteria, final CriteriaQuery criteriaQuery)
+            throws HibernateException {
+            final ArrayList<TypedValue> list = new ArrayList<TypedValue>();
+            final Type type = criteriaQuery.getTypeUsingProjection(criteria, this.propertyName);
+            if (type.isComponentType()) {
+                final CompositeType actype = (CompositeType) type;
+                final Type[] types = actype.getSubtypes();
+                for (int j = 0; j < this.values.length; j++) {
+                    for (int i = 0; i < types.length; i++) {
+                        final Object subval = this.values[j] == null ? null :
+                            actype.getPropertyValues(this.values[j], EntityMode.POJO)[i];
+                        list.add(new TypedValue(types[i], subval, EntityMode.POJO));
+                    }
+                }
+            }
+            else {
+                for (int j = 0; j < this.values.length; j++) {
+                    list.add(new TypedValue(type, this.values[j], EntityMode.POJO));
+                }
+            }
+            return list.toArray(new TypedValue[list.size()]);
+        }
+
+        @Override
+        public String toString() {
+            return this.propertyName + " in (" + StringHelper.toString(this.values) + ')';
+        }
+
+        private String[] wrapLower(final String[] columns) {
+            final String[] wrappedColumns = new String[columns.length];
+            for (int i = 0; i < columns.length; i++) {
+                wrappedColumns[i] = "lower(" + columns[i] + ")";
+            }
+            return wrappedColumns;
+        }
+    }
+
 }

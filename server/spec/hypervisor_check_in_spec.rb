@@ -10,12 +10,18 @@ describe 'Hypervisor Resource', :type => :virt do
     @expected_host = random_string("Host1")
     @expected_guest_ids = [@uuid1, @uuid2]
 
-    # Check in with initial hypervisor to create host consumer and associate guests.
-    host_guest_mapping = get_host_guest_mapping(@expected_host, @expected_guest_ids)
-    results = @user.hypervisor_check_in(@owner['key'],  host_guest_mapping)
-    results.created.size.should == 1
+    # we must register the consumer to use it as a client
+    # hypervisor check in creation does not result in a client cert
+    consumer = @user.register(@expected_host, :hypervisor, nil, {},
+        nil, nil, [], [], nil, [], @expected_host)
 
-    @host_uuid = results.created[0]['uuid']
+    # Check in to associate guests.
+    host_guest_mapping = get_host_guest_mapping(@expected_host, @expected_guest_ids)
+
+    results = @user.hypervisor_check_in(@owner['key'],  host_guest_mapping)
+    results.updated.size.should == 1
+
+    @host_uuid = results.updated[0]['uuid']
     consumer = @cp.get_consumer(@host_uuid)
     check_hypervisor_consumer(consumer, @expected_host, @expected_guest_ids)
 
@@ -315,6 +321,11 @@ describe 'Hypervisor Resource', :type => :virt do
     job_detail['state'].should == 'FINISHED'
     job_detail['result'].should_not be_nil
     return job_detail
+  end
+
+  it 'should see the capability that corresponds to the async method' do
+    json = @cp.get_status()
+    json['managerCapabilities'].should include("async_virt_who")
   end
 
   it 'should add consumer to created when new host id and no guests reported [async]' do
