@@ -38,7 +38,7 @@ import javax.xml.bind.annotation.XmlTransient;
  * See sub-classes for actual implementations tying this to a subscription or pool.
  */
 @Entity
-@Table(name = "cpo_branding")
+@Table(name = "cp_branding")
 public class Branding extends AbstractHibernateObject {
 
     @Id
@@ -48,7 +48,7 @@ public class Branding extends AbstractHibernateObject {
     @NotNull
     private String id;
 
-    @Column(name = "product_uuid", nullable = false)
+    @Column(name = "product_id", nullable = false)
     @NotNull
     @Size(max = 255)
     private String productId;
