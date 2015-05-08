@@ -252,15 +252,17 @@ public class MultiOrgUpgradeTask {
             this.executeUpdate(
                 "INSERT INTO cpo_pool_provided_products " +
                 "SELECT pool_id, ? " +
-                "FROM cp_pool_products WHERE product_id = ? AND dtype='provided'",
-                productuuid, productid
+                "FROM cp_pool_products pp, cp_pool p WHERE pp.pool_id = p.id " +
+                "    AND p.owner_id = ? AND pp.product_id = ? AND pp.dtype='provided' ",
+                productuuid, orgid, productid
             );
 
             this.executeUpdate(
                 "INSERT INTO cpo_pool_derived_products " +
                 "SELECT pool_id, ? " +
-                "FROM cp_pool_products WHERE product_id = ? AND dtype='derived'",
-                productuuid, productid
+                "FROM cp_pool_products pp, cp_pool p WHERE pp.pool_id = p.id " +
+                "     AND p.owner_id = ? AND pp.product_id = ? AND pp.dtype='derived' ",
+                productuuid, orgid, productid
             );
 
             ResultSet attributes = this.executeQuery(
