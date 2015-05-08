@@ -91,7 +91,7 @@ public class PoolRules {
     }
 
     public List<Pool> createPools(Subscription sub, List<Pool> existingPools) {
-        log.info("Creating pools for subscription: " + sub);
+        log.info("Checking if pools need to be created for: {}", sub);
         PoolHelper helper = new PoolHelper(this.poolManager,
             this.productCache, null);
 
@@ -153,6 +153,8 @@ public class PoolRules {
             }
 
             pools.add(newPool);
+
+            log.info("Creating new master pool: {}", newPool);
         }
 
         // If this subscription carries a virt_limit, we need to either create a bonus
@@ -189,6 +191,7 @@ public class PoolRules {
                 // is created for this subscription
                 newPool.setSourceSubscription(new SourceSubscription(sub.getId(), "derived"));
                 pools.add(newPool);
+                log.info("Creating new derived pool: {}", newPool);
             }
         }
         return pools;
@@ -268,8 +271,6 @@ public class PoolRules {
     }
 
     public List<PoolUpdate> updatePools(Subscription sub, List<Pool> existingPools) {
-        log.debug("Refreshing pools for existing subscription: " + sub);
-        log.debug("  existing pools: " + existingPools.size());
         PoolHelper helper = new PoolHelper(this.poolManager, this.productCache, null);
 
         List<PoolUpdate> poolsUpdated = new LinkedList<PoolUpdate>();
