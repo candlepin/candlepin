@@ -252,15 +252,17 @@ public class MultiOrgUpgradeTask {
             this.executeUpdate(
                 "INSERT INTO cpo_pool_provided_products " +
                 "SELECT pool_id, ? " +
-                "FROM cp_pool_products WHERE product_id = ? AND dtype='provided'",
-                productuuid, productid
+                "FROM cp_pool_products pp, cp_pool p WHERE pp.pool_id = p.id " +
+                "    AND p.owner_id = ? AND pp.product_id = ? AND pp.dtype='provided' ",
+                productuuid, orgid, productid
             );
 
             this.executeUpdate(
                 "INSERT INTO cpo_pool_derived_products " +
                 "SELECT pool_id, ? " +
-                "FROM cp_pool_products WHERE product_id = ? AND dtype='derived'",
-                productuuid, productid
+                "FROM cp_pool_products pp, cp_pool p WHERE pp.pool_id = p.id " +
+                "     AND p.owner_id = ? AND pp.product_id = ? AND pp.dtype='derived' ",
+                productuuid, orgid, productid
             );
 
             ResultSet attributes = this.executeQuery(
@@ -483,7 +485,6 @@ public class MultiOrgUpgradeTask {
 
         while (subscriptiondata.next()) {
             String subid = subscriptiondata.getString(1);
-            String subuuid = this.generateUUID();
 
             // Update any master pools which make use of this subscription information
             this.executeUpdate(
@@ -514,7 +515,7 @@ public class MultiOrgUpgradeTask {
                 "        WHERE owner_id = ? AND product_id = S.derivedproduct_id), " +
                 "    cdn_id " +
                 "FROM cp_subscription S WHERE id = ?",
-                subuuid, orgid, orgid, orgid, subid
+                subid, orgid, orgid, orgid, subid
             );
 
             ResultSet sourcesub = this.executeQuery(
@@ -528,7 +529,7 @@ public class MultiOrgUpgradeTask {
                     "INSERT INTO cpo_pool_source_sub " +
                     "  (id, subscription_id, subscription_sub_key, pool_id, created, updated)" +
                     "VALUES(?, ?, ?, ?, ?, ?)",
-                    this.generateUUID(), subuuid, sourcesub.getString(3),
+                    this.generateUUID(), subid, sourcesub.getString(3),
                     sourcesub.getString(4), sourcesub.getDate(5), sourcesub.getDate(6)
                 );
             }
@@ -546,7 +547,7 @@ public class MultiOrgUpgradeTask {
                 this.executeUpdate(
                     "INSERT INTO cpo_subscription_branding(subscription_id, branding_id) " +
                     "VALUES(?, ?)",
-                    subuuid, branding.getString(1)
+                    subid, branding.getString(1)
                 );
             }
 
@@ -557,7 +558,7 @@ public class MultiOrgUpgradeTask {
                 "SELECT ?, (SELECT uuid FROM cpo_products " +
                 "    WHERE owner_id = ? AND product_id = S.product_id) " +
                 "FROM cp_subscription_products S WHERE subscription_id = ?",
-                subuuid, orgid, subid
+                subid, orgid, subid
             );
 
             this.executeUpdate(
@@ -565,7 +566,7 @@ public class MultiOrgUpgradeTask {
                 "SELECT ?, (SELECT uuid FROM cpo_products " +
                 "    WHERE owner_id = ? AND product_id = S.product_id) " +
                 "FROM cp_sub_derivedprods S WHERE subscription_id = ?",
-                subuuid, orgid, subid
+                subid, orgid, subid
             );
         }
 

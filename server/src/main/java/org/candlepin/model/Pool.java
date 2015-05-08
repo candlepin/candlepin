@@ -421,6 +421,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         return (this.getProduct() != null ? this.getProduct().getName() : null);
     }
 
+    public String getDerivedProductName() {
+        return (this.getDerivedProduct() != null ? this.getDerivedProduct().getName() : null);
+    }
     /**
      * Return the contract for this pool's subscription.
      *
@@ -777,6 +780,14 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * @return
      *  the top-level product for this pool.
      */
+    /*
+     * We skip this when serializing, it wasn't originally available in early versions,
+     * and the required info was exposed via other getters. (id, name, attributes)
+     * We must maintain API compatability for those so to avoid sending a big chunk
+     * of duplicated data, we'll skip serialization of the actual product reference.
+     * (perhaps to be revisited in a v2.0 API)
+     */
+    @XmlTransient
     public Product getProduct() {
         return this.product;
     }
@@ -880,6 +891,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     public Set<ProductAttribute> getProductAttributes() {
         return this.getProduct() != null ?
             this.getProduct().getAttributes() :
+            new HashSet<ProductAttribute>();
+    }
+
+    public Set<ProductAttribute> getDerivedProductAttributes() {
+        return this.getDerivedProduct() != null ?
+            this.getDerivedProduct().getAttributes() :
             new HashSet<ProductAttribute>();
     }
 
@@ -1115,6 +1132,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.cdn = cdn;
     }
 
+    @XmlTransient
     public SubscriptionsCertificate getCertificate() {
         return this.cert;
     }

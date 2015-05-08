@@ -1184,6 +1184,10 @@ public class OwnerResource {
      * their subscriptions. This method (and the one below may not be entirely
      * RESTful, as the updated data is not supplied as an argument.
      *
+     * This API call is only relevant in a top level hosted deployment where subscriptions
+     * and products are sourced from adapters. Calling this in an on-site deployment
+     * is just a no-op.
+     *
      * @param ownerKey unique id key of the owner whose pools should be updated
      * @return a JobDetail object
      * @httpcode 404
@@ -1252,7 +1256,10 @@ public class OwnerResource {
     }
 
     /**
-     * Imports a Manifest to the Owner
+     * Imports a manifest zip file for the given organization.
+     *
+     * This will bring in any products, content, and subscriptions that were assigned to
+     * the distributor who generated the manifest.
      *
      * @httpcode 400
      * @httpcode 404
@@ -1263,7 +1270,7 @@ public class OwnerResource {
     @POST
     @Path("{owner_key}/imports")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @NonTransactional // a rare case where we commit data despite an error
+    @NonTransactional // a rare case where we commit data despite an error (recording error details
     public void importManifest(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("force") String[] overrideConflicts, MultipartInput input) {

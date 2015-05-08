@@ -173,8 +173,8 @@ function createPool(pool) {
 
     pool.getAttribute = function (attrName) {
         attr_result = this.findAttributeIn(attrName, this.attributes);
-        if (attr_result === null && this.product) {
-            return this.findAttributeIn(attrName, this.product.attributes);
+        if (attr_result === null) {
+            return this.findAttributeIn(attrName, this.productAttributes);
         }
         return attr_result;
     };
@@ -184,7 +184,7 @@ function createPool(pool) {
     };
 
     pool.getProductAttribute = function (attrName) {
-        var attr_result = this.product ? this.findAttributeIn(attrName, this.product.attributes) : null;
+        var attr_result = this.findAttributeIn(attrName, this.productAttributes);
         if (attr_result === null) {
             return this.findAttributeIn(attrName, this.attributes);
         }
@@ -226,7 +226,7 @@ function createPool(pool) {
     // case. (this is probably impossible to hit due to changes in rule
     // versioning)
     pool.hasDerived = function () {
-        if (this.derivedProduct == null) {
+        if (this.derivedProductId == null) {
           return false;
         }
         return true;
@@ -477,8 +477,8 @@ function architectureMatches(productArchStr, consumerUnameMachine, consumerType)
  * set to 0 or is not set, it is considered to be unlimited.
  */
 function getPoolQuantity(pool, attributeName) {
-    for (var j = 0; j < pool.product.attributes.length; j++) {
-        var prodAttr = pool.product.attributes[j];
+    for (var j = 0; j < pool.productAttributes.length; j++) {
+        var prodAttr = pool.productAttributes[j];
 
         if (prodAttr.name == attributeName) {
             var initialQuantity = prodAttr.value;
@@ -1674,7 +1674,7 @@ var Entitlement = {
             //
             // NOTE: We check for subProductId in the pre_global space because it is not
             // a product attribute.
-            if (pool.derivedProduct && !Utils.isCapable(consumer, "derived_product")) {
+            if (pool.derivedProductId && !Utils.isCapable(consumer, "derived_product")) {
                 if (BEST_POOLS_CALLER == caller || BIND_CALLER == caller) {
                     result.addError("rulefailed.derivedproduct.unsupported.by.consumer");
                 }
@@ -2528,8 +2528,8 @@ function is_stacked(ent) {
 }
 
 function is_pool_stacked(pool) {
-    for (var j = 0; j < pool.product.attributes.length; j++) {
-        var attr = pool.product.attributes[j];
+    for (var j = 0; j < pool.productAttributes.length; j++) {
+        var attr = pool.productAttributes[j];
 
         if (attr.name == "stacking_id") {
             return true;
