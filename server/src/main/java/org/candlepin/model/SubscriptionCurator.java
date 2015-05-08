@@ -14,8 +14,7 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.Criteria;
-import org.hibernate.criterion.CriteriaSpecification;
+import org.hibernate.Query;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
@@ -107,16 +106,12 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
     @SuppressWarnings("unchecked")
     public List<Subscription> listByProduct(Product product) {
 
-        Criteria subscriptionCriteria = currentSession()
-                .createCriteria(Subscription.class)
-                .createAlias("providedProducts", "providedProduct",
-                    CriteriaSpecification.LEFT_JOIN)
-                .add(Restrictions.or(
-                    Restrictions.eq("product", product),
-                    Restrictions.eq("providedProduct.id", product.getId())
-            ));
+        String hql = "select distinct s from Subscription as s left join " +
+                "s.providedProducts as pp where s.product.id = :productId or pp.id = :productId";
+        Query query = currentSession().createQuery(hql);
+        query.setParameter("productId", product.getId());
 
-        List<Subscription> subs = subscriptionCriteria.list();
+        List<Subscription> subs = query.list();
         if (subs == null) {
             return new LinkedList<Subscription>();
         }
