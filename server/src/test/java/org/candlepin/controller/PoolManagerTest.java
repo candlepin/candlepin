@@ -75,6 +75,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -1190,6 +1191,276 @@ public class PoolManagerTest {
         assertEquals(subscriptionId, fabricated.getId());
     }
 
+    private Content buildContent(Owner owner) {
+        Content content = new Content();
+
+        int rand = TestUtil.randomInt();
+        HashSet<String> modifiedProductIds = new HashSet<String>(
+            Arrays.asList("mpid-a-" + rand, "mpid-d-" + rand, "mpid-c-" + rand)
+        );
+
+        content.setId("cid" + rand);
+        content.setOwner(owner);
+
+        content.setContentUrl("https://www.content_url.com/" + rand);
+        content.setGpgUrl("https://www.gpg_url.com/" + rand);
+        content.setLabel("content_label-" + rand);
+        content.setName("content-" + rand);
+        content.setReleaseVer("content_releasever-" + rand);
+        content.setRequiredTags("content_tags-" + rand);
+        content.setType("content_type-" + rand);
+        content.setVendor("content_vendor-" + rand);
+        content.setArches("content_arches-" + rand);
+        content.setModifiedProductIds(modifiedProductIds);
+
+        return content;
+    }
+
+    private Content copyContent(Content source) {
+        Content copy = (new Content()).copyProperties(source);
+        copy.setId(source.getId());
+        copy.setOwner(source.getOwner());
+
+        return copy;
+    }
+
+    private Content mockContent(Content content) {
+        when(contentCuratorMock.lookupById(content.getOwner(), content.getId())).thenReturn(content);
+        return content;
+    }
+
+    @Test
+    public void testGetChangedContentNewContent() {
+        Owner owner = TestUtil.createOwner();
+
+        Content c1 = this.mockContent(this.buildContent(owner));
+        Content c2 = this.buildContent(owner);
+
+        Content c1m = this.copyContent(c1);
+
+        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2));
+
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    public void testGetChangedContentDifferingContentURL() {
+        Owner owner = TestUtil.createOwner();
+
+        Content c1 = this.mockContent(this.buildContent(owner));
+        Content c2 = this.mockContent(this.buildContent(owner));
+
+        Content c1m = this.copyContent(c1);
+        Content c2m = this.copyContent(c2);
+
+        c1m.setContentUrl("modified_value");
 
 
+        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+
+        assertEquals(1, result.size());
+        assertEquals(c1m, result.toArray()[0]);
+    }
+
+    @Test
+    public void testGetChangedContentDifferingGPGURL() {
+        Owner owner = TestUtil.createOwner();
+
+        Content c1 = this.mockContent(this.buildContent(owner));
+        Content c2 = this.mockContent(this.buildContent(owner));
+
+        Content c1m = this.copyContent(c1);
+        Content c2m = this.copyContent(c2);
+
+        c1m.setGpgUrl("modified_value");
+
+
+        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+
+        assertEquals(1, result.size());
+        assertEquals(c1m, result.toArray()[0]);
+    }
+
+    @Test
+    public void testGetChangedContentDifferingLabel() {
+        Owner owner = TestUtil.createOwner();
+
+        Content c1 = this.mockContent(this.buildContent(owner));
+        Content c2 = this.mockContent(this.buildContent(owner));
+
+        Content c1m = this.copyContent(c1);
+        Content c2m = this.copyContent(c2);
+
+        c1m.setLabel("modified_value");
+
+
+        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+
+        assertEquals(1, result.size());
+        assertEquals(c1m, result.toArray()[0]);
+    }
+
+    @Test
+    public void testGetChangedContentDifferingName() {
+        Owner owner = TestUtil.createOwner();
+
+        Content c1 = this.mockContent(this.buildContent(owner));
+        Content c2 = this.mockContent(this.buildContent(owner));
+
+        Content c1m = this.copyContent(c1);
+        Content c2m = this.copyContent(c2);
+
+        c1m.setName("modified_value");
+
+
+        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+
+        assertEquals(1, result.size());
+        assertEquals(c1m, result.toArray()[0]);
+    }
+
+    @Test
+    public void testGetChangedContentDifferingReleaseVersion() {
+        Owner owner = TestUtil.createOwner();
+
+        Content c1 = this.mockContent(this.buildContent(owner));
+        Content c2 = this.mockContent(this.buildContent(owner));
+
+        Content c1m = this.copyContent(c1);
+        Content c2m = this.copyContent(c2);
+
+        c1m.setReleaseVer("modified_value");
+
+
+        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+
+        assertEquals(1, result.size());
+        assertEquals(c1m, result.toArray()[0]);
+    }
+
+    @Test
+    public void testGetChangedContentDifferingRequiredTags() {
+        Owner owner = TestUtil.createOwner();
+
+        Content c1 = this.mockContent(this.buildContent(owner));
+        Content c2 = this.mockContent(this.buildContent(owner));
+
+        Content c1m = this.copyContent(c1);
+        Content c2m = this.copyContent(c2);
+
+        c1m.setRequiredTags("modified_value");
+
+
+        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+
+        assertEquals(1, result.size());
+        assertEquals(c1m, result.toArray()[0]);
+    }
+
+    @Test
+    public void testGetChangedContentDifferingType() {
+        Owner owner = TestUtil.createOwner();
+
+        Content c1 = this.mockContent(this.buildContent(owner));
+        Content c2 = this.mockContent(this.buildContent(owner));
+
+        Content c1m = this.copyContent(c1);
+        Content c2m = this.copyContent(c2);
+
+        c1m.setType("modified_value");
+
+
+        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+
+        assertEquals(1, result.size());
+        assertEquals(c1m, result.toArray()[0]);
+    }
+
+    @Test
+    public void testGetChangedContentDifferingVendor() {
+        Owner owner = TestUtil.createOwner();
+
+        Content c1 = this.mockContent(this.buildContent(owner));
+        Content c2 = this.mockContent(this.buildContent(owner));
+
+        Content c1m = this.copyContent(c1);
+        Content c2m = this.copyContent(c2);
+
+        c1m.setVendor("modified_value");
+
+
+        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+
+        assertEquals(1, result.size());
+        assertEquals(c1m, result.toArray()[0]);
+    }
+
+    @Test
+    public void testGetChangedContentDifferingArches() {
+        Owner owner = TestUtil.createOwner();
+
+        Content c1 = this.mockContent(this.buildContent(owner));
+        Content c2 = this.mockContent(this.buildContent(owner));
+
+        Content c1m = this.copyContent(c1);
+        Content c2m = this.copyContent(c2);
+
+        c1m.setArches("modified_value");
+
+
+        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+
+        assertEquals(1, result.size());
+        assertEquals(c1m, result.toArray()[0]);
+    }
+
+    @Test
+    public void testGetChangedContentDifferingModifiedProductIds() {
+        Owner owner = TestUtil.createOwner();
+
+        Content c1 = this.mockContent(this.buildContent(owner));
+        Content c2 = this.mockContent(this.buildContent(owner));
+
+        Content c1m = this.copyContent(c1);
+        Content c2m = this.copyContent(c2);
+
+        HashSet<String> modifiedProductIds = new HashSet<String>();
+        Set<Content> result;
+
+        // New modified product
+        modifiedProductIds.clear();
+        modifiedProductIds.addAll(c1.getModifiedProductIds());
+        modifiedProductIds.add("modified_value");
+
+        c1m.setModifiedProductIds(modifiedProductIds);
+        result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+
+        assertEquals(1, result.size());
+        assertEquals(c1m, result.toArray()[0]);
+
+
+        // Removed modified product
+        modifiedProductIds.clear();
+        modifiedProductIds.addAll(c1.getModifiedProductIds());
+        modifiedProductIds.remove(modifiedProductIds.toArray()[0]);
+
+        c1m.setModifiedProductIds(modifiedProductIds);
+        result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+
+        assertEquals(1, result.size());
+        assertEquals(c1m, result.toArray()[0]);
+
+
+        // Replaced modified product
+        modifiedProductIds.clear();
+        modifiedProductIds.addAll(c1.getModifiedProductIds());
+        modifiedProductIds.remove(modifiedProductIds.toArray()[0]);
+        modifiedProductIds.add("modified_value");
+
+        c1m.setModifiedProductIds(modifiedProductIds);
+        result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+
+        assertEquals(1, result.size());
+        assertEquals(c1m, result.toArray()[0]);
+    }
 }

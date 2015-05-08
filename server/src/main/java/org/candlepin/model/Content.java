@@ -116,7 +116,6 @@ public class Content extends AbstractHibernateObject {
                      joinColumns = @JoinColumn(name = "content_uuid"))
     @Column(name = "element")
     @Size(max = 255)
-    // TODO: This should probably be a collection of products
     private Set<String> modifiedProductIds = new HashSet<String>();
 
     @Column(nullable = true)
@@ -253,8 +252,6 @@ public class Content extends AbstractHibernateObject {
      * @param modifiedProductIds the modifiedProductIds to set
      */
     public void setModifiedProductIds(Set<String> modifiedProductIds) {
-        // TODO: This should probably change to modifiedProductUuids
-
         this.modifiedProductIds = modifiedProductIds;
     }
 
@@ -278,25 +275,50 @@ public class Content extends AbstractHibernateObject {
         if (this == other) {
             return true;
         }
+
         if (other instanceof Content) {
+            // TODO: This should also check the uuid or id/owner. Two content instances can only be
+            //       equal if they're representing the same data for the same owner. If we need to
+            //       check only data or the ref, those should be broken out into two distinct
+            //       checks: refEquals and dataEquals.
+
             Content that = (Content) other;
-            return new EqualsBuilder().append(this.contentUrl, that.contentUrl)
+            return new EqualsBuilder()
+                .append(this.contentUrl, that.contentUrl)
                 .append(this.gpgUrl, that.gpgUrl)
                 .append(this.label, that.label)
+                .append(this.metadataExpire, that.metadataExpire)
                 .append(this.name, that.name)
+                .append(this.releaseVer, that.releaseVer)
+                .append(this.requiredTags, that.requiredTags)
                 .append(this.type, that.type)
-                .append(this.vendor, that.vendor).isEquals();
+                .append(this.vendor, that.vendor)
+                .append(this.arches, that.arches)
+                .append(this.modifiedProductIds, that.modifiedProductIds)
+                .isEquals();
         }
+
         return false;
     }
 
     @Override
     public int hashCode() {
         // This must always be a subset of equals
-        return new HashCodeBuilder(37, 7).append(this.contentUrl)
-            .append(this.gpgUrl).append(this.label).append(this.name)
-            .append(this.type).append(this.vendor).toHashCode();
+        return new HashCodeBuilder(37, 7)
+            .append(this.contentUrl)
+            .append(this.gpgUrl)
+            .append(this.label)
+            .append(this.metadataExpire)
+            .append(this.name)
+            .append(this.releaseVer)
+            .append(this.requiredTags)
+            .append(this.type)
+            .append(this.vendor)
+            .append(this.arches)
+            .append(this.modifiedProductIds)
+            .toHashCode();
     }
+
 
     public Long getMetadataExpire() {
         return metadataExpire;
@@ -353,18 +375,17 @@ public class Content extends AbstractHibernateObject {
      * @return current Content object with updated properties
      */
     public Content copyProperties(Content from) {
-        setType(from.getType());
-        setLabel(from.getLabel());
-        setName(from.getName());
-        setVendor(from.getVendor());
         setContentUrl(from.getContentUrl());
-        setRequiredTags(from.getRequiredTags());
-        setReleaseVer(from.getReleaseVer());
         setGpgUrl(from.getGpgUrl());
+        setLabel(from.getLabel());
         setMetadataExpire(from.getMetadataExpire());
-        setModifiedProductIds(defaultIfNull(from.getModifiedProductIds(),
-            new HashSet<String>()));
+        setName(from.getName());
+        setReleaseVer(from.getReleaseVer());
+        setRequiredTags(from.getRequiredTags());
+        setType(from.getType());
+        setVendor(from.getVendor());
         setArches(from.getArches());
+        setModifiedProductIds(defaultIfNull(from.getModifiedProductIds(), new HashSet<String>()));
 
         return this;
     }

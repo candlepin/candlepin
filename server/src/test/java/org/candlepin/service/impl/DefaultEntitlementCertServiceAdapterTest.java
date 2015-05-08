@@ -159,13 +159,15 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     private static KeyPair keyPair;
 
-    private String[] testUrls = {"/content/dist/rhel/$releasever/$basearch/os",
+    private String[] testUrls = {
+        "/content/dist/rhel/$releasever/$basearch/os",
         "/content/dist/rhel/$releasever/$basearch/debug",
         "/content/dist/rhel/$releasever/$basearch/source/SRPMS",
         "/content/dist/jboss/source",
         "/content/beta/rhel/$releasever/$basearch/os",
         "/content/beta/rhel/$releasever/$basearch/debug",
-        "/content/beta/rhel/$releasever/$basearch/source/SRPMS"};
+        "/content/beta/rhel/$releasever/$basearch/source/SRPMS"
+    };
 
     static {
         Security.addProvider(new BouncyCastleProvider());
