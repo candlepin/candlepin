@@ -416,53 +416,52 @@ public class MultiOrgUpgradeTask {
      *  The id of the owner/organization for which to migrate pool data
      */
     private void migratePoolData(String orgid) throws DatabaseException, SQLException {
+        // this.logger.info("Migrating pool data for org " + orgid);
 
-        this.logger.info("Migrating pool data for org " + orgid);
+        // ResultSet pools = this.executeQuery("SELECT id FROM cp_pool WHERE owner_id = ?", orgid);
 
-        ResultSet pools = this.executeQuery("SELECT id FROM cp_pool WHERE owner_id = ?", orgid);
+        // while (pools.next()) {
+        //     String poolid = pools.getString(1);
 
-        while (pools.next()) {
-            String poolid = pools.getString(1);
+        //     ResultSet branding = this.executeQuery(
+        //         "SELECT B.id, B.created, B.updated, (SELECT uuid FROM cpo_products " +
+        //         "    WHERE owner_id = ? AND product_id = B.productid), B.type, B.name, B.productid " +
+        //         "FROM cp_branding B " +
+        //         "  JOIN cp_pool_branding PB ON PB.branding_id = B.id " +
+        //         "WHERE PB.pool_id = ?",
+        //         orgid, poolid
+        //     );
 
-            ResultSet branding = this.executeQuery(
-                "SELECT B.id, B.created, B.updated, (SELECT uuid FROM cpo_products " +
-                "    WHERE owner_id = ? AND product_id = B.productid), B.type, B.name, B.productid " +
-                "FROM cp_branding B " +
-                "  JOIN cp_pool_branding PB ON PB.branding_id = B.id " +
-                "WHERE PB.pool_id = ?",
-                orgid, poolid
-            );
+        //     while (branding.next()) {
+        //         String brandingid = branding.getString(1);
+        //         String brandinguuid = this.generateUUID();
 
-            while (branding.next()) {
-                String brandingid = branding.getString(1);
-                String brandinguuid = this.generateUUID();
+        //         this.logger.info(
+        //             String.format(
+        //                 "Migrating branding details for ID (legacy: %s, migrated: %s), " +
+        //                 "Org/product: %s, %s",
+        //                 brandingid, brandinguuid, orgid, branding.getString(7)
+        //             )
+        //         );
 
-                this.logger.info(
-                    String.format(
-                        "Migrating branding details for ID (legacy: %s, migrated: %s), " +
-                        "Org/product: %s, %s",
-                        brandingid, brandinguuid, orgid, branding.getString(7)
-                    )
-                );
+        //         this.executeUpdate(
+        //             "INSERT INTO cpo_branding(id, created, updated, product_uuid, type, name) " +
+        //             "VALUES(?, ?, ?, ?, ?, ?)",
+        //             brandinguuid, branding.getDate(2), branding.getDate(3),
+        //             branding.getString(4), branding.getString(5), branding.getString(6)
+        //         );
 
-                this.executeUpdate(
-                    "INSERT INTO cpo_branding(id, created, updated, product_uuid, type, name) " +
-                    "VALUES(?, ?, ?, ?, ?, ?)",
-                    brandinguuid, branding.getDate(2), branding.getDate(3),
-                    branding.getString(4), branding.getString(5), branding.getString(6)
-                );
+        //         this.executeUpdate(
+        //             "INSERT INTO cpo_pool_branding(pool_id, branding_id) " +
+        //             "VALUES(?, ?)",
+        //             poolid, brandinguuid
+        //         );
+        //     }
 
-                this.executeUpdate(
-                    "INSERT INTO cpo_pool_branding(pool_id, branding_id) " +
-                    "VALUES(?, ?)",
-                    poolid, brandinguuid
-                );
-            }
+        //     branding.close();
+        // }
 
-            branding.close();
-        }
-
-        pools.close();
+        // pools.close();
     }
 
     /**
@@ -536,29 +535,17 @@ public class MultiOrgUpgradeTask {
             sourcesub.close();
 
             ResultSet branding = this.executeQuery(
-                "SELECT B.id, B.created, B.updated, (SELECT uuid FROM cpo_products " +
-                "    WHERE owner_id = ? AND product_id = B.productid), B.type, B.name " +
-                "FROM cp_branding B " +
-                "JOIN cp_sub_branding SB ON SB.branding_id = B.id " +
-                "WHERE SB.subscription_id = ?",
-                orgid, subid
+                "SELECT B.branding_id " +
+                "FROM cp_sub_branding B " +
+                "WHERE B.subscription_id = ?",
+                subid
             );
 
             while (branding.next()) {
-                String brandingid = branding.getString(1);
-                String brandinguuid = this.generateUUID();
-
-                this.executeUpdate(
-                    "INSERT INTO cpo_branding(id, created, updated, product_uuid, type, name) " +
-                    "VALUES(?, ?, ?, ?, ?, ?)",
-                    brandinguuid, branding.getDate(2), branding.getDate(3),
-                    branding.getString(4), branding.getString(5), branding.getString(6)
-                );
-
                 this.executeUpdate(
                     "INSERT INTO cpo_subscription_branding(subscription_id, branding_id) " +
                     "VALUES(?, ?)",
-                    subid, brandinguuid
+                    subid, branding.getString(1)
                 );
             }
 

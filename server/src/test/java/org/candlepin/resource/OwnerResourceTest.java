@@ -41,8 +41,6 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EventCurator;
-import org.candlepin.model.ExporterMetadata;
-import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
@@ -892,8 +890,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void undoImportforOwnerWithNoImports() {
         Owner owner1 = new Owner("owner-with-no-imports", "foo");
         ownerResource.createOwner(owner1);
-        ownerResource.undoImports(owner1.getKey(),
-            new UserPrincipal("JarjarBinks", null, true));
+        ownerResource.undoImports(owner1.getKey(), new UserPrincipal("JarjarBinks", null, true));
     }
 
     @Test(expected = BadRequestException.class)
@@ -910,7 +907,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerResource or = new OwnerResource(oc,
             null, akc, null, null, i18n, null, null, null,
-            null, null, null, null, null, null, null,
+            null, null, null, null, null, null,
             null, null, null, null, null, null, null, contentOverrideValidator,
             serviceLevelValidator, null, null, null, null, null);
         or.createActivationKey("testOwner", ak);
@@ -988,7 +985,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         EventSink es = mock(EventSink.class);
         OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null,
             null, null, null, i18n, es, null, null, null, importer, null, null,
-            null, importRecordCurator, null, null, null, null, null,
+            null, importRecordCurator, null, null, null, null,
             null, null, null, contentOverrideValidator,
             serviceLevelValidator, null, null, null, null, null);
 
@@ -1017,38 +1014,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testImportRecordDeleteWithLogging()
-        throws IOException, ImporterException {
-        EventSink es = mock(EventSink.class);
-        ExporterMetadataCurator ec = mock(ExporterMetadataCurator.class);
-        SubscriptionCurator sc = mock(SubscriptionCurator.class);
-        OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, sc,
-            null, null, null, i18n, es, null, null, null, null, this.poolManager, ec,
-            null, importRecordCurator, null, null, null, null, null,
-            null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, null, null);
-
-        ExporterMetadata metadata = new ExporterMetadata();
-        when(ec.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner))
-            .thenReturn(metadata);
-        when(sc.listByOwner(owner)).thenReturn(new ArrayList<Subscription>());
-
-        thisOwnerResource.undoImports(owner.getKey(),
-            new UserPrincipal("JarJarBinks", null, true));
-        List<ImportRecord> records = importRecordCurator.findRecords(owner);
-        assertTrue(records.size() == 1);
-        ImportRecord ir = records.get(0);
-        assertTrue(ir.getStatus() == ImportRecord.Status.DELETE);
-    }
-
-    @Test
     public void testImportRecordFailureWithFilename()
         throws IOException, ImporterException {
         Importer importer = mock(Importer.class);
         EventSink es = mock(EventSink.class);
         OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null,
             null, null, null, i18n, es, null, null, null, importer, null, null,
-            null, importRecordCurator, null, null, null, null, null,
+            null, importRecordCurator, null, null, null, null,
             null, null, null, contentOverrideValidator,
             serviceLevelValidator, null, null, null, null, null);
 
@@ -1090,7 +1062,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner owner = mock(Owner.class);
         OwnerResource ownerres = new OwnerResource(oc, null,
             null, null, null, i18n, null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null,
             contentOverrideValidator, serviceLevelValidator, null, null, null, null, null);
 
         when(oc.lookupByKey(eq("admin"))).thenReturn(owner);

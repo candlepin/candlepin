@@ -352,8 +352,7 @@ public class ConsumerResource {
             }
 
             // enrich with subscription data
-            consumer.setCanActivate(subAdapter
-                .canActivateSubscription(consumer));
+            consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
             // enrich with installed product data
             addDataToInstalledProducts(consumer);
         }
@@ -1234,8 +1233,7 @@ public class ConsumerResource {
 
         log.debug("Getting client certificates for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        poolManager.regenerateDirtyEntitlements(subAdapter,
-            entitlementCurator.listByConsumer(consumer));
+        poolManager.regenerateDirtyEntitlements(entitlementCurator.listByConsumer(consumer));
 
         Set<Long> serialSet = this.extractSerials(serials);
 
@@ -1269,8 +1267,7 @@ public class ConsumerResource {
 
         log.debug("Getting client certificate zip file for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        poolManager.regenerateDirtyEntitlements(subAdapter,
-            entitlementCurator.listByConsumer(consumer));
+        poolManager.regenerateDirtyEntitlements(entitlementCurator.listByConsumer(consumer));
 
         Set<Long> serialSet = this.extractSerials(serials);
         // filtering requires a null set, so make this null if it is
@@ -1337,8 +1334,7 @@ public class ConsumerResource {
 
         log.debug("Getting client certificate serials for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        poolManager.regenerateDirtyEntitlements(subAdapter,
-            entitlementCurator.listByConsumer(consumer));
+        poolManager.regenerateDirtyEntitlements(entitlementCurator.listByConsumer(consumer));
 
         List<CertificateSerialDto> allCerts = new LinkedList<CertificateSerialDto>();
         for (EntitlementCertificate cert : entCertService
@@ -1595,7 +1591,7 @@ public class ConsumerResource {
         }
 
         if (regen) {
-            poolManager.regenerateDirtyEntitlements(subAdapter, returnedEntitlements);
+            poolManager.regenerateDirtyEntitlements(returnedEntitlements);
         }
         else {
             log.debug("Skipping certificate regeneration.");
@@ -1813,8 +1809,7 @@ public class ConsumerResource {
                 i18n.tr("A CDN with label {0} does not exist on this system.", cdnLabel));
         }
 
-        poolManager.regenerateDirtyEntitlements(subAdapter,
-            entitlementCurator.listByConsumer(consumer));
+        poolManager.regenerateDirtyEntitlements(entitlementCurator.listByConsumer(consumer));
 
         File archive;
         try {

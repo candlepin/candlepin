@@ -473,15 +473,12 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
         this.productContent.add(content);
     }
 
-    // FIXME: this seems wrong, shouldn't this reset the content not add to it?
     public void setContent(Set<Content> content) {
         if (content == null) {
             return;
         }
 
-        if (this.productContent == null) {
-            this.productContent = new LinkedList<ProductContent>();
-        }
+        this.productContent = new LinkedList<ProductContent>();
 
         for (Content newContent : content) {
             this.productContent.add(new ProductContent(this, newContent, false));

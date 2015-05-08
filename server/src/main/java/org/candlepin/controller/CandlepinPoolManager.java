@@ -117,7 +117,6 @@ public class CandlepinPoolManager implements PoolManager {
      */
     @Inject
     public CandlepinPoolManager(PoolCurator poolCurator,
-        SubscriptionServiceAdapter subAdapter,
         ProductCurator productCurator,
         EntitlementCertServiceAdapter entCertAdapter, EventSink sink,
         EventFactory eventFactory, Configuration config, Enforcer enforcer,
@@ -152,7 +151,7 @@ public class CandlepinPoolManager implements PoolManager {
         log.info("Refreshing pools for owner: {}", owner);
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
 
-        log.debug("Found " + subs.size() + " existing subscriptions.");
+        log.debug("Found {} existing subscriptions.", subs.size());
 
         SubscriptionReconciler reconciler = new SubscriptionReconciler();
         reconciler.reconcile(owner, subs, poolCurator);
@@ -172,7 +171,7 @@ public class CandlepinPoolManager implements PoolManager {
             // Remove expired subscriptions
             if (isExpired(sub)) {
                 deletedSubs.add(subId);
-                log.info("Skipping expired subscription: " + sub);
+                log.info("Skipping expired subscription: {}", sub);
                 continue;
             }
 
@@ -183,16 +182,15 @@ public class CandlepinPoolManager implements PoolManager {
         // remove everything that isn't actually active
         subIds.removeAll(deletedSubs);
         // delete pools whose subscription disappeared:
-        for (Pool p : poolCurator.getPoolsFromBadSubs(owner, subIds)) {
-            if (p.getSourceSubscription() != null &&
-                    (p.getType() == PoolType.NORMAL || p.getType() == PoolType.BONUS)) {
-                deletePool(p);
+        for (Pool pool : poolCurator.getPoolsFromBadSubs(owner, subIds)) {
+            if (pool.getSourceSubscription() != null && !pool.getType().isDerivedType()) {
+                deletePool(pool);
             }
         }
 
         // TODO: break this call into smaller pieces.  There may be lots of floating pools
         List<Pool> floatingPools = poolCurator.getOwnersFloatingPools(owner);
-        updateFloatingPools(subAdapter, floatingPools, lazy, changedProducts);
+        updateFloatingPools(floatingPools, lazy, changedProducts);
     }
 
     /**
@@ -631,8 +629,7 @@ public class CandlepinPoolManager implements PoolManager {
      * @return
      */
     @Transactional
-    void updateFloatingPools(SubscriptionServiceAdapter subAdapter,
-            List<Pool> floatingPools, boolean lazy, Set<Product> changedProducts) {
+    void updateFloatingPools(List<Pool> floatingPools, boolean lazy, Set<Product> changedProducts) {
         /*
          * Rules need to determine which pools have changed, but the Java must
          * send out the events. Create an event for each pool that could change,
@@ -1530,8 +1527,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public void regenerateDirtyEntitlements(SubscriptionServiceAdapter subAdapter,
-        List<Entitlement> entitlements) {
+    public void regenerateDirtyEntitlements(List<Entitlement> entitlements) {
 
         List<Entitlement> dirtyEntitlements = new ArrayList<Entitlement>();
         for (Entitlement e : entitlements) {
@@ -1546,7 +1542,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public Refresher getRefresher(SubscriptionServiceAdapter subAdapter) {
-        return new Refresher(this, subAdapter, true);
+        return this.getRefresher(subAdapter, true);
     }
 
     @Override
@@ -1736,6 +1732,11 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public Pool getMasterPoolBySubscriptionId(String subscriptionId) {
         return this.poolCurator.getMasterPoolBySubscriptionId(subscriptionId);
+    }
+
+    @Override
+    public List<Pool> listMasterPools() {
+        return this.poolCurator.listMasterPools();
     }
 
     @Override

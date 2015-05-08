@@ -617,6 +617,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     @SuppressWarnings("unchecked")
+    public List<Pool> listMasterPools() {
+        return this.currentSession().createCriteria(Pool.class)
+            .createAlias("sourceSubscription", "srcsub", JoinType.LEFT_OUTER_JOIN)
+            .add(Restrictions.eq("srcsub.subscriptionSubKey", "master"))
+            .list();
+    }
+
+    @SuppressWarnings("unchecked")
     public List<Pool> getOwnersFloatingPools(Owner owner) {
         return currentSession().createCriteria(Pool.class)
                 .add(Restrictions.eq("owner", owner))

@@ -105,7 +105,18 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         ENTITLEMENT_DERIVED,
         STACK_DERIVED,
         BONUS,
-        UNMAPPED_GUEST
+        UNMAPPED_GUEST;
+
+        public boolean isDerivedType() {
+            switch (this) {
+                case ENTITLEMENT_DERIVED:
+                case STACK_DERIVED:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
     }
 
     @Id
@@ -221,7 +232,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     private Long exported;
 
     @OneToMany
-    @JoinTable(name = "cpo_pool_branding",
+    @JoinTable(name = "cp_pool_branding",
         joinColumns = @JoinColumn(name = "pool_id"),
         inverseJoinColumns = @JoinColumn(name = "branding_id"))
     @Cascade({org.hibernate.annotations.CascadeType.ALL,

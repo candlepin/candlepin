@@ -1087,9 +1087,11 @@ public class X509V3ExtensionUtil extends X509Util {
             // if no PathNode, we just bail. No need to cause an NPE.
             return;
         }
+
         if (root.getChildren().size() == 0) {
             urls.add(aPath.toString());
         }
+
         for (NodePair child : root.getChildren()) {
             StringBuffer childPath = new StringBuffer(aPath.substring(0));
             childPath.append("/");
