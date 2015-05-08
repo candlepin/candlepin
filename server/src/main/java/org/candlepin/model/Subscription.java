@@ -149,8 +149,8 @@ public class Subscription extends AbstractHibernateObject implements Owned, Name
     }
 
     public String toString() {
-        return "Subscription [id = " + getId() + ", product = " + getProduct() +
-            ", quantity = " + getQuantity() + ", expires = " + getEndDate() + "]";
+        return "Subscription [id = " + getId() + ", product = " + getProduct().getId() +
+            ", owner = " + getOwner().getKey() + "]";
     }
 
     /**

@@ -17,6 +17,7 @@ package org.candlepin.pinsetter.tasks;
 import static org.quartz.JobBuilder.*;
 
 import org.candlepin.controller.Entitler;
+import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.pinsetter.core.model.JobStatus;
@@ -74,12 +75,13 @@ public class EntitleByProductsJob extends KingpinJob {
         }
     }
 
-    public static JobDetail bindByProducts(String[] prodIds, String uuid,
+    public static JobDetail bindByProducts(String[] prodIds, Consumer consumer,
         Date entitleDate, Collection<String> fromPools) {
         JobDataMap map = new JobDataMap();
+        map.put(JobStatus.OWNER_ID, consumer.getOwner().getKey());
         map.put("product_ids", prodIds);
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
-        map.put(JobStatus.TARGET_ID, uuid);
+        map.put(JobStatus.TARGET_ID, consumer.getUuid());
         map.put("entitle_date", entitleDate);
         map.put("from_pools", fromPools);
 

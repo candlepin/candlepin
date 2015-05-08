@@ -19,11 +19,9 @@ import org.candlepin.audit.QueueStatus;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.common.auth.SecurityHole;
-import org.candlepin.pinsetter.tasks.PopulateHostedDBTask;
-
 import org.candlepin.model.User;
 import org.candlepin.model.UserCurator;
-
+import org.candlepin.pinsetter.tasks.PopulateHostedDBTask;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
 
@@ -119,8 +117,6 @@ public class AdminResource {
         return dispatcher.getQueueInfo();
     }
 
-
-
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("pophosteddb")
@@ -128,6 +124,5 @@ public class AdminResource {
         // TODO: Remove this method once we no longer need the task.
         return PopulateHostedDBTask.createAsyncTask();
     }
-
 
 }

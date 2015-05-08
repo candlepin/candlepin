@@ -24,6 +24,9 @@ import org.candlepin.util.Util;
 import com.google.inject.persist.Transactional;
 import com.google.inject.persist.UnitOfWork;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +40,7 @@ public class Refresher {
     private SubscriptionServiceAdapter subAdapter;
     private boolean lazy;
     private UnitOfWork uow;
+    private static Logger log = LoggerFactory.getLogger(Refresher.class);
 
     private Set<Owner> owners = Util.newSet();
     private Set<Product> products = Util.newSet();
@@ -83,7 +87,17 @@ public class Refresher {
         // specific subscriptions.
         Set<Subscription> subscriptions = Util.newSet();
         for (Product product : products) {
-            subscriptions.addAll(subAdapter.getSubscriptions(product));
+            List<Subscription> subs = subAdapter.getSubscriptions(product);
+            log.debug("Will refresh {} subscriptions in all orgs using product: ",
+                    subs.size(), product.getId());
+            if (log.isDebugEnabled()) {
+                for (Subscription s : subs) {
+                    if (!owners.contains(s.getOwner())) {
+                        log.debug("   {}", s);
+                    }
+                }
+            }
+            subscriptions.addAll(subs);
         }
 
         for (Subscription subscription : subscriptions) {

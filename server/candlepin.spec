@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.49
+Version: 0.9.50
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -47,7 +47,7 @@ BuildRequires: java-devel >= 1:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
 BuildRequires: selinux-policy-doc
-BuildRequires: candlepin-common >= 0:1.0.16
+BuildRequires: candlepin-common >= 0:1.0.21
 %if 0%{?rhel} && 0%{?rhel} < 7
 BuildRequires: ant-nodeps >= 0:1.7.0
 %endif
@@ -394,6 +394,27 @@ fi
 
 
 %changelog
+* Fri May 01 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.50-1
+- Fix unmapped guest pool clean on import undo. (dgoodwin@redhat.com)
+- Added the PopulateHostedDB task and API call (crog@redhat.com)
+- Add a couple scripts for generating big virt-who checkin data files, and
+  doing the checkin. (dgoodwin@redhat.com)
+- Checkstyle updates in PoolTypeUpgradeTask (crog@redhat.com)
+- Update version requirement on candlepin-common (awood@redhat.com)
+- Move apicrawl out of candlepin proper. (awood@redhat.com)
+- Moved queries back to custom task to address issue with MySQL
+  (crog@redhat.com)
+- Add Candlepin sub-projects as dependencies in POM files. (awood@redhat.com)
+- Downgrade the logging severity for non-fatal conditions. (wpoteat@redhat.com)
+- 1204962: remove throw/catch/eat of runtime exception in bind
+  (wpoteat@redhat.com)
+- Updated the method used to determine pool types (crog@redhat.com)
+- Remove dead migration resource and associated code. (awood@redhat.com)
+- Moved SQL statements from custom task to Liquibase changeset
+  (crog@redhat.com)
+- Adjusted default QPID connection timeouts/retries (mstead@redhat.com)
+- Pool types are now stored in the DB (crog@redhat.com)
+
 * Tue Apr 07 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.49-1
 - 1204311: Promote derived objects to first-class objects on temporary pools
   (awood@redhat.com)

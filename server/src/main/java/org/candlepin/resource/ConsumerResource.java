@@ -1452,11 +1452,11 @@ public class ConsumerResource {
             JobDetail detail = null;
 
             if (poolIdString != null) {
-                detail = EntitlerJob.bindByPool(poolIdString, consumerUuid, quantity);
+                detail = EntitlerJob.bindByPool(poolIdString, consumer, quantity);
             }
             else {
                 detail = EntitleByProductsJob.bindByProducts(productIds,
-                        consumerUuid, entitleDate, fromPools);
+                        consumer, entitleDate, fromPools);
             }
 
             // events will be triggered by the job

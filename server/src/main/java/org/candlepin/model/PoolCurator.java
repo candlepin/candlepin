@@ -639,48 +639,171 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * Retrieves the set of all known product IDs, as determined by looking only at pool data. If
      * there are no known products, this method returns an empty set.
      *
-     *
-     *
      * @return
      *  a set of all known product IDs.
      */
+    @SuppressWarnings("unchecked")
     public Set<String> getAllKnownProductIds() {
-        /*
-            SELECT "product_id" FROM "cp_pool_products"
-            WHERE "product_id" IS NOT NULL AND "product_id" != ''
-            UNION
-            SELECT "productid" AS "product_id" FROM "cp_pool"
-            WHERE "productid" IS NOT NULL AND "productid" != ''
-            UNION
-            SELECT "derivedproductid" AS "product_id" FROM "cp_pool"
-            WHERE "derivedproductid" IS NOT NULL AND "derivedproductid" != ''
-        */
-
         // Impl note:
         // HQL does not (properly) support unions, so we have to do this query multiple times.
         Set<String> result = new HashSet<String>();
 
         Query query = this.currentSession().createQuery(
             "SELECT DISTINCT P.product.id " +
-            "    FROM Pool P" +
-            "    WHERE P.product.id IS NOT NULL AND P.product.id != ''"
+            "FROM Pool P " +
+            "WHERE NULLIF(P.product.id, '') IS NOT NULL"
         );
         result.addAll(query.list());
 
         query = this.currentSession().createQuery(
             "SELECT DISTINCT P.derivedProduct.id " +
-            "    FROM Pool P" +
-            "    WHERE P.derivedProduct.id IS NOT NULL AND P.derivedProduct.id != ''"
+            "FROM Pool P " +
+            "WHERE NULLIF(P.derivedProduct.id, '') IS NOT NULL"
         );
         result.addAll(query.list());
 
         query = this.currentSession().createQuery(
-            "SELECT DISTINCT P.providedProducts.id " +
-            "    FROM Pool P" +
-            "    WHERE P.providedProducts.id IS NOT NULL AND P.providedProducts.id != ''"
+            "SELECT DISTINCT PP.id " +
+            "FROM Pool P INNER JOIN P.providedProducts AS PP " +
+            "WHERE NULLIF(PP.id, '') IS NOT NULL"
         );
         result.addAll(query.list());
 
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT DPP.id " +
+            "FROM Pool P INNER JOIN P.derivedProvidedProducts AS DPP " +
+            "WHERE NULLIF(DPP.id, '') IS NOT NULL"
+        );
+        result.addAll(query.list());
+
+
+        // TODO: These may not be necessary if the subscriptions table is empty in Hosted. Though,
+        // if they're empty, then these queries will take virtually no time to run anyway.
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT S.product.id " +
+            "FROM Subscription S " +
+            "WHERE NULLIF(S.product.id, '') IS NOT NULL"
+        );
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT S.derivedProduct.id " +
+            "FROM Subscription S " +
+            "WHERE NULLIF(S.derivedProduct.id, '') IS NOT NULL"
+        );
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT PP.id " +
+            "FROM Subscription S INNER JOIN S.providedProducts AS PP " +
+            "WHERE NULLIF(PP.id, '') IS NOT NULL"
+        );
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT DPP.id " +
+            "FROM Subscription S INNER JOIN S.derivedProvidedProducts AS DPP " +
+            "WHERE NULLIF(DPP.id, '') IS NOT NULL"
+        );
+        result.addAll(query.list());
+
+        // Return!
+        return result;
+    }
+
+    /**
+     * Retrieves the set of all known product IDs for the specified owner, as determined by looking
+     * only at pool data. If there are no known products for the given owner, this method returns an
+     * empty set.
+     *
+     * @param owner
+     *  The owner for which to retrieve all known product IDs
+     *
+     * @return
+     *  a set of all known product IDs for the specified owner
+     */
+    @SuppressWarnings("unchecked")
+    public Set<String> getAllKnownProductIdsForOwner(Owner owner) {
+        // Impl note:
+        // HQL does not (properly) support unions, so we have to do this query multiple times.
+        Set<String> result = new HashSet<String>();
+
+        Query query = this.currentSession().createQuery(
+            "SELECT DISTINCT P.product.id " +
+            "FROM Pool P " +
+            "WHERE NULLIF(P.product.id, '') IS NOT NULL " +
+            "AND P.owner = :owner"
+        );
+        query.setParameter("owner", owner);
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT P.derivedProduct.id " +
+            "FROM Pool P " +
+            "WHERE NULLIF(P.derivedProduct.id, '') IS NOT NULL " +
+            "AND P.owner = :owner"
+        );
+        query.setParameter("owner", owner);
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT PP.id " +
+            "FROM Pool P INNER JOIN P.providedProducts AS PP " +
+            "WHERE NULLIF(PP.id, '') IS NOT NULL " +
+            "AND P.owner = :owner"
+        );
+        query.setParameter("owner", owner);
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT DPP.id " +
+            "FROM Pool P INNER JOIN P.derivedProvidedProducts AS DPP " +
+            "WHERE NULLIF(DPP.id, '') IS NOT NULL " +
+            "AND P.owner = :owner"
+        );
+        query.setParameter("owner", owner);
+        result.addAll(query.list());
+
+
+        // TODO: These may not be necessary if the subscriptions table is empty in Hosted. Though,
+        // if they're empty, then these queries will take virtually no time to run anyway.
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT S.product.id " +
+            "FROM Subscription S " +
+            "WHERE NULLIF(S.product.id, '') IS NOT NULL " +
+            "AND S.owner = :owner"
+        );
+        query.setParameter("owner", owner);
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT S.derivedProduct.id " +
+            "FROM Subscription S " +
+            "WHERE NULLIF(S.derivedProduct.id, '') IS NOT NULL " +
+            "AND S.owner = :owner"
+        );
+        query.setParameter("owner", owner);
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT PP.id " +
+            "FROM Subscription S INNER JOIN S.providedProducts AS PP " +
+            "WHERE NULLIF(PP.id, '') IS NOT NULL " +
+            "AND S.owner = :owner"
+        );
+        query.setParameter("owner", owner);
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT DPP.id " +
+            "FROM Subscription S INNER JOIN S.derivedProvidedProducts AS DPP " +
+            "WHERE NULLIF(DPP.id, '') IS NOT NULL " +
+            "AND S.owner = :owner"
+        );
+        query.setParameter("owner", owner);
+        result.addAll(query.list());
+
+        // Return!
         return result;
     }
 }

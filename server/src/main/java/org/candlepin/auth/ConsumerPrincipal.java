@@ -15,12 +15,15 @@
 package org.candlepin.auth;
 
 import org.candlepin.auth.permissions.AttachPermission;
+import org.candlepin.auth.permissions.CheckJobStatusPermission;
 import org.candlepin.auth.permissions.ConsumerEntitlementPermission;
 import org.candlepin.auth.permissions.ConsumerOrgHypervisorPermission;
 import org.candlepin.auth.permissions.ConsumerPermission;
 import org.candlepin.auth.permissions.ConsumerServiceLevelsPermission;
 import org.candlepin.auth.permissions.OwnerPoolsPermission;
 import org.candlepin.model.Consumer;
+
+import java.util.Arrays;
 
 /**
  *
@@ -48,6 +51,9 @@ public class ConsumerPrincipal extends Principal {
 
         // Allow consumers to run virt-who hypervisor update
         addPermission(new ConsumerOrgHypervisorPermission(consumer.getOwner()));
+
+        // Allow consumers to check the status of their own jobs.
+        addPermission(new CheckJobStatusPermission(getData(), Arrays.asList(consumer.getOwner().getKey())));
     }
 
     public Consumer getConsumer() {

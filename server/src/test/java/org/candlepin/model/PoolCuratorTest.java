@@ -1009,6 +1009,151 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertThat(results, Matchers.hasItems(p1Attributes, p2Attributes));
     }
 
+    private List<Owner> setupDBForProductIdTests() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+        this.ownerCurator.create(owner1);
+        this.ownerCurator.create(owner2);
+
+        Pool p1 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p1", "p1"));
+        p1.setDerivedProduct(this.generateProduct(owner1, "dp1", "dp1"));
+        p1.setProvidedProducts(this.generateProductCollection(owner1, "pp-a-", 3));
+        p1.setDerivedProvidedProducts(this.generateProductCollection(owner1, "dpp-a-", 3));
+
+        Pool p2 = TestUtil.createPool(owner2, this.generateProduct(owner2, "p2", "p2"));
+        p2.setDerivedProduct(this.generateProduct(owner2, "dp2", "dp2"));
+        p2.setProvidedProducts(this.generateProductCollection(owner2, "pp-b-", 3));
+        p2.setDerivedProvidedProducts(this.generateProductCollection(owner2, "dpp-b-", 3));
+
+        this.poolCurator.create(p1);
+        this.poolCurator.create(p2);
+
+
+        Subscription s1 = TestUtil.createSubscription(owner1, this.generateProduct(owner1, "s1", "s1"));
+        s1.setDerivedProduct(this.generateProduct(owner1, "sdp1", "sdp1"));
+        s1.setProvidedProducts(this.generateProductCollection(owner1, "spp-a-", 3));
+        s1.setDerivedProvidedProducts(this.generateProductCollection(owner1, "sdpp-a-", 3));
+
+        Subscription s2 = TestUtil.createSubscription(owner2, this.generateProduct(owner2, "s2", "s2"));
+        s2.setDerivedProduct(this.generateProduct(owner2, "sdp2", "sdp2"));
+        s2.setProvidedProducts(this.generateProductCollection(owner2, "spp-b-", 3));
+        s2.setDerivedProvidedProducts(this.generateProductCollection(owner2, "sdpp-b-", 3));
+
+        this.subCurator.create(s1);
+        this.subCurator.create(s2);
+
+        return Arrays.asList(owner1, owner2);
+    }
+
+    @Test
+    public void testGetAllKnownProductIds() {
+        this.setupDBForProductIdTests();
+
+        Set<String> expected = new HashSet<String>();
+        expected.add("p1");
+        expected.add("p2");
+        expected.add("dp1");
+        expected.add("dp2");
+        expected.add("pp-a-0");
+        expected.add("pp-a-1");
+        expected.add("pp-a-2");
+        expected.add("pp-b-0");
+        expected.add("pp-b-1");
+        expected.add("pp-b-2");
+        expected.add("dpp-a-0");
+        expected.add("dpp-a-1");
+        expected.add("dpp-a-2");
+        expected.add("dpp-b-0");
+        expected.add("dpp-b-1");
+        expected.add("dpp-b-2");
+
+        expected.add("s1");
+        expected.add("s2");
+        expected.add("sdp1");
+        expected.add("sdp2");
+        expected.add("spp-a-0");
+        expected.add("spp-a-1");
+        expected.add("spp-a-2");
+        expected.add("spp-b-0");
+        expected.add("spp-b-1");
+        expected.add("spp-b-2");
+        expected.add("sdpp-a-0");
+        expected.add("sdpp-a-1");
+        expected.add("sdpp-a-2");
+        expected.add("sdpp-b-0");
+        expected.add("sdpp-b-1");
+        expected.add("sdpp-b-2");
+
+        Set<String> result = this.poolCurator.getAllKnownProductIds();
+
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testGetAllKnownProductIdsForOwner() {
+        List<Owner> owners = this.setupDBForProductIdTests();
+
+        Set<String> expected = new HashSet<String>();
+        expected.add("p1");
+        expected.add("dp1");
+        expected.add("pp-a-0");
+        expected.add("pp-a-1");
+        expected.add("pp-a-2");
+        expected.add("dpp-a-0");
+        expected.add("dpp-a-1");
+        expected.add("dpp-a-2");
+
+        expected.add("s1");
+        expected.add("sdp1");
+        expected.add("spp-a-0");
+        expected.add("spp-a-1");
+        expected.add("spp-a-2");
+        expected.add("sdpp-a-0");
+        expected.add("sdpp-a-1");
+        expected.add("sdpp-a-2");
+
+        assertEquals(expected, this.poolCurator.getAllKnownProductIdsForOwner(owners.get(0)));
+
+
+        expected = new HashSet<String>();
+        expected.add("p2");
+        expected.add("dp2");
+        expected.add("pp-b-0");
+        expected.add("pp-b-1");
+        expected.add("pp-b-2");
+        expected.add("dpp-b-0");
+        expected.add("dpp-b-1");
+        expected.add("dpp-b-2");
+
+        expected.add("s2");
+        expected.add("sdp2");
+        expected.add("spp-b-0");
+        expected.add("spp-b-1");
+        expected.add("spp-b-2");
+        expected.add("sdpp-b-0");
+        expected.add("sdpp-b-1");
+        expected.add("sdpp-b-2");
+
+        assertEquals(expected, this.poolCurator.getAllKnownProductIdsForOwner(owners.get(1)));
+    }
+
+    private Product generateProduct(Owner owner, String id, String name) {
+        Product product = TestUtil.createProduct(id, name, owner);
+        this.productCurator.create(product);
+
+        return product;
+    }
+
+    private Set<Product> generateProductCollection(Owner owner, String prefix, int count) {
+        Set<Product> products = new HashSet<Product>();
+
+        for (int i = 0; i < count; ++i) {
+            products.add(this.generateProduct(owner, prefix + i, prefix + i));
+        }
+
+        return products;
+    }
+
     private Pool createPool(Owner o, String subId) {
         Pool pool = TestUtil.createPool(o, product);
         pool.setSourceSubscription(new SourceSubscription(subId, "master"));

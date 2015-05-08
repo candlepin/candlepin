@@ -18,6 +18,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -80,7 +81,8 @@ public class ConsumerPrincipalTest {
 
     @Test
     public void equalsDifferentConsumer() {
-        Consumer c = mock(Consumer.class);
+        Consumer c = new Consumer("Test Consumer", "test-consumer", new Owner("o1"),
+            new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
         ConsumerPrincipal cp = new ConsumerPrincipal(c);
         assertFalse(principal.equals(cp));
     }

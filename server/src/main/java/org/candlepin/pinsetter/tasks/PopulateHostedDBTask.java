@@ -15,9 +15,11 @@
 package org.candlepin.pinsetter.tasks;
 
 import org.candlepin.model.ContentCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PoolCurator;
-// import org.candlepin.model.Product;
-// import org.candlepin.model.ProductContent;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.Util;
@@ -31,7 +33,8 @@ import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// import java.util.Set;
+import java.util.HashSet;
+import java.util.Set;
 
 
 
@@ -47,16 +50,18 @@ public class PopulateHostedDBTask extends KingpinJob {
     private ProductCurator productCurator;
     private ContentCurator contentCurator;
     private PoolCurator poolCurator;
+    private OwnerCurator ownerCurator;
 
 
     @Inject
     public PopulateHostedDBTask(ProductServiceAdapter productService, ProductCurator productCurator,
-        ContentCurator contentCurator, PoolCurator poolCurator) {
+        ContentCurator contentCurator, PoolCurator poolCurator, OwnerCurator ownerCurator) {
 
         this.productService = productService;
         this.productCurator = productCurator;
         this.contentCurator = contentCurator;
         this.poolCurator = poolCurator;
+        this.ownerCurator = ownerCurator;
     }
 
     @Override
@@ -65,29 +70,44 @@ public class PopulateHostedDBTask extends KingpinJob {
         int ccount = 0;
         log.info("Populating Hosted DB");
 
-        /*
-        TODO: Uh oh. This whole task needs to be examined. May be unnecessary now.
+        for (Owner owner : this.ownerCurator.listAll()) {
+            Set<String> productCache = new HashSet<String>();
+            Set<String> productIds = this.poolCurator.getAllKnownProductIdsForOwner(owner);
+            log.info("Importing data for known products for owner {}...", owner);
 
+            do {
+                Set<String> dependentProducts = new HashSet<String>();
 
-        Set<String> productIds = this.poolCurator.getAllKnownProductIds();
+                for (Product product : this.productService.getProductsByIds(owner, productIds)) {
+                    log.info("Storing product: {}", product);
 
-        for (Product product : this.productService.getProductsByIds(productIds)) {
-            log.info("Updating product: " + product.toString());
-            this.productCurator.createOrUpdate(product);
-            ++pcount;
+                    dependentProducts.addAll(product.getDependentProductIds());
 
-            for (ProductContent pcontent : product.getProductContent()) {
-                log.info("Inserting product content: " + pcontent.getContent().toString());
-                this.contentCurator.createOrUpdate(pcontent.getContent());
-                ++ccount;
-            }
+                    for (ProductContent pcontent : product.getProductContent()) {
+                        log.info("  Storing product content: {}", pcontent.getContent());
+                        this.contentCurator.createOrUpdate(pcontent.getContent());
+                        ++ccount;
+                    }
+
+                    this.productCurator.createOrUpdate(product);
+                    ++pcount;
+                }
+
+                log.info("Importing data for dependent products...");
+                productCache.addAll(productIds);
+                dependentProducts.removeAll(productCache);
+                productIds = dependentProducts;
+            } while (productIds.size() > 0);
         }
 
-        log.info(String.format(
-            "Finished populating Hosted DB. Inserted/updated %d product(s) and %d content",
+        // TODO: Should this be translated...?
+        String result = String.format(
+            "Finished populating Hosted DB. Received %d product(s) and %d content",
             pcount, ccount
-        ));
-        */
+        );
+
+        log.info(result);
+        context.setResult(result);
     }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -20,11 +20,38 @@ export AUTOCONF=1
 export FORCECERT=1
 export HOME=/root
 
+trapex() {
+    target="$1"
+    shift
+
+    for sig in "$@"; do
+        trap "$target $sig" "$sig"
+        signals="$signals $sig"
+    done
+}
+
 # Be sure to run cleanup on any error, SIGINT, or SIGTERM
-trap cleanup ERR INT TERM
+trapex cleanup SIGINT SIGTERM ERR EXIT
 cleanup() {
+    # Remove our traps so we don't end up calling this more than once
+    trap - $signals
+    trap "" ERR EXIT
+
+    # Run buildr clean in our target CP directory
     cd $CP_HOME
     buildr clean
+
+    # Errors in the script should still launch the shell, as they're likely CP config errors, not
+    # actual errors with the script
+    if [ "$1" == "" ] || [ "$1" == "ERR" ] || [ "$1" == "EXIT" ]; then
+        if [ "$LAUNCHSHELL" == "1" ]; then
+            echo "Launching shell..."
+            /bin/bash -i -l
+        fi
+    else
+        # exit, propagating any signal we received
+        kill -$1 $$
+    fi
 }
 
 usage() {
@@ -33,7 +60,8 @@ usage() {
 
     OPTIONS:
         -d  deploy a live candlepin
-        -r  run rspec test suite
+        -t  populate Candlepin database with test data (implies -d)
+        -r  run rspec test suite (implies -d)
         -u  run unit test suite
         -s  run a bash shell when done
         -c  git reference to checkout
@@ -41,7 +69,7 @@ usage() {
 HELP
 }
 
-while getopts ":rusdc:p:" opt; do
+while getopts ":rusdtc:p:" opt; do
     case $opt in
         r  )
             RSPEC="1"
@@ -50,6 +78,10 @@ while getopts ":rusdc:p:" opt; do
         u  ) UNITTEST="1";;
         s  ) LAUNCHSHELL="1";;
         d  ) DEPLOY="1";;
+        t  )
+            DEPLOY="1"
+            TESTDATA="1"
+            ;;
         c  ) CHECKOUT="${OPTARG}";;
         p  ) PROJECT="${OPTARG}";;
         ?  ) usage; exit;;
@@ -95,7 +127,13 @@ fi
 
 if [ "$DEPLOY" == "1" ]; then
     echo "Deploying candlepin."
-    bin/deploy -g
+
+    if [ "$TESTDATA" == "1" ]; then
+        bin/deploy -g -t
+    else
+        bin/deploy -g
+    fi
+
     sleep 7
 fi
 
@@ -111,10 +149,6 @@ if [ "$RSPEC" == "1" ]; then
         cp -v /var/log/candlepin/candlepin.log /artifacts/
         cp -v /var/log/candlepin/error.log /artifacts/
     fi
-fi
-
-if [ "$LAUNCHSHELL" == "1" ]; then
-    /bin/bash -i -l
 fi
 
 cleanup
