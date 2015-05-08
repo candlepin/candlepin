@@ -157,6 +157,8 @@ public class CandlepinPoolManager implements PoolManager {
                 continue;
             }
 
+            log.debug("Processing subscription: " + sub);
+
             // Remove expired subscriptions
             if (isExpired(sub)) {
                 deletedSubs.add(subId);
@@ -184,12 +186,18 @@ public class CandlepinPoolManager implements PoolManager {
         updateFloatingPools(floatingPools, lazy);
     }
 
-    // Returns IDs of deleted subscription
     @Transactional
     void refreshPoolsForSubscription(Subscription sub, boolean lazy) {
 
         // These don't all necessarily belong to this owner
         List<Pool> subscriptionPools = poolCurator.getPoolsBySubscriptionId(sub.getId());
+        log.debug("Found {} pools for subscription {}", subscriptionPools.size(),
+                sub.getId());
+        if (log.isDebugEnabled()) {
+            for (Pool p : subscriptionPools) {
+                log.debug("    owner={} - {}", p.getOwner().getKey(), p);
+            }
+        }
 
         // Cleans up pools on other owners who have migrated subs away
         removeAndDeletePoolsOnOtherOwners(subscriptionPools, sub);
@@ -288,6 +296,10 @@ public class CandlepinPoolManager implements PoolManager {
         if (existingPools == null || existingPools.isEmpty()) {
             return new HashSet<String>(0);
         }
+
+        log.debug("Updating {} pools for existing subscription: {}",
+                existingPools.size(), sub);
+
         Map<String, EventBuilder> poolEvents = new HashMap<String, EventBuilder>();
         for (Pool existing : existingPools) {
             EventBuilder eventBuilder = eventFactory
@@ -401,11 +413,8 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     public List<Pool> createPoolsForSubscription(Subscription sub, List<Pool> existingPools) {
-        if (log.isDebugEnabled()) {
-            log.debug("Creating new pool for new sub: " + sub.getId());
-        }
-
         List<Pool> pools = poolRules.createPools(sub, existingPools);
+        log.debug("Creating {} pools for subscription: ", pools.size());
         for (Pool pool : pools) {
             createPool(pool);
         }

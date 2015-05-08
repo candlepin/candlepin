@@ -14,10 +14,10 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.ProductCache;
 
