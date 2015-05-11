@@ -148,6 +148,8 @@ public class PoolRules {
             newPool.setCertificate(sub.getCertificate());
 
             pools.add(newPool);
+
+            log.info("Creating new master pool: {}", newPool);
         }
 
         // If this subscription carries a virt_limit, we need to either create a bonus
@@ -183,6 +185,7 @@ public class PoolRules {
                 // is created for this subscription
                 derivedPool.setSourceSubscription(new SourceSubscription(sub.getId(), "derived"));
                 pools.add(derivedPool);
+                log.info("Creating new derived pool: {}", derivedPool);
             }
         }
 

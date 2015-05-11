@@ -168,6 +168,8 @@ public class CandlepinPoolManager implements PoolManager {
             String subId = sub.getId();
             subIds.add(subId);
 
+            log.debug("Processing subscription: {}", sub);
+
             // Remove expired subscriptions
             if (isExpired(sub)) {
                 deletedSubs.add(subId);
@@ -452,6 +454,13 @@ public class CandlepinPoolManager implements PoolManager {
     void refreshPoolsForSubscription(Subscription sub, boolean lazy, Set<Product> changedProducts) {
         // These don't all necessarily belong to this owner
         List<Pool> subscriptionPools = poolCurator.getPoolsBySubscriptionId(sub.getId());
+        log.debug("Found {} pools for subscription {}", subscriptionPools.size(),
+                sub.getId());
+        if (log.isDebugEnabled()) {
+            for (Pool p : subscriptionPools) {
+                log.debug("    owner={} - {}", p.getOwner().getKey(), p);
+            }
+        }
 
         // Cleans up pools on other owners who have migrated subs away
         removeAndDeletePoolsOnOtherOwners(subscriptionPools, sub);
@@ -469,15 +478,14 @@ public class CandlepinPoolManager implements PoolManager {
 
     public void cleanupExpiredPools() {
         List<Pool> pools = poolCurator.listExpiredPools();
-        log.info("Expired pools: " + pools.size());
+        log.info("Expired pools: {}", pools.size());
         for (Pool p : pools) {
             if (p.hasAttribute("derived_pool")) {
                 // Derived pools will be cleaned up when their parent entitlement
                 // is revoked.
                 continue;
             }
-            log.info("Cleaning up expired pool: " + p.getId() +
-                " (" + p.getEndDate() + ")");
+            log.info("Cleaning up expired pool: {} ({})", p.getId(), p.getEndDate());
 
             deletePool(p);
         }
@@ -513,7 +521,7 @@ public class CandlepinPoolManager implements PoolManager {
         for (Pool existing : existingPools) {
             if (!existing.getOwner().equals(sub.getOwner())) {
                 toRemove.add(existing);
-                log.warn("Removing " + existing + " because it exists in the wrong org");
+                log.warn("Removing {} because it exists in the wrong org", existing);
                 if (existing.getType() == PoolType.NORMAL ||
                     existing.getType() == PoolType.BONUS) {
                     deletePool(existing);
@@ -545,6 +553,9 @@ public class CandlepinPoolManager implements PoolManager {
         if (existingPools == null || existingPools.isEmpty()) {
             return new HashSet<String>(0);
         }
+
+        log.debug("Updating {} pools for existing subscription: {}", existingPools.size(), sub);
+
         Map<String, EventBuilder> poolEvents = new HashMap<String, EventBuilder>();
         for (Pool existing : existingPools) {
             EventBuilder eventBuilder = eventFactory
@@ -582,12 +593,11 @@ public class CandlepinPoolManager implements PoolManager {
         for (PoolUpdate updatedPool : updatedPools) {
 
             Pool existingPool = updatedPool.getPool();
-            log.info("Pool changed: " + updatedPool.toString());
+            log.info("Pool changed: {}", updatedPool.toString());
 
             // Delete pools the rules signal needed to be cleaned up:
             if (existingPool.isMarkedForDelete()) {
-                log.warn("Deleting pool as requested by rules: " +
-                    existingPool.getId());
+                log.warn("Deleting pool as requested by rules: {}", existingPool.getId());
                 deletePool(existingPool);
                 continue;
             }
@@ -657,8 +667,8 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     public List<Pool> createPoolsForSubscription(Subscription sub, List<Pool> existingPools) {
-
         List<Pool> pools = poolRules.createPools(sub, existingPools);
+        log.debug("Creating {} pools for subscription: ", pools.size());
         for (Pool pool : pools) {
             createPool(pool);
         }
@@ -769,7 +779,7 @@ public class CandlepinPoolManager implements PoolManager {
             for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
                 fullList.add(cip.getId());
             }
-            log.info("No entitlements available for products: " + fullList);
+            log.info("No entitlements available for products: {}", fullList);
             return null;
         }
 
@@ -805,8 +815,7 @@ public class CandlepinPoolManager implements PoolManager {
         throws EntitlementRefusedException {
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
         if (!host.getOwner().equals(guest.getOwner())) {
-            log.debug("Host " + host.getUuid() + " and guest " +
-                guest.getUuid() + " have different owners.");
+            log.debug("Host {} and guest {} have different owners", host.getUuid(), guest.getUuid());
             return entitlements;
         }
         Owner owner = host.getOwner();
@@ -820,7 +829,7 @@ public class CandlepinPoolManager implements PoolManager {
             entitleDate, owner, null, possiblePools);
 
         if (bestPools == null) {
-            log.info("No entitlements for host: " + host.getUuid());
+            log.info("No entitlements for host: {}", host.getUuid());
             return null;
         }
 
@@ -853,7 +862,7 @@ public class CandlepinPoolManager implements PoolManager {
         throws EntitlementRefusedException {
 
         ValidationResult failedResult = null;
-        log.debug("Looking up best pools for host: " + host);
+        log.debug("Looking up best pools for host: {}", host);
 
         Date activePoolDate = entitleDate;
         if (entitleDate == null) {
@@ -871,15 +880,14 @@ public class CandlepinPoolManager implements PoolManager {
             guest, null, owner, (String) null, activePoolDate,
             true, false, poolFilter,
             null).getPageData();
-        log.debug("Found {} total pools already available for guest",
-                allOwnerPoolsForGuest.size());
+        log.debug("Found {} total pools already available for guest", allOwnerPoolsForGuest.size());
         logPools(allOwnerPoolsForGuest);
 
         for (Entitlement ent : host.getEntitlements()) {
             //filter out pools that are attached, there is no need to
             //complete partial stacks, as they are already granting
             //virtual pools
-            log.debug("Removing pool host is already entitled to: " + ent.getPool());
+            log.debug("Removing pool host is already entitled to: {}", ent.getPool());
             allOwnerPools.remove(ent.getPool());
         }
         List<Pool> filteredPools = new LinkedList<Pool>();
@@ -903,13 +911,13 @@ public class CandlepinPoolManager implements PoolManager {
                 }
             }
         }
-        log.debug("Guest already will have virt-only pools to cover: " +
+        log.debug("Guest already will have virt-only pools to cover: {}",
                 Util.collectionToString(productsToRemove));
         tmpSet.removeAll(productsToRemove);
         String[] productIds = tmpSet.toArray(new String [] {});
 
         if (log.isDebugEnabled()) {
-            log.debug("Attempting host autobind for guest products: " +
+            log.debug("Attempting host autobind for guest products: {}",
                     Util.collectionToString(tmpSet));
         }
 
@@ -923,8 +931,7 @@ public class CandlepinPoolManager implements PoolManager {
                     // If this is a derived pool, we need to see if the derived product
                     // provides anything for the guest, otherwise we use the parent.
                     if (pool.providesDerived(productId)) {
-                        log.debug("Found virt_limit pool providing product {}: {}",
-                                productId, pool);
+                        log.debug("Found virt_limit pool providing product {}: {}", productId, pool);
                         providesProduct = true;
                         break;
                     }
@@ -938,12 +945,9 @@ public class CandlepinPoolManager implements PoolManager {
                     // Just keep the last one around, if we need it
                     failedResult = result;
                     if (log.isDebugEnabled()) {
-                        log.debug("Pool filtered from candidates due to failed rule(s): {}" +
-                                pool);
-                        log.debug("   warnings: " +
-                                Util.collectionToString(result.getWarnings()));
-                        log.debug("   errors: " +
-                                Util.collectionToString(result.getErrors()));
+                        log.debug("Pool filtered from candidates due to failed rule(s): {}", pool);
+                        log.debug("  warnings: {}", Util.collectionToString(result.getWarnings()));
+                        log.debug("  errors: {}", Util.collectionToString(result.getErrors()));
                     }
                 }
                 else {
@@ -1008,8 +1012,7 @@ public class CandlepinPoolManager implements PoolManager {
         // a healing request)
         ComplianceStatus compliance = complianceRules.getStatus(consumer, entitleDate, false);
         if (productIds == null || productIds.length == 0) {
-            log.debug("No products specified for bind, checking compliance to see what " +
-                "is needed.");
+            log.debug("No products specified for bind, checking compliance to see what is needed.");
             Set<String> tmpSet = new HashSet<String>();
             tmpSet.addAll(compliance.getNonCompliantProducts());
             tmpSet.addAll(compliance.getPartiallyCompliantProducts().keySet());
@@ -1017,7 +1020,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("Attempting for products on date: " + entitleDate);
+            log.debug("Attempting for products on date: {}", entitleDate);
             for (String productId : productIds) {
                 log.debug("  " + productId);
             }
@@ -1047,11 +1050,7 @@ public class CandlepinPoolManager implements PoolManager {
                 if (result.hasErrors() || result.hasWarnings()) {
                     // Just keep the last one around, if we need it
                     failedResult = result;
-                    if (log.isDebugEnabled()) {
-                        log.debug("Pool filtered from candidates due to rules " +
-                            "failure: " +
-                            pool.getId());
-                    }
+                    log.debug("Pool filtered from candidates due to rules failure: {}", pool.getId());
                 }
                 else {
                     filteredPools.add(pool);
@@ -1532,7 +1531,7 @@ public class CandlepinPoolManager implements PoolManager {
         List<Entitlement> dirtyEntitlements = new ArrayList<Entitlement>();
         for (Entitlement e : entitlements) {
             if (e.getDirty()) {
-                log.info("Found dirty entitlement to regenerate: " + e);
+                log.info("Found dirty entitlement to regenerate: {}", e);
                 dirtyEntitlements.add(e);
             }
         }
@@ -1782,12 +1781,12 @@ public class CandlepinPoolManager implements PoolManager {
                 filteredPools.add(p);
             }
             else if (log.isDebugEnabled()) {
-                log.debug("Omitting pool due to failed rules: " + p.getId());
+                log.debug("Omitting pool due to failed rules: {}", p.getId());
                 if (result.hasErrors()) {
-                    log.debug("\tErrors: " + result.getErrors());
+                    log.debug("\tErrors: {}", result.getErrors());
                 }
                 if (result.hasWarnings()) {
-                    log.debug("\tWarnings: " + result.getWarnings());
+                    log.debug("\tWarnings: {}", result.getWarnings());
                 }
             }
         }

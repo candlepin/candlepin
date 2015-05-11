@@ -6,6 +6,7 @@ describe 'Job Status' do
 
   before(:each) do
     @owner = create_owner(random_string("test_owner"))
+    @owner2 = create_owner(random_string("test_owner_2"))
     @user = user_client(@owner, random_string("test_user"))
     @monitoring = create_product
 
@@ -106,6 +107,56 @@ describe 'Job Status' do
     wait_for_job(status['id'], 15)
   end
 
+  it 'should allow admin to view any job status' do
+    job = @cp.refresh_pools(@owner['key'], true)
+    wait_for_job(job['id'], 15)
+    status = @cp.get_job(job['id'])
+    status['id'].should == job['id']
+  end
+
+  it 'should allow user to view status of own job' do
+    job = @user.autoheal_org(@owner['key'])
+    wait_for_job(job['id'], 15)
+    status = @user.get_job(job['id'])
+    status['id'].should == job['id']
+  end
+
+  it 'should allow user to view job status of consumer in managed org' do
+    system = consumer_client(@user, 's1')
+    job = system.consume_product(@monitoring.id, { :async => true })
+    status = @user.get_job(job['id'])
+    status['id'].should == job['id']
+  end
+
+  it 'should not allow user to view job status outside of managed org' do
+    other_user = user_client(@owner2, random_string("other_user"))
+    system = consumer_client(other_user, random_string("another_system"))
+    job = system.consume_product(@monitoring.id, { :async => true })
+
+    lambda do
+      @user.get_job(job['id'])
+    end.should raise_exception(RestClient::Forbidden)
+
+  end
+
+  it 'should allow consumer to view status of own job' do
+    system = consumer_client(@user, 'system7')
+    job = system.consume_product(@monitoring.id, { :async => true })
+    status = system.get_job(job['id'])
+    status['id'].should == job['id']
+  end
+
+  it 'should not allow consumer to access another consumers job status' do
+    system1 = consumer_client(@user, 's1')
+    system2 = consumer_client(@user, 's2')
+
+    job = system1.consume_product(@monitoring.id, { :async => true })
+    status = system1.get_job(job['id'])
+
+    lambda do
+      system2.get_job(job['id'])
+    end.should raise_exception(RestClient::Forbidden)
+  end
 
 end
 

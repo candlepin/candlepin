@@ -7,6 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
     <changeSet id="20141203153942-1" author="dgoodwin">
+        <validCheckSum>7:5682e551dd6fb1c61326d03bc0dab472</validCheckSum>
         <comment>add event status</comment>
         <addColumn tableName="gb_event">
             <column name="status" type="varchar(32)" defaultValue="SKIPPED">

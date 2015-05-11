@@ -14,14 +14,12 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 import static org.quartz.JobBuilder.newJob;
 
+import org.candlepin.auth.Access;
+import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
@@ -31,6 +29,7 @@ import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.candlepin.pinsetter.tasks.HealEntireOrgJob;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.apache.commons.lang.RandomStringUtils;
@@ -242,6 +241,136 @@ public class JobCuratorTest extends DatabaseTestFixture {
         assertEquals(JobStatus.JobState.CANCELED, status5.getState());
     }
 
+    @Test
+    public void findByPrincipalNameRestrictsUserToAccessableOrgs() {
+        JobStatus job = newJobStatus().principalName("donald").owner("ducks").create();
+        newJobStatus().principalName("donald").owner("marley").create();
+
+        setupPrincipal("goofy", new Owner("ducks"), Access.READ_ONLY);
+
+        List<JobStatus> jobs = this.curator.findByPrincipalName("donald");
+        assertNotNull(jobs);
+        assertEquals(1, jobs.size());
+        assertEquals("donald", job.getPrincipalName());
+        assertEquals(job, jobs.get(0));
+    }
+
+    @Test
+    public void findByPrincipalNameRestrictsConsumerToOwnJobs() {
+        Owner owner = new Owner("ducks");
+        Consumer consumer = TestUtil.createConsumer(owner);
+
+        JobStatus job = newJobStatus().principalName(consumer.getUuid()).owner(owner.getKey()).create();
+        newJobStatus().principalName("donald").owner(owner.getKey()).create();
+
+        setupPrincipal(new ConsumerPrincipal(consumer));
+
+        assertTrue(this.curator.findByPrincipalName("donald").isEmpty());
+
+        List<JobStatus> jobs = this.curator.findByPrincipalName(consumer.getUuid());
+        assertNotNull(jobs);
+        assertEquals(1, jobs.size());
+        assertEquals(consumer.getUuid(), job.getPrincipalName());
+        assertEquals(job, jobs.get(0));
+    }
+
+    @Test
+    public void findByOwnerReturnsAllWhenRequestedBySuperAdmin() {
+        newJobStatus().principalName("p1").owner("owner1").create();
+        newJobStatus().principalName("p2").owner("owner1").create();
+        newJobStatus().principalName("p3").owner("owner2").create();
+        setupAdminPrincipal("bob");
+
+        List<JobStatus> jobs = this.curator.findByOwnerKey("owner1");
+        assertNotNull(jobs);
+        assertEquals(2, jobs.size());
+
+        for (JobStatus job : jobs) {
+            assertEquals("owner1", job.getOwnerId());
+        }
+
+        assertEquals(1, this.curator.findByOwnerKey("owner2").size());
+    }
+
+    @Test
+    public void findByUserFiltersByOwnerAccessWhenRequestedByBasicUser() {
+        newJobStatus().principalName("p1").owner("owner1").create();
+        newJobStatus().principalName("p2").owner("owner1").create();
+        newJobStatus().principalName("p3").owner("owner2").create();
+        setupPrincipal("goofy", new Owner("owner1"), Access.READ_ONLY);
+
+        List<JobStatus> jobs = this.curator.findByOwnerKey("owner1");
+        assertNotNull(jobs);
+        assertEquals(2, jobs.size());
+
+        for (JobStatus job : jobs) {
+            assertEquals("owner1", job.getOwnerId());
+        }
+
+        assertTrue(this.curator.findByOwnerKey("owner2").isEmpty());
+    }
+
+    @Test
+    public void findByUserFiltersByOwnerAccessAndUUIDWhenRequestedByConsumer() {
+        Owner owner = new Owner("testowner");
+        Consumer consumer = TestUtil.createConsumer(owner);
+
+        JobStatus job = newJobStatus().principalName(consumer.getUuid()).owner(owner.getKey()).create();
+        newJobStatus().principalName("p1").owner("owner1").create();
+        newJobStatus().principalName("p2").owner("owner1").create();
+        newJobStatus().principalName("p3").owner("owner2").create();
+
+        setupPrincipal(new ConsumerPrincipal(consumer));
+
+        assertTrue(this.curator.findByOwnerKey("owner1").isEmpty());
+        assertTrue(this.curator.findByOwnerKey("owner2").isEmpty());
+
+        List<JobStatus> found = this.curator.findByOwnerKey("testowner");
+        assertEquals(1, found.size());
+        assertEquals(job, found.get(0));
+    }
+
+    @Test
+    public void findByConsumerUuidRestrictsByOwnerWhenRequestedByBasicUser() {
+        newJobStatus().principalName("p1").consumer("c1", "owner1").create();
+        newJobStatus().principalName("p4").owner("owner2").create();
+
+        JobStatus job = newJobStatus().principalName("p3").consumer("c2", "owner1").create();
+        // Technically this case should not happen since a consumer
+        // can belong to one org, but adding just to make sure that
+        // it gets filtered.
+        newJobStatus().principalName("p2").consumer("c2", "owner2").create();
+
+        setupPrincipal("goofy", new Owner("owner1"), Access.READ_ONLY);
+
+        List<JobStatus> found = curator.findByConsumerUuid("c2");
+        assertEquals(1, found.size());
+        assertEquals(job, found.get(0));
+    }
+
+    @Test
+    public void findByConsuemrUuidRestrictsByConsumerUuidEnforcesOwnerMatchWhenRequestedByConsumer() {
+        Owner owner = new Owner("testowner");
+        Consumer consumer = TestUtil.createConsumer(owner);
+
+        JobStatus job = newJobStatus().principalName(consumer.getUuid())
+            .consumer(consumer.getUuid(), consumer.getOwner().getKey()).create();
+
+        // Technically this case should not happen since a consumer
+        // can belong to one org, but adding just to make sure that
+        // it gets filtered.
+        newJobStatus().principalName(consumer.getUuid()).consumer(consumer.getUuid(), "owner1").create();
+
+        newJobStatus().principalName("p2").consumer("c2", "owner1").create();
+        newJobStatus().principalName("p3").owner("owner2").create();
+
+        setupPrincipal(new ConsumerPrincipal(consumer));
+
+        List<JobStatus> jobs = curator.findByConsumerUuid(consumer.getUuid());
+        assertEquals(1, jobs.size());
+        assertEquals(job, jobs.get(0));
+    }
+
     private JobStatusBuilder newJobStatus() {
         return new JobStatusBuilder();
     }
@@ -252,14 +381,22 @@ public class JobCuratorTest extends DatabaseTestFixture {
         private Date endDt;
         private String result;
         private JobState state;
-        private String ownerkey;
+        private String targetValue;
         private String principalName;
+
+        private String contextOwner;
+        private JobStatus.TargetType targetType;
+
         private JobDataMap map;
         private Class<? extends Job> jobClass = Job.class;
 
         public JobStatusBuilder() {
             id("id" + Math.random());
             map = new JobDataMap();
+
+            contextOwner = "an-owner-key";
+            targetValue = contextOwner;
+            targetType = JobStatus.TargetType.OWNER;
         }
 
         public JobStatusBuilder id(String id) {
@@ -288,7 +425,16 @@ public class JobCuratorTest extends DatabaseTestFixture {
         }
 
         public JobStatusBuilder owner(String key) {
-            this.ownerkey = key;
+            this.contextOwner = key;
+            this.targetValue = key;
+            this.targetType = JobStatus.TargetType.OWNER;
+            return this;
+        }
+
+        public JobStatusBuilder consumer(String consumerUuid, String consumerOwnerKey) {
+            this.contextOwner = consumerOwnerKey;
+            this.targetValue = consumerUuid;
+            this.targetType = JobStatus.TargetType.CONSUMER;
             return this;
         }
 
@@ -310,8 +456,9 @@ public class JobCuratorTest extends DatabaseTestFixture {
             when(p.getPrincipalName()).thenReturn(principalName);
 
             map.put(PinsetterJobListener.PRINCIPAL_KEY, p);
-            map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
-            map.put(JobStatus.TARGET_ID, ownerkey);
+            map.put(JobStatus.TARGET_TYPE, targetType);
+            map.put(JobStatus.TARGET_ID, targetValue);
+            map.put(JobStatus.OWNER_ID, contextOwner);
             JobStatus status = new JobStatus(
                 newJob(jobClass).withIdentity(id, PinsetterKernel.SINGLE_JOB_GROUP)
                 .usingJobData(map).build());

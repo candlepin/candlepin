@@ -20,7 +20,10 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.controller.Entitler;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
 import org.candlepin.pinsetter.core.model.JobStatus;
 
 import org.junit.After;
@@ -44,11 +47,15 @@ import java.util.List;
 public class EntitlerJobTest {
 
     private String consumerUuid;
+    private Consumer consumer;
     private Entitler e;
 
     @Before
     public void init() {
         consumerUuid = "49bd6a8f-e9f8-40cc-b8d7-86cafd687a0e";
+        consumer = new Consumer("Test Consumer", "test-consumer", new Owner("test-owner"),
+            new ConsumerType("system"));
+        consumer.setUuid(consumerUuid);
         e = mock(Entitler.class);
     }
 
@@ -56,7 +63,7 @@ public class EntitlerJobTest {
     public void bindByPoolSetup() {
         String pool = "pool10";
 
-        JobDetail detail = EntitlerJob.bindByPool(pool, consumerUuid, 1);
+        JobDetail detail = EntitlerJob.bindByPool(pool, consumer, 1);
         assertNotNull(detail);
         String resultpool = (String) detail.getJobDataMap().get("pool_id");
         assertEquals("pool10", resultpool);
@@ -68,7 +75,7 @@ public class EntitlerJobTest {
     public void bindByPoolExec() throws JobExecutionException {
         String pool = "pool10";
 
-        JobDetail detail = EntitlerJob.bindByPool(pool, consumerUuid, 1);
+        JobDetail detail = EntitlerJob.bindByPool(pool, consumer, 1);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         List<Entitlement> ents = new ArrayList<Entitlement>();
@@ -90,13 +97,13 @@ public class EntitlerJobTest {
      */
     @Test
     public void serializeJobDataMapForPool() throws IOException {
-        JobDetail detail = EntitlerJob.bindByPool("pool10", consumerUuid, 1);
+        JobDetail detail = EntitlerJob.bindByPool("pool10", consumer, 1);
         serialize(detail.getJobDataMap());
     }
 
     @Test
     public void recoveryIsFalse() {
-        JobDetail detail = EntitlerJob.bindByPool("pool10", consumerUuid, 1);
+        JobDetail detail = EntitlerJob.bindByPool("pool10", consumer, 1);
         assertFalse(detail.requestsRecovery());
         assertFalse(detail.isDurable());
     }
@@ -110,7 +117,7 @@ public class EntitlerJobTest {
     @Test(expected = JobExecutionException.class)
     public void handleException() throws JobExecutionException {
         String pool = "pool10";
-        JobDetail detail = EntitlerJob.bindByPool(pool, consumerUuid, 1);
+        JobDetail detail = EntitlerJob.bindByPool(pool, consumer, 1);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         when(e.bindByPool(eq(pool), eq(consumerUuid), eq(1))).thenThrow(

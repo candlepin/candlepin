@@ -14,9 +14,7 @@
  */
 package org.candlepin.util.apicrawl;
 
-import org.candlepin.auth.interceptor.Verify;
-import org.candlepin.guice.HttpMethodMatcher;
-import org.candlepin.resource.RootResource;
+import org.candlepin.common.guice.HttpMethodMatcher;
 import org.candlepin.resteasy.JsonProvider;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -25,13 +23,17 @@ import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
 import com.google.inject.matcher.Matcher;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.FileWriter;
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -48,15 +50,21 @@ import javax.ws.rs.core.MediaType;
  * namespace looking for exposed API calls.
  */
 public class ApiCrawler {
+
+    public static final Logger log = LoggerFactory.getLogger(ApiCrawler.class);
+
     // Let's just set it to pretty_print the output instead of having
     // to construct a configuration only to get a simple value.
     private ObjectMapper mapper = new JsonProvider(true)
             .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
-    private List<Class> httpClasses;
+    private List<Class<?>> httpClasses;
     private NonRecursiveModule dontRecurse;
 
+    private Map<Class<?>, Map<String, Integer>> classMethodMap =
+        new HashMap<Class<?>, Map<String, Integer>>();
+
     public ApiCrawler() {
-        httpClasses = new LinkedList<Class>();
+        httpClasses = new LinkedList<Class<?>>();
         httpClasses.add(GET.class);
         httpClasses.add(POST.class);
         httpClasses.add(PUT.class);
@@ -78,11 +86,19 @@ public class ApiCrawler {
         mapper.registerModule(dontRecurse);
     }
 
-    public void run(String apiFile) throws IOException {
+    @SuppressWarnings("unchecked")
+    public void run(String apiFile) throws Exception {
         List<RestApiCall> allApiCalls = new LinkedList<RestApiCall>();
-        for (Object o : RootResource.RESOURCE_CLASSES.keySet()) {
+
+        Class<?> rootResourceClazz = this.getClass().getClassLoader().loadClass(
+            "org.candlepin.resource.RootResource");
+        Map<Object, String> resourceClasses = (Map<Object, String>)
+            rootResourceClazz.getDeclaredField("RESOURCE_CLASSES").get(null);
+
+        log.info("Examining resources: {}", resourceClasses.keySet());
+        for (Object o : resourceClasses.keySet()) {
             if (o instanceof Class) {
-                Class c = (Class) o;
+                Class<?> c = (Class<?>) o;
                 allApiCalls.addAll(processClass(c));
             }
         }
@@ -102,7 +118,7 @@ public class ApiCrawler {
         }
     }
 
-    private List<RestApiCall> processClass(Class c) {
+    private List<RestApiCall> processClass(Class<?> c) {
         Path a = (Path) c.getAnnotation(Path.class);
         String parentUrl = a.value();
         List<RestApiCall> classApiCalls = new LinkedList<RestApiCall>();
@@ -152,6 +168,7 @@ public class ApiCrawler {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void processHttpVerb(Method m, RestApiCall apiCall) {
         for (Class httpClass : httpClasses) {
             if (m.getAnnotation(httpClass) != null) {
@@ -177,11 +194,26 @@ public class ApiCrawler {
      * but you can have more than one per method.
      */
     private void processVerifiedParams(Method m, RestApiCall apiCall) {
+        String verifyAnnotationClazz = "org.candlepin.auth.interceptor.Verify";
+
+        try {
+            // Raise a ClassNotFoundException if we can't find the annotation class.
+            // This is to fail-safe against future refactors that may move the class or
+            // change its name.
+            this.getClass().getClassLoader().loadClass(verifyAnnotationClazz);
+        }
+        catch (ClassNotFoundException e) {
+            log.error("Looking for methods with the {} annotation but the annotation class is missing",
+                verifyAnnotationClazz, e);
+            throw new RuntimeException(e);
+        }
+
         for (int i = 0; i < m.getParameterAnnotations().length; i++) {
             boolean hasVerify = false;
             String pathName = null;
             for (Annotation a : m.getParameterAnnotations()[i]) {
-                if (a instanceof Verify) {
+                String annotationClazz = a.annotationType().getName();
+                if (verifyAnnotationClazz.equals(annotationClazz)) {
                     hasVerify = true;
                 }
                 else if (a instanceof PathParam) {
@@ -205,7 +237,55 @@ public class ApiCrawler {
         return generator.generateSchema(method.getReturnType());
     }
 
-    private static String getQualifiedName(Method method) {
+    /**
+     * Hash map with a default value for any given key
+     */
+    public static final class DefaultHashMap<K, V> extends HashMap<K, V> {
+        protected V defaultValue;
+
+        public DefaultHashMap(V defaultValue) {
+            this.defaultValue = defaultValue;
+        }
+
+        @Override
+        public V get(Object key) {
+            return containsKey(key) ? super.get(key) : defaultValue;
+        }
+    }
+
+    @SuppressWarnings("rawtypes")
+    private String getQualifiedName(Method method) {
+        Map<String, Integer> occurenceMap = classMethodMap.get(method.getDeclaringClass());
+        if (occurenceMap == null) {
+            // Only need to run this once per class
+            Method[] allMethods = method.getDeclaringClass().getMethods();
+            occurenceMap = new DefaultHashMap<String, Integer>(new Integer(0));
+            for (Method x : allMethods) {
+                String name = x.getName();
+                occurenceMap.put(name, occurenceMap.get(name) + 1);
+            }
+            classMethodMap.put(method.getDeclaringClass(), occurenceMap);
+        }
+
+        if (occurenceMap.get(method.getName()) > 1) {
+            Class[] params = method.getParameterTypes();
+
+            StringBuilder sb = new StringBuilder();
+            sb.append(method.getDeclaringClass().getName() + "." + method.getName() + "(");
+
+            for (int i = 0; i < params.length; i++) {
+                sb.append(params[i].getName());
+                if (i != params.length - 1) {
+                    sb.append(", ");
+                }
+                else {
+                    sb.append(")");
+                }
+            }
+
+            return sb.toString();
+        }
+
         return method.getDeclaringClass().getName() + "." + method.getName();
     }
 
@@ -292,6 +372,7 @@ public class ApiCrawler {
     }
 
     public static void main(String [] args) throws Exception {
+        log.info("Running API Crawl");
         ApiCrawler crawler = new ApiCrawler();
         if (args.length != 1) {
             throw new IllegalArgumentException("Must provide file name to write to");

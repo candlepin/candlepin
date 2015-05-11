@@ -177,25 +177,49 @@ public class SubscriptionCuratorTest extends DatabaseTestFixture {
         Product product = TestUtil.createProduct(owner);
         Product product2 = TestUtil.createProduct(owner);
         Product product3 = TestUtil.createProduct(owner);
+        Product product4 = TestUtil.createProduct(owner);
+        Product product5 = TestUtil.createProduct(owner);
         productCurator.create(product);
         productCurator.create(product2);
         productCurator.create(product3);
+        productCurator.create(product4);
+        productCurator.create(product5);
 
         Set<Product> providedProducts = new HashSet<Product>();
         providedProducts.add(product);
+        providedProducts.add(product4);
+        providedProducts.add(product5);
 
         Subscription sub = TestUtil.createSubscription(owner, product2, providedProducts);
         adapter.createSubscription(sub);
 
         Set<Product> providedProducts2 = new HashSet<Product>();
         providedProducts2.add(product3);
+        providedProducts2.add(product5);
+
         Subscription sub2 = TestUtil.createSubscription(owner, product, providedProducts2);
         adapter.createSubscription(sub2);
 
+        subCurator.evict(sub);
+        subCurator.evict(sub2);
         List<Subscription> results = adapter.getSubscriptions(product);
+
         assertEquals(2, results.size());
-        assertTrue(results.contains(sub));
-        assertTrue(results.contains(sub2));
+        assertTrue(results.get(0).getId().equals(sub.getId()) ||
+                results.get(0).getId().equals(sub2.getId()));
+        assertTrue(results.get(1).getId().equals(sub.getId()) ||
+                results.get(1).getId().equals(sub2.getId()));
+        if (results.get(0).getId().equals(sub.getId())) {
+            sub = results.get(0);
+            sub2 = results.get(1);
+        }
+        else {
+            sub2 = results.get(0);
+            sub = results.get(1);
+        }
+
+        assertEquals(3, sub.getProvidedProducts().size());
+        assertEquals(2, sub2.getProvidedProducts().size());
     }
 
     @Test

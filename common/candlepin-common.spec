@@ -21,7 +21,7 @@
 Name: %{parent_proj}-common
 Summary: Common code for Candlepin and related projects
 License: GPLv2
-Version: 1.0.22
+Version: 1.0.23
 Release: 1%{?dist}
 URL: http://www.candlepinproject.org
 Source: %{name}-%{version}.tar.gz
@@ -174,6 +174,16 @@ rm -rf %{_tmppath}/distlibdir
 %{_datadir}/%{parent_proj}/gutterball/lib/%{name}.jar
 
 %changelog
+* Fri May 01 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.23-1
+- Translations update. (dgoodwin@redhat.com)
+- Move apicrawl out of candlepin proper. (awood@redhat.com)
+- Add Candlepin sub-projects as dependencies in POM files. (awood@redhat.com)
+- Add missing newline in HTTP Request logging. (awood@redhat.com)
+- Keep HTTP verb & URL and response code on top line in debug log.
+  (awood@redhat.com)
+- Consolidate request and response logging into one log statement.
+  (awood@redhat.com)
+
 * Wed Feb 25 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.22-1
 - Translation updates for Sprint 87 (wpoteat@redhat.com)
 
