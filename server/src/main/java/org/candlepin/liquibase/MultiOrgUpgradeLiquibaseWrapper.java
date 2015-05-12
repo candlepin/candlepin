@@ -51,7 +51,7 @@ public class MultiOrgUpgradeLiquibaseWrapper implements CustomTaskChange {
     @Override
     public void execute(Database database) throws CustomChangeException {
         MultiOrgUpgradeTask task = new MultiOrgUpgradeTask(
-            (JdbcConnection) database.getConnection(),
+            database,
             new LiquibaseCustomTaskLogger()
         );
 
