@@ -29,7 +29,7 @@ describe 'Import', :serial => true do
     @cp.delete_user(@import_username)
     @cp.delete_owner(@import_owner['key'])
     @exporters.each do |e|
-      # e.cleanup()
+      e.cleanup()
     end
   end
 
