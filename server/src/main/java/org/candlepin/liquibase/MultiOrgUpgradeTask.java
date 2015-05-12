@@ -397,7 +397,6 @@ public class MultiOrgUpgradeTask {
      *  The id of the owner/organization for which to migrate activation key data
      */
     private void migrateActivationKeyData(String orgid) throws DatabaseException, SQLException {
-
         this.logger.info("Migrating activation key data for org " + orgid);
 
         this.executeUpdate(
@@ -473,7 +472,6 @@ public class MultiOrgUpgradeTask {
      *  The id of the owner/organization for which to migrate subscription data
      */
     private void migrateSubscriptionData(String orgid) throws DatabaseException, SQLException {
-
         this.logger.info("Migrating subscription data for org " + orgid);
 
         ResultSet subscriptiondata = this.executeQuery(
@@ -486,22 +484,57 @@ public class MultiOrgUpgradeTask {
         while (subscriptiondata.next()) {
             String subid = subscriptiondata.getString(1);
 
-            // Update any master pools which make use of this subscription information
-            this.executeUpdate(
-                "UPDATE cp_pool SET " +
-                "  certificate_id = ?, " +
-                "  cdn_id = ?, " +
-                "  upstream_entitlement_id = ?, " +
-                "  upstream_consumer_id = ?, " +
-                "  upstream_pool_id = ? " +
-                "WHERE cp_pool.id IN (" +
-                "  SELECT SS.pool_id FROM cp_pool_source_sub SS " +
-                "  WHERE SS.subscriptionid = ? AND SS.subscriptionsubkey = 'master'" +
-                ")",
-                subscriptiondata.getString(2), subscriptiondata.getString(3),
-                subscriptiondata.getString(4), subscriptiondata.getString(5),
-                subscriptiondata.getString(6), subid
-            );
+            String upstreamEntitlementId = subscriptiondata.getString(4);
+            String upstreamConsumerId = subscriptiondata.getString(5);
+            String upstreamPoolId = subscriptiondata.getString(6);
+
+            // If the subscription is lacking upstream information, it's likely a custom sub. We'll
+            // need to remove the source sub information from its corresponding pool (if it exists)
+            if (upstreamEntitlementId == null || upstreamConsumerId == null || upstreamPoolId == null) {
+                int count = this.executeUpdate(
+                    "DELETE FROM cp_pool_source_sub " +
+                    "WHERE subscriptionid = ?",
+                    subid
+                );
+
+                // If we didn't delete anything, the pools haven't been refreshed after the sub was
+                // added, so we'll need to migrate it ourselves.
+                if (count == 0) {
+                    this.executeUpdate(
+                        "INSERT INTO cp_pool (" +
+                        "  id, created, updated, activesubscription, accountnumber, contractnumber, " +
+                        "  enddate, quantity, startdate, owner_id, ordernumber, type, product_uuid, " +
+                        "  cdn_id, certificate_id, version) " +
+                        "SELECT ?, S.created, S.updated, ?, S.accountnumber, S.contractnumber, " +
+                        "  S.enddate, S.quantity, S.startdate, S.owner_id, S.ordernumber, 'NORMAL', " +
+                        "  (SELECT uuid FROM cpo_products " +
+                        "    WHERE owner_id = S.owner_id AND product_id = S.product_id), " +
+                        "  S.cdn_id, S.certificate_id, 0 " +
+                        "FROM cp_subscription S WHERE id = ?",
+                        this.generateUUID(), 1, subid
+                    );
+                }
+            }
+
+            // ...otherwise we need to migrate upstream information to the master pool
+            else {
+                // Update any master pools which make use of this subscription information
+                this.executeUpdate(
+                    "UPDATE cp_pool SET " +
+                    "  certificate_id = ?, " +
+                    "  cdn_id = ?, " +
+                    "  upstream_entitlement_id = ?, " +
+                    "  upstream_consumer_id = ?, " +
+                    "  upstream_pool_id = ? " +
+                    "WHERE cp_pool.id IN (" +
+                    "  SELECT SS.pool_id FROM cp_pool_source_sub SS " +
+                    "  WHERE SS.subscriptionid = ? AND SS.subscriptionsubkey = 'master'" +
+                    ")",
+                    subscriptiondata.getString(2), subscriptiondata.getString(3),
+                    subscriptiondata.getString(4), subscriptiondata.getString(5),
+                    subscriptiondata.getString(6), subid
+                );
+            }
 
             // TODO: Everything from here down may be extraneous.
             this.executeUpdate(
