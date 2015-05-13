@@ -41,7 +41,7 @@ public class MultiOrgUpgradeTask {
 
 
     public MultiOrgUpgradeTask(Database database) {
-        this(connection, new SystemOutLogger());
+        this(database, new SystemOutLogger());
     }
 
     public MultiOrgUpgradeTask(Database database, CustomTaskLogger logger) {
@@ -53,7 +53,7 @@ public class MultiOrgUpgradeTask {
             throw new IllegalArgumentException("logger is null");
         }
 
-        if (!(database.getConnection instanceof JdbcConnection)) {
+        if (!(database.getConnection() instanceof JdbcConnection)) {
             throw new RuntimeException("database connection is not a JDBC connection");
         }
 
@@ -124,26 +124,6 @@ public class MultiOrgUpgradeTask {
         PreparedStatement statement = this.prepareStatement(sql, argv);
         return statement.executeUpdate();
     }
-
-    /**
-     * Retrieves a cross-database compliant value representing the specified boolean value.
-     *
-     * @param value
-     *  The value to represent
-     *
-     * @return
-     *  a value representing the given boolean value for the current database
-     */
-    protected Object getCompliantValue(boolean value) {
-        if ("oracle".equals(this.database.getShortName()) || "mysql".equals(this.database.getShortName())) {
-            return value ? 1 : 0;
-        }
-        else {
-            // Hoping for the best here...
-            return value;
-        }
-    }
-
 
     /**
      * Generates a 32-character UUID to use with object creation/migration.
@@ -530,13 +510,14 @@ public class MultiOrgUpgradeTask {
                         "  id, created, updated, activesubscription, accountnumber, contractnumber, " +
                         "  enddate, quantity, startdate, owner_id, ordernumber, type, product_uuid, " +
                         "  cdn_id, certificate_id, version) " +
-                        "SELECT ?, S.created, S.updated, ?, S.accountnumber, S.contractnumber, " +
-                        "  S.enddate, S.quantity, S.startdate, S.owner_id, S.ordernumber, 'NORMAL', " +
+                        "SELECT ?, S.created, S.updated, ?, " +
+                        "  S.accountnumber, S.contractnumber, S.enddate, S.quantity, S.startdate, " +
+                        "  S.owner_id, S.ordernumber, 'NORMAL', " +
                         "  (SELECT uuid FROM cpo_products " +
                         "    WHERE owner_id = S.owner_id AND product_id = S.product_id), " +
                         "  S.cdn_id, S.certificate_id, 0 " +
                         "FROM cp_subscription S WHERE id = ?",
-                        this.generateUUID(), this.getCompliantValue(true), subid
+                        this.generateUUID(), true, subid
                     );
                 }
             }
