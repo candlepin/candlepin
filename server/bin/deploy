@@ -35,6 +35,11 @@ gendb() {
     if [ -n "$DBPASSWORD" ] ; then
         LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
     fi
+
+    if [ "$VERBOSE" == "1" ]; then
+        LQCOMMAND="$LQCOMMAND --logLevel=debug "
+    fi
+
     LQCOMMAND="$LQCOMMAND update -Dcommunity=True"
     (cd $PROJECT_DIR && $LQCOMMAND)
     evalrc $? "Liquibase command failed"
@@ -129,6 +134,7 @@ usage() {
         -l  use Logdriver
         -m  use MySQL
         -a  auto-deploy a generated candlepin.conf
+        -v  verbose output
 HELP
 }
 
@@ -172,7 +178,7 @@ init
 
 DBUSER="candlepin"
 
-while getopts ":fgtolma" opt; do
+while getopts ":fgtolmav" opt; do
     case $opt in
         f  ) FORCECERT="1" ;;
         g  ) GENDB="1";;
@@ -181,6 +187,7 @@ while getopts ":fgtolma" opt; do
         l  ) LOGDRIVER="logdriver";;
         m  ) USE_MYSQL="1";;
         a  ) AUTOCONF="1";;
+        v  ) VERBOSE="1";;
         ?  ) usage; exit;;
     esac
 done
