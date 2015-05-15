@@ -148,6 +148,7 @@ public class CandlepinPoolManager implements PoolManager {
      * so we don't miss anything
      */
     void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter, Owner owner, boolean lazy) {
+        long start = System.currentTimeMillis();
         log.info("Refreshing pools for owner: {}", owner);
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
 
@@ -193,6 +194,8 @@ public class CandlepinPoolManager implements PoolManager {
         // TODO: break this call into smaller pieces.  There may be lots of floating pools
         List<Pool> floatingPools = poolCurator.getOwnersFloatingPools(owner);
         updateFloatingPools(floatingPools, lazy, changedProducts);
+        log.info("Refresh pools for owner: {} completed in: {}ms", owner.getKey(),
+                System.currentTimeMillis() - start);
     }
 
     /**
