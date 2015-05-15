@@ -106,7 +106,7 @@ public class PoolRules {
             throw new IllegalArgumentException("subscription is null");
         }
 
-        log.info("Creating pools for subscription: {}", sub);
+        log.info("Checking if pools need to be created for subscription: {}", sub);
         PoolHelper helper = new PoolHelper(this.poolManager, null);
 
         List<Pool> pools = new LinkedList<Pool>();
