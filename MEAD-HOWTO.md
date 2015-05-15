@@ -104,6 +104,10 @@ A few special variables are made available to the Cheetah template.
 * `$revision` - The revision of the **top_level** project.
 * `$epoch` - The epoch of the **top_level** project.
 
+Mead can also access files that are in dist-git such as patches.  However, it
+cannot access anything in the lookaside cache (which is where the source
+tarballs are normally kept).
+
 You can test building an RPM from a template by using an existing Mead build
 with the `mead-test-spec-fragment` script.
 
