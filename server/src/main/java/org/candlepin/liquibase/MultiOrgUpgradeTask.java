@@ -283,7 +283,7 @@ public class MultiOrgUpgradeTask {
                     "INSERT INTO cpo_product_attributes" +
                     "  (id, created, updated, name, value, product_uuid) " +
                     "VALUES(?, ?, ?, ?, ?, ?)",
-                    this.generateUUID(), attributes.getDate(2), attributes.getDate(3),
+                    this.generateUUID(), attributes.getTimestamp(2), attributes.getTimestamp(3),
                     attributes.getString(4), attributes.getString(5), productuuid
                 );
             }
@@ -301,7 +301,7 @@ public class MultiOrgUpgradeTask {
                     "INSERT INTO cpo_product_certificates" +
                     "  (id, created, updated, cert, privatekey, product_uuid) " +
                     "VALUES(?, ?, ?, ?, ?, ?)",
-                    this.generateUUID(), certificates.getDate(2), certificates.getDate(3),
+                    this.generateUUID(), certificates.getTimestamp(2), certificates.getTimestamp(3),
                     certificates.getBytes(4), certificates.getBytes(5), productuuid
                 );
             }
@@ -374,7 +374,7 @@ public class MultiOrgUpgradeTask {
                             "INSERT INTO cpo_environment_content" +
                             "  (id, created, updated, content_uuid, enabled, environment_id) " +
                             "VALUES(?, ?, ?, ?, ?, ?)",
-                            this.generateUUID(), content.getDate(2), content.getDate(3),
+                            this.generateUUID(), content.getTimestamp(2), content.getTimestamp(3),
                             contentuuid, content.getBoolean(5), content.getString(6)
                         );
                     }
@@ -455,7 +455,7 @@ public class MultiOrgUpgradeTask {
         //         this.executeUpdate(
         //             "INSERT INTO cpo_branding(id, created, updated, product_uuid, type, name) " +
         //             "VALUES(?, ?, ?, ?, ?, ?)",
-        //             brandinguuid, branding.getDate(2), branding.getDate(3),
+        //             brandinguuid, branding.getTimestamp(2), branding.getTimestamp(3),
         //             branding.getString(4), branding.getString(5), branding.getString(6)
         //         );
 
@@ -568,7 +568,7 @@ public class MultiOrgUpgradeTask {
                     "  (id, subscription_id, subscription_sub_key, pool_id, created, updated)" +
                     "VALUES(?, ?, ?, ?, ?, ?)",
                     this.generateUUID(), subid, sourcesub.getString(3),
-                    sourcesub.getString(4), sourcesub.getDate(5), sourcesub.getDate(6)
+                    sourcesub.getString(4), sourcesub.getTimestamp(5), sourcesub.getTimestamp(6)
                 );
             }
 
