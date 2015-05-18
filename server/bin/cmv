@@ -105,6 +105,30 @@ end
 class VerifyCommand < CMVCommand
     def initialize
         super('Verifies the current data for the specified org(s) matches the last/given snapshot')
+
+        @exclude = [
+            'orgs.pools.productAttributes.updated',
+            'orgs.products.attributes.updated',
+            'orgs.products.updated',
+            'orgs.products.productContent.content.updated'
+        ]
+
+        @id_cols = {
+            'orgs' => 'id',
+            'orgs.products' => 'id',
+            'orgs.products.productContent' => 'content.id',
+            'orgs.products.productContent.content' => 'id',
+            'orgs.products.attributes' => 'name',
+            'orgs.consumers' => 'uuid',
+            'orgs.pools' => 'id',
+            'orgs.pools.attributes' => 'name',
+            'orgs.pools.branding' => 'productId',
+            'orgs.pools.providedProducts' => 'productId',
+            'orgs.pools.productAttributes' => 'name',
+            'orgs.pools.derivedProvidedProducts' => 'productId',
+            'orgs.pools.derivedProductAttributes' => 'name',
+            'orgs.subscriptions' => 'id',
+        }
     end
 
     def execute(candlepin, orgs=[], options={})
@@ -125,7 +149,7 @@ class VerifyCommand < CMVCommand
         orgs.each do |org|
             org_data = self.compileOrgData(candlepin, org)
 
-            result = self.compareOrg(org, snapshot[org], org_data)
+            result = self.compareObjects("orgs[#{org}]", snapshot[org], org_data)
             messages.insert(messages.length, *result)
         end
 
@@ -140,251 +164,98 @@ class VerifyCommand < CMVCommand
         end
     end
 
-    def compareOrg(org, expected, actual)
-        if expected.nil? and actual.nil? then
-            # Not entirely sure how this scenario happens, but I suppose it'd be valid
-            return ValidationResult.new(true)
+    def getObjIdKey(path, obj)
+        path = path.gsub(/\[[^\]]+\]/, '')
+        id_col = @id_cols[path]
+
+        if !id_col.nil? then
+            return id_col.split('.')[0]
         end
 
-        if expected.nil? then
-            return ValidationResult.new(false, "Org \"%s\" does not exist in the provided snapshot" % org)
-        elsif actual.nil? then
-            return ValidationResult.new(false, "Org \"%s\" does not exist in the current deployment" % org)
-        end
+        return nil
+    end
 
-        messages = []
+    def getObjId(path, obj)
+        path = path.gsub(/\[[^\]]+\]/, '')
+        id_col = @id_cols[path]
 
-        keys = Set.new
-        keys.merge(expected.keys)
-        keys.merge(actual.keys)
+        if !id_col.nil? then
+            parts = id_col.split('.')
 
-        # These fields will be validated separately, so we don't need to process them here
-        external = {
-            'consumers' => 'compareConsumers',
-            'pools' => 'comparePools',
-            'subscriptions' => 'compareSubscriptions',
-            'products' => 'compareProducts'
-        }
-
-        keys.each do |key|
-            if !expected.key?(key) then
-                messages << "WARNING: Key \"#{key}\" does not exist in snapshot data for org: #{org}"
-            elsif !actual.key?(key) then
-                messages << "WARNING: Key \"#{key}\" does not exist in deployment data for org: #{org}"
-            elsif external.key?(key) then
-                # We have a special handler for this key
-                result = self.send(external[key], org, expected[key], actual[key])
-                messages.insert(messages.length, *result)
-            else
-                if (actual[key] != expected[key]) then
-                    messages << "ERROR: Org value mismatch:  Org: #{org}, Key: #{key}\nExpected: #{expected[key]}\nActual:   #{actual[key]}"
+            parts.each do |part|
+                if obj.is_a?(Hash) then
+                    obj = obj[part]
+                else
+                    obj = nil
+                    break
                 end
             end
+
+            return obj
         end
 
-        return messages
+        return nil
     end
 
-    def compareConsumers(org, expected, actual)
+    def compareObjects(path, expected, actual)
         messages = []
 
-        expected.each do |exp_consumer|
-            actual.each do |act_consumer|
-                if exp_consumer['name'] == act_consumer['name']
-                    cid = exp_consumer['name']
+        if @exclude.include?(path.gsub(/\[[^\]]+\]/, '')) then
+            return messages # We're excluding this field
+        end
 
-                    expected -= [exp_consumer]
-                    actual -= [act_consumer]
+        if expected.is_a?(Hash) and actual.is_a?(Hash) then
+            keys = Set.new
+            keys.merge(expected.keys)
+            keys.merge(actual.keys)
 
-                    keys = Set.new
-                    keys.merge(exp_consumer.keys)
-                    keys.merge(act_consumer.keys)
-
-                    keys.each do |key|
-                        if !exp_consumer.key?(key) then
-                            messages << "WARNING: Key \"#{key}\" does not exist in snapshot data for consumer: #{org}.content.#{cid}"
-                        elsif !act_consumer.key?(key) then
-                            messages << "WARNING: Key \"#{key}\" does not exist in deployment data for consumer: #{org}.content.#{cid}"
-                        else
-                            if (exp_consumer[key] != act_consumer[key]) then
-                                messages << "ERROR: Consumer value mismatch: #{org}.content.#{cid}[#{key}]\nExpected: #{exp_consumer[key]}\nActual:   #{act_consumer[key]}"
-                            end
-                        end
-                    end
+            keys.each do |key|
+                if !expected.key?(key) then
+                    messages << "WARNING: Key \"#{key}\" does not exist in snapshot data at: #{path}.#{key}"
+                elsif !actual.key?(key) then
+                    messages << "WARNING: Key \"#{key}\" does not exist in deployment data at: #{path}.#{key}"
+                else
+                    result = self.compareObjects("#{path}.#{key}", expected[key], actual[key])
+                    messages.insert(messages.length, *result)
                 end
             end
-        end
+        elsif expected.is_a?(Array) and actual.is_a?(Array) then
+            # How to figure out if these two are identical?
+            expected.each do |exp_obj|
+                actual.each do |act_obj|
+                    if exp_obj.is_a?(Hash) and act_obj.is_a?(Hash) then
+                        key = self.getObjIdKey(path, exp_obj)
+                        exp_id = self.getObjId(path, exp_obj)
+                        act_id = self.getObjId(path, act_obj)
 
-        # Check if we have any stragglers in either list
-        if !expected.empty? then
-            expected.each do |consumer|
-                messages << "ERROR: Consumer absent from deployment data: #{org}.content.#{consumer['name']}"
-            end
-        end
+                        if !key.nil? and exp_id == act_id then
+                            expected -= [exp_obj]
+                            actual -= [act_obj]
 
-        if !actual.empty? then
-            actual.each do |consumer|
-                messages << "ERROR: New consumer found in deployment data: #{org}.content.#{consumer['name']}"
-            end
-        end
-
-        return messages
-    end
-
-    def comparePools(org, expected, actual)
-        messages = []
-
-        expected.each do |exp_pool|
-            actual.each do |act_pool|
-                if exp_pool['id'] == act_pool['id']
-                    pid = exp_pool['id']
-
-                    expected -= [exp_pool]
-                    actual -= [act_pool]
-
-                    keys = Set.new
-                    keys.merge(exp_pool.keys)
-                    keys.merge(act_pool.keys)
-
-                    keys.each do |key|
-                        if !exp_pool.key?(key) then
-                            messages << "WARNING: Key \"#{key}\" does not exist in snapshot data for pool: #{org}.pools.#{pid}"
-                        elsif !act_pool.key?(key) then
-                            messages << "WARNING: Key \"#{key}\" does not exist in deployment data for pool: #{org}.pools.#{pid}"
-                        else
-                            if (exp_pool[key] != act_pool[key]) then
-                                messages << "ERROR: Pool value mismatch: #{org}.pools.#{pid}[#{key}]\nExpected: #{exp_pool[key]}\nActual:   #{act_pool[key]}"
-                            end
-                        end
-                    end
-                end
-            end
-        end
-
-        # Check if we have any stragglers in either list
-        if !expected.empty? then
-            expected.each do |pool|
-                messages << "ERROR: Pool absent from deployment data: #{org}.pools.#{pool['id']}"
-            end
-        end
-
-        if !actual.empty? then
-            actual.each do |pool|
-                messages << "ERROR: New pool found in deployment data: #{org}.pools.#{pool['id']}"
-            end
-        end
-
-        return messages
-    end
-
-    def compareSubscriptions(org, expected, actual)
-        # Do we still care about these?
-    end
-
-    def compareProducts(org, expected, actual)
-        messages = []
-
-        external = {
-            'productContent' => 'compareProductContent'
-        }
-
-        expected.each do |exp_product|
-            actual.each do |act_product|
-                if exp_product['id'] == act_product['id']
-                    pid = exp_product['id']
-
-                    expected -= [exp_product]
-                    actual -= [act_product]
-
-                    keys = Set.new
-                    keys.merge(exp_product.keys)
-                    keys.merge(act_product.keys)
-
-                    keys.each do |key|
-                        if !exp_product.key?(key) then
-                            messages << "WARNING: Key \"#{key}\" does not exist in snapshot data for product: #{org}.products.#{pid}"
-                        elsif !act_product.key?(key) then
-                            messages << "WARNING: Key \"#{key}\" does not exist in deployment data for product: #{org}.products.#{pid}"
-                        elsif external.key?(key) then
-                            result = self.send(external[key], org, pid, exp_product[key], act_product[key])
+                            result = self.compareObjects("#{path}[#{exp_id}]", exp_obj, act_obj)
                             messages.insert(messages.length, *result)
-                        else
-                            if (exp_product[key] != act_product[key]) then
-                                messages << "ERROR: Product value mismatch: #{org}.products.#{pid}[#{key}]\nExpected: #{exp_product[key]}\nActual:   #{act_product[key]}"
-                            end
                         end
+                    elsif exp_obj == act_obj then
+                        expected -= [exp_obj]
+                        actual -= [act_obj]
                     end
                 end
             end
-        end
 
-        # Check if we have any stragglers in either list
-        if !expected.empty? then
-            expected.each do |product|
-                messages << "ERROR: Product absent from deployment data: #{org}.products.#{product['id']}"
-            end
-        end
-
-        if !actual.empty? then
-            actual.each do |product|
-                messages << "ERROR: New Product found in deployment data: #{org}.products.#{product['id']}"
-            end
-        end
-
-        return messages
-    end
-
-    def compareProductContent(org, product, expected, actual)
-        messages = []
-
-        expected.each do |exp_content|
-            actual.each do |act_content|
-                exp_content_obj = exp_content['content']
-                act_content_obj = act_content['content']
-
-                if exp_content_obj['id'] == act_content_obj['id']
-                    cid = act_content_obj['id']
-
-                    expected -= [exp_content]
-                    actual -= [act_content]
-
-                    keys = Set.new
-                    keys.merge(exp_content_obj.keys)
-                    keys.merge(act_content_obj.keys)
-
-                    keys.each do |key|
-                        if !exp_content_obj.key?(key) then
-                            messages << "WARNING: Key \"#{key}\" does not exist in snapshot data for content: #{org}.products.#{product}.content.#{cid}"
-                        elsif !act_content_obj.key?(key) then
-                            messages << "WARNING: Key \"#{key}\" does not exist in deployment data for content: #{org}.products.#{product}.content.#{cid}"
-                        else
-                            if (exp_content_obj[key] != act_content_obj[key]) then
-                                messages << "ERROR: Content value mismatch:  #{org}.products.#{product}.content.#{cid}[#{key}]\nExpected: #{exp_content_obj[key]}\nActual:   #{act_content_obj[key]}"
-                            end
-                        end
-                    end
-
-                    # Due to the goofy structure here, we need to check this parent property here
-                    if exp_content['enabled'] != act_content['enabled'] then
-                        messages << "ERROR: Content value mismatch:  #{org}.products.#{product}.content.#{cid}[enabled]\nExpected: #{exp_content[enabled]}\nActual:   #{act_content[enabled]}"
-                    end
+            # Check if we have any stragglers in either list
+            if !expected.empty? then
+                expected.each do |absent|
+                    messages << "ERROR: Value absent from collection in deployment data at: #{path}\nExpected: #{absent}"
                 end
             end
-        end
 
-        # Check if we have any stragglers in either list
-        if !expected.empty? then
-            expected.each do |content|
-                content = content['content']
-                messages << "ERROR: Product content absent from deployment data: #{org}.products.#{product}.content.#{content['id']}"
+            if !actual.empty? then
+                actual.each do |extra|
+                    messages << "ERROR: New values found in collection in deployment data at: #{path}\nValue: #{extra}"
+                end
             end
-        end
-
-        if !actual.empty? then
-            actual.each do |content|
-                content = content['content']
-                messages << "ERROR: New product content found in deployment data: #{org}.products.#{product}.content.#{content['id']}"
-            end
+        elsif actual != expected then
+            messages << "ERROR: Value mismatch at: #{path}\nExpected: #{expected}\nActual:   #{actual}"
         end
 
         return messages
