@@ -1,0 +1,535 @@
+#!/usr/bin/env ruby
+
+require 'pp'
+require File.expand_path('candlepin_api', File.dirname(__FILE__) + '/../client/ruby')
+require 'optparse'
+require 'set'
+
+
+class CMVCommand
+    def initialize(help=nil)
+        @cmd_help = help
+    end
+
+    def getCommandHelp
+        return @cmd_help
+    end
+
+    def execute(candlepin, orgs=[], options={})
+        raise "Unimplemented method"
+    end
+
+    def compileOrgData(candlepin, org)
+        org_data = candlepin.get_owner(org)
+
+        org_data['consumers'] = candlepin.list_consumers({:owner => org})
+        org_data['pools'] = candlepin.list_pools({:owner => org_data['id']})
+        org_data['subscriptions'] = candlepin.list_subscriptions(org)
+
+        product_ids = Set.new
+
+        org_data['pools'].each do |pool|
+            product_ids << pool['productId']
+
+            if !pool['derivedProductId'].nil? and !pool['derivedProductId'].empty? then
+                product_ids << pool['derivedProductId']
+            end
+
+            pool['providedProducts'].each do |product|
+                product_ids << product['productId']
+            end
+
+            pool['derivedProvidedProducts'].each do |product|
+                product_ids << product['productId']
+            end
+        end
+
+        org_data['subscriptions'].each do |subscription|
+            product_ids << subscription['product']['id']
+
+            if !subscription['derivedProduct'].nil? and !subscription['derivedProduct'].empty? then
+                if !subscription['derivedProduct']['id'].nil? and !subscription['derivedProduct']['id'].empty? then
+                    product_ids << subscription['derivedProduct']['id']
+                end
+            end
+
+            subscription['providedProducts'].each do |product|
+                product_ids << product['id']
+            end
+
+            subscription['derivedProvidedProducts'].each do |product|
+                product_ids << product['id']
+            end
+        end
+
+        products = []
+
+        product_ids.each do |pid|
+            product = candlepin.get_product(pid)
+            products << product
+        end
+
+        org_data['products'] = products
+
+        return org_data
+    end
+end
+
+class SnapshotCommand < CMVCommand
+    def initialize
+        super('Creates a snapshot of the products, content and pools for the specified org(s)')
+    end
+
+    def execute(candlepin, orgs=[], options={})
+        # This may become problematic on deployments with huge amounts of data. If it breaks, maybe
+        # look into writing the snapshot smaller files and zipping them all together
+        snapshot = {}
+
+        if !File.writable?(File.exists?(options[:file]) ? options[:file] : File.dirname(options[:file])) then
+            raise "Cannot write to snapshot file: #{options[:file]}"
+        end
+
+        orgs.each do |org|
+            snapshot[org] = self.compileOrgData(candlepin, org)
+        end
+
+        # write snapshot to file
+        file = File.new(options[:file], 'w+')
+        file.write(JSON.generate(snapshot))
+        file.close()
+
+        puts "Snapshot successfully captured and saved to file: #{file.path}"
+    end
+end
+
+class VerifyCommand < CMVCommand
+    def initialize
+        super('Verifies the current data for the specified org(s) matches the last/given snapshot')
+    end
+
+    def execute(candlepin, orgs=[], options={})
+        if !File.readable?(options[:file]) then
+            raise "Cannot read from snapshot file: #{options[:file]}"
+        end
+
+        # Like the note above states, this could be a problem on deployments with huge datasets. We
+        # may need to do this with smaller files and not keep everything in memory at once
+        file = File.new(options[:file], 'r')
+        snapshot = JSON.parse(file.read)
+        file.close()
+
+        # TODO: Maybe change this to a has with warning/errors instead of just a flat list of
+        # messages?
+        messages = []
+
+        orgs.each do |org|
+            org_data = self.compileOrgData(candlepin, org)
+
+            result = self.compareOrg(org, snapshot[org], org_data)
+            messages.insert(messages.length, *result)
+        end
+
+        if messages.empty? then
+            puts "Deployment successfully verified against snapshot: #{file.path}"
+        else
+            messages.each do |message|
+                puts "\n#{message}\n"
+            end
+
+            puts "Deployment failed validation against snapshot #{file.path} with #{messages.length} messages\n"
+        end
+    end
+
+    def compareOrg(org, expected, actual)
+        if expected.nil? and actual.nil? then
+            # Not entirely sure how this scenario happens, but I suppose it'd be valid
+            return ValidationResult.new(true)
+        end
+
+        if expected.nil? then
+            return ValidationResult.new(false, "Org \"%s\" does not exist in the provided snapshot" % org)
+        elsif actual.nil? then
+            return ValidationResult.new(false, "Org \"%s\" does not exist in the current deployment" % org)
+        end
+
+        messages = []
+
+        keys = Set.new
+        keys.merge(expected.keys)
+        keys.merge(actual.keys)
+
+        # These fields will be validated separately, so we don't need to process them here
+        external = {
+            'consumers' => 'compareConsumers',
+            'pools' => 'comparePools',
+            'subscriptions' => 'compareSubscriptions',
+            'products' => 'compareProducts'
+        }
+
+        keys.each do |key|
+            if !expected.key?(key) then
+                messages << "WARNING: Key \"#{key}\" does not exist in snapshot data for org: #{org}"
+            elsif !actual.key?(key) then
+                messages << "WARNING: Key \"#{key}\" does not exist in deployment data for org: #{org}"
+            elsif external.key?(key) then
+                # We have a special handler for this key
+                result = self.send(external[key], org, expected[key], actual[key])
+                messages.insert(messages.length, *result)
+            else
+                if (actual[key] != expected[key]) then
+                    messages << "ERROR: Org value mismatch:  Org: #{org}, Key: #{key}\nExpected: #{expected[key]}\nActual:   #{actual[key]}"
+                end
+            end
+        end
+
+        return messages
+    end
+
+    def compareConsumers(org, expected, actual)
+        messages = []
+
+        expected.each do |exp_consumer|
+            actual.each do |act_consumer|
+                if exp_consumer['name'] == act_consumer['name']
+                    cid = exp_consumer['name']
+
+                    expected -= [exp_consumer]
+                    actual -= [act_consumer]
+
+                    keys = Set.new
+                    keys.merge(exp_consumer.keys)
+                    keys.merge(act_consumer.keys)
+
+                    keys.each do |key|
+                        if !exp_consumer.key?(key) then
+                            messages << "WARNING: Key \"#{key}\" does not exist in snapshot data for consumer: #{org}.content.#{cid}"
+                        elsif !act_consumer.key?(key) then
+                            messages << "WARNING: Key \"#{key}\" does not exist in deployment data for consumer: #{org}.content.#{cid}"
+                        else
+                            if (exp_consumer[key] != act_consumer[key]) then
+                                messages << "ERROR: Consumer value mismatch: #{org}.content.#{cid}[#{key}]\nExpected: #{exp_consumer[key]}\nActual:   #{act_consumer[key]}"
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        # Check if we have any stragglers in either list
+        if !expected.empty? then
+            expected.each do |consumer|
+                messages << "ERROR: Consumer absent from deployment data: #{org}.content.#{consumer['name']}"
+            end
+        end
+
+        if !actual.empty? then
+            actual.each do |consumer|
+                messages << "ERROR: New consumer found in deployment data: #{org}.content.#{consumer['name']}"
+            end
+        end
+
+        return messages
+    end
+
+    def comparePools(org, expected, actual)
+        messages = []
+
+        expected.each do |exp_pool|
+            actual.each do |act_pool|
+                if exp_pool['id'] == act_pool['id']
+                    pid = exp_pool['id']
+
+                    expected -= [exp_pool]
+                    actual -= [act_pool]
+
+                    keys = Set.new
+                    keys.merge(exp_pool.keys)
+                    keys.merge(act_pool.keys)
+
+                    keys.each do |key|
+                        if !exp_pool.key?(key) then
+                            messages << "WARNING: Key \"#{key}\" does not exist in snapshot data for pool: #{org}.pools.#{pid}"
+                        elsif !act_pool.key?(key) then
+                            messages << "WARNING: Key \"#{key}\" does not exist in deployment data for pool: #{org}.pools.#{pid}"
+                        else
+                            if (exp_pool[key] != act_pool[key]) then
+                                messages << "ERROR: Pool value mismatch: #{org}.pools.#{pid}[#{key}]\nExpected: #{exp_pool[key]}\nActual:   #{act_pool[key]}"
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        # Check if we have any stragglers in either list
+        if !expected.empty? then
+            expected.each do |pool|
+                messages << "ERROR: Pool absent from deployment data: #{org}.pools.#{pool['id']}"
+            end
+        end
+
+        if !actual.empty? then
+            actual.each do |pool|
+                messages << "ERROR: New pool found in deployment data: #{org}.pools.#{pool['id']}"
+            end
+        end
+
+        return messages
+    end
+
+    def compareSubscriptions(org, expected, actual)
+        # Do we still care about these?
+    end
+
+    def compareProducts(org, expected, actual)
+        messages = []
+
+        external = {
+            'productContent' => 'compareProductContent'
+        }
+
+        expected.each do |exp_product|
+            actual.each do |act_product|
+                if exp_product['id'] == act_product['id']
+                    pid = exp_product['id']
+
+                    expected -= [exp_product]
+                    actual -= [act_product]
+
+                    keys = Set.new
+                    keys.merge(exp_product.keys)
+                    keys.merge(act_product.keys)
+
+                    keys.each do |key|
+                        if !exp_product.key?(key) then
+                            messages << "WARNING: Key \"#{key}\" does not exist in snapshot data for product: #{org}.products.#{pid}"
+                        elsif !act_product.key?(key) then
+                            messages << "WARNING: Key \"#{key}\" does not exist in deployment data for product: #{org}.products.#{pid}"
+                        elsif external.key?(key) then
+                            result = self.send(external[key], org, pid, exp_product[key], act_product[key])
+                            messages.insert(messages.length, *result)
+                        else
+                            if (exp_product[key] != act_product[key]) then
+                                messages << "ERROR: Product value mismatch: #{org}.products.#{pid}[#{key}]\nExpected: #{exp_product[key]}\nActual:   #{act_product[key]}"
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        # Check if we have any stragglers in either list
+        if !expected.empty? then
+            expected.each do |product|
+                messages << "ERROR: Product absent from deployment data: #{org}.products.#{product['id']}"
+            end
+        end
+
+        if !actual.empty? then
+            actual.each do |product|
+                messages << "ERROR: New Product found in deployment data: #{org}.products.#{product['id']}"
+            end
+        end
+
+        return messages
+    end
+
+    def compareProductContent(org, product, expected, actual)
+        messages = []
+
+        expected.each do |exp_content|
+            actual.each do |act_content|
+                exp_content_obj = exp_content['content']
+                act_content_obj = act_content['content']
+
+                if exp_content_obj['id'] == act_content_obj['id']
+                    cid = act_content_obj['id']
+
+                    expected -= [exp_content]
+                    actual -= [act_content]
+
+                    keys = Set.new
+                    keys.merge(exp_content_obj.keys)
+                    keys.merge(act_content_obj.keys)
+
+                    keys.each do |key|
+                        if !exp_content_obj.key?(key) then
+                            messages << "WARNING: Key \"#{key}\" does not exist in snapshot data for content: #{org}.products.#{product}.content.#{cid}"
+                        elsif !act_content_obj.key?(key) then
+                            messages << "WARNING: Key \"#{key}\" does not exist in deployment data for content: #{org}.products.#{product}.content.#{cid}"
+                        else
+                            if (exp_content_obj[key] != act_content_obj[key]) then
+                                messages << "ERROR: Content value mismatch:  #{org}.products.#{product}.content.#{cid}[#{key}]\nExpected: #{exp_content_obj[key]}\nActual:   #{act_content_obj[key]}"
+                            end
+                        end
+                    end
+
+                    # Due to the goofy structure here, we need to check this parent property here
+                    if exp_content['enabled'] != act_content['enabled'] then
+                        messages << "ERROR: Content value mismatch:  #{org}.products.#{product}.content.#{cid}[enabled]\nExpected: #{exp_content[enabled]}\nActual:   #{act_content[enabled]}"
+                    end
+                end
+            end
+        end
+
+        # Check if we have any stragglers in either list
+        if !expected.empty? then
+            expected.each do |content|
+                content = content['content']
+                messages << "ERROR: Product content absent from deployment data: #{org}.products.#{product}.content.#{content['id']}"
+            end
+        end
+
+        if !actual.empty? then
+            actual.each do |content|
+                content = content['content']
+                messages << "ERROR: New product content found in deployment data: #{org}.products.#{product}.content.#{content['id']}"
+            end
+        end
+
+        return messages
+    end
+end
+
+# setup command map
+commands = {
+    'snapshot' => SnapshotCommand.new,
+    'verify' => VerifyCommand.new
+}
+
+def printCommands(commands)
+    puts "Commands:"
+
+    commands.each do |cmd_name, command|
+        printf("  %-15s   %s\n", cmd_name, command.getCommandHelp)
+    end
+end
+
+####################################################################################################
+
+# Set up the options
+options = {}
+
+optparse = OptionParser.new do |opts|
+    file = File.basename(__FILE__)
+    opts.banner = "Usage: #{file} [options] <command> [org1 [, org2, [, org3...]]]\n\nOptions:"
+
+    options[:user] = 'admin'
+    opts.on('--username [USER]', 'Username to connect as; defaults to "admin".') do |opt|
+        options[:user] = opt
+    end
+
+    options[:password] = 'admin'
+    opts.on('--password [PASSWORD]', 'Password to authenticate the user as; defaults to "admin".') do |opt|
+        options[:password] = opt
+    end
+
+    options[:server] = 'localhost'
+    opts.on('--server [SERVERNAME]', String, 'Server name FQDN; defaults to "localhost"') do |opt|
+        options[:server] = opt
+    end
+
+    options[:port] = 8443
+    opts.on('--port [PORTNUM]', 'Port number for the Candlepin server; defaults to 8443') do |opt|
+        options[:port] = opt.to_i
+    end
+
+    options[:context] = 'candlepin'
+    opts.on('--context [CONTEXT]', 'Context to use; defaults to "candlepin"') do |opt|
+        options[:context] = opt
+    end
+
+    options[:uuid] = nil
+    opts.on('--uuid [UUID]', 'UUID to use; defaults to nil') do |opt|
+        options[:uuid] = opt
+    end
+
+    options[:ssl] = true
+    opts.on('--nossl', 'Do not use SSL; defaults to false') do |opt|
+        options[:ssl] = false
+    end
+
+    options[:trusted_user] = false
+    opts.on('--trusted', 'User should be trusted; defaults to false') do
+        options[:trusted_user] = true
+    end
+
+    options[:file] = 'snapshot.dat'
+    opts.on('-f [FILE]', '--file [FILE]', 'The snapshot file to read/write; defaults to "snapshot.dat"') do |opt|
+        options[:file] = opt
+    end
+
+    options[:verbose] = false
+    opts.on( '--verbose', 'Enable Verbose Logging' ) do
+        options[:verbose] = true
+    end
+
+    opts.on('-?', '--help', 'Displays command and option information') do
+        puts opts
+        puts
+        printCommands(commands)
+        exit
+    end
+
+    opts.on('-c', '--commands', 'Displays the available commands') do
+        printCommands(commands)
+        exit
+    end
+end
+
+####################################################################################################
+
+optparse.parse!
+
+if ARGV.empty?
+    puts optparse
+    exit
+else
+    candlepin = Candlepin.new(
+        options[:user], options[:password], nil, nil, options[:server], options[:port], nil,
+        options[:uuid], options[:trused_user], options[:context], options[:ssl]
+    )
+
+    candlepin.verbose= options[:verbose]
+
+    cmd_name = ARGV[0]
+    command = commands[cmd_name]
+
+    if command.nil? then
+        puts "Invalid command or usage\n"
+        puts optparse
+        exit
+    end
+
+    org_list = ARGV[1, ARGV.size]
+
+    if !org_list.empty? then
+        # verify specified orgs exist
+        org_list.each do |org|
+            begin
+                result = candlepin.get_owner(org)
+
+                if result.nil? then
+                    raise "Invalid org: #{org}"
+                end
+            rescue
+                puts "Invalid org: #{org}"
+                exit
+            end
+        end
+    else
+        orgs = candlepin.list_owners
+
+        if !orgs.nil? then
+            orgs.each do |org|
+                org_list << org['key']
+            end
+        end
+    end
+
+    if !org_list.empty? then
+        command.execute(candlepin, org_list, options)
+    else
+        puts "No orgs to snapshot"
+    end
+end
