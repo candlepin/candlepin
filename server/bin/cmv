@@ -31,7 +31,7 @@ class CMVCommand
         org_data['pools'].each do |pool|
             product_ids << pool['productId']
 
-            if !pool['derivedProductId'].nil? and !pool['derivedProductId'].empty? then
+            if !pool['derivedProductId'].nil? && !pool['derivedProductId'].empty? then
                 product_ids << pool['derivedProductId']
             end
 
@@ -47,8 +47,8 @@ class CMVCommand
         org_data['subscriptions'].each do |subscription|
             product_ids << subscription['product']['id']
 
-            if !subscription['derivedProduct'].nil? and !subscription['derivedProduct'].empty? then
-                if !subscription['derivedProduct']['id'].nil? and !subscription['derivedProduct']['id'].empty? then
+            if !subscription['derivedProduct'].nil? && !subscription['derivedProduct'].empty? then
+                if !subscription['derivedProduct']['id'].nil? && !subscription['derivedProduct']['id'].empty? then
                     product_ids << subscription['derivedProduct']['id']
                 end
             end
@@ -204,7 +204,7 @@ class VerifyCommand < CMVCommand
             return messages # We're excluding this field
         end
 
-        if expected.is_a?(Hash) and actual.is_a?(Hash) then
+        if expected.is_a?(Hash) && actual.is_a?(Hash) then
             keys = Set.new
             keys.merge(expected.keys)
             keys.merge(actual.keys)
@@ -219,11 +219,11 @@ class VerifyCommand < CMVCommand
                     messages.insert(messages.length, *result)
                 end
             end
-        elsif expected.is_a?(Array) and actual.is_a?(Array) then
+        elsif expected.is_a?(Array) && actual.is_a?(Array) then
             # How to figure out if these two are identical?
             expected.each do |exp_obj|
                 actual.each do |act_obj|
-                    if exp_obj.is_a?(Hash) and act_obj.is_a?(Hash) then
+                    if exp_obj.is_a?(Hash) && act_obj.is_a?(Hash) then
                         key = self.getObjIdKey(path, exp_obj)
                         exp_id = self.getObjId(path, exp_obj)
                         act_id = self.getObjId(path, act_obj)
