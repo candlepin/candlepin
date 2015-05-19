@@ -31,7 +31,7 @@ class CMVCommand
         org_data['pools'].each do |pool|
             product_ids << pool['productId']
 
-            if !pool['derivedProductId'].nil? && !pool['derivedProductId'].empty? then
+            if pool['derivedProductId'] && !pool['derivedProductId'].empty? then
                 product_ids << pool['derivedProductId']
             end
 
@@ -48,7 +48,7 @@ class CMVCommand
             product_ids << subscription['product']['id']
 
             if !subscription['derivedProduct'].nil? && !subscription['derivedProduct'].empty? then
-                if !subscription['derivedProduct']['id'].nil? && !subscription['derivedProduct']['id'].empty? then
+                if subscription['derivedProduct']['id'] && !subscription['derivedProduct']['id'].empty? then
                     product_ids << subscription['derivedProduct']['id']
                 end
             end
@@ -166,10 +166,9 @@ class VerifyCommand < CMVCommand
 
     def getObjIdKey(path, obj)
         path = path.gsub(/\[[^\]]+\]/, '')
-        id_col = @id_cols[path]
 
-        if !id_col.nil? then
-            return id_col.split('.')[0]
+        if @id_cols[path] then
+            return @id_cols[path].split('.')[0]
         end
 
         return nil
@@ -177,10 +176,9 @@ class VerifyCommand < CMVCommand
 
     def getObjId(path, obj)
         path = path.gsub(/\[[^\]]+\]/, '')
-        id_col = @id_cols[path]
 
-        if !id_col.nil? then
-            parts = id_col.split('.')
+        if @id_cols[path] then
+            parts = @id_cols[path].split('.')
 
             parts.each do |part|
                 if obj.is_a?(Hash) then
@@ -228,7 +226,7 @@ class VerifyCommand < CMVCommand
                         exp_id = self.getObjId(path, exp_obj)
                         act_id = self.getObjId(path, act_obj)
 
-                        if !key.nil? and exp_id == act_id then
+                        if key and exp_id == act_id then
                             expected -= [exp_obj]
                             actual -= [act_obj]
 
@@ -391,7 +389,7 @@ else
     else
         orgs = candlepin.list_owners
 
-        if !orgs.nil? then
+        if orgs then
             orgs.each do |org|
                 org_list << org['key']
             end
