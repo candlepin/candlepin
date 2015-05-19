@@ -5,6 +5,11 @@ require File.expand_path('candlepin_api', File.dirname(__FILE__) + '/../client/r
 require 'optparse'
 require 'set'
 
+$field_filter = {
+    'include' => [],
+    'exclude' => []
+}
+
 
 class CMVCommand
     def initialize(help=nil)
@@ -106,13 +111,6 @@ class VerifyCommand < CMVCommand
     def initialize
         super('Verifies the current data for the specified org(s) matches the last/given snapshot')
 
-        @exclude = [
-            'orgs.pools.productAttributes.updated',
-            'orgs.products.attributes.updated',
-            'orgs.products.updated',
-            'orgs.products.productContent.content.updated'
-        ]
-
         @id_cols = {
             'orgs' => 'id',
             'orgs.products' => 'id',
@@ -129,6 +127,15 @@ class VerifyCommand < CMVCommand
             'orgs.pools.derivedProductAttributes' => 'name',
             'orgs.subscriptions' => 'id',
         }
+
+        exclude = [
+            'orgs.pools.productAttributes.updated',
+            'orgs.products.attributes.updated',
+            'orgs.products.updated',
+            'orgs.products.productContent.content.updated'
+        ]
+
+        $field_filter['exclude'].insert($field_filter['exclude'].length, *exclude)
     end
 
     def execute(candlepin, orgs=[], options={})
@@ -160,7 +167,7 @@ class VerifyCommand < CMVCommand
                 puts "\n#{message}\n"
             end
 
-            puts "Deployment failed validation against snapshot #{file.path} with #{messages.length} messages\n"
+            puts "\nDeployment failed validation against snapshot #{file.path} with #{messages.length} messages\n"
         end
     end
 
@@ -195,12 +202,38 @@ class VerifyCommand < CMVCommand
         return nil
     end
 
+    def includeField?(path)
+        pchunks = path.gsub(/\[[^\]]+\]/, '').split('.')
+
+        levels = {}
+
+        $field_filter.each do |key, filter|
+            level = 0
+
+            filter.each do |filter_path|
+                fchunks = filter_path.split('.')
+                match = false
+                i = 0
+
+                begin
+                    match = pchunks[i] && pchunks[i].casecmp(fchunks[i]) == 0
+                    i += 1
+                end while (match && i < pchunks.length && i < fchunks.length)
+
+                if match && i >= fchunks.length && i > level then
+                    level = i
+                end
+            end
+
+            levels[key] = level
+        end
+
+        return (levels['include'] > levels['exclude'] || levels['exclude'] == 0)
+    end
+
     def compareObjects(path, expected, actual)
         messages = []
-
-        if @exclude.include?(path.gsub(/\[[^\]]+\]/, '')) then
-            return messages # We're excluding this field
-        end
+        exclude = !self.includeField?(path)
 
         if expected.is_a?(Hash) && actual.is_a?(Hash) then
             keys = Set.new
@@ -209,9 +242,9 @@ class VerifyCommand < CMVCommand
 
             keys.each do |key|
                 if !expected.key?(key) then
-                    messages << "WARNING: Key \"#{key}\" does not exist in snapshot data at: #{path}.#{key}"
+                    !self.includeField?("#{path}.#{key}") or (messages << "WARNING: Key \"#{key}\" does not exist in snapshot data at: #{path}.#{key}")
                 elsif !actual.key?(key) then
-                    messages << "WARNING: Key \"#{key}\" does not exist in deployment data at: #{path}.#{key}"
+                    !self.includeField?("#{path}.#{key}") or (messages << "WARNING: Key \"#{key}\" does not exist in deployment data at: #{path}.#{key}")
                 else
                     result = self.compareObjects("#{path}.#{key}", expected[key], actual[key])
                     messages.insert(messages.length, *result)
@@ -243,17 +276,17 @@ class VerifyCommand < CMVCommand
             # Check if we have any stragglers in either list
             if !expected.empty? then
                 expected.each do |absent|
-                    messages << "ERROR: Value absent from collection in deployment data at: #{path}\nExpected: #{absent}"
+                    exclude or (messages << "ERROR: Value absent from collection in deployment data at: #{path}\nExpected: #{absent}")
                 end
             end
 
             if !actual.empty? then
                 actual.each do |extra|
-                    messages << "ERROR: New values found in collection in deployment data at: #{path}\nValue: #{extra}"
+                    exclude or (messages << "ERROR: New values found in collection in deployment data at: #{path}\nValue: #{extra}")
                 end
             end
         elsif actual != expected then
-            messages << "ERROR: Value mismatch at: #{path}\nExpected: #{expected}\nActual:   #{actual}"
+            exclude or (messages << "ERROR: Value mismatch at: #{path}\nExpected: #{expected}\nActual:   #{actual}")
         end
 
         return messages
@@ -326,6 +359,14 @@ optparse = OptionParser.new do |opts|
     options[:file] = 'snapshot.dat'
     opts.on('-f [FILE]', '--file [FILE]', 'The snapshot file to read/write; defaults to "snapshot.dat"') do |opt|
         options[:file] = opt
+    end
+
+    opts.on('-x [EXCLUDE]', '--exclude [EXCLUDE]', 'A field to ignore during verification; may be specified more than once') do |opt|
+        $field_filter['exclude'] << opt
+    end
+
+    opts.on('-i [INCLUDE]', '--include [INCLUDE]', 'A field to examine during verification, overriding any excludes; may be specified more than once') do |opt|
+        $field_filter['include'] << opt
     end
 
     options[:verbose] = false
