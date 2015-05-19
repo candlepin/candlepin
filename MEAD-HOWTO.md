@@ -135,6 +135,8 @@ Other Cheetah notes:
   #end raw
   ```
 
+* Do not use line continuations (i.e. ending a line with '\')!
+  Cheetah doesn't like them for some reason.
 * Always surround the entire `%changelog` section in `#raw` and `#end raw` tags
   so that people's changelog entries won't break the template.
 
