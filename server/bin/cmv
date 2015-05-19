@@ -95,6 +95,7 @@ class SnapshotCommand < CMVCommand
         end
 
         orgs.each do |org|
+            puts "Compiling data for org \"#{org}\""
             snapshot[org] = self.compileOrgData(candlepin, org)
         end
 
