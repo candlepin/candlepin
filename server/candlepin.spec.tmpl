@@ -140,8 +140,7 @@ cd selinux
 for selinuxvariant in %{selinux_variants}
 do
   %{__install} -d %{buildroot}/%{_datadir}/selinux/$selinuxvariant
-  %{__install} -p -m 644 %{modulename}.pp.$selinuxvariant \
-    %{buildroot}/%{_datadir}/selinux/$selinuxvariant/%{modulename}.pp
+  %{__install} -p -m 644 %{modulename}.pp.$selinuxvariant %{buildroot}/%{_datadir}/selinux/$selinuxvariant/%{modulename}.pp
 done
 #end raw
 cd -
@@ -154,8 +153,7 @@ rm -rf %{buildroot}
 #raw
 for selinuxvariant in %{selinux_variants}
 do
-  /usr/sbin/semodule -s $selinuxvariant -i \
-    %{_datadir}/selinux/$selinuxvariant/%{modulename}.pp &> /dev/null || :
+  /usr/sbin/semodule -s $selinuxvariant -i %{_datadir}/selinux/$selinuxvariant/%{modulename}.pp &> /dev/null || :
 done
 /sbin/restorecon %{_localstatedir}/cache/thumbslug &> /dev/null || :
 /sbin/restorecon -R %{_sysconfdir}/%{name}/ &> /dev/null || :
