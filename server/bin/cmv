@@ -204,7 +204,7 @@ class VerifyCommand < CMVCommand
     end
 
     def includeField?(path)
-        pchunks = path.gsub(/\[[^\]]+\]/, '').split('.')
+        pchunks = path.split('.')
 
         levels = {}
 
@@ -217,7 +217,9 @@ class VerifyCommand < CMVCommand
                 i = 0
 
                 begin
-                    match = pchunks[i] && pchunks[i].casecmp(fchunks[i]) == 0
+                    match = pchunks[i] && (pchunks[i].casecmp(fchunks[i]) == 0 ||
+                        pchunks[i].gsub(/\[[^\]]+\]/, '').casecmp(fchunks[i]) == 0)
+
                     i += 1
                 end while (match && i < pchunks.length && i < fchunks.length)
 
