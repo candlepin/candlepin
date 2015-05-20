@@ -2,11 +2,15 @@
 # Candlepin Migration Validator
 # Takes pre-migration snapshots and verifies data integrity of a Candlepin deployment post-migration
 
-
-require 'pp'
-require File.expand_path('candlepin_api', File.dirname(__FILE__) + '/../client/ruby')
 require 'optparse'
 require 'set'
+require 'tempfile'
+require 'zip/zip'
+require 'zip/zipfilesystem'
+
+require File.expand_path('candlepin_api', File.dirname(__FILE__) + '/../client/ruby')
+
+
 
 $field_filter = {
     'include' => [],
@@ -27,59 +31,84 @@ class CMVCommand
         raise "Unimplemented method"
     end
 
-    def compile_org_data(candlepin, org)
-        org_data = candlepin.get_owner(org)
+    def get_deployment_data(candlepin, orgs)
+        # get our base snapshot info (candlepin status/version info and snapshot timestamp)
+        snapshot_info = candlepin.get_status()
 
-        org_data['consumers'] = candlepin.list_consumers({:owner => org})
-        org_data['pools'] = candlepin.list_pools({:owner => org_data['id']})
-        org_data['subscriptions'] = candlepin.list_subscriptions(org)
+        yield '', 'snapshot_info.json', snapshot_info
 
-        product_ids = Set.new
+        orgs.each do |org|
+            puts "Fetching data for org \"#{org}\"..."
+            product_ids = Set.new
 
-        org_data['pools'].each do |pool|
-            product_ids << pool['productId']
+            # Get base org info
+            org_data = candlepin.get_owner(org)
+            yield "orgs[#{org}]", "orgs/#{org}/org_info.json", org_data
 
-            if pool['derivedProductId'] && !pool['derivedProductId'].empty? then
-                product_ids << pool['derivedProductId']
+            # list consumers and store in orgs/<org>/consumers/<consumer>.json
+            print "  Retrieving consumers...      "
+            consumers = candlepin.list_consumers({:owner => org})
+            consumers.each do |consumer|
+                yield "orgs[#{org}].consumers[#{consumer['uuid']}]", "orgs/#{org}/consumers/#{consumer['uuid']}.json", consumer
             end
+            puts "done."
 
-            pool['providedProducts'].each do |product|
-                product_ids << product['productId']
-            end
+            # list pools and store in orgs/<org>/pools/<pool>.json
+            print "  Retrieving pools...          "
+            pools = candlepin.list_pools({:owner => org_data['id']})
+            pools.each do |pool|
+                yield "orgs[#{org}].pools[#{pool['id']}]", "orgs/#{org}/pools/#{pool['id']}.json", pool
 
-            pool['derivedProvidedProducts'].each do |product|
-                product_ids << product['productId']
-            end
-        end
+                # We also need to grab product IDs from the pool as well
+                product_ids << pool['productId']
 
-        org_data['subscriptions'].each do |subscription|
-            product_ids << subscription['product']['id']
+                if pool['derivedProductId'] then
+                    product_ids << pool['derivedProductId']
+                end
 
-            if !subscription['derivedProduct'].nil? && !subscription['derivedProduct'].empty? then
-                if subscription['derivedProduct']['id'] && !subscription['derivedProduct']['id'].empty? then
-                    product_ids << subscription['derivedProduct']['id']
+                pool['providedProducts'].each do |product|
+                    product_ids << product['productId']
+                end
+
+                pool['derivedProvidedProducts'].each do |product|
+                    product_ids << product['productId']
                 end
             end
+            puts "done."
 
-            subscription['providedProducts'].each do |product|
-                product_ids << product['id']
-            end
+            # list subscriptions and store in orgs/<org>/subscriptions/<subscription>.json
+            print "  Retrieving subscriptions...  "
+            subscriptions = candlepin.list_subscriptions(org)
+            subscriptions.each do |subscription|
+                yield "orgs[#{org}].subscriptions[#{subscription['id']}]", "orgs/#{org}/subscriptions/#{subscription['id']}.json", subscription
 
-            subscription['derivedProvidedProducts'].each do |product|
-                product_ids << product['id']
+                # We also need to grab product IDs from the subscription as well
+                product_ids << subscription['product']['id']
+
+                if subscription['derivedProduct'] then
+                    product_ids << subscription['derivedProduct']['id']
+                end
+
+                subscription['providedProducts'].each do |product|
+                    product_ids << product['id']
+                end
+
+                subscription['derivedProvidedProducts'].each do |product|
+                    product_ids << product['id']
+                end
             end
+            puts "done."
+
+            # list products and store in orgs/<org>/products/<product>.json
+            print "  Retrieving products...       "
+            product_ids.each do |pid|
+                product = candlepin.get_product(pid)
+
+                yield "orgs[#{org}].products[#{product['id']}]", "orgs/#{org}/products/#{product['id']}.json", product
+            end
+            puts "done."
         end
 
-        products = []
-
-        product_ids.each do |pid|
-            product = candlepin.get_product(pid)
-            products << product
-        end
-
-        org_data['products'] = products
-
-        return org_data
     end
 end
 
@@ -89,26 +118,22 @@ class SnapshotCommand < CMVCommand
     end
 
     def execute(candlepin, orgs=[], options={})
-        # This may become problematic on deployments with huge amounts of data. If it breaks, maybe
-        # look into writing the snapshot smaller files and zipping them all together
-        snapshot = {}
-
         if !File.writable?(File.exists?(options[:file]) ? options[:file] : File.dirname(options[:file])) then
             raise "Cannot write to snapshot file: #{options[:file]}"
         end
 
-        orgs.each do |org|
-            puts "Compiling data for org \"#{org}\""
-            snapshot[org] = self.compile_org_data(candlepin, org)
+        Zip::ZipOutputStream.open(options[:file]) do |zos|
+            puts "Compiling snapshot..."
+
+            self.get_deployment_data(candlepin, orgs) do |obj_path, zip_path, data|
+                zos.put_next_entry(zip_path)
+                zos.print JSON.generate(data)
+            end
         end
 
-        # write snapshot to file
-        file = File.new(options[:file], 'w+')
-        file.write(JSON.generate(snapshot))
-        file.close()
-
-        puts "Snapshot successfully captured and saved to file: #{file.path}"
+        puts "Snapshot successfully captured and saved to file: #{options[:file]}"
     end
+
 end
 
 class VerifyCommand < CMVCommand
@@ -147,32 +172,64 @@ class VerifyCommand < CMVCommand
             raise "Cannot read from snapshot file: #{options[:file]}"
         end
 
-        # Like the note above states, this could be a problem on deployments with huge datasets. We
-        # may need to do this with smaller files and not keep everything in memory at once
-        file = File.new(options[:file], 'r')
-        snapshot = JSON.parse(file.read)
-        file.close()
-
-        # TODO: Maybe change this to a has with warning/errors instead of just a flat list of
-        # messages?
+        snapshot = Zip::ZipFile.open(options[:file])
+        processed_files = Set.new
         messages = []
 
-        orgs.each do |org|
-            org_data = self.compile_org_data(candlepin, org)
+        puts "Verifying deployment data against snapshot: #{options[:file]}"
 
-            result = self.compare_objects("orgs[#{org}]", snapshot[org], org_data)
+        self.get_deployment_data(candlepin, orgs) do |obj_path, zip_path, act_data|
+            next if !obj_path || obj_path.empty?
+
+            exp_data = JSON.parse(snapshot.read(zip_path))
+
+            result = self.compare_objects(obj_path, exp_data, act_data)
             messages.insert(messages.length, *result)
+
+            processed_files << zip_path
         end
 
-        if messages.empty? then
-            puts "Deployment successfully verified against snapshot: #{file.path}"
-        else
-            messages.each do |message|
-                puts "\n#{message}\n"
+        # Run through our snapshot and throw warnings for any file that wasn't processed
+        snapshot.each do |entry|
+            file = entry.to_s()
+            next if processed_files.include?(file)
+
+            path = self.convert_file_to_path(file)
+
+            if self.include_field?(path) then
+                data = JSON.parse(snapshot.read(file))
+                (messages << "ERROR: Value absent from deployment data at: #{path}\nExpected: #{data}")
+                puts "ERROR: Value absent from deployment data at: #{path}\nExpected: #{data}"
             end
-
-            puts "\nDeployment failed validation against snapshot #{file.path} with #{messages.length} messages\n"
         end
+
+
+        # if messages.empty? then
+        #     puts "Deployment successfully verified against snapshot: #{options[:file]}"
+        # else
+        #     messages.each do |message|
+        #         puts "\n#{message}\n"
+        #     end
+
+        #     puts "\nDeployment failed validation against snapshot #{options[:file]} with #{messages.length} messages\n"
+        # end
+    end
+
+    def convert_file_to_path(file)
+        fparts = file.gsub(/\.json\z/, '').split('/')
+        path = ''
+        i = 1
+
+        fparts.each do |part|
+            if i % 2 == 1 then
+                path += '.' if !path.empty?
+                path += part
+            else
+                path += "[#{part}]"
+            end
+        end
+
+        return path
     end
 
     def get_obj_id_key(path, obj)
@@ -366,8 +423,8 @@ optparse = OptionParser.new do |opts|
         options[:trusted_user] = true
     end
 
-    options[:file] = 'snapshot.dat'
-    opts.on('-f [FILE]', '--file [FILE]', 'The snapshot file to read/write; defaults to "snapshot.dat"') do |opt|
+    options[:file] = 'snapshot.zip'
+    opts.on('-f [FILE]', '--file [FILE]', 'The snapshot file to read/write; defaults to "snapshot.zip"') do |opt|
         options[:file] = opt
     end
 
