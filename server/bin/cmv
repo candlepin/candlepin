@@ -151,7 +151,7 @@ class CMVCommand
             # list products and store in orgs/<org>/products/<product>.json
             print "  Retrieving products...       "
             product_ids.each do |pid|
-                product = candlepin.get_product(pid)
+                product = candlepin.get_product(org, pid)
 
                 yield "orgs[#{org}].products[#{product['id']}]", "orgs/#{org}/products/#{product['id']}.json", product
             end
