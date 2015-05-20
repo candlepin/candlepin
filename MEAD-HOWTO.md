@@ -23,8 +23,8 @@ $ ./brew regen-repo YOUR_BUILDROOT
 For example:
 ```
 $ get-maven-artifacts org.apache:apache:pom:11
-$ ./import-maven --tag candlepin-0-rhel-6-deps apache-11*
-$ ./brew regen-repo candlepin-0-rhel-6-build
+$ ./import-maven --tag candlepin-mead-rhel-6-deps apache-11*
+$ ./brew regen-repo candlepin-mead-rhel-6-build
 ```
 
 Importing everything one at a time is slow, so the fastest way is to run your
@@ -69,15 +69,15 @@ With the source available, you're ready to actually try a build using Brew's
 `maven-build` sub-command.
 
 ```
-$ brew maven-build candlepin-0-rhel-6-candidate --scratch
+$ brew maven-build candlepin-mead-rhel-6-maven-candidate --scratch
 "git://git.engineering.redhat.com/users/KERB_ID/candlepin.git#REF_NAME"
 ```
 
 `REF_NAME` can be any git ref.  I frequently run my build like
 
 ```
-brew maven-build candlepin-0-rhel-6-candidate --scratch "git://git.engineering.redhat.com/users/awood/candlepin.git#$(git
- rev-parse awood/mead)"
+$ brew maven-build candlepin-mead-rhel-6-maven-candidate --scratch "git://git.engineering.redhat.com/users/awood/candlepin.git#$(git
+ rev-parse HEAD)"
 ```
 
 so the `git rev-parse` will expand out to the hash of the last commit on the
@@ -134,9 +134,11 @@ Other Cheetah notes:
   done
   #end raw
   ```
-
 * Do not use line continuations (i.e. ending a line with '\')!
   Cheetah doesn't like them for some reason.
+* Do not use non-ASCII characters anywhere in the Cheetah template (including
+  names with non-ASCII characters in the changelog.)  I ran into difficulties
+  with the template failing to render when non-ASCII characters appeared in it.
 * Always surround the entire `%changelog` section in `#raw` and `#end raw` tags
   so that people's changelog entries won't break the template.
 
@@ -146,8 +148,21 @@ To build a wrapper-RPM all in one shot, you can use the `--specfile` option in
 the `maven-build` subcommand.
 
 ```
-brew maven-build candlepin-0-rhel-6-candidate --scratch --specfile "git://git.engineering.redhat.com/users/awood/candlepin.git?server#$(git rev-parse awood/mead) "git://git.engineering.redhat.com/users/awood/candlepin.git#$(git rev-parse awood/mead)"
+$ brew maven-build candlepin-mead-rhel-6-maven-candidate --scratch --specfile "git://git.engineering.redhat.com/users/awood/candlepin.git?server#gutterball-1.0.17-1" "git://git.engineering.redhat.com/users/awood/candlepin.git#gutterball-1.0.17-1"
 ```
 
 Notice in the `--specfile` option, I'm giving a URL to the **directory** with
 the template in it as well as a pointer to the Git reference I want to build.
+
+The `rhpkg` tool command is similar if you are working in dist-git, but you can
+pass "." as an argument to `--specfile` and it will use the template checked-in
+to dist-git.
+
+```
+$ rhpkg maven-build --scratch --sources="git://git.engineering.redhat.com/users/awood/candlepin.git#gutterball-1.0.17-1" --specfile=.  --scratch
+```
+
+`rhpkg maven-build` can also send options to Maven with `--maven-option` or
+`--property`.  However, if you use `--maven-option`, use an equals sign to
+connect it to the arguments so that `rhpkg` doesn't interpret the option that
+should be going to Maven.  For example, `--maven-options='--debug'`.
