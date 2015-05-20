@@ -1,4 +1,7 @@
 #!/usr/bin/env ruby
+# Candlepin Migration Validator
+# Takes pre-migration snapshots and verifies data integrity of a Candlepin deployment post-migration
+
 
 require 'pp'
 require File.expand_path('candlepin_api', File.dirname(__FILE__) + '/../client/ruby')
@@ -16,7 +19,7 @@ class CMVCommand
         @cmd_help = help
     end
 
-    def getCommandHelp
+    def get_command_help
         return @cmd_help
     end
 
@@ -24,7 +27,7 @@ class CMVCommand
         raise "Unimplemented method"
     end
 
-    def compileOrgData(candlepin, org)
+    def compile_org_data(candlepin, org)
         org_data = candlepin.get_owner(org)
 
         org_data['consumers'] = candlepin.list_consumers({:owner => org})
@@ -96,7 +99,7 @@ class SnapshotCommand < CMVCommand
 
         orgs.each do |org|
             puts "Compiling data for org \"#{org}\""
-            snapshot[org] = self.compileOrgData(candlepin, org)
+            snapshot[org] = self.compile_org_data(candlepin, org)
         end
 
         # write snapshot to file
@@ -155,9 +158,9 @@ class VerifyCommand < CMVCommand
         messages = []
 
         orgs.each do |org|
-            org_data = self.compileOrgData(candlepin, org)
+            org_data = self.compile_org_data(candlepin, org)
 
-            result = self.compareObjects("orgs[#{org}]", snapshot[org], org_data)
+            result = self.compare_objects("orgs[#{org}]", snapshot[org], org_data)
             messages.insert(messages.length, *result)
         end
 
@@ -172,7 +175,7 @@ class VerifyCommand < CMVCommand
         end
     end
 
-    def getObjIdKey(path, obj)
+    def get_obj_id_key(path, obj)
         path = path.gsub(/\[[^\]]+\]/, '')
 
         if @id_cols[path] then
@@ -182,7 +185,7 @@ class VerifyCommand < CMVCommand
         return nil
     end
 
-    def getObjId(path, obj)
+    def get_obj_id(path, obj)
         path = path.gsub(/\[[^\]]+\]/, '')
 
         if @id_cols[path] then
@@ -203,7 +206,7 @@ class VerifyCommand < CMVCommand
         return nil
     end
 
-    def includeField?(path)
+    def include_field?(path)
         pchunks = path.split('.')
 
         levels = {}
@@ -220,6 +223,10 @@ class VerifyCommand < CMVCommand
                     match = pchunks[i] && (pchunks[i].casecmp(fchunks[i]) == 0 ||
                         pchunks[i].gsub(/\[[^\]]+\]/, '').casecmp(fchunks[i]) == 0)
 
+                    # We're probably fine here, but if this results in some goofy behavior, we may
+                    # need to increase the level in cases where we match an instance name instead
+                    # of a generic path
+
                     i += 1
                 end while (match && i < pchunks.length && i < fchunks.length)
 
@@ -231,12 +238,12 @@ class VerifyCommand < CMVCommand
             levels[key] = level
         end
 
-        return (levels['include'] > levels['exclude'] || levels['exclude'] == 0)
+        return (levels['include'] >= levels['exclude'] || levels['exclude'] == 0)
     end
 
-    def compareObjects(path, expected, actual)
+    def compare_objects(path, expected, actual)
         messages = []
-        exclude = !self.includeField?(path)
+        exclude = !self.include_field?(path)
 
         if expected.is_a?(Hash) && actual.is_a?(Hash) then
             keys = Set.new
@@ -245,11 +252,11 @@ class VerifyCommand < CMVCommand
 
             keys.each do |key|
                 if !expected.key?(key) then
-                    !self.includeField?("#{path}.#{key}") or (messages << "WARNING: Key \"#{key}\" does not exist in snapshot data at: #{path}.#{key}")
+                    !self.include_field?("#{path}.#{key}") or (messages << "WARNING: Key \"#{key}\" does not exist in snapshot data at: #{path}.#{key}")
                 elsif !actual.key?(key) then
-                    !self.includeField?("#{path}.#{key}") or (messages << "WARNING: Key \"#{key}\" does not exist in deployment data at: #{path}.#{key}")
+                    !self.include_field?("#{path}.#{key}") or (messages << "WARNING: Key \"#{key}\" does not exist in deployment data at: #{path}.#{key}")
                 else
-                    result = self.compareObjects("#{path}.#{key}", expected[key], actual[key])
+                    result = self.compare_objects("#{path}.#{key}", expected[key], actual[key])
                     messages.insert(messages.length, *result)
                 end
             end
@@ -258,15 +265,15 @@ class VerifyCommand < CMVCommand
             expected.each do |exp_obj|
                 actual.each do |act_obj|
                     if exp_obj.is_a?(Hash) && act_obj.is_a?(Hash) then
-                        key = self.getObjIdKey(path, exp_obj)
-                        exp_id = self.getObjId(path, exp_obj)
-                        act_id = self.getObjId(path, act_obj)
+                        key = self.get_obj_id_key(path, exp_obj)
+                        exp_id = self.get_obj_id(path, exp_obj)
+                        act_id = self.get_obj_id(path, act_obj)
 
                         if key and exp_id == act_id then
                             expected -= [exp_obj]
                             actual -= [act_obj]
 
-                            result = self.compareObjects("#{path}[#{exp_id}]", exp_obj, act_obj)
+                            result = self.compare_objects("#{path}[#{exp_id}]", exp_obj, act_obj)
                             messages.insert(messages.length, *result)
                         end
                     elsif exp_obj == act_obj then
@@ -302,11 +309,11 @@ commands = {
     'verify' => VerifyCommand.new
 }
 
-def printCommands(commands)
+def print_commands(commands)
     puts "Commands:"
 
     commands.each do |cmd_name, command|
-        printf("  %-15s   %s\n", cmd_name, command.getCommandHelp)
+        printf("  %-15s   %s\n", cmd_name, command.get_command_help)
     end
 end
 
@@ -380,12 +387,12 @@ optparse = OptionParser.new do |opts|
     opts.on('-?', '--help', 'Displays command and option information') do
         puts opts
         puts
-        printCommands(commands)
+        print_commands(commands)
         exit
     end
 
     opts.on('-c', '--commands', 'Displays the available commands') do
-        printCommands(commands)
+        print_commands(commands)
         exit
     end
 end
