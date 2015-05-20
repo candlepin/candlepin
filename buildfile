@@ -206,7 +206,7 @@ define "candlepin" do
 
   desc "Common Candlepin Code"
   define "common" do
-    project.version = spec_version('candlepin-common.spec')
+    project.version = spec_version('candlepin-common.spec.tmpl')
 
     eclipse.natures :java
 
