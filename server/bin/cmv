@@ -12,10 +12,59 @@ require File.expand_path('candlepin_api', File.dirname(__FILE__) + '/../client/r
 
 
 
-$field_filter = {
-    'include' => [],
-    'exclude' => []
-}
+class FieldFilter
+    BLACKLIST = 0
+    WHITELIST = 1
+
+    @@mode = BLACKLIST
+
+    @@filters = {
+        'include' => [],
+        'exclude' => []
+    }
+
+    def self.filter_path(filter, path)
+        @@filters[filter] << path if @@filters.key?(filter)
+    end
+
+    def self.set_mode(mode)
+        @@mode = mode
+    end
+
+    def self.include_field?(path)
+        pchunks = path.split('.')
+        levels = {}
+
+        @@filters.each do |key, filter|
+            level = 0
+
+            filter.each do |filter_path|
+                fchunks = filter_path.split('.')
+                match = false
+                i = 0
+
+                begin
+                    match = pchunks[i] && (pchunks[i].casecmp(fchunks[i]) == 0 ||
+                        pchunks[i].gsub(/\[[^\]]+\]/, '').casecmp(fchunks[i]) == 0)
+
+                    # We're probably fine here, but if this results in some goofy behavior, we may
+                    # need to increase the level in cases where we match an instance name instead
+                    # of a generic path
+
+                    i += 1
+                end while (match && i < pchunks.length && i < fchunks.length)
+
+                if match && i >= fchunks.length && i > level then
+                    level = i
+                end
+            end
+
+            levels[key] = level
+        end
+
+        return levels['include'] >= levels['exclude'] && (@@mode == BLACKLIST || levels['include'] > 0)
+    end
+end
 
 
 class CMVCommand
@@ -157,6 +206,7 @@ class VerifyCommand < CMVCommand
             'orgs.subscriptions' => 'id',
         }
 
+        # Common paths we should expect to exclude
         exclude = [
             'orgs.pools.productAttributes.updated',
             'orgs.products.attributes.updated',
@@ -164,7 +214,9 @@ class VerifyCommand < CMVCommand
             'orgs.products.productContent.content.updated'
         ]
 
-        $field_filter['exclude'].insert($field_filter['exclude'].length, *exclude)
+        exclude.each do |path|
+            FieldFilter.filter_path('exclude', path)
+        end
     end
 
     def execute(candlepin, orgs=[], options={})
@@ -192,27 +244,32 @@ class VerifyCommand < CMVCommand
         # Run through our snapshot and throw warnings for any file that wasn't processed
         snapshot.each do |entry|
             file = entry.to_s()
-            next if processed_files.include?(file)
+            next if processed_files.include?(file) || file == 'snapshot_info.json'
 
             path = self.convert_file_to_path(file)
+            org = self.get_org_from_file(file)
 
-            if self.include_field?(path) then
+            if FieldFilter.include_field?(path) && orgs.include?(org) then
                 data = JSON.parse(snapshot.read(file))
-                (messages << "ERROR: Value absent from deployment data at: #{path}\nExpected: #{data}")
-                puts "ERROR: Value absent from deployment data at: #{path}\nExpected: #{data}"
+                messages << "ERROR: Value absent from deployment data: #{path}\nExpected: #{data}"
             end
         end
 
+        # Display any messages we received during the verification
+        if messages.empty? then
+            puts "Deployment successfully verified against snapshot: #{options[:file]}"
+        else
+            messages.each do |message|
+                puts "\n#{message}\n"
+            end
 
-        # if messages.empty? then
-        #     puts "Deployment successfully verified against snapshot: #{options[:file]}"
-        # else
-        #     messages.each do |message|
-        #         puts "\n#{message}\n"
-        #     end
+            puts "\nDeployment failed validation against snapshot #{options[:file]} with #{messages.length} messages\n"
+        end
+    end
 
-        #     puts "\nDeployment failed validation against snapshot #{options[:file]} with #{messages.length} messages\n"
-        # end
+    def get_org_from_file(file)
+        fparts = file.split('/')
+        return fparts.length >= 2 ? fparts[1] : nil
     end
 
     def convert_file_to_path(file)
@@ -227,6 +284,8 @@ class VerifyCommand < CMVCommand
             else
                 path += "[#{part}]"
             end
+
+            i += 1
         end
 
         return path
@@ -263,44 +322,9 @@ class VerifyCommand < CMVCommand
         return nil
     end
 
-    def include_field?(path)
-        pchunks = path.split('.')
-
-        levels = {}
-
-        $field_filter.each do |key, filter|
-            level = 0
-
-            filter.each do |filter_path|
-                fchunks = filter_path.split('.')
-                match = false
-                i = 0
-
-                begin
-                    match = pchunks[i] && (pchunks[i].casecmp(fchunks[i]) == 0 ||
-                        pchunks[i].gsub(/\[[^\]]+\]/, '').casecmp(fchunks[i]) == 0)
-
-                    # We're probably fine here, but if this results in some goofy behavior, we may
-                    # need to increase the level in cases where we match an instance name instead
-                    # of a generic path
-
-                    i += 1
-                end while (match && i < pchunks.length && i < fchunks.length)
-
-                if match && i >= fchunks.length && i > level then
-                    level = i
-                end
-            end
-
-            levels[key] = level
-        end
-
-        return (levels['include'] >= levels['exclude'] || levels['exclude'] == 0)
-    end
-
     def compare_objects(path, expected, actual)
         messages = []
-        exclude = !self.include_field?(path)
+        exclude = !FieldFilter.include_field?(path)
 
         if expected.is_a?(Hash) && actual.is_a?(Hash) then
             keys = Set.new
@@ -309,9 +333,9 @@ class VerifyCommand < CMVCommand
 
             keys.each do |key|
                 if !expected.key?(key) then
-                    !self.include_field?("#{path}.#{key}") or (messages << "WARNING: Key \"#{key}\" does not exist in snapshot data at: #{path}.#{key}")
+                    !FieldFilter.include_field?("#{path}.#{key}") or (messages << "WARNING: Key \"#{key}\" does not exist in snapshot data at: #{path}.#{key}\nValue: #{actual[key]}")
                 elsif !actual.key?(key) then
-                    !self.include_field?("#{path}.#{key}") or (messages << "WARNING: Key \"#{key}\" does not exist in deployment data at: #{path}.#{key}")
+                    !FieldFilter.include_field?("#{path}.#{key}") or (messages << "WARNING: Key \"#{key}\" does not exist in deployment data at: #{path}.#{key}\nExpected: #{expected[key]}")
                 else
                     result = self.compare_objects("#{path}.#{key}", expected[key], actual[key])
                     messages.insert(messages.length, *result)
@@ -378,6 +402,7 @@ end
 
 # Set up the options
 options = {}
+excludes = false
 
 optparse = OptionParser.new do |opts|
     file = File.basename(__FILE__)
@@ -429,11 +454,14 @@ optparse = OptionParser.new do |opts|
     end
 
     opts.on('-x [EXCLUDE]', '--exclude [EXCLUDE]', 'A field to ignore during verification; may be specified more than once') do |opt|
-        $field_filter['exclude'] << opt
+        FieldFilter.filter_path('exclude', opt)
+        FieldFilter.set_mode(FieldFilter::BLACKLIST)
+        excludes = true
     end
 
     opts.on('-i [INCLUDE]', '--include [INCLUDE]', 'A field to examine during verification, overriding any excludes; may be specified more than once') do |opt|
-        $field_filter['include'] << opt
+        FieldFilter.filter_path('include', opt)
+        FieldFilter.set_mode(FieldFilter::WHITELIST) if !excludes
     end
 
     options[:verbose] = false
