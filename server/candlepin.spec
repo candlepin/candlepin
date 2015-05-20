@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.50
+Version: 0.9.51
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,12 @@ fi
 
 
 %changelog
+* Wed May 20 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.51-1
+- Added a new data validation utility (crog@redhat.com)
+- Logging improvements for refresh pools. (dgoodwin@redhat.com)
+- Fix cross-org import bug. (dgoodwin@redhat.com)
+- Apply permissions while getting Job Status (mstead@redhat.com)
+
 * Fri May 01 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.50-1
 - Fix unmapped guest pool clean on import undo. (dgoodwin@redhat.com)
 - Added the PopulateHostedDB task and API call (crog@redhat.com)
