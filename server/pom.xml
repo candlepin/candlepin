@@ -11,7 +11,7 @@
   </parent>
   <groupId>org.candlepin</groupId>
   <artifactId>candlepin</artifactId>
-  <version>0.9.49</version>
+  <version>0.9.50</version>
   <packaging>war</packaging>
   <properties>
     <org.apache.qpid-qpid-common.version>0.30</org.apache.qpid-qpid-common.version>
@@ -86,7 +86,7 @@
     <javax.mail-mail.version>1.4</javax.mail-mail.version>
     <org.mozilla-rhino.version>1.7R3</org.mozilla-rhino.version>
     <com.sun.xml.bind-jaxb-impl.version>2.1.12</com.sun.xml.bind-jaxb-impl.version>
-    <org.candlepin-candlepin-common.version>1.0.22</org.candlepin-candlepin-common.version>
+    <org.candlepin-candlepin-common.version>1.0.23</org.candlepin-candlepin-common.version>
     <postgresql-postgresql.version>9.0-801.jdbc4</postgresql-postgresql.version>
     <mysql-mysql-connector-java.version>5.1.26</mysql-mysql-connector-java.version>
     <org.hsqldb-hsqldb.version>2.3.2</org.hsqldb-hsqldb.version>
