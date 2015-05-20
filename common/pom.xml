@@ -551,6 +551,10 @@
         <groupId>com.googlecode.gettext-commons</groupId>
         <artifactId>gettext-maven-plugin</artifactId>
       </plugin>
+      <plugin>
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
+      </plugin>
     </plugins>
   </build>
 </project>

@@ -1,7 +1,7 @@
 # vi: set ft=ruby:
 
 ### Repositories
-repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin/"
+repositories.remote << "http://awood.fedorapeople.org/ivy/candlepin/"
 repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
 repositories.remote << "http://oauth.googlecode.com/svn/code/maven/"
 repositories.remote << "http://central.maven.org/maven2/"
@@ -199,7 +199,7 @@ define "candlepin" do
   use_logdriver = ENV['logdriver']
   if use_logdriver
     info "Compiling with logdriver"
-    download artifact(LOGDRIVER) => 'http://jmrodri.fedorapeople.org/ivy/candlepin/logdriver/logdriver/1.0/logdriver-1.0.jar'
+    download artifact(LOGDRIVER) => 'http://awood.fedorapeople.org/ivy/candlepin/logdriver/logdriver/1.0/logdriver-1.0.jar'
   end
   download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
 
@@ -225,7 +225,7 @@ define "candlepin" do
       RESTEASY,
       JACKSON,
       JAVAX,
-      OAUTH
+      OAUTH,
     ]
 
     compile.with(compile_classpath)
@@ -246,6 +246,11 @@ define "candlepin" do
       xml.groupId("com.googlecode.gettext-commons")
       xml.artifactId("gettext-maven-plugin")
     end
+
+    pom.plugin_procs << Proc.new do |xml, proj|
+      xml.groupId("org.owasp")
+      xml.artifactId("dependency-check-maven")
+    end
   end
 
   desc "API Crawl"
@@ -254,6 +259,10 @@ define "candlepin" do
     eclipse.natures = :java
     checkstyle.config_directory = checkstyle_config_directory
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
+
+    # API Crawl is not shipped so don't check for CVEs since checking is
+    # slow
+    project.dependency_check.enabled = false
 
     compile_classpath = [
       COMMONS,
@@ -359,6 +368,11 @@ define "candlepin" do
     end
     pom.provided_dependencies.concat(PROVIDED)
     pom.additional_properties['release'] = release_number
+
+    pom.plugin_procs << Proc.new do |xml, proj|
+      xml.groupId("org.owasp")
+      xml.artifactId("dependency-check-maven")
+    end
   end
 
   desc "The Candlepin Server"
@@ -479,6 +493,11 @@ define "candlepin" do
       war.classes << msgfmt.destination if msgfmt.enabled?
       web_inf = war.path('WEB-INF/classes')
       web_inf.path(candlepin_path).include("#{compiled_cp_path}/**")
+    end
+
+    pom.plugin_procs << Proc.new do |xml, proj|
+      xml.groupId("org.owasp")
+      xml.artifactId("dependency-check-maven")
     end
 
     desc 'Crawl the REST API and print a summary.'
