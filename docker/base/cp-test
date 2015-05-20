@@ -66,10 +66,11 @@ usage() {
         -s  run a bash shell when done
         -c  git reference to checkout
         -p  subproject to build (defaults to "server")
+        -v  enable verbose/debug output
 HELP
 }
 
-while getopts ":rusdtc:p:" opt; do
+while getopts ":rusdtvc:p:" opt; do
     case $opt in
         r  )
             RSPEC="1"
@@ -82,6 +83,7 @@ while getopts ":rusdtc:p:" opt; do
             DEPLOY="1"
             TESTDATA="1"
             ;;
+        v  ) VERBOSE="1";;
         c  ) CHECKOUT="${OPTARG}";;
         p  ) PROJECT="${OPTARG}";;
         ?  ) usage; exit;;
@@ -128,12 +130,17 @@ fi
 if [ "$DEPLOY" == "1" ]; then
     echo "Deploying candlepin."
 
+    DEPLOY_FLAGS="-g"
+
     if [ "$TESTDATA" == "1" ]; then
-        bin/deploy -g -t
-    else
-        bin/deploy -g
+        DEPLOY_FLAGS="$DEPLOY_FLAGS -t"
     fi
 
+    if [ "$VERBOSE" == "1" ]; then
+        DEPLOY_FLAGS="$DEPLOY_FLAGS -v"
+    fi
+
+    bin/deploy $DEPLOY_FLAGS
     sleep 7
 fi
 
