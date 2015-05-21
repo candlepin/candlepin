@@ -53,9 +53,16 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor {
         boolean containsExcludes = queryParams.containsKey("exclude");
         boolean containsIncludes = queryParams.containsKey("include");
 
-        // We want the list to be a blacklist by default when neither include nor exclude is
-        // provided, so we don't accidentally filter anything
-        DynamicFilterData filterData = new DynamicFilterData(containsIncludes && !containsExcludes);
+        DynamicFilterData filterData = new DynamicFilterData();
+
+        if (queryParams.containsKey("filtermode")) {
+            List<String> values = queryParams.get("filtermode");
+            filterData.setWhitelistMode("whitelist".equalsIgnoreCase(values.get(0)));
+        } else {
+            // We want the list to be a blacklist by default when neither include nor exclude is
+            // provided, so we don't accidentally filter anything
+            filterData.setWhitelistMode(containsIncludes && !containsExcludes);
+        }
 
         if (containsIncludes) {
             for (String path : queryParams.get("include")) {
