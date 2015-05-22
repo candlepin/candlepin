@@ -16,7 +16,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.16
+Version: 2.0.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -76,6 +76,9 @@ rm -rf %{buildroot}
 
 #raw
 %changelog
+* Fri May 22 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 2.0.0-1
+- Switch to MEAD build system. (awood@redhat.com)
+
 * Fri May 01 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.16-1
 - 1217058: Fixed broken changeset affecting upgrade (mstead@redhat.com)
 - Add Candlepin sub-projects as dependencies in POM files. (awood@redhat.com)
