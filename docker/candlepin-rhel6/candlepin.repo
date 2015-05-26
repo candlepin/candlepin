@@ -1,0 +1,5 @@
+[candlepin]
+name=candlepin
+#baseurl=http://download.devel.redhat.com/brewroot/repos/candlepin-mead-rhel-6-build/latest/x86_64
+baseurl=http://download.devel.redhat.com/brewroot/repos/candlepin-1-rhel-6-build/latest/x86_64
+gpgcheck=0
