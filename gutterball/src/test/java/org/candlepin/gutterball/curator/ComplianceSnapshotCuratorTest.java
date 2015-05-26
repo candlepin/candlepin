@@ -29,7 +29,6 @@ import org.candlepin.gutterball.model.Event;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
 import org.candlepin.gutterball.model.snapshot.Consumer;
-import org.candlepin.gutterball.model.snapshot.ConsumerInstalledProduct;
 import org.candlepin.gutterball.model.snapshot.Entitlement;
 
 import org.junit.Before;
@@ -104,9 +103,10 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
                 }
             }
         );
-        entitlement1.setProvidedProducts(new HashMap<String, String>() {{
-            this.put("p1", "p1");
-        }});
+        entitlement1.setProvidedProducts(new HashMap<String, String>() { {
+                this.put("p1", "p1");
+            }
+        });
 
         Entitlement entitlement2 = createEntitlement(
             "testsku2",
@@ -120,9 +120,10 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
                 }
             }
         );
-        entitlement2.setProvidedProducts(new HashMap<String, String>() {{
-            this.put("p2", "p2");
-        }});
+        entitlement2.setProvidedProducts(new HashMap<String, String>() { {
+                this.put("p2", "p2");
+            }
+        });
 
         Entitlement entitlement3 = createEntitlement(
             "testsku3",
@@ -136,9 +137,10 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
                 }
             }
         );
-        entitlement3.setProvidedProducts(new HashMap<String, String>() {{
-            this.put("p3", "p3");
-        }});
+        entitlement3.setProvidedProducts(new HashMap<String, String>() { {
+                this.put("p3", "p3");
+            }
+        });
 
         this.beginTransaction();
 
