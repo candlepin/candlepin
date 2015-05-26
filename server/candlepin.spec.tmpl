@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.0
+Version: 2.0.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -208,6 +208,10 @@ fi
 
 #raw
 %changelog
+* Tue May 26 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 2.0.1-1
+- Fixed method name check in cpc (crog@redhat.com)
+- Fix dev deploy scripts to use the new spec templates. (dgoodwin@redhat.com)
+
 * Thu May 21 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 2.0.0-1
 - Switch to the new MEAD build system. (awood@redhat.com)
 * Wed May 20 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.51-1
