@@ -110,7 +110,7 @@ class Candlepin
     unless create_missing.nil?
       path << "?create_missing=#{create_missing}"
     end
-    job_detail = post_text_return_json(path, json_data)
+    job_detail = post_text(path, json_data, 'json')
     return job_detail
   end
 
@@ -1233,13 +1233,8 @@ class Candlepin
     return JSON.parse(response.body) unless response.body.empty?
   end
 
-  def post_text(uri, data=nil)
-    response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(data, :content_type => 'text/plain', :accept => 'text/plain' )
-    return response.body
-  end
-
-  def post_text_return_json(uri, data=nil)
-    response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(data, :content_type => 'text/plain', :accept => :json)
+  def post_text(uri, data=nil, accept='text/plain')
+    response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(data, :content_type => 'text/plain', :accept => accept )
     return response.body
   end
 

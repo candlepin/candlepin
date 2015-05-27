@@ -179,7 +179,7 @@ public class HypervisorResourceTest {
         when(idCertService.generateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
 
-        HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(hostGuestMap,
+        HypervisorCheckInResult result = hypervisorResource.hypervisorUpdate(hostGuestMap,
             principal, owner.getKey(), true);
 
         Set<Consumer> created = result.getCreated();
@@ -227,7 +227,7 @@ public class HypervisorResourceTest {
             thenReturn(new VirtConsumerMap());
 
 
-        HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(hostGuestMap,
+        HypervisorCheckInResult result = hypervisorResource.hypervisorUpdate(hostGuestMap,
             principal, owner.getKey(), true);
         Set<Consumer> updated = result.getUpdated();
         assertEquals(1, updated.size());
@@ -270,7 +270,7 @@ public class HypervisorResourceTest {
         when(consumerCurator.create(any(Consumer.class))).
                 thenThrow(exception);
 
-        HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(hostGuestMap,
+        HypervisorCheckInResult result = hypervisorResource.hypervisorUpdate(hostGuestMap,
             principal, owner.getKey(), true);
 
         Set<String> failures = result.getFailedUpdate();
@@ -304,7 +304,7 @@ public class HypervisorResourceTest {
         when(idCertService.generateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
 
-        HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(hostGuestMap,
+        HypervisorCheckInResult result = hypervisorResource.hypervisorUpdate(hostGuestMap,
             principal, owner.getKey(), false);
 
         assertEquals(0, result.getCreated().size());
@@ -317,6 +317,6 @@ public class HypervisorResourceTest {
 
     @Test(expected = BadRequestException.class)
     public void ensureBadRequestWhenNoMappingIsIncludedInRequest() {
-        hypervisorResource.hypervisorCheckIn(null, principal, "an-owner", false);
+        hypervisorResource.hypervisorUpdate(null, principal, "an-owner", false);
     }
 }

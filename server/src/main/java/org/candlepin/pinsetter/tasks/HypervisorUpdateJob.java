@@ -102,12 +102,14 @@ public class HypervisorUpdateJob extends UniqueByOwnerJob {
             Owner owner = ownerCurator.lookupByKey(ownerKey);
             if (owner == null) {
                 context.setResult("Nothing to do. Owner does not exist");
+                log.warn("Hypervisor update attempted against non-existent org id ''{0}''", ownerKey);
                 return;
             }
             byte[] data = (byte[]) map.get(DATA);
             String json = decompress(data);
             HypervisorList hypervisors = (HypervisorList) Util.fromJson(json, HypervisorList.class);
             log.info("Hypervisor consumers for create/update: " + hypervisors.getHypervisors().size());
+            log.info("Updating hypervisor consumers for org ''{0}''", ownerKey);
 
             Set<String> hosts = new HashSet<String>();
             Set<String> guests = new HashSet<String>();

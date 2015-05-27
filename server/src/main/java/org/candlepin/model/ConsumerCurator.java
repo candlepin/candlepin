@@ -218,7 +218,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
         int fromIndex = 0;
         int toIndex = fromIndex + MAX_IN_QUERY_LENGTH;
-        int count = 0;
 
         while (fromIndex < possibleGuestIds.size()) {
             if (toIndex > possibleGuestIds.size()) {

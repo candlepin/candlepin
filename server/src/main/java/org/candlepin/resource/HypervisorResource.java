@@ -89,6 +89,7 @@ public class HypervisorResource {
      * have a hypervisorId attribute, so that should be added manually
      * when necessary by the management environment.
      *
+     * @deprecated Use the asynchronous method
      * @param hostGuestMap a mapping of host_id to list of guestIds
      * @param principal
      * @param ownerKey key of owner to update
@@ -104,8 +105,9 @@ public class HypervisorResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Deprecated
     @Transactional
-    public HypervisorCheckInResult hypervisorCheckIn(
+    public HypervisorCheckInResult hypervisorUpdate(
         Map<String, List<GuestId>> hostGuestMap, @Context Principal principal,
         @QueryParam("owner") @Verify(value = Owner.class,
             require = Access.READ_ONLY,
@@ -218,7 +220,7 @@ public class HypervisorResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     @Path("/{owner}")
-    public JobDetail updateOwnersHypervisors(
+    public JobDetail hypervisorUpdateAsync(
         String hypervisorJson, @Context Principal principal,
         @PathParam("owner") @Verify(value = Owner.class,
             require = Access.READ_ONLY,

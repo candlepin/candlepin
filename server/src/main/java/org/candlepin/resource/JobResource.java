@@ -33,8 +33,8 @@ import org.xnap.commons.i18n.I18n;
 import java.util.Collection;
 import java.util.List;
 
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
