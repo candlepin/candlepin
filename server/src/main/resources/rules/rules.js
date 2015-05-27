@@ -1,4 +1,4 @@
-// Version: 5.15
+// Version: 5.16
 
 /*
  * Default Candlepin rule set.
@@ -2210,8 +2210,9 @@ var Autobind = {
         var poolSLA = pool.getProductAttribute('support_level');
         var poolSLAExempt = isLevelExempt(pool.getProductAttribute('support_level'), context.exemptList);
 
-        if (!poolSLAExempt && consumerSLA &&
-            consumerSLA != "" && !Utils.equalsIgnoreCase(consumerSLA, poolSLA)) {
+        if (poolSLA && poolSLA != "" && !poolSLAExempt &&
+            consumerSLA && consumerSLA != "" &&
+            !Utils.equalsIgnoreCase(consumerSLA, poolSLA)) {
             log.debug("Skipping pool " + pool.id +
                     " since SLA does not match that of the consumer.");
             return false;
