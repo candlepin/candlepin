@@ -8,7 +8,7 @@
 
     <groupId>org.candlepin</groupId>
     <artifactId>candlepin-parent</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
     <packaging>pom</packaging>
     <name>Candlepin Parent Project</name>
     <url>http://www.candlepinproject.org</url>
