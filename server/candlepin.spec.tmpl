@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.1
+Version: 2.0.2
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -208,6 +208,9 @@ fi
 
 #raw
 %changelog
+* Wed May 27 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 2.0.2-1
+- Rebuild with new parent pom version.
+
 * Tue May 26 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 2.0.1-1
 - Fixed method name check in cpc (crog@redhat.com)
 - Fix dev deploy scripts to use the new spec templates. (dgoodwin@redhat.com)
