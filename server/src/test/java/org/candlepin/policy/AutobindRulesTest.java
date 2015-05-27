@@ -357,8 +357,9 @@ public class AutobindRulesTest {
             new String[]{ productId, slaPremiumProdId, slaStandardProdId},
             pools, compliance, null, new HashSet<String>(), false);
 
-        assertEquals(1, bestPools.size());
+        assertEquals(2, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
+        assertTrue(bestPools.contains(new PoolQuantity(noSLAPool, 1)));
     }
 
     @Test
@@ -411,8 +412,9 @@ public class AutobindRulesTest {
             new String[]{ productId, slaPremiumProdId, slaStandardProdId},
             pools, compliance, null, new HashSet<String>(), false);
 
-        assertEquals(1, bestPools.size());
+        assertEquals(2, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
+        assertTrue(bestPools.contains(new PoolQuantity(noSLAPool, 1)));
     }
 
     @Test
