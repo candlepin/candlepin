@@ -32,6 +32,7 @@ import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 import org.slf4j.Logger;
@@ -99,17 +100,38 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  A list of statuses to use to filter the results. If provided, only compliances with a status
      *  matching the list will be retrieved.
      *
+     * @param productNameFilters
+     *  A list of product names to use to filter compliances. If provided, only compliances for
+     *  consumers having installed the specified products will be retrieved.
+     *
+     * @param subscriptionSkuFilters
+     *  A list of subscription skus to use to filter compliances. If provided, only compliances for
+     *  the specified subscription skus will be retrieved.
+     *
+     * @param subscriptionNameFilters
+     *  A list of subscription names to use to filter compliances. If provided, only compliances for
+     *  the specified subscription names will be retrieved.
+     *
+     * @param attributeFilters
+     *  A map of entitlement attributes to use to filter compliances. If provided, only compliances
+     *  for entitlements having the specified values for the given attributes will be retrieved.
+     *
      * @return
      *  An iterator over the compliance snapshots for the target date.
      */
     public Iterator<Compliance> getSnapshotIterator(Date targetDate, List<String> consumerUuids,
-        List<String> ownerFilters, List<String> statusFilters, Map<String, String> attributeFilters) {
+        List<String> ownerFilters, List<String> statusFilters, List<String> productNameFilters,
+        List<String> subscriptionSkuFilters, List<String> subscriptionNameFilters,
+        Map<String, String> attributeFilters) {
 
         Page<Iterator<Compliance>> result = this.getSnapshotIterator(
             targetDate,
             consumerUuids,
             ownerFilters,
             statusFilters,
+            productNameFilters,
+            subscriptionSkuFilters,
+            subscriptionNameFilters,
             attributeFilters,
             null
         );
@@ -136,6 +158,22 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  A list of statuses to use to filter the results. If provided, only compliances with a status
      *  matching the list will be retrieved.
      *
+     * @param productNameFilters
+     *  A list of product names to use to filter compliances. If provided, only compliances for
+     *  consumers having installed the specified products will be retrieved.
+     *
+     * @param subscriptionSkuFilters
+     *  A list of subscription skus to use to filter compliances. If provided, only compliances for
+     *  the specified subscription skus will be retrieved.
+     *
+     * @param subscriptionNameFilters
+     *  A list of subscription names to use to filter compliances. If provided, only compliances for
+     *  the specified subscription names will be retrieved.
+     *
+     * @param attributeFilters
+     *  A map of entitlement attributes to use to filter compliances. If provided, only compliances
+     *  for entitlements having the specified values for the given attributes will be retrieved.
+     *
      * @param pageRequest
      *  A PageRequest instance containing paging information from the request. If null, no paging
      *  will be performed.
@@ -145,8 +183,9 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  the paging information for the query.
      */
     public Page<Iterator<Compliance>> getSnapshotIterator(Date targetDate, List<String> consumerUuids,
-        List<String> ownerFilters, List<String> statusFilters, Map<String, String> attributeFilters,
-        PageRequest pageRequest) {
+        List<String> ownerFilters, List<String> statusFilters, List<String> productNameFilters,
+        List<String> subscriptionSkuFilters, List<String> subscriptionNameFilters,
+        Map<String, String> attributeFilters, PageRequest pageRequest) {
 
         Page<Iterator<Compliance>> page = new Page<Iterator<Compliance>>();
         page.setPageRequest(pageRequest);
@@ -180,18 +219,20 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                 .add(Projections.groupProperty("c.uuid"))
         );
 
-        // Post query filter on Status.
         Session session = this.currentSession();
-        Criteria query = session.createCriteria(Compliance.class)
-            .createAlias("consumer", "cs")
-            .add(Subqueries.propertiesIn(new String[] {"date", "cs.uuid"}, subquery))
+        Criteria query = session.createCriteria(Compliance.class, "comp")
+            .createAlias("comp.consumer", "cs")
+            .add(Subqueries.propertiesIn(new String[] {"comp.date", "cs.uuid"}, subquery))
             .setCacheMode(CacheMode.IGNORE)
             .setReadOnly(true);
 
 
         if ((statusFilters != null && !statusFilters.isEmpty()) ||
-                (attributeFilters != null && attributeFilters.containsKey("management_enabled"))) {
-            query.createAlias("status", "stat");
+            (attributeFilters != null && attributeFilters.containsKey("management_enabled")) ||
+            (productNameFilters != null && !productNameFilters.isEmpty())) {
+
+            query.createAlias("comp.status", "stat");
+
             if (statusFilters != null && !statusFilters.isEmpty()) {
                 query.add(Restrictions.in("stat.status", statusFilters));
             }
@@ -200,6 +241,127 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                 boolean managementEnabledFilter =
                         PropertyConverter.toBoolean(attributeFilters.get("management_enabled"));
                 query.add(Restrictions.eq("stat.managementEnabled", managementEnabledFilter));
+            }
+
+            if (productNameFilters != null && !productNameFilters.isEmpty()) {
+                // criteria.add(String.format(
+                //     "?%d IN (" +
+                //     "SELECT Installed.productName " +
+                //     "FROM " +
+                //         "Consumer AS ConsumerSnapP " +
+                //         "INNER JOIN ConsumerSnapP.installedProducts AS Installed " +
+                //         "INNER JOIN ConsumerSnapP.complianceSnapshot AS ComplianceSnapP " +
+                //         "INNER JOIN ComplianceSnapP.status AS ComplianceStatusSnapP " +
+                //         "LEFT JOIN ComplianceStatusSnapP.compliantProducts AS CProduct " +
+                //         "LEFT JOIN ComplianceStatusSnapP.nonCompliantProducts AS NCProduct " +
+                //         "LEFT JOIN ComplianceStatusSnapP.partiallyCompliantProducts AS PCProduct " +
+                //     "WHERE " +
+                //         "ComplianceStatusSnapP.id = ComplianceStatusSnap.id " +
+                //         "AND (" +
+                //             "Installed.productId = CProduct " +
+                //             "OR Installed.productId = NCProduct " +
+                //             "OR Installed.productId = PCProduct " +
+                //         ")" +
+                //     ")",
+                //     ++counter
+                // ));
+
+/*
+select this_.id as id1_1_5_, this_.date as date2_1_5_, cs1_.id as id1_7_0_, cs1_.compliance_snap_id as complia12_7_0_, cs1_.uuid as uuid11_7_0_, cs1_.entitlementCount as entitlem2_7_0_, cs1_.entitlementStatus as
+ entitlem3_7_0_, cs1_.environmentName as environm4_7_0_, cs1_.hypervisorId as hypervis5_7_0_, cs1_.lastCheckin as lastChec6_7_0_, cs1_.name as name7_7_0_, cs1_.releaseVer as releaseV8_7_0_, cs1_.serviceLevel as serviceL9_7_0_, cs1_.type_id as type_id13_7_0_, cs1_.usernam
+e as usernam10_7_0_, consumerst5_.uuid as uuid1_8_1_, consumerst5_.created as created2_8_1_, consumerst5_.deleted as deleted3_8_1_, consumerst5_.ownerKey as ownerKey4_8_1_, consumerty6_.id as id1_9_2_, consumerty6_.label as label2_9_2_, consumerty6_.manifest as manifest3
+_9_2_, owner7_.id as id1_18_3_, owner7_.consumer_snap_id as consumer4_18_3_, owner7_.displayName as displayN2_18_3_, owner7_.account as account3_18_3_, stat2_.id as id1_2_4_, stat2_.compliance_snap_id as complian6_2_4_, stat2_.compliant_until as complian2_2_4_, stat2_.da
+te as date3_2_4_, stat2_.management_enabled as manageme4_2_4_, stat2_.status as status5_2_4_ from gb_compliance_snap this_ inner join gb_consumer_snap cs1_ on this_.id=cs1_.compliance_snap_id left outer join gb_consumer_state consumerst5_ on cs1_.uuid=consumerst5_.uuid l
+eft outer join gb_consumer_type_snap consumerty6_ on cs1_.type_id=consumerty6_.id left outer join gb_owner_snap owner7_ on cs1_.id=owner7_.consumer_snap_id inner join gb_compliance_status_snap stat2_ on this_.id=stat2_.compliance_snap_id where (stat2_.id in (select insta
+lled2_.product_id as y0_ from gb_compliance_snap comp2_ inner join gb_consumer_snap cons2x1_ on comp2_.id=cons2x1_.compliance_snap_id inner join gb_installed_product_snap installed2_ on cons2x1_.id=installed2_.consumer_id where (installed2_.product_name in (?) and comp2_
+.id=this_.id)) or stat2_.id in (select installed2_.product_id as y0_ from gb_compliance_snap comp2_ inner join gb_consumer_snap cons2x1_ on comp2_.id=cons2x1_.compliance_snap_id inner join gb_installed_product_snap installed2_ on cons2x1_.id=installed2_.consumer_id where
+ (installed2_.product_name in (?) and comp2_.id=this_.id)) or stat2_.id in (select installed2_.product_id as y0_ from gb_compliance_snap comp2_ inner join gb_consumer_snap cons2x1_ on comp2_.id=cons2x1_.compliance_snap_id inner join gb_installed_product_snap installed2_
+on cons2x1_.id=installed2_.consumer_id where (installed2_.product_name in (?) and comp2_.id=this_.id)))
+
+    [junit] 2015-05-28 20:38:16,025 [main] TRACE BasicBinder[84] - binding parameter [1] as [VARCHAR] - p1
+    [junit] 2015-05-28 20:38:16,025 [main] TRACE BasicBinder[84] - binding parameter [2] as [VARCHAR] - p1
+    [junit] 2015-05-28 20:38:16,025 [main] TRACE BasicBinder[84] - binding parameter [3] as [VARCHAR] - p1
+*/
+
+
+
+                Criteria outerquery = session.createCriteria(Compliance.class, "comp")
+                    .createAlias("comp.consumer", "cs")
+                    .createAlias("comp.status", "stat");
+
+                DetachedCriteria testquery = DetachedCriteria.forClass(Compliance.class, "comp2");
+                testquery.createAlias("comp2.consumer", "cons2");
+                testquery.createAlias("cons2.installedProducts", "installed");
+                testquery.add(Restrictions.and(
+                    Restrictions.in("installed.productName", productNameFilters),
+                    Restrictions.eqProperty("comp2.id", "comp.id")
+                ));
+                testquery.setProjection(Projections.property("installed.productId"));
+
+                outerquery.add(
+                    Restrictions.or(
+                        Property.forName("stat.compliantProducts").in(testquery),
+                        Property.forName("stat.partiallyCompliantProducts").in(testquery),
+                        Property.forName("stat.nonCompliantProducts").in(testquery)
+                    )
+                );
+
+                for (Compliance comp : (List<Compliance>) outerquery.list()) {
+                    log.debug("Comp id: {}", comp.getId());
+
+                    if (comp.getStatus().getCompliantProducts() != null) {
+                        for (String id : comp.getStatus().getCompliantProducts()) {
+                            log.debug("Found compliant prod id: {}", id);
+                        }
+                    }
+
+                    if (comp.getStatus().getPartiallyCompliantProducts() != null) {
+                        for (String id : comp.getStatus().getPartiallyCompliantProducts()) {
+                            log.debug("Found partially-compliant prod id: {}", id);
+                        }
+                    }
+
+                    if (comp.getStatus().getNonCompliantProducts() != null) {
+                        for (String id : comp.getStatus().getNonCompliantProducts()) {
+                            log.debug("Found non-compliant prod id: {}", id);
+                        }
+                    }
+                }
+                log.debug("Done.");
+
+                DetachedCriteria prodQuery = DetachedCriteria.forClass(Compliance.class, "comp2");
+                prodQuery.createAlias("comp2.consumer", "cons2");
+                prodQuery.createAlias("cons2.installedProducts", "installed");
+                prodQuery.add(Restrictions.and(
+                    Restrictions.in("installed.productName", productNameFilters),
+                    Restrictions.eqProperty("comp2.id", "comp.id")
+                ));
+                prodQuery.setProjection(Projections.property("installed.productId"));
+
+                query.add(
+                    Restrictions.or(
+                        Subqueries.propertyIn("stat.compliantProducts", prodQuery),
+                        Subqueries.propertyIn("stat.partiallyCompliantProducts", prodQuery),
+                        Subqueries.propertyIn("stat.nonCompliantProducts", prodQuery)
+                    )
+                );
+            }
+        }
+
+        // Add subscription filters, if necessary
+        if ((subscriptionSkuFilters != null && !subscriptionSkuFilters.isEmpty()) ||
+            (subscriptionNameFilters != null && !subscriptionNameFilters.isEmpty())) {
+
+            // Impl note: We have to be very careful with alias names, as Hibernate has a tendancy
+            // to errorneously truncate "long" ones. Actual property/field names are safe, though.
+            query.createAlias("comp.entitlements", "entsnap");
+
+            if (subscriptionSkuFilters != null && !subscriptionSkuFilters.isEmpty()) {
+                query.add(Restrictions.in("entsnap.productId", subscriptionSkuFilters));
+            }
+
+            if (subscriptionNameFilters != null && !subscriptionNameFilters.isEmpty()) {
+                query.add(Restrictions.in("entsnap.productName", subscriptionNameFilters));
             }
         }
 

@@ -87,10 +87,30 @@ public class ConsumerStatusReport extends Report<ReportResult> {
                 .getParameter()
         );
 
-        addParameter(
+        this.addParameter(
+            builder.init("product_name", i18n.tr("The name of a product on which to filter"))
+                .mustNotHave("sku", "subscription_name", "management_enabled")
+                .getParameter()
+        );
+
+        this.addParameter(
+            builder.init("sku", i18n.tr("The entitlement sku on which to filter"))
+                .mustNotHave("product_name", "subscription_name", "management_enabled")
+                .getParameter()
+        );
+
+        this.addParameter(
+            builder.init("subscription_name", i18n.tr("The name of a subscription on which to filter"))
+                .mustNotHave("product_name", "sku", "management_enabled")
+                .getParameter()
+        );
+
+        this.addParameter(
             builder.init(
                 "management_enabled",
-                i18n.tr("Filter on subscriptions which have management enabled set to this value (boolean)"))
+                i18n.tr("Filter on subscriptions which have management enabled set to this value (boolean)")
+            )
+                .mustNotHave("product_name", "sku", "subscription_name")
                 .getParameter()
         );
 
@@ -113,7 +133,6 @@ public class ConsumerStatusReport extends Report<ReportResult> {
                 .mustNotHave("include")
                 .multiValued()
                 .getParameter());
-
     }
 
     @Override
@@ -124,6 +143,9 @@ public class ConsumerStatusReport extends Report<ReportResult> {
         List<String> consumerIds = queryParams.get("consumer_uuid");
         List<String> statusFilters = queryParams.get("status");
         List<String> ownerFilters = queryParams.get("owner");
+        List<String> productNameFilters = queryParams.get("product_name");
+        List<String> subscriptionSkuFilters = queryParams.get("sku");
+        List<String> subscriptionNameFilters = queryParams.get("subscription_name");
 
         Date targetDate = queryParams.containsKey("on_date") ?
             parseDateTime(queryParams.getFirst("on_date")) :
@@ -151,14 +173,60 @@ public class ConsumerStatusReport extends Report<ReportResult> {
             queryParams.getFirst(CUSTOM_RESULTS_PARAM) : "";
         boolean useCustom = PropertyConverter.toBoolean(custom);
 
-        Page<Iterator<Compliance>> page = this.complianceSnapshotCurator.getSnapshotIterator(
-            targetDate,
-            consumerIds,
-            ownerFilters,
-            statusFilters,
-            attributeFilters,
-            pageRequest
-        );
+        Page<Iterator<Compliance>> page;
+
+        if (productNameFilters != null) {
+            page = this.complianceSnapshotCurator.getSnapshotIterator(
+                targetDate,
+                consumerIds,
+                ownerFilters,
+                statusFilters,
+                productNameFilters,
+                null,
+                null,
+                attributeFilters,
+                pageRequest
+            );
+        }
+        else if (subscriptionSkuFilters != null) {
+            page = this.complianceSnapshotCurator.getSnapshotIterator(
+                targetDate,
+                consumerIds,
+                ownerFilters,
+                statusFilters,
+                null,
+                subscriptionSkuFilters,
+                null,
+                attributeFilters,
+                pageRequest
+            );
+        }
+        else if (subscriptionNameFilters != null) {
+            page = this.complianceSnapshotCurator.getSnapshotIterator(
+                targetDate,
+                consumerIds,
+                ownerFilters,
+                statusFilters,
+                null,
+                null,
+                subscriptionNameFilters,
+                attributeFilters,
+                pageRequest
+            );
+        }
+        else {
+            page = this.complianceSnapshotCurator.getSnapshotIterator(
+                targetDate,
+                consumerIds,
+                ownerFilters,
+                statusFilters,
+                null,
+                null,
+                null,
+                attributeFilters,
+                pageRequest
+            );
+        }
 
         ResteasyProviderFactory.pushContext(Page.class, page);
 

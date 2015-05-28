@@ -23,6 +23,7 @@ import org.candlepin.gutterball.model.snapshot.Compliance;
 import org.candlepin.gutterball.model.snapshot.ComplianceReason;
 import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
 import org.candlepin.gutterball.model.snapshot.Consumer;
+import org.candlepin.gutterball.model.snapshot.ConsumerInstalledProduct;
 import org.candlepin.gutterball.model.snapshot.Owner;
 import org.candlepin.gutterball.report.Report;
 
@@ -30,8 +31,10 @@ import org.apache.commons.lang.RandomStringUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 public class TestUtils {
 
@@ -64,6 +67,34 @@ public class TestUtils {
             String owner, String statusString, ConsumerState state) {
         Consumer consumerSnap = new Consumer(consumerUuid, null, createOwnerSnapshot(owner, owner));
         consumerSnap.setConsumerState(state);
+        ComplianceStatus statusSnap = new ComplianceStatus(statusDate, statusString);
+
+        if (statusString.toLowerCase().equals("invalid")) {
+            ComplianceReason reason = new ComplianceReason("reason-key", "Test message");
+            reason.setComplianceStatus(statusSnap);
+            statusSnap.getReasons().add(reason);
+        }
+        return new Compliance(statusDate, consumerSnap, statusSnap);
+    }
+
+    public static Compliance createComplianceSnapshotWithProducts(Date statusDate, String consumerUuid,
+            String owner, String statusString, ConsumerState state, Set<String> products) {
+        Consumer consumerSnap = new Consumer(consumerUuid, null, createOwnerSnapshot(owner, owner));
+        consumerSnap.setConsumerState(state);
+
+        Set<ConsumerInstalledProduct> installedProducts = new HashSet<ConsumerInstalledProduct>();
+
+        for (String productName : products) {
+            ConsumerInstalledProduct installed = new ConsumerInstalledProduct();
+
+            installed.setProductId(productName);
+            installed.setProductName(productName);
+
+            installedProducts.add(installed);
+        }
+
+        consumerSnap.setInstalledProducts(installedProducts);
+
         ComplianceStatus statusSnap = new ComplianceStatus(statusDate, statusString);
 
         if (statusString.toLowerCase().equals("invalid")) {

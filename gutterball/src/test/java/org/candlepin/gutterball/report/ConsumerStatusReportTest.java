@@ -77,8 +77,8 @@ public class ConsumerStatusReportTest {
 
         // Indentation note: This is what checkstyle actually wants. :/
         when(complianceSnapshotCurator.getSnapshotIterator(
-                any(Date.class), any(List.class), any(List.class), any(List.class), any(Map.class),
-                any(PageRequest.class)
+            any(Date.class), any(List.class), any(List.class), any(List.class), any(List.class),
+            any(List.class), any(List.class), any(Map.class), any(PageRequest.class)
         )).thenReturn(page);
 
         report = new ConsumerStatusReport(i18nProvider, complianceSnapshotCurator, messageGenerator);
@@ -115,8 +115,11 @@ public class ConsumerStatusReportTest {
 
         report.run(params, pageRequest);
 
-        verify(complianceSnapshotCurator).getSnapshotIterator(eq(cal.getTime()),
-                eq(uuids), eq(owners), eq(status), any(Map.class), eq(pageRequest));
+        verify(complianceSnapshotCurator).getSnapshotIterator(
+            eq(cal.getTime()), eq(uuids), eq(owners), eq(status), any(List.class), any(List.class),
+            any(List.class), any(Map.class), eq(pageRequest)
+        );
+
         verifyNoMoreInteractions(complianceSnapshotCurator);
     }
 
@@ -133,8 +136,11 @@ public class ConsumerStatusReportTest {
 
         report.run(params, pageRequest);
 
-        verify(complianceSnapshotCurator).getSnapshotIterator(any(Date.class),
-                eq(uuids), eq(owners), eq(status), any(Map.class), eq(pageRequest));
+        verify(complianceSnapshotCurator).getSnapshotIterator(
+            any(Date.class), eq(uuids), eq(owners), eq(status), any(List.class), any(List.class),
+            any(List.class), any(Map.class), eq(pageRequest)
+        );
+
         verifyNoMoreInteractions(complianceSnapshotCurator);
     }
 
@@ -149,11 +155,11 @@ public class ConsumerStatusReportTest {
         PageRequest pageRequest = null;
 
         report.run(params, pageRequest);
-        verify(complianceSnapshotCurator).getSnapshotIterator(any(Date.class),
-                eq(uuids), eq(owners),
-                eq(Arrays.asList("partial")),
-                any(Map.class),
-                eq(pageRequest));
+        verify(complianceSnapshotCurator).getSnapshotIterator(
+            any(Date.class), eq(uuids), eq(owners), eq(Arrays.asList("partial")), any(List.class),
+            any(List.class), any(List.class), any(Map.class), eq(pageRequest)
+        );
+
         verifyNoMoreInteractions(complianceSnapshotCurator);
     }
 
@@ -170,12 +176,8 @@ public class ConsumerStatusReportTest {
 
         report.run(params, pageRequest);
         verify(complianceSnapshotCurator).getSnapshotIterator(
-                any(Date.class),
-                eq(uuids),
-                eq(owners),
-                eq(statuses),
-                any(Map.class),
-                eq(pageRequest)
+            any(Date.class), eq(uuids), eq(owners), eq(statuses), any(List.class),
+            any(List.class), any(List.class), any(Map.class), eq(pageRequest)
         );
         verifyNoMoreInteractions(complianceSnapshotCurator);
     }
@@ -193,8 +195,8 @@ public class ConsumerStatusReportTest {
         page.setPageData(complianceList.iterator());
 
         when(complianceSnapshotCurator.getSnapshotIterator(
-                any(Date.class), any(List.class), any(List.class), any(List.class), any(Map.class),
-                any(PageRequest.class)
+                any(Date.class), any(List.class), any(List.class), any(List.class), any(List.class),
+                any(List.class), any(List.class), any(Map.class), any(PageRequest.class)
         )).thenReturn(page);
 
         ComplianceTransformerIterator result = (ComplianceTransformerIterator) report.run(params, null);
@@ -216,8 +218,8 @@ public class ConsumerStatusReportTest {
         page.setPageData(complianceList.iterator());
 
         when(complianceSnapshotCurator.getSnapshotIterator(
-                any(Date.class), any(List.class), any(List.class), any(List.class),
-                any(Map.class), any(PageRequest.class)
+                any(Date.class), any(List.class), any(List.class), any(List.class), any(List.class),
+                any(List.class), any(List.class), any(Map.class), any(PageRequest.class)
         )).thenReturn(page);
 
         ReasonGeneratingReportResult result = (ReasonGeneratingReportResult) report.run(params, null);
