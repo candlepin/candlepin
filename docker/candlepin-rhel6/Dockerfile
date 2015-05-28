@@ -10,7 +10,7 @@ RUN rpm -ivh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noar
 RUN yum install -y vim-enhanced python-pip postgresql postgresql-jdbc
 
 ADD candlepin.repo /etc/yum.repos.d/
-RUN yum install -y candlepin candlepin-tomcat6
+RUN yum install -y candlepin
 
 ADD setup-supervisor.sh /root/
 RUN /bin/bash /root/setup-supervisor.sh
