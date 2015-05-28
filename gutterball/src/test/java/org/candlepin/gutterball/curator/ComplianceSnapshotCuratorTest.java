@@ -29,6 +29,7 @@ import org.candlepin.gutterball.model.Event;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
 import org.candlepin.gutterball.model.snapshot.Consumer;
+import org.candlepin.gutterball.model.snapshot.ConsumerInstalledProduct;
 import org.candlepin.gutterball.model.snapshot.Entitlement;
 
 import org.junit.Before;
@@ -291,8 +292,16 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     public void testGetAllLatestStatusReportsIterator() {
         // c1 was deleted before the report date.
         List<String> expectedConsumerUuids = Arrays.asList("c2", "c3", "c4");
-        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(null, null, null, null,
-                null);
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+        );
 
         int received = 0;
         while (snaps.hasNext()) {
@@ -312,8 +321,16 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
 
         Map<String, String> attributeFilters = new HashMap<String, String>();
         attributeFilters.put("management_enabled", "1");
-        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(null, null, null, null,
-                attributeFilters);
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            attributeFilters
+        );
 
         int received = 0;
         Compliance comp = null;
@@ -333,8 +350,16 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
 
         Map<String, String> attributeFilters = new HashMap<String, String>();
         attributeFilters.put("management_enabled", "0");
-        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(null, null, null, null,
-                attributeFilters);
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            attributeFilters
+        );
 
         int received = 0;
         while (snaps.hasNext()) {
@@ -366,6 +391,9 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
 
         Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
             cal.getTime(),
+            null,
+            null,
+            null,
             null,
             null,
             null,
@@ -437,6 +465,9 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
                 null,
                 null,
                 null,
+                null,
+                null,
+                null,
                 pageRequest
             );
 
@@ -470,6 +501,9 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
             null,
             null,
             null,
+            null,
+            null,
+            null,
             null
         );
 
@@ -493,6 +527,9 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
             null,
             Arrays.asList(expectedOwner),
             null,
+            null,
+            null,
+            null,
             null
         );
 
@@ -509,6 +546,9 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
             new Date(),
             Arrays.asList("c1", "c4"),
+            null,
+            null,
+            null,
             null,
             null,
             null
@@ -550,6 +590,9 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
             null,
             null,
             Arrays.asList(expectedStatus),
+            null,
+            null,
+            null,
             null
         );
 
@@ -558,6 +601,123 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
 
         assertEquals("c3", compliance.getConsumer().getUuid());
         assertFalse(snaps.hasNext());
+    }
+
+
+    @Test
+    public void testGetIteratorByProductName() {
+        String expectedProduct = "p1";
+
+        // Note: c1 is deleted before the test is run (June 10, 2012)
+        List<String> expectedConsumerUuids = Arrays.asList("c2", "c4");
+
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
+            null,
+            null,
+            null,
+            null,
+            Arrays.asList(expectedProduct),
+            null,
+            null,
+            null
+        );
+
+        int received = 0;
+        while (snaps.hasNext()) {
+            Compliance comp = snaps.next();
+            assertTrue(expectedConsumerUuids.contains(comp.getConsumer().getUuid()));
+
+            // Ensure the product was listed.
+            boolean found = false;
+            for (ConsumerInstalledProduct product : comp.getConsumer().getInstalledProducts()) {
+                if (expectedProduct.equalsIgnoreCase(product.getProductName())) {
+                    found = true;
+                    break;
+                }
+            }
+
+            assertTrue("Expected product not found in consumer's installed product list.", found);
+
+            ++received;
+        }
+
+        assertEquals(expectedConsumerUuids.size(), received);
+    }
+
+    @Test
+    public void testGetIteratorBySubscriptionSku() {
+        String expectedSku = "testsku2";
+        List<String> expectedConsumerUuids = Arrays.asList("c2", "c3", "c4");
+
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
+            null,
+            null,
+            null,
+            null,
+            null,
+            Arrays.asList(expectedSku),
+            null,
+            null
+        );
+
+        int received = 0;
+        while (snaps.hasNext()) {
+            Compliance comp = snaps.next();
+            assertTrue(expectedConsumerUuids.contains(comp.getConsumer().getUuid()));
+
+            // Ensure the product was listed.
+            boolean found = false;
+            for (Entitlement entitlement : comp.getEntitlements()) {
+                if (expectedSku.equalsIgnoreCase(entitlement.getProductId())) {
+                    found = true;
+                    break;
+                }
+            }
+
+            assertTrue("Expected subscription sku not found in compliance entitlement list.", found);
+
+            ++received;
+        }
+
+        assertEquals(expectedConsumerUuids.size(), received);
+    }
+
+    @Test
+    public void testGetIteratorBySubscriptionName() {
+        String expectedSubscription = "test product 2";
+        List<String> expectedConsumerUuids = Arrays.asList("c2", "c3", "c4");
+
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            Arrays.asList(expectedSubscription),
+            null
+        );
+
+        int received = 0;
+        while (snaps.hasNext()) {
+            Compliance comp = snaps.next();
+            assertTrue(expectedConsumerUuids.contains(comp.getConsumer().getUuid()));
+
+            // Ensure the product was listed.
+            boolean found = false;
+            for (Entitlement entitlement : comp.getEntitlements()) {
+                if (expectedSubscription.equalsIgnoreCase(entitlement.getProductName())) {
+                    found = true;
+                    break;
+                }
+            }
+
+            assertTrue("Expected subscription name not found in compliance entitlement list.", found);
+
+            ++received;
+        }
+
+        assertEquals(expectedConsumerUuids.size(), received);
     }
 
     @Test
