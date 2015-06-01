@@ -272,6 +272,7 @@ define "candlepin" do
       GUICE,
       HIBERNATE,
       JACKSON,
+      LIQUIBASE,
       LOGGING,
       PROVIDED,
       RESTEASY,

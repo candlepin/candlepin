@@ -184,7 +184,7 @@ public class ConsumerStatusReport extends Report<ReportResult> {
                 productNameFilters,
                 null,
                 null,
-                attributeFilters,
+                null,
                 pageRequest
             );
         }
@@ -197,7 +197,7 @@ public class ConsumerStatusReport extends Report<ReportResult> {
                 null,
                 subscriptionSkuFilters,
                 null,
-                attributeFilters,
+                null,
                 pageRequest
             );
         }
@@ -210,7 +210,7 @@ public class ConsumerStatusReport extends Report<ReportResult> {
                 null,
                 null,
                 subscriptionNameFilters,
-                attributeFilters,
+                null,
                 pageRequest
             );
         }

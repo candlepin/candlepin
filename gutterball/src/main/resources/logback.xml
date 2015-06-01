@@ -9,8 +9,8 @@
         </encoder>
     </appender>
 
-    <logger name="org.candlepin.gutterball" level="INFO"/>
-    <logger name="org.candlepin.common" level="INFO"/>
+    <logger name="org.candlepin.gutterball" level="DEBUG"/>
+    <logger name="org.candlepin.common" level="DEBUG"/>
 
     <root level="WARN">
         <appender-ref ref="GutterballAppender" />
