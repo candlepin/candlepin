@@ -28,9 +28,12 @@ import org.candlepin.gutterball.model.ConsumerState;
 import org.candlepin.gutterball.model.Event;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
+import org.candlepin.gutterball.model.snapshot.CompliantProductReference;
 import org.candlepin.gutterball.model.snapshot.Consumer;
 import org.candlepin.gutterball.model.snapshot.ConsumerInstalledProduct;
 import org.candlepin.gutterball.model.snapshot.Entitlement;
+import org.candlepin.gutterball.model.snapshot.NonCompliantProductReference;
+import org.candlepin.gutterball.model.snapshot.PartiallyCompliantProductReference;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -150,13 +153,13 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
 
         // Consumer created
         cal.set(Calendar.MONTH, Calendar.MARCH);
-        compliance = createInitialConsumer(cal.getTime(), "c1", "o1", "invalid", c1prods);
-        setCompliantProducts(compliance, null, null, c1prods);
+        compliance = createInitialConsumerWithCompliances(cal.getTime(), "c1", "o1", "invalid",
+            c1prods, null, null, c1prods);
         attachEntitlement(compliance, entitlement1);
         // Simulate status change
         cal.set(Calendar.MONTH, Calendar.MAY);
-        compliance = createSnapshotWithProducts(cal.getTime(), "c1", "o1", "valid", c1prods);
-        setCompliantProducts(compliance, c1prods, null, null);
+        compliance = createSnapshotWithProductsAndCompliances(cal.getTime(), "c1", "o1", "valid",
+            c1prods, c1prods, null, null);
         attachEntitlement(compliance, entitlement1);
         // Consumer was deleted
         cal.set(Calendar.MONTH, Calendar.JUNE);
@@ -164,35 +167,33 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         attachEntitlement(compliance, entitlement1);
 
         cal.set(Calendar.MONTH, Calendar.APRIL);
-        compliance = createInitialConsumer(cal.getTime(), "c2", "o1", "invalid", c2prods);
-        this.complianceSnapshotCurator.merge(compliance);
-        setCompliantProducts(compliance, null, null, c2prods);
+        compliance = createInitialConsumerWithCompliances(cal.getTime(), "c2", "o1", "invalid",
+            c2prods, null, null, c2prods);
         attachEntitlement(compliance, entitlement1);
         attachEntitlement(compliance, entitlement2);
 
         cal.set(Calendar.MONTH, Calendar.MAY);
-        compliance = createInitialConsumer(cal.getTime(), "c3", "o2", "invalid", c3prods);
-        setCompliantProducts(compliance, null, null, c3prods);
+        compliance = createInitialConsumerWithCompliances(cal.getTime(), "c3", "o2", "invalid",
+            c3prods, null, null, c3prods);
         attachEntitlement(compliance, entitlement2);
         cal.set(Calendar.MONTH, Calendar.JUNE);
-        compliance = createSnapshotWithProducts(cal.getTime(), "c3", "o2", "partial", c3prods);
-        setCompliantProducts(compliance, new HashSet(Arrays.asList("p3")),
-            new HashSet(Arrays.asList("p4")), null);
+        compliance = createSnapshotWithProductsAndCompliances(cal.getTime(), "c3", "o2", "partial",
+            c3prods, new HashSet(Arrays.asList("p3")), new HashSet(Arrays.asList("p4")), null);
         attachEntitlement(compliance, entitlement2);
 
         cal.set(Calendar.MONTH, Calendar.MAY);
-        compliance = createInitialConsumer(cal.getTime(), "c4", "o3", "invalid", c4prods);
-        setCompliantProducts(compliance, null, null, c4prods);
+        compliance = createInitialConsumerWithCompliances(cal.getTime(), "c4", "o3", "invalid",
+            c4prods, null, null, c4prods);
         attachEntitlement(compliance, entitlement2);
         attachEntitlement(compliance, entitlement3);
         cal.set(Calendar.MONTH, Calendar.JUNE);
-        compliance = createSnapshotWithProducts(cal.getTime(), "c4", "o3", "partial", c4prods);
-        setCompliantProducts(compliance, null, c4prods, null);
+        compliance = createSnapshotWithProductsAndCompliances(cal.getTime(), "c4", "o3", "partial",
+            c4prods, null, c4prods, null);
         attachEntitlement(compliance, entitlement2);
         attachEntitlement(compliance, entitlement3);
         cal.set(Calendar.MONTH, Calendar.JULY);
-        compliance = createSnapshotWithProducts(cal.getTime(), "c4", "o3", "valid", c4prods);
-        setCompliantProducts(compliance, c4prods, null, null);
+        compliance = createSnapshotWithProductsAndCompliances(cal.getTime(), "c4", "o3", "valid",
+            c4prods, c4prods, null, null);
         attachEntitlement(compliance, entitlement2);
         attachEntitlement(compliance, entitlement3);
 
@@ -1813,11 +1814,34 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         return snapshot;
     }
 
+    private Compliance createInitialConsumerWithCompliances(Date createdOn, String uuid, String owner,
+        String status, Set<String> products, Set<String> compliant, Set<String> partiallyCompliant,
+        Set<String> nonCompliant) {
+
+        Compliance snapshot = this.createSnapshotWithProductsAndCompliances(createdOn, uuid, owner,
+            status, products, compliant, partiallyCompliant, nonCompliant);
+
+        this.consumerStateCurator.create(new ConsumerState(uuid, owner, createdOn));
+
+        return snapshot;
+    }
+
     private Compliance createSnapshotWithProducts(Date date, String uuid, String owner,
         String status, Set<String> products) {
 
         Compliance snapshot = createComplianceSnapshotWithProducts(date, uuid, owner, status, null,
             products);
+        complianceSnapshotCurator.create(snapshot);
+
+        return snapshot;
+    }
+
+    private Compliance createSnapshotWithProductsAndCompliances(Date date, String uuid, String owner,
+        String status, Set<String> products, Set<String> compliant, Set<String> partiallyCompliant,
+        Set<String> nonCompliant) {
+
+        Compliance snapshot = createComplianceSnapshotWithProductsAndCompliances(date, uuid, owner,
+            status, null, products, compliant, partiallyCompliant, nonCompliant);
         complianceSnapshotCurator.create(snapshot);
 
         return snapshot;
@@ -1835,28 +1859,6 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         consumerStateCurator.setConsumerDeleted(uuid, deletedOn);
 
         return snapshot;
-    }
-
-    private Compliance setCompliantProducts(Compliance compliance, Set<String> compliant,
-        Set<String> partiallyCompliant, Set<String> nonCompliant) {
-
-        ComplianceStatus status = compliance.getStatus();
-
-        status.setCompliantProducts(compliant);
-        status.setPartiallyCompliantProducts(partiallyCompliant);
-        status.setNonCompliantProducts(nonCompliant);
-
-        this.complianceSnapshotCurator.merge(compliance);
-
-
-        Compliance test = this.complianceSnapshotCurator.find(compliance.getId());
-        assertNotNull(test);
-
-        assertEquals(compliant, test.getStatus().getCompliantProducts());
-        assertEquals(partiallyCompliant, test.getStatus().getPartiallyCompliantProducts());
-        assertEquals(nonCompliant, test.getStatus().getNonCompliantProducts());
-
-        return compliance;
     }
 
     private Entitlement createEntitlement(String sku, String productName, int quantity,

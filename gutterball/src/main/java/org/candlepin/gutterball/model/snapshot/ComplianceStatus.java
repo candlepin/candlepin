@@ -92,25 +92,23 @@ public class ComplianceStatus {
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<ComplianceReason> reasons;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @BatchSize(size = 25)
-    @CollectionTable(name = "gb_noncompprod_snap", joinColumns = @JoinColumn(name = "comp_status_id"))
-    @Column(name = "product_id")
-    private Set<String> nonCompliantProducts;
+    @OneToMany(mappedBy = "complianceStatus",
+        targetEntity = CompliantProductReference.class, fetch = FetchType.LAZY)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    private Set<CompliantProductReference> compliantProducts;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @BatchSize(size = 25)
-    @CollectionTable(name = "gb_compprod_snap", joinColumns = @JoinColumn(name = "comp_status_id"))
-    @Column(name = "product_id")
-    @JsonDeserialize(converter = MapToKeysConverter.class)
-    private Set<String> compliantProducts;
+    @OneToMany(mappedBy = "complianceStatus",
+        targetEntity = PartiallyCompliantProductReference.class, fetch = FetchType.LAZY)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    private Set<PartiallyCompliantProductReference> partiallyCompliantProducts;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @BatchSize(size = 25)
-    @CollectionTable(name = "gb_partcompprod_snap", joinColumns = @JoinColumn(name = "comp_status_id"))
-    @Column(name = "product_id")
-    @JsonDeserialize(converter = MapToKeysConverter.class)
-    private Set<String> partiallyCompliantProducts;
+    @OneToMany(mappedBy = "complianceStatus",
+        targetEntity = NonCompliantProductReference.class, fetch = FetchType.LAZY)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    private Set<NonCompliantProductReference> nonCompliantProducts;
 
     @ElementCollection(fetch = FetchType.LAZY)
     @BatchSize(size = 25)
@@ -125,9 +123,9 @@ public class ComplianceStatus {
     public ComplianceStatus() {
         // Required by hibernate.
         reasons = new HashSet<ComplianceReason>();
-        this.nonCompliantProducts = new HashSet<String>();
-        this.compliantProducts = new HashSet<String>();
-        this.partiallyCompliantProducts = new HashSet<String>();
+        this.compliantProducts = new HashSet<CompliantProductReference>();
+        this.partiallyCompliantProducts = new HashSet<PartiallyCompliantProductReference>();
+        this.nonCompliantProducts = new HashSet<NonCompliantProductReference>();
         this.partialStacks = new HashSet<String>();
         this.managementEnabled = Boolean.FALSE;
     }
@@ -194,27 +192,27 @@ public class ComplianceStatus {
         this.compliantUntil = compliantUntil;
     }
 
-    public Set<String> getNonCompliantProducts() {
+    public Set<NonCompliantProductReference> getNonCompliantProducts() {
         return nonCompliantProducts;
     }
 
-    public void setNonCompliantProducts(Set<String> nonCompliantProducts) {
+    public void setNonCompliantProducts(Set<NonCompliantProductReference> nonCompliantProducts) {
         this.nonCompliantProducts = nonCompliantProducts;
     }
 
-    public Set<String> getCompliantProducts() {
+    public Set<CompliantProductReference> getCompliantProducts() {
         return compliantProducts;
     }
 
-    public void setCompliantProducts(Set<String> compliantProducts) {
+    public void setCompliantProducts(Set<CompliantProductReference> compliantProducts) {
         this.compliantProducts = compliantProducts;
     }
 
-    public Set<String> getPartiallyCompliantProducts() {
+    public Set<PartiallyCompliantProductReference> getPartiallyCompliantProducts() {
         return partiallyCompliantProducts;
     }
 
-    public void setPartiallyCompliantProducts(Set<String> partiallyCompliantProducts) {
+    public void setPartiallyCompliantProducts(Set<PartiallyCompliantProductReference> partiallyCompliantProducts) {
         this.partiallyCompliantProducts = partiallyCompliantProducts;
     }
 
