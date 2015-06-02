@@ -28,11 +28,24 @@ docker run -P -e POSTGRES_PASSWORD=candlepin --name=postgres -d postgres
 These containers are prepped to install Candlepin RPMs, but no Candlepin packages have been installed yet. The startup script will look for the YUM_REPO URL environment variable defined in docker run command with -e. This will be used to configure a candlepin.repo, and then a ```yum install candlepin``` will be attempted. Note that this container takes a little while to startup as a result of this.
 
 ```
-$ docker run --name candlepin -d -P -e "YUM_REPO=http://download.devel.redhat.com/brewroot/repos/candlepin-mead-rhel-6-build/latest/x86_64" --link postgres:db candlepin/candlepin-preinstall-rhel6
+$ docker run --name candlepin -d -P -e "YUM_REPO=http://download.devel.redhat.com/brewroot/repos/candlepin-mead-rhel-6-build/latest/x86_64" --link postgres:db candlepin/candlepin-rhel6-base
 $ docker attach candlepin
 ```
 
 The attach console output will indicate when the install has completed.
+
+### candlepin-rhel6 / candlepin-rhel7
+
+These containers are fully functional Candlepin installations from latest brew RPMs. They are tagged according to Candlepin version. Startup script simply configures your instance (generates certs, populates db), and within a few seconds you should have a live REST API.
+
+```
+$ docker run -d -P --name cp-rhel6 --link postgres:db candlepin/candlepin-rhel6
+$ docker attach cp-rhel6
+$ docker ps
+CONTAINER ID        IMAGE                              COMMAND                CREATED             STATUS              PORTS                     NAMES
+c7d0599b588f        candlepin/candlepin-rhel6:latest   "/bin/bash /root/sta   44 seconds ago      Up 43 seconds       0.0.0.0:32769->8443/tcp   cp-rhel6
+2870b85addc2        postgres:latest                    "/docker-entrypoint.   2 minutes ago       Up 2 minutes        0.0.0.0:32768->5432/tcp   postgres
+```
 
 ## Development Containers
 
@@ -56,24 +69,24 @@ up and running.
 The included scripts actually make a fairly good guide for setting up a
 development environment.
 
-The containers are hosted on an internal server (sorry world!), but you can
-build them yourself if you wish.
-
 ### Usage
 
   * Create a fresh candlepin server and postgresql database, leave a shell open:
-
+    ```
     docker run -i -P -t --rm docker.usersys.redhat.com/candlepin/candlepin-postgresql cp-test -s -d
+    ```
 
     Use docker ps to see the port mappings if you wanted to actually hit the candlepin API.
 
   * Run the unit tests:
-
+    ```
     docker run -i -P -t --rm docker.usersys.redhat.com/candlepin/candlepin-base cp-test -u
+    ```
 
   * Run the spec test suite against postgresql (or oracle or mysql):
-
+    ```
     docker run -i -P -t --rm docker.usersys.redhat.com/candlepin/candlepin-postgresql cp-test -r
+    ```
 
   * Specify -v /home/dgoodwin/src/candlepin/:/candlepin-dev/ to use your
     current source checkout *instead* of the remote git repo. This could be
