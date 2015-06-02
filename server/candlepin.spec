@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.49.1
+Version: 0.9.49.2
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,9 @@ fi
 
 
 %changelog
+* Tue Jun 02 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.49.2-1
+- Fix cross-org import bug. (dgoodwin@redhat.com)
+
 * Mon Jun 01 2015 Michael Stead <mstead@redhat.com> 0.9.49.1-1
 - 1123560: Allow consumer with service level to autobind to pool without
   (wpoteat@redhat.com)
