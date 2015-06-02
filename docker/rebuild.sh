@@ -30,7 +30,7 @@ docker build -t candlepin-mysql .
 docker tag -f candlepin-mysql docker.usersys.redhat.com/candlepin/candlepin-mysql
 docker push docker.usersys.redhat.com/candlepin/candlepin-mysql
 
-cd ../candlepin-preinstall-rhel6
+cd ../candlepin-rhel6-base
 ./build.sh
 
 cd ../candlepin-rhel6

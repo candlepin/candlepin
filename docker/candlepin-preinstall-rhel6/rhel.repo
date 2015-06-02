@@ -1,4 +1,0 @@
-[rhel]
-name=rhel
-baseurl=http://download.eng.bos.redhat.com/released/RHEL-6/6.5/Server/x86_64/os/
-gpgcheck=0
