@@ -1,5 +1,5 @@
 # Latest brew candlepin RPMs on RHEL 7
-FROM candlepin/candlepin-preinstall-rhel7
+FROM candlepin/candlepin-rhel7-base
 MAINTAINER Devan Goodwin <dgoodwin@redhat.com>
 
 ADD candlepin.repo /etc/yum.repos.d/
