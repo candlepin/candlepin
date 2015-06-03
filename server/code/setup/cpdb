@@ -87,6 +87,8 @@ class DbSetup(object):
         if self.password:
             liquibase_options += " --password=%s" % self.password
 
+        print liquibase_options
+
         output = run_command("liquibase %s migrate -Dcommunity=%s" % (
             liquibase_options,
             self.community))
@@ -137,17 +139,36 @@ class OracleSetup(DbSetup):
 
 
 class PostgresqlSetup(DbSetup):
-    def __init__(self, username, password, db, community):
+    def __init__(self, host, port, username, password, db, community):
         super(PostgresqlSetup, self).__init__(username, password, db, community)
+        self.host = host
+        self.port = port
         self.jdbc_jar = "/usr/share/java/postgresql-jdbc.jar"
         self.driver_class = "org.postgresql.Driver"
-        self.jdbc_url = "jdbc:postgresql:%s" % (self.db)
+
+        # Adjust the jdbc URL for correct deployment:
+        self.jdbc_url = "jdbc:postgresql:"
+        if host is not None:
+            self.jdbc_url = "%s//%s" % (self.jdbc_url, host)
+            # Requires host:
+            if port is not None:
+                self.jdbc_url = "%s:%s" % (self.jdbc_url, port)
+            # Append / for the database name:
+            self.jdbc_url = "%s/" % (self.jdbc_url)
+        self.jdbc_url = "%s%s" % (self.jdbc_url, db)
+        print("Configuring PostgreSQL with JDBC URL: %s" % self.jdbc_url)
+
         if password:
             os.environ["PGPASSWORD"] = password
 
     def create(self):
-        print("Creating candlepin database")
-        command = "createdb -U %s %s" % (self.username, self.db)
+        print("Creating candlepin database 2")
+        command = "createdb -U %s" % (self.username)
+        if self.host:
+            command = "%s -h %s" % (command, self.host)
+            if self.port:
+                command = "%s -p %s" % (command, self.port)
+        command = "%s %s" % (command, self.db)
         (status, output) = commands.getstatusoutput(command)
 
         if status > 0 and output.find("already exists") > 0:
@@ -191,6 +212,12 @@ if __name__ == "__main__":
     parser.add_option("-p", "--password",
             dest="dbpassword",
             help="database password to use")
+    parser.add_option("--dbhost",
+            dest="dbhost",
+            help="the database host to use (optional)")
+    parser.add_option("--dbport",
+            dest="dbport",
+            help="the database port to use (optional)")
     parser.add_option("--community",
             action="store_true", default=False,
             dest="community",
@@ -233,7 +260,8 @@ if __name__ == "__main__":
         dbsetup = OracleSetup(options.dbuser, options.dbpassword, options.db,
                 options.community, options.oracle_user, options.oracle_password)
     else:
-        dbsetup = PostgresqlSetup(options.dbuser, options.dbpassword, options.db, options.community)
+        dbsetup = PostgresqlSetup(options.dbhost, options.dbport,
+            options.dbuser, options.dbpassword, options.db, options.community)
 
     if options.create:
         if options.drop:

@@ -111,11 +111,21 @@ class TomcatSetup(object):
         run_command("chown tomcat:tomcat -R /var/lib/" + TOMCAT)
         run_command("chown tomcat:tomcat -R /var/cache/" + TOMCAT)
 
+    # If supervisord tomcat.conf exists, assume this is a docker container
+    # and use supervisorctl to manage the service instead:
     def stop(self):
-        run_command("/sbin/service " + TOMCAT +" stop")
+        if os.path.exists('/etc/supervisor/conf.d/tomcat.conf'):
+            print("Supervisord tomcat config exists, using supervisorctl stop.")
+            run_command("supervisorctl stop tomcat")
+        else:
+            run_command("/sbin/service " + TOMCAT + " stop")
 
     def restart(self):
-        run_command("/sbin/service " + TOMCAT + " restart")
+        if os.path.exists('/etc/supervisor/conf.d/tomcat.conf'):
+            print("Supervisord tomcat config exists, using supervisorctl restart.")
+            #run_command("supervisorctl restart tomcat")
+        else:
+            run_command("/sbin/service " + TOMCAT + " restart")
 
     def wait_for_startup(self):
         print("Waiting for tomcat to restart...")
@@ -159,25 +169,30 @@ class CertSetup(object):
 
 
 class OracleConf(object):
-    def get_dialect(self):
-        return "org.hibernate.dialect.Oracle10gDialect"
-
-    def get_driver(self):
-        return "oracle.jdbc.OracleDriver"
-
-    def get_jdbc_url(self, db):
-        return "jdbc:oracle:thin:@//%s" % db
+    def __init__(self, options):
+        self.options = options
+        self.dialect = "org.hibernate.dialect.Oracle10gDialect"
+        self.driver = "oracle.jdbc.OracleDriver"
+        self.jdbc_url = "jdbc:oracle:thin:@//%s" % self.options.db
 
 
 class PostgresqlConf(object):
-    def get_dialect(self):
-        return "org.hibernate.dialect.PostgreSQLDialect"
+    def __init__(self, options):
+        self.options = options
+        self.dialect = "org.hibernate.dialect.PostgreSQLDialect"
+        self.driver = "org.postgresql.Driver"
 
-    def get_driver(self):
-        return "org.postgresql.Driver"
-
-    def get_jdbc_url(self, db):
-        return "jdbc:postgresql:%s" % db
+        # Build up the correct jdbc URL:
+        # TODO: duplicated within cpdb:
+        self.jdbc_url = "jdbc:postgresql:"
+        if self.options.dbhost is not None:
+            self.jdbc_url = "%s//%s" % (self.jdbc_url, self.options.dbhost)
+            # Requires host:
+            if self.options.dbport is not None:
+                self.jdbc_url = "%s:%s" % (self.jdbc_url, self.options.dbport)
+            # Append / for the database name:
+            self.jdbc_url = "%s/" % (self.jdbc_url)
+        self.jdbc_url = "%s%s" % (self.jdbc_url, self.options.db)
 
 
 def write_candlepin_conf(options):
@@ -194,14 +209,14 @@ def write_candlepin_conf(options):
     print("Writing configuration file")
 
     if options.oracle:
-        dbconf = OracleConf()
+        dbconf = OracleConf(options)
     else:
-        dbconf = PostgresqlConf()
+        dbconf = PostgresqlConf(options)
 
     f = open(CANDLEPIN_CONF, 'w')
-    f.write('jpa.config.hibernate.dialect=%s\n' % dbconf.get_dialect())
-    f.write('jpa.config.hibernate.connection.driver_class=%s\n' % dbconf.get_driver())
-    f.write('jpa.config.hibernate.connection.url=%s\n' % dbconf.get_jdbc_url(options.db))
+    f.write('jpa.config.hibernate.dialect=%s\n' % dbconf.dialect)
+    f.write('jpa.config.hibernate.connection.driver_class=%s\n' % dbconf.driver)
+    f.write('jpa.config.hibernate.connection.url=%s\n' % dbconf.jdbc_url)
     f.write('jpa.config.hibernate.connection.username=%s\n' % options.dbuser)
     f.write('jpa.config.hibernate.connection.password=%s\n' % options.password)
     if options.webapp_prefix:
@@ -220,7 +235,13 @@ def main(argv):
                   help="the database user to use")
     parser.add_option("-d", "--database",
                   dest="db", default="candlepin",
-                  help="the database to use")
+                  help="the database name to use")
+    parser.add_option("--dbhost",
+                  dest="dbhost",
+                  help="the database host to use (optional)")
+    parser.add_option("--dbport",
+                  dest="dbport",
+                  help="the database port to use (optional)")
     parser.add_option("--schema-only",
                   action="store_true", dest="schema_only", default=False,
                   help="database already exists, only load the schema.")
@@ -269,6 +290,14 @@ def main(argv):
     if options.oracle:
         command = " ".join([command, "--oracle --oracle-user %s --oracle-password %s" %
             (options.oracle_user, options.oracle_password)])
+
+    if options.dbhost:
+        command = " ".join([command, "--dbhost %s" % options.dbhost])
+    if options.dbport:
+        command = " ".join([command, "--dbport %s" % options.dbport])
+
+    print(command)
+
     run_command(command)
 
     if not options.skipdbcfg:
