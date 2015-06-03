@@ -8,7 +8,8 @@
 
     <groupId>org.candlepin</groupId>
     <artifactId>candlepin-parent</artifactId>
-    <version>1.1</version>
+    <!-- This is the canonical version -->
+    <version>2.0</version>
     <packaging>pom</packaging>
     <name>Candlepin Parent Project</name>
     <url>http://www.candlepinproject.org</url>
@@ -64,12 +65,35 @@
     </profiles>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <pluginManagement>
             <!-- If you add plugins here, you still need to add a plugin block
                  to the child pom file (but you can leave out the configuration
                  in the child.  Plugins can be added as Ruby Procs to the plugin_procs
                  array off of the pom object.  See tasks/pom.rake for details. -->
             <plugins>
+                <plugin>
+                    <groupId>com.googlecode.gettext-commons</groupId>
+                    <artifactId>gettext-maven-plugin</artifactId>
+                    <version>1.2.4</version>
+                    <configuration>
+                        <targetBundle>org.candlepin.common.i18n.Messages</targetBundle>
+                        <poDirectory>po</poDirectory>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <phase>generate-resources</phase>
+                            <goals>
+                                <goal>dist</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>

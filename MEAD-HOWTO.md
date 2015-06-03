@@ -143,7 +143,6 @@ Other Cheetah notes:
   so that people's changelog entries won't break the template.
 
 ## Putting It All Together
-
 To build a wrapper-RPM all in one shot, you can use the `--specfile` option in
 the `maven-build` subcommand.
 
@@ -166,3 +165,10 @@ $ rhpkg maven-build --scratch --sources="git://git.engineering.redhat.com/users/
 `--property`.  However, if you use `--maven-option`, use an equals sign to
 connect it to the arguments so that `rhpkg` doesn't interpret the option that
 should be going to Maven.  For example, `--maven-options='--debug'`.
+
+## Gotchas
+Maven and MEAD do not automatically handle building sibling projects.  For
+example, Candlepin depends on Common.  Neither Maven nor Mead will
+automatically build Common for you unless you build from the top.  If you
+are building Candlepin and Common has been updated, you need to make sure to
+run a MEAD build for Common first so that it will be in the repository.
