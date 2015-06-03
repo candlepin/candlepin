@@ -19,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -44,7 +43,7 @@ public abstract class AbstractProductReference {
     private String id;
 
     @ManyToOne
-    @JoinColumn(name="comp_status_id")
+    @JoinColumn(name = "comp_status_id")
     @NotNull
     private ComplianceStatus complianceStatus;
 

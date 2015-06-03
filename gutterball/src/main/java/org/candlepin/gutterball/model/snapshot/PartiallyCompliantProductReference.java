@@ -19,6 +19,9 @@ import javax.persistence.Table;
 
 
 
+/**
+ * Represents a partially-compliant product reference from a compliance snapshot
+ */
 @Entity
 @Table(name = "gb_partcompprod_snap")
 public class PartiallyCompliantProductReference extends AbstractProductReference {
