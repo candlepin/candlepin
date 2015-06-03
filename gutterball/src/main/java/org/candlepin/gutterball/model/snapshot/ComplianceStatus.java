@@ -17,6 +17,9 @@ package org.candlepin.gutterball.model.snapshot;
 
 import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.gutterball.jackson.MapToKeysConverter;
+import org.candlepin.gutterball.jackson.CompliantProductReferenceConverter;
+import org.candlepin.gutterball.jackson.NonCompliantProductReferenceConverter;
+import org.candlepin.gutterball.jackson.PartiallyCompliantProductReferenceConverter;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -40,6 +43,8 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -96,18 +101,21 @@ public class ComplianceStatus {
         targetEntity = CompliantProductReference.class, fetch = FetchType.LAZY)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @JsonDeserialize(converter = CompliantProductReferenceConverter.class)
     private Set<CompliantProductReference> compliantProducts;
 
     @OneToMany(mappedBy = "complianceStatus",
         targetEntity = PartiallyCompliantProductReference.class, fetch = FetchType.LAZY)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @JsonDeserialize(converter = PartiallyCompliantProductReferenceConverter.class)
     private Set<PartiallyCompliantProductReference> partiallyCompliantProducts;
 
     @OneToMany(mappedBy = "complianceStatus",
         targetEntity = NonCompliantProductReference.class, fetch = FetchType.LAZY)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @JsonDeserialize(converter = NonCompliantProductReferenceConverter.class)
     private Set<NonCompliantProductReference> nonCompliantProducts;
 
     @ElementCollection(fetch = FetchType.LAZY)
@@ -212,7 +220,9 @@ public class ComplianceStatus {
         return partiallyCompliantProducts;
     }
 
-    public void setPartiallyCompliantProducts(Set<PartiallyCompliantProductReference> partiallyCompliantProducts) {
+    public void setPartiallyCompliantProducts(
+        Set<PartiallyCompliantProductReference> partiallyCompliantProducts) {
+
         this.partiallyCompliantProducts = partiallyCompliantProducts;
     }
 
@@ -231,5 +241,28 @@ public class ComplianceStatus {
     public void setManagementEnabled(Boolean managementEnabled) {
         this.managementEnabled = managementEnabled;
     }
+
+
+    @PrePersist
+    protected void onCreate() {
+        this.onUpdate();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        // Update all of our contained objects to ensure they point to this as their parent
+        for (AbstractProductReference pr : this.compliantProducts) {
+            pr.setComplianceStatus(this);
+        }
+
+        for (AbstractProductReference pr : this.partiallyCompliantProducts) {
+            pr.setComplianceStatus(this);
+        }
+
+        for (AbstractProductReference pr : this.nonCompliantProducts) {
+            pr.setComplianceStatus(this);
+        }
+    }
+
 
 }

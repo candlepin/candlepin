@@ -18,9 +18,7 @@ package org.candlepin.gutterball.curator;
 import org.candlepin.common.config.PropertyConverter;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
-import org.candlepin.gutterball.model.snapshot.AbstractProductReference;
 import org.candlepin.gutterball.model.snapshot.Compliance;
-import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
 import org.candlepin.gutterball.util.AutoEvictingColumnarResultsIterator;
 
 import com.google.inject.Inject;

@@ -19,6 +19,9 @@ import javax.persistence.Table;
 
 
 
+/**
+ * Represents a non-compliant product reference from a compliance snapshot
+ */
 @Entity
 @Table(name = "gb_noncompprod_snap")
 public class NonCompliantProductReference extends AbstractProductReference {

@@ -28,12 +28,9 @@ import org.candlepin.gutterball.model.ConsumerState;
 import org.candlepin.gutterball.model.Event;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
-import org.candlepin.gutterball.model.snapshot.CompliantProductReference;
 import org.candlepin.gutterball.model.snapshot.Consumer;
 import org.candlepin.gutterball.model.snapshot.ConsumerInstalledProduct;
 import org.candlepin.gutterball.model.snapshot.Entitlement;
-import org.candlepin.gutterball.model.snapshot.NonCompliantProductReference;
-import org.candlepin.gutterball.model.snapshot.PartiallyCompliantProductReference;
 
 import org.junit.Before;
 import org.junit.Test;
