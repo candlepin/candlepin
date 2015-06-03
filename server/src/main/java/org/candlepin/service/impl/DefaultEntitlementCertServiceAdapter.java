@@ -175,7 +175,7 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         if (shouldGenerateV3(ent)) {
             extensions = prepareV3Extensions(ent, contentPrefix, promotedContent);
-            byteExtensions = prepareV3ByteExtensions(products, ent, contentPrefix,
+            byteExtensions = prepareV3ByteExtensions(product, products, ent, contentPrefix,
                 promotedContent);
         }
         else {
@@ -326,12 +326,12 @@ public class DefaultEntitlementCertServiceAdapter extends
         return result;
     }
 
-    public Set<X509ByteExtensionWrapper> prepareV3ByteExtensions(Set<Product> products,
-        Entitlement ent, String contentPrefix,
+    public Set<X509ByteExtensionWrapper> prepareV3ByteExtensions(Product sku,
+            Set<Product> products, Entitlement ent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent)
         throws IOException {
-        Set<X509ByteExtensionWrapper> result =  v3extensionUtil.getByteExtensions(products,
-            ent, contentPrefix, promotedContent);
+        Set<X509ByteExtensionWrapper> result =  v3extensionUtil.getByteExtensions(sku,
+                products, ent, contentPrefix, promotedContent);
         return result;
     }
 
@@ -388,8 +388,8 @@ public class DefaultEntitlementCertServiceAdapter extends
         String pem = new String(this.pki.getPemEncoded(x509Cert));
 
         if (shouldGenerateV3(entitlement)) {
-            byte[] payloadBytes = v3extensionUtil.createEntitlementDataPayload(products,
-                entitlement, contentPrefix, promotedContent);
+            byte[] payloadBytes = v3extensionUtil.createEntitlementDataPayload(product,
+                    products, entitlement, contentPrefix, promotedContent);
             String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
             payload += Util.toBase64(payloadBytes);
             payload += "-----END ENTITLEMENT DATA-----\n";
