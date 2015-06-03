@@ -27,7 +27,7 @@ class CandlepinCLI < Candlepin
   private
 
   def self.callable_name?(method_name)
-    method_name.end_with?('=')
+    !method_name.end_with?('=')
   end
 
 end
