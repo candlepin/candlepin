@@ -32,7 +32,7 @@ $ docker run --name candlepin -d -P -e "YUM_REPO=http://download.devel.redhat.co
 $ docker attach candlepin
 ```
 
-The attach console output will indicate when the install has completed.
+The attach console output will indicate when the install has completed, this can take several minutes.
 
 ### candlepin-rhel6 / candlepin-rhel7
 
@@ -45,13 +45,20 @@ $ docker ps
 CONTAINER ID        IMAGE                              COMMAND                CREATED             STATUS              PORTS                     NAMES
 c7d0599b588f        candlepin/candlepin-rhel6:latest   "/bin/bash /root/sta   44 seconds ago      Up 43 seconds       0.0.0.0:32769->8443/tcp   cp-rhel6
 2870b85addc2        postgres:latest                    "/docker-entrypoint.   2 minutes ago       Up 2 minutes        0.0.0.0:32768->5432/tcp   postgres
+$ curl -k "https://localhost:32769/candlepin/status"
+{"result":true,"version":"0.9.49.1","rulesVersion":"5.16","release":"1","standalone":true,"timeUTC":"2015-06-03T12:24:25.554+0000","managerCapabilities":["cores","ram","instance_multiplier","derived_product","cert_v3","guest_limit","vcpu"],"rulesSource":"DEFAULT"}%
 ```
 
 ## Development Containers
 
-The development containers are currently located in the base/ mysql/ oracle/ and postgresql/ directories. The base container uses a Fedora source checkout of Candlepin, optionally mounting your own local source if desired. The other database specific containers build on base to bundle in the db resulting in a self container container.
+The development containers are currently located in the base/ mysql/ oracle/
+and postgresql/ directories. The base container uses a Fedora source checkout
+of Candlepin, optionally mounting your own local source if desired. The other
+database specific containers build on base to bundle in the db resulting in a
+self container container.
 
-*NOTE*: These containers will soon be re-done to use an external database container linked in.
+*NOTE*: These containers will soon be re-done to use an external database
+container linked in.
 
 These containers can be used to quickly fire up a container with candlepin and
 a fresh database. They can run unit or spec tests against supported databases,
