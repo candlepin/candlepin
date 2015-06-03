@@ -102,12 +102,13 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public Set<X509ByteExtensionWrapper> getByteExtensions(Product sku,
-            Set<Product> products, Entitlement ent, String contentPrefix,
+            List<org.candlepin.json.model.Product> productModels,
+            Entitlement ent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent) throws IOException {
         Set<X509ByteExtensionWrapper> toReturn =
             new LinkedHashSet<X509ByteExtensionWrapper>();
 
-        EntitlementBody eb = createEntitlementBodyContent(sku, products, ent,
+        EntitlementBody eb = createEntitlementBodyContent(sku, productModels, ent,
             contentPrefix, promotedContent);
 
         X509ByteExtensionWrapper bodyExtension =
@@ -119,18 +120,18 @@ public class X509V3ExtensionUtil extends X509Util {
         return toReturn;
     }
 
-    public byte[] createEntitlementDataPayload(Product skuProduct, Set<Product> products,
-        Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent)
+    public byte[] createEntitlementDataPayload(Product skuProduct,
+            List<org.candlepin.json.model.Product> productModels,
+            Entitlement ent, String contentPrefix,
+            Map<String, EnvironmentContent> promotedContent)
         throws UnsupportedEncodingException, IOException {
 
-        EntitlementBody map = createEntitlementBody(skuProduct, products, ent,
-            contentPrefix, promotedContent);
+        EntitlementBody map = createEntitlementBody(skuProduct, productModels,
+                ent, contentPrefix, promotedContent);
 
         String json = toJson(map);
         return processPayload(json);
     }
-
 
     private byte[] retreiveContentValue(EntitlementBody eb) throws IOException {
         List<Content> contentList = getContentList(eb);
@@ -153,29 +154,29 @@ public class X509V3ExtensionUtil extends X509Util {
         return data.toByteArray();
     }
 
-    public EntitlementBody createEntitlementBody(Product skuProduct, Set<Product> products,
-        Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent) {
+    public EntitlementBody createEntitlementBody(Product skuProduct,
+            List<org.candlepin.json.model.Product> productModels,
+            Entitlement ent, String contentPrefix,
+            Map<String, EnvironmentContent> promotedContent) {
 
         EntitlementBody toReturn = new EntitlementBody();
         toReturn.setConsumer(ent.getConsumer().getUuid());
         toReturn.setQuantity(ent.getQuantity());
         toReturn.setSubscription(createSubscription(ent));
         toReturn.setOrder(createOrder(ent.getPool()));
-        toReturn.setProducts(createProducts(skuProduct, products, contentPrefix,
-                promotedContent, ent.getConsumer(), ent));
+        toReturn.setProducts(productModels);
         toReturn.setPool(createPool(ent));
 
         return toReturn;
     }
 
-    public EntitlementBody createEntitlementBodyContent(Product sku, Set<Product> products,
+    public EntitlementBody createEntitlementBodyContent(Product sku,
+            List<org.candlepin.json.model.Product> productModels,
         Entitlement ent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent) {
 
         EntitlementBody toReturn = new EntitlementBody();
-        toReturn.setProducts(createProducts(sku, products, contentPrefix, promotedContent,
-            ent.getConsumer(), ent));
+        toReturn.setProducts(productModels);
 
         return toReturn;
     }
