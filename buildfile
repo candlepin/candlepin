@@ -184,7 +184,7 @@ end
 desc "The Candlepin Project"
 define "candlepin" do
   project.group = "org.candlepin"
-  project.version = "1.0"
+  project.version = pom_version(path_to('pom.xml'))
   manifest["Copyright"] = "Red Hat, Inc. #{Date.today.strftime('%Y')}"
 
   compile.options.target = '1.6'
@@ -239,8 +239,13 @@ define "candlepin" do
     ])
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
-    common_jar = package(:jar).tap do |jar|
+    package(:jar).tap do |jar|
       jar.include(:from => msgfmt.destination)
+    end
+
+    project.pom.plugin_procs << Proc.new do |xml, proj|
+      xml.groupId("com.googlecode.gettext-commons")
+      xml.artifactId("gettext-maven-plugin")
     end
   end
 
@@ -335,7 +340,7 @@ define "candlepin" do
     ])
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
-    gutterball_war = package(:war, :id=>"gutterball").tap do |war|
+    package(:war, :id=>"gutterball").tap do |war|
       war.libs -= artifacts(PROVIDED)
       war.classes << resources.target
       war.classes << msgfmt.destination if msgfmt.enabled?
@@ -427,7 +432,7 @@ define "candlepin" do
 
     pom.provided_dependencies = PROVIDED
 
-    api_jar = package(:jar, :id=>'candlepin-api').tap do |jar|
+    package(:jar, :id=>'candlepin-api').tap do |jar|
       jar.clean
       pkgs = %w{auth config jackson model pki resteasy service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
       p = jar.path(candlepin_path)
@@ -441,7 +446,7 @@ define "candlepin" do
       p.include(pkgs)
     end
 
-    war_file = package(:war, :id=>"candlepin").tap do |war|
+    package(:war, :id=>"candlepin").tap do |war|
       war.libs += artifacts(HSQLDB)
       war.libs -= artifacts(PROVIDED)
       war.classes.clear
