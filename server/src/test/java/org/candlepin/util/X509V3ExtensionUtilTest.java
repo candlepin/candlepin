@@ -15,7 +15,7 @@
 package org.candlepin.util;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
@@ -146,8 +146,8 @@ public class X509V3ExtensionUtilTest {
         Entitlement e = new Entitlement(pool, consumer, 10);
         when(psa.getProductById(eq("mkt"))).thenReturn(mktProd);
 
-        List<org.candlepin.json.model.Product> certProds = util.createProducts(prods, "",
-            new HashMap<String, EnvironmentContent>(),  new Consumer(), e);
+        List<org.candlepin.json.model.Product> certProds = util.createProducts(mktProd,
+                prods, "", new HashMap<String, EnvironmentContent>(),  new Consumer(), e);
 
         assertEquals(1, certProds.size());
         assertEquals(brandedName, certProds.get(0).getBrandName());
@@ -174,8 +174,8 @@ public class X509V3ExtensionUtilTest {
         Entitlement e = new Entitlement(pool, consumer, 10);
         when(psa.getProductById(eq("mkt"))).thenReturn(mktProd);
 
-        List<org.candlepin.json.model.Product> certProds = util.createProducts(prods, "",
-            new HashMap<String, EnvironmentContent>(),  new Consumer(), e);
+        List<org.candlepin.json.model.Product> certProds = util.createProducts(mktProd,
+                prods, "", new HashMap<String, EnvironmentContent>(),  new Consumer(), e);
 
         assertEquals(1, certProds.size());
         // Should get the first name we encountered
