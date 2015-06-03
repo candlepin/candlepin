@@ -36,7 +36,13 @@
     </changeSet>
 
     <changeSet id="20150211111319-2" author="dgoodwin">
+        <!-- Checksums for current state (top) and the state dated Feb 25, 2015 -->
+        <validCheckSum>7:25f5368fe0a7bce4784403b0dd79a5ed</validCheckSum>
+        <validCheckSum>7:1cec9823accc46e660334425b7c5393b</validCheckSum>
+
         <comment>Populate guest ID checkins table with current values.</comment>
+
+
         <!-- re-use the consumer ID as the first checkin ID to avoid generated ID problem, we know it will be unique -->
         <sql>
             INSERT INTO cp_guest_ids_checkin(id, consumer_id, created, updated)
