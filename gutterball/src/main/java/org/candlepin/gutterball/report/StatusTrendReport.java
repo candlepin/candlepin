@@ -106,14 +106,20 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
         );
 
         this.addParameter(
+            builder.init("product_name", i18n.tr("The name of a product on which to filter"))
+                .mustNotHave("sku", "subscription_name", "management_enabled")
+                .getParameter()
+        );
+
+        this.addParameter(
             builder.init("sku", i18n.tr("The entitlement sku on which to filter"))
-                .mustNotHave("subscription_name", "management_enabled")
+                .mustNotHave("product_name", "subscription_name", "management_enabled")
                 .getParameter()
         );
 
         this.addParameter(
             builder.init("subscription_name", i18n.tr("The name of a subscription on which to filter"))
-                .mustNotHave("sku", "management_enabled")
+                .mustNotHave("product_name", "sku", "management_enabled")
                 .getParameter()
         );
 
@@ -122,7 +128,7 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
                 "management_enabled",
                 i18n.tr("Filter on subscriptions which have management enabled set to this value (boolean)")
             )
-                .mustNotHave("sku", "subscription_name")
+                .mustNotHave("product_name", "sku", "subscription_name")
                 .getParameter()
         );
 
@@ -146,6 +152,7 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
         Date startDate = this.parseDate(queryParams.getFirst("start_date"), timezone);
         Date endDate = this.parseDate(queryParams.getFirst("end_date"), timezone);
         String ownerKey = queryParams.getFirst("owner");
+        String productName = queryParams.getFirst("product_name");
         String sku = queryParams.getFirst("sku");
         String subscriptionName = queryParams.getFirst("subscription_name");
         List<String> consumerUuids = queryParams.get("consumer_uuid");
@@ -167,13 +174,27 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
             }
         }
 
-        if (sku != null) {
+        if (productName != null) {
+            page = this.curator.getComplianceStatusCounts(
+                startDate,
+                endDate,
+                ownerKey,
+                consumerUuids,
+                null,
+                null,
+                productName,
+                null,
+                pageRequest
+            );
+        }
+        else if (sku != null) {
             page = this.curator.getComplianceStatusCounts(
                 startDate,
                 endDate,
                 ownerKey,
                 consumerUuids,
                 sku,
+                null,
                 null,
                 null,
                 pageRequest
@@ -188,6 +209,7 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
                 null,
                 subscriptionName,
                 null,
+                null,
                 pageRequest
             );
         }
@@ -197,6 +219,7 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
                 endDate,
                 ownerKey,
                 consumerUuids,
+                null,
                 null,
                 null,
                 attributes,
@@ -209,6 +232,7 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
                 endDate,
                 ownerKey,
                 consumerUuids,
+                null,
                 null,
                 null,
                 null,

@@ -10,7 +10,7 @@
   <logger name="org.hibernate.id.UUIDHexGenerator" level="ERROR"/>
   <logger name="liquibase" level="ERROR"/>
 
-  <logger name="org.candlepin.gutterball" level="INFO"/>
+  <logger name="org.candlepin.gutterball" level="DEBUG"/>
   <root level="WARN">
     <appender-ref ref="RootAppender"/>
   </root>
