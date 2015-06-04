@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.candlepin</groupId>
   <artifactId>candlepin</artifactId>
-  <version>0.9.49.3</version>
+  <version>0.9.49.4</version>
   <properties>
     <org.apache.qpid-qpid-common.version>0.30</org.apache.qpid-qpid-common.version>
     <org.apache.qpid-qpid-client.version>0.30</org.apache.qpid-qpid-client.version>
