@@ -2,10 +2,3 @@
 name=rhel
 baseurl=http://download.eng.bos.redhat.com/released/RHEL-6/6.6/Server/x86_64/os/
 gpgcheck=0
-
-#[rhel65-z]
-#name=rhel65-z
-#baseurl=http://download.lab.bos.redhat.com/rel-eng/repos/RHEL-6.5-Z/x86_64/
-#enabled=1
-#gpgcheck = 0
-

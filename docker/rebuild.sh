@@ -10,27 +10,27 @@
 # Add: INSECURE_REGISTRY='--insecure-registry docker.usersys.redhat.com'
 # To: /etc/sysconfig/docker
 
-#cd base
-#docker build -t candlepin-base .
-#docker tag -f candlepin-base docker.usersys.redhat.com/candlepin/candlepin-base
-#docker push docker.usersys.redhat.com/candlepin/candlepin-base
+cd base
+docker build -t candlepin-base .
+docker tag -f candlepin-base docker.usersys.redhat.com/candlepin/candlepin-base
+docker push docker.usersys.redhat.com/candlepin/candlepin-base
 
-#cd ../postgresql
-#docker build -t candlepin-postgresql .
-#docker tag -f candlepin-postgresql docker.usersys.redhat.com/candlepin/candlepin-postgresql
-#docker push docker.usersys.redhat.com/candlepin/candlepin-postgresql
+cd ../postgresql
+docker build -t candlepin-postgresql .
+docker tag -f candlepin-postgresql docker.usersys.redhat.com/candlepin/candlepin-postgresql
+docker push docker.usersys.redhat.com/candlepin/candlepin-postgresql
 
-#cd ../oracle
-#docker build -t candlepin-oracle .
-#docker tag -f candlepin-oracle docker.usersys.redhat.com/candlepin/candlepin-oracle
-#docker push docker.usersys.redhat.com/candlepin/candlepin-oracle
+cd ../oracle
+docker build -t candlepin-oracle .
+docker tag -f candlepin-oracle docker.usersys.redhat.com/candlepin/candlepin-oracle
+docker push docker.usersys.redhat.com/candlepin/candlepin-oracle
 
-#cd ../mysql
-#docker build -t candlepin-mysql .
-#docker tag -f candlepin-mysql docker.usersys.redhat.com/candlepin/candlepin-mysql
-#docker push docker.usersys.redhat.com/candlepin/candlepin-mysql
+cd ../mysql
+docker build -t candlepin-mysql .
+docker tag -f candlepin-mysql docker.usersys.redhat.com/candlepin/candlepin-mysql
+docker push docker.usersys.redhat.com/candlepin/candlepin-mysql
 
-cd ./candlepin-rhel6-base
+cd ../candlepin-rhel6-base
 ./build.sh
 
 cd ../candlepin-rhel6
