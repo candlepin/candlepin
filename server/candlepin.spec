@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.49.2
+Version: 0.9.49.3
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,9 @@ fi
 
 
 %changelog
+* Thu Jun 04 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.49.3-1
+- 1227930: Deleting invalid content Ids causes error 500 (crog@redhat.com)
+
 * Tue Jun 02 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.49.2-1
 - Fix cross-org import bug. (dgoodwin@redhat.com)
 
