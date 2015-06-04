@@ -11,10 +11,6 @@ RUN rpm -ivh http://fedora-epel.mirror.iweb.com/7/x86_64/e/epel-release-7-5.noar
 RUN yum install -y vim-enhanced python-pip postgresql postgresql-jdbc openssl
 RUN rpm -e --nodeps fakesystemd
 
-# TODO: Drop epel so we stop getting bouncycastle and breaking. This can be
-# removed once we switch to Candlepin 2.0 MEAD builds:
-RUN yum remove -y epel-release
-
 ADD setup-supervisor.sh /root/
 RUN /bin/bash /root/setup-supervisor.sh
 
