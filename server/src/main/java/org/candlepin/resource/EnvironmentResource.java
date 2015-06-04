@@ -291,7 +291,7 @@ public class EnvironmentResource {
         Environment e = lookupEnvironment(envId);
         consumer.setEnvironment(e);
         return this.consumerResource.create(consumer, principal, userName,
-            e.getOwner().getKey(), activationKeys);
+            e.getOwner().getKey(), activationKeys, true);
     }
 
 }

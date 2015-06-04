@@ -339,16 +339,21 @@ public class ConsumerResource {
 
         if (consumer != null) {
             IdentityCertificate idcert = consumer.getIdCert();
-            Date expire = idcert.getSerial().getExpiration();
-            int days = config.getInt(ConfigProperties.IDENTITY_CERT_EXPIRY_THRESHOLD, 90);
-            Date futureExpire = Util.addDaysToDt(days);
-            // if expiration is within 90 days, regenerate it
-            log.debug("Threshold [{}] expires on [{}] futureExpire [{}]", days, expire, futureExpire);
+            if (idcert != null) {
+                Date expire = idcert.getSerial().getExpiration();
+                int days = config.getInt(
+                        ConfigProperties.IDENTITY_CERT_EXPIRY_THRESHOLD, 90);
+                Date futureExpire = Util.addDaysToDt(days);
+                // if expiration is within 90 days, regenerate it
+                log.debug("Threshold [{}] expires on [{}] futureExpire [{}]",
+                        days, expire, futureExpire);
 
-            if (expire.before(futureExpire)) {
-                log.info("Regenerating identity certificate for consumer: {}, expiry: {}",
-                    uuid, expire);
-                consumer = this.regenerateIdentityCertificates(uuid);
+                if (expire.before(futureExpire)) {
+                    log.info(
+                            "Regenerating identity certificate for consumer: {}, expiry: {}",
+                            uuid, expire);
+                    consumer = this.regenerateIdentityCertificates(uuid);
+                }
             }
 
             // enrich with subscription data
@@ -388,7 +393,8 @@ public class ConsumerResource {
     public Consumer create(Consumer consumer, @Context Principal principal,
         @QueryParam("username") String userName,
         @QueryParam("owner") String ownerKey,
-        @QueryParam("activation_keys") String activationKeys)
+        @QueryParam("activation_keys") String activationKeys,
+        @QueryParam("identity_cert_creation") @DefaultValue("true") boolean identityCertCreation)
         throws BadRequestException {
         // API:registerConsumer
         Set<String> keyStrings = splitKeys(activationKeys);
@@ -486,8 +492,10 @@ public class ConsumerResource {
 
         try {
             consumer = consumerCurator.create(consumer);
-            IdentityCertificate idCert = generateIdCert(consumer, false);
-            consumer.setIdCert(idCert);
+            if (identityCertCreation) {
+                IdentityCertificate idCert = generateIdCert(consumer, false);
+                consumer.setIdCert(idCert);
+            }
 
             sink.emitConsumerCreated(consumer);
 
@@ -789,7 +797,7 @@ public class ConsumerResource {
         VirtConsumerMap guestConsumerMap = new VirtConsumerMap();
         VirtConsumerMap guestsHostConsumerMap = new VirtConsumerMap();
         if (consumer.getGuestIds() != null) {
-            List<String> allGuestIds = new LinkedList<String>();
+            Set<String> allGuestIds = new HashSet<String>();
             for (GuestId gid : consumer.getGuestIds()) {
                 allGuestIds.add(gid.getGuestId());
             }
@@ -817,10 +825,17 @@ public class ConsumerResource {
         }
     }
 
-    @Transactional
-    protected boolean performConsumerUpdates(Consumer updated, Consumer toUpdate,
+    public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate,
             VirtConsumerMap guestConsumerMap,
             VirtConsumerMap guestHypervisorConsumers) {
+        return performConsumerUpdates(updated, toUpdate, guestConsumerMap, guestHypervisorConsumers, true);
+    }
+
+    @Transactional
+    public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate,
+            VirtConsumerMap guestConsumerMap,
+            VirtConsumerMap guestHypervisorConsumers,
+            boolean isIdCert) {
         if (log.isDebugEnabled()) {
             log.debug("Updating consumer: {}", toUpdate.getUuid());
         }
@@ -900,9 +915,11 @@ public class ConsumerResource {
                     toUpdate.getName(), updated.getName());
             toUpdate.setName(updated.getName());
 
-            // get the new name into the id cert
-            IdentityCertificate ic = generateIdCert(toUpdate, true);
-            toUpdate.setIdCert(ic);
+            // get the new name into the id cert if we are using the cert
+            if (isIdCert) {
+                IdentityCertificate ic = generateIdCert(toUpdate, true);
+                toUpdate.setIdCert(ic);
+            }
         }
 
         if (updated.getLastCheckin() != null) {
@@ -939,7 +956,13 @@ public class ConsumerResource {
             }
             else {
                 if (existingId != null) {
-                    existingId.setHypervisorId(incomingId.getHypervisorId());
+                    if (existingId.getHypervisorId() != null &&
+                        !existingId.getHypervisorId().equals(incomingId.getHypervisorId())) {
+                        existingId.setHypervisorId(incomingId.getHypervisorId());
+                    }
+                    else {
+                        return false;
+                    }
                 }
                 else {
                     // Safer to build a new clean HypervisorId object

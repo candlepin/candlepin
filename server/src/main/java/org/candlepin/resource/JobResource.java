@@ -34,6 +34,7 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -128,6 +129,10 @@ public class JobResource {
             throw new NotFoundException("");
         }
 
+        for (JobStatus js : statuses) {
+            js.cloakResultData(true);
+        }
+
         return statuses;
     }
 
@@ -204,8 +209,11 @@ public class JobResource {
     @GET
     @Path("/{job_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public JobStatus getStatus(@PathParam("job_id") @Verify(JobStatus.class) String jobId) {
-        return curator.find(jobId);
+    public JobStatus getStatus(@PathParam("job_id") @Verify(JobStatus.class) String jobId,
+                               @QueryParam("result_data") @DefaultValue("false") boolean resultData) {
+        JobStatus js = curator.find(jobId);
+        js.cloakResultData(!resultData);
+        return js;
     }
 
     /**

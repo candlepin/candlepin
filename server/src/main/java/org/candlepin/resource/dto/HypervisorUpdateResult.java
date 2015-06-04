@@ -31,14 +31,14 @@ import java.util.Set;
  *     failed: a list of strings formated as '{host_virt_id}: Error message'.
  * </pre>
  */
-public class HypervisorCheckInResult implements Serializable{
+public class HypervisorUpdateResult implements Serializable{
 
     private Set<Consumer> created;
     private Set<Consumer> updated;
     private Set<Consumer> unchanged;
     private Set<String> failed;
 
-    public HypervisorCheckInResult() {
+    public HypervisorUpdateResult() {
         this.created = new HashSet<Consumer>();
         this.updated = new HashSet<Consumer>();
         this.unchanged = new HashSet<Consumer>();
