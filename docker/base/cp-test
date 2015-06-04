@@ -56,7 +56,7 @@ cleanup() {
 
 usage() {
     cat <<HELP
-    usage: candlepin-test [options]
+    usage: cp-test [options]
 
     OPTIONS:
         -d  deploy a live candlepin
