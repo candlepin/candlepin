@@ -46,7 +46,7 @@ gendb() {
 }
 
 deploy() {
-  VERSION="$(grep Version: $PROJECT_DIR/candlepin.spec | cut --delim=' ' -f2)"
+  VERSION="$(grep Version: $PROJECT_DIR/candlepin.spec.tmpl | cut --delim=' ' -f2)"
     if [ -z $CLEAN ] ; then
         $SUDO rm -rf $DEPLOY
     else

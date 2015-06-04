@@ -66,7 +66,7 @@ autoconf() {
 }
 
 deploy() {
-    VERSION="$(grep Version: $PROJECT_DIR/${APP}.spec | cut --delim=' ' -f2)"
+    VERSION="$(grep Version: $PROJECT_DIR/${APP}.spec.tmpl | cut --delim=' ' -f2)"
 
     # delete the exploded directory otherwise app won't reload
     if [ -d /var/lib/${TC}/webapps/${APP}/ ]; then

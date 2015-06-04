@@ -1,3 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
@@ -6,9 +8,23 @@
 
     <groupId>org.candlepin</groupId>
     <artifactId>candlepin-parent</artifactId>
+    <version>1.1</version>
     <packaging>pom</packaging>
-    <version>1.0.19</version>
     <name>Candlepin Parent Project</name>
+    <url>http://www.candlepinproject.org</url>
+
+    <licenses>
+        <license>
+            <name>GNU Public License (GPL) version 2.0</name>
+            <url>http://www.gnu.org/licenses/gpl-2.0.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:git://github.com/candlepin/candlepin.git</connection>
+        <developerConnection>scm:git:git@github.com:candlepin/candlepin.git</developerConnection>
+    </scm>
 
     <modules>
         <module>common</module>
@@ -16,27 +32,88 @@
         <module>server</module>
     </modules>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.test.skip>true</maven.test.skip>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>build</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <repositories>
+                <repository>
+                    <id>gettext-commons</id>
+                    <name>Gettext Commons</name>
+                    <url>http://gettext-commons.googlecode.com/svn/maven-repository/</url>
+                </repository>
+                <repository>
+                    <id>jboss</id>
+                    <name>JBoss</name>
+                    <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+                </repository>
+                <repository>
+                    <id>oauth</id>
+                    <name>OAuth</name>
+                    <url>http://oauth.googlecode.com/svn/code/maven/</url>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+
     <build>
         <pluginManagement>
+            <!-- If you add plugins here, you still need to add a plugin block
+                 to the child pom file (but you can leave out the configuration
+                 in the child.  Plugins can be added as Ruby Procs to the plugin_procs
+                 array off of the pom object.  See tasks/pom.rake for details. -->
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.3</version>
                     <configuration>
-                        <source>1.5</source>
-                        <target>1.5</target>
+                        <source>1.6</source>
+                        <target>1.6</target>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.12.4</version>
+                 </plugin>
+                 <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>2.4</version>
+                    <configuration>
+                        <descriptorRefs>
+                            <!--
+                            This descriptor just archives the entire project.  Any
+                            customizations to the assembly process will require the
+                            definition of an assembly descriptor which is another
+                            XML file that the assembly plugin reads to see which
+                            directories to exclude.  Probably the best way would
+                            be to declare the assembly descriptor in the parent POM
+                            and have all the child projects reference it.  See
+                            https://maven.apache.org/plugins/maven-assembly-plugin/examples/sharing-descriptors.html
+                            -->
+                            <descriptorRef>project</descriptorRef>
+                        </descriptorRefs>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>create-archive</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                 </plugin>
             </plugins>
         </pluginManagement>
     </build>
-
-    <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
 </project>

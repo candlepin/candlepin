@@ -184,6 +184,7 @@ end
 desc "The Candlepin Project"
 define "candlepin" do
   project.group = "org.candlepin"
+  project.version = "1.0"
   manifest["Copyright"] = "Red Hat, Inc. #{Date.today.strftime('%Y')}"
 
   compile.options.target = '1.6'
@@ -205,7 +206,7 @@ define "candlepin" do
 
   desc "Common Candlepin Code"
   define "common" do
-    project.version = spec_version('candlepin-common.spec')
+    project.version = spec_version('candlepin-common.spec.tmpl')
 
     eclipse.natures :java
 
@@ -238,7 +239,7 @@ define "candlepin" do
     ])
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
-    pom.artifacts << package(:jar).tap do |jar|
+    common_jar = package(:jar).tap do |jar|
       jar.include(:from => msgfmt.destination)
     end
   end
@@ -261,11 +262,20 @@ define "candlepin" do
 
     compile.with(compile_classpath)
     compile.with(project('common'))
+
+    # Buildr tries to outsmart you and use classpath variables whenever
+    # possible. If we don't do the below, Buildr will add
+    # 'JAVA_HOMElib/tools.jar' to the .classpath file, but Eclipse doesn't
+    # have JAVA_HOME set as one of its classpath variables by default so the
+    # file isn't found. We will cheat by setting the classpath variable to
+    # be exactly the same as the file path.
+    tools_location = File.basename(Java.tools_jar)
+    eclipse.classpath_variables tools_location.to_sym => tools_location
   end
 
   desc "The Gutterball Reporting Engine"
   define "gutterball" do
-    spec_file = "gutterball.spec"
+    spec_file = "gutterball.spec.tmpl"
     project.version = spec_version(spec_file)
     release_number = spec_release(spec_file)
 
@@ -330,12 +340,12 @@ define "candlepin" do
       war.classes << resources.target
       war.classes << msgfmt.destination if msgfmt.enabled?
     end
-    pom.artifacts << gutterball_war
+    pom.provided_dependencies = PROVIDED
   end
 
   desc "The Candlepin Server"
   define "server" do
-    spec_file = "candlepin.spec"
+    spec_file = "candlepin.spec.tmpl"
     project.version = spec_version(spec_file)
     release_number = spec_release(spec_file)
 
@@ -350,14 +360,6 @@ define "candlepin" do
     # eclipse settings
     # http://buildr.apache.org/more_stuff.html#eclipse
     eclipse.natures :java
-
-    # Buildr tries to outsmart you and use classpath variables whenever possible.  If
-    # we don't do the below, Buildr will add 'JAVA_HOMElib/tools.jar' to the .classpath
-    # file, but Eclipse doesn't have JAVA_HOME set as one of its classpath variables by
-    # default so the file isn't found.  We will cheat by setting the classpath variable to
-    # be exactly the same as the file path.
-    tools_location = File.basename(Java.tools_jar)
-    eclipse.classpath_variables tools_location.to_sym => tools_location
 
     resource_substitutions = {
       'version' => project.version,
@@ -423,13 +425,14 @@ define "candlepin" do
     candlepin_path = "org/candlepin"
     compiled_cp_path = "#{compile.target}/#{candlepin_path}"
 
+    pom.provided_dependencies = PROVIDED
+
     api_jar = package(:jar, :id=>'candlepin-api').tap do |jar|
       jar.clean
       pkgs = %w{auth config jackson model pki resteasy service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
       p = jar.path(candlepin_path)
       p.include(pkgs)
     end
-    pom.artifacts << api_jar
 
     package(:jar, :id=>"candlepin-certgen").tap do |jar|
       jar.clean
@@ -447,7 +450,6 @@ define "candlepin" do
       web_inf = war.path('WEB-INF/classes')
       web_inf.path(candlepin_path).include("#{compiled_cp_path}/**")
     end
-    pom.artifacts << war_file
 
     desc 'Crawl the REST API and print a summary.'
     task :apicrawl => [project('apicrawl').task(:package), :compile] do

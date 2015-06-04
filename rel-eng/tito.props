@@ -1,5 +1,5 @@
 [globalconfig]
-default_builder = tito.builder.Builder
+default_builder = tito.builder.MeadBuilder
 default_tagger = tito.tagger.VersionTagger
 
 [katello-thirdparty-candlepin-rhel6]

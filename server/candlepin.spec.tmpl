@@ -7,23 +7,11 @@
 %global selinux_policyver %(%{__sed} -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
 %global modulename candlepin
 
-# This is technically just a temporary directory to get us through
-# the compilation phase. It is later destroyed and the spec file will
-# re-call initjars with the correct destination for both tomcat and jboss.
-%global distlibdir %{buildroot}/%{_tmppath}/distlibdir/
-%global libdir %{_javadir}
-
-# We require the Candlepin SCL, but because we are not an SCL package
-# ourselves, we need to point to deps in the expected location.
-%global scllibdir /opt/rh/candlepin-scl/root
-
-%{?fedora:%global reqcpdeps 1}
-
-# Ideally we would just use %{dist} for the deps_suffix, but %dist isn't just always
-# the major version.  E.g. rpm --eval "%{dist}" returns ".el6_5" in the RHEL 6
-# candlepin buildroot and ".el6" in other environments.
-%{?fedora:%global deps_suffix fc%{fedora}}
-%{?rhel:%global deps_suffix el%{rhel}}
+## If you follow the Java packaging guidelines, you
+## only need to run brp-java-repack-jars on packages that include
+## arch-independent JAR files under /usr/share and that also include
+## GCJ-compiled .jar.so files.
+%global __jar_repack %{nil}
 
 %if 0%{?fedora} >= 19 || 0%{?rhel} >= 7
 %global tomcat tomcat
@@ -32,201 +20,51 @@
 %endif
 
 Name: candlepin
-Summary: Candlepin is an open source entitlement management system
-Group: System Environment/Daemons
-License: GPLv2
-Version: 0.9.50
+Version: 2.0.2
 Release: 1%{?dist}
-URL: http://fedorahosted.org/candlepin
-# Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
-Source: %{name}-%{version}.tar.gz
+#if $epoch
+Epoch: $epoch
+#end if
+Summary: Candlepin is an open source entitlement management system
+
+Group: System Environment/Daemons
+URL: http://www.candlepinproject.org
+License: GPLv2
+Source0: %{name}-%{version}-project.tar.gz
+Source1: %{name}-%{version}.war
+
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildArch: noarch
 
-BuildRequires: java-devel >= 1:1.6.0
-BuildRequires: ant >= 0:1.7.0
-BuildRequires: gettext
 BuildRequires: selinux-policy-doc
-BuildRequires: candlepin-common >= 0:1.0.21
-%if 0%{?rhel} && 0%{?rhel} < 7
-BuildRequires: ant-nodeps >= 0:1.7.0
-%endif
 
-%if 0%{?reqcpdeps}
-%global distlibdir %{_datadir}/%{name}/lib/
-%global libdir %{_datadir}/%{name}/lib/
-%global usecpdeps "usecpdeps"
-BuildRequires: candlepin-deps >= 0:0.3.5
-%else
-# Require the candlepin software collection for packages we use that may
-# conflict with other projects/releases:
-BuildRequires: scl-utils-build
-BuildRequires: candlepin-scl
-
-BuildRequires: antlr >= 0:2.7.7
-BuildRequires: bouncycastle
-BuildRequires: hibernate4-core >= 0:4.2.5
-BuildRequires: hibernate4-entitymanager >= 0:4.2.5
-BuildRequires: hibernate4-c3p0 >= 0:4.2.5
-%if 0%{?rhel} >= 7
-BuildRequires: glassfish-jaxb
-BuildRequires: candlepin-guice >= 0:3.0
-BuildRequires: guava >= 0:13.0
-BuildRequires: apache-commons-collections
-BuildRequires: mvn(org.apache.httpcomponents:httpclient) >= 0:4.1.2
-BuildRequires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
-BuildRequires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
-BuildRequires: mvn(ch.qos.logback:logback-classic)
-%else
-BuildRequires: jaxb-impl
-BuildRequires: google-guice >= 0:3.0
-BuildRequires: google-collections >= 0:1.0
-BuildRequires: commons-collections >= 3.1
-BuildRequires: slf4j-api >= 0:1.7.5
-BuildRequires: jcl-over-slf4j >= 0:1.7.5
-BuildRequires: logback-classic
-BuildRequires: httpclient >= 0:4.1.2
-%endif
-
-BuildRequires: javassist >= 3.12.0
-
-# for schema
-BuildRequires: hibernate3-commons-annotations >= 0:4.0.1
-BuildRequires: hibernate-beanvalidation-api >= 1.0.0
-BuildRequires: hibernate4-validator >= 0:4.2.5
-
-BuildRequires: liquibase >= 0:2.0.5
-BuildRequires: resteasy >= 0:2.3.7
-BuildRequires: hornetq >= 0:2.3.5
-BuildRequires: jakarta-commons-lang
-BuildRequires: jakarta-commons-io
-BuildRequires: apache-commons-codec-eap6
-
-%global jackson_version 0:2.3.0
-BuildRequires: jackson-annotations >= %{jackson_version}
-BuildRequires: jackson-core >= %{jackson_version}
-BuildRequires: jackson-databind >= %{jackson_version}
-BuildRequires: jackson-datatype-hibernate4 >= %{jackson_version}
-BuildRequires: jackson-jaxrs-json-provider >= %{jackson_version}
-BuildRequires: jackson-module-jaxb-annotations >= %{jackson_version}
-
-# Configure Datasources
-BuildRequires: hibernate-jpa-2.0-api >= 1.0.1
-BuildRequires: netty
-BuildRequires: jms >= 0:1.1
-BuildRequires: oauth >= 20100601-4
-
-# needed to setup runtime deps, not for compilation
-BuildRequires: c3p0 >= 0.9.1.2
-BuildRequires: scannotation
-BuildRequires: postgresql-jdbc
-BuildRequires: servlet
-BuildRequires: gettext-commons
-BuildRequires: jta
-
-# resteasy multipart requires this at runtime
-BuildRequires: apache-mime4j = 0:0.6
-
-BuildRequires: qpid-java-client >= 0:0.30
-BuildRequires: qpid-java-common >= 0:0.30
-%endif
-
-# Common requires go here
 Requires: java >= 0:1.6.0
-#until cpsetup is removed
 Requires: wget
+Requires: %{tomcat}
 Requires: liquibase >= 0:2.0.5
-Requires: postgresql-jdbc
-Requires: candlepin-common >= 0:1.0.16
-
-# specific requires
-# if not using cpdeps, we'll need real requires
-%if !0%{?reqcpdeps}
-# candlepin webapp requires
-Requires: antlr >= 0:2.7.7
-Requires: bouncycastle
-%if 0%{?rhel} >= 7
-Requires: glassfish-jaxb
-Requires: candlepin-guice >= 0:3.0
-Requires: guava >= 0:13.0
-Requires: apache-commons-collections
-Requires: mvn(org.apache.httpcomponents:httpclient) >= 0:4.1.2
-Requires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
-Requires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
-Requires: mvn(ch.qos.logback:logback-classic)
-Requires: mvn(net.sf.cglib:cglib)
-Requires: mvn(asm:asm)
-%else
-Requires: jaxb-impl
-Requires: google-guice >= 0:3.0
-Requires: google-collections >= 0:1.0
-Requires: commons-collections >= 3.1
-Requires: slf4j-api >= 0:1.7.5-4
-# apache-mime4j uses commons-logging, so we have to provide a slf4j bridge
-Requires: jcl-over-slf4j >= 0:1.7.5
-Requires: logback-classic
-Requires: httpclient >= 0:4.1.2
-%endif
-Requires: hibernate4-core >= 0:4.2.5
-Requires: hibernate4-entitymanager >= 0:4.2.5
-Requires: hibernate4-c3p0 >= 0:4.2.5
-Requires: hibernate4-validator >= 0:4.2.5
-Requires: hibernate3-commons-annotations >= 0:4.0.1
-Requires: hibernate-jpa-2.0-api >= 0:1.0.1
-Requires: candlepin-scl
-Requires: hibernate-beanvalidation-api >= 1.0.0
-Requires: c3p0 >= 0:0.9.1.2
-Requires: resteasy >= 0:2.3.7
-Requires: jackson-annotations >= %{jackson_version}
-Requires: jackson-core >= %{jackson_version}
-Requires: jackson-databind >= %{jackson_version}
-Requires: jackson-datatype-hibernate4 >= %{jackson_version}
-Requires: jackson-jaxrs-json-provider >= %{jackson_version}
-Requires: jackson-module-jaxb-annotations >= %{jackson_version}
-Requires: hornetq >= 0:2.3.5
-Requires: netty
-Requires: oauth >= 20100601-4
-Requires: scannotation
-Requires: jakarta-commons-lang
-Requires: jakarta-commons-io
-Requires: apache-commons-codec-eap6
-
-# RESTEasy breaks if you use a newer version because the location of some
-# of the packages changed between 0.6 and 0.7
-Requires: apache-mime4j = 0:0.6
-Requires: gettext-commons
-Requires: javamail
-Requires: javassist >= 3.12.0
-Requires: jta
-Requires: qpid-java-client >= 0:0.30
-Requires: qpid-java-common >= 0:0.30
-%endif
-%global __jar_repack %{nil}
 
 %description
 Candlepin is an open source entitlement management system.
 
-%package %{tomcat}
-Summary: Candlepin web application for tomcat
-Requires: %{tomcat}
-Requires: candlepin = %{version}
+## %package %{tomcat}
+## Summary: Candlepin web application for tomcat
+## Requires: candlepin = %{version}
 
-%description %{tomcat}
-Candlepin web application for tomcat
+## %description %{tomcat}
+## Candlepin web application for tomcat
 
-%package devel
-Summary: Development libraries for candlepin integration
-Group: Development/Libraries
-
-%description devel
-Development libraries for candlepin integration
-
-%package certgen-lib
-Summary: candlepin certgen library for use by other apps
-
-%description certgen-lib
-candlepin library for use by other apps
-
+## %package devel
+## Summary: Development libraries for candlepin integration
+## Group: Development/Libraries
+##
+## %description devel
+## Development libraries for candlepin integration
+##
+## %package certgen-lib
+## Summary: candlepin certgen library for use by other apps
+##
+## %description certgen-lib
+## candlepin library for use by other apps
 
 %package selinux
 Summary:        SELinux policy module supporting candlepin
@@ -250,150 +88,141 @@ Requires(postun): /sbin/restorecon
 SELinux policy module supporting candlepin
 
 %prep
-%setup -q
-mkdir -p %{distlibdir}
+%setup -q %{SOURCE0}
 
 %build
-# Once candlepin-deps is gone we can remove the %{?rhel} conditional
-ant %{?rhel:-Ddeps.file=deps/%{deps_suffix}.txt} -Dlibdir=%{libdir} -Ddistlibdir=%{distlibdir} -Dscllibdir=%{scllibdir}/%{_datadir}/java/ clean %{?reqcpdeps:usecpdeps} package
-
 cd selinux
+#raw
 for selinuxvariant in %{selinux_variants}
 do
-  make NAME=${selinuxvariant} -f /usr/share/selinux/devel/Makefile
-  mv %{modulename}.pp %{modulename}.pp.${selinuxvariant}
-  make NAME=${selinuxvariant} -f /usr/share/selinux/devel/Makefile clean
+  make NAME=$selinuxvariant -f /usr/share/selinux/devel/Makefile
+  mv %{modulename}.pp %{modulename}.pp.$selinuxvariant
+  make NAME=$selinuxvariant -f /usr/share/selinux/devel/Makefile clean
 done
+#end raw
 cd -
 
 %install
 rm -rf %{buildroot}
-# Create the directory structure required to lay down our files
-# common
-install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/
-install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/upstream/
-install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/amqp/
-install -m 644 conf/candlepin-redhat-ca.crt %{buildroot}%{_sysconfdir}/%{name}/certs/upstream/
-install -d 755 %{buildroot}%{_sysconfdir}/logrotate.d/
-install -m 644 conf/logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
-install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/
-install -d -m 755 %{buildroot}/%{_datadir}/%{name}/
-install -m 755 code/setup/cpsetup %{buildroot}/%{_datadir}/%{name}/cpsetup
-install -m 755 code/setup/cpdb %{buildroot}/%{_datadir}/%{name}/cpdb
+
+## Create the directory structure required to lay down our files
+## common
+%{__install} -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/upstream/
+%{__install} -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/amqp/
+%{__install} -m 644 conf/candlepin-redhat-ca.crt %{buildroot}%{_sysconfdir}/%{name}/certs/upstream/
+
+%{__install} -d 755 %{buildroot}%{_sysconfdir}/logrotate.d/
+%{__install} -m 644 conf/logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
+
+%{__install} -d -m 755 %{buildroot}/%{_datadir}/%{name}/
+
+%{__install} -m 755 code/setup/cpsetup %{buildroot}/%{_datadir}/%{name}/cpsetup
+%{__install} -m 755 code/setup/cpdb %{buildroot}/%{_datadir}/%{name}/cpdb
+
+%{__install} -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/
 touch %{buildroot}/%{_sysconfdir}/%{name}/%{name}.conf
 
-# tomcat
-install -d -m 755 %{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/
-install -d -m 755 %{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/
-install -d -m 755 %{buildroot}/%{_sysconfdir}/%{tomcat}/
-unzip target/%{name}-%{version}.war -d %{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/
+## tomcat
+%{__install} -d -m 755 %{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}
+%{__install} -d -m 755 %{buildroot}/%{_sysconfdir}/%{tomcat}/
+%{__unzip} %{SOURCE1} -d %{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}
 
+%{__ln_s} /etc/candlepin/certs/keystore %{buildroot}/%{_sysconfdir}/%{tomcat}/keystore
 
-%if !0%{?reqcpdeps}
-#remove the copied jars and resymlink
-rm %{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/WEB-INF/lib/*.jar
-ant %{?rhel:-Ddeps.file=deps/%{deps_suffix}.txt} -Ddistlibdir=%{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/WEB-INF/lib/ -Dscllibdir=%{scllibdir}/%{_datadir}/java/ initjars
+## /var/lib dir for hornetq state
+%{__install} -d -m 755 %{buildroot}/%{_sharedstatedir}/%{name}
 
-%endif
-ln -s /etc/candlepin/certs/keystore %{buildroot}/%{_sysconfdir}/%{tomcat}/keystore
-
-# devel
-install -d -m 755 %{buildroot}/%{_datadir}/%{name}/lib/
-install -m 644 target/%{name}-api-%{version}.jar %{buildroot}/%{_datadir}/%{name}/lib/
-
-# jar
-install -d -m 755 %{buildroot}/usr/share/java
-install -m 644 target/%{name}-certgen-%{version}.jar %{buildroot}/usr/share/java/
-ln -s /usr/share/java/candlepin-certgen-%{version}.jar %{buildroot}/usr/share/java/candlepin-certgen.jar
-
-# /var/lib dir for hornetq state
-install -d -m 755 %{buildroot}/%{_localstatedir}/lib/%{name}
-
-install -d -m 755 %{buildroot}/%{_localstatedir}/log/%{name}
-install -d -m 755 %{buildroot}/%{_localstatedir}/cache/%{name}
+%{__install} -d -m 755 %{buildroot}/%{_localstatedir}/log/%{name}
+%{__install} -d -m 755 %{buildroot}/%{_localstatedir}/cache/%{name}
 
 cd selinux
+#raw
 for selinuxvariant in %{selinux_variants}
 do
-  install -d %{buildroot}/%{_datadir}/selinux/${selinuxvariant}
-  install -p -m 644 %{modulename}.pp.${selinuxvariant} \
-    %{buildroot}/%{_datadir}/selinux/${selinuxvariant}/%{modulename}.pp
+  %{__install} -d %{buildroot}/%{_datadir}/selinux/$selinuxvariant
+  %{__install} -p -m 644 %{modulename}.pp.$selinuxvariant %{buildroot}/%{_datadir}/selinux/$selinuxvariant/%{modulename}.pp
 done
+#end raw
 cd -
 /usr/sbin/hardlink -cv %{buildroot}/%{_datadir}/selinux
 
 %clean
 rm -rf %{buildroot}
-rm -rf %{_tmppath}/distlibdir
 
 %post selinux
+#raw
 for selinuxvariant in %{selinux_variants}
 do
-  /usr/sbin/semodule -s ${selinuxvariant} -i \
-    %{_datadir}/selinux/${selinuxvariant}/%{modulename}.pp &> /dev/null || :
+  /usr/sbin/semodule -s $selinuxvariant -i %{_datadir}/selinux/$selinuxvariant/%{modulename}.pp &> /dev/null || :
 done
 /sbin/restorecon %{_localstatedir}/cache/thumbslug &> /dev/null || :
 /sbin/restorecon -R %{_sysconfdir}/%{name}/ &> /dev/null || :
+#end raw
 
 %postun selinux
+#raw
 if [ $1 -eq 0 ] ; then
   for selinuxvariant in %{selinux_variants}
   do
-     /usr/sbin/semodule -s ${selinuxvariant} -r %{modulename} &> /dev/null || :
+     /usr/sbin/semodule -s $selinuxvariant -r %{modulename} &> /dev/null || :
   done
   /sbin/restorecon %{_localstatedir}/cache/thumbslug &> /dev/null || :
   /sbin/restorecon -R %{_sysconfdir}/%{name}/ &> /dev/null || :
 fi
-
+#end raw
 
 %files
 %defattr(-,root,root)
-%dir %{_datadir}/%{name}/
+%doc LICENSE
+%doc README
+%dir %{_datadir}/%{name}
+
 %{_datadir}/%{name}/cpsetup
 %{_datadir}/%{name}/cpdb
-%{_sysconfdir}/%{name}/certs/
-%{_sysconfdir}/%{name}/certs/upstream
-# amqp dir, keystore & truststore used by qpid JMS client
-%{_sysconfdir}/%{name}/certs/amqp
+## amqp dir, keystore & truststore used by qpid JMS client
 %ghost %attr(644, tomcat, tomcat) %{_sysconfdir}/%{name}/certs/amqp/keystore
 %ghost %attr(644, tomcat, tomcat) %{_sysconfdir}/%{name}/certs/amqp/truststore
 %ghost %attr(644, root, root) %{_sysconfdir}/%{name}/certs/candlepin-ca.crt
-# Default is to track the rpm version of this cert for manifest signatures.
-# If a deployment is managing their own, they will need to restore from the
-# .rpmsave backup after upgrading the candlepin rpm.
+## Default is to track the rpm version of this cert for manifest signatures.
+## If a deployment is managing their own, they will need to restore from the
+## .rpmsave backup after upgrading the candlepin rpm.
 %config %attr(644, root, root) %{_sysconfdir}/%{name}/certs/upstream/candlepin-redhat-ca.crt
 %config(noreplace) %attr(644,root,root) %{_sysconfdir}/logrotate.d/candlepin
-%doc LICENSE
-%doc README
 
-%files %{tomcat}
-%defattr(644,tomcat,tomcat,775)
-%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/*
-%{_localstatedir}/lib/%{name}/
+%defattr(644, tomcat, tomcat, 775)
+%{_sharedstatedir}/%{tomcat}/webapps/%{name}/*
+%{_sharedstatedir}/%{name}
 %{_localstatedir}/cache/%{name}
 %config(noreplace) %{_sysconfdir}/%{tomcat}/keystore
+
 %defattr(600,tomcat,tomcat,-)
 %config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
-# log dir needs to be group root or not group writeable
-# else logroate fails
+## log dir needs to be group root or not group writeable
+## else logroate fails
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
-
-%files devel
-%defattr(644,root,root,775)
-%{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
-
-%files certgen-lib
-%defattr(644,root,root,775)
-/usr/share/java/%{name}-certgen-%{version}.jar
-/usr/share/java/%{name}-certgen.jar
 
 %files selinux
 %defattr(-,root,root,0755)
 %doc selinux/*
 %{_datadir}/selinux/*/%{modulename}.pp
 
-
+#raw
 %changelog
+* Wed May 27 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 2.0.2-1
+- Rebuild with new parent pom version.
+
+* Tue May 26 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 2.0.1-1
+- Fixed method name check in cpc (crog@redhat.com)
+- Fix dev deploy scripts to use the new spec templates. (dgoodwin@redhat.com)
+
+* Thu May 21 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 2.0.0-1
+- Switch to the new MEAD build system. (awood@redhat.com)
+* Wed May 20 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.51-1
+- Added a new data validation utility (crog@redhat.com)
+- Logging improvements for refresh pools. (dgoodwin@redhat.com)
+- Fix cross-org import bug. (dgoodwin@redhat.com)
+- Apply permissions while getting Job Status (mstead@redhat.com)
+
 * Fri May 01 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.50-1
 - Fix unmapped guest pool clean on import undo. (dgoodwin@redhat.com)
 - Added the PopulateHostedDB task and API call (crog@redhat.com)
@@ -784,9 +613,9 @@ fi
 - 1070388: Changes userpass string parsing to allow colons in passwords. (csnyder@redhat.com)
 
 * Thu May 22 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.15-1
-- add jms & qpid for el7 (jesusr@redhat.com)
+- add jms and qpid for el7 (jesusr@redhat.com)
 - Translations update. (dgoodwin@redhat.com)
-- use proper qpid-java-client jar name: qpid-client-0.22 & jms el6 (jesusr@redhat.com)
+- use proper qpid-java-client jar name: qpid-client-0.22 and jms el6 (jesusr@redhat.com)
 
 * Thu May 22 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.14-1
 - bump candlepin-deps (jesusr@redhat.com)
@@ -1779,6 +1608,7 @@ fi
 - Further update to make all references and names V3 (wpoteat@redhat.com)
 - wrap pool results in a isDebugEnabled() (alikins@redhat.com)
 - certv3: encode tree for URL, update compression, build huffman tries (wpoteat@redhat.com)
+
 * Wed Sep 12 2012 Alex Wood <awood@redhat.com> 0.7.9-1
 - Fix and clarify performance script CLI help. (dgoodwin@redhat.com)
 - Remove some useless and verbose JS logging. (dgoodwin@redhat.com)
@@ -2185,7 +2015,7 @@ fi
   (cduryee@redhat.com)
 
 * Thu Feb 09 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.5.17-1
-- 789034: Replace $env if possible when generating ent certs.
+- 789034: Replace %env if possible when generating ent certs.
   (dgoodwin@redhat.com)
 - better log statements for debugging migration issues (cduryee@redhat.com)
 - Ignore quantity when checking sockets for non-stacked entitlements.
@@ -2869,7 +2699,7 @@ fi
 - removed Physical and Flex Guest Entitlement counts from content certificate
   (wpoteat@redhat.com)
 - removed change to Content class for getContentUrl (wpoteat@redhat.com)
-- getContentUrl prepended with /$owner/$env (wpoteat@redhat.com)
+- getContentUrl prepended with /%owner/%env (wpoteat@redhat.com)
 - change to test as admin can see owners (wpoteat@redhat.com)
 - ignore test to verify this was intentional (jmrodri@gmail.com)
 - don't look at /etc/candlepin during unit test runs (jmrodri@gmail.com)
@@ -3103,11 +2933,11 @@ fi
 
 * Tue Mar 08 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.11-1
 - Fixing virt_limit when no virt.is_guest fact exists. (jharris@redhat.com)
-- Adding virt_limit 'unlimited' support (jharris@redhat.com)
+- Adding virt_limit "unlimited" support (jharris@redhat.com)
 - Update OID for latest product changes (provides). (jbowes@redhat.com)
 
 * Mon Mar 07 2011 Devan Goodwin <dgoodwin@redhat.com> 0.2.10-1
-- Add content tags support to Ruby APİ. (dgoodwin@redhat.com)
+- Add content tags support to Ruby API. (dgoodwin@redhat.com)
 - Add model support for content tags and apply to ent certs.
   (dgoodwin@redhat.com)
 - 679472:  Add null check for autosubscribing to non-existant product.
@@ -4606,3 +4436,4 @@ fi
 - Remove the test resource (jbowes@redhat.com)
 - remove changelog, bump down version to 0.0.0 (jesusr@redhat.com)
 - Fixing up checkstyle  and cucumber test.  (jharris@redhat.com)
+#end raw

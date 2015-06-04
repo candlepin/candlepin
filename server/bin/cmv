@@ -1,0 +1,556 @@
+#!/usr/bin/env ruby
+# Candlepin Migration Validator
+# Takes pre-migration snapshots and verifies data integrity of a Candlepin deployment post-migration
+
+require 'optparse'
+require 'set'
+require 'tempfile'
+require 'zip/zip'
+require 'zip/zipfilesystem'
+
+require File.expand_path('candlepin_api', File.dirname(__FILE__) + '/../client/ruby')
+
+
+
+class FieldFilter
+    BLACKLIST = 0
+    WHITELIST = 1
+
+    @@mode = BLACKLIST
+
+    @@filters = {
+        'include' => [],
+        'exclude' => []
+    }
+
+    def self.filter_path(filter, path)
+        @@filters[filter] << path if @@filters.key?(filter)
+    end
+
+    def self.set_mode(mode)
+        @@mode = mode
+    end
+
+    def self.include_field?(path)
+        pchunks = path.split('.')
+        levels = {}
+
+        @@filters.each do |key, filter|
+            level = 0
+
+            filter.each do |filter_path|
+                fchunks = filter_path.split('.')
+                match = false
+                i = 0
+
+                begin
+                    match = pchunks[i] && (pchunks[i].casecmp(fchunks[i]) == 0 ||
+                        pchunks[i].gsub(/\[[^\]]+\]/, '').casecmp(fchunks[i]) == 0)
+
+                    # We're probably fine here, but if this results in some goofy behavior, we may
+                    # need to increase the level in cases where we match an instance name instead
+                    # of a generic path
+
+                    i += 1
+                end while (match && i < pchunks.length && i < fchunks.length)
+
+                if match && i >= fchunks.length && i > level then
+                    level = i
+                end
+            end
+
+            levels[key] = level
+        end
+
+        return levels['include'] >= levels['exclude'] && (@@mode == BLACKLIST || levels['include'] > 0)
+    end
+end
+
+
+class CMVCommand
+    def initialize(help=nil)
+        @cmd_help = help
+    end
+
+    def get_command_help
+        return @cmd_help
+    end
+
+    def execute(candlepin, orgs=[], options={})
+        raise "Unimplemented method"
+    end
+
+    def get_deployment_data(candlepin, orgs)
+        # get our base snapshot info (candlepin status/version info and snapshot timestamp)
+        snapshot_info = candlepin.get_status()
+
+        yield '', 'snapshot_info.json', snapshot_info
+
+        orgs.each do |org|
+            puts "Fetching data for org \"#{org}\"..."
+            product_ids = Set.new
+
+            # Get base org info
+            org_data = candlepin.get_owner(org)
+            yield "orgs[#{org}]", "orgs/#{org}/org_info.json", org_data
+
+            # list consumers and store in orgs/<org>/consumers/<consumer>.json
+            print "  Retrieving consumers...      "
+            consumers = candlepin.list_consumers({:owner => org})
+            consumers.each do |consumer|
+                yield "orgs[#{org}].consumers[#{consumer['uuid']}]", "orgs/#{org}/consumers/#{consumer['uuid']}.json", consumer
+            end
+            puts "done."
+
+            # list pools and store in orgs/<org>/pools/<pool>.json
+            print "  Retrieving pools...          "
+            pools = candlepin.list_pools({:owner => org_data['id']})
+            pools.each do |pool|
+                yield "orgs[#{org}].pools[#{pool['id']}]", "orgs/#{org}/pools/#{pool['id']}.json", pool
+
+                # We also need to grab product IDs from the pool as well
+                product_ids << pool['productId']
+
+                if pool['derivedProductId'] then
+                    product_ids << pool['derivedProductId']
+                end
+
+                pool['providedProducts'].each do |product|
+                    product_ids << product['productId']
+                end
+
+                pool['derivedProvidedProducts'].each do |product|
+                    product_ids << product['productId']
+                end
+            end
+            puts "done."
+
+            # list subscriptions and store in orgs/<org>/subscriptions/<subscription>.json
+            print "  Retrieving subscriptions...  "
+            subscriptions = candlepin.list_subscriptions(org)
+            subscriptions.each do |subscription|
+                yield "orgs[#{org}].subscriptions[#{subscription['id']}]", "orgs/#{org}/subscriptions/#{subscription['id']}.json", subscription
+
+                # We also need to grab product IDs from the subscription as well
+                product_ids << subscription['product']['id']
+
+                if subscription['derivedProduct'] then
+                    product_ids << subscription['derivedProduct']['id']
+                end
+
+                subscription['providedProducts'].each do |product|
+                    product_ids << product['id']
+                end
+
+                subscription['derivedProvidedProducts'].each do |product|
+                    product_ids << product['id']
+                end
+            end
+            puts "done."
+
+            # list products and store in orgs/<org>/products/<product>.json
+            print "  Retrieving products...       "
+            product_ids.each do |pid|
+                product = candlepin.get_product(org, pid)
+
+                yield "orgs[#{org}].products[#{product['id']}]", "orgs/#{org}/products/#{product['id']}.json", product
+            end
+            puts "done."
+        end
+
+    end
+end
+
+class SnapshotCommand < CMVCommand
+    def initialize
+        super('Creates a snapshot of the products, content and pools for the specified org(s)')
+    end
+
+    def execute(candlepin, orgs=[], options={})
+        if !File.writable?(File.exists?(options[:file]) ? options[:file] : File.dirname(options[:file])) then
+            raise "Cannot write to snapshot file: #{options[:file]}"
+        end
+
+        Zip::ZipOutputStream.open(options[:file]) do |zos|
+            puts "Compiling snapshot..."
+
+            self.get_deployment_data(candlepin, orgs) do |obj_path, zip_path, data|
+                zos.put_next_entry(zip_path)
+                zos.print JSON.generate(data)
+            end
+        end
+
+        puts "Snapshot successfully captured and saved to file: #{options[:file]}"
+    end
+
+end
+
+class VerifyCommand < CMVCommand
+    def initialize
+        super('Verifies the current data for the specified org(s) matches the last/given snapshot')
+
+        @id_cols = {
+            'orgs' => 'id',
+
+            'orgs.consumers' => 'uuid',
+
+            'orgs.pools' => 'id',
+            'orgs.pools.attributes' => 'name',
+            'orgs.pools.branding' => 'productId',
+            'orgs.pools.providedProducts' => 'productId',
+            'orgs.pools.productAttributes' => 'name',
+            'orgs.pools.derivedProvidedProducts' => 'productId',
+            'orgs.pools.derivedProductAttributes' => 'name',
+
+            'orgs.products' => 'id',
+            'orgs.products.attributes' => 'name',
+            'orgs.products.productContent' => 'content.id',
+            'orgs.products.productContent.content' => 'id',
+
+            'orgs.subscriptions' => 'id',
+            'orgs.subscriptions.branding' => 'productId',
+            'orgs.subscriptions.derivedProduct.attributes' => 'name',
+            'orgs.subscriptions.derivedProvidedProducts' => 'id',
+            'orgs.subscriptions.derivedProvidedProducts.attributes' => 'name',
+            'orgs.subscriptions.derivedProvidedProducts.attributes' => 'name',
+            'orgs.subscriptions.derivedProvidedProducts.productContent' => 'content.id',
+            'orgs.subscriptions.derivedProvidedProducts.productContent.content' => 'id',
+            'orgs.subscriptions.product.attributes' => 'name',
+            'orgs.subscriptions.providedProducts' => 'id',
+            'orgs.subscriptions.providedProducts.attributes' => 'name',
+            'orgs.subscriptions.providedProducts.attributes' => 'name',
+            'orgs.subscriptions.providedProducts.productContent' => 'content.id',
+            'orgs.subscriptions.providedProducts.productContent.content' => 'id',
+        }
+
+        # Common paths we should expect to exclude
+        exclude = [
+            'orgs.pools.productAttributes.updated',
+            'orgs.products.attributes.updated',
+            'orgs.products.updated',
+            'orgs.products.productContent.content.updated'
+        ]
+
+        exclude.each do |path|
+            FieldFilter.filter_path('exclude', path)
+        end
+    end
+
+    def execute(candlepin, orgs=[], options={})
+        if !File.readable?(options[:file]) then
+            raise "Cannot read from snapshot file: #{options[:file]}"
+        end
+
+        snapshot = Zip::ZipFile.open(options[:file])
+        processed_files = Set.new
+        messages = []
+
+        puts "Verifying deployment data against snapshot: #{options[:file]}"
+
+        self.get_deployment_data(candlepin, orgs) do |obj_path, zip_path, act_data|
+            next if !obj_path || obj_path.empty?
+
+            exp_data = JSON.parse(snapshot.read(zip_path))
+
+            result = self.compare_objects(obj_path, exp_data, act_data)
+            messages.insert(messages.length, *result)
+
+            processed_files << zip_path
+        end
+
+        # Run through our snapshot and throw warnings for any file that wasn't processed
+        snapshot.each do |entry|
+            file = entry.to_s()
+            next if processed_files.include?(file) || file == 'snapshot_info.json'
+
+            path = self.convert_file_to_path(file)
+            org = self.get_org_from_file(file)
+
+            if FieldFilter.include_field?(path) && orgs.include?(org) then
+                data = JSON.parse(snapshot.read(file))
+                messages << "ERROR: Value absent from deployment data: #{path}\nExpected: #{data}"
+            end
+        end
+
+        # Display any messages we received during the verification
+        if messages.empty? then
+            puts "Deployment successfully verified against snapshot: #{options[:file]}"
+        else
+            messages.each do |message|
+                puts "\n#{message}\n"
+            end
+
+            puts "\nDeployment failed validation against snapshot #{options[:file]} with #{messages.length} messages\n"
+        end
+    end
+
+    def get_org_from_file(file)
+        fparts = file.split('/')
+        return fparts.length >= 2 ? fparts[1] : nil
+    end
+
+    def convert_file_to_path(file)
+        fparts = file.gsub(/\.json\z/, '').split('/')
+        path = ''
+        i = 1
+
+        fparts.each do |part|
+            if i % 2 == 1 then
+                path += '.' if !path.empty?
+                path += part
+            else
+                path += "[#{part}]"
+            end
+
+            i += 1
+        end
+
+        return path
+    end
+
+    def get_obj_id_key(path, obj)
+        path = path.gsub(/\[[^\]]+\]/, '')
+
+        if @id_cols[path] then
+            return @id_cols[path].split('.')[0]
+        end
+
+        return nil
+    end
+
+    def get_obj_id(path, obj)
+        path = path.gsub(/\[[^\]]+\]/, '')
+
+        if @id_cols[path] then
+            parts = @id_cols[path].split('.')
+
+            parts.each do |part|
+                if obj.is_a?(Hash) then
+                    obj = obj[part]
+                else
+                    obj = nil
+                    break
+                end
+            end
+
+            return obj
+        end
+
+        return nil
+    end
+
+    def compare_objects(path, expected, actual)
+        messages = []
+        exclude = !FieldFilter.include_field?(path)
+
+        if expected.is_a?(Hash) && actual.is_a?(Hash) then
+            keys = Set.new
+            keys.merge(expected.keys)
+            keys.merge(actual.keys)
+
+            keys.each do |key|
+                if !expected.key?(key) then
+                    !FieldFilter.include_field?("#{path}.#{key}") or (messages << "WARNING: Key \"#{key}\" does not exist in snapshot data at: #{path}.#{key}\nValue: #{actual[key]}")
+                elsif !actual.key?(key) then
+                    !FieldFilter.include_field?("#{path}.#{key}") or (messages << "WARNING: Key \"#{key}\" does not exist in deployment data at: #{path}.#{key}\nExpected: #{expected[key]}")
+                else
+                    result = self.compare_objects("#{path}.#{key}", expected[key], actual[key])
+                    messages.insert(messages.length, *result)
+                end
+            end
+        elsif expected.is_a?(Array) && actual.is_a?(Array) then
+            expected.each do |exp_obj|
+                actual.each do |act_obj|
+                    if exp_obj.is_a?(Hash) && act_obj.is_a?(Hash) then
+                        key = self.get_obj_id_key(path, exp_obj)
+                        exp_id = self.get_obj_id(path, exp_obj)
+                        act_id = self.get_obj_id(path, act_obj)
+
+                        if key and exp_id == act_id then
+                            expected -= [exp_obj]
+                            actual -= [act_obj]
+
+                            result = self.compare_objects("#{path}[#{exp_id}]", exp_obj, act_obj)
+                            messages.insert(messages.length, *result)
+                        end
+                    elsif exp_obj == act_obj then
+                        expected -= [exp_obj]
+                        actual -= [act_obj]
+                    end
+                end
+            end
+
+            # Check if we have any stragglers in either list
+            if !expected.empty? then
+                expected.each do |absent|
+                    exclude or (messages << "ERROR: Value absent from collection in deployment data at: #{path}\nExpected: #{absent}")
+                end
+            end
+
+            if !actual.empty? then
+                actual.each do |extra|
+                    exclude or (messages << "ERROR: New value found in collection in deployment data at: #{path}\nValue: #{extra}")
+                end
+            end
+        elsif actual != expected then
+            exclude or (messages << "ERROR: Value mismatch at: #{path}\nExpected: #{expected}\nActual:   #{actual}")
+        end
+
+        return messages
+    end
+end
+
+# setup command map
+commands = {
+    'snapshot' => SnapshotCommand.new,
+    'verify' => VerifyCommand.new
+}
+
+def print_commands(commands)
+    puts "Commands:"
+
+    commands.each do |cmd_name, command|
+        printf("  %-15s   %s\n", cmd_name, command.get_command_help)
+    end
+end
+
+####################################################################################################
+
+# Set up the options
+options = {}
+excludes = false
+
+optparse = OptionParser.new do |opts|
+    file = File.basename(__FILE__)
+    opts.banner = "Usage: #{file} [options] <command> [org1 [, org2, [, org3...]]]\n\nOptions:"
+
+    options[:user] = 'admin'
+    opts.on('--username [USER]', 'Username to connect as; defaults to "admin".') do |opt|
+        options[:user] = opt
+    end
+
+    options[:password] = 'admin'
+    opts.on('--password [PASSWORD]', 'Password to authenticate the user as; defaults to "admin".') do |opt|
+        options[:password] = opt
+    end
+
+    options[:server] = 'localhost'
+    opts.on('--server [SERVERNAME]', String, 'Server name FQDN; defaults to "localhost"') do |opt|
+        options[:server] = opt
+    end
+
+    options[:port] = 8443
+    opts.on('--port [PORTNUM]', 'Port number for the Candlepin server; defaults to 8443') do |opt|
+        options[:port] = opt.to_i
+    end
+
+    options[:context] = 'candlepin'
+    opts.on('--context [CONTEXT]', 'Context to use; defaults to "candlepin"') do |opt|
+        options[:context] = opt
+    end
+
+    options[:uuid] = nil
+    opts.on('--uuid [UUID]', 'UUID to use; defaults to nil') do |opt|
+        options[:uuid] = opt
+    end
+
+    options[:ssl] = true
+    opts.on('--nossl', 'Do not use SSL; defaults to false') do |opt|
+        options[:ssl] = false
+    end
+
+    options[:trusted_user] = false
+    opts.on('--trusted', 'User should be trusted; defaults to false') do
+        options[:trusted_user] = true
+    end
+
+    options[:file] = 'snapshot.zip'
+    opts.on('-f [FILE]', '--file [FILE]', 'The snapshot file to read/write; defaults to "snapshot.zip"') do |opt|
+        options[:file] = opt
+    end
+
+    opts.on('-x [EXCLUDE]', '--exclude [EXCLUDE]', 'A field to ignore during verification; may be specified more than once') do |opt|
+        FieldFilter.filter_path('exclude', opt)
+        FieldFilter.set_mode(FieldFilter::BLACKLIST)
+        excludes = true
+    end
+
+    opts.on('-i [INCLUDE]', '--include [INCLUDE]', 'A field to examine during verification, overriding any excludes; may be specified more than once') do |opt|
+        FieldFilter.filter_path('include', opt)
+        FieldFilter.set_mode(FieldFilter::WHITELIST) if !excludes
+    end
+
+    options[:verbose] = false
+    opts.on( '--verbose', 'Enable Verbose Logging' ) do
+        options[:verbose] = true
+    end
+
+    opts.on('-?', '--help', 'Displays command and option information') do
+        puts opts
+        puts
+        print_commands(commands)
+        exit
+    end
+
+    opts.on('-c', '--commands', 'Displays the available commands') do
+        print_commands(commands)
+        exit
+    end
+end
+
+####################################################################################################
+
+optparse.parse!
+
+if ARGV.empty?
+    puts optparse
+    exit
+else
+    candlepin = Candlepin.new(
+        options[:user], options[:password], nil, nil, options[:server], options[:port], nil,
+        options[:uuid], options[:trused_user], options[:context], options[:ssl]
+    )
+
+    candlepin.verbose= options[:verbose]
+
+    cmd_name = ARGV[0]
+    command = commands[cmd_name]
+
+    if command.nil? then
+        puts "Invalid command or usage\n"
+        puts optparse
+        exit
+    end
+
+    org_list = ARGV[1, ARGV.size]
+
+    if !org_list.empty? then
+        # verify specified orgs exist
+        org_list.each do |org|
+            begin
+                result = candlepin.get_owner(org)
+
+                if result.nil? then
+                    raise "Invalid org: #{org}"
+                end
+            rescue
+                puts "Invalid org: #{org}"
+                exit
+            end
+        end
+    else
+        orgs = candlepin.list_owners
+
+        if orgs then
+            orgs.each do |org|
+                org_list << org['key']
+            end
+        end
+    end
+
+    if !org_list.empty? then
+        command.execute(candlepin, org_list, options)
+    else
+        puts "No orgs to snapshot"
+    end
+end

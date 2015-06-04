@@ -27,7 +27,7 @@ class CandlepinCLI < Candlepin
   private
 
   def self.callable_name?(method_name)
-    method_name[-1] != ?=
+    !method_name.end_with?('=')
   end
 
 end
@@ -43,7 +43,7 @@ optparse = OptionParser.new do|opts|
     opts.banner = "Usage: cpc [options] command"
 
     options[:user] = 'admin'
-    opts.on( '--username [USER]', 'Username to connect as.  Defaults to admin.' ) do |opt|
+    opts.on( '--username [USER]', 'Username to connect as. Defaults to admin.' ) do |opt|
         options[:user] = opt
     end
 
@@ -53,27 +53,27 @@ optparse = OptionParser.new do|opts|
     end
 
     options[:server] = 'localhost'
-    opts.on( '--server [SERVERNAME]', String, 'Server name FQDN. Defults to localhost' ) do |opt|
+    opts.on( '--server [SERVERNAME]', String, 'Server name FQDN. Defaults to localhost' ) do |opt|
         options[:server] = opt
     end
 
     options[:port] = 8443
-    opts.on( '--port [PORTNUM]', 'Port Number. Defults to 8443' ) do |opt|
+    opts.on( '--port [PORTNUM]', 'Port Number. Defaults to 8443' ) do |opt|
         options[:port] = opt.to_i
     end
 
     options[:context] = 'candlepin'
-    opts.on( '--context [CONTEXT]', 'Context to use. Defults to candlepin' ) do |opt|
+    opts.on( '--context [CONTEXT]', 'Context to use. Defaults to candlepin' ) do |opt|
         options[:context] = opt
     end
 
     options[:uuid] = nil
-    opts.on( '--uuid [UUID]', 'UUID to use. Defults to nil' ) do |opt|
+    opts.on( '--uuid [UUID]', 'UUID to use. Defaults to nil' ) do |opt|
         options[:uuid] = opt
     end
 
     options[:ssl] = true
-    opts.on( '--nossl', 'Do not use SSL.' ) do |opt|
+    opts.on( '--nossl', 'Do not use SSL. Defaults to false' ) do |opt|
         options[:ssl] = false
     end
 
@@ -101,7 +101,6 @@ optparse = OptionParser.new do|opts|
         end
         exit
     end
-
 end
 
 optparse.parse!
