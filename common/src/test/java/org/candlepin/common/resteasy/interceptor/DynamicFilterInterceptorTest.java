@@ -52,8 +52,7 @@ public class DynamicFilterInterceptorTest {
 
     @Test
     public void testNoFilters() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET",
-            "http://localhost/candlepin/status");
+        MockHttpRequest req = MockHttpRequest.create("GET", "http://localhost/candlepin/status");
         this.interceptor.preProcess(req, rmethod);
 
         DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
@@ -252,4 +251,72 @@ public class DynamicFilterInterceptorTest {
         assertTrue(filterData.isAttributeExcluded(Arrays.asList("a3", "c2")));
     }
 
+    @Test
+    public void testIncludesWithExcludes() throws Exception {
+        MockHttpRequest req = MockHttpRequest.create(
+            "GET",
+            "http://localhost/candlepin/status?include=a.b1&exclude=a.b1.c2&exclude=a.b2&include=a.b2.d2"
+        );
+        this.interceptor.preProcess(req, rmethod);
+
+        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        assertNotNull(filterData);
+
+        // a: { b1: { c1, c2, c3 }, b2: { d1, d2, d3 } }
+
+        assertFalse(filterData.isAttributeExcluded("a"));
+        assertFalse(filterData.isAttributeExcluded("a.b1"));
+        assertFalse(filterData.isAttributeExcluded("a.b1.c1"));
+        assertTrue(filterData.isAttributeExcluded("a.b1.c2"));
+        assertFalse(filterData.isAttributeExcluded("a.b1.c3"));
+        assertFalse(filterData.isAttributeExcluded("a.b2"));
+        assertTrue(filterData.isAttributeExcluded("a.b2.d1"));
+        assertFalse(filterData.isAttributeExcluded("a.b2.d2"));
+        assertTrue(filterData.isAttributeExcluded("a.b2.d3"));
+
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a", "b1")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a", "b1", "c1")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a", "b1", "c2")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a", "b1", "c3")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a", "b2")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a", "b2", "d1")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a", "b2", "d2")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a", "b2", "d3")));
+    }
+
+    @Test
+    public void testIncludesWithExcludesUsingWhitelist() throws Exception {
+        MockHttpRequest req = MockHttpRequest.create(
+            "GET",
+            "http://localhost/candlepin/status?" +
+            "include=a.b1&exclude=a.b1.c2&include=a.b2.d2&filtermode=whitelist"
+        );
+        this.interceptor.preProcess(req, rmethod);
+
+        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        assertNotNull(filterData);
+
+        // a: { b1: { c1, c2, c3 }, b2: { d1, d2, d3 } }
+
+        assertFalse(filterData.isAttributeExcluded("a"));
+        assertFalse(filterData.isAttributeExcluded("a.b1"));
+        assertFalse(filterData.isAttributeExcluded("a.b1.c1"));
+        assertTrue(filterData.isAttributeExcluded("a.b1.c2"));
+        assertFalse(filterData.isAttributeExcluded("a.b1.c3"));
+        assertFalse(filterData.isAttributeExcluded("a.b2"));
+        assertTrue(filterData.isAttributeExcluded("a.b2.d1"));
+        assertFalse(filterData.isAttributeExcluded("a.b2.d2"));
+        assertTrue(filterData.isAttributeExcluded("a.b2.d3"));
+
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a", "b1")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a", "b1", "c1")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a", "b1", "c2")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a", "b1", "c3")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a", "b2")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a", "b2", "d1")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a", "b2", "d2")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a", "b2", "d3")));
+    }
 }

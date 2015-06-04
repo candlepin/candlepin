@@ -209,7 +209,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             new UserPrincipal(someuser.getUsername(), Arrays.asList(new Permission [] {
                 new OwnerPermission(owner, Access.ALL) }), false),
             someuser.getUsername(),
-            owner.getKey(), null);
+            owner.getKey(), null, true);
 
         assertNotNull(submitted);
         assertNotNull(consumerCurator.find(submitted.getId()));
@@ -227,7 +227,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             new UserPrincipal(someuser.getUsername(), Arrays.asList(new Permission [] {
                 new OwnerPermission(owner, Access.ALL) }), false),
             someuser.getUsername(),
-            owner.getKey(), null);
+            owner.getKey(), null, true);
 
         assertEquals(DEFAULT_SERVICE_LEVEL, submitted.getServiceLevel());
 
@@ -243,7 +243,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
 
         Consumer submitted = consumerResource.create(toSubmit, principal, null,
-                owner.getKey(), null);
+                owner.getKey(), null, true);
         assertNotNull(submitted);
         assertNotNull(submitted.getId());
         assertNotNull(consumerCurator.find(submitted.getId()));
@@ -259,7 +259,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         anotherToSubmit.setUuid(uuid);
         anotherToSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
         anotherToSubmit.setId(null);
-        consumerResource.create(anotherToSubmit, principal, null, owner.getKey(), null);
+        consumerResource.create(anotherToSubmit, principal, null, owner.getKey(), null, true);
     }
 
     public void testDeleteResource() {
@@ -279,7 +279,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             standardSystemType);
 
         consumer = consumerResource.create(consumer, principal, null, null,
-            null);
+            null, true);
 
         assertEquals(USER_NAME, consumer.getUsername());
     }
@@ -335,7 +335,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         Consumer submitted = consumerResource.create(
             toSubmit,
             TestUtil.createPrincipal(someuser.getUsername(), owner, Access.ALL),
-            null, null, null);
+            null, null, null, true);
 
         assertNotNull(submitted);
         assertEquals(toSubmit.getUuid(), submitted.getUuid());
@@ -351,7 +351,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         submitted = consumerResource.create(
             nulltypeid,
             TestUtil.createPrincipal(someuser.getUsername(), owner, Access.ALL),
-            null, null, null);
+            null, null, null, true);
         assertNotNull(submitted);
         assertEquals(nulltypeid.getUuid(), submitted.getUuid());
         assertNotNull(submitted.getType().getId());
@@ -552,7 +552,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void personalNameOverride() {
         Consumer personal = TestUtil.createConsumer(personType, owner);
 
-        personal = consumerResource.create(personal, principal, null, null, null);
+        personal = consumerResource.create(personal, principal, null, null, null, true);
 
         // Not sure if this should be hard-coded to default
         assertEquals(USER_NAME, personal.getName());
@@ -572,7 +572,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         Consumer personal = TestUtil.createConsumer(personType, owner);
         personal.setName(((UserPrincipal) emailuser).getUsername());
 
-        personal = consumerResource.create(personal, emailuser, username, null, null);
+        personal = consumerResource.create(personal, emailuser, username, null, null, true);
 
         // Not sure if this should be hard-coded to default
         assertEquals(username, personal.getName());
@@ -581,10 +581,10 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test(expected = BadRequestException.class)
     public void onlyOnePersonalConsumer() {
         Consumer personal = TestUtil.createConsumer(personType, owner);
-        consumerResource.create(personal, principal, null, null, null);
+        consumerResource.create(personal, principal, null, null, null, true);
 
         personal = TestUtil.createConsumer(personType, owner);
-        consumerResource.create(personal, principal, null, null, null);
+        consumerResource.create(personal, principal, null, null, null, true);
     }
 
     /**

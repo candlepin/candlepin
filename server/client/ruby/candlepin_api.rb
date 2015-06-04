@@ -105,6 +105,15 @@ class Candlepin
     return consumers
   end
 
+  def hypervisor_update(owner, json_data, create_missing=nil)
+    path = get_path("hypervisors") + "/#{owner}"
+    unless create_missing.nil?
+      path << "?create_missing=#{create_missing}"
+    end
+    job_detail = post_text(path, json_data, 'json')
+    return job_detail
+  end
+
   def remove_deletion_record(deleted_uuid)
     path = get_path("consumers") + "/#{deleted_uuid}/deletionrecord"
     result = delete(path)
@@ -1077,8 +1086,10 @@ class Candlepin
     get "/jobs?owner=#{owner_key}"
   end
 
-  def get_job(job_id)
-    get "/jobs/#{job_id}"
+  def get_job(job_id, result_data=false)
+    url = "/jobs/#{job_id}"
+    url += "?result_data=true" if result_data
+    get url
   end
 
   def cancel_job(job_id)
@@ -1267,8 +1278,8 @@ class Candlepin
     return JSON.parse(response.body) unless response.body.empty?
   end
 
-  def post_text(uri, data=nil)
-    response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(data, :content_type => 'text/plain', :accept => 'text/plain' )
+  def post_text(uri, data=nil, accept='text/plain')
+    response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(data, :content_type => 'text/plain', :accept => accept )
     return response.body
   end
 

@@ -16,11 +16,12 @@ package org.candlepin.liquibase;
 
 import liquibase.change.custom.CustomTaskChange;
 import liquibase.database.Database;
-import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.CustomChangeException;
 import liquibase.exception.SetupException;
 import liquibase.exception.ValidationErrors;
 import liquibase.resource.ResourceAccessor;
+
+
 
 /**
  * The MultiOrgUpgradeLiquibaseWrapper class wraps the MultiOrgUpgradeTask to allow it to be

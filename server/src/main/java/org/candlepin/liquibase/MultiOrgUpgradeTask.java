@@ -478,6 +478,7 @@ public class MultiOrgUpgradeTask {
      * @param orgid
      *  The id of the owner/organization for which to migrate subscription data
      */
+    @SuppressWarnings("checkstyle:methodlength")
     private void migrateSubscriptionData(String orgid) throws DatabaseException, SQLException {
         this.logger.info("Migrating subscription data for org " + orgid);
 

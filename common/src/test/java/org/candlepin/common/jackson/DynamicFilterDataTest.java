@@ -33,8 +33,8 @@ public class DynamicFilterDataTest {
 
     @Test
     public void testSimpleWhitelistFiltering() {
-        DynamicFilterData filterData = new DynamicFilterData(false);
-        filterData.addAttributeFilter("bacon");
+        DynamicFilterData filterData = new DynamicFilterData(true);
+        filterData.includeAttribute("bacon");
 
         assertTrue(filterData.isAttributeExcluded("spinach"));
         assertTrue(filterData.isAttributeExcluded(Arrays.asList("spinach")));
@@ -44,8 +44,8 @@ public class DynamicFilterDataTest {
 
     @Test
     public void testMultiLevelWhitelistFiltering() {
-        DynamicFilterData filterData = new DynamicFilterData(false);
-        filterData.addAttributeFilter("bacon.egg");
+        DynamicFilterData filterData = new DynamicFilterData(true);
+        filterData.includeAttribute("bacon.egg");
 
         assertTrue(filterData.isAttributeExcluded("spinach"));
         assertTrue(filterData.isAttributeExcluded(Arrays.asList("spinach")));
@@ -67,8 +67,8 @@ public class DynamicFilterDataTest {
 
     @Test
     public void testSimpleBlacklistFiltering() {
-        DynamicFilterData filterData = new DynamicFilterData(true);
-        filterData.addAttributeFilter("bacon");
+        DynamicFilterData filterData = new DynamicFilterData(false);
+        filterData.excludeAttribute("bacon");
 
         assertFalse(filterData.isAttributeExcluded("spinach"));
         assertFalse(filterData.isAttributeExcluded(Arrays.asList("spinach")));
@@ -78,8 +78,8 @@ public class DynamicFilterDataTest {
 
     @Test
     public void testMultiLevelBlacklistFiltering() {
-        DynamicFilterData filterData = new DynamicFilterData(true);
-        filterData.addAttributeFilter("bacon.egg");
+        DynamicFilterData filterData = new DynamicFilterData(false);
+        filterData.excludeAttribute("bacon.egg");
 
         assertFalse(filterData.isAttributeExcluded("spinach"));
         assertFalse(filterData.isAttributeExcluded(Arrays.asList("spinach")));
@@ -98,4 +98,36 @@ public class DynamicFilterDataTest {
         assertTrue(filterData.isAttributeExcluded("bacon.egg.cheese"));
         assertTrue(filterData.isAttributeExcluded(Arrays.asList("bacon", "egg", "cheese")));
     }
+
+    @Test
+    public void testMultiLevelDualFiltering() {
+        DynamicFilterData filterData = new DynamicFilterData(false);
+        filterData.includeAttribute("a.b1");
+        filterData.includeAttribute("a.b2.d2");
+        filterData.excludeAttribute("a.b1.c2");
+        filterData.excludeAttribute("a.b2");
+
+        // a: { b1: { c1, c2, c3 }, b2: { d1, d2, d3 } }
+
+        assertFalse(filterData.isAttributeExcluded("a"));
+        assertFalse(filterData.isAttributeExcluded("a.b1"));
+        assertFalse(filterData.isAttributeExcluded("a.b1.c1"));
+        assertTrue(filterData.isAttributeExcluded("a.b1.c2"));
+        assertFalse(filterData.isAttributeExcluded("a.b1.c3"));
+        assertFalse(filterData.isAttributeExcluded("a.b2"));
+        assertTrue(filterData.isAttributeExcluded("a.b2.d1"));
+        assertFalse(filterData.isAttributeExcluded("a.b2.d2"));
+        assertTrue(filterData.isAttributeExcluded("a.b2.d3"));
+
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a", "b1")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a", "b1", "c1")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a", "b1", "c2")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a", "b1", "c3")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a", "b2")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a", "b2", "d1")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a", "b2", "d2")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a", "b2", "d3")));
+    }
+
 }

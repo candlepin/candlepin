@@ -147,6 +147,38 @@ describe 'Environments' do
     @env['environmentContent'].size.should == 0
   end
 
+  it 'gracefully aborts on invalid content during demotion' do
+    content = create_content
+    content2 = create_content
+    job = @org_admin.promote_content(@env['id'], [{:contentId => content['id']}])
+    wait_for_job(job['id'], 15)
+    job = @org_admin.promote_content(@env['id'], [{:contentId => content2['id']}])
+    wait_for_job(job['id'], 15)
+
+    lambda do
+      @org_admin.demote_content(@env['id'], ['bad_content_id'])
+    end.should raise_exception(RestClient::ResourceNotFound)
+    @env = @org_admin.get_environment(@env['id'])
+    @env['environmentContent'].size.should == 2
+
+    lambda do
+      @org_admin.demote_content(@env['id'], [content['id'], 'bad_content_id', content2['id']])
+    end.should raise_exception(RestClient::ResourceNotFound)
+    @env = @org_admin.get_environment(@env['id'])
+    @env['environmentContent'].size.should == 2
+
+    lambda do
+      @org_admin.demote_content(@env['id'], [content['id'], content2['id'], 'bad_content_id'])
+    end.should raise_exception(RestClient::ResourceNotFound)
+    @env = @org_admin.get_environment(@env['id'])
+    @env['environmentContent'].size.should == 2
+
+    job = @org_admin.demote_content(@env['id'], [content['id'], content2['id']])
+    wait_for_job(job['id'], 15)
+    @env = @org_admin.get_environment(@env['id'])
+    @env['environmentContent'].size.should == 0
+  end
+
   it 'filters content not promoted to environment' do
     consumer = @org_admin.register(random_string('testsystem'), :system, nil, {},
         nil, nil, [], [], @env['id'])

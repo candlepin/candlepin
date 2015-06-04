@@ -345,7 +345,7 @@ public class ConsumerResourceTest {
             null, null, null, null, null, i18n, null, null, null, null,
             null, null, null, null, oc, akc, null, null, null, null,
             null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
-        cr.create(c, nap, null, "testOwner", "testKey");
+        cr.create(c, nap, null, "testOwner", "testKey", true);
     }
 
     @Test
@@ -497,7 +497,7 @@ public class ConsumerResourceTest {
             null, null, null, null, null, i18n, null, null, null, null,
             usa, null, null,  null, oc, null, null, null, null, null,
             null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
-        cr.create(c, up, null, "testOwner", null);
+        cr.create(c, up, null, "testOwner", null, true);
     }
 
     @Test
