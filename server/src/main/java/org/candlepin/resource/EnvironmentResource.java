@@ -42,6 +42,7 @@ import org.xnap.commons.i18n.I18n;
 import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.Consumes;
@@ -236,8 +237,7 @@ public class EnvironmentResource {
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
         Environment e = lookupEnvironment(envId);
-
-        HashMap<String, EnvironmentContent> demotedContent = new HashMap<String, EnvironmentContent>();
+        Map<String, EnvironmentContent> demotedContent = new HashMap<String, EnvironmentContent>();
 
         // Step through and validate all given content IDs before deleting
         for (String contentId : contentIds) {
@@ -257,7 +257,7 @@ public class EnvironmentResource {
 
         // Impl note: Unfortunately, we have to make an additional set here, as the keySet isn't
         // serializable. Attempting to use it causes exceptions.
-        HashSet<String> demotedContentIds = new HashSet<String>(demotedContent.keySet());
+        Set<String> demotedContentIds = new HashSet<String>(demotedContent.keySet());
         JobDataMap map = new JobDataMap();
         map.put(RegenEnvEntitlementCertsJob.ENV, e);
         map.put(RegenEnvEntitlementCertsJob.CONTENT, demotedContentIds);
