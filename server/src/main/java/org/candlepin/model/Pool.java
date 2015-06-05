@@ -861,14 +861,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.calculatedAttributes = calculatedAttributes;
     }
 
-    public void addCalculatedAttribute(String name, String value) {
-        if (calculatedAttributes == null) {
-            calculatedAttributes = new HashMap<String, String>();
-        }
-
-        calculatedAttributes.put(name, value);
-    }
-
     public Product getDerivedProduct() {
         return this.derivedProduct;
     }
