@@ -29,7 +29,7 @@
     </changeSet>
 
     <changeSet id="20150602102655-4" author="crog">
-        <customChange class="org.candlepin.gutterball.liquibase.ComplianceStatusProductIdLiquibaseWrapper"/>
+        <customChange class="org.candlepin.gutterball.liquibase.ComplianceStatusProductIdMigrationTaskLiquibaseWrapper"/>
     </changeSet>
 
     <changeSet id="20150602102655-5" author="crog">

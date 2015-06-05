@@ -32,10 +32,10 @@ import java.util.UUID;
 // Migrate common stuff to the CP commons
 
 /**
- * The ComplianceStatusProductId upgrade task adds IDs to the existing rows in the gb_*compprod_snap
- * tables.
+ * The ComplianceStatusProductIdMigrationTask upgrade task adds IDs to the existing rows in the
+ * gb_*compprod_snap tables.
  */
-public class ComplianceStatusProductId {
+public class ComplianceStatusProductIdMigrationTask {
 
     private Database database;
     private JdbcConnection connection;
@@ -44,11 +44,11 @@ public class ComplianceStatusProductId {
     private Map<String, PreparedStatement> preparedStatements;
 
 
-    public ComplianceStatusProductId(Database database) {
+    public ComplianceStatusProductIdMigrationTask(Database database) {
         this(database, new SystemOutLogger());
     }
 
-    public ComplianceStatusProductId(Database database, CustomTaskLogger logger) {
+    public ComplianceStatusProductIdMigrationTask(Database database, CustomTaskLogger logger) {
         if (database == null) {
             throw new IllegalArgumentException("database is null");
         }
@@ -69,9 +69,17 @@ public class ComplianceStatusProductId {
     }
 
     /**
+     * Prepares the specified SQL statement and returns a PreparedStatement instance initialized and
+     * configured with the given arguments.
      *
+     * @param sql
+     *  The SQL statement to prepare
      *
+     * @param argv
+     *  A collection of parameters into the prepared statement
      *
+     * @return
+     *  A PreparedStatement instance for the given SQL
      */
     protected PreparedStatement prepareStatement(String sql, Object... argv)
         throws DatabaseException, SQLException {
@@ -145,9 +153,6 @@ public class ComplianceStatusProductId {
     protected String generateUUID() {
         return UUID.randomUUID().toString().replace("-", "");
     }
-
-
-
 
     private int addIdsToTable(String table) throws DatabaseException, SQLException {
         int updated = 0;
