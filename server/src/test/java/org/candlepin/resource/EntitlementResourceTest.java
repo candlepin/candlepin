@@ -72,9 +72,8 @@ public class EntitlementResourceTest {
     @Before
     public void before() {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        entResource = new EntitlementResource(prodAdapter, entitlementCurator,
-            consumerCurator, poolManager, i18n, entitler, subResource, entRules,
-            messageTranslator, prodCurator);
+        entResource = new EntitlementResource(entitlementCurator, consumerCurator,
+            poolManager, i18n, entitler, entRules, messageTranslator);
         owner = new Owner("admin");
         consumer = new Consumer("myconsumer", "bill", owner,
             TestUtil.createConsumerType());

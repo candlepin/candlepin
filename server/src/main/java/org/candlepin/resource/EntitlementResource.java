@@ -30,14 +30,12 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -78,32 +76,24 @@ public class EntitlementResource {
     private PoolManager poolManager;
     private final EntitlementCurator entitlementCurator;
     private I18n i18n;
-    private ProductServiceAdapter prodAdapter;
     private Entitler entitler;
-    private SubscriptionResource subResource;
     private Enforcer enforcer;
     private EntitlementRulesTranslator messageTranslator;
-    private ProductCurator productCurator;
 
     @Inject
-    public EntitlementResource(ProductServiceAdapter prodAdapter,
-            EntitlementCurator entitlementCurator,
+    public EntitlementResource(EntitlementCurator entitlementCurator,
             ConsumerCurator consumerCurator,
             PoolManager poolManager,
-            I18n i18n, Entitler entitler, SubscriptionResource subResource,
-            Enforcer enforcer, EntitlementRulesTranslator messageTranslator,
-            ProductCurator productCurator) {
+            I18n i18n,
+            Entitler entitler, Enforcer enforcer, EntitlementRulesTranslator messageTranslator) {
 
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
         this.i18n = i18n;
-        this.prodAdapter = prodAdapter;
         this.poolManager = poolManager;
         this.entitler = entitler;
-        this.subResource = subResource;
         this.enforcer = enforcer;
         this.messageTranslator = messageTranslator;
-        this.productCurator = productCurator;
 
         // TODO: Is the prodAdapter still necessary if we have the curator?
     }
@@ -339,7 +329,6 @@ public class EntitlementResource {
     public JobDetail regenerateEntitlementCertificatesForProduct(
             @PathParam("product_id") String productId,
             @QueryParam("lazy_regen") @DefaultValue("true") boolean lazyRegen) {
-        prodAdapter.purgeCache(Arrays.asList(productId));
 
         JobDataMap map = new JobDataMap();
         map.put(RegenProductEntitlementCertsJob.PROD_ID, productId);
