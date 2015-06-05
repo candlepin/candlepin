@@ -62,7 +62,6 @@ import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -174,7 +173,6 @@ public class OwnerResource {
     private ProductCurator prodCurator;
     private Configuration config;
     private ContentCurator contentCurator;
-    private PoolCurator poolCurator;
 
 
 
@@ -206,8 +204,7 @@ public class OwnerResource {
         OwnerServiceAdapter ownerService,
         ProductCurator productCurator,
         Configuration config,
-        ContentCurator contentCurator,
-        PoolCurator poolCurator) {
+        ContentCurator contentCurator) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -237,7 +234,6 @@ public class OwnerResource {
         this.prodCurator = productCurator;
         this.config = config;
         this.contentCurator = contentCurator;
-        this.poolCurator = poolCurator;
     }
 
     /**
@@ -403,11 +399,6 @@ public class OwnerResource {
             envCurator.delete(e);
         }
 
-        // TODO: Probably pointless and safe to remove now.
-        for (Subscription s : subscriptionCurator.listByOwner(owner)) {
-            log.info("Deleting subscription: " + s);
-            subscriptionCurator.delete(s);
-        }
         for (Pool p : poolManager.listPoolsByOwner(owner)) {
             log.info("Deleting pool: " + p);
             poolManager.deletePool(p);
@@ -1103,6 +1094,8 @@ public class OwnerResource {
     /**
      * Creates a Subscription for an Owner
      *
+     * DEPRECATED: Please create pools directly with POST /pools.
+     *
      * @return a Subscription object
      * @httpcode 404
      * @httpcode 200
@@ -1111,6 +1104,7 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/subscriptions")
+    @Deprecated
     public Subscription createSubscription(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         Subscription subscription) {
@@ -1130,7 +1124,7 @@ public class OwnerResource {
     }
 
     /**
-     * Creates a floating pool for an Owner.
+     * Creates a custom pool for an Owner.
      *
      * Floating pools are not tied to any upstream subscription, and are most commonly
      * used for custom content delivery in Satellite.

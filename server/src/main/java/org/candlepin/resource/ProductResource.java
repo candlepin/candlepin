@@ -17,7 +17,6 @@ package org.candlepin.resource;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
@@ -36,8 +35,8 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
@@ -62,19 +61,17 @@ public class ProductResource {
 
     private static Logger log = LoggerFactory.getLogger(ProductResource.class);
     private ProductCurator productCurator;
-    private ContentCurator contentCurator;
     private OwnerCurator ownerCurator;
     private ProductCertificateCurator productCertCurator;
     private StatisticCurator statisticCurator;
     private I18n i18n;
 
     @Inject
-    public ProductResource(ProductCurator productCurator, ContentCurator contentCurator,
-        OwnerCurator ownerCurator, ProductCertificateCurator productCertCurator,
-        StatisticCurator statisticCurator, I18n i18n) {
+    public ProductResource(ProductCurator productCurator, OwnerCurator ownerCurator,
+        ProductCertificateCurator productCertCurator, StatisticCurator statisticCurator,
+        I18n i18n) {
 
         this.productCurator = productCurator;
-        this.contentCurator = contentCurator;
         this.productCertCurator = productCertCurator;
         this.statisticCurator = statisticCurator;
         this.ownerCurator = ownerCurator;
@@ -186,8 +183,6 @@ public class ProductResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public Product createProduct(Product product) {
-        // TODO: Should this be allowed if the product describes a valid owner?
-
         throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic product write operations are not supported."
         ));
@@ -209,54 +204,6 @@ public class ProductResource {
         throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic product write operations are not supported."
         ));
-    }
-
-    protected boolean performProductUpdates(Product existing, Product incoming) {
-        boolean changesMade = false;
-
-        if (incoming.getName() != null && !existing.getName().equals(incoming.getName()) &&
-            !incoming.getName().isEmpty()) {
-
-            log.debug("Updating product name");
-            changesMade = true;
-            existing.setName(incoming.getName());
-        }
-
-        if (incoming.getAttributes() != null &&
-            !existing.getAttributes().equals(incoming.getAttributes())) {
-
-            log.debug("Updating product attributes");
-
-            // clear and addall here instead of replacing instance so there are no
-            // dangling memory references
-            existing.getAttributes().clear();
-            existing.getAttributes().addAll(incoming.getAttributes());
-            changesMade = true;
-        }
-
-        if (incoming.getDependentProductIds() != null &&
-            !existing.getDependentProductIds().equals(incoming.getDependentProductIds())) {
-
-            log.debug("Updating dependent product ids");
-
-            // clear and addall here instead of replacing instance so there are no
-            // dangling memory references
-            existing.getDependentProductIds().clear();
-            existing.getDependentProductIds().addAll(incoming.getDependentProductIds());
-            changesMade = true;
-        }
-
-        if (incoming.getMultiplier() != null &&
-            existing.getMultiplier().longValue() != incoming.getMultiplier().longValue()) {
-
-            log.debug("Updating product multiplier");
-            changesMade = true;
-            existing.setMultiplier(incoming.getMultiplier());
-        }
-
-        // not calling setHref() it's a no op and pointless to call.
-
-        return changesMade;
     }
 
     /**

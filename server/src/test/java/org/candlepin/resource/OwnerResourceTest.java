@@ -909,7 +909,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, akc, null, null, i18n, null, null, null,
             null, null, null, null, null, null,
             null, null, null, null, null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, null, null);
+            serviceLevelValidator, null, null, null, null);
         or.createActivationKey("testOwner", ak);
     }
 
@@ -987,7 +987,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, null, null, i18n, es, null, null, null, importer, null, null,
             null, importRecordCurator, null, null, null, null,
             null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, null, null);
+            serviceLevelValidator, null, null, null, null);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1022,7 +1022,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, null, null, i18n, es, null, null, null, importer, null, null,
             null, importRecordCurator, null, null, null, null,
             null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, null, null);
+            serviceLevelValidator, null, null, null, null);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1063,7 +1063,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource ownerres = new OwnerResource(oc, null,
             null, null, null, i18n, null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, null, null,
-            contentOverrideValidator, serviceLevelValidator, null, null, null, null, null);
+            contentOverrideValidator, serviceLevelValidator, null, null, null, null);
 
         when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
         when(owner.getUpstreamConsumer()).thenReturn(upstream);

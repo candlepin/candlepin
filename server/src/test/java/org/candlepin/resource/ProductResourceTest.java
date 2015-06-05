@@ -96,7 +96,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     public void testDeleteProductWithSubscriptions() {
         ProductCurator pc = mock(ProductCurator.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        ProductResource pr = new ProductResource(pc, null, null, null, null, i18n);
+        ProductResource pr = new ProductResource(pc, null, null, null, i18n);
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);
         when(pc.lookupById(eq(o), eq("10"))).thenReturn(p);

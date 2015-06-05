@@ -94,8 +94,6 @@ public class EntitlementResource {
         this.entitler = entitler;
         this.enforcer = enforcer;
         this.messageTranslator = messageTranslator;
-
-        // TODO: Is the prodAdapter still necessary if we have the curator?
     }
 
     private void verifyExistence(Object o, String id) {

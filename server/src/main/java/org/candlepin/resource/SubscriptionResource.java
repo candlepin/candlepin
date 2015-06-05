@@ -266,7 +266,7 @@ public class SubscriptionResource {
      */
     @DELETE
     @Path("/{subscription_id}")
-    @Produces(MediaType.APPLICATION_JSON) // Does it??
+    @Produces(MediaType.APPLICATION_JSON)
     public void deleteSubscription(@PathParam("subscription_id") String subscriptionId) {
 
         // Lookup pools from subscription ID
