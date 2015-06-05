@@ -27,7 +27,7 @@
     <commons-lang-commons-lang.version>2.5</commons-lang-commons-lang.version>
     <postgresql-postgresql.version>9.0-801.jdbc4</postgresql-postgresql.version>
     <mysql-mysql-connector-java.version>5.1.26</mysql-mysql-connector-java.version>
-    <org.xnap.commons-gettext-commons.version>0.9.6</org.xnap.commons-gettext-commons.version>
+    <com.googlecode.gettext-commons-gettext-commons.version>0.9.8</com.googlecode.gettext-commons-gettext-commons.version>
     <com.google.inject.extensions-guice-assistedinject.version>3.0</com.google.inject.extensions-guice-assistedinject.version>
     <com.google.inject.extensions-guice-multibindings.version>3.0</com.google.inject.extensions-guice-multibindings.version>
     <com.google.inject.extensions-guice-servlet.version>3.0</com.google.inject.extensions-guice-servlet.version>
@@ -217,9 +217,9 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.xnap.commons</groupId>
+      <groupId>com.googlecode.gettext-commons</groupId>
       <artifactId>gettext-commons</artifactId>
-      <version>${org.xnap.commons-gettext-commons.version}</version>
+      <version>${com.googlecode.gettext-commons-gettext-commons.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
