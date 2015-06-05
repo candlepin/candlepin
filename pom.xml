@@ -45,11 +45,6 @@
             </activation>
             <repositories>
                 <repository>
-                    <id>gettext-commons</id>
-                    <name>Gettext Commons</name>
-                    <url>http://gettext-commons.googlecode.com/svn/maven-repository/</url>
-                </repository>
-                <repository>
                     <id>jboss</id>
                     <name>JBoss</name>
                     <url>http://repository.jboss.org/nexus/content/groups/public/</url>
