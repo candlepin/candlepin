@@ -87,6 +87,9 @@ public class Refresher {
         // specific subscriptions.
         Set<Subscription> subscriptions = Util.newSet();
         for (Product product : products) {
+            // TODO: This adapter call is not implemented in prod, and cannot be. We plan
+            // to fix this whole code path in near future by looking for pools using the
+            // given products to be refreshed.
             List<Subscription> subs = subAdapter.getSubscriptions(product);
             log.debug("Will refresh {} subscriptions in all orgs using product: ",
                     subs.size(), product.getId());
@@ -121,9 +124,8 @@ public class Refresher {
         }
     }
 
-    // TODO: Can this be replaced with CandlepinPoolManager.refreshForSub?
-    // They look identical... Suspect this is a holdover from some attempted transaction
-    // magic.
+    // TODO: Ties into the refresh all pools using a product comment above, which is
+    // a broken code path and due to be fixed in near future.
     @Transactional
     private void refreshPoolsForSubscription(Subscription subscription, List<Pool> pools) {
         poolManager.removeAndDeletePoolsOnOtherOwners(pools, subscription);
