@@ -262,11 +262,7 @@ public class CandlepinPoolManager implements PoolManager {
             Content existing = contentMap.get(content.getId());
 
             if (existing != null && !content.equals(existing)) {
-                // TODO: Is this condition exception worthy?
-                log.warn(
-                    "Preexisting content found with new data. Using new version for content: {}",
-                    content.getId()
-                );
+                log.warn("Content changes detected: {}", content.getId());
             }
 
             contentMap.put(content.getId(), content);
@@ -373,11 +369,7 @@ public class CandlepinPoolManager implements PoolManager {
             Product existing = productMap.get(product.getId());
 
             if (existing != null && !this.hasProductChanged(existing, product)) {
-                // TODO: Is this condition exception worthy?
-                log.warn(
-                    "Preexisting product found with new data. Using new version for product: {}",
-                    product.getId()
-                );
+                log.warn("Product changes detected: {}", product.getId());
             }
 
             productMap.put(product.getId(), product);
@@ -413,8 +405,6 @@ public class CandlepinPoolManager implements PoolManager {
                     log.info("Product changed for org {}: {}", o.getKey(), incoming.getId());
                     prodCurator.createOrUpdate(incoming);
                     changedProducts.add(incoming);
-                    // TODO: signal back to caller the set of changed products, we'll
-                    // need to know during refreshing of existing pools.
                 }
             }
         }
