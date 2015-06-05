@@ -40,7 +40,6 @@ import javax.ws.rs.core.MultivaluedMap;
  * ConsumerStatusListReport
  */
 public class ConsumerStatusReport extends Report<ReportResult> {
-
     private static final String CUSTOM_RESULTS_PARAM = "custom_results";
     private ComplianceSnapshotCurator complianceSnapshotCurator;
     private StatusReasonMessageGenerator messageGenerator;
@@ -89,19 +88,16 @@ public class ConsumerStatusReport extends Report<ReportResult> {
 
         this.addParameter(
             builder.init("product_name", i18n.tr("The name of a product on which to filter"))
-                .mustNotHave("sku", "subscription_name", "management_enabled")
                 .getParameter()
         );
 
         this.addParameter(
             builder.init("sku", i18n.tr("The entitlement sku on which to filter"))
-                .mustNotHave("product_name", "subscription_name", "management_enabled")
                 .getParameter()
         );
 
         this.addParameter(
             builder.init("subscription_name", i18n.tr("The name of a subscription on which to filter"))
-                .mustNotHave("product_name", "sku", "management_enabled")
                 .getParameter()
         );
 
@@ -110,7 +106,6 @@ public class ConsumerStatusReport extends Report<ReportResult> {
                 "management_enabled",
                 i18n.tr("Filter on subscriptions which have management enabled set to this value (boolean)")
             )
-                .mustNotHave("product_name", "sku", "subscription_name")
                 .getParameter()
         );
 
@@ -139,7 +134,6 @@ public class ConsumerStatusReport extends Report<ReportResult> {
     protected ReportResult execute(MultivaluedMap<String, String> queryParams, PageRequest pageRequest) {
         // At this point we would execute a lookup against the DW data store to formulate
         // the report result set.
-
         List<String> consumerIds = queryParams.get("consumer_uuid");
         List<String> statusFilters = queryParams.get("status");
         List<String> ownerFilters = queryParams.get("owner");
@@ -173,60 +167,17 @@ public class ConsumerStatusReport extends Report<ReportResult> {
             queryParams.getFirst(CUSTOM_RESULTS_PARAM) : "";
         boolean useCustom = PropertyConverter.toBoolean(custom);
 
-        Page<Iterator<Compliance>> page;
-
-        if (productNameFilters != null) {
-            page = this.complianceSnapshotCurator.getSnapshotIterator(
-                targetDate,
-                consumerIds,
-                ownerFilters,
-                statusFilters,
-                productNameFilters,
-                null,
-                null,
-                null,
-                pageRequest
-            );
-        }
-        else if (subscriptionSkuFilters != null) {
-            page = this.complianceSnapshotCurator.getSnapshotIterator(
-                targetDate,
-                consumerIds,
-                ownerFilters,
-                statusFilters,
-                null,
-                subscriptionSkuFilters,
-                null,
-                null,
-                pageRequest
-            );
-        }
-        else if (subscriptionNameFilters != null) {
-            page = this.complianceSnapshotCurator.getSnapshotIterator(
-                targetDate,
-                consumerIds,
-                ownerFilters,
-                statusFilters,
-                null,
-                null,
-                subscriptionNameFilters,
-                null,
-                pageRequest
-            );
-        }
-        else {
-            page = this.complianceSnapshotCurator.getSnapshotIterator(
-                targetDate,
-                consumerIds,
-                ownerFilters,
-                statusFilters,
-                null,
-                null,
-                null,
-                attributeFilters,
-                pageRequest
-            );
-        }
+        Page<Iterator<Compliance>> page = this.complianceSnapshotCurator.getSnapshotIterator(
+            targetDate,
+            consumerIds,
+            ownerFilters,
+            statusFilters,
+            productNameFilters,
+            subscriptionSkuFilters,
+            subscriptionNameFilters,
+            attributeFilters,
+            pageRequest
+        );
 
         ResteasyProviderFactory.pushContext(Page.class, page);
 
