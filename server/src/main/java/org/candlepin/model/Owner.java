@@ -96,17 +96,6 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     @OneToMany(mappedBy = "owner", targetEntity = Pool.class)
     private Set<Pool> pools;
 
-    // TODO:
-    // Do we even want/need these? This will have a massive affect on the amount of data that needs
-    // to be serialized; may not be worth it if Hibernate is nice enough to not require this to be
-    // present.
-    @OneToMany(mappedBy = "owner", targetEntity = Product.class)
-    private Set<Product> products;
-
-    @OneToMany(mappedBy = "owner", targetEntity = Content.class)
-    private Set<Content> productContent;
-    // end TODO
-
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "upstream_id")
     private UpstreamConsumer upstreamConsumer;
@@ -122,8 +111,6 @@ public class Owner extends AbstractHibernateObject implements Serializable,
         this.consumers = new HashSet<Consumer>();
         this.pools = new HashSet<Pool>();
         this.environments = new HashSet<Environment>();
-        this.products = new HashSet<Product>();
-        this.productContent = new HashSet<Content>();
     }
 
     /**
@@ -256,42 +243,6 @@ public class Owner extends AbstractHibernateObject implements Serializable,
             this.pools = new HashSet<Pool>();
         }
         this.pools.add(pool);
-    }
-
-    /**
-     * @return the products
-     */
-    @XmlTransient
-    public Set<Product> getProducts() {
-        return products;
-    }
-
-    /**
-     * @param products the products to set
-     */
-    public void setProducts(Set<Product> products) {
-        this.products = products;
-    }
-
-    /**
-     * Adds the specified product to this owner. The product's owner will be set to this owner, and
-     * the product will be added to this owner's set of products.
-     *
-     * @param product
-     *  The product to add to this owner/org.
-     *
-     * @return
-     *  True if the product was added successfully; false otherwise.
-     */
-    public boolean addProduct(Product product) {
-        // TODO: Shouldn't this remove it from the previous owner as necessary?
-
-        if (this.products.add(product)) {
-            product.setOwner(this);
-            return true;
-        }
-
-        return false;
     }
 
     /**
