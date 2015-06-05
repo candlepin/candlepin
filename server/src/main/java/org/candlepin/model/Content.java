@@ -15,10 +15,10 @@
 package org.candlepin.model;
 
 import org.candlepin.service.UniqueIdGenerator;
-import org.hibernate.annotations.GenericGenerator;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
 import java.util.HashSet;
@@ -277,11 +277,6 @@ public class Content extends AbstractHibernateObject {
         }
 
         if (other instanceof Content) {
-            // TODO: This should also check the uuid or id/owner. Two content instances can only be
-            //       equal if they're representing the same data for the same owner. If we need to
-            //       check only data or the ref, those should be broken out into two distinct
-            //       checks: refEquals and dataEquals.
-
             Content that = (Content) other;
             return new EqualsBuilder()
                 .append(this.contentUrl, that.contentUrl)
@@ -295,6 +290,7 @@ public class Content extends AbstractHibernateObject {
                 .append(this.vendor, that.vendor)
                 .append(this.arches, that.arches)
                 .append(this.modifiedProductIds, that.modifiedProductIds)
+                .append(this.owner, that.owner)
                 .isEquals();
         }
 
