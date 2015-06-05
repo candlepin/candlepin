@@ -14,6 +14,7 @@
   <version>2.0.0</version>
   <packaging>war</packaging>
   <properties>
+    <release>1</release>
     <org.apache.qpid-qpid-common.version>0.30</org.apache.qpid-qpid-common.version>
     <org.apache.qpid-qpid-client.version>0.30</org.apache.qpid-qpid-client.version>
     <org.apache.mina-mina-core.version>1.0.1</org.apache.mina-mina-core.version>
