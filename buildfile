@@ -325,6 +325,7 @@ define "candlepin" do
     }
     resources.filter.using(resource_substitutions)
     test.resources.filter.using(resource_substitutions)
+    pom.additional_properties['release'] = release_number
 
     test.setup do |task|
       filter(path_to(:src, :main, :resources)).into(path_to(:target, :classes)).run
@@ -372,6 +373,7 @@ define "candlepin" do
     }
     resources.filter.using(resource_substitutions)
     test.resources.filter.using(resource_substitutions)
+    pom.additional_properties['release'] = release_number
 
     unless use_pmd.nil?
       pmd.enabled = true
