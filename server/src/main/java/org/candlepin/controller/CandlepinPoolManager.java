@@ -1625,13 +1625,8 @@ public class CandlepinPoolManager implements PoolManager {
         }
         @Override
         public void handleBonusPools(Pool pool, Entitlement entitlement) {
-            // TODO: I don't think a change here affects much anymore because sub-pools
-            // are always just quantity = virt_limit, entitlement quantity doesn't matter.
-            // TODO: what about legacy bonus pools after quantity changed on a manifest
-            // consumer entitlement?
-//            updatePoolsForSubscription(poolCurator.listBySourceEntitlement(entitlement),
-//                subAdapter.getSubscription(pool.getSubscriptionId()), false,
-//                new HashSet<Product>());
+            // This is likely a no-op now that virt-limit is the quantity on sub-pools,
+            // rather than the older virt_limit * entitlement quantity:
             checkBonusPoolQuantities(pool, entitlement);
         }
     }
