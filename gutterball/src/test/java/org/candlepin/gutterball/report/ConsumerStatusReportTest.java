@@ -18,6 +18,7 @@ package org.candlepin.gutterball.report;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
+import static junitparams.JUnitParamsRunner.*;
 
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
@@ -28,8 +29,6 @@ import org.candlepin.gutterball.model.ConsumerState;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 import org.candlepin.gutterball.report.dto.ConsumerStatusComplianceDto;
 
-import org.jukito.JukitoModule;
-import org.jukito.JukitoRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,42 +37,68 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MultivaluedMap;
 
-@RunWith(JukitoRunner.class)
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
+
+
+@RunWith(JUnitParamsRunner.class)
 public class ConsumerStatusReportTest {
+    /**
+     * Kludge implementation so we don't have to endlessly mock this class.
+     *
+     * If/when we get the Java EE 7 classes, this can be removed and we can simply import
+     * javax.ws.rs.core.MultivaluedHashMap.
+     */
+    private class MultivaluedHashMap<K, V> extends HashMap<K, List<V>> implements MultivaluedMap<K, V> {
+        public void add(K key, V value) {
+            List<V> values = this.get(key);
 
-    public static class Module extends JukitoModule {
+            if (values == null) {
+                values = new LinkedList<V>();
+                this.put(key, values);
+            }
 
-        @Override
-        protected void configureTest() {
-            bindMock(ComplianceSnapshotCurator.class);
+            values.add(value);
         }
 
+        public V getFirst(K key) {
+            List<V> values = this.get(key);
+            return values != null && !values.isEmpty() ? values.get(0) : null;
+        }
+
+        public void putSingle(K key, V value) {
+            this.remove(key);
+            this.add(key, value);
+        }
     }
 
-    @Inject
-    private HttpServletRequest mockReq;
 
-    @Inject
+
+    private HttpServletRequest mockReq = mock(HttpServletRequest.class);
+
     private ComplianceSnapshotCurator complianceSnapshotCurator;
 
     private ConsumerStatusReport report;
 
     @Before
     public void setUp() throws Exception {
-        I18nProvider i18nProvider = new I18nProvider(mockReq);
+        I18nProvider i18nProvider = new I18nProvider(this.mockReq);
         StatusReasonMessageGenerator messageGenerator = mock(StatusReasonMessageGenerator.class);
 
         Page<Iterator<Compliance>> page = new Page<Iterator<Compliance>>();
         page.setPageData((new LinkedList<Compliance>()).iterator());
+
+        this.complianceSnapshotCurator = mock(ComplianceSnapshotCurator.class);
 
         // Indentation note: This is what checkstyle actually wants. :/
         when(complianceSnapshotCurator.getSnapshotIterator(
@@ -96,71 +121,146 @@ public class ConsumerStatusReportTest {
     }
 
     @Test
-    public void testReportOnTargetDate() {
+    @Parameters(method = "buildParamsForRunReportTest")
+    public void testRunReport(String targetDate, List<String> consumerIds, List<String> ownerFilters,
+        List<String> statusFilters, List<String> productNameFilters, List<String> subSkuFilters,
+        List<String> subNameFilters, Boolean managementEnabled) {
+
+        MultivaluedMap<String, String> params = new MultivaluedHashMap<String, String>();
+        Map<String, String> attributeFilters = new HashMap<String, String>();
+        Date expectedDate = null;
+
+        if (targetDate != null) {
+            params.add("on_date", targetDate);
+            expectedDate = report.parseDateTime(targetDate);
+        }
+
+        if (consumerIds != null && !consumerIds.isEmpty()) {
+            params.put("consumer_uuid", consumerIds);
+        }
+
+        if (ownerFilters != null && !ownerFilters.isEmpty()) {
+            params.put("owner", ownerFilters);
+        }
+
+        if (statusFilters != null && !statusFilters.isEmpty()) {
+            params.put("status", statusFilters);
+        }
+
+        if (productNameFilters != null && !productNameFilters.isEmpty()) {
+            params.put("product_name", productNameFilters);
+        }
+
+        if (subSkuFilters != null && !subSkuFilters.isEmpty()) {
+            params.put("sku", subSkuFilters);
+        }
+
+        if (subNameFilters != null && !subNameFilters.isEmpty()) {
+            params.put("subscription_name", subNameFilters);
+        }
+
+        if (managementEnabled != null) {
+            params.add("management_enabled", managementEnabled ? "true" : "false");
+            attributeFilters.put("management_enabled", managementEnabled ? "1" : "0");
+        }
+
+        PageRequest pageRequest = null;
+
+        report.run(params, pageRequest);
+
+        verify(complianceSnapshotCurator).getSnapshotIterator(
+            expectedDate != null ? eq(expectedDate) : any(Date.class), eq(consumerIds),
+            eq(ownerFilters), eq(statusFilters), eq(productNameFilters), eq(subSkuFilters),
+            eq(subNameFilters), eq(attributeFilters), eq(pageRequest)
+        );
+
+        verifyNoMoreInteractions(complianceSnapshotCurator);
+    }
+
+    public Object[][] buildParamsForRunReportTest() {
+
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.YEAR, 2012);
         cal.set(Calendar.MONTH, Calendar.APRIL);
         cal.set(Calendar.DAY_OF_MONTH, 12);
 
-        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
         String onDateString = formatDate(cal.getTime());
-        when(params.containsKey("on_date")).thenReturn(true);
-        when(params.getFirst("on_date")).thenReturn(onDateString);
-        when(params.get("on_date")).thenReturn(Arrays.asList(onDateString));
+        List<String> consumerIdFilters = Arrays.asList("consumer1");
+        List<String> ownerFilters = Arrays.asList("owner1");
+        List<String> statusFilters = Arrays.asList("valid");
+        List<String> productNameFilters = Arrays.asList("prod1");
+        List<String> subSkuFilters = Arrays.asList("sku1");
+        List<String> subNameFilters = Arrays.asList("sub1");
 
-        List<String> uuids = null;
-        List<String> owners = null;
-        List<String> status = null;
-        PageRequest pageRequest = null;
+        List<String> consumerIdFiltersMulti = Arrays.asList("consumer1", "consumer2", "consumer3");
+        List<String> ownerFiltersMulti = Arrays.asList("owner1", "owner2", "owner3");
+        List<String> statusFiltersMulti = Arrays.asList("valid", "partial", "non-compliant");
+        List<String> productNameFiltersMulti = Arrays.asList("prod1", "prod2", "prod3");
+        List<String> subSkuFiltersMulti = Arrays.asList("sku1", "sku2", "sku3");
+        List<String> subNameFiltersMulti = Arrays.asList("sub1", "sub2", "sub3");
 
-        report.run(params, pageRequest);
-
-        verify(complianceSnapshotCurator).getSnapshotIterator(
-            eq(cal.getTime()), eq(uuids), eq(owners), eq(status), any(List.class), any(List.class),
-            any(List.class), any(Map.class), eq(pageRequest)
+        Object[][] params = this.buildArray(
+            null,
+            new Object[] { null, onDateString },
+            new Object[] { null, consumerIdFilters, consumerIdFiltersMulti },
+            new Object[] { null, ownerFilters, ownerFiltersMulti },
+            new Object[] { null, statusFilters, statusFiltersMulti },
+            new Object[] { null, productNameFilters, productNameFiltersMulti },
+            new Object[] { null, subSkuFilters, subSkuFiltersMulti },
+            new Object[] { null, subNameFilters, subNameFiltersMulti },
+            new Object[] { null, Boolean.TRUE, Boolean.FALSE }
         );
 
-        verifyNoMoreInteractions(complianceSnapshotCurator);
+        return params;
     }
 
-    @Test
-    public void testGetByOwner() {
-        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("owner")).thenReturn(true);
-        when(params.get("owner")).thenReturn(Arrays.asList("o2"));
 
-        List<String> uuids = null;
-        List<String> owners = Arrays.asList("o2");
-        List<String> status = null;
-        PageRequest pageRequest = null;
+    private Object[][] buildArray(Object[] base, Object[]... lists) {
+        if (lists == null) {
+            throw new IllegalArgumentException();
+        }
 
-        report.run(params, pageRequest);
+        if (base == null) {
+            base = new Object[0];
+        }
 
-        verify(complianceSnapshotCurator).getSnapshotIterator(
-            any(Date.class), eq(uuids), eq(owners), eq(status), any(List.class), any(List.class),
-            any(List.class), any(Map.class), eq(pageRequest)
-        );
+        if (lists.length == 0) {
+            // We're done! base contains our completed row.
+            Object[][] ret = new Object[1][];
+            ret[0] = base;
 
-        verifyNoMoreInteractions(complianceSnapshotCurator);
-    }
+            return ret;
+        }
+        else {
+            if (lists[0].length == 0) {
+                throw new IllegalArgumentException("lists contains an empty list");
+            }
 
-    @Test
-    public void testGetByStatus() {
-        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("status")).thenReturn(true);
-        when(params.get("status")).thenReturn(Arrays.asList("partial"));
+            int resultCount = 1;
 
-        List<String> uuids = null;
-        List<String> owners = null;
-        PageRequest pageRequest = null;
+            for (int r = 0; r < lists.length; ++r) {
+                resultCount *= lists[r].length;
+            }
 
-        report.run(params, pageRequest);
-        verify(complianceSnapshotCurator).getSnapshotIterator(
-            any(Date.class), eq(uuids), eq(owners), eq(Arrays.asList("partial")), any(List.class),
-            any(List.class), any(List.class), any(Map.class), eq(pageRequest)
-        );
+            if (resultCount == 0) {
+                throw new IllegalArgumentException("lists contains an empty list");
+            }
 
-        verifyNoMoreInteractions(complianceSnapshotCurator);
+            Object[][] results = new Object[resultCount][];
+            Object[][] listSubset = Arrays.copyOfRange(lists, 1, lists.length);
+            int offset = 0;
+
+            for (Object value : lists[0]) {
+                Object[] bcopy = Arrays.copyOf(base, base.length + 1);
+                bcopy[base.length] = value;
+
+                for (Object[] row : this.buildArray(bcopy, listSubset)) {
+                    results[offset++] = row;
+                }
+            }
+
+            return results;
+        }
     }
 
     @Test
