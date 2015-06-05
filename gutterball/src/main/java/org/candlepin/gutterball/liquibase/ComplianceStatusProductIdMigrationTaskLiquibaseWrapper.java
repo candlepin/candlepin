@@ -22,10 +22,11 @@ import liquibase.exception.ValidationErrors;
 import liquibase.resource.ResourceAccessor;
 
 /**
- * The ComplianceStatusProductIdLiquibaseWrapper class wraps the ComplianceStatusProductId upgrade
- * task to allow it to be programatically performed via Liquibase.
+ * The ComplianceStatusProductIdMigrationTaskLiquibaseWrapper class wraps the
+ * ComplianceStatusProductIdMigrationTask upgrade task to allow it to be programatically performed
+ * via Liquibase.
  */
-public class ComplianceStatusProductIdLiquibaseWrapper implements CustomTaskChange {
+public class ComplianceStatusProductIdMigrationTaskLiquibaseWrapper implements CustomTaskChange {
 
     @Override
     public String getConfirmationMessage() {
@@ -49,7 +50,7 @@ public class ComplianceStatusProductIdLiquibaseWrapper implements CustomTaskChan
 
     @Override
     public void execute(Database database) throws CustomChangeException {
-        ComplianceStatusProductId task = new ComplianceStatusProductId(
+        ComplianceStatusProductIdMigrationTask task = new ComplianceStatusProductIdMigrationTask(
             database,
             new LiquibaseCustomTaskLogger()
         );
