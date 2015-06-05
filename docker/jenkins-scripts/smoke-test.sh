@@ -61,7 +61,7 @@ if len(sys.argv) < 3:
 
 image_name = sys.argv[1]
 cp_repo_url = sys.argv[2]
-max_wait_time = 60
+max_wait_time = 600
 
 server_container_id = None
 db_container_id = None
@@ -99,7 +99,7 @@ try:
 
             # Wait for it to start...
             if port:
-                print "Container started successfully. Waiting for Candlepin to start..."
+                print "Containers started successfully. Waiting for Candlepin to start..."
 
                 status_url = "https://localhost:%s/candlepin/status" % port
                 start_time = time.time()
