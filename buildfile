@@ -242,7 +242,7 @@ define "candlepin" do
       jar.include(:from => msgfmt.destination)
     end
 
-    project.pom.plugin_procs << Proc.new do |xml, proj|
+    pom.plugin_procs << Proc.new do |xml, proj|
       xml.groupId("com.googlecode.gettext-commons")
       xml.artifactId("gettext-maven-plugin")
     end
@@ -324,7 +324,6 @@ define "candlepin" do
     }
     resources.filter.using(resource_substitutions)
     test.resources.filter.using(resource_substitutions)
-    pom.additional_properties['release'] = release_number
 
     test.setup do |task|
       filter(path_to(:src, :main, :resources)).into(path_to(:target, :classes)).run
@@ -345,7 +344,20 @@ define "candlepin" do
       war.classes << resources.target
       war.classes << msgfmt.destination if msgfmt.enabled?
     end
-    pom.provided_dependencies = PROVIDED
+
+    # We need to add this dependency so that the Maven assembly plugin will
+    # include the source of the common project in the final assembly.
+    common = project('common')
+    pom.dependency_procs << Proc.new do |xml, project|
+      xml.groupId(common.group)
+      xml.artifactId(common.id)
+      xml.version(common.version)
+      xml.classifier("complete")
+      xml.type("tar.gz")
+      xml.scope("provided")
+    end
+    pom.provided_dependencies.concat(PROVIDED)
+    pom.additional_properties['release'] = release_number
   end
 
   desc "The Candlepin Server"
@@ -372,7 +384,6 @@ define "candlepin" do
     }
     resources.filter.using(resource_substitutions)
     test.resources.filter.using(resource_substitutions)
-    pom.additional_properties['release'] = release_number
 
     unless use_pmd.nil?
       pmd.enabled = true
@@ -431,7 +442,19 @@ define "candlepin" do
     candlepin_path = "org/candlepin"
     compiled_cp_path = "#{compile.target}/#{candlepin_path}"
 
-    pom.provided_dependencies = PROVIDED
+    # We need to add this dependency so that the Maven assembly plugin will
+    # include the source of the common project in the final assembly.
+    common = project('common')
+    pom.dependency_procs << Proc.new do |xml, project|
+      xml.groupId(common.group)
+      xml.artifactId(common.id)
+      xml.version(common.version)
+      xml.classifier("complete")
+      xml.type("tar.gz")
+      xml.scope("provided")
+    end
+    pom.additional_properties['release'] = release_number
+    pom.provided_dependencies.concat(PROVIDED)
 
     package(:jar, :id=>'candlepin-api').tap do |jar|
       jar.clean
