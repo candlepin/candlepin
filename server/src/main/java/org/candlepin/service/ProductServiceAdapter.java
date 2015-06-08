@@ -14,9 +14,9 @@
  */
 package org.candlepin.service;
 
+import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.Owner;
 
 import java.util.Collection;
 import java.util.List;
@@ -51,16 +51,6 @@ public interface ProductServiceAdapter {
      * @return all products.
      */
     List<Product> getProducts();
-
-    /**
-     * Creates a new {@link Product}.
-     *
-     * @param product
-     * @return the created {@link Product}
-     * @throws UnsupportedOperationException if this implementation does not
-     *         support new product creation
-     */
-    Product createProduct(Product product);
 
     /**
      * deletes specified product

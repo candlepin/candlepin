@@ -14,7 +14,6 @@
  */
 package org.candlepin.service.impl;
 
-import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
@@ -70,21 +69,6 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     @Override
     public List<Product> getProducts() {
         return prodCurator.listAll();
-    }
-
-    @Override
-    public Product createProduct(Product product) {
-        // TODO: This may not actually work properly with the change from getId to getProductId
-        if (prodCurator.find(product.getId()) != null) {
-            throw new BadRequestException("product with ID " + product.getId() + " already exists");
-        }
-        else {
-            if (product.getId() == null || product.getId().trim().equals("")) {
-                product.setId(idGenerator.generateId());
-            }
-            Product newProduct = prodCurator.create(product);
-            return newProduct;
-        }
     }
 
     @Override

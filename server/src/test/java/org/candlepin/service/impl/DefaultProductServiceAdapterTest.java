@@ -14,23 +14,12 @@
  */
 package org.candlepin.service.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
+import static org.junit.Assert.*;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
@@ -106,25 +95,6 @@ public class DefaultProductServiceAdapterTest {
         when(pc.listAll()).thenReturn(prods);
         List<Product> result = dpsa.getProducts();
         assertEquals(prods, result);
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void createExistingProduct() {
-        Product p = mock(Product.class);
-        when(p.getId()).thenReturn(someid);
-        when(pc.find(someid)).thenReturn(p);
-        dpsa.createProduct(p);
-    }
-
-    @Test
-    public void createNewProduct() {
-        Product p = mock(Product.class);
-        when(pc.find(null)).thenReturn(null);
-        when(pc.create(eq(p))).thenReturn(p);
-        when(idgen.generateId()).thenReturn(someid);
-        Product result = dpsa.createProduct(p);
-        verify(p).setId(eq(someid));
-        assertNotNull(result);
     }
 
     @Test
