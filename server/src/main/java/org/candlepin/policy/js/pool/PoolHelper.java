@@ -169,15 +169,18 @@ public class PoolHelper extends AttributeHelper {
         }
 
         for (Product product : products) {
-            // This is a potential issue. If the product is specified, we should expect to find it
-            // in the org, but there's no guarantee.
-            // TODO: Perhaps we should throw an exception if it's not found?
+            // If no result is returned here, the product has not been correctly imported
+            // into the organization, indicating a problem somewhere in the sync or refresh code:
             Product destprod = prodCurator.lookupById(destination.getOwner(), product.getId());
+            if (destprod == null) {
+                throw new RuntimeException("Product " + product.getId() +
+                        " has not been imported into org " +
+                        destination.getOwner().getKey());
+            }
             destination.addProvidedProduct(destprod);
         }
     }
 
-    // TODO: Update this method to not use a subscription... somehow.
     public Pool createPool(Subscription sub, Product product, String quantity,
         Map<String, String> attributes, ProductCurator prodCurator) {
 
