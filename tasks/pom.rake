@@ -97,6 +97,10 @@ module PomTask
       end
       @plugin_procs
     end
+
+    def dependency_procs
+      @dependency_procs ||= []
+    end
   end
 
   class PomBuilder
@@ -191,6 +195,12 @@ module PomTask
                   xml.artifactId('*')
                 end
               end
+            end
+          end
+
+          config.dependency_procs.each do |dependency_proc|
+            xml.dependency do
+              dependency_proc.call(xml, project)
             end
           end
         end

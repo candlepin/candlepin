@@ -36,6 +36,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.test.skip>true</maven.test.skip>
+        <project.eclipse.directory>${project.basedir}/target-eclipse</project.eclipse.directory>
     </properties>
 
     <profiles>
@@ -63,6 +64,10 @@
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+            <resource>
+                <directory>${project.build.directory}/generated-resources</directory>
                 <filtering>true</filtering>
             </resource>
         </resources>
@@ -102,25 +107,15 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.12.4</version>
-                 </plugin>
-                 <plugin>
+                </plugin>
+                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
                     <version>2.4</version>
                     <configuration>
-                        <descriptorRefs>
-                            <!--
-                            This descriptor just archives the entire project.  Any
-                            customizations to the assembly process will require the
-                            definition of an assembly descriptor which is another
-                            XML file that the assembly plugin reads to see which
-                            directories to exclude.  Probably the best way would
-                            be to declare the assembly descriptor in the parent POM
-                            and have all the child projects reference it.  See
-                            https://maven.apache.org/plugins/maven-assembly-plugin/examples/sharing-descriptors.html
-                            -->
-                            <descriptorRef>project</descriptorRef>
-                        </descriptorRefs>
+                        <descriptors>
+                            <descriptor>${project.basedir}/assembly.xml</descriptor>
+                        </descriptors>
                     </configuration>
                     <executions>
                         <execution>
