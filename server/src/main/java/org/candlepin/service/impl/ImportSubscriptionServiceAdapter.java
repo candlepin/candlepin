@@ -37,6 +37,10 @@ public class ImportSubscriptionServiceAdapter implements
     private List<Subscription> subscriptions;
     private Map<String, Subscription> subsBySubId = new HashMap<String, Subscription>();
 
+    public ImportSubscriptionServiceAdapter() {
+        this(new LinkedList<Subscription>());
+    }
+
     public ImportSubscriptionServiceAdapter(List<Subscription> subs) {
         this.subscriptions = subs;
         for (Subscription sub : this.subscriptions) {

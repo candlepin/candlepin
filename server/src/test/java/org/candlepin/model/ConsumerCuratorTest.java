@@ -701,7 +701,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.create(consumer);
         Product prod = new Product("1", "2", owner);
         this.productCurator.create(prod);
-        Pool p = createPoolAndSub(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
+        Pool p = createPool(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
         Entitlement ent = this.createEntitlement(owner, consumer, p,
                 createEntitlementCertificate("entkey", "ecert"));
         ent.setUpdatedOnStart(false);
@@ -718,7 +718,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.create(consumer);
         Product prod = new Product("1", "2", owner);
         this.productCurator.create(prod);
-        Pool p = createPoolAndSub(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
+        Pool p = createPool(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
         Entitlement ent = this.createEntitlement(owner, consumer, p,
                 createEntitlementCertificate("entkey", "ecert"));
         // Already taken care of

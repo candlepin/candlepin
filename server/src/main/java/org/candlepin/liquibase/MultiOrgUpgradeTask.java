@@ -151,24 +151,29 @@ public class MultiOrgUpgradeTask {
 
         // Store the connection's auto commit setting, so we may temporarily clobber it.
         boolean autocommit = this.connection.getAutoCommit();
-        this.connection.setAutoCommit(false);
 
-        ResultSet orgids = this.executeQuery("SELECT id FROM cp_owner");
-        while (orgids.next()) {
-            String orgid = orgids.getString(1);
-            this.logger.info(String.format("Migrating data for org %s", orgid));
+        try {
+            this.connection.setAutoCommit(false);
 
-            this.migrateProductData(orgid);
-            this.migrateActivationKeyData(orgid);
-            this.migratePoolData(orgid);
-            this.migrateSubscriptionData(orgid);
+            ResultSet orgids = this.executeQuery("SELECT id FROM cp_owner");
+            while (orgids.next()) {
+                String orgid = orgids.getString(1);
+                this.logger.info(String.format("Migrating data for org %s", orgid));
+
+                this.migrateProductData(orgid);
+                this.migrateActivationKeyData(orgid);
+                this.migratePoolData(orgid);
+                this.migrateSubscriptionData(orgid);
+            }
+
+            orgids.close();
+
+            this.connection.commit();
         }
-
-        orgids.close();
-
-        // Commit & restore original autocommit state
-        this.connection.commit();
-        this.connection.setAutoCommit(autocommit);
+        finally {
+            // Restore original autocommit state
+            this.connection.setAutoCommit(autocommit);
+        }
     }
 
     /**
@@ -542,21 +547,7 @@ public class MultiOrgUpgradeTask {
                 );
             }
 
-            // TODO: Everything from here down may be extraneous.
-            this.executeUpdate(
-                "INSERT INTO cpo_subscriptions " +
-                "SELECT ?, created, updated, accountnumber, contractnumber, enddate, " +
-                "    modified, quantity, startdate, upstream_pool_id, certificate_id, ?, " +
-                "    (SELECT uuid FROM cpo_products " +
-                "        WHERE owner_id = ? AND product_id = S.product_id), " +
-                "    ordernumber, upstream_entitlement_id, upstream_consumer_id, " +
-                "    (SELECT uuid FROM cpo_products " +
-                "        WHERE owner_id = ? AND product_id = S.derivedproduct_id), " +
-                "    cdn_id " +
-                "FROM cp_subscription S WHERE id = ?",
-                subid, orgid, orgid, orgid, subid
-            );
-
+            // Migrate pool source subscription info
             ResultSet sourcesub = this.executeQuery(
                 "SELECT id, subscriptionid, subscriptionsubkey, pool_id, created, updated " +
                 "FROM cp_pool_source_sub WHERE subscriptionid = ?",
@@ -574,6 +565,25 @@ public class MultiOrgUpgradeTask {
             }
 
             sourcesub.close();
+
+
+            // TODO: Everything from here down may be extraneous.
+            /*
+            this.executeUpdate(
+                "INSERT INTO cpo_subscriptions " +
+                "SELECT ?, created, updated, accountnumber, contractnumber, enddate, " +
+                "    modified, quantity, startdate, upstream_pool_id, certificate_id, ?, " +
+                "    (SELECT uuid FROM cpo_products " +
+                "        WHERE owner_id = ? AND product_id = S.product_id), " +
+                "    ordernumber, upstream_entitlement_id, upstream_consumer_id, " +
+                "    (SELECT uuid FROM cpo_products " +
+                "        WHERE owner_id = ? AND product_id = S.derivedproduct_id), " +
+                "    cdn_id " +
+                "FROM cp_subscription S WHERE id = ?",
+                subid, orgid, orgid, orgid, subid
+            );
+
+
 
             ResultSet branding = this.executeQuery(
                 "SELECT B.branding_id " +
@@ -607,6 +617,7 @@ public class MultiOrgUpgradeTask {
                 "FROM cp_sub_derivedprods S WHERE subscription_id = ?",
                 subid, orgid, subid
             );
+            */
         }
 
         subscriptiondata.close();

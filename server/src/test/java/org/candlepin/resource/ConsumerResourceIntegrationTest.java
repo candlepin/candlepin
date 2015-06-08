@@ -153,7 +153,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         product.addAttribute(new ProductAttribute("support_level", DEFAULT_SERVICE_LEVEL));
         productCurator.create(product);
 
-        pool = createPoolAndSub(owner, product, 10L,
+        pool = createPool(owner, product, 10L,
             TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
     }
 

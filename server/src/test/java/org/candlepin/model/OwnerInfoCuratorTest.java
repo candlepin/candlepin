@@ -58,7 +58,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         Product product1 = TestUtil.createProduct(owner);
         productCurator.create(product1);
 
-        pool1 = createPoolAndSub(owner, product1, 1L,
+        pool1 = createPool(owner, product1, 1L,
             Util.yesterday(), Util.tomorrow());
         poolCurator.create(pool1);
 

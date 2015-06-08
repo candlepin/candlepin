@@ -65,10 +65,10 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         consumer = this.createConsumer(owner);
         Product targetProduct = TestUtil.createProduct(owner);
         this.productCurator.create(targetProduct);
-        Pool physicalPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
+        Pool physicalPool = this.createPool(owner, targetProduct, 1L, new Date(),
             new Date());
 
-        Pool virtPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
+        Pool virtPool = this.createPool(owner, targetProduct, 1L, new Date(),
             new Date());
         virtPool.setAttribute("virt_only", "true");
         poolCurator.merge(virtPool);
@@ -96,9 +96,9 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         Product targetProduct = TestUtil.createProduct(owner);
         targetProduct.setAttribute("virt_only", "true");
         this.productCurator.create(targetProduct);
-        this.createPoolAndSub(owner, targetProduct, 1L, new Date(), new Date());
+        this.createPool(owner, targetProduct, 1L, new Date(), new Date());
 
-        this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
+        this.createPool(owner, targetProduct, 1L, new Date(),
             new Date());
 
         List<Pool> results = poolCurator.listAvailableEntitlementPools(consumer, null,
@@ -126,14 +126,14 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         Product targetProduct = TestUtil.createProduct(owner);
         this.productCurator.create(targetProduct);
 
-        Pool virtPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
+        Pool virtPool = this.createPool(owner, targetProduct, 1L, new Date(),
             new Date());
         virtPool.setAttribute("virt_only", "true");
         virtPool.setAttribute("requires_host", host.getUuid());
         poolCurator.merge(virtPool);
 
         // Another pool requiring a different host:
-        Pool anotherVirtPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
+        Pool anotherVirtPool = this.createPool(owner, targetProduct, 1L, new Date(),
             new Date());
         anotherVirtPool.setAttribute("virt_only", "true");
         anotherVirtPool.setAttribute("requires_host", "SOMEOTHERUUID");
@@ -172,7 +172,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         Product targetProduct = TestUtil.createProduct(owner);
         this.productCurator.create(targetProduct);
 
-        Pool virtPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
+        Pool virtPool = this.createPool(owner, targetProduct, 1L, new Date(),
             new Date());
         virtPool.setAttribute("virt_only", "true");
         virtPool.setAttribute("requires_host", host.getUuid());
@@ -199,7 +199,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         Product targetProduct = TestUtil.createProduct(owner);
         this.productCurator.create(targetProduct);
 
-        Pool virtPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
+        Pool virtPool = this.createPool(owner, targetProduct, 1L, new Date(),
             new Date());
         virtPool.setAttribute("virt_only", "true");
         poolCurator.merge(virtPool);

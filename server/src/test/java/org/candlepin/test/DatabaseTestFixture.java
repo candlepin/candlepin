@@ -46,11 +46,10 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.SourceSubscription;
-import org.candlepin.model.Subscription;
-import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.DateSource;
+import org.candlepin.util.Util;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -101,7 +100,6 @@ public class DatabaseTestFixture {
     @Inject protected PoolCurator poolCurator;
     @Inject protected ConsumerCurator consumerCurator;
     @Inject protected ConsumerTypeCurator consumerTypeCurator;
-    @Inject protected SubscriptionCurator subCurator;
     @Inject protected CertificateSerialCurator certSerialCurator;
     @Inject protected ContentCurator contentCurator;
     @Inject protected SubscriptionServiceAdapter subAdapter;
@@ -205,11 +203,11 @@ public class DatabaseTestFixture {
     }
 
     /**
-     * Create an entitlement pool and matching subscription.
+     * Create an entitlement pool.
      *
-     * @return an entitlement pool and matching subscription.
+     * @return an entitlement pool
      */
-    protected Pool createPoolAndSub(Owner owner, Product product, Long quantity, Date startDate,
+    protected Pool createPool(Owner owner, Product product, Long quantity, Date startDate,
         Date endDate) {
 
         Pool p = new Pool(
@@ -223,17 +221,8 @@ public class DatabaseTestFixture {
             DEFAULT_ACCOUNT,
             DEFAULT_ORDER
         );
-        Subscription sub = new Subscription(
-            owner,
-            product,
-            new HashSet<Product>(),
-            quantity,
-            startDate,
-            endDate,
-            TestUtil.createDate(2010, 2, 12)
-        );
-        subCurator.create(sub);
-        p.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
+
+        p.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
         return poolCurator.create(p);
     }
 

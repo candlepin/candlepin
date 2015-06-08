@@ -31,11 +31,12 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Subscription;
-import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
+import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.Util;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
@@ -57,7 +58,6 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
     @Inject private ProductCurator productCurator;
     @Inject private ConsumerCurator consumerCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private SubscriptionCurator subCurator;
     @Inject private ConsumerResource consumerResource;
     @Inject private PoolManager poolManager;
 
@@ -79,6 +79,9 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
+        List<Subscription> subscriptions = new ArrayList<Subscription>();
+        subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
+
         manifestType = consumerTypeCurator.create(
             new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN));
         systemType = consumerTypeCurator.create(
@@ -104,7 +107,8 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             TestUtil.createDate(2010, 1, 1),
             TestUtil.createDate(2020, 1, 1),
             TestUtil.createDate(2000, 1, 1));
-        subCurator.create(limitSub);
+        limitSub.setId(Util.generateDbUUID());
+        subscriptions.add(limitSub);
 
         limitPools = poolManager.createPoolsForSubscription(limitSub);
 
@@ -120,7 +124,8 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             TestUtil.createDate(2010, 1, 1),
             TestUtil.createDate(2020, 1, 1),
             TestUtil.createDate(2000, 1, 1));
-        subCurator.create(unlimitSub);
+        unlimitSub.setId(Util.generateDbUUID());
+        subscriptions.add(unlimitSub);
 
         unlimitPools = poolManager.createPoolsForSubscription(unlimitSub);
     }

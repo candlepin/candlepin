@@ -29,6 +29,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 
+
+
 /**
  * UeberCertificateGenerator
  */
@@ -64,7 +66,6 @@ public class UeberCertificateGenerator {
         this.consumerTypeCurator = consumerTypeCurator;
         this.consumerCurator = consumerCurator;
         this.i18n = i18n;
-
     }
 
     public EntitlementCertificate generate(Owner o, Principal principal)
@@ -80,6 +81,12 @@ public class UeberCertificateGenerator {
     }
 
     public Product createUeberProduct(Owner o) {
+        // TODO: These ueber objects are (heavily) reliant on implementation details of the
+        // DefaultUniqueIdGenerator returning only numeric IDs, despite the interface and the return
+        // value lacking any such guarantee.
+        // Specifically, the X509 filtering functionality will only properly filter when these are
+        // generated with numeric IDs.
+
         Product ueberProduct = Product.createUeberProductForOwner(idGenerator, o);
         productCurator.create(ueberProduct);
 
@@ -93,9 +100,19 @@ public class UeberCertificateGenerator {
     }
 
     public Subscription createUeberSubscription(Owner o, Product ueberProduct) {
+        Date now = now();
+
         Subscription subscription = new Subscription(o, ueberProduct,
-            new HashSet<Product>(), 1L, now(), hundredYearsFromNow(), now());
-        return subService.createSubscription(subscription);
+            new HashSet<Product>(), 1L, now, hundredYearsFromNow(), now);
+
+        // We need to fake a subscription ID here so our generated pool's source subscription ends
+        // up with a valid ID.
+        subscription.setId(idGenerator.generateId());
+        subscription.setCreated(now);
+        subscription.setUpdated(now);
+
+        // return subService.createSubscription(subscription);
+        return subscription;
     }
 
     public Consumer createUeberConsumer(Principal principal, Owner o) {

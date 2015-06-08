@@ -29,7 +29,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
-import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,7 +57,6 @@ import java.util.Set;
 public class EntitlementImporterTest {
 
     @Mock private EventSink sink;
-    @Mock private SubscriptionCurator curator;
     @Mock private CertificateSerialCurator certSerialCurator;
     @Mock private CdnCurator cdnCurator;
     @Mock private ObjectMapper om;

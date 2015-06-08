@@ -70,7 +70,6 @@ import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
 import org.candlepin.model.Subscription;
-import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -147,7 +146,6 @@ public class OwnerResource {
 
     private OwnerCurator ownerCurator;
     private OwnerInfoCurator ownerInfoCurator;
-    private SubscriptionCurator subscriptionCurator;
     private ActivationKeyCurator activationKeyCurator;
     private StatisticCurator statisticCurator;
     private OwnerServiceAdapter ownerService;
@@ -178,7 +176,6 @@ public class OwnerResource {
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator,
-        SubscriptionCurator subscriptionCurator,
         ActivationKeyCurator activationKeyCurator,
         ConsumerCurator consumerCurator,
         StatisticCurator statisticCurator,
@@ -208,7 +205,6 @@ public class OwnerResource {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
-        this.subscriptionCurator = subscriptionCurator;
         this.activationKeyCurator = activationKeyCurator;
         this.consumerCurator = consumerCurator;
         this.statisticCurator = statisticCurator;
@@ -437,19 +433,13 @@ public class OwnerResource {
     }
 
     /**
-     * The subscription and pool created when generating a uebercert do not appear
-     * in the normal list of pools/subscriptions for that owner, and so do not get
-     * cleaned up by the normal operations. Instead we must check if they exist and
-     * explicitly delete them.
+     * The pool created when generating a uebercert do not appear in the normal list of pools for
+     * that owner, and so do not get cleaned up by the normal operations. Instead we must check if
+     * they exist and explicitly delete them.
      *
-     * @param owner Owner to check for uebercert subscription and pool.
+     * @param owner Owner to check for uebercert pool.
      */
     private void cleanupUeberCert(Owner owner) {
-        Subscription ueberSub = subscriptionCurator.findUeberSubscription(owner);
-        if (ueberSub != null) {
-            subscriptionCurator.delete(ueberSub);
-        }
-
         Pool ueberPool = poolManager.findUeberPool(owner);
         if (ueberPool != null) {
             poolManager.deletePool(ueberPool);
@@ -1096,6 +1086,7 @@ public class OwnerResource {
      *
      * DEPRECATED: Please create pools directly with POST /pools.
      *
+     * @deprecated Please create pools directly with POST /pools.
      * @return a Subscription object
      * @httpcode 404
      * @httpcode 200

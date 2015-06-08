@@ -676,37 +676,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         );
         result.addAll(query.list());
 
-
-        // TODO: These may not be necessary if the subscriptions table is empty in Hosted. Though,
-        // if they're empty, then these queries will take virtually no time to run anyway.
-        query = this.currentSession().createQuery(
-            "SELECT DISTINCT S.product.id " +
-            "FROM Subscription S " +
-            "WHERE NULLIF(S.product.id, '') IS NOT NULL"
-        );
-        result.addAll(query.list());
-
-        query = this.currentSession().createQuery(
-            "SELECT DISTINCT S.derivedProduct.id " +
-            "FROM Subscription S " +
-            "WHERE NULLIF(S.derivedProduct.id, '') IS NOT NULL"
-        );
-        result.addAll(query.list());
-
-        query = this.currentSession().createQuery(
-            "SELECT DISTINCT PP.id " +
-            "FROM Subscription S INNER JOIN S.providedProducts AS PP " +
-            "WHERE NULLIF(PP.id, '') IS NOT NULL"
-        );
-        result.addAll(query.list());
-
-        query = this.currentSession().createQuery(
-            "SELECT DISTINCT DPP.id " +
-            "FROM Subscription S INNER JOIN S.derivedProvidedProducts AS DPP " +
-            "WHERE NULLIF(DPP.id, '') IS NOT NULL"
-        );
-        result.addAll(query.list());
-
         // Return!
         return result;
     }
@@ -760,45 +729,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             "FROM Pool P INNER JOIN P.derivedProvidedProducts AS DPP " +
             "WHERE NULLIF(DPP.id, '') IS NOT NULL " +
             "AND P.owner = :owner"
-        );
-        query.setParameter("owner", owner);
-        result.addAll(query.list());
-
-
-        // TODO: These may not be necessary if the subscriptions table is empty in Hosted. Though,
-        // if they're empty, then these queries will take virtually no time to run anyway.
-        query = this.currentSession().createQuery(
-            "SELECT DISTINCT S.product.id " +
-            "FROM Subscription S " +
-            "WHERE NULLIF(S.product.id, '') IS NOT NULL " +
-            "AND S.owner = :owner"
-        );
-        query.setParameter("owner", owner);
-        result.addAll(query.list());
-
-        query = this.currentSession().createQuery(
-            "SELECT DISTINCT S.derivedProduct.id " +
-            "FROM Subscription S " +
-            "WHERE NULLIF(S.derivedProduct.id, '') IS NOT NULL " +
-            "AND S.owner = :owner"
-        );
-        query.setParameter("owner", owner);
-        result.addAll(query.list());
-
-        query = this.currentSession().createQuery(
-            "SELECT DISTINCT PP.id " +
-            "FROM Subscription S INNER JOIN S.providedProducts AS PP " +
-            "WHERE NULLIF(PP.id, '') IS NOT NULL " +
-            "AND S.owner = :owner"
-        );
-        query.setParameter("owner", owner);
-        result.addAll(query.list());
-
-        query = this.currentSession().createQuery(
-            "SELECT DISTINCT DPP.id " +
-            "FROM Subscription S INNER JOIN S.derivedProvidedProducts AS DPP " +
-            "WHERE NULLIF(DPP.id, '') IS NOT NULL " +
-            "AND S.owner = :owner"
         );
         query.setParameter("owner", owner);
         result.addAll(query.list());

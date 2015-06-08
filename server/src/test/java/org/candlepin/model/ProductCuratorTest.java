@@ -53,7 +53,6 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;
     @Inject private ProductCurator productCurator;
     @Inject private ProductAttributeCurator attributeCurator;
-    @Inject private SubscriptionCurator subCurator;
     @Inject private PoolCurator poolCurator;
     @Inject private ContentCurator contentCurator;
     @Inject private Configuration config;

@@ -68,9 +68,9 @@ import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultProductServiceAdapter;
-import org.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
+import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.service.impl.stub.StubEntitlementCertServiceAdapter;
 import org.candlepin.test.AuthMethodInterceptorFactory;
 import org.candlepin.test.DateSourceForTesting;
@@ -255,8 +255,7 @@ public class TestingModules {
                 DefaultSubjectKeyIdentifierWriter.class);
             bind(PKIUtility.class).to(BouncyCastlePKIUtility.class);
             bind(PKIReader.class).to(PKIReaderForTesting.class).asEagerSingleton();
-            bind(SubscriptionServiceAdapter.class).to(
-                DefaultSubscriptionServiceAdapter.class);
+            bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
             bind(OwnerServiceAdapter.class).to(
                 DefaultOwnerServiceAdapter.class);
             bind(EntitlementCertServiceAdapter.class).to(

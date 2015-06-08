@@ -73,7 +73,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         product1 = new Product("xyzzy", "xyzzy", owner1);
         productCurator.create(product1);
 
-        pool1 = createPoolAndSub(owner1, product1, 500L,
+        pool1 = createPool(owner1, product1, 500L,
             TestUtil.createDate(2000, 1, 1), TestUtil.createDate(3000, 1, 1));
 
         Locale locale = new Locale("en_US");
@@ -140,7 +140,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         product2.addAttribute(new ProductAttribute("instance_multiplier", "12"));
         productCurator.create(product2);
 
-        Pool pool2 = createPoolAndSub(owner1, product2, 500L,
+        Pool pool2 = createPool(owner1, product2, 500L,
             TestUtil.createDate(2000, 1, 1), TestUtil.createDate(3000, 1, 1));
 
         SuggestedQuantity suggested = new SuggestedQuantity();

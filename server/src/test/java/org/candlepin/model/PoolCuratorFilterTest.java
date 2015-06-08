@@ -65,7 +65,7 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         searchProduct.addAttribute(new ProductAttribute("support_level", "CustomSupportLevel"));
         productCurator.create(searchProduct);
 
-        Pool searchPool = createPoolAndSub(owner, searchProduct, 100L,
+        Pool searchPool = createPool(owner, searchProduct, 100L,
                 TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));
 
         Product provided = TestUtil.createProduct("101111", "Server Bits", owner);
@@ -87,7 +87,7 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         // Create another we don't intend to see in the results:
         Product hideProduct = new Product("hidden-product", "Not-So-Awesome OS Home Edition", owner);
         productCurator.create(hideProduct);
-        hidePool = createPoolAndSub(owner, hideProduct, 100L,
+        hidePool = createPool(owner, hideProduct, 100L,
                 TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));
 
         provided = TestUtil.createProduct("101", "Workstation Bits", owner);

@@ -25,6 +25,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.Util;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -48,7 +49,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     @Inject private ConsumerCurator consumerCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private EntitlementCurator entitlementCurator;
-    @Inject private SubscriptionCurator subCurator;
     @Inject private ActivationKeyCurator activationKeyCurator;
     @Inject private UeberCertificateGenerator ueberCertGenerator;
     @Inject private CandlepinPoolManager poolManager;
@@ -79,7 +79,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testPoolNotYetActive() {
-        Pool pool = createPoolAndSub(owner, product, 100L,
+        Pool pool = createPool(owner, product, 100L,
                 TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
 
@@ -91,7 +91,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testPoolExpired() {
-        Pool pool = createPoolAndSub(owner, product, 100L,
+        Pool pool = createPool(owner, product, 100L,
                 TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool);
 
@@ -109,7 +109,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testAvailablePoolsDoesNotIncludeUeberPool() throws Exception {
-        Pool pool = createPoolAndSub(owner, product, 100L,
+        Pool pool = createPool(owner, product, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool);
 
@@ -125,7 +125,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void availablePoolsCanBeFilteredByProductPoolAttribute() throws Exception {
         Date activeDate = TestUtil.createDate(2000, 3, 2);
 
-        Pool pool1 = createPoolAndSub(owner, product, 100L,
+        Pool pool1 = createPool(owner, product, 100L,
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool1);
 
@@ -133,7 +133,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         product2.addAttribute(new ProductAttribute("cores", "8"));
         productCurator.create(product2);
 
-        Pool pool2 = createPoolAndSub(owner, product2, 100L,
+        Pool pool2 = createPool(owner, product2, 100L,
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool2);
 
@@ -158,11 +158,11 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void availablePoolsCanBeFilteredByPoolAttribute() throws Exception {
         Date activeDate = TestUtil.createDate(2000, 3, 2);
 
-        Pool pool1 = createPoolAndSub(owner, product, 100L,
+        Pool pool1 = createPool(owner, product, 100L,
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool1);
 
-        Pool pool2 = createPoolAndSub(owner, product, 100L,
+        Pool pool2 = createPool(owner, product, 100L,
             activeDate, TestUtil.createDate(2005, 3, 2));
         pool2.setAttribute("virt_only", "true");
         poolCurator.create(pool2);
@@ -188,11 +188,11 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void availablePoolsCanBeFilteredByPoolId() throws Exception {
         Date activeDate = TestUtil.createDate(2000, 3, 2);
 
-        Pool pool1 = createPoolAndSub(owner, product, 100L,
+        Pool pool1 = createPool(owner, product, 100L,
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool1);
 
-        Pool pool2 = createPoolAndSub(owner, product, 100L,
+        Pool pool2 = createPool(owner, product, 100L,
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool2);
 
@@ -227,11 +227,11 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void availablePoolsCanNotBeFilteredByOverriddenAttribute() throws Exception {
         Date activeDate = TestUtil.createDate(2000, 3, 2);
 
-        Pool pool1 = createPoolAndSub(owner, product, 100L,
+        Pool pool1 = createPool(owner, product, 100L,
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool1);
 
-        Pool pool2 = createPoolAndSub(owner, product, 100L,
+        Pool pool2 = createPool(owner, product, 100L,
             activeDate, TestUtil.createDate(2005, 3, 2));
 
         // This product value should be overridden by the pool attr. Note that this product is used
@@ -258,7 +258,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         throws Exception {
         Date activeDate = TestUtil.createDate(2000, 3, 2);
 
-        Pool pool1 = createPoolAndSub(owner, product, 100L,
+        Pool pool1 = createPool(owner, product, 100L,
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool1);
 
@@ -266,7 +266,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         product2.addAttribute(new ProductAttribute("cores", "4"));
         productCurator.create(product2);
 
-        Pool pool2 = createPoolAndSub(owner, product2, 100L,
+        Pool pool2 = createPool(owner, product2, 100L,
             activeDate, TestUtil.createDate(2005, 3, 2));
         pool2.setAttribute("virt_only", "true");
         poolCurator.create(pool2);
@@ -293,7 +293,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void availablePoolsCanFilterByEmptyValueAttribute() throws Exception {
         Date activeDate = TestUtil.createDate(2000, 3, 2);
 
-        Pool pool1 = createPoolAndSub(owner, product, 100L,
+        Pool pool1 = createPool(owner, product, 100L,
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool1);
 
@@ -301,7 +301,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         product2.addAttribute(new ProductAttribute("empty-attr", ""));
         productCurator.create(product2);
 
-        Pool pool2 = createPoolAndSub(owner, product2, 100L,
+        Pool pool2 = createPool(owner, product2, 100L,
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool2);
 
@@ -331,7 +331,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Date activeDate = TestUtil.createDate(2000, 3, 2);
 
-        Pool pool = createPoolAndSub(owner, product1, 100L,
+        Pool pool = createPool(owner, product1, 100L,
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool);
 
@@ -386,15 +386,15 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Date activeDate = TestUtil.createDate(2000, 3, 2);
 
-        Pool pool1 = createPoolAndSub(owner, product1, 100L,
+        Pool pool1 = createPool(owner, product1, 100L,
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool1);
 
-        Pool pool2 = createPoolAndSub(owner, product2, 100L,
+        Pool pool2 = createPool(owner, product2, 100L,
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool2);
 
-        Pool pool3 = createPoolAndSub(owner, product3, 100L,
+        Pool pool3 = createPool(owner, product3, 100L,
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool3);
 
@@ -424,7 +424,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Product p = new Product("someProduct", "An Extremely Great Product", owner);
         productCurator.create(p);
 
-        Pool pool = createPoolAndSub(owner, p, 100L,
+        Pool pool = createPool(owner, p, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
 
@@ -439,7 +439,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Product p = new Product("another", "A Great Operating System", owner);
         productCurator.create(p);
 
-        Pool pool = createPoolAndSub(owner, p, 25L,
+        Pool pool = createPool(owner, p, 25L,
             TestUtil.createDate(1999, 1, 10), TestUtil.createDate(2099, 1, 9));
         poolCurator.create(pool);
         pool = poolCurator.find(pool.getId());
@@ -452,7 +452,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Product p = new Product("another", "A Great Operating System", owner);
         productCurator.create(p);
 
-        Pool pool = createPoolAndSub(owner, p, 25L,
+        Pool pool = createPool(owner, p, 25L,
             TestUtil.createDate(1999, 1, 10), TestUtil.createDate(2099, 1, 9));
         poolCurator.create(pool);
         pool = poolCurator.listAll().get(0);
@@ -497,7 +497,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 16L,
             TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2020, 1, 1), new Date());
-        this.subCurator.create(sub);
+        sub.setId(Util.generateDbUUID());
 
         Pool newPool = poolManager.createPoolsForSubscription(sub).get(0);
         List<Pool> pools = poolCurator.lookupBySubscriptionId(sub.getId());
@@ -529,7 +529,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     @Test
     public void testLoookupOverconsumedBySubscriptionId() {
 
-        Pool pool = createPoolAndSub(owner, product, 1L,
+        Pool pool = createPool(owner, product, 1L,
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
         String subid = pool.getSubscriptionId();
@@ -550,7 +550,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     @Test
     public void testLoookupOverconsumedIgnoresOtherSourceEntitlementPools() {
 
-        Pool pool = createPoolAndSub(owner, product, 1L,
+        Pool pool = createPool(owner, product, 1L,
             TestUtil.createDate(2011, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
 
@@ -595,7 +595,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     @Test
     public void testLoookupOverconsumedBySubscriptionIdIgnoresUnlimited() {
 
-        Pool pool = createPoolAndSub(owner, product, -1L,
+        Pool pool = createPool(owner, product, -1L,
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
         String subid = pool.getSubscriptionId();
@@ -824,19 +824,19 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         product5.addAttribute(new ProductAttribute("support_level", "HIGH"));
         productCurator.create(product5);
 
-        Pool pool1 = createPoolAndSub(owner, product1, 100L,
+        Pool pool1 = createPool(owner, product1, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool1);
-        Pool pool2 = createPoolAndSub(owner, product2, 100L,
+        Pool pool2 = createPool(owner, product2, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool2);
-        Pool pool3 = createPoolAndSub(owner, product3, 100L,
+        Pool pool3 = createPool(owner, product3, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool3);
-        Pool pool4 = createPoolAndSub(owner, product4, 100L,
+        Pool pool4 = createPool(owner, product4, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool4);
-        Pool pool5 = createPoolAndSub(owner, product5, 100L,
+        Pool pool5 = createPool(owner, product5, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool5);
 
@@ -866,13 +866,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         product3.addAttribute(new ProductAttribute("support_level", "Premiums"));
         productCurator.create(product3);
 
-        Pool pool1 = createPoolAndSub(owner, product1, 100L,
+        Pool pool1 = createPool(owner, product1, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool1);
-        Pool pool2 = createPoolAndSub(owner, product2, 100L,
+        Pool pool2 = createPool(owner, product2, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool2);
-        Pool pool3 = createPoolAndSub(owner, product3, 100L,
+        Pool pool3 = createPool(owner, product3, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool3);
 
@@ -912,7 +912,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void confirmBonusPoolDeleted() {
         Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 16L,
             TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2020, 1, 1), new Date());
-        subCurator.create(sub);
+        sub.setId(Util.generateDbUUID());
 
         Pool sourcePool = poolManager.createPoolsForSubscription(sub).get(0);
         poolCurator.create(sourcePool);
@@ -1028,20 +1028,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         this.poolCurator.create(p1);
         this.poolCurator.create(p2);
 
-
-        Subscription s1 = TestUtil.createSubscription(owner1, this.generateProduct(owner1, "s1", "s1"));
-        s1.setDerivedProduct(this.generateProduct(owner1, "sdp1", "sdp1"));
-        s1.setProvidedProducts(this.generateProductCollection(owner1, "spp-a-", 3));
-        s1.setDerivedProvidedProducts(this.generateProductCollection(owner1, "sdpp-a-", 3));
-
-        Subscription s2 = TestUtil.createSubscription(owner2, this.generateProduct(owner2, "s2", "s2"));
-        s2.setDerivedProduct(this.generateProduct(owner2, "sdp2", "sdp2"));
-        s2.setProvidedProducts(this.generateProductCollection(owner2, "spp-b-", 3));
-        s2.setDerivedProvidedProducts(this.generateProductCollection(owner2, "sdpp-b-", 3));
-
-        this.subCurator.create(s1);
-        this.subCurator.create(s2);
-
         return Arrays.asList(owner1, owner2);
     }
 
@@ -1067,23 +1053,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         expected.add("dpp-b-1");
         expected.add("dpp-b-2");
 
-        expected.add("s1");
-        expected.add("s2");
-        expected.add("sdp1");
-        expected.add("sdp2");
-        expected.add("spp-a-0");
-        expected.add("spp-a-1");
-        expected.add("spp-a-2");
-        expected.add("spp-b-0");
-        expected.add("spp-b-1");
-        expected.add("spp-b-2");
-        expected.add("sdpp-a-0");
-        expected.add("sdpp-a-1");
-        expected.add("sdpp-a-2");
-        expected.add("sdpp-b-0");
-        expected.add("sdpp-b-1");
-        expected.add("sdpp-b-2");
-
         Set<String> result = this.poolCurator.getAllKnownProductIds();
 
         assertEquals(expected, result);
@@ -1103,15 +1072,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         expected.add("dpp-a-1");
         expected.add("dpp-a-2");
 
-        expected.add("s1");
-        expected.add("sdp1");
-        expected.add("spp-a-0");
-        expected.add("spp-a-1");
-        expected.add("spp-a-2");
-        expected.add("sdpp-a-0");
-        expected.add("sdpp-a-1");
-        expected.add("sdpp-a-2");
-
         assertEquals(expected, this.poolCurator.getAllKnownProductIdsForOwner(owners.get(0)));
 
 
@@ -1124,15 +1084,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         expected.add("dpp-b-0");
         expected.add("dpp-b-1");
         expected.add("dpp-b-2");
-
-        expected.add("s2");
-        expected.add("sdp2");
-        expected.add("spp-b-0");
-        expected.add("spp-b-1");
-        expected.add("spp-b-2");
-        expected.add("sdpp-b-0");
-        expected.add("sdpp-b-1");
-        expected.add("sdpp-b-2");
 
         assertEquals(expected, this.poolCurator.getAllKnownProductIdsForOwner(owners.get(1)));
     }

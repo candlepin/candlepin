@@ -18,16 +18,26 @@ import org.candlepin.service.UniqueIdGenerator;
 
 import java.util.Date;
 
+
+
 /**
  * DefaultUniqueIdGenerator
  */
 public class DefaultUniqueIdGenerator implements UniqueIdGenerator {
+
+    private static Object lock = new Object();
+    private static long idCount = 0;
 
     /* (non-Javadoc)
      * @see org.candlepin.service.UniqueIdGenerator#generateId()
      */
     @Override
     public String generateId() {
-        return "" + (new Date()).getTime();
+        synchronized (lock) {
+            Date now = new Date();
+            long id = now.getTime() + ++idCount;
+
+            return String.valueOf(id);
+        }
     }
 }

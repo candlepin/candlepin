@@ -127,29 +127,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         return derivedProducts;
     }
 
-    // private Set<Product> getProvidedProducts(Pool pool, Subscription sub) {
-    //     Set<Product> providedProducts = new HashSet<Product>();
-    //     // TODO: eliminate the use of subscription here by looking up products in a batch
-    //     // somehow, and we can eliminate all use of subscriptions during bind.
-    //     if (sub != null) {
-    //         // need to use the sub provided products if creating an
-    //         // entitlement for derived pool who's sub specifies a
-    //         // sub product.
-    //         boolean derived = pool.hasAttribute("pool_derived");
-    //         providedProducts = derived && sub.getDerivedProduct() != null ?
-    //             sub.getDerivedProvidedProducts() : sub.getProvidedProducts();
-    //     }
-    //     else {
-    //         // If this pool doesn't have a subscription associated with it, we need to
-    //         // lookup all the Product objects manually:
-    //         for (ProvidedProduct providedProduct : pool.getProvidedProducts()) {
-    //             providedProducts.add(
-    //                 productAdapter.getProductById(providedProduct.getProductId()));
-    //         }
-    //     }
-    //     return providedProducts;
-    // }
-
     // TODO: productModels not used by V1 certificates. This whole v1/v3 split needs
     // a re-org. Passing them here because it eliminates a substantial performance hit
     // recalculating this for the entitlement body in v3 certs.

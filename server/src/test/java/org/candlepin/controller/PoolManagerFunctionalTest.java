@@ -44,12 +44,12 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Subscription;
-import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.resource.dto.AutobindData;
+import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
@@ -65,6 +65,7 @@ import org.mockito.Mockito;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -86,7 +87,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Inject private ConsumerCurator consumerCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private EntitlementCurator entitlementCurator;
-    @Inject private SubscriptionCurator subCurator;
     @Inject private ContentCurator contentCurator;
     @Inject private CandlepinPoolManager poolManager;
 
@@ -135,15 +135,29 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         productCurator.create(monitoring);
         productCurator.create(provisioning);
 
-        subCurator.create(new Subscription(o, virtHost, new HashSet<Product>(),
-            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
-        subCurator.create(new Subscription(o, virtHostPlatform, new HashSet<Product>(),
-            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
+        List<Subscription> subscriptions = new LinkedList<Subscription>();
+        ImportSubscriptionServiceAdapter subAdapter
+            = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        subCurator.create(new Subscription(o, monitoring, new HashSet<Product>(),
-            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
-        subCurator.create(new Subscription(o, provisioning, new HashSet<Product>(),
-            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
+        Subscription sub1 = new Subscription(o, virtHost, new HashSet<Product>(),
+            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
+        Subscription sub2 = new Subscription(o, virtHostPlatform, new HashSet<Product>(),
+            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
+
+        Subscription sub3 = new Subscription(o, monitoring, new HashSet<Product>(),
+            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
+        Subscription sub4 = new Subscription(o, provisioning, new HashSet<Product>(),
+            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
+
+        sub1.setId(Util.generateDbUUID());
+        sub2.setId(Util.generateDbUUID());
+        sub3.setId(Util.generateDbUUID());
+        sub4.setId(Util.generateDbUUID());
+
+        subscriptions.add(sub1);
+        subscriptions.add(sub2);
+        subscriptions.add(sub3);
+        subscriptions.add(sub4);
 
         poolManager.getRefresher(subAdapter).add(o).run();
 
@@ -251,8 +265,15 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         contentCurator.create(content);
         productCurator.create(modifier);
 
-        subCurator.create(new Subscription(o, modifier, new HashSet<Product>(),
-            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
+        List<Subscription> subscriptions = new LinkedList<Subscription>();
+        ImportSubscriptionServiceAdapter subAdapter
+            = new ImportSubscriptionServiceAdapter(subscriptions);
+
+        Subscription sub = new Subscription(o, modifier, new HashSet<Product>(),
+            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
+        sub.setId(Util.generateDbUUID());
+
+        subscriptions.add(sub);
 
         poolManager.getRefresher(subAdapter).add(o).run();
 
@@ -288,9 +309,14 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         productCurator.create(product1);
         productCurator.create(product2);
 
+        List<Subscription> subscriptions = new LinkedList<Subscription>();
+        ImportSubscriptionServiceAdapter subAdapter
+            = new ImportSubscriptionServiceAdapter(subscriptions);
+
         Subscription subscription = new Subscription(o, product1, new HashSet<Product>(),
             5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
-        subCurator.create(subscription);
+        subscription.setId(Util.generateDbUUID());
+        subscriptions.add(subscription);
 
         // set up initial pool
         poolManager.getRefresher(subAdapter).add(o).run();
@@ -300,7 +326,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         // now alter the product behind the sub, and make sure the pool is also updated
         subscription.setProduct(product2);
-        subCurator.merge(subscription);
 
         // set up initial pool
         poolManager.getRefresher(subAdapter).add(o).run();
@@ -317,7 +342,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
                 new PoolFilterBuilder(), new PageRequest());
         assertEquals(4, results.getPageData().size());
 
-        Pool pool = createPoolAndSub(o, socketLimitedProduct, 100L,
+        Pool pool = createPool(o, socketLimitedProduct, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
 
@@ -342,7 +367,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         // Creating a pool with no entitlements available, which will trigger
         // a rules error:
-        Pool pool = createPoolAndSub(o, p, 0L,
+        Pool pool = createPool(o, p, 0L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
 
@@ -371,7 +396,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         // Creating a pool with no entitlements available, which does not trigger
         // a rules error:
-        Pool pool = createPoolAndSub(o, p, 0L,
+        Pool pool = createPool(o, p, 0L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
 
@@ -391,7 +416,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
                 new PoolFilterBuilder(), new PageRequest());
         assertEquals(4, results.getPageData().size());
 
-        Pool pool = createPoolAndSub(o, socketLimitedProduct, 100L,
+        Pool pool = createPool(o, socketLimitedProduct, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
 
@@ -407,7 +432,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testListAllForOldGuestExcludesTempPools() {
-        Pool pool = createPoolAndSub(o, virtGuest, 100L,
+        Pool pool = createPool(o, virtGuest, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         pool.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
         poolCurator.create(pool);

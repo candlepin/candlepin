@@ -101,11 +101,11 @@ public class PoolResourceTest extends DatabaseTestFixture {
         productCurator.create(product1Owner2);
         productCurator.create(product2);
 
-        pool1 = createPoolAndSub(owner1, product1, 500L,
+        pool1 = createPool(owner1, product1, 500L,
              TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
-        pool2 = createPoolAndSub(owner1, product2, 500L,
+        pool2 = createPool(owner1, product2, 500L,
              TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
-        pool3 = createPoolAndSub(owner2 , product1Owner2, 500L,
+        pool3 = createPool(owner2 , product1Owner2, 500L,
              TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
         poolCurator.create(pool1);
         poolCurator.create(pool2);

@@ -72,7 +72,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         newProduct.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
         productCurator.create(newProduct);
 
-        Pool consumerPool = createPoolAndSub(owner, newProduct,
+        Pool consumerPool = createPool(owner, newProduct,
             numAvailEntitlements, TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
@@ -95,7 +95,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct(owner);
         productCurator.create(newProduct);
 
-        Pool consumerPool = createPoolAndSub(owner, newProduct, numAvailEntitlements,
+        Pool consumerPool = createPool(owner, newProduct, numAvailEntitlements,
             TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
         poolCurator.create(consumerPool);
 

@@ -29,7 +29,6 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
-import org.candlepin.model.SubscriptionCurator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -55,7 +54,6 @@ import java.util.Locale;
 public class SubscriptionReconcilerTest {
 
     @Mock private EventSink sink;
-    @Mock private SubscriptionCurator curator;
     @Mock private PoolCurator poolCurator;
     @Mock private CertificateSerialCurator certSerialCurator;
     @Mock private CdnCurator cdnCurator;
@@ -74,8 +72,7 @@ public class SubscriptionReconcilerTest {
         this.reconciler = new SubscriptionReconciler();
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        this.importer = new EntitlementImporter(certSerialCurator, cdnCurator,
-            i18n);
+        this.importer = new EntitlementImporter(certSerialCurator, cdnCurator, i18n);
     }
 
     /*

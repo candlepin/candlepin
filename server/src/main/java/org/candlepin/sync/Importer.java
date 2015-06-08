@@ -35,7 +35,6 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Subscription;
-import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
@@ -121,7 +120,6 @@ public class Importer {
     private RulesImporter rulesImporter;
     private OwnerCurator ownerCurator;
     private ContentCurator contentCurator;
-    private SubscriptionCurator subCurator;
     private IdentityCertificateCurator idCertCurator;
     private PoolManager poolManager;
     private PKIUtility pki;
@@ -137,7 +135,7 @@ public class Importer {
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator,
         RulesImporter rulesImporter, OwnerCurator ownerCurator,
         IdentityCertificateCurator idCertCurator,
-        ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm,
+        ContentCurator contentCurator, PoolManager pm,
         PKIUtility pki, Configuration config, ExporterMetadataCurator emc,
         CertificateSerialCurator csc, EventSink sink, I18n i18n,
         DistributorVersionCurator distVerCurator,
@@ -150,7 +148,6 @@ public class Importer {
         this.ownerCurator = ownerCurator;
         this.idCertCurator = idCertCurator;
         this.contentCurator = contentCurator;
-        this.subCurator = subCurator;
         this.poolManager = pm;
         this.mapper = SyncUtils.getObjectMapper(this.config);
         this.pki = pki;

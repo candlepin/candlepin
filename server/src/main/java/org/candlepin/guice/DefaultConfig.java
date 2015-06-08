@@ -26,8 +26,8 @@ import org.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
 import org.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultProductServiceAdapter;
-import org.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
+import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 
 import com.google.inject.AbstractModule;
 
@@ -42,8 +42,6 @@ class DefaultConfig extends AbstractModule {
     public void configure() {
         bind(HttpServletDispatcher.class).asEagerSingleton();
         bind(ScriptEngineProvider.class);
-        bind(SubscriptionServiceAdapter.class).to(
-            DefaultSubscriptionServiceAdapter.class);
         bind(OwnerServiceAdapter.class).to(
             DefaultOwnerServiceAdapter.class);
         bind(IdentityCertServiceAdapter.class).to(
@@ -53,5 +51,7 @@ class DefaultConfig extends AbstractModule {
         bind(UserServiceAdapter.class).to(DefaultUserServiceAdapter.class);
         bind(ProductServiceAdapter.class).to(DefaultProductServiceAdapter.class);
         bind(SubjectKeyIdentifierWriter.class).to(DefaultSubjectKeyIdentifierWriter.class);
+
+        bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
     }
 }

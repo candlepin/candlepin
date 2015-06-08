@@ -73,7 +73,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
 
     @Test
     public void testActiveEntitlementJob() throws JobExecutionException {
-        Pool p = createPoolAndSub(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
+        Pool p = createPool(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
         Entitlement ent = this.createEntitlement(owner, consumer, p,
                 createEntitlementCertificate("entkey", "ecert"));
         // Needs to be flipped
@@ -93,7 +93,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
 
     @Test
     public void testActiveEntitlementJobNoChange() throws JobExecutionException {
-        Pool p = createPoolAndSub(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
+        Pool p = createPool(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
         Entitlement ent = this.createEntitlement(owner, consumer, p,
                 createEntitlementCertificate("entkey", "ecert"));
         // Already done
@@ -109,7 +109,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
     @Test
     public void testActiveEntitlementJobStillInactive() throws JobExecutionException {
         // Future pool
-        Pool p = createPoolAndSub(owner, prod, 5L, Util.tomorrow(), Util.addDaysToDt(10));
+        Pool p = createPool(owner, prod, 5L, Util.tomorrow(), Util.addDaysToDt(10));
         Entitlement ent = this.createEntitlement(owner, consumer, p,
                 createEntitlementCertificate("entkey", "ecert"));
         // Needs to be flipped, eventually

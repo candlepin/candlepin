@@ -264,7 +264,7 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     private Pool entitlementPoolWithMembersAndExpiration(Owner theOwner, Product product,
         final int currentMembers, final int maxMembers, Date expiry) {
-        Pool p = createPoolAndSub(theOwner, product,
+        Pool p = createPool(theOwner, product,
             Long.valueOf(maxMembers), new Date(), expiry);
 
         for (int i = 0; i < currentMembers; i++) {

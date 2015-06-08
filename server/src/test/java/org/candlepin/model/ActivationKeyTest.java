@@ -70,7 +70,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
         ActivationKey key = createActivationKey(owner);
         Product prod = TestUtil.createProduct(owner);
         productCurator.create(prod);
-        Pool pool = createPoolAndSub(owner, prod, 12L,
+        Pool pool = createPool(owner, prod, 12L,
             new Date(), new Date(System.currentTimeMillis() + (365 * 24 * 60 * 60 * 1000)));
         key.addPool(pool, 5L);
         activationKeyCurator.create(key);
@@ -86,7 +86,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
         ActivationKey key = createActivationKey(owner);
         Product prod = TestUtil.createProduct(owner);
         productCurator.create(prod);
-        Pool pool = createPoolAndSub(owner, prod, 12L,
+        Pool pool = createPool(owner, prod, 12L,
             new Date(), new Date(System.currentTimeMillis() + (365 * 24 * 60 * 60 * 1000)));
         key.addPool(pool, null);
         activationKeyCurator.create(key);
@@ -102,7 +102,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
         ActivationKey key = this.createActivationKey(this.owner);
         Product prod = TestUtil.createProduct(owner);
         productCurator.create(prod);
-        Pool pool = createPoolAndSub(
+        Pool pool = createPool(
             this.owner,
             prod,
             12L,

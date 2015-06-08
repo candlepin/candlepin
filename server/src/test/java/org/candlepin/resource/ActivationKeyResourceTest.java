@@ -103,7 +103,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKey key = new ActivationKey();
         Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
-        Pool pool = createPoolAndSub(owner, product, 10L, new Date(), new Date());
+        Pool pool = createPool(owner, product, 10L, new Date(), new Date());
         key.setOwner(owner);
         key.setName("dd");
         key = activationKeyCurator.create(key);
@@ -119,7 +119,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKey key = new ActivationKey();
         Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
-        Pool pool = createPoolAndSub(owner, product, 10L, new Date(), new Date());
+        Pool pool = createPool(owner, product, 10L, new Date(), new Date());
 
         key.setOwner(owner);
         key.setName("dd");

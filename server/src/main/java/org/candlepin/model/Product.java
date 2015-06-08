@@ -35,7 +35,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -105,9 +104,6 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
     private List<ProductContent> productContent;
 
-    @ManyToMany(mappedBy = "providedProducts")
-    private List<Subscription> subscriptions;
-
     @ElementCollection
     @CollectionTable(name = "cpo_product_dependent_products",
                      joinColumns = @JoinColumn(name = "product_uuid"))
@@ -135,7 +131,6 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
         setMultiplier(multiplier);
         setAttributes(new HashSet<ProductAttribute>());
         setProductContent(new LinkedList<ProductContent>());
-        setSubscriptions(new LinkedList<Subscription>());
         setDependentProductIds(new HashSet<String>());
     }
 
@@ -186,7 +181,6 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
         }
         this.setProductContent(content);
 
-        this.setSubscriptions(source.getSubscriptions());
         this.setDependentProductIds(source.getDependentProductIds());
 
         this.setCreated(source.getCreated());
@@ -482,23 +476,6 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
 
         for (Content newContent : content) {
             this.productContent.add(new ProductContent(this, newContent, false));
-        }
-    }
-
-    @XmlTransient
-    public List<Subscription> getSubscriptions() {
-        return subscriptions;
-    }
-
-    public void setSubscriptions(List<Subscription> subscriptions) {
-        if (this.subscriptions == null) {
-            this.subscriptions = new LinkedList<Subscription>();
-        }
-
-        this.subscriptions.clear();
-
-        if (subscriptions != null) {
-            this.subscriptions.addAll(subscriptions);
         }
     }
 
