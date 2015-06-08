@@ -594,10 +594,6 @@ public class Importer {
         for (Product product : products) {
             log.debug("Adding product owned by {} to ID map", owner.getKey());
 
-            // TODO: If this should be the UUID instead of the RHID, we need to update several
-            // parts of the EntitlementImporter (and any other class that receives this map) to
-            // expect UUIDs as well.
-
             // Note: This may actually be causing problems with subscriptions receiving the wrong
             // version of a product
             productsById.put(product.getId(), product);
