@@ -81,7 +81,7 @@
     <com.sun.xml.bind-jaxb-impl.version>2.1.12</com.sun.xml.bind-jaxb-impl.version>
     <net.oauth.core-oauth.version>20100527</net.oauth.core-oauth.version>
     <net.oauth.core-oauth-provider.version>20100527</net.oauth.core-oauth-provider.version>
-    <org.candlepin-candlepin-common.version>2.0.0</org.candlepin-candlepin-common.version>
+    <org.candlepin-candlepin-common.version>2.0.1</org.candlepin-candlepin-common.version>
   </properties>
   <dependencies>
     <dependency>
@@ -825,7 +825,7 @@
     <dependency>
       <groupId>org.candlepin</groupId>
       <artifactId>candlepin-common</artifactId>
-      <version>2.0.0</version>
+      <version>2.0.1</version>
       <classifier>complete</classifier>
       <type>tar.gz</type>
       <scope>provided</scope>
