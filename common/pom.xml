@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.candlepin</groupId>
     <artifactId>candlepin-parent</artifactId>
-    <version>1.0</version>
+    <version>2.0</version>
     <relativePath>..</relativePath>
   </parent>
   <groupId>org.candlepin</groupId>
@@ -31,7 +31,7 @@
     <com.google.inject-guice.version>3.0</com.google.inject-guice.version>
     <aopalliance-aopalliance.version>1.0</aopalliance-aopalliance.version>
     <javax.inject-javax.inject.version>1</javax.inject-javax.inject.version>
-    <org.xnap.commons-gettext-commons.version>0.9.6</org.xnap.commons-gettext-commons.version>
+    <com.googlecode.gettext-commons-gettext-commons.version>0.9.8</com.googlecode.gettext-commons-gettext-commons.version>
     <com.google.guava-guava.version>13.0</com.google.guava-guava.version>
     <javax.servlet-servlet-api.version>2.5</javax.servlet-servlet-api.version>
     <org.jboss.resteasy-jaxrs-api.version>2.3.7.Final</org.jboss.resteasy-jaxrs-api.version>
@@ -247,9 +247,9 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.xnap.commons</groupId>
+      <groupId>com.googlecode.gettext-commons</groupId>
       <artifactId>gettext-commons</artifactId>
-      <version>${org.xnap.commons-gettext-commons.version}</version>
+      <version>${com.googlecode.gettext-commons-gettext-commons.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
@@ -546,6 +546,10 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>com.googlecode.gettext-commons</groupId>
+        <artifactId>gettext-maven-plugin</artifactId>
       </plugin>
     </plugins>
   </build>
