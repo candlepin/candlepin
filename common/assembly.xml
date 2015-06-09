@@ -15,17 +15,4 @@
       </excludes>
     </fileSet>
   </fileSets>
-  <dependencySets>
-    <dependencySet>
-      <outputDirectory>${artifact.groupId}</outputDirectory>
-      <scope>provided</scope>
-      <unpack>true</unpack>
-      <useTransitiveDependencies>false</useTransitiveDependencies>
-      <useProjectAttachments>true</useProjectAttachments>
-      <includes>
-        <include>org.candlepin:candlepin-common</include>
-      </includes>
-      <useProjectArtifact>false</useProjectArtifact>
-    </dependencySet>
-  </dependencySets>
 </assembly>
