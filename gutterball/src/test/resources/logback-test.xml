@@ -15,7 +15,6 @@
   <logger name="org.hibernate.type" level="TRACE"/>
 -->
 
-
   <logger name="org.candlepin.gutterball" level="DEBUG"/>
   <root level="WARN">
     <appender-ref ref="RootAppender"/>

@@ -48,30 +48,39 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor {
     @Override
     public ServerResponse preProcess(HttpRequest request, ResourceMethod method)
         throws Failure, WebApplicationException {
-        Map<String, List<String>> queryParams = request.getUri().getQueryParameters();
-        boolean containsExcl = queryParams.containsKey("exclude");
-        boolean containsIncl = queryParams.containsKey("include");
-        // Cannot do both types of filtering together,
-        // no point in continuing if neither are present
-        if ((containsExcl && containsIncl) ||
-            !(containsExcl || containsIncl)) {
-            return null;
-        }
-        // We wait the list to be a blacklist by default when neither include
-        // nor exclude is provided, so we don't accidentally filter anything
-        DynamicFilterData filterData = new DynamicFilterData(!containsIncl);
 
-        if (containsExcl) {
-            for (String toExclude : queryParams.get("exclude")) {
-                filterData.addAttributeFilter(toExclude);
+        Map<String, List<String>> queryParams = request.getUri().getQueryParameters();
+        boolean containsExcludes = queryParams.containsKey("exclude");
+        boolean containsIncludes = queryParams.containsKey("include");
+
+        DynamicFilterData filterData = new DynamicFilterData();
+
+        if (queryParams.containsKey("filtermode")) {
+            List<String> values = queryParams.get("filtermode");
+            filterData.setWhitelistMode("whitelist".equalsIgnoreCase(values.get(0)));
+        }
+        else {
+            // We want the list to be a blacklist by default when neither include nor exclude is
+            // provided, so we don't accidentally filter anything
+            filterData.setWhitelistMode(containsIncludes && !containsExcludes);
+        }
+
+        if (containsIncludes) {
+            for (String path : queryParams.get("include")) {
+                filterData.includeAttribute(path);
             }
         }
-        else if (containsIncl) {
-            for (String toInclude : queryParams.get("include")) {
-                filterData.addAttributeFilter(toInclude);
+
+        if (containsExcludes) {
+            for (String path : queryParams.get("exclude")) {
+                filterData.excludeAttribute(path);
             }
         }
-        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+
+        if (containsIncludes || containsExcludes) {
+            ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+        }
+
         return null;
     }
 }

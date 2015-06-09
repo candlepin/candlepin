@@ -16,7 +16,7 @@ package org.candlepin.resource;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -59,7 +59,6 @@ import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -165,11 +164,11 @@ public class HypervisorResourceTest {
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
 
         when(consumerCurator.getHostConsumersMap(any(Owner.class),
-                any(Collection.class))).
+                any(Set.class))).
                 thenReturn(new VirtConsumerMap());
-        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
-        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
 
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
@@ -180,7 +179,7 @@ public class HypervisorResourceTest {
         when(idCertService.generateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
 
-        HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(hostGuestMap,
+        HypervisorCheckInResult result = hypervisorResource.hypervisorUpdate(hostGuestMap,
             principal, owner.getKey(), true);
 
         Set<Consumer> created = result.getCreated();
@@ -220,15 +219,15 @@ public class HypervisorResourceTest {
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
         // Force update
         when(consumerCurator.getHostConsumersMap(any(Owner.class),
-                any(Collection.class))).
+                any(Set.class))).
                 thenReturn(mockHypervisorConsumerMap(hypervisorId, existing));
-        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
                 thenReturn(new VirtConsumerMap());
-        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
 
 
-        HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(hostGuestMap,
+        HypervisorCheckInResult result = hypervisorResource.hypervisorUpdate(hostGuestMap,
             principal, owner.getKey(), true);
         Set<Consumer> updated = result.getUpdated();
         assertEquals(1, updated.size());
@@ -249,11 +248,11 @@ public class HypervisorResourceTest {
             new GuestId("GUEST_B")));
 
         when(consumerCurator.getHostConsumersMap(any(Owner.class),
-                any(Collection.class))).
+                any(Set.class))).
                 thenReturn(new VirtConsumerMap());
-        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
-        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
 
         when(consumerTypeCurator.lookupByLabel(
@@ -271,7 +270,7 @@ public class HypervisorResourceTest {
         when(consumerCurator.create(any(Consumer.class))).
                 thenThrow(exception);
 
-        HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(hostGuestMap,
+        HypervisorCheckInResult result = hypervisorResource.hypervisorUpdate(hostGuestMap,
             principal, owner.getKey(), true);
 
         Set<String> failures = result.getFailedUpdate();
@@ -290,11 +289,11 @@ public class HypervisorResourceTest {
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
 
         when(consumerCurator.getHostConsumersMap(any(Owner.class),
-                any(Collection.class))).
+                any(Set.class))).
                 thenReturn(new VirtConsumerMap());
-        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
-        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
 
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
@@ -305,7 +304,7 @@ public class HypervisorResourceTest {
         when(idCertService.generateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
 
-        HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(hostGuestMap,
+        HypervisorCheckInResult result = hypervisorResource.hypervisorUpdate(hostGuestMap,
             principal, owner.getKey(), false);
 
         assertEquals(0, result.getCreated().size());
@@ -318,6 +317,6 @@ public class HypervisorResourceTest {
 
     @Test(expected = BadRequestException.class)
     public void ensureBadRequestWhenNoMappingIsIncludedInRequest() {
-        hypervisorResource.hypervisorCheckIn(null, principal, "an-owner", false);
+        hypervisorResource.hypervisorUpdate(null, principal, "an-owner", false);
     }
 }

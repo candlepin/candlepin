@@ -29,25 +29,29 @@ import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.VirtConsumerMap;
+import org.candlepin.pinsetter.tasks.HypervisorUpdateJob;
 import org.candlepin.resource.dto.HypervisorCheckInResult;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -85,6 +89,7 @@ public class HypervisorResource {
      * have a hypervisorId attribute, so that should be added manually
      * when necessary by the management environment.
      *
+     * @deprecated Use the asynchronous method
      * @param hostGuestMap a mapping of host_id to list of guestIds
      * @param principal
      * @param ownerKey key of owner to update
@@ -100,8 +105,9 @@ public class HypervisorResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Deprecated
     @Transactional
-    public HypervisorCheckInResult hypervisorCheckIn(
+    public HypervisorCheckInResult hypervisorUpdate(
         Map<String, List<GuestId>> hostGuestMap, @Context Principal principal,
         @QueryParam("owner") @Verify(value = Owner.class,
             require = Access.READ_ONLY,
@@ -121,7 +127,7 @@ public class HypervisorResource {
         VirtConsumerMap hypervisorConsumersMap =
                 consumerCurator.getHostConsumersMap(owner, hostGuestMap.keySet());
 
-        List<String> allGuestIds = new LinkedList<String>();
+        Set<String> allGuestIds = new HashSet<String>();
         for (Entry<String, List<GuestId>> hostEntry : hostGuestMap.entrySet()) {
             for (GuestId gid : hostEntry.getValue()) {
                 allGuestIds.add(gid.getGuestId());
@@ -186,6 +192,53 @@ public class HypervisorResource {
         return result;
     }
 
+    /**
+     * Creates or Updates the list of Hypervisor hosts
+     * <p>
+     * Allows agents such as virt-who to update hosts' information . This is typically
+     * used when a host is unable to register to candlepin via subscription manager.
+     * <p>
+     * In situations where consumers already exist it is probably best not to
+     * allow creation of new hypervisor consumers.  Most consumers do not
+     * have a hypervisorId attribute, so that should be added manually
+     * when necessary by the management environment.
+     *
+     * @param hypervisorJson the json representation of the hypervisors
+     * @param principal
+     * @param ownerKey key of owner to update
+     * @param createMissing specify whether or not to create missing hypervisors.
+     * Default is true.  If false is specified, hypervisorIds that are not found
+     * will result in a failed state of the job.
+     * @return a JobDetail object
+     *
+     * @httpcode 202
+     * @httpcode 200
+     *
+     */
+    @POST
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    @Path("/{owner}")
+    public JobDetail hypervisorUpdateAsync(
+        String hypervisorJson, @Context Principal principal,
+        @PathParam("owner") @Verify(value = Owner.class,
+            require = Access.READ_ONLY,
+            subResource = SubResource.HYPERVISOR) String ownerKey,
+        @QueryParam("create_missing") @DefaultValue("true") boolean createMissing) {
+
+        if (hypervisorJson == null || hypervisorJson.isEmpty()) {
+            log.debug("Host/Guest mapping provided during hypervisor update was null.");
+            throw new BadRequestException(
+                i18n.tr("Host to guest mapping was not provided for hypervisor update."));
+        }
+
+        log.info("Hypervisor update by principal: " + principal);
+        Owner owner = this.getOwner(ownerKey);
+
+        return HypervisorUpdateJob.forOwner(owner, hypervisorJson, createMissing, principal);
+    }
+
     /*
      * Get the owner or bust
      */
@@ -221,18 +274,28 @@ public class HypervisorResource {
      */
     private Consumer createConsumerForHypervisorId(String incHypervisorId,
             Owner owner, Principal principal) {
-        Consumer consumer = new Consumer();
+        return createConsumerForHypervisorId(null, incHypervisorId, owner,  principal);
+    }
+
+
+    /*
+     * Create a new hypervisor type consumer to represent the incoming hypervisorId
+     */
+    private Consumer createConsumerForHypervisorId(Consumer consumer, String incHypervisorId,
+            Owner owner, Principal principal) {
+        if (consumer == null) {
+            consumer = new Consumer();
+        }
         consumer.setName(incHypervisorId);
         consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
         consumer.setFact("uname.machine", "x86_64");
         consumer.setGuestIds(new ArrayList<GuestId>());
         consumer.setOwner(owner);
         // Create HypervisorId
-        HypervisorId hypervisorId =
-            new HypervisorId(consumer, incHypervisorId);
+        HypervisorId hypervisorId = new HypervisorId(consumer, incHypervisorId);
         consumer.setHypervisorId(hypervisorId);
         // Create Consumer
-        return consumerResource.create(consumer,
-            principal, null, owner.getKey(), null);
+        return consumerResource.create(consumer, principal, null, owner.getKey(), null, false);
     }
+
 }

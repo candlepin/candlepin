@@ -193,7 +193,7 @@ public class ConsumerResourceCreationTest {
         List<String> activationKeys) {
         Consumer consumer = new Consumer(consumerName, null, null, system);
         return this.resource.create(consumer, principal, USER, owner.getKey(),
-            null);
+            null, true);
     }
 
     @Test
@@ -300,7 +300,7 @@ public class ConsumerResourceCreationTest {
         // Should be able to register successfully with as a trusted user principal:
         Principal p = new TrustedUserPrincipal("anyuser");
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        resource.create(consumer, p, null, owner.getKey(), null);
+        resource.create(consumer, p, null, owner.getKey(), null, true);
     }
 
     @Test
@@ -309,7 +309,7 @@ public class ConsumerResourceCreationTest {
         Principal p = new NoAuthPrincipal();
         List<String> keys = mockActivationKeys();
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys));
+        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys), true);
         for (String keyName : keys) {
             verify(activationKeyCurator).lookupForOwner(keyName, owner);
         }
@@ -319,7 +319,7 @@ public class ConsumerResourceCreationTest {
         Principal p = new NoAuthPrincipal();
         List<String> keys = mockActivationKeys();
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        resource.create(consumer, p, null, null, createKeysString(keys));
+        resource.create(consumer, p, null, null, createKeysString(keys), true);
     }
 
     @Test(expected = BadRequestException.class)
@@ -327,7 +327,7 @@ public class ConsumerResourceCreationTest {
         Principal p = new NoAuthPrincipal();
         List<String> keys = mockActivationKeys();
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        resource.create(consumer, p, USER, owner.getKey(), createKeysString(keys));
+        resource.create(consumer, p, USER, owner.getKey(), createKeysString(keys), true);
     }
 
     @Test(expected = BadRequestException.class)
@@ -336,7 +336,7 @@ public class ConsumerResourceCreationTest {
         List<String> keys = new ArrayList<String>();
         keys.add("NoSuchKey");
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys));
+        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys), true);
     }
 
     @Test
@@ -345,7 +345,7 @@ public class ConsumerResourceCreationTest {
         List<String> keys = mockActivationKeys();
         keys.add("NoSuchKey");
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys));
+        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys), true);
     }
 
     @Test
@@ -354,7 +354,7 @@ public class ConsumerResourceCreationTest {
         Consumer consumer = new Consumer();
         consumer.setType(system);
         consumer.setName("consumername");
-        resource.create(consumer, p, USER, owner.getKey(), null);
+        resource.create(consumer, p, USER, owner.getKey(), null, true);
     }
 
     @Test
@@ -364,7 +364,7 @@ public class ConsumerResourceCreationTest {
         consumer.setType(system);
         consumer.setName("consumername");
         consumer.setReleaseVer(null);
-        resource.create(consumer, p, USER, owner.getKey(), null);
+        resource.create(consumer, p, USER, owner.getKey(), null, true);
 
     }
 
@@ -375,7 +375,7 @@ public class ConsumerResourceCreationTest {
         consumer.setType(system);
         consumer.setName("consumername");
         consumer.setReleaseVer(new Release(""));
-        resource.create(consumer, p, USER, owner.getKey(), null);
+        resource.create(consumer, p, USER, owner.getKey(), null, true);
     }
 
     @Test
@@ -384,7 +384,7 @@ public class ConsumerResourceCreationTest {
         Consumer consumer = new Consumer();
         consumer.setType(system);
         consumer.setName("consumername");
-        resource.create(consumer, p, USER, owner.getKey(), null);
+        resource.create(consumer, p, USER, owner.getKey(), null, true);
     }
 
     @Test
@@ -393,7 +393,7 @@ public class ConsumerResourceCreationTest {
         Consumer consumer = new Consumer();
         consumer.setType(system);
         consumer.setName("consumername");
-        resource.create(consumer, p, USER, owner.getKey(), null);
+        resource.create(consumer, p, USER, owner.getKey(), null, true);
         // Should be called with the consumer, null date (now),
         // no compliantUntil, and not update the consumer record
         verify(complianceRules).getStatus(eq(consumer), eq((Date) null), eq(false), eq(false));

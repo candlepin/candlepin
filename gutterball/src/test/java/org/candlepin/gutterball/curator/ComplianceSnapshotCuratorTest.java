@@ -35,6 +35,8 @@ import org.candlepin.gutterball.model.snapshot.Entitlement;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -58,6 +60,7 @@ import java.util.TreeMap;
 
 @RunWith(JUnitParamsRunner.class)
 public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
+    private static Logger log = LoggerFactory.getLogger(ComplianceSnapshotCuratorTest.class);
 
     private Date baseTestingDate;
 
@@ -804,7 +807,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     public void testGetComplianceStatusCounts() {
         Map<Date, Map<String, Integer>> expected = this.buildMapForAllStatusCounts();
         Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator
-            .getComplianceStatusCounts(null, null, null, null, null, null, null);
+            .getComplianceStatusCounts(null, null, null, null, null, null, null, null);
 
         assertEquals(expected, actual);
     }
@@ -825,7 +828,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
             pageRequest.setPage(p);
 
             Page<Map<Date, Map<String, Integer>>> page = this.complianceSnapshotCurator
-                .getComplianceStatusCounts(null, null, null, null, null, null, null, pageRequest);
+                .getComplianceStatusCounts(null, null, null, null, null, null, null, null, pageRequest);
 
             if (pages == 0) {
                 pages = page.getMaxRecords();
@@ -853,7 +856,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     @Parameters(method = "buildMapForStatusCountsAfterDate")
     public void testGetComplianceStatusCountsAfterDate(Date date, Map<Date, Map<String, Integer>> expected) {
         Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator
-            .getComplianceStatusCounts(date, null, null, null, null, null, null);
+            .getComplianceStatusCounts(date, null, null, null, null, null, null, null);
 
         assertEquals(expected, actual);
     }
@@ -862,7 +865,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     @Parameters(method = "buildMapForStatusCountsBeforeDate")
     public void testGetComplianceStatusCountsBeforeDate(Date date, Map<Date, Map<String, Integer>> expected) {
         Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator
-            .getComplianceStatusCounts(null, date, null, null, null, null, null);
+            .getComplianceStatusCounts(null, date, null, null, null, null, null, null);
 
         assertEquals(expected, actual);
     }
@@ -873,7 +876,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         Map<Date, Map<String, Integer>> expected) {
 
         Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator
-            .getComplianceStatusCounts(startDate, endDate, null, null, null, null, null);
+            .getComplianceStatusCounts(startDate, endDate, null, null, null, null, null, null);
 
         assertEquals(expected, actual);
     }
@@ -885,7 +888,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         Map<Date, Map<String, Integer>> actual;
 
         actual = this.complianceSnapshotCurator
-            .getComplianceStatusCounts(startDate, endDate, null, null, sku, null, null);
+            .getComplianceStatusCounts(startDate, endDate, null, null, sku, null, null, null);
 
         assertEquals(expected, actual);
     }
@@ -897,7 +900,23 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         Map<Date, Map<String, Integer>> actual;
 
         actual = this.complianceSnapshotCurator
-            .getComplianceStatusCounts(startDate, endDate, null, null, null, subscriptionName, null);
+            .getComplianceStatusCounts(startDate, endDate, null, null, null, subscriptionName, null, null);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    @Parameters(method = "buildMapForStatusCountsWithProducts")
+    public void testGetComplianceStatusCountsWithProduct(Date startDate, Date endDate,
+        String productName, Map<Date, Map<String, Integer>> expected) {
+        Map<Date, Map<String, Integer>> actual;
+
+        log.debug("Retriving status counts for product: {} (in dates: {} to {})", productName, startDate, endDate);
+
+        actual = this.complianceSnapshotCurator
+            .getComplianceStatusCounts(startDate, endDate, null, null, null, null, productName, null);
+
+        log.debug("Received: {}", actual);
 
         assertEquals(expected, actual);
     }
@@ -909,7 +928,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         Map<Date, Map<String, Integer>> actual;
 
         actual = this.complianceSnapshotCurator
-            .getComplianceStatusCounts(startDate, endDate, null, null, null, null, attributes);
+            .getComplianceStatusCounts(startDate, endDate, null, null, null, null, null, attributes);
 
         assertEquals(expected, actual);
     }
@@ -920,7 +939,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         Map<Date, Map<String, Integer>> expected) {
 
         Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator
-            .getComplianceStatusCounts(null, null, null, consumers, null, null, null);
+            .getComplianceStatusCounts(null, null, null, consumers, null, null, null, null);
 
         assertEquals(expected, actual);
     }
@@ -931,7 +950,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         List<String> consumers, Map<Date, Map<String, Integer>> expected) {
 
         Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator
-            .getComplianceStatusCounts(startDate, endDate, null, consumers, null, null, null);
+            .getComplianceStatusCounts(startDate, endDate, null, consumers, null, null, null, null);
 
         assertEquals(expected, actual);
     }
@@ -1165,6 +1184,37 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         return tests.toArray();
     }
 
+    public Object[] buildMapForStatusCountsWithProducts() {
+        LinkedList<Object[]> tests = new LinkedList<Object[]>();
+        Object[][] beforeSet = this.buildMapForStatusCountsBeforeDate();
+        Object[][] afterSet = this.buildMapForStatusCountsAfterDate();
+        Object[][] productSet = this.buildSubMapForStatusCountsWithProduct();
+
+        // Impl note:
+        // This intersection stuff to check date filtering does not work with dates beyond our data
+        // set. If our dates require extrapolating the data, the expected output will be missing
+        // all of the necessary extrapolated statuses.
+
+        for (Object[] before : beforeSet) {
+            for (Object[] after : afterSet) {
+                for (Object[] product : productSet) {
+                    tests.add(new Object[] {
+                        after[0],
+                        before[0],
+                        product[0],
+                        this.intersect(
+                            (Map<Date, Map<String, Integer>>) after[1],
+                            (Map<Date, Map<String, Integer>>) before[1],
+                            (Map<Date, Map<String, Integer>>) product[1]
+                        )
+                    });
+                }
+            }
+        }
+
+        return tests.toArray();
+    }
+
     public Object[] buildMapForStatusCountsWithAttributes() {
         LinkedList<Object[]> tests = new LinkedList<Object[]>();
         Object[][] beforeSet = this.buildMapForStatusCountsBeforeDate();
@@ -1250,6 +1300,112 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         expected.put(cal.getTime(), counts);
 
         return expected;
+    }
+
+    private Object[][] buildSubMapForStatusCountsWithProduct() {
+        Calendar cal = this.getCalendar();
+        cal.set(Calendar.YEAR, 2012);
+        cal.set(Calendar.DAY_OF_MONTH, 10);
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        cal.set(Calendar.MILLISECOND, 999);
+
+        Map<Date, Map<String, Integer>> expected;
+        Map<Date, Map<String, Integer>> actual;
+        HashMap<String, Integer> counts;
+
+        Object[][] output = new Object[4][];
+
+        output[0] = $(null, this.buildMapForAllStatusCounts());
+
+
+        expected = new TreeMap<Date, Map<String, Integer>>();
+
+        cal.set(Calendar.MONTH, Calendar.MARCH);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 1);
+        for (int i = 0; i < 31; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 2);
+        for (int i = 0; i < 30; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Integer>();
+        counts.put("valid", 1);
+        counts.put("invalid", 2);
+        for (int i = 0; i < 31; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 1);
+        counts.put("partial", 1);
+        for (int i = 0; i < 30; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.JULY);
+        counts = new HashMap<String, Integer>();
+        counts.put("valid", 1);
+        counts.put("invalid", 1);
+        expected.put(cal.getTime(), counts);
+
+        output[1] = $("p1", expected);
+
+
+        expected = new TreeMap<Date, Map<String, Integer>>();
+
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 1);
+        for (int i = 0; i < 30; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+
+        expected = new TreeMap<Date, Map<String, Integer>>();
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 2);
+        for (int i = 0; i < 31; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        counts = new HashMap<String, Integer>();
+        counts.put("partial", 2);
+        for (int i = 0; i < 30; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.JULY);
+        counts = new HashMap<String, Integer>();
+        counts.put("valid", 1);
+        counts.put("partial", 1);
+        expected.put(cal.getTime(), counts);
+
+        output[2] = $("p4", expected);
+
+
+        output[3] = $("bad_product", new HashMap<Date, Map<String, Integer>>());
+
+        return output;
     }
 
     private Object[][] buildSubMapForStatusCountsWithSku() {

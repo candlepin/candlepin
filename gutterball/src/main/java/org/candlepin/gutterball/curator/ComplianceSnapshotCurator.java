@@ -470,7 +470,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      */
     public Map<Date, Map<String, Integer>> getComplianceStatusCounts(Date startDate, Date endDate,
         String ownerKey, List<String> consumerUuids, String sku, String subscriptionName,
-        Map<String, String> attributes) {
+        String productName, Map<String, String> attributes) {
 
         Page<Map<Date, Map<String, Integer>>> result = this.getComplianceStatusCounts(
             startDate,
@@ -479,6 +479,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
             consumerUuids,
             sku,
             subscriptionName,
+            productName,
             attributes,
             null
         );
@@ -512,6 +513,10 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  A subscription name to use to filter compliance status counts. If provided, only consumers
      *  using subscriptions with the specified product name will be counted.
      *
+     * @param productName
+     *  A product name to use to filter compliance status counts. If provided, only consumers with
+     *  an installed product with the specified product name will be counted.
+     *
      * @param attributes
      *  A map of entitlement attributes to use to filter compliance status counts. If provided, only
      *  consumers with entitlements having the specified values for the given attributes will be
@@ -531,7 +536,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      */
     public Page<Map<Date, Map<String, Integer>>> getComplianceStatusCounts(Date startDate, Date endDate,
         String ownerKey, List<String> consumerUuids,  String sku, String subscriptionName,
-        Map<String, String> attributes, PageRequest pageRequest) {
+        String productName, Map<String, String> attributes, PageRequest pageRequest) {
 
         Page<Map<Date, Map<String, Integer>>> page = new Page<Map<Date, Map<String, Integer>>>();
         page.setPageRequest(pageRequest);
@@ -547,6 +552,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
             consumerUuids,
             sku,
             subscriptionName,
+            productName,
             attributes
         );
 
@@ -821,6 +827,10 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  A product name to use to filter compliance status counts. If provided, only consumers using
      *  subscriptions which provide the specified product name will be counted.
      *
+     * @param productName
+     *  A product name to use to filter compliance status counts. If provided, only consumers with
+     *  an installed product with the specified product name will be counted.
+     *
      * @param attributes
      *  A map of entitlement attributes to use to filter compliance status counts. If provided, only
      *  consumers with entitlements having the specified values for the given attributes will be
@@ -836,7 +846,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
     @SuppressWarnings("checkstyle:methodlength")
     private Query buildComplianceStatusCountQuery(Session session, Date startDate, Date endDate,
         String ownerKey, List<String> consumerUuids, String sku, String subscriptionName,
-        Map<String, String> attributes) {
+        String productName, Map<String, String> attributes) {
 
         List<Object> parameters = new LinkedList<Object>();
         int counter = 0;
@@ -890,7 +900,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
         // Add our reporting criteria...
         if (sku != null || subscriptionName != null || (attributes != null && attributes.size() > 0) ||
-            ownerKey != null || (consumerUuids != null && consumerUuids.size() > 0)) {
+            ownerKey != null || (consumerUuids != null && consumerUuids.size() > 0) || productName != null) {
 
             List<String> criteria = new LinkedList<String>();
             StringBuffer inner = new StringBuffer(
@@ -913,6 +923,32 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
             if (subscriptionName != null) {
                 criteria.add("EntitlementSnap.productName = ?" + ++counter);
                 parameters.add(subscriptionName);
+            }
+
+            if (productName != null) {
+                criteria.add(String.format(
+                    "?%d IN (" +
+                    "SELECT Installed.productName " +
+                    "FROM " +
+                        "Consumer AS ConsumerSnapP " +
+                        "INNER JOIN ConsumerSnapP.installedProducts AS Installed " +
+                        "INNER JOIN ConsumerSnapP.complianceSnapshot AS ComplianceSnapP " +
+                        "INNER JOIN ComplianceSnapP.status AS ComplianceStatusSnapP " +
+                        "LEFT JOIN ComplianceStatusSnapP.compliantProducts AS CProduct " +
+                        "LEFT JOIN ComplianceStatusSnapP.nonCompliantProducts AS NCProduct " +
+                        "LEFT JOIN ComplianceStatusSnapP.partiallyCompliantProducts AS PCProduct " +
+                    "WHERE " +
+                        "ComplianceStatusSnapP.id = ComplianceStatusSnap.id " +
+                        "AND (" +
+                            "Installed.productId = CProduct.productId " +
+                            "OR Installed.productId = NCProduct.productId " +
+                            "OR Installed.productId = PCProduct.productId " +
+                        ")" +
+                    ")",
+                    ++counter
+                ));
+
+                parameters.add(productName);
             }
 
             if (attributes != null && attributes.size() > 0) {
@@ -1042,6 +1078,8 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
         // Add our grouping...
         hql.append("ORDER BY ComplianceStatusSnap.date ASC");
+
+        // log.debug("\nFINAL QUERY: {}", hql.toString());
 
         // Build our query object and set the parameters...
         Query query = session.createQuery(hql.toString());

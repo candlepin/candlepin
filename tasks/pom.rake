@@ -45,6 +45,11 @@ module PomTask
       @create_assembly ||= true
     end
 
+    attr_writer :additional_properties
+    def additional_properties
+      @additional_properties ||= {}
+    end
+
     # A list of procs that will be executed in the plugin configuration
     # section of the POM.  The proc receives the XML Builder object and
     # the Buildr Project object. Note that the XML Builder object
@@ -91,6 +96,10 @@ module PomTask
         end
       end
       @plugin_procs
+    end
+
+    def dependency_procs
+      @dependency_procs ||= []
     end
   end
 
@@ -154,6 +163,9 @@ module PomTask
 
         # Manage version numbers in a properties section
         xml.properties do
+          @config.additional_properties.each do |k, v|
+            xml.tag!(k, v)
+          end
           dependencies.each do |dep|
             h = dep.to_hash
             prop_name = "#{h[:group]}-#{h[:id]}.version"
@@ -183,6 +195,12 @@ module PomTask
                   xml.artifactId('*')
                 end
               end
+            end
+          end
+
+          config.dependency_procs.each do |dependency_proc|
+            xml.dependency do
+              dependency_proc.call(xml, project)
             end
           end
         end

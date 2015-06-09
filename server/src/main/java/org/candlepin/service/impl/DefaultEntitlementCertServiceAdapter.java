@@ -61,6 +61,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -158,8 +159,13 @@ public class DefaultEntitlementCertServiceAdapter extends
         return providedProducts;
     }
 
+    // TODO: productModels not used by V1 certificates. This whole v1/v3 split needs
+    // a re-org. Passing them here because it eliminates a substantial performance hit
+    // recalculating this for the entitlement body in v3 certs.
     public X509Certificate createX509Certificate(Entitlement ent,
-        Product product, Set<Product> products, BigInteger serialNumber,
+        Product product, Set<Product> products,
+        List<org.candlepin.json.model.Product> productModels,
+        BigInteger serialNumber,
         KeyPair keyPair, boolean useContentPrefix)
         throws GeneralSecurityException, IOException {
 
@@ -175,8 +181,8 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         if (shouldGenerateV3(ent)) {
             extensions = prepareV3Extensions(ent, contentPrefix, promotedContent);
-            byteExtensions = prepareV3ByteExtensions(products, ent, contentPrefix,
-                promotedContent);
+            byteExtensions = prepareV3ByteExtensions(product, productModels,
+                    ent, contentPrefix, promotedContent);
         }
         else {
             extensions = prepareV1Extensions(products, ent, contentPrefix,
@@ -326,12 +332,13 @@ public class DefaultEntitlementCertServiceAdapter extends
         return result;
     }
 
-    public Set<X509ByteExtensionWrapper> prepareV3ByteExtensions(Set<Product> products,
-        Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent)
-        throws IOException {
-        Set<X509ByteExtensionWrapper> result =  v3extensionUtil.getByteExtensions(products,
-            ent, contentPrefix, promotedContent);
+    public Set<X509ByteExtensionWrapper> prepareV3ByteExtensions(Product sku,
+            List<org.candlepin.json.model.Product> productModels,
+            Entitlement ent, String contentPrefix,
+            Map<String, EnvironmentContent> promotedContent) throws IOException {
+
+        Set<X509ByteExtensionWrapper> result =  v3extensionUtil.getByteExtensions(sku,
+                productModels, ent, contentPrefix, promotedContent);
         return result;
     }
 
@@ -370,26 +377,31 @@ public class DefaultEntitlementCertServiceAdapter extends
         // to add any derived products as well so that their content
         // is available in the upstream certificate.
         products.addAll(getDerivedProductsForDistributor(sub, entitlement));
+        products.add(product);
+
+        Map<String, EnvironmentContent> promotedContent = getPromotedContent(entitlement);
+        String contentPrefix = getContentPrefix(entitlement, !thisIsUeberCert);
 
         log.info("Creating X509 cert.");
+        List<org.candlepin.json.model.Product> productModels =
+                v3extensionUtil.createProducts(product, products, contentPrefix,
+                        promotedContent,
+                        entitlement.getConsumer(), entitlement);
+
         X509Certificate x509Cert = createX509Certificate(entitlement,
-            product, products, BigInteger.valueOf(serial.getId()), keyPair,
+            product, products, productModels, BigInteger.valueOf(serial.getId()), keyPair,
             !thisIsUeberCert);
 
         EntitlementCertificate cert = new EntitlementCertificate();
         cert.setSerial(serial);
         cert.setKeyAsBytes(pki.getPemEncoded(keyPair.getPrivate()));
 
-        products.add(product);
-        Map<String, EnvironmentContent> promotedContent = getPromotedContent(entitlement);
-        String contentPrefix = getContentPrefix(entitlement, !thisIsUeberCert);
-
         log.info("Getting PEM encoded cert.");
         String pem = new String(this.pki.getPemEncoded(x509Cert));
 
         if (shouldGenerateV3(entitlement)) {
-            byte[] payloadBytes = v3extensionUtil.createEntitlementDataPayload(products,
-                entitlement, contentPrefix, promotedContent);
+            byte[] payloadBytes = v3extensionUtil.createEntitlementDataPayload(product,
+                    productModels, entitlement, contentPrefix, promotedContent);
             String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
             payload += Util.toBase64(payloadBytes);
             payload += "-----END ENTITLEMENT DATA-----\n";

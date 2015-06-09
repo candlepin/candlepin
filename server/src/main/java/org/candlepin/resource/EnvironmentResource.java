@@ -40,7 +40,9 @@ import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.Consumes;
@@ -235,14 +237,27 @@ public class EnvironmentResource {
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
         Environment e = lookupEnvironment(envId);
-        Set<String> demotedContentIds = new HashSet<String>();
+        Map<String, EnvironmentContent> demotedContent = new HashMap<String, EnvironmentContent>();
+
+        // Step through and validate all given content IDs before deleting
         for (String contentId : contentIds) {
-            EnvironmentContent envContent =
-                envContentCurator.lookupByEnvironmentAndContent(e, contentId);
-            envContentCurator.delete(envContent);
-            demotedContentIds.add(contentId);
+            EnvironmentContent envContent = envContentCurator.lookupByEnvironmentAndContent(e, contentId);
+
+            if (envContent == null) {
+                throw new NotFoundException(i18n.tr("Content does not exist in environment: {0}", contentId));
+            }
+
+            demotedContent.put(contentId, envContent);
         }
 
+        // We've validated everything here, so we're clear to start deleting...
+        for (EnvironmentContent envContent : demotedContent.values()) {
+            this.envContentCurator.delete(envContent);
+        }
+
+        // Impl note: Unfortunately, we have to make an additional set here, as the keySet isn't
+        // serializable. Attempting to use it causes exceptions.
+        Set<String> demotedContentIds = new HashSet<String>(demotedContent.keySet());
         JobDataMap map = new JobDataMap();
         map.put(RegenEnvEntitlementCertsJob.ENV, e);
         map.put(RegenEnvEntitlementCertsJob.CONTENT, demotedContentIds);
@@ -291,7 +306,7 @@ public class EnvironmentResource {
         Environment e = lookupEnvironment(envId);
         consumer.setEnvironment(e);
         return this.consumerResource.create(consumer, principal, userName,
-            e.getOwner().getKey(), activationKeys);
+            e.getOwner().getKey(), activationKeys, true);
     }
 
 }

@@ -23,12 +23,18 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -102,6 +108,11 @@ public class JobStatus extends AbstractHibernateObject {
     @Column(length = 255)
     private Class<? extends KingpinJob> jobClass;
 
+    private byte[] resultData;
+
+    @Transient
+    private boolean cloakData = false;
+
     public JobStatus() { }
 
     public JobStatus(JobDetail jobDetail) {
@@ -163,6 +174,7 @@ public class JobStatus extends AbstractHibernateObject {
             // BZ1004780: setResult truncates long strings
             // setting result directly causes database issues.
             setResult(jobResult.toString());
+            setResultData(jobResult);
         }
     }
 
@@ -243,5 +255,74 @@ public class JobStatus extends AbstractHibernateObject {
         return this.state == JobState.CANCELED ||
             this.state == JobState.FAILED ||
             this.state == JobState.FINISHED;
+    }
+
+    public void setResultData(Object resultData)  {
+        if (resultData == null) { return; }
+
+        byte[] data = new byte[0];
+        ByteArrayOutputStream baos = null;
+        ObjectOutputStream oos = null;
+
+        try {
+            baos = new ByteArrayOutputStream();
+            oos = new ObjectOutputStream(baos);
+            oos.writeObject(resultData);
+            data = baos.toByteArray();
+        }
+        catch (IOException ioe) {
+            throw new RuntimeException(ioe);
+        }
+        finally {
+            try {
+                if (baos != null) {
+                    baos.close();
+                }
+                if (oos != null) {
+                    oos.close();
+                }
+            }
+            catch (Exception e) {
+                // unable to close streams
+            }
+        }
+        this.resultData = data;
+    }
+
+    public Object getResultData() {
+        if (this.resultData == null) { return null; }
+        if (this.cloakData) { return "[cloaked]"; }
+
+        Object result = null;
+        ByteArrayInputStream bais = null;
+        ObjectInputStream ois = null;
+
+        try {
+            bais = new ByteArrayInputStream(this.resultData);
+            ois = new ObjectInputStream(bais);
+            result = ois.readObject();
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            throw new RuntimeException(e);
+        }
+        finally {
+            try {
+                if (bais != null) {
+                    bais.close();
+                }
+                if (ois != null) {
+                    ois.close();
+                }
+            }
+            catch (Exception e) {
+                // unable to close streams
+            }
+        }
+        return result;
+    }
+
+    public void cloakResultData(boolean cloak) {
+        this.cloakData = cloak;
     }
 }
