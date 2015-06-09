@@ -401,24 +401,6 @@ public class HibernateValidationAnnotationTest {
     }
 
     @Test
-    public void subscriptionTest() throws Exception {
-        Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<Field, Matcher<AnnotatedElement>>();
-        fm.put(Subscription.class.getDeclaredField("id"), notNull);
-        fm.put(Subscription.class.getDeclaredField("owner"), notNull);
-        fm.put(Subscription.class.getDeclaredField("product"), notNull);
-        fm.put(Subscription.class.getDeclaredField("quantity"), notNull);
-        fm.put(Subscription.class.getDeclaredField("startDate"), notNull);
-        fm.put(Subscription.class.getDeclaredField("endDate"), notNull);
-        fm.put(Subscription.class.getDeclaredField("contractNumber"), size);
-        fm.put(Subscription.class.getDeclaredField("accountNumber"), size);
-        fm.put(Subscription.class.getDeclaredField("orderNumber"), size);
-        fm.put(Subscription.class.getDeclaredField("upstreamPoolId"), size);
-        fm.put(Subscription.class.getDeclaredField("upstreamEntitlementId"), size);
-        fm.put(Subscription.class.getDeclaredField("upstreamConsumerId"), size);
-        runMap(fm);
-    }
-
-    @Test
     public void subscriptionsCertificateTest() throws Exception {
         Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<Field, Matcher<AnnotatedElement>>();
         fm.put(SubscriptionsCertificate.class.getDeclaredField("id"), notNull);

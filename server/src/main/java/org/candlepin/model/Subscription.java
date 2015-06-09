@@ -15,123 +15,61 @@
 package org.candlepin.model;
 
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.GenericGenerator;
 
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+
 
 /**
  * Represents a Subscription
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@Entity
-@Table(name = "cpo_subscriptions")
 public class Subscription extends AbstractHibernateObject implements Owned, Named {
 
-    @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    @Column(length = 32)
-    @NotNull
     private String id;
 
-    @ManyToOne
-    @JoinColumn(nullable = false)
-    @NotNull
     private Owner owner;
 
-    @ManyToOne
-    @JoinColumn(name = "product_uuid", nullable = false)
-    @NotNull
     private Product product;
 
-    @ManyToOne
-    @JoinColumn(name = "derived_product_uuid", nullable = true)
     private Product derivedProduct;
 
-    @ManyToMany(targetEntity = Product.class)
-    @JoinTable(name = "cpo_subscription_products",
-        joinColumns = @JoinColumn(name = "subscription_id"),
-        inverseJoinColumns = @JoinColumn(name = "product_uuid"))
     private Set<Product> providedProducts = new HashSet<Product>();
 
-    @ManyToMany(targetEntity = Product.class)
-    @JoinTable(name = "cpo_sub_derived_products",
-        joinColumns = @JoinColumn(name = "subscription_id"),
-        inverseJoinColumns = @JoinColumn(name = "product_uuid"))
     private Set<Product> derivedProvidedProducts = new HashSet<Product>();
 
-    @OneToMany
-    @JoinTable(name = "cpo_subscription_branding",
-        joinColumns = @JoinColumn(name = "subscription_id"),
-        inverseJoinColumns = @JoinColumn(name = "branding_id"))
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<Branding> branding = new HashSet<Branding>();
 
-    @Column(nullable = false)
-    @NotNull
     private Long quantity;
 
-    @Column(nullable = false)
-    @NotNull
     private Date startDate;
 
-    @Column(nullable = false)
-    @NotNull
     private Date endDate;
 
-    @Size(max = 255)
     private String contractNumber;
 
-    @Size(max = 255)
     private String accountNumber;
 
     private Date modified;
 
-    @Size(max = 255)
     private String orderNumber;
 
-    @Column(name = "upstream_pool_id")
-    @Size(max = 255)
     private String upstreamPoolId;
 
-    @Column(name = "upstream_entitlement_id")
-    @Size(max = 37)
     private String upstreamEntitlementId;
 
-    @Column(name = "upstream_consumer_id")
-    @Size(max = 255)
     private String upstreamConsumerId;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "certificate_id")
     private SubscriptionsCertificate cert;
 
-    @OneToOne
-    @JoinColumn(name = "cdn_id")
     private Cdn cdn;
 
     public Subscription() {
