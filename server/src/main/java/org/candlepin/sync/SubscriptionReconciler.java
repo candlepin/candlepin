@@ -220,8 +220,6 @@ public class SubscriptionReconciler {
         Map<String, Pool> map) {
         subscription.setId(local.getSubscriptionId());
         map.remove(local.getUpstreamEntitlementId());
-        // send updated event
-//        sink.emitSubscriptionModified(local, subscription);
     }
 
     /**
@@ -232,7 +230,6 @@ public class SubscriptionReconciler {
     public static class QuantityComparator implements
         Comparator<Pool>, Serializable {
 
-        // TODO: compare quantity / multiplier to match subscription
         @Override
         public int compare(Pool s1, Pool s2) {
             return s2.getQuantity().compareTo(s1.getQuantity());
