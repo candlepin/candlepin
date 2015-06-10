@@ -16,11 +16,6 @@ package org.candlepin.util;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.json.model.Content;
-import org.candlepin.json.model.EntitlementBody;
-import org.candlepin.json.model.Order;
-import org.candlepin.json.model.Service;
-import org.candlepin.json.model.Subscription;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -29,6 +24,11 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
+import org.candlepin.model.dto.Content;
+import org.candlepin.model.dto.EntitlementBody;
+import org.candlepin.model.dto.Order;
+import org.candlepin.model.dto.Service;
+import org.candlepin.model.dto.TinySubscription;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 
@@ -98,7 +98,7 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public Set<X509ByteExtensionWrapper> getByteExtensions(Product sku,
-            List<org.candlepin.json.model.Product> productModels,
+            List<org.candlepin.model.dto.Product> productModels,
             Entitlement ent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent) throws IOException {
         Set<X509ByteExtensionWrapper> toReturn =
@@ -117,7 +117,7 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public byte[] createEntitlementDataPayload(Product skuProduct,
-            List<org.candlepin.json.model.Product> productModels,
+            List<org.candlepin.model.dto.Product> productModels,
             Entitlement ent, String contentPrefix,
             Map<String, EnvironmentContent> promotedContent)
         throws UnsupportedEncodingException, IOException {
@@ -151,7 +151,7 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public EntitlementBody createEntitlementBody(Product skuProduct,
-            List<org.candlepin.json.model.Product> productModels,
+            List<org.candlepin.model.dto.Product> productModels,
             Entitlement ent, String contentPrefix,
             Map<String, EnvironmentContent> promotedContent) {
 
@@ -167,7 +167,7 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public EntitlementBody createEntitlementBodyContent(Product sku,
-            List<org.candlepin.json.model.Product> productModels,
+            List<org.candlepin.model.dto.Product> productModels,
         Entitlement ent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent) {
 
@@ -177,9 +177,9 @@ public class X509V3ExtensionUtil extends X509Util {
         return toReturn;
     }
 
-    public Subscription createSubscription(
+    public TinySubscription createSubscription(
         Entitlement ent) {
-        Subscription toReturn = new Subscription();
+        TinySubscription toReturn = new TinySubscription();
         Pool pool = ent.getPool();
         Product product = pool.getProduct();
 
@@ -271,12 +271,12 @@ public class X509V3ExtensionUtil extends X509Util {
         return toReturn;
     }
 
-    public List<org.candlepin.json.model.Product> createProducts(Product sku,
+    public List<org.candlepin.model.dto.Product> createProducts(Product sku,
             Set<Product> products, String contentPrefix,
             Map<String, EnvironmentContent> promotedContent, Consumer consumer, Entitlement ent) {
 
-        List<org.candlepin.json.model.Product> toReturn =
-            new ArrayList<org.candlepin.json.model.Product>();
+        List<org.candlepin.model.dto.Product> toReturn =
+            new ArrayList<org.candlepin.model.dto.Product>();
 
         Set<String> entitledProductIds = entCurator.listEntitledProductIds(consumer,
             ent.getStartDate(), ent.getEndDate());
@@ -289,17 +289,17 @@ public class X509V3ExtensionUtil extends X509Util {
         return toReturn;
     }
 
-    public org.candlepin.json.model.Pool createPool(Entitlement ent) {
-        org.candlepin.json.model.Pool toReturn = new org.candlepin.json.model.Pool();
+    public org.candlepin.model.dto.Pool createPool(Entitlement ent) {
+        org.candlepin.model.dto.Pool toReturn = new org.candlepin.model.dto.Pool();
         toReturn.setId(ent.getPool().getId());
         return toReturn;
     }
 
-    private org.candlepin.json.model.Product mapProduct(Product engProduct, Product sku,
+    private org.candlepin.model.dto.Product mapProduct(Product engProduct, Product sku,
         String contentPrefix, Map<String, EnvironmentContent> promotedContent,
         Consumer consumer, Entitlement ent, Set<String> entitledProductIds) {
 
-        org.candlepin.json.model.Product toReturn = new org.candlepin.json.model.Product();
+        org.candlepin.model.dto.Product toReturn = new org.candlepin.model.dto.Product();
 
         toReturn.setId(engProduct.getId());
         toReturn.setName(engProduct.getName());
@@ -500,8 +500,8 @@ public class X509V3ExtensionUtil extends X509Util {
     protected List<Content> getContentList(EntitlementBody eb) {
         // collect content URL's
         List<Content> contentList = new ArrayList<Content>();
-        for (org.candlepin.json.model.Product p : eb.getProducts()) {
-            for (org.candlepin.json.model.Content c : p.getContent()) {
+        for (org.candlepin.model.dto.Product p : eb.getProducts()) {
+            for (org.candlepin.model.dto.Content c : p.getContent()) {
                 contentList.add(c);
             }
         }

@@ -12,7 +12,18 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.model;
+package org.candlepin.model.dto;
+
+import org.candlepin.model.Branding;
+import org.candlepin.model.Cdn;
+import org.candlepin.model.Named;
+import org.candlepin.model.Owned;
+import org.candlepin.model.Owner;
+import org.candlepin.model.Product;
+import org.candlepin.model.SubscriptionsCertificate;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -22,6 +33,7 @@ import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -32,45 +44,32 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Subscription extends AbstractHibernateObject implements Owned, Named {
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonFilter("DefaultFilter")
+public class Subscription implements Owned, Named {
 
     private String id;
-
+    private Date created;
+    private Date updated;
     private Owner owner;
-
     private Product product;
-
     private Product derivedProduct;
-
     private Set<Product> providedProducts = new HashSet<Product>();
-
     private Set<Product> derivedProvidedProducts = new HashSet<Product>();
-
     private Set<Branding> branding = new HashSet<Branding>();
-
     private Long quantity;
-
     private Date startDate;
-
     private Date endDate;
-
     private String contractNumber;
-
     private String accountNumber;
-
     private Date modified;
-
     private String orderNumber;
-
     private String upstreamPoolId;
-
     private String upstreamEntitlementId;
-
     private String upstreamConsumerId;
-
     private SubscriptionsCertificate cert;
-
     private Cdn cdn;
+
 
     public Subscription() {
     }
@@ -353,12 +352,29 @@ public class Subscription extends AbstractHibernateObject implements Owned, Name
         return !StringUtils.isBlank(virtLimit) && !"0".equals(virtLimit);
     }
 
-    @Override
     @XmlTransient
     public String getName() {
         if (getProduct() != null) {
             return getProduct().getName();
         }
         return null;
+    }
+
+    @XmlElement
+    public Date getCreated() {
+        return created;
+    }
+
+    public void setCreated(Date created) {
+        this.created = created;
+    }
+
+    @XmlElement
+    public Date getUpdated() {
+        return updated;
+    }
+
+    public void setUpdated(Date updated) {
+        this.updated = updated;
     }
 }

@@ -12,21 +12,33 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.json.model;
+package org.candlepin.model.dto;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Pool
+ * Service
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Pool {
-    private String id;
+public class Service {
 
-    public void setId(String id) {
-        this.id = id;
+    private String level;
+    private String type;
+
+    /**
+     * @param level
+     */
+    public void setLevel(String level) {
+        this.level = level;
+    }
+
+    /**
+     * @param type
+     */
+    public void setType(String type) {
+        this.type = type;
     }
 }

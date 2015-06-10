@@ -30,7 +30,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.Subscription;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;

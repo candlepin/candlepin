@@ -39,7 +39,7 @@ import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
-import org.candlepin.model.Subscription;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
@@ -1182,9 +1182,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
         assertFalse(extMapHasContentType(unknownTypeContent, extMap, "null"));
     }
 
-    private List<org.candlepin.json.model.Product> getProductModels(Product sku,
+    private List<org.candlepin.model.dto.Product> getProductModels(Product sku,
             Set<Product> providedProducts, String prefix, Entitlement e) {
-        List<org.candlepin.json.model.Product> productModels =
+        List<org.candlepin.model.dto.Product> productModels =
                 v3extensionUtil.createProducts(sku, providedProducts, prefix,
                         new HashMap<String, EnvironmentContent>(),
                         e.getConsumer(), e);
@@ -1796,11 +1796,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void testPathTreeCommonHeadAndTail() {
-        List<org.candlepin.json.model.Content> contentList =
-            new ArrayList<org.candlepin.json.model.Content>();
+        List<org.candlepin.model.dto.Content> contentList =
+            new ArrayList<org.candlepin.model.dto.Content>();
         for (int i = 0; i < 20; i++) {
-            org.candlepin.json.model.Content cont =
-                new org.candlepin.json.model.Content();
+            org.candlepin.model.dto.Content cont =
+                new org.candlepin.model.dto.Content();
             cont.setPath("/head/neck/shoulders/heart" + i + "/waist" +
                 i + "/leg/foot/heel");
             contentList.add(cont);
@@ -1869,14 +1869,14 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void testPathTreeSortsChildNodesAlphabetically() {
-        List<org.candlepin.json.model.Content> contentList =
-            new ArrayList<org.candlepin.json.model.Content>();
+        List<org.candlepin.model.dto.Content> contentList =
+            new ArrayList<org.candlepin.model.dto.Content>();
 
-        org.candlepin.json.model.Content contentA = new org.candlepin.json.model.Content();
+        org.candlepin.model.dto.Content contentA = new org.candlepin.model.dto.Content();
         contentA.setPath("/AAA");
-        org.candlepin.json.model.Content contentB = new org.candlepin.json.model.Content();
+        org.candlepin.model.dto.Content contentB = new org.candlepin.model.dto.Content();
         contentB.setPath("/BBB");
-        org.candlepin.json.model.Content contentC = new org.candlepin.json.model.Content();
+        org.candlepin.model.dto.Content contentC = new org.candlepin.model.dto.Content();
         contentC.setPath("/CCC");
 
         contentList.add(contentB);
@@ -1894,22 +1894,22 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void testPathDictionary() throws IOException {
-        List<org.candlepin.json.model.Content> contentList =
-            new ArrayList<org.candlepin.json.model.Content>();
-        org.candlepin.json.model.Content cont = null;
+        List<org.candlepin.model.dto.Content> contentList =
+            new ArrayList<org.candlepin.model.dto.Content>();
+        org.candlepin.model.dto.Content cont = null;
         for (int i = 0; i < 20; i++) {
-            cont = new org.candlepin.json.model.Content();
+            cont = new org.candlepin.model.dto.Content();
             cont.setPath("/head/neck/shoulders/heart" + i + "/waist" +
                 i + "/leg/foot/heel");
             contentList.add(cont);
         }
-        cont = new org.candlepin.json.model.Content();
+        cont = new org.candlepin.model.dto.Content();
         cont.setPath("/head/neck/shoulders/chest/leg");
         contentList.add(cont);
-        cont = new org.candlepin.json.model.Content();
+        cont = new org.candlepin.model.dto.Content();
         cont.setPath("/head/neck/shoulders/chest/foot");
         contentList.add(cont);
-        cont = new org.candlepin.json.model.Content();
+        cont = new org.candlepin.model.dto.Content();
         cont.setPath("/head/neck/shoulders/chest/torso/leg");
         contentList.add(cont);
 

@@ -34,7 +34,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.Subscription;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;

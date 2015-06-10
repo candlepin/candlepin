@@ -145,7 +145,7 @@ public class X509V3ExtensionUtilTest {
         Consumer consumer = new Consumer();
         Entitlement e = new Entitlement(pool, consumer, 10);
 
-        List<org.candlepin.json.model.Product> certProds = util.createProducts(mktProd,
+        List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd,
                 prods, "", new HashMap<String, EnvironmentContent>(),  new Consumer(), e);
 
         assertEquals(1, certProds.size());
@@ -173,7 +173,7 @@ public class X509V3ExtensionUtilTest {
         Consumer consumer = new Consumer();
         Entitlement e = new Entitlement(pool, consumer, 10);
 
-        List<org.candlepin.json.model.Product> certProds = util.createProducts(mktProd,
+        List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd,
                 prods, "", new HashMap<String, EnvironmentContent>(),  new Consumer(), e);
 
         assertEquals(1, certProds.size());

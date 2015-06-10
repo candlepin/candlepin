@@ -28,7 +28,7 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.Subscription;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

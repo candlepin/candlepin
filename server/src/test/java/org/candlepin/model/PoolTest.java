@@ -18,6 +18,7 @@ import static org.junit.Assert.*;
 
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.model.Pool.PoolType;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;

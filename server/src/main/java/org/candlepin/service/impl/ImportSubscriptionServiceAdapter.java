@@ -18,7 +18,7 @@ package org.candlepin.service.impl;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
-import org.candlepin.model.Subscription;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import java.util.ArrayList;

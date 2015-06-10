@@ -32,10 +32,10 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SourceSubscription;
-import org.candlepin.model.Subscription;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
+import org.candlepin.model.dto.Subscription;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;

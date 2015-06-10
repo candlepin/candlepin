@@ -19,7 +19,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
-import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
@@ -114,20 +113,6 @@ public class EventSinkImpl implements EventSink {
     public void emitActivationKeyCreated(ActivationKey key) {
         Event e = eventFactory.activationKeyCreated(key);
         queueEvent(e);
-    }
-
-    @Override
-    public void emitSubscriptionCreated(Subscription subscription) {
-        Event e = eventFactory.subscriptionCreated(subscription);
-        queueEvent(e);
-    }
-
-    public void emitSubscriptionModified(Subscription old, Subscription newSub) {
-        queueEvent(eventFactory.subscriptionModified(old, newSub));
-    }
-
-    public Event createSubscriptionDeleted(Subscription todelete) {
-        return eventFactory.subscriptionDeleted(todelete);
     }
 
     @Override

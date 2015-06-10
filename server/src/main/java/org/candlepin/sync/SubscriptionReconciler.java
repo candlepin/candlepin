@@ -18,7 +18,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
-import org.candlepin.model.Subscription;
+import org.candlepin.model.dto.Subscription;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

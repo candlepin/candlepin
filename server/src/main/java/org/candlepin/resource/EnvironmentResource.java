@@ -221,7 +221,7 @@ public class EnvironmentResource {
     @Path("/{env_id}/content")
     public JobDetail promoteContent(
             @PathParam("env_id") @Verify(Environment.class) String envId,
-            List<org.candlepin.json.model.EnvironmentContent> contentToPromote,
+            List<org.candlepin.model.dto.EnvironmentContent> contentToPromote,
             @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
         Environment env = lookupEnvironment(envId);
@@ -231,7 +231,7 @@ public class EnvironmentResource {
         // Impl note:
         // We have to do this in a separate loop or we'll end up with an undefined state, should
         // there be a problem with the request.
-        for (org.candlepin.json.model.EnvironmentContent promoteMe : contentToPromote) {
+        for (org.candlepin.model.dto.EnvironmentContent promoteMe : contentToPromote) {
             log.debug(
                 "EnvironmentContent to promote: {}:{}",
                 promoteMe.getEnvironmentId(), promoteMe.getContentId()
@@ -249,7 +249,7 @@ public class EnvironmentResource {
             }
         }
 
-        for (org.candlepin.json.model.EnvironmentContent promoteMe : contentToPromote) {
+        for (org.candlepin.model.dto.EnvironmentContent promoteMe : contentToPromote) {
             // Make sure the content exists:
             EnvironmentContent envcontent = new EnvironmentContent();
 

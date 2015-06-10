@@ -27,7 +27,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
-import org.candlepin.model.Subscription;
+import org.candlepin.model.dto.Subscription;
 
 import com.google.inject.Inject;
 

@@ -23,7 +23,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
-import org.candlepin.model.Subscription;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.AttributeHelper;
 
 import org.apache.commons.lang.StringUtils;

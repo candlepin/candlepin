@@ -28,7 +28,7 @@ import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.SourceSubscription;
-import org.candlepin.model.Subscription;
+import org.candlepin.model.dto.Subscription;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

@@ -29,7 +29,7 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.Subscription;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Test;

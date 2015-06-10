@@ -21,7 +21,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
-import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
@@ -62,19 +61,6 @@ public class EventSinkForTesting implements EventSink {
 
     @Override
     public void emitImportCreated(Owner owner) {
-    }
-
-    @Override
-    public void emitSubscriptionCreated(Subscription subscription) {
-    }
-
-    @Override
-    public Event createSubscriptionDeleted(Subscription todelete) {
-        return null;
-    }
-
-    @Override
-    public void emitSubscriptionModified(Subscription old, Subscription newSub) {
     }
 
     @Override

@@ -21,8 +21,8 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionsCertificate;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;

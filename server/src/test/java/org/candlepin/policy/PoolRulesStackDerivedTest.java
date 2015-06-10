@@ -34,7 +34,7 @@ import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.model.Subscription;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;

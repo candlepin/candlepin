@@ -25,7 +25,6 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
-import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
@@ -193,25 +192,6 @@ public class EventFactory {
     public Event importCreated(Owner owner) {
         return getEventBuilder(Target.IMPORT, Type.CREATED)
                 .setNewEntity(owner)
-                .buildEvent();
-    }
-
-    public Event subscriptionCreated(Subscription subscription) {
-        return getEventBuilder(Target.SUBSCRIPTION, Type.CREATED)
-                .setNewEntity(subscription)
-                .buildEvent();
-    }
-
-    public Event subscriptionModified(Subscription oldSub, Subscription newSub) {
-        return getEventBuilder(Target.SUBSCRIPTION, Type.MODIFIED)
-                .setOldEntity(newSub)
-                .setOldEntity(oldSub)
-                .buildEvent();
-    }
-
-    public Event subscriptionDeleted(Subscription todelete) {
-        return getEventBuilder(Target.SUBSCRIPTION, Type.DELETED)
-                .setOldEntity(todelete)
                 .buildEvent();
     }
 

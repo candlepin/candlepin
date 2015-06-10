@@ -132,7 +132,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     // recalculating this for the entitlement body in v3 certs.
     public X509Certificate createX509Certificate(Entitlement ent,
         Product product, Set<Product> products,
-        List<org.candlepin.json.model.Product> productModels,
+        List<org.candlepin.model.dto.Product> productModels,
         BigInteger serialNumber,
         KeyPair keyPair, boolean useContentPrefix)
         throws GeneralSecurityException, IOException {
@@ -302,7 +302,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     }
 
     public Set<X509ByteExtensionWrapper> prepareV3ByteExtensions(Product sku,
-            List<org.candlepin.json.model.Product> productModels,
+            List<org.candlepin.model.dto.Product> productModels,
             Entitlement ent, String contentPrefix,
             Map<String, EnvironmentContent> promotedContent) throws IOException {
 
@@ -351,7 +351,7 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         log.info("Creating X509 cert for product: {}", product);
         log.debug("Provided products: {}", products);
-        List<org.candlepin.json.model.Product> productModels =
+        List<org.candlepin.model.dto.Product> productModels =
                 v3extensionUtil.createProducts(product, products, contentPrefix,
                         promotedContent,
                         entitlement.getConsumer(), entitlement);

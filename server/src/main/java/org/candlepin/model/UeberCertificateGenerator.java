@@ -17,6 +17,7 @@ package org.candlepin.model;
 import org.candlepin.auth.Principal;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
