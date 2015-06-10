@@ -280,7 +280,7 @@ class VerifyCommand < CMVCommand
                 puts "\n#{message}\n"
             end
 
-            puts "\nDeployment failed validation against snapshot #{options[:file]} with #{messages.length} messages\n"
+            puts "\nDeployment failed validation against snapshot #{options[:file]} with #{messages.length} message(s)\n"
         end
     end
 
@@ -504,6 +504,8 @@ optparse.parse!
 
 if ARGV.empty?
     puts optparse
+    puts
+    print_commands(commands)
     exit
 else
     candlepin = Candlepin.new(
