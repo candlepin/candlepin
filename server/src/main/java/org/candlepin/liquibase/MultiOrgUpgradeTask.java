@@ -429,52 +429,34 @@ public class MultiOrgUpgradeTask {
      *  The id of the owner/organization for which to migrate pool data
      */
     private void migratePoolData(String orgid) throws DatabaseException, SQLException {
-        // this.logger.info("Migrating pool data for org " + orgid);
+        this.logger.info("Migrating pool data for org " + orgid);
 
-        // ResultSet pools = this.executeQuery("SELECT id FROM cp_pool WHERE owner_id = ?", orgid);
+        ResultSet pools = this.executeQuery("SELECT id FROM cp_pool WHERE owner_id = ?", orgid);
 
-        // while (pools.next()) {
-        //     String poolid = pools.getString(1);
+        while (pools.next()) {
+            String poolid = pools.getString(1);
 
-        //     ResultSet branding = this.executeQuery(
-        //         "SELECT B.id, B.created, B.updated, (SELECT uuid FROM cpo_products " +
-        //         "    WHERE owner_id = ? AND product_id = B.productid), B.type, B.name, B.productid " +
-        //         "FROM cp_branding B " +
-        //         "  JOIN cp_pool_branding PB ON PB.branding_id = B.id " +
-        //         "WHERE PB.pool_id = ?",
-        //         orgid, poolid
-        //     );
+            // Migrate pool source subscription info
+            ResultSet sourcesub = this.executeQuery(
+                "SELECT id, subscriptionid, subscriptionsubkey, pool_id, created, updated " +
+                "FROM cp_pool_source_sub WHERE pool_id = ?",
+                poolid
+            );
 
-        //     while (branding.next()) {
-        //         String brandingid = branding.getString(1);
-        //         String brandinguuid = this.generateUUID();
+            while (sourcesub.next()) {
+                this.executeUpdate(
+                    "INSERT INTO cpo_pool_source_sub " +
+                    "  (id, subscription_id, subscription_sub_key, pool_id, created, updated)" +
+                    "VALUES(?, ?, ?, ?, ?, ?)",
+                    this.generateUUID(), sourcesub.getString(2), sourcesub.getString(3), poolid,
+                    sourcesub.getTimestamp(5), sourcesub.getTimestamp(6)
+                );
+            }
 
-        //         this.logger.info(
-        //             String.format(
-        //                 "Migrating branding details for ID (legacy: %s, migrated: %s), " +
-        //                 "Org/product: %s, %s",
-        //                 brandingid, brandinguuid, orgid, branding.getString(7)
-        //             )
-        //         );
+            sourcesub.close();
+        }
 
-        //         this.executeUpdate(
-        //             "INSERT INTO cpo_branding(id, created, updated, product_uuid, type, name) " +
-        //             "VALUES(?, ?, ?, ?, ?, ?)",
-        //             brandinguuid, branding.getTimestamp(2), branding.getTimestamp(3),
-        //             branding.getString(4), branding.getString(5), branding.getString(6)
-        //         );
-
-        //         this.executeUpdate(
-        //             "INSERT INTO cpo_pool_branding(pool_id, branding_id) " +
-        //             "VALUES(?, ?)",
-        //             poolid, brandinguuid
-        //         );
-        //     }
-
-        //     branding.close();
-        // }
-
-        // pools.close();
+        pools.close();
     }
 
     /**
@@ -546,78 +528,6 @@ public class MultiOrgUpgradeTask {
                     upstreamEntitlementId, upstreamConsumerId, upstreamPoolId, subid
                 );
             }
-
-            // Migrate pool source subscription info
-            ResultSet sourcesub = this.executeQuery(
-                "SELECT id, subscriptionid, subscriptionsubkey, pool_id, created, updated " +
-                "FROM cp_pool_source_sub WHERE subscriptionid = ?",
-                subid
-            );
-
-            while (sourcesub.next()) {
-                this.executeUpdate(
-                    "INSERT INTO cpo_pool_source_sub " +
-                    "  (id, subscription_id, subscription_sub_key, pool_id, created, updated)" +
-                    "VALUES(?, ?, ?, ?, ?, ?)",
-                    this.generateUUID(), subid, sourcesub.getString(3),
-                    sourcesub.getString(4), sourcesub.getTimestamp(5), sourcesub.getTimestamp(6)
-                );
-            }
-
-            sourcesub.close();
-
-
-            // TODO: Everything from here down may be extraneous.
-            /*
-            this.executeUpdate(
-                "INSERT INTO cpo_subscriptions " +
-                "SELECT ?, created, updated, accountnumber, contractnumber, enddate, " +
-                "    modified, quantity, startdate, upstream_pool_id, certificate_id, ?, " +
-                "    (SELECT uuid FROM cpo_products " +
-                "        WHERE owner_id = ? AND product_id = S.product_id), " +
-                "    ordernumber, upstream_entitlement_id, upstream_consumer_id, " +
-                "    (SELECT uuid FROM cpo_products " +
-                "        WHERE owner_id = ? AND product_id = S.derivedproduct_id), " +
-                "    cdn_id " +
-                "FROM cp_subscription S WHERE id = ?",
-                subid, orgid, orgid, orgid, subid
-            );
-
-
-
-            ResultSet branding = this.executeQuery(
-                "SELECT B.branding_id " +
-                "FROM cp_sub_branding B " +
-                "WHERE B.subscription_id = ?",
-                subid
-            );
-
-            while (branding.next()) {
-                this.executeUpdate(
-                    "INSERT INTO cpo_subscription_branding(subscription_id, branding_id) " +
-                    "VALUES(?, ?)",
-                    subid, branding.getString(1)
-                );
-            }
-
-            branding.close();
-
-            this.executeUpdate(
-                "INSERT INTO cpo_subscription_products " +
-                "SELECT ?, (SELECT uuid FROM cpo_products " +
-                "    WHERE owner_id = ? AND product_id = S.product_id) " +
-                "FROM cp_subscription_products S WHERE subscription_id = ?",
-                subid, orgid, subid
-            );
-
-            this.executeUpdate(
-                "INSERT INTO cpo_sub_derived_products " +
-                "SELECT ?, (SELECT uuid FROM cpo_products " +
-                "    WHERE owner_id = ? AND product_id = S.product_id) " +
-                "FROM cp_sub_derivedprods S WHERE subscription_id = ?",
-                subid, orgid, subid
-            );
-            */
         }
 
         subscriptiondata.close();
