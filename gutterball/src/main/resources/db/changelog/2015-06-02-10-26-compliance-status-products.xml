@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20150602102655-1" author="crog">
+        <comment>
+            Adds an ID column to ease the joining of product references to compliance statuses
+        </comment>
+
+        <addColumn tableName="gb_compprod_snap">
+            <column name="id" type="varchar(32)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20150602102655-2" author="crog">
+        <addColumn tableName="gb_partcompprod_snap">
+            <column name="id" type="varchar(32)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20150602102655-3" author="crog">
+        <addColumn tableName="gb_noncompprod_snap">
+            <column name="id" type="varchar(32)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20150602102655-4" author="crog">
+        <customChange class="org.candlepin.gutterball.liquibase.ComplianceStatusProductIdMigrationTaskLiquibaseWrapper"/>
+    </changeSet>
+
+    <changeSet id="20150602102655-5" author="crog">
+        <addPrimaryKey
+            columnNames="id"
+            constraintName="gb_compprod_snap_pk"
+            tableName="gb_compprod_snap"
+        />
+    </changeSet>
+
+    <changeSet id="20150602102655-6" author="crog">
+        <addPrimaryKey
+            columnNames="id"
+            constraintName="gb_partcompprod_snap_pk"
+            tableName="gb_partcompprod_snap"
+        />
+    </changeSet>
+
+    <changeSet id="20150602102655-7" author="crog">
+        <addPrimaryKey
+            columnNames="id"
+            constraintName="gb_noncompprod_snap_pk"
+            tableName="gb_noncompprod_snap"
+        />
+    </changeSet>
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

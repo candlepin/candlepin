@@ -22,9 +22,12 @@ import org.candlepin.gutterball.model.ConsumerState;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 import org.candlepin.gutterball.model.snapshot.ComplianceReason;
 import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
+import org.candlepin.gutterball.model.snapshot.CompliantProductReference;
 import org.candlepin.gutterball.model.snapshot.Consumer;
 import org.candlepin.gutterball.model.snapshot.ConsumerInstalledProduct;
+import org.candlepin.gutterball.model.snapshot.NonCompliantProductReference;
 import org.candlepin.gutterball.model.snapshot.Owner;
+import org.candlepin.gutterball.model.snapshot.PartiallyCompliantProductReference;
 import org.candlepin.gutterball.report.Report;
 
 import org.apache.commons.lang.RandomStringUtils;
@@ -79,6 +82,16 @@ public class TestUtils {
 
     public static Compliance createComplianceSnapshotWithProducts(Date statusDate, String consumerUuid,
             String owner, String statusString, ConsumerState state, Set<String> products) {
+
+        return createComplianceSnapshotWithProductsAndCompliances(statusDate, consumerUuid, owner,
+            statusString, state, products, null, null, null);
+    }
+
+    public static Compliance createComplianceSnapshotWithProductsAndCompliances(Date statusDate,
+        String consumerUuid, String owner, String statusString, ConsumerState state,
+        Set<String> products, Set<String> compliant, Set<String> partiallyCompliant,
+        Set<String> nonCompliant) {
+
         Consumer consumerSnap = new Consumer(consumerUuid, null, createOwnerSnapshot(owner, owner));
         consumerSnap.setConsumerState(state);
 
@@ -96,6 +109,36 @@ public class TestUtils {
         consumerSnap.setInstalledProducts(installedProducts);
 
         ComplianceStatus statusSnap = new ComplianceStatus(statusDate, statusString);
+
+        if (compliant != null) {
+            Set<CompliantProductReference> cpr = new HashSet<CompliantProductReference>();
+
+            for (String pid : compliant) {
+                cpr.add(new CompliantProductReference(statusSnap, pid));
+            }
+
+            statusSnap.setCompliantProducts(cpr);
+        }
+
+        if (partiallyCompliant != null) {
+            Set<PartiallyCompliantProductReference> pcpr = new HashSet<PartiallyCompliantProductReference>();
+
+            for (String pid : partiallyCompliant) {
+                pcpr.add(new PartiallyCompliantProductReference(statusSnap, pid));
+            }
+
+            statusSnap.setPartiallyCompliantProducts(pcpr);
+        }
+
+        if (nonCompliant != null) {
+            Set<NonCompliantProductReference> ncpr = new HashSet<NonCompliantProductReference>();
+
+            for (String pid : nonCompliant) {
+                ncpr.add(new NonCompliantProductReference(statusSnap, pid));
+            }
+
+            statusSnap.setNonCompliantProducts(ncpr);
+        }
 
         if (statusString.toLowerCase().equals("invalid")) {
             ComplianceReason reason = new ComplianceReason("reason-key", "Test message");
