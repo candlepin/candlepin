@@ -911,7 +911,8 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         String productName, Map<Date, Map<String, Integer>> expected) {
         Map<Date, Map<String, Integer>> actual;
 
-        log.debug("Retriving status counts for product: {} (in dates: {} to {})", productName, startDate, endDate);
+        log.debug("Retriving status counts for product: {} (in dates: {} to {})",
+            productName, startDate, endDate);
 
         actual = this.complianceSnapshotCurator
             .getComplianceStatusCounts(startDate, endDate, null, null, null, null, productName, null);
