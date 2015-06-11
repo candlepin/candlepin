@@ -14,6 +14,8 @@
  */
 package org.candlepin.pinsetter.tasks;
 
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
@@ -48,20 +50,28 @@ public class PopulateHostedDBTask extends KingpinJob {
     private ProductCurator productCurator;
     private ContentCurator contentCurator;
     private PoolCurator poolCurator;
+    private Configuration config;
 
 
     @Inject
     public PopulateHostedDBTask(ProductServiceAdapter productService, ProductCurator productCurator,
-        ContentCurator contentCurator, PoolCurator poolCurator) {
+        ContentCurator contentCurator, PoolCurator poolCurator, Configuration config) {
 
         this.productService = productService;
         this.productCurator = productCurator;
         this.contentCurator = contentCurator;
         this.poolCurator = poolCurator;
+        this.config = config;
     }
 
     @Override
     public void toExecute(JobExecutionContext context) throws JobExecutionException {
+        if (this.config.getBoolean(ConfigProperties.STANDALONE)) {
+            log.warn("Aborting populate DB task in standalone environment");
+            context.setResult("Aborting populate DB task in standalone environment");
+            return;
+        }
+
         int pcount = 0;
         int ccount = 0;
         log.info("Populating Hosted DB");
@@ -94,8 +104,7 @@ public class PopulateHostedDBTask extends KingpinJob {
             productIds = dependentProducts;
         } while (productIds.size() > 0);
 
-
-        // TODO: Should this be translated...?
+        // TODO: Should this be translated?
         String result = String.format(
             "Finished populating Hosted DB. Received %d product(s) and %d content",
             pcount, ccount
@@ -110,7 +119,7 @@ public class PopulateHostedDBTask extends KingpinJob {
     public static JobDetail createAsyncTask() {
         JobDetail detail = JobBuilder.newJob(PopulateHostedDBTask.class)
             .withIdentity("populated_hosted_db-" + Util.generateUUID())
-            .requestRecovery(true) // TODO: Do we need recovery for this task?
+            .requestRecovery(true)
             .build();
 
         return detail;
