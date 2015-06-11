@@ -24,10 +24,10 @@ import liquibase.resource.ResourceAccessor;
 
 
 /**
- * The MultiOrgUpgradeLiquibaseWrapper class wraps the MultiOrgUpgradeTask to allow it to be
+ * The PerOrgProductsUpgradeLiquibaseWrapper class wraps the PerOrgProductsUpgradeTask to allow it to be
  * programatically performed via Liquibase.
  */
-public class MultiOrgUpgradeLiquibaseWrapper implements CustomTaskChange {
+public class PerOrgProductsUpgradeLiquibaseWrapper implements CustomTaskChange {
 
     @Override
     public String getConfirmationMessage() {
@@ -51,7 +51,7 @@ public class MultiOrgUpgradeLiquibaseWrapper implements CustomTaskChange {
 
     @Override
     public void execute(Database database) throws CustomChangeException {
-        MultiOrgUpgradeTask task = new MultiOrgUpgradeTask(
+        PerOrgProductsUpgradeTask task = new PerOrgProductsUpgradeTask(
             database,
             new LiquibaseCustomTaskLogger()
         );

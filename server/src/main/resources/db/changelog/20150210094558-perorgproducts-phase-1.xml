@@ -489,7 +489,7 @@
     <changeSet id="20150210094558-40" author="crog">
         <comment>Migrate data from obsoleted tables to new org-specific tables.</comment>
 
-        <customChange class="org.candlepin.liquibase.MultiOrgUpgradeLiquibaseWrapper"/>
+        <customChange class="org.candlepin.liquibase.PerOrgProductsUpgradeLiquibaseWrapper"/>
     </changeSet>
 
 </databaseChangeLog>

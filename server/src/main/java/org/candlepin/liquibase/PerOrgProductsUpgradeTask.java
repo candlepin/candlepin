@@ -29,9 +29,9 @@ import java.util.UUID;
 
 
 /**
- * The MultiOrgUpgradeTask performs the post-db upgrade data migration to the cpo_* tables.
+ * The PerOrgProductsUpgradeTask performs the post-db upgrade data migration to the cpo_* tables.
  */
-public class MultiOrgUpgradeTask {
+public class PerOrgProductsUpgradeTask {
 
     private Database database;
     private JdbcConnection connection;
@@ -40,11 +40,11 @@ public class MultiOrgUpgradeTask {
     private Map<String, PreparedStatement> preparedStatements;
 
 
-    public MultiOrgUpgradeTask(Database database) {
+    public PerOrgProductsUpgradeTask(Database database) {
         this(database, new SystemOutLogger());
     }
 
-    public MultiOrgUpgradeTask(Database database, CustomTaskLogger logger) {
+    public PerOrgProductsUpgradeTask(Database database, CustomTaskLogger logger) {
         if (database == null) {
             throw new IllegalArgumentException("database is null");
         }

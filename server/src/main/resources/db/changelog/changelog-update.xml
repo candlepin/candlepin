@@ -80,7 +80,7 @@
     <include file="db/changelog/20150211111319-add-last-guest-update-table.xml"/>
     <include file="db/changelog/20150316122833-add-entitlement-end-date-override.xml"/>
     <include file="db/changelog/20150311151612-force-all-content-metadataexpire-to-0.xml"/>
-    <include file="db/changelog/20150210094558-multiorg-phase-1.xml"/>
+    <include file="db/changelog/20150210094558-perorgproducts-phase-1.xml"/>
     <include file="db/changelog/20150401140006-add-pool-type-to-db.xml"/>
     <include file="db/changelog/20150416090438-mysql-quartz-longblob.xml"/>
     <include file="db/changelog/20150424150412-add-owner-id-to-jobstatus.xml"/>
