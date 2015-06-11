@@ -98,14 +98,6 @@
                     <groupId>org.owasp</groupId>
                     <artifactId>dependency-check-maven</artifactId>
                     <version>1.2.11</version>
-                    <executions>
-                        <execution>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>aggregate</goal>
-                            </goals>
-                        </execution>
-                    </executions>
                     <configuration>
                         <skipProvidedScope>true</skipProvidedScope>
                         <format>ALL</format>
