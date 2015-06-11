@@ -35,9 +35,20 @@ module CandlepinMethods
     end
   end
 
-  # Wrapper for the ruby API's create product. Products do not get cleaned
-  # up when an owner is deleted so we will need to track them.
   def create_product(id=nil, name=nil, params={})
+
+    # If owner given in params, use it, if not, try to find @owner, if neither
+    # is set error out.
+    # NOTE: this is the owner key being passed in as a string
+    if params[:owner]
+      owner = params[:owner]
+    elsif @owner
+      owner = @owner['key']
+    end
+    if ! owner
+      raise "Must call create_product with owner param or set @owner in spec suite."
+    end
+
     # For purposes of testing, you can omit id and name to create with
     # random strings.
     id ||= random_string(nil, true) #id has to be a number. OID encoding fails otherwise
@@ -47,28 +58,52 @@ module CandlepinMethods
     #Product IDs are 32 characters or less
     id = id[0..31]
 
-    product = @cp.create_product(id, name, params)
+    product = @cp.create_product(owner, id, name, params)
     @created_products <<  product
     return product
   end
 
   def create_content(params={})
+    # If owner given in params, use it, if not, try to find @owner, if neither
+    # is set error out.
+    # NOTE: this is the owner key being passed in as a string
+    if params[:owner]
+      owner = params[:owner]
+    elsif @owner
+      owner = @owner['key']
+    end
+    if ! owner
+      raise "Must call create_product with owner param or set @owner in spec suite."
+    end
+
     random_str = random_string(nil, true).to_i
     label = random_string("label")
     # Apologies, passing optional params straight through to prevent just pulling
     # each one out and putting it into a new hash.
-    @cp.create_content(random_str, random_str, label, "yum",
-      random_str, params)
+    @cp.create_content(owner, random_str, random_str, label, "yum", random_str, params)
   end
 
-  def create_batch_content(count=1)
+  def create_batch_content(count=1, params={})
+    # If owner given in params, use it, if not, try to find @owner, if neither
+    # is set error out.
+    # NOTE: this is the owner key being passed in as a string
+    if params[:owner]
+      owner = params[:owner]
+    elsif @owner
+      owner = @owner['key']
+    end
+    if ! owner
+      raise "Must call create_product with owner param or set @owner in spec suite."
+    end
+
     contents = []
     (0..count).each do |i|
       random_str = random_string(nil, true).to_i
-      contents << @cp.create_content(random_str, random_str, random_str, "yum",
+      contents << @cp.create_content(owner, random_str, random_str, random_str, "yum",
         random_str, {:content_url => "/content/dist/rhel/$releasever#{i}/$basearch#{i}/debug#{i}"}, false)
     end
-    @cp.create_batch_content(contents)
+
+    @cp.create_batch_content(owner, contents)
   end
 
   # Wrapper for ruby API so we can track all distributor versions we created and clean them up.
@@ -382,10 +417,10 @@ class StandardExporter < Exporter
                                    :required_tags => "TAG1,TAG2",
                                    :arches => "i386,x86_64"})
 
-    @cp.add_content_to_product(@products[:product1].id, content.id)
-    @cp.add_content_to_product(@products[:product2].id, content.id)
-    @cp.add_content_to_product(@products[:product2].id, arch_content.id)
-    @cp.add_content_to_product(@products[:derived_product].id, content.id)
+    @cp.add_content_to_product(@owner['key'], @products[:product1].id, content.id)
+    @cp.add_content_to_product(@owner['key'], @products[:product2].id, content.id)
+    @cp.add_content_to_product(@owner['key'], @products[:product2].id, arch_content.id)
+    @cp.add_content_to_product(@owner['key'], @products[:derived_product].id, content.id)
 
     end_date = Date.new(2025, 5, 29)
 
@@ -446,9 +481,9 @@ class StandardExporter < Exporter
     arch_content = create_content({:metadata_expire => 6000,
                                    :required_tags => "TAG1,TAG2",
                                    :arches => "i686,x86_64"})
-    @cp.add_content_to_product(product1.id, content.id)
-    @cp.add_content_to_product(product2.id, content.id)
-    @cp.add_content_to_product(product2.id, arch_content.id)
+    @cp.add_content_to_product(@owner['key'], product1.id, content.id)
+    @cp.add_content_to_product(@owner['key'], product2.id, content.id)
+    @cp.add_content_to_product(@owner['key'], product2.id, arch_content.id)
 
     end_date = Date.new(2025, 5, 29)
     @cp.create_subscription(@owner['key'], product1.id, 12, [], '', '12345', '6789', nil, end_date)

@@ -23,9 +23,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -36,6 +34,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -76,9 +76,7 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
     private String description;
 
     @ManyToOne
-    @ForeignKey(name = "fk_activation_key_owner")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_activation_key_owner_fk_idx")
     @NotNull
     private Owner owner;
 
@@ -87,10 +85,13 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<ActivationKeyPool> pools = new HashSet<ActivationKeyPool>();
 
-    @OneToMany(mappedBy = "key")
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    private Set<ActivationKeyProduct> productIds = new HashSet<ActivationKeyProduct>();
+    @ManyToMany
+    @JoinTable(
+        name = "cpo_activation_key_products",
+        joinColumns = {@JoinColumn(name = "key_id")},
+        inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
+    )
+    private Set<Product> products = new HashSet<Product>();
 
     @OneToMany(targetEntity = ActivationKeyContentOverride.class, mappedBy = "key")
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
@@ -161,17 +162,17 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
     }
 
     /**
-     * @return the product ids
+     * @return the products
      */
-    public Set<ActivationKeyProduct> getProductIds() {
-        return productIds;
+    public Set<Product> getProducts() {
+        return products;
     }
 
     /**
-     * @param productIds the set of product Ids to set
+     * @param products the set of product to set
      */
-    public void setProductIds(Set<ActivationKeyProduct> productIds) {
-        this.productIds = productIds;
+    public void setProducts(Set<Product> products) {
+        this.products = products;
     }
 
     /**
@@ -189,20 +190,16 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
     }
 
     public void addProduct(Product product) {
-        ActivationKeyProduct akpid = new ActivationKeyProduct(this, product.getId());
-        this.getProductIds().add(akpid);
+        this.getProducts().add(product);
     }
 
     public void removeProduct(Product product) {
-        ActivationKeyProduct toRemove = null;
-
-        for (ActivationKeyProduct akpid : this.getProductIds()) {
-            if (akpid.getProductId().equals(product.getId())) {
-                toRemove = akpid;
+        for (Product candidate : this.getProducts()) {
+            if (product.getId().equals(candidate.getId())) {
+                this.getProducts().remove(candidate);
                 break;
             }
         }
-        this.getProductIds().remove(toRemove);
     }
 
     /**
@@ -222,8 +219,8 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
             throw new IllegalArgumentException("product is null");
         }
 
-        for (ActivationKeyProduct akp : this.getProductIds()) {
-            if (akp.getProductId().equals(product.getId())) {
+        for (Product candidate : this.getProducts()) {
+            if (product.getId().equals(candidate.getId())) {
                 return true;
             }
         }

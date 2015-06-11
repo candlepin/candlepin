@@ -14,18 +14,15 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.model.Pool.PoolType;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
-import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.Util;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -38,11 +35,12 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+
+
 public class PoolTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;
     @Inject private ProductCurator productCurator;
     @Inject private PoolCurator poolCurator;
-    @Inject private SubscriptionServiceAdapter subAdapter;
     @Inject private ConsumerCurator consumerCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private EntitlementCurator entitlementCurator;
@@ -59,24 +57,22 @@ public class PoolTest extends DatabaseTestFixture {
     public void createObjects() {
         beginTransaction();
 
-        prod1 = TestUtil.createProduct();
-        prod2 = TestUtil.createProduct();
-        productCurator.create(prod1);
-        productCurator.create(prod2);
         owner = new Owner("testowner");
         ownerCurator.create(owner);
 
-        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-        ProvidedProduct providedProduct = new ProvidedProduct(
-            prod2.getId(), prod2.getName());
-        providedProducts.add(providedProduct);
+        prod1 = TestUtil.createProduct(owner);
+        prod2 = TestUtil.createProduct(owner);
+        productCurator.create(prod1);
+        productCurator.create(prod2);
+
+        Set<Product> providedProducts = new HashSet<Product>();
+        providedProducts.add(prod2);
 
         pool = TestUtil.createPool(owner, prod1, providedProducts, 1000);
         subscription = TestUtil.createSubscription(owner, prod1);
-        subAdapter.createSubscription(subscription);
-        pool.setSourceSubscription(
-            new SourceSubscription(subscription.getId(), "master"));
-        providedProduct.setPool(pool);
+        subscription.setId(Util.generateDbUUID());
+
+        pool.setSourceSubscription(new SourceSubscription(subscription.getId(), "master"));
         poolCurator.create(pool);
         owner = pool.getOwner();
 
@@ -92,8 +88,7 @@ public class PoolTest extends DatabaseTestFixture {
 
     @Test
     public void testCreate() {
-        Pool lookedUp = entityManager().find(
-                Pool.class, pool.getId());
+        Pool lookedUp = entityManager().find(Pool.class, pool.getId());
         assertNotNull(lookedUp);
         assertEquals(owner.getId(), lookedUp.getOwner().getId());
         assertEquals(prod1.getId(), lookedUp.getProductId());
@@ -102,14 +97,13 @@ public class PoolTest extends DatabaseTestFixture {
 
     @Test
     public void testCreateWithDerivedProvidedProducts() {
-        Product derivedProd = TestUtil.createProduct();
+        Product derivedProd = TestUtil.createProduct(owner);
         productCurator.create(derivedProd);
 
-        Pool p = TestUtil.createPool(owner, prod1, new HashSet<ProvidedProduct>(), 1000);
-        p.addProvidedProduct(new ProvidedProduct(prod2.getId(), prod2.getName()));
-        Set<DerivedProvidedProduct> derivedProducts = new HashSet<DerivedProvidedProduct>();
-        derivedProducts.add(new DerivedProvidedProduct(derivedProd.getId(),
-            derivedProd.getName(), p));
+        Pool p = TestUtil.createPool(owner, prod1, new HashSet<Product>(), 1000);
+        p.addProvidedProduct(prod2);
+        Set<Product> derivedProducts = new HashSet<Product>();
+        derivedProducts.add(derivedProd);
 
         p.setDerivedProvidedProducts(derivedProducts);
         poolCurator.create(p);
@@ -117,15 +111,15 @@ public class PoolTest extends DatabaseTestFixture {
         Pool lookedUp = entityManager().find(Pool.class, p.getId());
         assertEquals(1, lookedUp.getProvidedProducts().size());
         assertEquals(prod2.getId(),
-            lookedUp.getProvidedProducts().iterator().next().getProductId());
+            lookedUp.getProvidedProducts().iterator().next().getId());
         assertEquals(1, lookedUp.getDerivedProvidedProducts().size());
         assertEquals(derivedProd.getId(),
-            lookedUp.getDerivedProvidedProducts().iterator().next().getProductId());
+            lookedUp.getDerivedProvidedProducts().iterator().next().getId());
     }
 
     @Test
     public void testMultiplePoolsForOwnerProductAllowed() {
-        Pool duplicatePool = createPoolAndSub(owner,
+        Pool duplicatePool = createPool(owner,
                 prod1, -1L, TestUtil.createDate(2009, 11, 30),
                 TestUtil.createDate(2050, 11, 30));
         // Just need to see no exception is thrown.
@@ -134,7 +128,7 @@ public class PoolTest extends DatabaseTestFixture {
 
     @Test
     public void testIsOverflowing() {
-        Pool duplicatePool = createPoolAndSub(owner,
+        Pool duplicatePool = createPool(owner,
                 prod1, -1L, TestUtil.createDate(2009, 11, 30),
                 TestUtil.createDate(2050, 11, 30));
         assertFalse(duplicatePool.isOverflowing());
@@ -142,9 +136,9 @@ public class PoolTest extends DatabaseTestFixture {
 
     @Test
     public void testUnlimitedPool() {
-        Product newProduct = TestUtil.createProduct();
+        Product newProduct = TestUtil.createProduct(owner);
         productCurator.create(newProduct);
-        Pool unlimitedPool = createPoolAndSub(owner, newProduct,
+        Pool unlimitedPool = createPool(owner, newProduct,
                 -1L, TestUtil.createDate(2009, 11, 30),
                 TestUtil.createDate(2050, 11, 30));
         poolCurator.create(unlimitedPool);
@@ -154,10 +148,10 @@ public class PoolTest extends DatabaseTestFixture {
     @Test
     public void createEntitlementShouldIncreaseNumberOfMembers() throws Exception {
         Long numAvailEntitlements = 1L;
-        Product newProduct = TestUtil.createProduct();
+        Product newProduct = TestUtil.createProduct(owner);
 
         productCurator.create(newProduct);
-        Pool consumerPool = createPoolAndSub(owner, newProduct,
+        Pool consumerPool = createPool(owner, newProduct,
                 numAvailEntitlements, TestUtil.createDate(2009, 11, 30),
                 TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
@@ -173,41 +167,44 @@ public class PoolTest extends DatabaseTestFixture {
     public void createEntitlementShouldUpdateConsumer() throws Exception {
         Long numAvailEntitlements = 1L;
 
-        Product newProduct = TestUtil.createProduct();
+        Product newProduct = TestUtil.createProduct(owner);
         productCurator.create(newProduct);
 
-        Pool consumerPool = createPoolAndSub(owner, newProduct, numAvailEntitlements,
-                TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
+        Pool consumerPool = createPool(
+            owner,
+            newProduct,
+            numAvailEntitlements,
+            TestUtil.createDate(2009, 11, 30),
+            TestUtil.createDate(2050, 11, 30)
+        );
+
         poolCurator.create(consumerPool);
 
         assertEquals(0, consumer.getEntitlements().size());
         poolManager.entitleByPool(consumer, consumerPool, 1);
 
-        assertEquals(1, consumerCurator.find(consumer.getId())
-                .getEntitlements().size());
+        assertEquals(1, consumerCurator.find(consumer.getId()).getEntitlements().size());
     }
 
     // test subscription product changed exception
 
     @Test
     public void testLookupPoolsProvidingProduct() {
-        Product parentProduct = TestUtil.createProduct("1", "product-1");
-        Product childProduct = TestUtil.createProduct("2", "product-2");
+        Product parentProduct = TestUtil.createProduct("1", "product-1", owner);
+        Product childProduct = TestUtil.createProduct("2", "product-2", owner);
         productCurator.create(childProduct);
         productCurator.create(parentProduct);
 
-        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-        ProvidedProduct providedProduct = new ProvidedProduct(childProduct.getId(),
-            childProduct.getName());
-        providedProducts.add(providedProduct);
+        Set<Product> providedProducts = new HashSet<Product>();
+        providedProducts.add(childProduct);
 
         Pool pool = TestUtil.createPool(owner, parentProduct, providedProducts, 5);
-        providedProduct.setPool(pool);
         poolCurator.create(pool);
 
 
-        List<Pool> results = poolCurator.listAvailableEntitlementPools(null, owner,
-            childProduct.getId(), null, false);
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(
+            null, owner, childProduct.getId(), null, false
+        );
         assertEquals(1, results.size());
         assertEquals(pool.getId(), results.get(0).getId());
     }
@@ -218,9 +215,9 @@ public class PoolTest extends DatabaseTestFixture {
      */
     @Test
     public void testCreationTimestamp() {
-        Product newProduct = TestUtil.createProduct();
+        Product newProduct = TestUtil.createProduct(owner);
         productCurator.create(newProduct);
-        Pool pool = createPoolAndSub(owner, newProduct, 1L,
+        Pool pool = createPool(owner, newProduct, 1L,
             TestUtil.createDate(2011, 3, 30),
             TestUtil.createDate(2022, 11, 29));
         poolCurator.create(pool);
@@ -230,9 +227,9 @@ public class PoolTest extends DatabaseTestFixture {
 
     @Test
     public void testInitialUpdateTimestamp() {
-        Product newProduct = TestUtil.createProduct();
+        Product newProduct = TestUtil.createProduct(owner);
         productCurator.create(newProduct);
-        Pool pool = createPoolAndSub(owner, newProduct, 1L,
+        Pool pool = createPool(owner, newProduct, 1L,
             TestUtil.createDate(2011, 3, 30),
             TestUtil.createDate(2022, 11, 29));
         pool = poolCurator.create(pool);
@@ -246,9 +243,9 @@ public class PoolTest extends DatabaseTestFixture {
      */
     @Test
     public void testSubsequentUpdateTimestamp() {
-        Product newProduct = TestUtil.createProduct();
+        Product newProduct = TestUtil.createProduct(owner);
         productCurator.create(newProduct);
-        Pool pool = createPoolAndSub(owner, newProduct, 1L,
+        Pool pool = createPool(owner, newProduct, 1L,
             TestUtil.createDate(2011, 3, 30),
             TestUtil.createDate(2022, 11, 29));
 
@@ -268,18 +265,18 @@ public class PoolTest extends DatabaseTestFixture {
 
     @Test
     public void providedProductCleanup() {
-        Product parentProduct = TestUtil.createProduct("1", "product-1");
-        Product childProduct1 = TestUtil.createProduct("child1", "child1");
-        Product childProduct2 = TestUtil.createProduct("child2", "child2");
-        Product childProduct3 = TestUtil.createProduct("child3", "child3");
+        Product parentProduct = TestUtil.createProduct("1", "product-1", owner);
+        Product childProduct1 = TestUtil.createProduct("child1", "child1", owner);
+        Product childProduct2 = TestUtil.createProduct("child2", "child2", owner);
+        Product childProduct3 = TestUtil.createProduct("child3", "child3", owner);
+        Product providedProduct = TestUtil.createProduct("provided", "Child 1", owner);
+        productCurator.create(providedProduct);
         productCurator.create(childProduct1);
         productCurator.create(childProduct2);
         productCurator.create(childProduct3);
         productCurator.create(parentProduct);
 
-        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-        ProvidedProduct providedProduct = new ProvidedProduct("child1",
-            "child1", pool);
+        Set<Product> providedProducts = new HashSet<Product>();
         providedProducts.add(providedProduct);
 
         Pool pool = TestUtil.createPool(owner, parentProduct, providedProducts, 5);
@@ -289,10 +286,8 @@ public class PoolTest extends DatabaseTestFixture {
 
         // Clear the set and create a new one:
         pool.getProvidedProducts().clear();
-        pool.addProvidedProduct(new ProvidedProduct("child2",
-            "child2", pool));
-        pool.addProvidedProduct(new ProvidedProduct("child3",
-            "child3", pool));
+        pool.addProvidedProduct(childProduct2);
+        pool.addProvidedProduct(childProduct3);
         poolCurator.merge(pool);
 
         pool = poolCurator.find(pool.getId());
@@ -301,7 +296,7 @@ public class PoolTest extends DatabaseTestFixture {
 
     @Test
     public void nullAttributeValue() {
-        ProductPoolAttribute ppa = new ProductPoolAttribute("Name", null, "Product");
+        ProductAttribute ppa = new ProductAttribute("Name", null);
         PoolAttribute pa = new PoolAttribute("Name", null);
         ppa.toString();
         pa.toString();

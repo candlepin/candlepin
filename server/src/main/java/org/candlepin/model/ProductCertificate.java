@@ -14,9 +14,7 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -36,7 +34,7 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @XmlRootElement(name = "cert")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@Table(name = "cp_product_certificate")
+@Table(name = "cpo_product_certificates")
 @Entity
 public class ProductCertificate extends AbstractCertificate {
 
@@ -53,9 +51,7 @@ public class ProductCertificate extends AbstractCertificate {
     }
 
     @ManyToOne
-    @ForeignKey(name = "fk_cert_product")
-    @JoinColumn(nullable = false)
-    @Index(name = "cp_prodcert_prod_fk_idx")
+    @JoinColumn(name = "product_uuid", nullable = false)
     @NotNull
     private Product product;
 

@@ -17,7 +17,7 @@ describe 'Derived Products' do
                                          :content_url => '/content/dist/rhel/$releasever/$basearch/os',
                                          :metadata_expire => 6400})
 
-    @cp.add_content_to_product(@eng_product.id, @eng_product_content.id, true)
+    @cp.add_content_to_product(@owner['key'], @eng_product.id, @eng_product_content.id, true)
 
     installed_prods = [{'productId' => @eng_product['id'],
       'productName' => @eng_product['name']}]
@@ -34,7 +34,7 @@ describe 'Derived Products' do
     @guest1 = @user.register(random_string('guest'), :system, nil,
       {'virt.uuid' => @uuid, 'virt.is_guest' => 'true'}, nil, nil,
       [], installed_prods)
-    @guest_client = Candlepin.new(nil, nil, @guest1['idCert']['cert'], @guest1['idCert']['key']) 
+    @guest_client = Candlepin.new(nil, nil, @guest1['idCert']['cert'], @guest1['idCert']['key'])
     # create subscription with sub-pool data:
     @datacenter_product = create_product(nil, nil, {
       :attributes => {
@@ -102,8 +102,7 @@ describe 'Derived Products' do
   it 'transfers sub-product data to main pool' do
     @main_pool['derivedProductId'].should == @derived_product['id']
     @main_pool['derivedProvidedProducts'].size.should == 1
-    @main_pool['derivedProvidedProducts'][0]['productId'].should ==
-      @eng_product['id']
+    @main_pool['derivedProvidedProducts'][0]['productId'].should == @eng_product['id']
 
     @physical_client.consume_pool @main_pool['id']
     ents = @physical_client.list_entitlements
@@ -156,8 +155,7 @@ describe 'Derived Products' do
     pool = pools.first
     pool['derivedProductId'].should == @derived_product['id']
     pool['derivedProvidedProducts'].size.should == 1
-    pool['derivedProvidedProducts'][0]['productId'].should ==
-      @eng_product['id']
+    pool['derivedProvidedProducts'][0]['productId'].should == @eng_product['id']
   end
 
   it 'prevents distributor from attaching without necessisary capabilities' do

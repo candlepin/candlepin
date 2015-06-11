@@ -18,193 +18,63 @@ describe 'Product Resource' do
         'derived_product_id' => @derived_product.id,
         'derived_provided_products' => [@derived_prov_product.id]
       })
-
   end
 
-  it 'updates individual product fields' do
-    prod = create_product(nil, 'tacos', {:multiplier => 2, :dependentProductIds => [2, 4]})
-    prod2 = create_product(nil, 'enchiladas', {:multiplier => 4})
-
-    prod.name.should_not == prod2.name
-    prod.multiplier.should_not == prod2.multiplier
-    prod.attributes.should_not == prod2.attributes
-    prod.dependentProductIds.should_not == prod2.dependentProductIds
-
-    prod = @cp.update_product(prod.id, {:name => 'enchiladas'})
-
-    prod.name.should == prod2.name
-    prod.multiplier.should_not == prod2.multiplier
-    prod.attributes.should_not == prod2.attributes
-    prod.dependentProductIds.should_not == prod2.dependentProductIds
-
-    #the idea here is attributes should not change if set equal to nil
-    #then updated, so store it as a temp variable to compare to after
-    #update_product is called.
-    temp_attributes = prod.attributes
-
-    prod = @cp.update_product(prod.id, {:multiplier => prod2.multiplier, :attributes => nil})
-
-    prod.multiplier.should == prod2.multiplier
-    prod.attributes.should == temp_attributes
-
-    prod = @cp.update_product(prod.id, {:dependentProductIds => prod2.dependentProductIds})
-
-    prod.dependentProductIds.should == prod2.dependentProductIds
-  end
-
-  it 'does not update product name' do
-    prod = create_product(nil, 'iron maiden')
-    prod2 = create_product(nil, nil)
-
-    prod.name.should == 'iron maiden'
-
-    prod = @cp.update_product(prod.id, prod2)
-
-    prod.name.should == 'iron maiden'
-  end
-
-  it 'removes content from products.' do
-    prod = create_product
-    content = create_content
-    @cp.add_content_to_product(prod['id'], content['id'])
-    prod = @cp.get_product(prod['id'])
-    prod['productContent'].size.should == 1
-
-    @cp.remove_content_from_product(prod['id'], content['id'])
-    prod = @cp.get_product(prod['id'])
-    prod['productContent'].should be_empty
-  end
-
-  it 'allows regular users to view products' do
-    owner = create_owner random_string('test')
-    user_cp = user_client(owner, random_string('testuser'), true)
-    prod = create_product
-    user_cp.get_product(prod['id'])
-  end
-
-  it 'create two products with the same name' do
-    product1 = create_product(nil, 'doppelganger')
-    product2 = create_product(nil, 'doppelganger')
-    product1.id.should_not  == product2.id
-    product1.name.should == product2.name
-  end
-
-  it 'retrieves the owners of an active product' do
-    owner = create_owner(random_string('owner'))
-    product = create_product(random_string("test_id"),
-      random_string("test_name"))
-    provided_product = create_product()
-    @cp.create_subscription(owner['key'], product.id, 10, [provided_product.id])
-    @cp.refresh_pools(owner['key'])
-    user = user_client(owner, random_string('billy'))
-    system = consumer_client(user, 'system6')
-    system.consume_product(product.id)
-    product_owners = @cp.get_product_owners([provided_product.id])
-    product_owners.should have(1).things
-    product_owners[0]['key'].should == owner['key']
-  end
-
-  it 'refreshes pools for specific products' do
-    owner = create_owner(random_string('owner'))
-    owner_client = user_client(owner, random_string('testuser'))
-    product = create_product(random_string("test_id"),
-      random_string("test_name"))
-    provided_product = create_product()
-    @cp.create_subscription(owner['key'], product.id, 10, [provided_product.id])
-    pool = owner_client.list_pools(:owner => owner.id)
-    pool.should have(0).things
-    @cp.refresh_pools_for_product(product.id)
-    pool = owner_client.list_pools(:owner => owner.id)
-    pool.should have(1).things
-    pool[0]['owner']['key'].should == owner['key']
-  end
-
-  it 'does not refresh pools without a given product' do
-    owner = create_owner(random_string('owner'))
-    owner_client = user_client(owner, random_string('testuser'))
-    product = create_product(random_string("test_id"),
-      random_string("test_name"))
-    product2 = create_product()
-    provided_product = create_product()
-    @cp.create_subscription(owner['key'], product.id, 10, [provided_product.id])
-    pool = owner_client.list_pools(:owner => owner.id)
-    pool.should have(0).things
-    @cp.refresh_pools_for_product(product2.id)
-    pool = owner_client.list_pools(:owner => owner.id)
-    pool.should have(0).things
-  end
-
-  it 'refreshes pools for specific provided products' do
-    owner = create_owner(random_string('owner'))
-    owner_client = user_client(owner, random_string('testuser'))
-    product = create_product(random_string("test_id"),
-      random_string("test_name"))
-    provided_product = create_product()
-    @cp.create_subscription(owner['key'], product.id, 10, [provided_product.id])
-    pool = owner_client.list_pools(:owner => owner.id)
-    pool.should have(0).things
-    @cp.refresh_pools_for_product(provided_product.id)
-    pool = owner_client.list_pools(:owner => owner.id)
-    pool.should have(1).things
-    pool[0]['owner']['key'].should == owner['key']
-  end
-
-  it 'lists all products in bulk fetch' do
-    prod1_id = random_string("test_id")
-    prod2_id = random_string("test_id")
-    prod3_id = random_string("test_id")
-    prod1 = create_product(prod1_id, random_string("test_name"))
-    prod2 = create_product(prod2_id, random_string("test_name"))
-    prod3 = create_product(prod3_id, random_string("test_name"))
-    all_products = @cp.list_products()
-    all_products.size.should > 2
-
-    # Pick two products to use in a bulk get
-    first_prod_id = all_products[0]['id']
-    second_prod_id = all_products[1]['id']
-    prod_ids_to_get = [first_prod_id, second_prod_id]
-
-    # Get 2 products
-    bulk_get_products = @cp.list_products(prod_ids_to_get)
-    bulk_get_products.size.should == 2
-
-    # Make sure it got the correct ones
-    prod_ids_to_get.index(bulk_get_products[0]['id']).should_not == nil
-    prod_ids_to_get.index(bulk_get_products[1]['id']).should_not == nil
-  end
-
-  it 'should return correct exception for contraint violations' do
-    lambda {
-      prod = create_product(random_string("test_id"),
-                          random_string("test_name"),
-                          {:attributes => {:support_level => "a" * 256}})
-    }.should raise_exception(RestClient::BadRequest)
-  end
-
-  it 'bad request on attempt to delete product attached to sub' do
+  it 'throws exception on write operation' do
     lambda do
-      @cp.delete_product(@product.id)
+      @cp.post("/products", {})
+    end.should raise_exception(RestClient::BadRequest)
+
+    lambda do
+      @cp.put("/products/dummyid", {})
+    end.should raise_exception(RestClient::BadRequest)
+
+    lambda do
+      @cp.post("/products/dummyid/batch_content", {})
+    end.should raise_exception(RestClient::BadRequest)
+
+    lambda do
+      @cp.post("/products/dummyid/content/contentid", {})
+    end.should raise_exception(RestClient::BadRequest)
+
+    lambda do
+      @cp.delete("/products/dummyid")
+    end.should raise_exception(RestClient::BadRequest)
+
+    lambda do
+      @cp.put("/products/dummyid/subscriptions", {})
     end.should raise_exception(RestClient::BadRequest)
   end
 
-  it 'bad request on attempt to delete provided product attached to sub' do
-    lambda do
-      @cp.delete_product(@prov_product.id)
-    end.should raise_exception(RestClient::BadRequest)
+  it "censors owner information on owner-agnostic retrieval" do
+    prod_id = "test_prod"
+
+    owner1 = create_owner(random_string("test_owner_1"))
+    owner2 = create_owner(random_string("test_owner_2"))
+    owner3 = create_owner(random_string("test_owner_3"))
+
+    prod1 = create_product(prod_id, "test product", {:owner => owner1['key']})
+    prod2 = create_product(prod_id, "test product", {:owner => owner2['key']})
+    prod3 = create_product(prod_id, "test product", {:owner => owner3['key']})
+
+    result = @cp.get("/products/#{prod_id}")
+    result.should_not be_nil
+
+    result["id"].should == prod_id
+    result["owner"].should be_nil
   end
 
-  it 'bad request on attempt to delete derived product attached to sub' do
-    lambda do
-      @cp.delete_product(@derived_product.id)
-    end.should raise_exception(RestClient::BadRequest)
-  end
+  it "censors owner information for owner-agnostic statistics" do
+    @cp.generate_statistics()
 
-  it 'bad request on attempt to delete derived provided product attached to sub' do
-    lambda do
-      @cp.delete_product(@derived_prov_product.id)
-    end.should raise_exception(RestClient::BadRequest)
-  end
+    result = @cp.get("/products/#{@product.id}/statistics")
+    result.should_not be_nil
+    result.length.should == 3
 
+    result.each do |stats|
+      stats['ownerId'].should be_nil
+    end
+  end
 
 end
 

@@ -63,6 +63,7 @@ public class EventSinkImplTest {
     private EventSinkImpl eventSinkImpl;
     private Principal principal;
     private ObjectMapper mapper;
+    private Owner o;
 
     @Before
     public void init() throws Exception {
@@ -77,6 +78,7 @@ public class EventSinkImplTest {
         when(mockSessionFactory.getServerLocator()).thenReturn(mockLocator);
         this.mapper = spy(new ObjectMapper());
         this.eventSinkImpl = createEventSink(mockSessionFactory);
+        o = new Owner("test owner");
     }
 
     /**
@@ -163,8 +165,7 @@ public class EventSinkImplTest {
     @Test
     public void ownerCreatedShouldEmitSuccessfully()
         throws Exception {
-        Owner owner = new Owner("Test Owner ");
-        eventSinkImpl.emitOwnerCreated(owner);
+        eventSinkImpl.emitOwnerCreated(o);
         eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
@@ -172,7 +173,7 @@ public class EventSinkImplTest {
     @Test
     public void poolCreatedShouldEmitSuccessfully()
         throws Exception {
-        Pool pool = TestUtil.createPool(TestUtil.createProduct());
+        Pool pool = TestUtil.createPool(o, TestUtil.createProduct(o));
         eventSinkImpl.emitPoolCreated(pool);
         eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
@@ -209,8 +210,8 @@ public class EventSinkImplTest {
     public void keyWithPoolsShouldEmitSuccessfully()
         throws Exception {
         ArrayList<Pool> pools = new ArrayList<Pool>();
-        pools.add(TestUtil.createPool(TestUtil.createProduct()));
-        pools.add(TestUtil.createPool(TestUtil.createProduct()));
+        pools.add(TestUtil.createPool(o, TestUtil.createProduct(o)));
+        pools.add(TestUtil.createPool(o, TestUtil.createProduct(o)));
         ActivationKey key = TestUtil.createActivationKey(new Owner("deadbeef"), pools);
         eventSinkImpl.emitActivationKeyCreated(key);
         eventSinkImpl.sendEvents();

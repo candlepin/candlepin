@@ -27,6 +27,8 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -39,12 +41,12 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProvidedProduct;
-import org.candlepin.model.Subscription;
+import org.candlepin.model.ProductContent;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -57,10 +59,12 @@ import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.sync.SubscriptionReconciler;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
@@ -88,7 +92,6 @@ public class CandlepinPoolManager implements PoolManager {
     private PoolCurator poolCurator;
     private static Logger log = LoggerFactory.getLogger(CandlepinPoolManager.class);
 
-    private SubscriptionServiceAdapter subAdapter;
     private EventSink sink;
     private EventFactory eventFactory;
     private Configuration config;
@@ -99,9 +102,11 @@ public class CandlepinPoolManager implements PoolManager {
     private EntitlementCertServiceAdapter entCertAdapter;
     private EntitlementCertificateCurator entitlementCertificateCurator;
     private ComplianceRules complianceRules;
-    private ProductCache productCache;
+    private ProductCurator productCurator;
     private AutobindRules autobindRules;
     private ActivationKeyRules activationKeyRules;
+    private ProductCurator prodCurator;
+    private ContentCurator contentCurator;
 
     /**
      * @param poolCurator
@@ -112,16 +117,15 @@ public class CandlepinPoolManager implements PoolManager {
      */
     @Inject
     public CandlepinPoolManager(PoolCurator poolCurator,
-        SubscriptionServiceAdapter subAdapter,
-        ProductCache productCache,
+        ProductCurator productCurator,
         EntitlementCertServiceAdapter entCertAdapter, EventSink sink,
         EventFactory eventFactory, Configuration config, Enforcer enforcer,
         PoolRules poolRules, EntitlementCurator curator1, ConsumerCurator consumerCurator,
         EntitlementCertificateCurator ecC, ComplianceRules complianceRules,
-        AutobindRules autobindRules, ActivationKeyRules activationKeyRules) {
+        AutobindRules autobindRules, ActivationKeyRules activationKeyRules,
+        ProductCurator prodCurator, ContentCurator contentCurator) {
 
         this.poolCurator = poolCurator;
-        this.subAdapter = subAdapter;
         this.sink = sink;
         this.eventFactory = eventFactory;
         this.config = config;
@@ -132,63 +136,315 @@ public class CandlepinPoolManager implements PoolManager {
         this.entCertAdapter = entCertAdapter;
         this.entitlementCertificateCurator = ecC;
         this.complianceRules = complianceRules;
-        this.productCache = productCache;
+        this.productCurator = productCurator;
         this.autobindRules = autobindRules;
         this.activationKeyRules = activationKeyRules;
+        this.prodCurator = prodCurator;
+        this.contentCurator = contentCurator;
     }
 
     /*
      * We need to update/regen entitlements in the same transaction we update pools
      * so we don't miss anything
      */
-    void refreshPoolsWithRegeneration(Owner owner, boolean lazy) {
-        log.info("Refreshing pools for owner: " + owner.getKey());
-        List<String> subIds = subAdapter.getSubscriptionIds(owner);
-        log.debug("Found " + subIds.size() + " existing subscriptions.");
+    void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter, Owner owner, boolean lazy) {
+        long start = System.currentTimeMillis();
+        log.info("Refreshing pools for owner: {}", owner);
+        List<Subscription> subs = subAdapter.getSubscriptions(owner);
+
+        log.debug("Found {} existing subscriptions.", subs.size());
+
+        SubscriptionReconciler reconciler = new SubscriptionReconciler();
+        reconciler.reconcile(owner, subs, poolCurator);
+
+        Set<String> subIds = Util.newSet();
+
+        // TODO:
+        // Does changedContent have a use? Should refreshing products imply refreshing content?
+        Set<Content> changedContent = refreshContent(owner, subs);
+        Set<Product> changedProducts = refreshProducts(owner, subs);
 
         List<String> deletedSubs = new LinkedList<String>();
-        for (String subId : subIds) {
-            Subscription sub = subAdapter.getSubscription(subId);
+        for (Subscription sub : subs) {
+            String subId = sub.getId();
+            subIds.add(subId);
 
-            // If this sub has been removed since getSubscriptionIds was called,
-            if (sub == null) {
-                deletedSubs.add(subId);
-                log.warn("Couldn't load subscription, assuming it has been deleted: " + subId);
-                continue;
-            }
-
-            log.debug("Processing subscription: " + sub);
+            log.debug("Processing subscription: {}", sub);
 
             // Remove expired subscriptions
             if (isExpired(sub)) {
                 deletedSubs.add(subId);
-                log.info("Deleting expired subscription: " + sub);
-                subAdapter.deleteSubscription(sub);
+                log.info("Skipping expired subscription: {}", sub);
                 continue;
             }
 
-            refreshPoolsForSubscription(sub, lazy);
+            refreshPoolsForSubscription(sub, lazy, changedProducts);
         }
 
         // We deleted some, need to take that into account so we
         // remove everything that isn't actually active
         subIds.removeAll(deletedSubs);
         // delete pools whose subscription disappeared:
-        for (Pool p : poolCurator.getPoolsFromBadSubs(owner, subIds)) {
-            if (p.getType() == PoolType.NORMAL || p.getType() == PoolType.BONUS ||
-                    p.getType() == PoolType.UNMAPPED_GUEST) {
-                deletePool(p);
+        for (Pool pool : poolCurator.getPoolsFromBadSubs(owner, subIds)) {
+            if (pool.getSourceSubscription() != null && !pool.getType().isDerivedType()) {
+                deletePool(pool);
             }
         }
 
         // TODO: break this call into smaller pieces.  There may be lots of floating pools
         List<Pool> floatingPools = poolCurator.getOwnersFloatingPools(owner);
-        updateFloatingPools(floatingPools, lazy);
+        updateFloatingPools(floatingPools, lazy, changedProducts);
+        log.info("Refresh pools for owner: {} completed in: {}ms", owner.getKey(),
+                System.currentTimeMillis() - start);
+    }
+
+    /**
+     * Refreshes the specified content under the given owner/org.
+     *
+     * @param owner
+     *  The owner for which to refresh content
+     *
+     * @param subs
+     *  The subscriptions from which to pull content
+     *
+     * @return
+     *  the set of existing content which was updated/changed as a result of this operation
+     */
+    protected Set<Content> refreshContent(Owner owner, Collection<Subscription> subs) {
+        // All inbound content, mapped by content ID. We're assuming it's all under the same org
+        Map<String, Content> content = new HashMap<String, Content>();
+
+        log.info("Refreshing content for {} subscriptions.", subs.size());
+
+        for (Subscription sub : subs) {
+            // Grab all the content from each product
+            this.addProductContentToMap(content, sub.getProduct());
+            this.addProductContentToMap(content, sub.getDerivedProduct());
+
+            for (Product product : sub.getProvidedProducts()) {
+                this.addProductContentToMap(content, product);
+            }
+
+            for (Product product : sub.getDerivedProvidedProducts()) {
+                this.addProductContentToMap(content, product);
+            }
+        }
+
+        Set<Content> changed = this.getChangedContent(owner, content.values());
+
+        // Go back through each sub and update content references so we don't end up with dangling,
+        // transient or duplicate references on any of the subs' products.
+        for (Subscription sub : subs) {
+            this.updateContentRefs(sub.getProduct());
+            this.updateContentRefs(sub.getDerivedProduct());
+
+            for (Product product : sub.getProvidedProducts()) {
+                this.updateContentRefs(product);
+            }
+
+            for (Product product : sub.getDerivedProvidedProducts()) {
+                this.updateContentRefs(product);
+            }
+        }
+
+        return changed;
+    }
+
+    private void addProductContentToMap(Map<String, Content> contentMap, Product product) {
+        if (product == null) {
+            return;
+        }
+
+        for (ProductContent pc : product.getProductContent()) {
+            Content content = pc.getContent();
+
+            // Check that the content hasn't changed if we've already seen it.
+            Content existing = contentMap.get(content.getId());
+
+            if (existing != null && !content.equals(existing)) {
+                log.warn("Content changes detected: {}", content.getId());
+            }
+
+            contentMap.put(content.getId(), content);
+        }
+    }
+
+    private void updateContentRefs(Product product) {
+        if (product == null) {
+            return;
+        }
+
+        for (ProductContent pc : product.getProductContent()) {
+            Content content = pc.getContent();
+            Content existing = this.contentCurator.lookupById(content.getOwner(), content.getId());
+
+            if (existing == null) {
+                // This should never happen.
+                throw new RuntimeException("Unable to resolve content reference");
+            }
+
+            pc.setContent(existing);
+        }
+    }
+
+    public Set<Content> getChangedContent(Owner owner, Collection<Content> content) {
+        Set<Content> changed = Util.newSet();
+
+        log.debug("Syncing {} incoming content.", content.size());
+
+        for (Content inbound : content) {
+            Content existing = this.contentCurator.lookupById(owner, inbound.getId());
+
+            if (existing == null) {
+                log.info("Creating new content for org {}: {}", owner.getKey(), inbound.getId());
+                inbound.setOwner(owner);
+
+                this.contentCurator.create(inbound);
+            }
+            else if (!inbound.equals(existing)) {
+                log.info("Updating existing content for org {}: {}", owner.getKey(), inbound.getId());
+                inbound.setOwner(owner);
+
+                this.contentCurator.createOrUpdate(inbound);
+                changed.add(inbound);
+            }
+        }
+
+        return changed;
+    }
+
+    Set<Product> refreshProducts(Owner o, List<Subscription> subs) {
+        /*
+         * Build a master list of all products on the incoming subscriptions. Note that
+         * these product objects are detached, and need to be synced with what's in the
+         * database.
+         */
+        Map<String, Product> products = new HashMap<String, Product>();
+
+        log.info("Refreshing products for {} subscriptions.", subs.size());
+
+        for (Subscription sub : subs) {
+            this.addProductToMap(products, sub.getProduct());
+            this.addProductToMap(products, sub.getDerivedProduct());
+
+            for (Product product : sub.getProvidedProducts()) {
+                this.addProductToMap(products, product);
+            }
+
+            for (Product product : sub.getDerivedProvidedProducts()) {
+                this.addProductToMap(products, product);
+            }
+        }
+
+        Set<Product> changed = this.getChangedProducts(o, products.values());
+
+        // Go back through each sub and update product references so we don't end up with dangling,
+        // transient or duplicate references on any of the subs.
+        for (Subscription sub : subs) {
+            sub.setProduct(this.resolveProductRef(sub.getProduct()));
+
+            if (sub.getDerivedProduct() != null) {
+                sub.setDerivedProduct(this.resolveProductRef(sub.getDerivedProduct()));
+            }
+
+            Set<Product> pset = new HashSet<Product>();
+            for (Product product : sub.getProvidedProducts()) {
+                pset.add(this.resolveProductRef(product));
+            }
+            sub.setProvidedProducts(pset);
+
+            pset.clear();
+            for (Product product : sub.getDerivedProvidedProducts()) {
+                pset.add(this.resolveProductRef(product));
+            }
+            sub.setDerivedProvidedProducts(pset);
+        }
+
+        return changed;
+    }
+
+    private void addProductToMap(Map<String, Product> productMap, Product product) {
+        if (product != null) {
+            // Check that the product hasn't changed if we've already seen it.
+            Product existing = productMap.get(product.getId());
+
+            if (existing != null && !this.hasProductChanged(existing, product)) {
+                log.warn("Product changes detected: {}", product.getId());
+            }
+
+            productMap.put(product.getId(), product);
+        }
+    }
+
+    private Product resolveProductRef(Product product) {
+        Product resolved = null;
+
+        if (product != null && product.getOwner() != null && product.getId() != null) {
+            resolved = this.prodCurator.lookupById(product.getOwner(), product.getId());
+        }
+
+        return resolved != null ? resolved : product;
+    }
+
+    public Set<Product> getChangedProducts(Owner o, Collection<Product> allProducts) {
+        Set<Product> changedProducts = Util.newSet();
+
+        HashMap<String, Content> cmap = new HashMap<String, Content>();
+
+        log.debug("Syncing {} incoming products.", allProducts.size());
+        for (Product incoming : allProducts) {
+            Product existing = prodCurator.lookupById(o, incoming.getId());
+
+            if (existing == null) {
+                log.info("Creating new product for org {}: {}", o.getKey(), incoming.getId());
+                incoming.setOwner(o);
+                prodCurator.create(incoming);
+            }
+            else {
+                if (hasProductChanged(existing, incoming)) {
+                    log.info("Product changed for org {}: {}", o.getKey(), incoming.getId());
+                    prodCurator.createOrUpdate(incoming);
+                    changedProducts.add(incoming);
+                }
+            }
+        }
+
+        return changedProducts;
+    }
+
+    // TODO: move to comparator? Perhaps updating Product.equals and using that would be better?
+    protected final boolean hasProductChanged(Product existingProd, Product importedProd) {
+        // trying to go in order from least to most work.
+        if (!existingProd.getName().equals(importedProd.getName())) {
+            return true;
+        }
+
+        if (!existingProd.getMultiplier().equals(importedProd.getMultiplier())) {
+            return true;
+        }
+
+        if (existingProd.getAttributes().size() != importedProd.getAttributes().size()) {
+            return true;
+        }
+        if (Sets.intersection(existingProd.getAttributes(),
+            importedProd.getAttributes()).size() != existingProd.getAttributes().size()) {
+            return true;
+        }
+
+        if (existingProd.getProductContent().size() != importedProd.getProductContent().size()) {
+            return true;
+        }
+        if (Sets.intersection(new HashSet<ProductContent>(existingProd.getProductContent()),
+                new HashSet<ProductContent>(importedProd.getProductContent())).size() !=
+                existingProd.getProductContent().size()) {
+            return true;
+        }
+
+        return false;
     }
 
     @Transactional
-    void refreshPoolsForSubscription(Subscription sub, boolean lazy) {
-
+    void refreshPoolsForSubscription(Subscription sub, boolean lazy, Set<Product> changedProducts) {
         // These don't all necessarily belong to this owner
         List<Pool> subscriptionPools = poolCurator.getPoolsBySubscriptionId(sub.getId());
         log.debug("Found {} pools for subscription {}", subscriptionPools.size(),
@@ -206,31 +462,24 @@ public class CandlepinPoolManager implements PoolManager {
         //  if only one of the pair still exists.
         createPoolsForSubscription(sub, subscriptionPools);
 
+        // don't update floating here, we'll do that later
+        // so we don't update anything twice
         regenerateCertificatesByEntIds(
-            // don't update floating here, we'll do that later
-            // so we don't update anything twice
-            updatePoolsForSubscription(subscriptionPools, sub, false), lazy);
+            updatePoolsForSubscription(subscriptionPools, sub, false, changedProducts), lazy
+        );
     }
 
     public void cleanupExpiredPools() {
         List<Pool> pools = poolCurator.listExpiredPools();
-        log.info("Expired pools: " + pools.size());
+        log.info("Expired pools: {}", pools.size());
         for (Pool p : pools) {
             if (p.hasAttribute("derived_pool")) {
                 // Derived pools will be cleaned up when their parent entitlement
                 // is revoked.
                 continue;
             }
-            log.info("Cleaning up expired pool: " + p.getId() +
-                " (" + p.getEndDate() + ")");
+            log.info("Cleaning up expired pool: {} ({})", p.getId(), p.getEndDate());
 
-            if (!subAdapter.isReadOnly()) {
-                Subscription sub = subAdapter.getSubscription(p.getSubscriptionId());
-                // In case it was already deleted:
-                if (sub != null) {
-                    subAdapter.deleteSubscription(sub);
-                }
-            }
             deletePool(p);
         }
     }
@@ -265,7 +514,7 @@ public class CandlepinPoolManager implements PoolManager {
         for (Pool existing : existingPools) {
             if (!existing.getOwner().equals(sub.getOwner())) {
                 toRemove.add(existing);
-                log.warn("Removing " + existing + " because it exists in the wrong org");
+                log.warn("Removing {} because it exists in the wrong org", existing);
                 if (existing.getType() == PoolType.NORMAL ||
                     existing.getType() == PoolType.BONUS) {
                     deletePool(existing);
@@ -286,7 +535,8 @@ public class CandlepinPoolManager implements PoolManager {
      * subscriptions
      */
     Set<String> updatePoolsForSubscription(List<Pool> existingPools,
-        Subscription sub, boolean updateStackDerived) {
+            Subscription sub, boolean updateStackDerived,
+            Set<Product> changedProducts) {
 
         /*
          * Rules need to determine which pools have changed, but the Java must
@@ -297,8 +547,7 @@ public class CandlepinPoolManager implements PoolManager {
             return new HashSet<String>(0);
         }
 
-        log.debug("Updating {} pools for existing subscription: {}",
-                existingPools.size(), sub);
+        log.debug("Updating {} pools for existing subscription: {}", existingPools.size(), sub);
 
         Map<String, EventBuilder> poolEvents = new HashMap<String, EventBuilder>();
         for (Pool existing : existingPools) {
@@ -309,19 +558,17 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // Hand off to rules to determine which pools need updating:
-        List<PoolUpdate> updatedPools = poolRules.updatePools(sub,
-            existingPools);
+        List<PoolUpdate> updatedPools = poolRules.updatePools(sub, existingPools, changedProducts);
 
         // Update subpools if necessary
         if (updateStackDerived && !updatedPools.isEmpty() &&
                 sub.createsSubPools() && sub.isStacked()) {
             // Get all pools for the subscriptions owner derived from the subscriptions
             // stack id, because we cannot look it up by subscriptionId
-            List<Pool> subPools = getOwnerSubPoolsForStackId(
-                sub.getOwner(), sub.getStackId());
+            List<Pool> subPools = getOwnerSubPoolsForStackId(sub.getOwner(), sub.getStackId());
 
             for (Pool subPool : subPools) {
-                PoolUpdate update = updatePoolFromStack(subPool);
+                PoolUpdate update = updatePoolFromStack(subPool, changedProducts);
 
                 if (update.changed()) {
                     updatedPools.add(update);
@@ -329,7 +576,8 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
-        return processPoolUpdates(poolEvents, updatedPools);
+        Set<String> entsToRegen = processPoolUpdates(poolEvents, updatedPools);
+        return entsToRegen;
     }
 
     private Set<String> processPoolUpdates(
@@ -338,12 +586,11 @@ public class CandlepinPoolManager implements PoolManager {
         for (PoolUpdate updatedPool : updatedPools) {
 
             Pool existingPool = updatedPool.getPool();
-            log.info("Pool changed: " + updatedPool.toString());
+            log.info("Pool changed: {}", updatedPool.toString());
 
             // Delete pools the rules signal needed to be cleaned up:
             if (existingPool.isMarkedForDelete()) {
-                log.warn("Deleting pool as requested by rules: " +
-                    existingPool.getId());
+                log.warn("Deleting pool as requested by rules: {}", existingPool.getId());
                 deletePool(existingPool);
                 continue;
             }
@@ -385,7 +632,7 @@ public class CandlepinPoolManager implements PoolManager {
      * @return
      */
     @Transactional
-    void updateFloatingPools(List<Pool> floatingPools, boolean lazy) {
+    void updateFloatingPools(List<Pool> floatingPools, boolean lazy, Set<Product> changedProducts) {
         /*
          * Rules need to determine which pools have changed, but the Java must
          * send out the events. Create an event for each pool that could change,
@@ -399,13 +646,13 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // Hand off to rules to determine which pools need updating:
-        List<PoolUpdate> updatedPools = poolRules.updatePools(floatingPools);
+        List<PoolUpdate> updatedPools = poolRules.updatePools(floatingPools, changedProducts);
         regenerateCertificatesByEntIds(processPoolUpdates(poolEvents, updatedPools), lazy);
     }
 
     /**
      * @param sub
-     * @return the newly created Pool
+     * @return the newly created Pools
      */
     @Override
     public List<Pool> createPoolsForSubscription(Subscription sub) {
@@ -423,17 +670,58 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public Pool createPool(Pool p) {
-        Pool created = poolCurator.create(p);
-        if (log.isDebugEnabled()) {
-            log.debug("   new pool: " + p);
-        }
+    public Pool createPool(Pool pool) {
+        Pool created = poolCurator.create(pool);
+        log.debug("   new pool: {}", pool);
+
         if (created != null) {
             sink.emitPoolCreated(created);
         }
 
         return created;
     }
+
+    @Override
+    public void updatePoolsForSubscription(Subscription subscription) {
+        if (subscription == null) {
+            throw new IllegalArgumentException("subscription is null");
+        }
+
+        // Ensure the subscription is not expired
+        if (subscription.getEndDate() != null && subscription.getEndDate().before(new Date())) {
+            this.deletePoolsForSubscription(subscription);
+        }
+        else {
+            this.refreshPoolsForSubscription(subscription, true, Collections.<Product>emptySet());
+        }
+    }
+
+    @Override
+    public void deletePoolsForSubscription(Subscription subscription) {
+        if (subscription == null) {
+            throw new IllegalArgumentException("subscription is null");
+        }
+
+        if (subscription.getId() != null) {
+            for (Pool pool : this.getPoolsBySubscriptionId(subscription.getId())) {
+                this.deletePool(pool);
+            }
+        }
+    }
+
+    @Override
+    public void deletePoolsForSubscriptions(Collection<String> subscriptionIds) {
+        if (subscriptionIds == null) {
+            throw new IllegalArgumentException("subscriptionIds is null");
+        }
+
+        if (subscriptionIds.size() > 0) {
+            for (Pool pool : this.poolCurator.getPoolsBySubscriptionIds(subscriptionIds)) {
+                this.deletePool(pool);
+            }
+        }
+    }
+
 
     @Override
     public Pool find(String poolId) {
@@ -484,7 +772,7 @@ public class CandlepinPoolManager implements PoolManager {
             for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
                 fullList.add(cip.getId());
             }
-            log.info("No entitlements available for products: " + fullList);
+            log.info("No entitlements available for products: {}", fullList);
             return null;
         }
 
@@ -520,8 +808,7 @@ public class CandlepinPoolManager implements PoolManager {
         throws EntitlementRefusedException {
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
         if (!host.getOwner().equals(guest.getOwner())) {
-            log.debug("Host " + host.getUuid() + " and guest " +
-                guest.getUuid() + " have different owners.");
+            log.debug("Host {} and guest {} have different owners", host.getUuid(), guest.getUuid());
             return entitlements;
         }
         Owner owner = host.getOwner();
@@ -535,7 +822,7 @@ public class CandlepinPoolManager implements PoolManager {
             entitleDate, owner, null, possiblePools);
 
         if (bestPools == null) {
-            log.info("No entitlements for host: " + host.getUuid());
+            log.info("No entitlements for host: {}", host.getUuid());
             return null;
         }
 
@@ -568,7 +855,7 @@ public class CandlepinPoolManager implements PoolManager {
         throws EntitlementRefusedException {
 
         ValidationResult failedResult = null;
-        log.debug("Looking up best pools for host: " + host);
+        log.debug("Looking up best pools for host: {}", host);
 
         Date activePoolDate = entitleDate;
         if (entitleDate == null) {
@@ -586,15 +873,14 @@ public class CandlepinPoolManager implements PoolManager {
             guest, null, owner, (String) null, activePoolDate,
             true, false, poolFilter,
             null).getPageData();
-        log.debug("Found {} total pools already available for guest",
-                allOwnerPoolsForGuest.size());
+        log.debug("Found {} total pools already available for guest", allOwnerPoolsForGuest.size());
         logPools(allOwnerPoolsForGuest);
 
         for (Entitlement ent : host.getEntitlements()) {
             //filter out pools that are attached, there is no need to
             //complete partial stacks, as they are already granting
             //virtual pools
-            log.debug("Removing pool host is already entitled to: " + ent.getPool());
+            log.debug("Removing pool host is already entitled to: {}", ent.getPool());
             allOwnerPools.remove(ent.getPool());
         }
         List<Pool> filteredPools = new LinkedList<Pool>();
@@ -610,7 +896,7 @@ public class CandlepinPoolManager implements PoolManager {
           already have virt_only pools available to the guest */
         Set<String> productsToRemove = new HashSet<String>();
         for (Pool pool : allOwnerPoolsForGuest) {
-            if (pool.hasProductAttribute("virt_only") || pool.hasAttribute("virt_only")) {
+            if (pool.getProduct().hasAttribute("virt_only") || pool.hasAttribute("virt_only")) {
                 for (String prodId : tmpSet) {
                     if (pool.provides(prodId)) {
                         productsToRemove.add(prodId);
@@ -618,13 +904,13 @@ public class CandlepinPoolManager implements PoolManager {
                 }
             }
         }
-        log.debug("Guest already will have virt-only pools to cover: " +
+        log.debug("Guest already will have virt-only pools to cover: {}",
                 Util.collectionToString(productsToRemove));
         tmpSet.removeAll(productsToRemove);
         String[] productIds = tmpSet.toArray(new String [] {});
 
         if (log.isDebugEnabled()) {
-            log.debug("Attempting host autobind for guest products: " +
+            log.debug("Attempting host autobind for guest products: {}",
                     Util.collectionToString(tmpSet));
         }
 
@@ -632,14 +918,13 @@ public class CandlepinPoolManager implements PoolManager {
             boolean providesProduct = false;
             // Would parse the int here, but it can be 'unlimited'
             // and we only need to check that it's non-zero
-            if (pool.hasProductAttribute("virt_limit") &&
-                    !pool.getProductAttribute("virt_limit").getValue().equals("0")) {
+            if (pool.getProduct().hasAttribute("virt_limit") &&
+                    !pool.getProduct().getAttributeValue("virt_limit").equals("0")) {
                 for (String productId : productIds) {
                     // If this is a derived pool, we need to see if the derived product
                     // provides anything for the guest, otherwise we use the parent.
                     if (pool.providesDerived(productId)) {
-                        log.debug("Found virt_limit pool providing product {}: {}",
-                                productId, pool);
+                        log.debug("Found virt_limit pool providing product {}: {}", productId, pool);
                         providesProduct = true;
                         break;
                     }
@@ -653,12 +938,9 @@ public class CandlepinPoolManager implements PoolManager {
                     // Just keep the last one around, if we need it
                     failedResult = result;
                     if (log.isDebugEnabled()) {
-                        log.debug("Pool filtered from candidates due to failed rule(s): {}" +
-                                pool);
-                        log.debug("   warnings: " +
-                                Util.collectionToString(result.getWarnings()));
-                        log.debug("   errors: " +
-                                Util.collectionToString(result.getErrors()));
+                        log.debug("Pool filtered from candidates due to failed rule(s): {}", pool);
+                        log.debug("  warnings: {}", Util.collectionToString(result.getWarnings()));
+                        log.debug("  errors: {}", Util.collectionToString(result.getErrors()));
                     }
                 }
                 else {
@@ -723,8 +1005,7 @@ public class CandlepinPoolManager implements PoolManager {
         // a healing request)
         ComplianceStatus compliance = complianceRules.getStatus(consumer, entitleDate, false);
         if (productIds == null || productIds.length == 0) {
-            log.debug("No products specified for bind, checking compliance to see what " +
-                "is needed.");
+            log.debug("No products specified for bind, checking compliance to see what is needed.");
             Set<String> tmpSet = new HashSet<String>();
             tmpSet.addAll(compliance.getNonCompliantProducts());
             tmpSet.addAll(compliance.getPartiallyCompliantProducts().keySet());
@@ -732,7 +1013,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("Attempting for products on date: " + entitleDate);
+            log.debug("Attempting for products on date: {}", entitleDate);
             for (String productId : productIds) {
                 log.debug("  " + productId);
             }
@@ -742,9 +1023,9 @@ public class CandlepinPoolManager implements PoolManager {
             boolean providesProduct = false;
             // If We want to complete partial stacks if possible,
             // even if they do not provide any products
-            if (pool.hasProductAttribute("stacking_id") &&
+            if (pool.getProduct().hasAttribute("stacking_id") &&
                     compliance.getPartialStacks().containsKey(
-                        pool.getProductAttribute("stacking_id").getValue())) {
+                        pool.getProduct().getAttributeValue("stacking_id"))) {
                 providesProduct = true;
             }
             else {
@@ -762,11 +1043,7 @@ public class CandlepinPoolManager implements PoolManager {
                 if (result.hasErrors() || result.hasWarnings()) {
                     // Just keep the last one around, if we need it
                     failedResult = result;
-                    if (log.isDebugEnabled()) {
-                        log.debug("Pool filtered from candidates due to rules " +
-                            "failure: " +
-                            pool.getId());
-                    }
+                    log.debug("Pool filtered from candidates due to rules failure: {}", pool.getId());
                 }
                 else {
                     filteredPools.add(pool);
@@ -836,18 +1113,16 @@ public class CandlepinPoolManager implements PoolManager {
         // pool
         // when it was read. As such we're going to reload it with a lock
         // before starting this process.
-        log.info("Locking pool: " + pool.getId());
+        log.info("Locking pool: {}", pool.getId());
         pool = poolCurator.lockAndLoad(pool);
 
         if (quantity > 0) {
             log.info("Running pre-entitlement rules.");
             // XXX preEntitlement is run twice for new entitlement creation
-            ValidationResult result = enforcer.preEntitlement(
-                consumer, pool, quantity, caller);
+            ValidationResult result = enforcer.preEntitlement(consumer, pool, quantity, caller);
 
             if (!result.isSuccessful()) {
-                log.warn("Entitlement not granted: " +
-                    result.getErrors().toString());
+                log.warn("Entitlement not granted: {}", result.getErrors().toString());
                 throw new EntitlementRefusedException(result);
             }
         }
@@ -872,7 +1147,7 @@ public class CandlepinPoolManager implements PoolManager {
         if (consumer.getType().isManifest()) {
             pool.setExported(pool.getExported() + quantity);
         }
-        PoolHelper poolHelper = new PoolHelper(this, productCache, entitlement);
+        PoolHelper poolHelper = new PoolHelper(this, entitlement);
         handler.handlePostEntitlement(consumer, poolHelper, entitlement);
 
         // Check consumer's new compliance status and save:
@@ -887,8 +1162,8 @@ public class CandlepinPoolManager implements PoolManager {
 
         // we might have changed the bonus pool quantities, lets find out.
         handler.handleBonusPools(pool, entitlement);
-        log.info("Granted entitlement: " + entitlement.getId() + " from pool: " +
-            pool.getId());
+
+        log.info("Granted entitlement: {} from pool: {}", entitlement.getId(), pool.getId());
         return entitlement;
     }
 
@@ -918,36 +1193,13 @@ public class CandlepinPoolManager implements PoolManager {
      */
     private EntitlementCertificate generateEntitlementCertificate(
         Pool pool, Entitlement e, boolean generateUeberCert) {
-        Subscription sub = null;
-        if (pool.getSubscriptionId() != null) {
-            log.info("Getting subscription: " + pool.getSubscriptionId());
-            sub = subAdapter.getSubscription(pool.getSubscriptionId());
-            log.info("Got subscription");
-        }
 
-        Product product = null;
-        /*
-         * If we have a subscription for this pool, the products we need are already
-         * loaded as this saves us some product adapter lookups.
-         *
-         * If not we'll have to look them up based on the pool's data.
-         */
-        if (sub != null) {
-            // Need to make sure that we check for a defined sub product
-            // if it is a derived pool.
-            boolean derived = pool.getType() != PoolType.NORMAL;
-            product = derived && sub.getDerivedProduct() != null ? sub.getDerivedProduct() :
-                sub.getProduct();
-        }
-        else {
-            // Some pools may not have a subscription, i.e. derived from stack pools.
-            product = productCache.getProductById(e.getProductId());
-        }
+        Product product = pool.getProduct();
 
         try {
             return generateUeberCert ?
-                entCertAdapter.generateUeberCert(e, sub, product) :
-                entCertAdapter.generateEntitlementCert(e, sub, product);
+                entCertAdapter.generateUeberCert(e, product) :
+                entCertAdapter.generateEntitlementCert(e, product);
         }
         catch (CertVersionConflictException cvce) {
             throw cvce;
@@ -962,8 +1214,11 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public void regenerateEntitlementCertificates(Consumer consumer, boolean lazy) {
-        log.info("Regenerating #" + consumer.getEntitlements().size() +
-            " entitlement certificates for consumer: " + consumer);
+        log.info(
+            "Regenerating #{}, entitlement certificates for consumer: {}",
+            consumer.getEntitlements().size(), consumer
+        );
+
         // TODO - Assumes only 1 entitlement certificate exists per entitlement
         this.regenerateCertificatesOf(consumer.getEntitlements(), lazy);
     }
@@ -984,7 +1239,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
             else {
                 // If it has been deleted, that's fine, one less to regenerate
-                log.info("Couldn't load Entitlement '" + entId + "' to regenerate, assuming deleted");
+                log.info("Couldn't load Entitlement \"{}\" to regenerate, assuming deleted", entId);
             }
         }
     }
@@ -1001,13 +1256,13 @@ public class CandlepinPoolManager implements PoolManager {
      */
     @Override
     @Transactional
-    public void regenerateCertificatesOf(Environment e, Set<String> affectedContent,
-        boolean lazy) {
-        log.info("Regenerating relevant certificates in environment: " + e.getId());
+    public void regenerateCertificatesOf(Environment e, Set<String> affectedContent, boolean lazy) {
+        log.info("Regenerating relevant certificates in environment: {}", e.getId());
+
         List<Entitlement> allEnvEnts = entitlementCurator.listByEnvironment(e);
         Set<Entitlement> entsToRegen = new HashSet<Entitlement>();
         for (Entitlement ent : allEnvEnts) {
-            Product prod = productCache.getProductById(ent.getProductId());
+            Product prod = productCurator.lookupById(ent.getOwner(), ent.getProductId());
             for (String contentId : affectedContent) {
                 if (prod.hasContent(contentId)) {
                     entsToRegen.add(ent);
@@ -1015,18 +1270,16 @@ public class CandlepinPoolManager implements PoolManager {
             }
 
             // Now the provided products:
-            for (ProvidedProduct provided : ent.getPool().getProvidedProducts()) {
-                Product providedProd = productCache.getProductById(
-                    provided.getProductId());
+            for (Product provided : ent.getPool().getProvidedProducts()) {
                 for (String contentId : affectedContent) {
-                    if (providedProd.hasContent(contentId)) {
+                    if (provided.hasContent(contentId)) {
                         entsToRegen.add(ent);
                     }
                 }
             }
         }
-        log.info("Found " + entsToRegen.size() + " certificates to regenerate.");
 
+        log.info("Found {} certificates to regenerate.", entsToRegen.size());
         regenerateCertificatesOf(entsToRegen, lazy);
     }
 
@@ -1035,54 +1288,50 @@ public class CandlepinPoolManager implements PoolManager {
      */
     @Override
     @Transactional
-    public void regenerateCertificatesOf(Entitlement e, boolean ueberCertificate,
-        boolean lazy) {
+    public void regenerateCertificatesOf(Entitlement e, boolean ueberCertificate, boolean lazy) {
 
         if (lazy) {
-            log.info("Marking certificates dirty for entitlement: " + e);
+            log.info("Marking certificates dirty for entitlement: {}", e);
             e.setDirty(true);
             return;
         }
 
-        if (log.isDebugEnabled()) {
-            log.debug("Revoking entitlementCertificates of : " + e);
-        }
+        log.debug("Revoking entitlementCertificates of: {}", e);
 
         Entitlement tempE = new Entitlement();
-        tempE.getCertificates().addAll(e.getCertificates());
-        e.getCertificates().clear();
+        tempE.setCertificates(e.getCertificates());
+        e.setCertificates(null);
+
         // below call creates new certificates and saves it to the backend.
         try {
             EntitlementCertificate generated = this.generateEntitlementCertificate(
-                e.getPool(), e, ueberCertificate);
+                e.getPool(), e, ueberCertificate
+            );
+
             e.setDirty(false);
             entitlementCurator.merge(e);
             for (EntitlementCertificate ec : tempE.getCertificates()) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Deleting entitlementCertificate: #" + ec.getId());
-                }
+                log.debug("Deleting entitlementCertificate: #{}", ec.getId());
                 this.entitlementCertificateCurator.delete(ec);
             }
 
             // send entitlement changed event.
             this.sink.queueEvent(this.eventFactory.entitlementChanged(e));
-            if (log.isDebugEnabled()) {
-                log.debug("Generated entitlementCertificate: #" + generated.getId());
-            }
+            log.debug("Generated entitlementCertificate: #{}", generated.getId());
         }
         catch (CertificateSizeException cse) {
-            e.getCertificates().addAll(tempE.getCertificates());
-            log.warn("The certificate cannot be regenerated at this time: " +
-                cse.getMessage());
+            e.setCertificates(tempE.getCertificates());
+            log.warn("The certificate cannot be regenerated at this time: {}", cse.getMessage());
         }
     }
 
     @Override
     @Transactional
-    public void regenerateCertificatesOf(String productId, boolean lazy) {
-        List<Pool> poolsForProduct = this.listAvailableEntitlementPools(null, null, null,
+    public void regenerateCertificatesOf(Owner owner, String productId, boolean lazy) {
+        List<Pool> poolsForProduct = this.listAvailableEntitlementPools(null, null, owner,
             productId, new Date(), false, false, new PoolFilterBuilder(), null)
             .getPageData();
+
         for (Pool pool : poolsForProduct) {
             regenerateCertificatesOf(pool.getEntitlements(), lazy);
         }
@@ -1097,9 +1346,7 @@ public class CandlepinPoolManager implements PoolManager {
      * anyhow, true otherwise. Prevents a deadlock issue on mysql (at least).
      */
     @Transactional
-    void removeEntitlement(Entitlement entitlement,
-        boolean regenModified) {
-
+    void removeEntitlement(Entitlement entitlement, boolean regenModified) {
         Consumer consumer = entitlement.getConsumer();
         Pool pool = entitlement.getPool();
 
@@ -1107,7 +1354,6 @@ public class CandlepinPoolManager implements PoolManager {
         // This won't do anything for over/under consumption, but it will prevent
         // concurrency issues if someone else is operating on the pool.
         pool = poolCurator.lockAndLoad(pool);
-
         consumer.removeEntitlement(entitlement);
 
         // Look for pools referencing this entitlement as their source
@@ -1122,6 +1368,7 @@ public class CandlepinPoolManager implements PoolManager {
             for (Entitlement e : p.getEntitlements()) {
                 this.revokeEntitlement(e);
             }
+
             deletablePools.add(p);
         }
         for (Pool dp : deletablePools) {
@@ -1136,6 +1383,7 @@ public class CandlepinPoolManager implements PoolManager {
         // The quantity is calculated at fetch time. We update it here
         // To reflect what we just removed from the db.
         pool.setConsumed(pool.getConsumed() - entitlement.getQuantity());
+
         if (consumer.getType().isManifest()) {
             pool.setExported(pool.getExported() - entitlement.getQuantity());
         }
@@ -1143,8 +1391,9 @@ public class CandlepinPoolManager implements PoolManager {
         // Check for a single stacked sub pool as well. We'll need to either
         // update or delete the sub pool now that all other pools have been deleted.
         if (!"true".equals(pool.getAttributeValue("pool_derived")) &&
-            pool.hasProductAttribute("stacking_id")) {
-            String stackId = pool.getProductAttributeValue("stacking_id");
+            pool.getProduct().hasAttribute("stacking_id")) {
+
+            String stackId = pool.getProduct().getAttributeValue("stacking_id");
             Pool stackedSubPool = poolCurator.getSubPoolForStackId(consumer, stackId);
             if (stackedSubPool != null) {
                 List<Entitlement> stackedEnts =
@@ -1164,18 +1413,17 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // post unbind actions
-        PoolHelper poolHelper = new PoolHelper(this, productCache, entitlement);
+        PoolHelper poolHelper = new PoolHelper(this, entitlement);
         enforcer.postUnbind(consumer, poolHelper, entitlement);
 
         if (regenModified) {
             // Find all of the entitlements that modified the original entitlement,
             // and regenerate those to remove the content sets.
             // Lazy regeneration is ok here.
-            this.regenerateCertificatesOf(entitlementCurator
-                .listModifying(entitlement), true);
+            this.regenerateCertificatesOf(entitlementCurator.listModifying(entitlement), true);
         }
 
-        log.info("Revoked entitlement: " + entitlement.getId());
+        log.info("Revoked entitlement: {}", entitlement.getId());
 
         // If we don't care about updating other entitlements based on this one, we probably
         // don't care about updating compliance either.
@@ -1272,10 +1520,11 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public void regenerateDirtyEntitlements(List<Entitlement> entitlements) {
+
         List<Entitlement> dirtyEntitlements = new ArrayList<Entitlement>();
         for (Entitlement e : entitlements) {
             if (e.getDirty()) {
-                log.info("Found dirty entitlement to regenerate: " + e);
+                log.info("Found dirty entitlement to regenerate: {}", e);
                 dirtyEntitlements.add(e);
             }
         }
@@ -1284,13 +1533,13 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public Refresher getRefresher() {
-        return getRefresher(true);
+    public Refresher getRefresher(SubscriptionServiceAdapter subAdapter) {
+        return this.getRefresher(subAdapter, true);
     }
 
     @Override
-    public Refresher getRefresher(boolean lazy) {
-        return new Refresher(this, this.subAdapter, lazy);
+    public Refresher getRefresher(SubscriptionServiceAdapter subAdapter, boolean lazy) {
+        return new Refresher(this, subAdapter, lazy);
     }
 
     /**
@@ -1314,8 +1563,7 @@ public class CandlepinPoolManager implements PoolManager {
         @Override
         public Entitlement handleEntitlement(Consumer consumer, Pool pool,
             Entitlement entitlement, int quantity) {
-            Entitlement newEntitlement = new Entitlement(pool, consumer,
-                quantity);
+            Entitlement newEntitlement = new Entitlement(pool, consumer, quantity);
             consumer.addEntitlement(newEntitlement);
             pool.getEntitlements().add(newEntitlement);
             return newEntitlement;
@@ -1330,7 +1578,7 @@ public class CandlepinPoolManager implements PoolManager {
                     poolCurator.getSubPoolForStackId(
                         entitlement.getConsumer(), entPool.getStackId());
                 if (pool != null) {
-                    poolRules.updatePoolFromStack(pool);
+                    poolRules.updatePoolFromStack(pool, new HashSet<Product>());
                     poolCurator.merge(pool);
                 }
             }
@@ -1355,7 +1603,7 @@ public class CandlepinPoolManager implements PoolManager {
     /**
      * UpdateHandler
      */
-    private class UpdateHandler implements EntitlementHandler{
+    private class UpdateHandler implements EntitlementHandler {
         @Override
         public Entitlement handleEntitlement(Consumer consumer, Pool pool,
             Entitlement entitlement, int quantity) {
@@ -1377,8 +1625,8 @@ public class CandlepinPoolManager implements PoolManager {
         }
         @Override
         public void handleBonusPools(Pool pool, Entitlement entitlement) {
-            updatePoolsForSubscription(poolCurator.listBySourceEntitlement(entitlement),
-                subAdapter.getSubscription(pool.getSubscriptionId()), false);
+            // This is likely a no-op now that virt-limit is the quantity on sub-pools,
+            // rather than the older virt_limit * entitlement quantity:
             checkBonusPoolQuantities(pool, entitlement);
         }
     }
@@ -1425,6 +1673,59 @@ public class CandlepinPoolManager implements PoolManager {
         return page;
     }
 
+    /**
+     * Creates a Subscription object using information derived from the specified pool. Used to
+     * support deprecated API calls that still require a subscription.
+     *
+     * @param pool
+     *  The pool from which to build a subscription
+     *
+     * @return
+     *  a new subscription object derived from the specified pool.
+     */
+    @Override
+    public Subscription fabricateSubscriptionFromPool(Pool pool) {
+        if (pool == null) {
+            throw new IllegalArgumentException("pool is null");
+        }
+
+        Subscription fabricated = new Subscription(
+            pool.getOwner(),
+            pool.getProduct(),
+            pool.getProvidedProducts(),
+            pool.getQuantity(),
+            pool.getStartDate(),
+            pool.getEndDate(),
+            pool.getUpdated()
+        );
+
+        fabricated.setId(pool.getSubscriptionId());
+        fabricated.setUpstreamEntitlementId(pool.getUpstreamEntitlementId());
+        fabricated.setCdn(pool.getCdn());
+        fabricated.setCertificate(pool.getCertificate());
+
+        // TODO:
+        // There's probably a fair amount of other stuff we need to migrate over to the
+        // subscription. We should do that here.
+
+        return fabricated;
+    }
+
+    @Override
+    public List<Pool> getPoolsBySubscriptionId(String subscriptionId) {
+        return this.poolCurator.getPoolsBySubscriptionId(subscriptionId);
+    }
+
+    @Override
+    public Pool getMasterPoolBySubscriptionId(String subscriptionId) {
+        return this.poolCurator.getMasterPoolBySubscriptionId(subscriptionId);
+    }
+
+    @Override
+    public List<Pool> listMasterPools() {
+        return this.poolCurator.listMasterPools();
+    }
+
     @Override
     public Set<String> retrieveServiceLevelsForOwner(Owner owner, boolean exempt) {
         return poolCurator.retrieveServiceLevelsForOwner(owner, exempt);
@@ -1445,13 +1746,14 @@ public class CandlepinPoolManager implements PoolManager {
         return poolCurator.listByOwner(owner);
     }
 
-    public PoolUpdate updatePoolFromStack(Pool pool) {
-        return poolRules.updatePoolFromStack(pool);
+    public PoolUpdate updatePoolFromStack(Pool pool, Set<Product> changedProducts) {
+        return poolRules.updatePoolFromStack(pool, changedProducts);
     }
 
     private PoolUpdate updatePoolFromStackedEntitlements(Pool pool,
         List<Entitlement> stackedEntitlements) {
-        return poolRules.updatePoolFromStackedEntitlements(pool, stackedEntitlements);
+        return poolRules.updatePoolFromStackedEntitlements(pool, stackedEntitlements,
+                null);
     }
 
     public List<Pool> getOwnerSubPoolsForStackId(Owner owner, String stackId) {
@@ -1467,12 +1769,12 @@ public class CandlepinPoolManager implements PoolManager {
                 filteredPools.add(p);
             }
             else if (log.isDebugEnabled()) {
-                log.debug("Omitting pool due to failed rules: " + p.getId());
+                log.debug("Omitting pool due to failed rules: {}", p.getId());
                 if (result.hasErrors()) {
-                    log.debug("\tErrors: " + result.getErrors());
+                    log.debug("\tErrors: {}", result.getErrors());
                 }
                 if (result.hasWarnings()) {
-                    log.debug("\tWarnings: " + result.getWarnings());
+                    log.debug("\tWarnings: {}", result.getWarnings());
                 }
             }
         }

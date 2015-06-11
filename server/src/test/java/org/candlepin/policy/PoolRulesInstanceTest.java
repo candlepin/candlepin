@@ -14,9 +14,7 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -24,13 +22,14 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.model.Subscription;
-import org.candlepin.policy.js.ProductCache;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.service.ProductServiceAdapter;
@@ -62,8 +61,7 @@ public class PoolRulesInstanceTest {
     @Mock private PoolManager poolManagerMock;
     @Mock private Configuration configMock;
     @Mock private EntitlementCurator entCurMock;
-
-    private ProductCache productCache;
+    @Mock private ProductCurator prodCuratorMock;
 
     @Before
     public void setUp() {
@@ -75,9 +73,8 @@ public class PoolRulesInstanceTest {
         when(rulesCuratorMock.getRules()).thenReturn(rules);
 
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
-        productCache = new ProductCache(configMock, productAdapterMock);
 
-        poolRules = new PoolRules(poolManagerMock, productCache, configMock, entCurMock);
+        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, prodCuratorMock);
     }
 
     @Test
@@ -120,7 +117,8 @@ public class PoolRulesInstanceTest {
 
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
-        List<PoolUpdate> updates = poolRules.updatePools(s, existingPools);
+        List<PoolUpdate> updates = poolRules.updatePools(s, existingPools,
+                TestUtil.stubChangedProducts(s.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -143,13 +141,14 @@ public class PoolRulesInstanceTest {
 
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
-        List<PoolUpdate> updates = poolRules.updatePools(s, existingPools);
+        List<PoolUpdate> updates = poolRules.updatePools(s, existingPools,
+                TestUtil.stubChangedProducts(s.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
         assertTrue(update.getQuantityChanged());
         assertEquals(new Long(100), update.getPool().getQuantity());
-        assertFalse(update.getPool().hasProductAttribute("instance_multiplier"));
+        assertFalse(update.getPool().getProduct().hasAttribute("instance_multiplier"));
     }
 
     @Test
@@ -166,7 +165,8 @@ public class PoolRulesInstanceTest {
 
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
-        List<PoolUpdate> updates = poolRules.updatePools(s, existingPools);
+        List<PoolUpdate> updates = poolRules.updatePools(s, existingPools,
+                TestUtil.stubChangedProducts(s.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -179,11 +179,12 @@ public class PoolRulesInstanceTest {
 
     private Subscription createInstanceBasedSub(String productId, int quantity,
         int instanceMultiplier, boolean exported) {
-        Product product = new Product(productId, productId);
+        Owner owner = new Owner("Test Corporation");
+        Product product = new Product(productId, productId, owner);
         product.setAttribute("instance_multiplier",
             Integer.toString(instanceMultiplier));
-        when(productAdapterMock.getProductById(productId)).thenReturn(product);
-        Subscription s = TestUtil.createSubscription(product);
+        when(prodCuratorMock.lookupById(owner, productId)).thenReturn(product);
+        Subscription s = TestUtil.createSubscription(owner, product);
         if (exported) {
             s.setUpstreamPoolId("SOMETHING");
         }

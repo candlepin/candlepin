@@ -17,8 +17,8 @@ package org.candlepin.model;
 import org.candlepin.auth.Principal;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 
@@ -30,6 +30,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 
+
+
 /**
  * UeberCertificateGenerator
  */
@@ -37,7 +39,7 @@ public class UeberCertificateGenerator {
 
     private PoolManager poolManager;
     private PoolCurator poolCurator;
-    private ProductServiceAdapter prodAdapter;
+    private ProductCurator productCurator;
     private ContentCurator contentCurator;
     private UniqueIdGenerator idGenerator;
     private SubscriptionServiceAdapter subService;
@@ -48,7 +50,7 @@ public class UeberCertificateGenerator {
     @Inject
     public UeberCertificateGenerator(PoolManager poolManager,
         PoolCurator poolCurator,
-        ProductServiceAdapter prodAdapter,
+        ProductCurator productCurator,
         ContentCurator contentCurator,
         UniqueIdGenerator idGenerator,
         SubscriptionServiceAdapter subService,
@@ -58,14 +60,13 @@ public class UeberCertificateGenerator {
 
         this.poolManager = poolManager;
         this.poolCurator = poolCurator;
-        this.prodAdapter = prodAdapter;
+        this.productCurator = productCurator;
         this.contentCurator = contentCurator;
         this.idGenerator = idGenerator;
         this.subService = subService;
         this.consumerTypeCurator = consumerTypeCurator;
         this.consumerCurator = consumerCurator;
         this.i18n = i18n;
-
     }
 
     public EntitlementCertificate generate(Owner o, Principal principal)
@@ -78,26 +79,41 @@ public class UeberCertificateGenerator {
 
         Pool ueberPool = poolCurator.findUeberPool(o);
         return generateUeberCertificate(consumer, ueberPool);
-
     }
 
     public Product createUeberProduct(Owner o) {
-        Product ueberProduct =
-            prodAdapter.createProduct(Product.createUeberProductForOwner(o));
-        Content ueberContent =
-            contentCurator.create(Content.createUeberContent(idGenerator, o, ueberProduct));
+        // TODO: These ueber objects are (heavily) reliant on implementation details of the
+        // DefaultUniqueIdGenerator returning only numeric IDs, despite the interface and the return
+        // value lacking any such guarantee.
+        // Specifically, the X509 filtering functionality will only properly filter when these are
+        // generated with numeric IDs.
 
-        ProductContent productContent =
-            new ProductContent(ueberProduct, ueberContent, true);
+        Product ueberProduct = Product.createUeberProductForOwner(idGenerator, o);
+        productCurator.create(ueberProduct);
+
+        Content ueberContent = Content.createUeberContent(idGenerator, o, ueberProduct);
+        contentCurator.create(ueberContent);
+
+        ProductContent productContent = new ProductContent(ueberProduct, ueberContent, true);
         ueberProduct.getProductContent().add(productContent);
 
         return ueberProduct;
     }
 
     public Subscription createUeberSubscription(Owner o, Product ueberProduct) {
+        Date now = now();
+
         Subscription subscription = new Subscription(o, ueberProduct,
-            new HashSet<Product>(), 1L, now(), hundredYearsFromNow(), now());
-        return subService.createSubscription(subscription);
+            new HashSet<Product>(), 1L, now, hundredYearsFromNow(), now);
+
+        // We need to fake a subscription ID here so our generated pool's source subscription ends
+        // up with a valid ID.
+        subscription.setId(idGenerator.generateId());
+        subscription.setCreated(now);
+        subscription.setUpdated(now);
+
+        // return subService.createSubscription(subscription);
+        return subscription;
     }
 
     public Consumer createUeberConsumer(Principal principal, Owner o) {

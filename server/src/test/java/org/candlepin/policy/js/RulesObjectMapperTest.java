@@ -14,17 +14,20 @@
  */
 package org.candlepin.policy.js;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
-import org.candlepin.model.ProductPoolAttribute;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductAttribute;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.junit.Before;
@@ -46,10 +49,12 @@ public class RulesObjectMapperTest {
 
     private RulesObjectMapper objMapper = RulesObjectMapper.instance();
     private Map<String, Object> context;
+    private Owner owner;
 
     @Before
     public void begin() {
         context = new HashMap<String, Object>();
+        owner = new Owner("test");
     }
 
     @Test
@@ -102,12 +107,14 @@ public class RulesObjectMapperTest {
 
     @Test
     public void filterTimestampsOffAttributes() {
+        Product prod = TestUtil.createProduct(owner);
         Pool p = new Pool();
+        p.setProduct(prod);
 
-        ProductPoolAttribute prodAttr = new ProductPoolAttribute("a", "1", "PRODID");
+        ProductAttribute prodAttr = new ProductAttribute("a", "1");
         prodAttr.setCreated(new Date());
         prodAttr.setUpdated(new Date());
-        p.addProductAttribute(prodAttr);
+        prod.addAttribute(prodAttr);
 
         PoolAttribute poolAttr = new PoolAttribute("a", "1");
         poolAttr.setCreated(new Date());

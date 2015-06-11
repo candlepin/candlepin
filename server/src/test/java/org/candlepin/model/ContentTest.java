@@ -16,8 +16,7 @@ package org.candlepin.model;
 
 
 import static org.hamcrest.collection.IsCollectionContaining.hasItem;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 
@@ -33,12 +32,16 @@ import javax.inject.Inject;
  */
 public class ContentTest extends DatabaseTestFixture {
     @Inject private ContentCurator contentCurator;
+    @Inject private OwnerCurator ownerCurator;
 
     @Test
     public void testContent() {
+        Owner owner = new Owner("Example-Corporation");
+        ownerCurator.create(owner);
+
         String  contentHash = String.valueOf(
             Math.abs(Long.valueOf("test-content".hashCode())));
-        Content content = new Content("test-content", contentHash,
+        Content content = new Content(owner, "test-content", contentHash,
                             "test-content-label", "yum", "test-vendor",
                              "test-content-url", "test-gpg-url",
                              "test-arch1,test-arch2");
@@ -52,7 +55,7 @@ public class ContentTest extends DatabaseTestFixture {
 
         contentCurator.create(content);
 
-        Content lookedUp = contentCurator.find(content.getId());
+        Content lookedUp = contentCurator.find(content.getUuid());
         assertEquals(content.getContentUrl(), lookedUp.getContentUrl());
         assertThat(lookedUp.getModifiedProductIds(), hasItem("ProductB"));
         assertEquals(metadataExpire, lookedUp.getMetadataExpire());
@@ -60,23 +63,28 @@ public class ContentTest extends DatabaseTestFixture {
 
     @Test
     public void testContentWithArches() {
+        Owner owner = new Owner("Example-Corporation");
+        ownerCurator.create(owner);
         String  contentHash = String.valueOf(
             Math.abs(Long.valueOf("test-content-arches".hashCode())));
 
-        Content content = new Content("test-content-arches", contentHash,
+        Content content = new Content(owner, "test-content-arches", contentHash,
                             "test-content-arches-label", "yum", "test-vendor",
                              "test-content-url", "test-gpg-url", "");
         String arches = "x86_64, i386";
         content.setArches(arches);
         contentCurator.create(content);
 
-        Content lookedUp = contentCurator.find(content.getId());
+        Content lookedUp = contentCurator.find(content.getUuid());
         assertEquals(lookedUp.getArches(), arches);
     }
 
     @Test
     public void testCreateOrUpdateWithNewLabel() {
-        Content content = new Content("Test Content", "100",
+        Owner owner = new Owner("Example-Corporation");
+        ownerCurator.create(owner);
+
+        Content content = new Content(owner, "Test Content", "100",
             "test-content-label", "yum", "test-vendor",
              "test-content-url", "test-gpg-url", "test-arch1");
         contentCurator.create(content);
@@ -84,12 +92,15 @@ public class ContentTest extends DatabaseTestFixture {
         // Same ID, but label changed:
         String newLabel = "test-content-label-new";
         String newName = "Test Content Updated";
-        Content modifiedContent = new Content(newName, "100",
+        Content modifiedContent = new Content(owner, newName, "100",
             newLabel, "yum", "test-vendor", "test-content-url",
             "test-gpg-url", "test-arch1");
+
+        modifiedContent.setUuid(content.getUuid());
+
         contentCurator.createOrUpdate(modifiedContent);
 
-        content = contentCurator.find("100");
+        content = contentCurator.lookupById(owner, "100");
         assertEquals(newLabel, content.getLabel());
         assertEquals(newName, content.getName());
     }

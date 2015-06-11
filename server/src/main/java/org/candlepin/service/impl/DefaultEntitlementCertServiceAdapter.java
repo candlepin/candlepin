@@ -29,13 +29,10 @@ import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
-import org.candlepin.model.ProvidedProduct;
-import org.candlepin.model.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.service.BaseEntitlementCertServiceAdapter;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
@@ -76,7 +73,6 @@ public class DefaultEntitlementCertServiceAdapter extends
     private X509V3ExtensionUtil v3extensionUtil;
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
-    private ProductServiceAdapter productAdapter;
     private EntitlementCurator entCurator;
     private I18n i18n;
     private Configuration config;
@@ -91,7 +87,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         EntitlementCertificateCurator entCertCurator,
         KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator,
-        ProductServiceAdapter productAdapter,
         EntitlementCurator entCurator, I18n i18n,
         Configuration config) {
 
@@ -101,7 +96,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         this.entCertCurator = entCertCurator;
         this.keyPairCurator = keyPairCurator;
         this.serialCurator = serialCurator;
-        this.productAdapter = productAdapter;
         this.entCurator = entCurator;
         this.i18n = i18n;
         this.config = config;
@@ -111,52 +105,26 @@ public class DefaultEntitlementCertServiceAdapter extends
     // NOTE: we use entitlement here, but it version does not...
     // NOTE: we can get consumer from entitlement.getConsumer()
     @Override
-    public EntitlementCertificate generateEntitlementCert(Entitlement entitlement,
-        Subscription sub, Product product)
+    public EntitlementCertificate generateEntitlementCert(Entitlement entitlement, Product product)
         throws GeneralSecurityException, IOException {
-        return generateEntitlementCert(entitlement, sub, product, false);
+        return generateEntitlementCert(entitlement, product, false);
     }
 
     @Override
-    public EntitlementCertificate generateUeberCert(Entitlement entitlement,
-        Subscription sub, Product product)
+    public EntitlementCertificate generateUeberCert(Entitlement entitlement, Product product)
         throws GeneralSecurityException, IOException {
-        return generateEntitlementCert(entitlement, sub, product, true);
+        return generateEntitlementCert(entitlement, product, true);
     }
 
-    private Set<Product> getDerivedProductsForDistributor(Subscription sub,
-        Entitlement ent) {
+    private Set<Product> getDerivedProductsForDistributor(Entitlement ent) {
         Set<Product> derivedProducts = new HashSet<Product>();
         boolean derived = ent.getPool().hasAttribute("pool_derived");
         if (!derived && ent.getConsumer().getType().isManifest() &&
-            sub.getDerivedProduct() != null) {
-            derivedProducts.add(sub.getDerivedProduct());
-            derivedProducts.addAll(sub.getDerivedProvidedProducts());
+            ent.getPool().getDerivedProduct() != null) {
+            derivedProducts.add(ent.getPool().getDerivedProduct());
+            derivedProducts.addAll(ent.getPool().getDerivedProvidedProducts());
         }
         return derivedProducts;
-    }
-
-    private Set<Product> getProvidedProducts(Pool pool, Subscription sub) {
-        Set<Product> providedProducts = new HashSet<Product>();
-        // TODO: eliminate the use of subscription here by looking up products in a batch
-        // somehow, and we can eliminate all use of subscriptions during bind.
-        if (sub != null) {
-            // need to use the sub provided products if creating an
-            // entitlement for derived pool who's sub specifies a
-            // sub product.
-            boolean derived = pool.hasAttribute("pool_derived");
-            providedProducts = derived && sub.getDerivedProduct() != null ?
-                sub.getDerivedProvidedProducts() : sub.getProvidedProducts();
-        }
-        else {
-            // If this pool doesn't have a subscription associated with it, we need to
-            // lookup all the Product objects manually:
-            for (ProvidedProduct providedProduct : pool.getProvidedProducts()) {
-                providedProducts.add(
-                    productAdapter.getProductById(providedProduct.getProductId()));
-            }
-        }
-        return providedProducts;
     }
 
     // TODO: productModels not used by V1 certificates. This whole v1/v3 split needs
@@ -164,7 +132,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     // recalculating this for the entitlement body in v3 certs.
     public X509Certificate createX509Certificate(Entitlement ent,
         Product product, Set<Product> products,
-        List<org.candlepin.json.model.Product> productModels,
+        List<org.candlepin.model.dto.Product> productModels,
         BigInteger serialNumber,
         KeyPair keyPair, boolean useContentPrefix)
         throws GeneralSecurityException, IOException {
@@ -223,7 +191,7 @@ public class DefaultEntitlementCertServiceAdapter extends
 
     private boolean shouldGenerateV3(Entitlement entitlement) {
         Consumer consumer = entitlement.getConsumer();
-        return consumer.isCertV3Capable();
+        return consumer != null && consumer.isCertV3Capable();
     }
 
     /**
@@ -262,8 +230,8 @@ public class DefaultEntitlementCertServiceAdapter extends
                 ent.getConsumer().getEnvironment());
             for (EnvironmentContent envContent :
                     ent.getConsumer().getEnvironment().getEnvironmentContent()) {
-                log.debug("  promoted content: " + envContent.getContentId());
-                promotedContent.put(envContent.getContentId(), envContent);
+                log.debug("  promoted content: " + envContent.getContent().getId());
+                promotedContent.put(envContent.getContent().getId(), envContent);
             }
         }
         return promotedContent;
@@ -281,11 +249,12 @@ public class DefaultEntitlementCertServiceAdapter extends
         int contentCounter = 0;
         boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
 
-        Product skuProd = productAdapter.getProductById(ent.getPool().getProductId());
+        Product skuProd = ent.getPool().getProduct();
 
-        for (Product prod : Collections2
-            .filter(products, X509Util.PROD_FILTER_PREDICATE)) {
+        for (Product prod : Collections2.filter(products, X509Util.PROD_FILTER_PREDICATE)) {
+            log.debug("Adding X509 extensions for product: {}", prod);
             result.addAll(extensionUtil.productExtensions(prod));
+
             Set<ProductContent> filteredContent =
                 extensionUtil.filterProductContent(prod, ent, entCurator,
                     promotedContent, enableEnvironmentFiltering, entitledProductIds);
@@ -296,6 +265,7 @@ public class DefaultEntitlementCertServiceAdapter extends
             // Keep track of the number of content sets that are being added.
             contentCounter += filteredContent.size();
 
+            log.debug("Adding X509 extensions for content: {}", filteredContent);
             result.addAll(extensionUtil.contentExtensions(filteredContent,
                 contentPrefix, promotedContent, ent.getConsumer(), skuProd));
         }
@@ -318,8 +288,7 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         if (log.isDebugEnabled()) {
             for (X509ExtensionWrapper eWrapper : result) {
-                log.debug(String.format("Extension %s with value %s",
-                    eWrapper.getOid(), eWrapper.getValue()));
+                log.debug("Extension {} with value {}", eWrapper.getOid(), eWrapper.getValue());
             }
         }
         return result;
@@ -333,7 +302,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     }
 
     public Set<X509ByteExtensionWrapper> prepareV3ByteExtensions(Product sku,
-            List<org.candlepin.json.model.Product> productModels,
+            List<org.candlepin.model.dto.Product> productModels,
             Entitlement ent, String contentPrefix,
             Map<String, EnvironmentContent> promotedContent) throws IOException {
 
@@ -358,11 +327,10 @@ public class DefaultEntitlementCertServiceAdapter extends
         return output.toString().replace("%24", "$");
     }
 
-    private EntitlementCertificate generateEntitlementCert(Entitlement entitlement,
-        Subscription sub, Product product, boolean thisIsUeberCert)
-        throws GeneralSecurityException, IOException {
+    private EntitlementCertificate generateEntitlementCert(Entitlement entitlement, Product product,
+        boolean thisIsUeberCert) throws GeneralSecurityException, IOException {
 
-        log.info("Generating entitlement cert.");
+        log.info("Generating entitlement cert for entitlement: {}", entitlement);
 
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(entitlement.getConsumer());
         CertificateSerial serial = new CertificateSerial(entitlement.getEndDate());
@@ -370,20 +338,20 @@ public class DefaultEntitlementCertServiceAdapter extends
         // otherwise we could have used cascading create
         serial = serialCurator.create(serial);
 
-        Set<Product> products = new HashSet<Product>(getProvidedProducts(
-            entitlement.getPool(), sub));
+        Set<Product> products = new HashSet<Product>(entitlement.getPool().getProvidedProducts());
 
         // If creating a certificate for a distributor, we need
         // to add any derived products as well so that their content
         // is available in the upstream certificate.
-        products.addAll(getDerivedProductsForDistributor(sub, entitlement));
+        products.addAll(getDerivedProductsForDistributor(entitlement));
         products.add(product);
 
         Map<String, EnvironmentContent> promotedContent = getPromotedContent(entitlement);
         String contentPrefix = getContentPrefix(entitlement, !thisIsUeberCert);
 
-        log.info("Creating X509 cert.");
-        List<org.candlepin.json.model.Product> productModels =
+        log.info("Creating X509 cert for product: {}", product);
+        log.debug("Provided products: {}", products);
+        List<org.candlepin.model.dto.Product> productModels =
                 v3extensionUtil.createProducts(product, products, contentPrefix,
                         promotedContent,
                         entitlement.getConsumer(), entitlement);
@@ -400,8 +368,11 @@ public class DefaultEntitlementCertServiceAdapter extends
         String pem = new String(this.pki.getPemEncoded(x509Cert));
 
         if (shouldGenerateV3(entitlement)) {
+            log.debug("Generating v3 entitlement data");
+
             byte[] payloadBytes = v3extensionUtil.createEntitlementDataPayload(product,
                     productModels, entitlement, contentPrefix, promotedContent);
+
             String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
             payload += Util.toBase64(payloadBytes);
             payload += "-----END ENTITLEMENT DATA-----\n";
@@ -415,7 +386,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         }
 
         cert.setCert(pem);
-
         cert.setEntitlement(entitlement);
 
         if (log.isDebugEnabled()) {

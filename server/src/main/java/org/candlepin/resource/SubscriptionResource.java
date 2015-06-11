@@ -16,10 +16,13 @@ package org.candlepin.resource;
 
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.Subscription;
+import org.candlepin.model.Pool;
 import org.candlepin.model.SubscriptionsCertificate;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
@@ -29,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
@@ -54,18 +58,70 @@ public class SubscriptionResource {
 
     private SubscriptionServiceAdapter subService;
     private ConsumerCurator consumerCurator;
+    private PoolManager poolManager;
 
     private I18n i18n;
 
     @Inject
     public SubscriptionResource(SubscriptionServiceAdapter subService,
-        ConsumerCurator consumerCurator,
-        I18n i18n) {
+        ConsumerCurator consumerCurator, PoolManager poolManager, I18n i18n) {
+
         this.subService = subService;
         this.consumerCurator = consumerCurator;
+        this.poolManager = poolManager;
 
         this.i18n = i18n;
+    }
 
+
+    /**
+     * Retrieves the master pool generated from the specified subscription. If an appropriate master
+     * pool cannot be found, this method throws a NotFoundException.
+     *
+     * @param subscriptionId
+     *  The subscription ID for which to retrieve the master pool
+     *
+     * @throws NotFoundException
+     *  if an appropriate master pool cannot be found.
+     *
+     * @return
+     *  the master pool for the given subscription
+     */
+    protected Pool getMasterPoolForSubscription(String subscriptionId) {
+        Pool pool = this.poolManager.getMasterPoolBySubscriptionId(subscriptionId);
+
+        if (pool == null) {
+            throw new NotFoundException(
+                i18n.tr("A subscription with the ID \"{0}\" could not be found.", subscriptionId)
+            );
+        }
+
+        return pool;
+    }
+
+    /**
+     * Retrieves the subscription certificate for the given subscription ID. If the subscription
+     * cannot be found or does not have a certificate, this method throws a NotFoundException.
+     *
+     * @param subscriptionId
+     *  The subscription ID for which to retrieve a subscription certificate
+     *
+     * @throws NotFoundException
+     *  if the subscription cannot be found or the subscription does not have a certificate
+     *
+     * @return
+     *  the certificate associated with the specified subscription
+     */
+    protected SubscriptionsCertificate getSubscriptionCertificate(String subscriptionId) {
+        Pool pool = this.getMasterPoolForSubscription(subscriptionId);
+
+        if (pool.getCertificate() == null) {
+            throw new NotFoundException(
+                i18n.tr("A certificate was not found for subscription \"{0}\"", subscriptionId)
+            );
+        }
+
+        return pool.getCertificate();
     }
 
     /**
@@ -77,7 +133,13 @@ public class SubscriptionResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Subscription> getSubscriptions() {
-        return subService.getSubscriptions();
+        List<Subscription> subscriptions = new LinkedList<Subscription>();
+
+        for (Pool pool : this.poolManager.listMasterPools()) {
+            subscriptions.add(this.poolManager.fabricateSubscriptionFromPool(pool));
+        }
+
+        return subscriptions;
     }
 
     /**
@@ -118,11 +180,10 @@ public class SubscriptionResource {
     @GET
     @Path("/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Subscription getSubscription(
-        @PathParam("subscription_id") String subscriptionId) {
+    public Subscription getSubscription(@PathParam("subscription_id") String subscriptionId) {
+        Pool pool = this.getMasterPoolForSubscription(subscriptionId);
 
-        Subscription subscription = verifyAndFind(subscriptionId);
-        return subscription;
+        return this.poolManager.fabricateSubscriptionFromPool(pool);
     }
 
      /**
@@ -141,9 +202,9 @@ public class SubscriptionResource {
     @Produces({ MediaType.TEXT_PLAIN })
     public String getSubCertAsPem(
         @PathParam("subscription_id") String subscriptionId) {
-        SubscriptionsCertificate subCert = getSubCertWorker(subscriptionId);
-        log.debug("get as pem");
-        return subCert.getCert() + subCert.getKey();
+
+        SubscriptionsCertificate cert = this.getSubscriptionCertificate(subscriptionId);
+        return cert.getCert() + cert.getKey();
     }
 
     /**
@@ -158,18 +219,8 @@ public class SubscriptionResource {
     @Produces({ MediaType.APPLICATION_JSON})
     public SubscriptionsCertificate getSubCert(
         @PathParam("subscription_id") String subscriptionId) {
-        SubscriptionsCertificate subCert = getSubCertWorker(subscriptionId);
-        return subCert;
-    }
 
-    private SubscriptionsCertificate getSubCertWorker(String subscriptionId) {
-        Subscription sub = verifyAndFind(subscriptionId);
-        SubscriptionsCertificate subCert = sub.getCertificate();
-        if (subCert == null) {
-            throw new BadRequestException(
-                i18n.tr("no certificate for subscription {0}", subscriptionId));
-        }
-        return subCert;
+        return this.getSubscriptionCertificate(subscriptionId);
     }
 
     /**
@@ -187,20 +238,17 @@ public class SubscriptionResource {
         @Context HttpServletResponse response) {
 
         if (email == null) {
-            throw new BadRequestException(i18n.tr(
-                    "email is required for notification"));
+            throw new BadRequestException(i18n.tr("email is required for notification"));
         }
 
         if (emailLocale == null) {
-            throw new BadRequestException(i18n.tr(
-                    "email locale is required for notification"));
+            throw new BadRequestException(i18n.tr("email locale is required for notification"));
         }
 
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
 
         if (consumer == null) {
-            throw new BadRequestException(i18n.tr("No such unit: {0}",
-                consumerUuid));
+            throw new BadRequestException(i18n.tr("No such unit: {0}", consumerUuid));
         }
 
         this.subService.activateSubscription(consumer, email, emailLocale);
@@ -219,20 +267,20 @@ public class SubscriptionResource {
     @DELETE
     @Path("/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public void deleteSubscription(
-        @PathParam("subscription_id") String subscriptionIdString) {
+    public void deleteSubscription(@PathParam("subscription_id") String subscriptionId) {
 
-        Subscription subscription = verifyAndFind(subscriptionIdString);
-        subService.deleteSubscription(subscription);
-    }
+        // Lookup pools from subscription ID
+        List<Pool> pools = this.poolManager.getPoolsBySubscriptionId(subscriptionId);
 
-    private Subscription verifyAndFind(String subscriptionId) {
-        Subscription subscription = subService.getSubscription(subscriptionId);
-
-        if (subscription == null) {
-            throw new BadRequestException(
-                i18n.tr("Subscription with id {0} could not be found.", subscriptionId));
+        if (pools.isEmpty()) {
+            throw new NotFoundException(
+                i18n.tr("A subscription with the ID \"{0}\" could not be found.", subscriptionId)
+            );
         }
-        return subscription;
+
+        for (Pool pool : pools) {
+            this.poolManager.deletePool(pool);
+        }
     }
+
 }

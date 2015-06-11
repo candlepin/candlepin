@@ -14,8 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.policy.EntitlementRefusedException;
@@ -54,7 +53,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         owner = createOwner();
         ownerCurator.create(owner);
 
-        product = TestUtil.createProduct();
+        product = TestUtil.createProduct(owner);
         productCurator.create(product);
 
         consumer = TestUtil.createConsumer(owner);
@@ -69,11 +68,11 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         throws Exception {
         Long numAvailEntitlements = 2L;
 
-        Product newProduct = TestUtil.createProduct();
+        Product newProduct = TestUtil.createProduct(owner);
         newProduct.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
         productCurator.create(newProduct);
 
-        Pool consumerPool = createPoolAndSub(owner, newProduct,
+        Pool consumerPool = createPool(owner, newProduct,
             numAvailEntitlements, TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
@@ -93,10 +92,10 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         throws Exception {
         Long numAvailEntitlements = 1L;
 
-        Product newProduct = TestUtil.createProduct();
+        Product newProduct = TestUtil.createProduct(owner);
         productCurator.create(newProduct);
 
-        Pool consumerPool = createPoolAndSub(owner, newProduct, numAvailEntitlements,
+        Pool consumerPool = createPool(owner, newProduct, numAvailEntitlements,
             TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
         poolCurator.create(consumerPool);
 

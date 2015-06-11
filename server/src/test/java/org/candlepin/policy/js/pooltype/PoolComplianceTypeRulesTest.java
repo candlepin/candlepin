@@ -14,14 +14,15 @@
  */
 package org.candlepin.policy.js.pooltype;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.junit.Before;
@@ -64,16 +65,16 @@ public class PoolComplianceTypeRulesTest {
      */
     @Test
     public void testStandardPool() {
-        Pool p = new Pool();
+        Pool p = TestUtil.createPool(TestUtil.createProduct(TestUtil.createOwner()));
         PoolComplianceType pt = poolTypeRules.getPoolType(p);
         assertEquals("standard", pt.getRawPoolType());
     }
 
     @Test
     public void testStackablePool() {
-        Pool p = new Pool();
-        p.setProductAttribute("stacking_id", "5", "test");
-        p.setProductAttribute("multi-entitlement", "yes", "test");
+        Pool p = TestUtil.createPool(TestUtil.createProduct(TestUtil.createOwner()));
+        p.getProduct().setAttribute("stacking_id", "5");
+        p.getProduct().setAttribute("multi-entitlement", "yes");
         PoolComplianceType pt = poolTypeRules.getPoolType(p);
         assertEquals("stackable", pt.getRawPoolType());
     }
@@ -84,18 +85,18 @@ public class PoolComplianceTypeRulesTest {
      */
     @Test
     public void testUniqueStackablePool() {
-        Pool p = new Pool();
-        p.setProductAttribute("stacking_id", "5", "test");
+        Pool p = TestUtil.createPool(TestUtil.createProduct(TestUtil.createOwner()));
+        p.getProduct().setAttribute("stacking_id", "5");
         PoolComplianceType pt = poolTypeRules.getPoolType(p);
         assertEquals("unique stackable", pt.getRawPoolType());
     }
 
     @Test
     public void testInstanceBasedPool() {
-        Pool p = new Pool();
-        p.setProductAttribute("stacking_id", "5", "test");
-        p.setProductAttribute("multi-entitlement", "yes", "test");
-        p.setProductAttribute("instance_multiplier", "2", "test");
+        Pool p = TestUtil.createPool(TestUtil.createProduct(TestUtil.createOwner()));
+        p.getProduct().setAttribute("stacking_id", "5");
+        p.getProduct().setAttribute("multi-entitlement", "yes");
+        p.getProduct().setAttribute("instance_multiplier", "2");
         PoolComplianceType pt = poolTypeRules.getPoolType(p);
         assertEquals("instance based", pt.getRawPoolType());
     }
@@ -106,8 +107,8 @@ public class PoolComplianceTypeRulesTest {
      */
     @Test
     public void testUnknownPool() {
-        Pool p = new Pool();
-        p.setProductAttribute("instance_multiplier", "2", "test");
+        Pool p = TestUtil.createPool(TestUtil.createProduct(TestUtil.createOwner()));
+        p.getProduct().setAttribute("instance_multiplier", "2");
         PoolComplianceType pt = poolTypeRules.getPoolType(p);
         assertEquals("unknown", pt.getRawPoolType());
     }

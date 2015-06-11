@@ -14,6 +14,8 @@
  */
 package org.candlepin.controller;
 
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Environment;
@@ -21,13 +23,13 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.PoolQuantity;
-import org.candlepin.model.Subscription;
+import org.candlepin.model.Product;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
+import org.candlepin.service.SubscriptionServiceAdapter;
 
 import java.util.Collection;
 import java.util.Date;
@@ -46,6 +48,33 @@ public interface PoolManager {
      * @return the newly created Pool
      */
     List<Pool> createPoolsForSubscription(Subscription sub);
+
+    /**
+     * Updates the pools associated with the specified subscription, using the information stored
+     * in the given subscription. Because the input subscription is used to lookup pools, the ID
+     * field must be set for this method to operate properly.
+     *
+     * @param subscription
+     *  The subscription to use for updating the associated pools
+     */
+    void updatePoolsForSubscription(Subscription subscription);
+
+    /**
+     * Deletes the pools associated with the specified subscription. Because the input subscription
+     * is used to lookup pools, the ID field must be set for this method to operate properly.
+     *
+     * @param subscription
+     *  The subscription to use for deleting the associated pools
+     */
+    void deletePoolsForSubscription(Subscription subscription);
+
+    /**
+     * Deletes the pools associated with the specified subscription IDs.
+     *
+     * @param subscriptionIds
+     *  A collection of subscription IDs used to lookup and delete pools
+     */
+    void deletePoolsForSubscriptions(Collection<String> subscriptionIds);
 
     /**
      * Cleanup entitlements and safely delete the given pool.
@@ -97,8 +126,8 @@ public interface PoolManager {
 
     List<Pool> lookupBySubscriptionId(String id);
 
-    Refresher getRefresher();
-    Refresher getRefresher(boolean lazy);
+    Refresher getRefresher(SubscriptionServiceAdapter subAdapter);
+    Refresher getRefresher(SubscriptionServiceAdapter subAdapter, boolean lazy);
 
     /**
      * @param e
@@ -108,7 +137,7 @@ public interface PoolManager {
 
     void regenerateCertificatesOf(Environment env, Set<String> contentIds, boolean lazy);
 
-    void regenerateCertificatesOf(String productId, boolean lazy);
+    void regenerateCertificatesOf(Owner owner, String productId, boolean lazy);
 
     void regenerateEntitlementCertificates(Consumer consumer, boolean lazy);
 
@@ -199,7 +228,7 @@ public interface PoolManager {
      *
      * @return pool update specifics
      */
-    PoolUpdate updatePoolFromStack(Pool pool);
+    PoolUpdate updatePoolFromStack(Pool pool, Set<Product> changedProducts);
 
     /**
      * @param guest products we want to provide for
@@ -226,4 +255,48 @@ public interface PoolManager {
     List<Entitlement> entitleByProductsForHost(Consumer guest, Consumer host,
             Date entitleDate, Collection<String> possiblePools)
         throws EntitlementRefusedException;
+
+    /**
+     * Creates a Subscription object using information derived from the specified pool. Used to
+     * support deprecated API calls that still require a subscription.
+     *
+     * @param pool
+     *  The pool from which to build a subscription
+     *
+     * @return
+     *  a new subscription object derived from the specified pool.
+     */
+    Subscription fabricateSubscriptionFromPool(Pool pool);
+
+    /**
+     * Retrieves a list of pools associated with the specified subscription ID. If there are no
+     * pools associated with the given subscription, this method should return an empty list.
+     *
+     * @param subscriptionId
+     *  The subscription ID to use to lookup pools
+     *
+     * @return
+     *  a list of pools associated with the specified subscription.
+     */
+    List<Pool> getPoolsBySubscriptionId(String subscriptionId);
+
+    /**
+     * Retrieves the master pool associated with the specified subscription ID. If there is not a
+     * master pool asscoated with the given subscription, this method should return null.
+     *
+     * @param subscriptionId
+     *  The subscription ID to use to lookup a master pool
+     *
+     * @return
+     *  the master pool associated with the specified subscription.
+     */
+    Pool getMasterPoolBySubscriptionId(String subscriptionId);
+
+    /**
+     * Retrieves a list consisting of all known master pools.
+     *
+     * @return
+     *  a list of known master pools
+     */
+    List<Pool> listMasterPools();
 }

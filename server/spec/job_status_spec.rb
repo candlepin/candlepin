@@ -14,14 +14,14 @@ describe 'Job Status' do
   end
 
   it 'should contain the owner key' do
-    status = @cp.refresh_pools(@owner['key'], true)
+    status = @cp.autoheal_org(@owner['key'])
     status['targetId'].should == @owner['key']
 
     wait_for_job(status['id'], 15)
   end
 
   it 'should contain the target type' do
-    status = @cp.refresh_pools(@owner['key'], true)
+    status = @cp.autoheal_org(@owner['key'])
     status['targetType'].should == "owner"
 
     wait_for_job(status['id'], 15)
@@ -31,7 +31,7 @@ describe 'Job Status' do
   it 'should be findable by owner key' do
     jobs = []
     3.times {
-        jobs << @cp.refresh_pools(@owner['key'], true)
+        jobs << @cp.autoheal_org(@owner['key'])
         wait_for_job(jobs[-1]['id'], 15)
     }
 
@@ -40,18 +40,19 @@ describe 'Job Status' do
 
   it 'should only find jobs with the correct owner key' do
     owner2 = create_owner(random_string('some_owner'))
-    @cp.create_subscription(owner2['key'], @monitoring.id, 100)
+    product = create_product(nil, nil, :owner => owner2['key'])
+    @cp.create_subscription(owner2['key'], product.id, 100)
 
     jobs = []
     # Just some random numbers here
     4.times {
-        jobs << @cp.refresh_pools(owner2['key'], true)
-        jobs << @cp.refresh_pools(@owner['key'], true)
+        jobs << @cp.autoheal_org(owner2['key'])
+        jobs << @cp.autoheal_org(@owner['key'])
         wait_for_job(jobs[-1]['id'], 15)
         wait_for_job(jobs[-2]['id'], 15)
     }
     2.times {
-        jobs << @cp.refresh_pools(owner2['key'], true)
+        jobs << @cp.autoheal_org(owner2['key'])
         wait_for_job(jobs[-1]['id'], 15)
     }
 
@@ -70,7 +71,7 @@ describe 'Job Status' do
 
   it 'should cancel a job' do
     @cp.set_scheduler_status(false)
-    job = @cp.refresh_pools(@owner['key'], true)
+    job = @cp.autoheal_org(@owner['key'])
     #make sure we see a job waiting to go
     joblist = @cp.list_jobs(@owner['key'])
     joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CREATED'
@@ -88,7 +89,7 @@ describe 'Job Status' do
   end
 
   it 'should contain the system target type and id for async binds' do
-    @cp.refresh_pools(@owner['key'])
+    @cp.autoheal_org(@owner['key'])
     system = consumer_client(@user, 'system6')
 
     status = system.consume_product(@monitoring.id, { :async => true })
@@ -100,7 +101,7 @@ describe 'Job Status' do
   end
 
   it 'should allow admin to view any job status' do
-    job = @cp.refresh_pools(@owner['key'], true)
+    job = @cp.autoheal_org(@owner['key'])
     wait_for_job(job['id'], 15)
     status = @cp.get_job(job['id'])
     status['id'].should == job['id']

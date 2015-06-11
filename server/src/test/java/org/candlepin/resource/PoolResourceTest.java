@@ -14,12 +14,9 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
@@ -75,6 +72,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     private Pool pool2;
     private Pool pool3;
     private Product product1;
+    private Product product1Owner2;
     private Product product2;
     private PoolResource poolResource;
     private static final String PRODUCT_CPULIMITED = "CPULIMITED001";
@@ -96,23 +94,26 @@ public class PoolResourceTest extends DatabaseTestFixture {
         ownerCurator.create(owner1);
         ownerCurator.create(owner2);
 
-        product1 = new Product(PRODUCT_CPULIMITED, PRODUCT_CPULIMITED);
-        product2 = TestUtil.createProduct();
+        product1 = new Product(PRODUCT_CPULIMITED, PRODUCT_CPULIMITED, owner1);
+        product1Owner2 = new Product(PRODUCT_CPULIMITED, PRODUCT_CPULIMITED, owner2);
+        product2 = TestUtil.createProduct(owner1);
         productCurator.create(product1);
+        productCurator.create(product1Owner2);
         productCurator.create(product2);
 
-        pool1 = createPoolAndSub(owner1, product1, 500L,
+        pool1 = createPool(owner1, product1, 500L,
              TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
-        pool2 = createPoolAndSub(owner1, product2, 500L,
+        pool2 = createPool(owner1, product2, 500L,
              TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
-        pool3 = createPoolAndSub(owner2 , product1, 500L,
+        pool3 = createPool(owner2 , product1Owner2, 500L,
              TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
         poolCurator.create(pool1);
         poolCurator.create(pool2);
         poolCurator.create(pool3);
 
-        poolResource = new PoolResource(consumerCurator, ownerCurator,
-            statisticCurator, i18n, poolManager, attrUtil);
+        poolResource = new PoolResource(
+            consumerCurator, ownerCurator, statisticCurator, i18n, poolManager, attrUtil
+        );
 
         // Consumer system with too many cpu cores:
 

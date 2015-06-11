@@ -51,6 +51,7 @@ public class AdminResource {
 
     private UserServiceAdapter userService;
     private UserCurator userCurator;
+
     private HornetqEventDispatcher dispatcher;
     private Configuration config;
 
@@ -59,6 +60,7 @@ public class AdminResource {
             HornetqEventDispatcher dispatcher, Configuration config) {
         this.userService = userService;
         this.userCurator = userCurator;
+
         this.dispatcher = dispatcher;
         this.config = config;
     }

@@ -14,9 +14,7 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -33,16 +31,13 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
-import org.candlepin.model.ProductPoolAttribute;
-import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.model.Subscription;
-import org.candlepin.policy.js.ProductCache;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
@@ -68,12 +63,11 @@ public class PoolRulesStackDerivedTest {
     private Consumer consumer;
 
     @Mock private RulesCurator rulesCuratorMock;
-    @Mock private ProductServiceAdapter productAdapterMock;
+    @Mock private ProductCurator productCuratorMock;
     @Mock private PoolManager poolManagerMock;
     @Mock private Configuration configMock;
     @Mock private EntitlementCurator entCurMock;
 
-    private ProductCache productCache;
     private UserPrincipal principal;
     private Owner owner;
 
@@ -112,9 +106,9 @@ public class PoolRulesStackDerivedTest {
         when(rulesCuratorMock.getRules()).thenReturn(rules);
 
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
-        productCache = new ProductCache(configMock, productAdapterMock);
 
-        poolRules = new PoolRules(poolManagerMock, productCache, configMock, entCurMock);
+        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock,
+                productCuratorMock);
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);
 
@@ -122,21 +116,21 @@ public class PoolRulesStackDerivedTest {
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
         // Two subtly different products stacked together:
-        prod1 = TestUtil.createProduct();
+        prod1 = TestUtil.createProduct("prod1", "prod1", owner);
         prod1.addAttribute(new ProductAttribute("virt_limit", "2"));
         prod1.addAttribute(new ProductAttribute("stacking_id", STACK));
         prod1.addAttribute(new ProductAttribute("testattr1", "1"));
-        when(productAdapterMock.getProductById(prod1.getId())).thenReturn(prod1);
+        when(productCuratorMock.find(prod1.getUuid())).thenReturn(prod1);
 
-        prod2 = TestUtil.createProduct();
+        prod2 = TestUtil.createProduct("prod2", "prod2", owner);
         prod2.addAttribute(new ProductAttribute("virt_limit", "unlimited"));
         prod2.addAttribute(new ProductAttribute("stacking_id", STACK));
         prod2.addAttribute(new ProductAttribute("testattr2", "2"));
-        when(productAdapterMock.getProductById(prod2.getId())).thenReturn(prod2);
+        when(productCuratorMock.find(prod2.getUuid())).thenReturn(prod2);
 
-        provided1 = TestUtil.createProduct();
-        provided2 = TestUtil.createProduct();
-        provided3 = TestUtil.createProduct();
+        provided1 = TestUtil.createProduct(owner);
+        provided2 = TestUtil.createProduct(owner);
+        provided3 = TestUtil.createProduct(owner);
 
         // Create three subscriptions with various start/end dates:
         sub1 = createStackedVirtSub(owner, prod1,
@@ -161,14 +155,13 @@ public class PoolRulesStackDerivedTest {
         stackedEnts.add(createEntFromPool(pool2));
         when(entCurMock.findByStackId(consumer, STACK)).thenReturn(stackedEnts);
 
-        PoolHelper helper = new PoolHelper(poolManagerMock, productCache,
-            stackedEnts.get(0));
-        stackDerivedPool = helper.createHostRestrictedPool(prod2.getId(), pool2, "6");
+        PoolHelper helper = new PoolHelper(poolManagerMock, stackedEnts.get(0));
+        stackDerivedPool = helper.createHostRestrictedPool(prod2, pool2, "6");
     }
 
     private Subscription createStackedVirtSub(Owner owner, Product product,
         Date start, Date end) {
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
         s.setStartDate(start);
         s.setEndDate(end);
         s.setProduct(product);
@@ -212,20 +205,20 @@ public class PoolRulesStackDerivedTest {
     @Test
     public void initialProvidedProducts() {
         assertEquals(1, stackDerivedPool.getProvidedProducts().size());
-        assertEquals(provided2.getId(),
-            stackDerivedPool.getProvidedProducts().iterator().next().getProductId());
+        assertEquals(provided2.getUuid(),
+            stackDerivedPool.getProvidedProducts().iterator().next().getUuid());
     }
 
     @Test
     public void initialAttributes() {
-        assertEquals(5, stackDerivedPool.getProductAttributes().size());
-        assertEquals("2", stackDerivedPool.getProductAttributeValue("testattr2"));
+        assertEquals(5, stackDerivedPool.getProduct().getAttributes().size());
+        assertEquals("2", stackDerivedPool.getProduct().getAttributeValue("testattr2"));
     }
 
     @Test
     public void addEarlierStartDate() {
         stackedEnts.add(createEntFromPool(pool1));
-        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool);
+        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
         assertTrue(update.changed());
         assertTrue(update.getDatesChanged());
         assertEquals(pool1.getStartDate(), stackDerivedPool.getStartDate());
@@ -236,7 +229,7 @@ public class PoolRulesStackDerivedTest {
     public void addLaterEndDate() {
         stackedEnts.add(createEntFromPool(pool1));
         stackedEnts.add(createEntFromPool(pool3));
-        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool);
+        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
         assertTrue(update.changed());
         assertTrue(update.getDatesChanged());
         assertEquals(pool1.getStartDate(), stackDerivedPool.getStartDate());
@@ -245,41 +238,39 @@ public class PoolRulesStackDerivedTest {
 
     @Test
     public void mergedProductAttributes() {
-        stackedEnts.add(createEntFromPool(pool1));
-        stackedEnts.add(createEntFromPool(pool3));
-        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool);
-        assertTrue(update.changed());
-        assertTrue(update.getProductAttributesChanged());
-        assertEquals(6, stackDerivedPool.getProductAttributes().size());
+        Entitlement ent1 = createEntFromPool(pool1);
+        ent1.setCreated(new Date(System.currentTimeMillis() - 86400000));
 
-        assertEquals("2", stackDerivedPool.getProductAttributeValue("testattr2"));
-        assertEquals("1", stackDerivedPool.getProductAttributeValue("testattr1"));
+        stackedEnts.add(ent1);
+        stackedEnts.add(createEntFromPool(pool3));
+        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
+        assertTrue(update.changed());
+
+        assertTrue(update.getProductAttributesChanged());
+        assertEquals(pool1.getProductAttributes(), stackDerivedPool.getProductAttributes());
     }
 
     @Test
     public void mergedProvidedProducts() {
         stackedEnts.add(createEntFromPool(pool1));
         stackedEnts.add(createEntFromPool(pool3));
-        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool);
+        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
         assertTrue(update.getProductsChanged());
         assertEquals(3, stackDerivedPool.getProvidedProducts().size());
-        assertTrue(stackDerivedPool.getProvidedProducts().contains(
-            new ProvidedProduct(provided1.getId(), provided1.getName())));
-        assertTrue(stackDerivedPool.getProvidedProducts().contains(
-            new ProvidedProduct(provided2.getId(), provided2.getName())));
-        assertTrue(stackDerivedPool.getProvidedProducts().contains(
-            new ProvidedProduct(provided3.getId(), provided3.getName())));
+        assertTrue(stackDerivedPool.getProvidedProducts().contains(provided1));
+        assertTrue(stackDerivedPool.getProvidedProducts().contains(provided2));
+        assertTrue(stackDerivedPool.getProvidedProducts().contains(provided3));
     }
 
     @Test
     public void removeEldestEntitlement() {
         stackedEnts.add(createEntFromPool(pool1));
         stackedEnts.add(createEntFromPool(pool3));
-        poolRules.updatePoolFromStack(stackDerivedPool);
+        poolRules.updatePoolFromStack(stackDerivedPool, null);
 
         // Should change a variety of settings on the pool.
         stackedEnts.remove(0);
-        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool);
+        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
         assertTrue(update.changed());
         assertFalse(update.getDatesChanged());
 
@@ -296,11 +287,11 @@ public class PoolRulesStackDerivedTest {
     public void removeEarliestStartingEntitlement() {
         stackedEnts.add(createEntFromPool(pool1));
         stackedEnts.add(createEntFromPool(pool3));
-        poolRules.updatePoolFromStack(stackDerivedPool);
+        poolRules.updatePoolFromStack(stackDerivedPool, null);
 
         // Should change a variety of settings on the pool.
         stackedEnts.remove(1);
-        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool);
+        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
         assertTrue(update.changed());
         assertTrue(update.getDatesChanged());
 
@@ -314,7 +305,7 @@ public class PoolRulesStackDerivedTest {
         stackedEnts.add(createEntFromPool(pool1));
         stackedEnts.add(createEntFromPool(pool3));
 
-        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool);
+        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
         assertTrue(update.changed());
         assertTrue(update.getQuantityChanged());
         assertEquals((Long) 2L, stackDerivedPool.getQuantity());
@@ -325,11 +316,11 @@ public class PoolRulesStackDerivedTest {
         stackedEnts.clear();
         stackedEnts.add(createEntFromPool(pool1));
         stackedEnts.add(createEntFromPool(pool2));
-        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool);
+        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
         assertEquals((Long) 2L, stackDerivedPool.getQuantity());
 
         stackedEnts.remove(0);
-        update = poolRules.updatePoolFromStack(stackDerivedPool);
+        update = poolRules.updatePoolFromStack(stackDerivedPool, null);
         assertTrue(update.changed());
         assertTrue(update.getQuantityChanged());
         assertEquals(new Long("-1"), stackDerivedPool.getQuantity());
@@ -339,20 +330,20 @@ public class PoolRulesStackDerivedTest {
     public void virtLimitNotChangedWhenLastVirtEntIsRemovedFromStack() {
         // Remove virt_limit from pool1 so that it is not considered
         // as virt limiting.
-        pool1.getProductAttributes().clear();
-        pool1.getProductAttributes().add(new ProductPoolAttribute(
-            "stacking_id", STACK, pool1.getProductId()));
-        pool1.getProductAttributes().add(new ProductPoolAttribute(
-            "testattr2", "2", pool1.getProductId()));
+        Product product = pool1.getProduct();
+
+        product.getAttributes().clear();
+        product.setAttribute("stacking_id", STACK);
+        product.setAttribute("testattr2", "2");
 
         stackedEnts.clear();
         stackedEnts.add(createEntFromPool(pool1));
         stackedEnts.add(createEntFromPool(pool2));
-        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool);
+        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
         assertEquals(new Long("-1"), stackDerivedPool.getQuantity());
 
         stackedEnts.remove(0);
-        update = poolRules.updatePoolFromStack(stackDerivedPool);
+        update = poolRules.updatePoolFromStack(stackDerivedPool, null);
         assertTrue(update.changed());
         assertTrue(update.getDatesChanged());
         assertFalse(update.getQuantityChanged());

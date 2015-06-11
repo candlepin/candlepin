@@ -55,8 +55,7 @@ describe 'Environments' do
 
     lambda {
       content = create_content
-      foreign_admin.promote_content(@env['id'],
-        [{:contentId => content['id']}])
+      foreign_admin.promote_content(@env['id'], [{:contentId => content['id']}])
     }.should raise_exception(RestClient::ResourceNotFound)
   end
 
@@ -70,8 +69,7 @@ describe 'Environments' do
 
   it 'can have promoted content' do
     content = create_content
-    job = @org_admin.promote_content(@env['id'],
-        [{:contentId => content['id']}])
+    job = @org_admin.promote_content(@env['id'], [{:contentId => content['id']}])
     wait_for_job(job['id'], 15)
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 1
@@ -121,16 +119,17 @@ describe 'Environments' do
     job = @org_admin.promote_content(
       @env['id'], [{:contentId => content1['id']}, {:contentId => content2['id']}]
     )
+
     wait_for_job(job['id'], 15)
 
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 2
 
-    @cp.delete_content(content1['id'])
+    @cp.delete_content(@owner['key'], content1['id'])
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 1
 
-    @cp.delete_content(content2['id'])
+    @cp.delete_content(@owner['key'], content2['id'])
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 0
   end
@@ -138,11 +137,9 @@ describe 'Environments' do
   it 'can demote content' do
     content = create_content
     content2 = create_content
-    job = @org_admin.promote_content(@env['id'],
-        [{:contentId => content['id']}])
+    job = @org_admin.promote_content(@env['id'], [{:contentId => content['id']}])
     wait_for_job(job['id'], 15)
-    job = @org_admin.promote_content(@env['id'],
-        [{:contentId => content2['id']}])
+    job = @org_admin.promote_content(@env['id'], [{:contentId => content2['id']}])
     wait_for_job(job['id'], 15)
     job = @org_admin.demote_content(@env['id'], [content['id'], content2['id']])
     wait_for_job(job['id'], 15)
@@ -192,8 +189,8 @@ describe 'Environments' do
     product = create_product
     content = create_content # promoted
     content2 = create_content # not promoted
-    @cp.add_content_to_product(product['id'], content['id'])
-    @cp.add_content_to_product(product['id'], content2['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content2['id'])
 
     # Override enabled to false:
     job = @org_admin.promote_content(@env['id'],
@@ -229,8 +226,8 @@ describe 'Environments' do
     product = create_product
     content = create_content # promoted
     content2 = create_content # not promoted
-    @cp.add_content_to_product(product['id'], content['id'])
-    @cp.add_content_to_product(product['id'], content2['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content2['id'])
 
     # Override enabled to false:
     job = @org_admin.promote_content(@env['id'],

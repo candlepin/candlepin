@@ -14,8 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -48,15 +47,14 @@ public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
         e = new Environment("env1", "Env 1", owner);
         envCurator.create(e);
 
-        p = TestUtil.createProduct();
-        c = new Content("testcontent", "contentId1", "testcontent", "yum",
-            "red hat", "http://example.com", "http://example.com/gpg.key",
-            "test-arch");
+        p = TestUtil.createProduct(owner);
+        c = new Content(this.owner, "testcontent", "contentId1", "testcontent", "yum",
+            "red hat", "http://example.com", "http://example.com/gpg.key", "test-arch");
         contentCurator.create(c);
         p.addContent(c);
         productCurator.create(p);
 
-        envContent = new EnvironmentContent(e, c.getId(), true);
+        envContent = new EnvironmentContent(e, c, true);
         envContent = envContentCurator.create(envContent);
     }
 
@@ -68,7 +66,7 @@ public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
         e = envCurator.find(e.getId());
         assertEquals(1, e.getEnvironmentContent().size());
 
-        assertEquals(1, envContentCurator.lookupByContent(c.getId()).size());
+        assertEquals(1, envContentCurator.lookupByContent(owner, c.getId()).size());
     }
 
     @Test
@@ -80,7 +78,7 @@ public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
 
     @Test(expected = PersistenceException.class)
     public void createDuplicate() {
-        envContent = new EnvironmentContent(e, c.getId(), true);
+        envContent = new EnvironmentContent(e, c, true);
         envContentCurator.create(envContent);
     }
 

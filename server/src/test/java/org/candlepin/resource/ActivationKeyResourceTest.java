@@ -14,12 +14,9 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
@@ -60,6 +57,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     protected ActivationKeyResource activationKeyResource;
     protected ActivationKeyRules activationKeyRules;
     private static int poolid = 0;
+    private Owner owner;
 
     @Before
     public void setUp() {
@@ -68,12 +66,12 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
             .getInstance(ActivationKeyResource.class);
         activationKeyRules = injector
             .getInstance(ActivationKeyRules.class);
+        owner = createOwner();
     }
 
     @Test(expected = BadRequestException.class)
     public void testCreateReadDelete() {
         ActivationKey key = new ActivationKey();
-        Owner owner = createOwner();
         key.setOwner(owner);
         key.setName("dd");
         key.setServiceLevel("level1");
@@ -103,10 +101,9 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     @Test
     public void testAddingRemovingPools() {
         ActivationKey key = new ActivationKey();
-        Owner owner = createOwner();
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
-        Pool pool = createPoolAndSub(owner, product, 10L, new Date(), new Date());
+        Pool pool = createPool(owner, product, 10L, new Date(), new Date());
         key.setOwner(owner);
         key.setName("dd");
         key = activationKeyCurator.create(key);
@@ -120,10 +117,9 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     @Test(expected = BadRequestException.class)
     public void testReaddingPools() {
         ActivationKey key = new ActivationKey();
-        Owner owner = createOwner();
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
-        Pool pool = createPoolAndSub(owner, product, 10L, new Date(), new Date());
+        Pool pool = createPool(owner, product, 10L, new Date(), new Date());
 
         key.setOwner(owner);
         key.setName("dd");
@@ -143,7 +139,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKey ak = genActivationKey();
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Pool p = genPool();
-        p.setProductAttribute("multi-entitlement", "no", "id");
+        p.getProduct().setAttribute("multi-entitlement", "no");
         PoolManager poolManager = mock(PoolManager.class);
 
         when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
@@ -175,7 +171,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKey ak = genActivationKey();
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Pool p = genPool();
-        p.setProductAttribute("multi-entitlement", "yes", "id");
+        p.getProduct().setAttribute("multi-entitlement", "yes");
         p.setQuantity(10L);
         PoolManager poolManager = mock(PoolManager.class);
 
@@ -192,7 +188,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKey ak = genActivationKey();
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Pool p = genPool();
-        p.setProductAttribute("multi-entitlement", "yes", "id");
+        p.getProduct().setAttribute("multi-entitlement", "yes");
         p.setQuantity(-1L);
         PoolManager poolManager = mock(PoolManager.class);
 
@@ -210,7 +206,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKey ak = genActivationKey();
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Pool p = genPool();
-        p.setProductAttribute("requires_consumer_type", "person", "id");
+        p.getProduct().setAttribute("requires_consumer_type", "person");
         p.setQuantity(1L);
         PoolManager poolManager = mock(PoolManager.class);
 
@@ -227,7 +223,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKey ak = genActivationKey();
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Pool p = genPool();
-        p.setProductAttribute("requires_consumer_type", "candlepin", "id");
+        p.getProduct().setAttribute("requires_consumer_type", "candlepin");
         PoolManager poolManager = mock(PoolManager.class);
 
         when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
@@ -343,7 +339,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     public void testAddingRemovingProductIDs() {
         ActivationKey key = new ActivationKey();
         Owner owner = createOwner();
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
 
         key.setOwner(owner);
@@ -352,16 +348,16 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         assertNotNull(key.getId());
         activationKeyResource.addProductIdToKey(key.getId(), product.getId());
-        assertTrue(key.getProductIds().size() == 1);
+        assertTrue(key.getProducts().size() == 1);
         activationKeyResource.removeProductIdFromKey(key.getId(), product.getId());
-        assertTrue(key.getProductIds().size() == 0);
+        assertEquals(0, key.getProducts().size());
     }
 
     @Test(expected = BadRequestException.class)
     public void testReaddingProductIDs() {
         ActivationKey key = new ActivationKey();
         Owner owner = createOwner();
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
 
         key.setOwner(owner);
@@ -371,7 +367,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         assertNotNull(key.getId());
 
         activationKeyResource.addProductIdToKey(key.getId(), product.getId());
-        assertTrue(key.getProductIds().size() == 1);
+        assertEquals(1, key.getProducts().size());
 
         activationKeyResource.addProductIdToKey(key.getId(), product.getId());
         // ^ Kaboom.
@@ -383,6 +379,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         pool.setQuantity(10L);
         pool.setConsumed(4L);
         pool.setAttribute("multi-entitlement", "yes");
+        pool.setProduct(TestUtil.createProduct(owner));
         return pool;
     }
 

@@ -24,10 +24,12 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
-import org.candlepin.model.Subscription;
-import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Test;
@@ -48,33 +50,37 @@ public class ProductResourceTest extends DatabaseTestFixture {
     @Inject private ProductCertificateCurator productCertificateCurator;
     @Inject private ContentCurator contentCurator;
     @Inject private ProductResource productResource;
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
 
-    private Product createProduct() {
+    private Product createProduct(Owner owner) {
         String label = "test_product";
         String name = "Test Product";
         String variant = "server";
         String version = "1.0";
         String arch = "ALL";
         String type = "SVC";
-        Product prod = new Product(label, name, variant,
+        Product prod = new Product(label, name, owner, variant,
                 version, arch, type);
         return prod;
     }
 
-    @Test
+    @Test(expected = BadRequestException.class)
     public void testCreateProductResource() {
+        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
 
-        Product toSubmit = createProduct();
+        Product toSubmit = createProduct(owner);
         productResource.createProduct(toSubmit);
-
     }
 
-    @Test
+    @Test(expected = BadRequestException.class)
     public void testCreateProductWithContent() {
-        Product toSubmit = createProduct();
+        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
+
+        Product toSubmit = createProduct(owner);
         String  contentHash = String.valueOf(
             Math.abs(Long.valueOf("test-content".hashCode())));
-        Content testContent = new Content("test-content", contentHash,
+        Content testContent = new Content(owner, "test-content", contentHash,
                             "test-content-label", "yum", "test-vendor",
                              "test-content-url", "test-gpg-url", "test-arch");
 
@@ -88,33 +94,40 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
     @Test(expected = BadRequestException.class)
     public void testDeleteProductWithSubscriptions() {
-        ProductServiceAdapter pa = mock(ProductServiceAdapter.class);
+        ProductCurator pc = mock(ProductCurator.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        ProductResource pr = new ProductResource(pa, null, null, null, i18n);
+        ProductResource pr = new ProductResource(pc, null, null, null, i18n);
+        Owner o = mock(Owner.class);
         Product p = mock(Product.class);
-        when(pa.getProductById(eq("10"))).thenReturn(p);
+        when(pc.lookupById(eq(o), eq("10"))).thenReturn(p);
         Set<Subscription> subs = new HashSet<Subscription>();
         Subscription s = mock(Subscription.class);
         subs.add(s);
-        when(pa.productHasSubscriptions(eq(p))).thenReturn(true);
+        when(pc.productHasSubscriptions(eq(p))).thenReturn(true);
 
         pr.deleteProduct("10");
     }
 
     @Test
     public void getProduct() {
-        Product p = createProduct();
-        p = productResource.createProduct(p);
+        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
+        Product product = productCurator.create(createProduct(owner));
+
         securityInterceptor.enable();
 
-        Product p1 = productResource.getProduct(p.getId());
-        assertEquals(p1, p);
+        // The returned product should be have the owner information removed.
+        Product expected = (Product) product.clone();
+        expected.setOwner(null);
+
+        Product actual = productResource.getProduct(product.getId());
+        assertEquals(actual, expected);
     }
 
     @Test
     public void getProductCertificate() {
-        Product p = createProduct();
-        p = productResource.createProduct(p);
+        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
+        Product p = productCurator.create(createProduct(owner));
+
         // ensure we check SecurityHole
         securityInterceptor.enable();
 
@@ -123,6 +136,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         cert.setKey("some key");
         cert.setProduct(p);
         productCertificateCurator.create(cert);
+
         ProductCertificate cert1 = productResource.getProductCertificate(p.getId());
         assertEquals(cert, cert1);
     }

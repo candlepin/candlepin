@@ -14,11 +14,14 @@
  */
 package org.candlepin.resource;
 
-import static org.quartz.JobBuilder.*;
+import static org.quartz.JobBuilder.newJob;
 
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
+import org.candlepin.common.paging.Paginate;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Cdn;
@@ -27,15 +30,12 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
-import org.candlepin.common.paging.Paginate;
+import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -76,27 +76,22 @@ public class EntitlementResource {
     private PoolManager poolManager;
     private final EntitlementCurator entitlementCurator;
     private I18n i18n;
-    private ProductServiceAdapter prodAdapter;
     private Entitler entitler;
-    private SubscriptionResource subResource;
     private Enforcer enforcer;
     private EntitlementRulesTranslator messageTranslator;
 
     @Inject
-    public EntitlementResource(ProductServiceAdapter prodAdapter,
-            EntitlementCurator entitlementCurator,
+    public EntitlementResource(EntitlementCurator entitlementCurator,
             ConsumerCurator consumerCurator,
             PoolManager poolManager,
-            I18n i18n, Entitler entitler, SubscriptionResource subResource,
-            Enforcer enforcer, EntitlementRulesTranslator messageTranslator) {
+            I18n i18n,
+            Entitler entitler, Enforcer enforcer, EntitlementRulesTranslator messageTranslator) {
 
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
         this.i18n = i18n;
-        this.prodAdapter = prodAdapter;
         this.poolManager = poolManager;
         this.entitler = entitler;
-        this.subResource = subResource;
         this.enforcer = enforcer;
         this.messageTranslator = messageTranslator;
     }
@@ -268,44 +263,37 @@ public class EntitlementResource {
     @Path("{dbid}/upstream_cert")
     public String getUpstreamCert(
         @PathParam("dbid") String entitlementId) {
+
         Entitlement ent = entitlementCurator.find(entitlementId);
         if (ent == null) {
             throw new NotFoundException(i18n.tr(
                 "Entitlement with ID ''{0}'' could not be found.", entitlementId));
         }
 
-        String subscriptionId = null;
         Pool entPool = ent.getPool();
-        if (StringUtils.isBlank(entPool.getSourceStackId())) {
-            subscriptionId = entPool.getSubscriptionId();
-        }
-        /*
-         * A derived pool originating from a stacked parent pool will have no subscription
-         * ID as the pool is technically from many subscriptions. (i.e. all the
-         * entitlements in the stack) In this case we must look up an active entitlement
-         * in the hosts stack, and use this as our upstream certificate.
-         */
-        else {
+        if (!StringUtils.isBlank(entPool.getSourceStackId())) {
+            /*
+             * A derived pool originating from a stacked parent pool will have no subscription
+             * ID as the pool is technically from many subscriptions. (i.e. all the
+             * entitlements in the stack) In this case we must look up an active entitlement
+             * in the hosts stack, and use this as our upstream certificate.
+             */
             log.debug("Entitlement is from a stack derived pool, searching for oldest " +
                 "active entitlements in source stack.");
-            Entitlement e = entitlementCurator.findUpstreamEntitlementForStack(
+
+            ent = entitlementCurator.findUpstreamEntitlementForStack(
                 entPool.getSourceConsumer(),
                 entPool.getSourceStackId());
-            if (e != null) {
-                subscriptionId = e.getPool().getSubscriptionId();
-            }
         }
 
-        if (subscriptionId == null) {
+        if (ent == null || ent.getPool() == null || ent.getPool().getCertificate() == null) {
             throw new NotFoundException(
-                i18n.tr("Unable to find upstream certificate for entitlement: {0}",
-                    entitlementId));
+                i18n.tr("Unable to find upstream certificate for entitlement: {0}", entitlementId)
+            );
         }
 
-        return subResource.getSubCertAsPem(subscriptionId);
-        // Cdn cdn = subResource.getSubscription(subscriptionId).getCdn();
-        // CdnInfo result = new CdnInfo(cdn, subResource.getSubCertAsPem(subscriptionId));
-        // return result;
+        SubscriptionsCertificate cert = ent.getPool().getCertificate();
+        return cert.getCert() + cert.getKey();
     }
 
     /**
@@ -339,7 +327,7 @@ public class EntitlementResource {
     public JobDetail regenerateEntitlementCertificatesForProduct(
             @PathParam("product_id") String productId,
             @QueryParam("lazy_regen") @DefaultValue("true") boolean lazyRegen) {
-        prodAdapter.purgeCache(Arrays.asList(productId));
+
         JobDataMap map = new JobDataMap();
         map.put(RegenProductEntitlementCertsJob.PROD_ID, productId);
         map.put(RegenProductEntitlementCertsJob.LAZY_REGEN, lazyRegen);

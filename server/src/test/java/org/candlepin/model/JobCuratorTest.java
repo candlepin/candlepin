@@ -218,16 +218,11 @@ public class JobCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void cancelOrphanedJobs() throws InterruptedException {
-        JobStatus status1 = newJobStatus().state(JobStatus.JobState.WAITING)
-            .id("1").create();
-        JobStatus status2 = newJobStatus().state(JobStatus.JobState.WAITING)
-            .id("2").create();
-        JobStatus status3 = newJobStatus().state(JobStatus.JobState.RUNNING)
-            .id("3").create();
-        JobStatus status4 = newJobStatus().state(JobStatus.JobState.CREATED)
-            .id("4").create();
-        JobStatus status5 = newJobStatus().state(JobStatus.JobState.RUNNING)
-            .id("5").create();
+        JobStatus status1 = newJobStatus().state(JobStatus.JobState.WAITING).id("1").create();
+        JobStatus status2 = newJobStatus().state(JobStatus.JobState.WAITING).id("2").create();
+        JobStatus status3 = newJobStatus().state(JobStatus.JobState.RUNNING).id("3").create();
+        JobStatus status4 = newJobStatus().state(JobStatus.JobState.CREATED).id("4").create();
+        JobStatus status5 = newJobStatus().state(JobStatus.JobState.RUNNING).id("5").create();
         List<String> activeIds = new LinkedList<String>();
         activeIds.add(status1.getId());
         activeIds.add(status3.getId());

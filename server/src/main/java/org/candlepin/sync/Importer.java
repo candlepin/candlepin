@@ -34,9 +34,10 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.Subscription;
-import org.candlepin.model.SubscriptionCurator;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -57,6 +58,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -99,7 +101,6 @@ public class Importer {
         public String fileName() {
             return fileName;
         }
-
     }
 
     /**
@@ -119,7 +120,6 @@ public class Importer {
     private RulesImporter rulesImporter;
     private OwnerCurator ownerCurator;
     private ContentCurator contentCurator;
-    private SubscriptionCurator subCurator;
     private IdentityCertificateCurator idCertCurator;
     private PoolManager poolManager;
     private PKIUtility pki;
@@ -135,7 +135,7 @@ public class Importer {
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator,
         RulesImporter rulesImporter, OwnerCurator ownerCurator,
         IdentityCertificateCurator idCertCurator,
-        ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm,
+        ContentCurator contentCurator, PoolManager pm,
         PKIUtility pki, Configuration config, ExporterMetadataCurator emc,
         CertificateSerialCurator csc, EventSink sink, I18n i18n,
         DistributorVersionCurator distVerCurator,
@@ -148,7 +148,6 @@ public class Importer {
         this.ownerCurator = ownerCurator;
         this.idCertCurator = idCertCurator;
         this.contentCurator = contentCurator;
-        this.subCurator = subCurator;
         this.poolManager = pm;
         this.mapper = SyncUtils.getObjectMapper(this.config);
         this.pki = pki;
@@ -339,6 +338,8 @@ public class Importer {
         ConflictOverrides overrides)
         throws IOException, ImporterException {
 
+        log.debug("Importing objects for owner: {}", owner);
+
         File metadata = importFiles.get(ImportFile.META.fileName());
         if (metadata == null) {
             throw new ImporterException(i18n.tr("The archive does not contain the " +
@@ -426,36 +427,32 @@ public class Importer {
 
         // If the consumer has no entitlements, this products directory will end up empty.
         // This also implies there will be no entitlements to import.
-        Refresher refresher = poolManager.getRefresher();
         Meta meta = mapper.readValue(metadata, Meta.class);
+        List<Subscription> importSubs = new ArrayList<Subscription>();
         if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
             ProductImporter importer = new ProductImporter(productCurator, contentCurator);
 
             Set<Product> productsToImport = importProducts(
-                importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(),
-                importer);
-
-            Set<Product> modifiedProducts = importer.getChangedProducts(productsToImport);
-            for (Product product : modifiedProducts) {
-                refresher.add(product);
-            }
-
-            importer.store(productsToImport);
+                importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(), importer, owner
+            );
 
             meta = mapper.readValue(metadata, Meta.class);
-            importEntitlements(owner, productsToImport, entitlements.listFiles(),
-                consumer, meta);
-
-            refresher.add(owner);
-            refresher.run();
+            importSubs = importEntitlements(owner, productsToImport,
+                    entitlements.listFiles(), consumer, meta);
         }
         else {
             log.warn("No products found to import, skipping product import.");
             log.warn("No entitlements in manifest, removing all subscriptions for owner.");
             importEntitlements(owner, new HashSet<Product>(), new File[]{}, consumer, meta);
-            refresher.add(owner);
-            refresher.run();
         }
+
+        // Setup our import subscription adapter with the subscriptions imported:
+        SubscriptionServiceAdapter adapter =
+                new ImportSubscriptionServiceAdapter(importSubs);
+        Refresher refresher = poolManager.getRefresher(adapter);
+        refresher.add(owner);
+        refresher.run();
+
         return consumer;
     }
 
@@ -553,17 +550,18 @@ public class Importer {
         return consumer;
     }
 
-    public Set<Product> importProducts(File[] products, ProductImporter importer)
+    public Set<Product> importProducts(File[] products, ProductImporter importer, Owner owner)
         throws IOException {
         Set<Product> productsToImport = new HashSet<Product>();
         for (File product : products) {
             // Skip product.pem's, we just need the json to import:
             if (product.getName().endsWith(".json")) {
-                log.debug("Import product: " + product.getName());
+                log.debug("Importing product {} for owner {}", product.getName(), owner.getKey());
+
                 Reader reader = null;
                 try {
                     reader = new FileReader(product);
-                    productsToImport.add(importer.createObject(mapper, reader));
+                    productsToImport.add(importer.createObject(mapper, reader, owner));
                 }
                 finally {
                     if (reader != null) {
@@ -580,18 +578,25 @@ public class Importer {
         return productsToImport;
     }
 
-    public void importEntitlements(Owner owner, Set<Product> products, File[] entitlements,
+    public List<Subscription> importEntitlements(Owner owner, Set<Product> products, File[] entitlements,
         ConsumerDto consumer, Meta meta)
         throws IOException, SyncDataFormatException {
-        EntitlementImporter importer = new EntitlementImporter(subCurator, csCurator,
-            cdnCurator, sink, i18n);
+
+        log.debug("Importing entitlements for owner: {}", owner);
+
+        EntitlementImporter importer = new EntitlementImporter(csCurator, cdnCurator,
+            i18n);
 
         Map<String, Product> productsById = new HashMap<String, Product>();
         for (Product product : products) {
+            log.debug("Adding product owned by {} to ID map", owner.getKey());
+
+            // Note: This may actually be causing problems with subscriptions receiving the wrong
+            // version of a product
             productsById.put(product.getId(), product);
         }
 
-        Set<Subscription> subscriptionsToImport = new HashSet<Subscription>();
+        List<Subscription> subscriptionsToImport = new ArrayList<Subscription>();
         for (File entitlement : entitlements) {
             Reader reader = null;
             try {
@@ -607,7 +612,7 @@ public class Importer {
             }
         }
 
-        importer.store(owner, subscriptionsToImport);
+        return subscriptionsToImport;
     }
 
     /**

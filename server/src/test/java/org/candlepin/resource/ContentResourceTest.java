@@ -14,38 +14,31 @@
  */
 package org.candlepin.resource;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
-import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
-import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 /**
  * ContentResourceTest
  */
@@ -56,7 +49,8 @@ public class ContentResourceTest {
     private I18n i18n;
     private EnvironmentContentCurator envContentCurator;
     private PoolManager poolManager;
-    private ProductServiceAdapter productAdapter;
+    private ProductCurator productCurator;
+    private OwnerCurator oc;
 
     @Before
     public void init() {
@@ -64,9 +58,12 @@ public class ContentResourceTest {
         cc = mock(ContentCurator.class);
         envContentCurator = mock(EnvironmentContentCurator.class);
         poolManager = mock(PoolManager.class);
-        productAdapter = mock(ProductServiceAdapter.class);
-        cr = new ContentResource(cc, i18n, new DefaultUniqueIdGenerator(),
-            envContentCurator, poolManager, productAdapter);
+        oc = mock(OwnerCurator.class);
+        productCurator = mock(ProductCurator.class);
+
+        cr = new ContentResource(
+            cc, i18n, new DefaultUniqueIdGenerator(), envContentCurator, poolManager, productCurator, oc
+        );
     }
 
     @Test
@@ -75,7 +72,7 @@ public class ContentResourceTest {
         verify(cc, atLeastOnce()).listAll();
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = NotFoundException.class)
     public void getContentNull() {
         when(cc.find(anyLong())).thenReturn(null);
         cr.getContent("10");
@@ -83,12 +80,16 @@ public class ContentResourceTest {
 
     @Test
     public void getContent() {
+        Owner owner = mock(Owner.class);
         Content content = mock(Content.class);
-        when(cc.find(eq("10"))).thenReturn(content);
+
+        when(oc.listAll()).thenReturn(Arrays.asList(owner));
+        when(cc.lookupById(eq(owner), eq("10"))).thenReturn(content);
+
         assertEquals(content, cr.getContent("10"));
     }
 
-    @Test
+    @Test(expected = BadRequestException.class)
     public void createContent() {
         Content content = mock(Content.class);
         when(content.getId()).thenReturn("10");
@@ -96,29 +97,31 @@ public class ContentResourceTest {
         assertEquals(content, cr.createContent(content));
     }
 
-    @Test
+    @Test(expected = BadRequestException.class)
     public void createContentNull()  {
         Content content = mock(Content.class);
         when(content.getId()).thenReturn("10");
         when(cc.find(eq(10L))).thenReturn(null);
         cr.createContent(content);
-        verify(cc, atLeastOnce()).create(content);
+
+        verify(cc, never()).create(content);
     }
 
-    @Test
+    @Test(expected = BadRequestException.class)
     public void deleteContent() {
+        Owner owner = mock(Owner.class);
         Content content = mock(Content.class);
         when(content.getId()).thenReturn("10");
         when(cc.find(eq("10"))).thenReturn(content);
         EnvironmentContent ec =
-            new EnvironmentContent(mock(Environment.class), content.getId(), true);
-        List<EnvironmentContent> envContents = listFrom(ec);
-        when(envContentCurator.lookupByContent(content.getId())).thenReturn(envContents);
+            new EnvironmentContent(mock(Environment.class), content, true);
+        List<EnvironmentContent> envContents = Arrays.asList(ec);
+        when(envContentCurator.lookupByContent(owner, content.getId())).thenReturn(envContents);
 
         cr.remove("10");
 
-        verify(cc, atLeastOnce()).delete(eq(content));
-        verify(envContentCurator, atLeastOnce()).delete(eq(ec));
+        verify(cc, never()).delete(eq(content));
+        verify(envContentCurator, never()).delete(eq(ec));
     }
 
     @Test(expected = BadRequestException.class)
@@ -130,53 +133,37 @@ public class ContentResourceTest {
         verify(cc, never()).delete(eq(content));
     }
 
-    @Test
+    @Test(expected = BadRequestException.class)
     public void testUpdateContent() {
+        final String productId = "productId";
         final String contentId = "10";
+
+        Owner owner = mock(Owner.class);
+        Product product = mock(Product.class);
         Content content = mock(Content.class);
+
+        when(product.getId()).thenReturn(productId);
+        when(product.getOwner()).thenReturn(owner);
+
         when(content.getId()).thenReturn(contentId);
 
         when(cc.find(any(String.class))).thenReturn(content);
         when(cc.createOrUpdate(any(Content.class))).thenReturn(content);
-        when(productAdapter.getProductsWithContent(
-            eq(setFrom(contentId)))).thenReturn(setFrom("productid"));
+        when(productCurator.getProductsWithContent(eq(owner), eq(Arrays.asList(contentId))))
+            .thenReturn(Arrays.asList(product));
 
         cr.updateContent(contentId, content);
 
-        verify(cc).find(eq(contentId));
-        verify(cc).createOrUpdate(eq(content));
-        verify(productAdapter).getProductsWithContent(setFrom(contentId));
-        verify(poolManager).regenerateCertificatesOf(eq("productid"), eq(true));
+        verify(cc, never()).find(eq(contentId));
+        verify(cc, never()).createOrUpdate(eq(content));
+        verify(productCurator, never()).getProductsWithContent(owner, Arrays.asList(contentId));
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test(expected = BadRequestException.class)
     public void testUpdateContentThrowsExceptionWhenContentDoesNotExist() {
         Content content = mock(Content.class);
         when(cc.find(any(String.class))).thenReturn(null);
 
         cr.updateContent("someId", content);
-    }
-
-    private <T> List<T> listFrom(T anElement) {
-        List<T> l = new ArrayList<T>();
-        l.add(anElement);
-        return l;
-    }
-
-    private <T> Set<T> setFrom(T anElement) {
-        Set<T> l = new HashSet<T>();
-        l.add(anElement);
-        return l;
-    }
-
-    private class SetContaining extends ArgumentMatcher<Set<String>> {
-        private Collection shouldContain;
-
-        public SetContaining(Collection shouldContain) {
-            this.shouldContain = shouldContain;
-        }
-        public boolean matches(Object set) {
-            return ((Set) set).containsAll(shouldContain);
-        }
     }
 }

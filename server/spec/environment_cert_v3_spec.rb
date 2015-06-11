@@ -23,8 +23,8 @@ describe 'Environments Certificate V3' do
     product = create_product
     content = create_content # promoted
     content2 = create_content # not promoted
-    @cp.add_content_to_product(product['id'], content['id'])
-    @cp.add_content_to_product(product['id'], content2['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content2['id'])
 
     # Override enabled to false:
     job = @org_admin.promote_content(@env['id'],
@@ -61,13 +61,13 @@ describe 'Environments Certificate V3' do
     product = create_product
     content = create_content # promoted
     content2 = create_content # not promoted
-    @cp.add_content_to_product(product['id'], content['id'])
-    @cp.add_content_to_product(product['id'], content2['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content2['id'])
 
     # Override enabled to false:
     job = @org_admin.promote_content(@env['id'],
         [{
-          :contentId => content['id'],
+          :contentId => content['id']
         }])
     wait_for_job(job['id'], 15)
 
@@ -89,7 +89,7 @@ describe 'Environments Certificate V3' do
     # Promote the other content set and make sure certs were regenerated:
     job = @org_admin.promote_content(@env['id'],
         [{
-          :contentId => content2['id'],
+          :contentId => content2['id']
         }])
     wait_for_job(job['id'], 15)
     ent = consumer_cp.list_entitlements()[0]

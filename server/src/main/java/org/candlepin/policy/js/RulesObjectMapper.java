@@ -67,9 +67,8 @@ public class RulesObjectMapper {
         filterProvider.setFailOnUnknownId(false);
         filterProvider = filterProvider.addFilter("PoolAttributeFilter",
             SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "id"));
-        filterProvider = filterProvider.addFilter("ProductPoolAttributeFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "productId",
-                "id"));
+        filterProvider = filterProvider.addFilter("ProductAttributeFilter",
+                SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "id", "product"));
         filterProvider = filterProvider.addFilter("ProvidedProductFilter",
             SimpleBeanPropertyFilter.serializeAllExcept("created", "updated"));
         filterProvider = filterProvider.addFilter("ConsumerFilter",

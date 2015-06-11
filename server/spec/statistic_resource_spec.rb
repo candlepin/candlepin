@@ -9,7 +9,7 @@ describe 'Statistic Resource' do
     owner1 = create_owner random_string('test_owner')
     owner1_client = user_client(owner1, random_string('testuser'))
 
-    product = create_product
+    product = create_product(nil, nil, :owner => owner1['key'])
     @cp.create_subscription(owner1['key'], product.id, 10)
     @cp.refresh_pools(owner1['key'])
 
@@ -44,9 +44,6 @@ describe 'Statistic Resource' do
 
     @cp.get_system_physical_count(owner1['key']).first.value.should == 1
     @cp.get_system_virtual_count(owner1['key']).first.value.should == 0
-
-
   end
-
 
 end

@@ -24,7 +24,6 @@ import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
-import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.util.DateSource;
 
@@ -46,13 +45,11 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     @Inject
     public EntitlementRules(DateSource dateSource,
         JsRunner jsRules,
-        ProductCache productCache,
         I18n i18n, Configuration config, ConsumerCurator consumerCurator,
         PoolCurator poolCurator) {
 
         this.jsRules = jsRules;
         this.dateSource = dateSource;
-        this.productCache = productCache;
         this.i18n = i18n;
         this.attributesToRules = null;
         this.config = config;

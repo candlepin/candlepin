@@ -43,14 +43,13 @@ import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.Subscription;
-import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.resource.dto.AutobindData;
-import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
@@ -66,11 +65,14 @@ import org.mockito.Mockito;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
 import javax.persistence.EntityNotFoundException;
+
+
 
 public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public static final String PRODUCT_MONITORING = "monitoring";
@@ -81,12 +83,10 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Inject private OwnerCurator ownerCurator;
     @Inject private ProductCurator productCurator;
-    @Inject private ProductServiceAdapter productAdapter;
     @Inject private PoolCurator poolCurator;
     @Inject private ConsumerCurator consumerCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private EntitlementCurator entitlementCurator;
-    @Inject private SubscriptionCurator subCurator;
     @Inject private ContentCurator contentCurator;
     @Inject private CandlepinPoolManager poolManager;
 
@@ -104,18 +104,18 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     private Consumer childVirtSystem;
     private EventSink eventSink;
 
+
     @Before
     public void setUp() throws Exception {
         o = createOwner();
         ownerCurator.create(o);
-        virtHost = new Product(PRODUCT_VIRT_HOST, PRODUCT_VIRT_HOST);
-        virtHostPlatform = new Product(PRODUCT_VIRT_HOST_PLATFORM,
-            PRODUCT_VIRT_HOST_PLATFORM);
-        virtGuest = new Product(PRODUCT_VIRT_GUEST, PRODUCT_VIRT_GUEST);
-        monitoring = new Product(PRODUCT_MONITORING, PRODUCT_MONITORING);
+        virtHost = new Product(PRODUCT_VIRT_HOST, PRODUCT_VIRT_HOST, o);
+        virtHostPlatform = new Product(PRODUCT_VIRT_HOST_PLATFORM, PRODUCT_VIRT_HOST_PLATFORM, o);
+        virtGuest = new Product(PRODUCT_VIRT_GUEST, PRODUCT_VIRT_GUEST, o);
+        monitoring = new Product(PRODUCT_MONITORING, PRODUCT_MONITORING, o);
         monitoring.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
 
-        provisioning = new Product(PRODUCT_PROVISIONING, PRODUCT_PROVISIONING);
+        provisioning = new Product(PRODUCT_PROVISIONING, PRODUCT_PROVISIONING, o);
         provisioning.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
 
         virtHost.addAttribute(new ProductAttribute(PRODUCT_VIRT_HOST, ""));
@@ -125,28 +125,41 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         monitoring.addAttribute(new ProductAttribute(PRODUCT_MONITORING, ""));
         provisioning.addAttribute(new ProductAttribute(PRODUCT_PROVISIONING, ""));
 
-        socketLimitedProduct = new Product("socket-limited-prod",
-            "Socket Limited Product");
+        socketLimitedProduct = new Product("socket-limited-prod", "Socket Limited Product", o);
         socketLimitedProduct.addAttribute(new ProductAttribute("sockets", "2"));
         productCurator.create(socketLimitedProduct);
 
-        productAdapter.createProduct(virtHost);
-        productAdapter.createProduct(virtHostPlatform);
-        productAdapter.createProduct(virtGuest);
-        productAdapter.createProduct(monitoring);
-        productAdapter.createProduct(provisioning);
+        productCurator.create(virtHost);
+        productCurator.create(virtHostPlatform);
+        productCurator.create(virtGuest);
+        productCurator.create(monitoring);
+        productCurator.create(provisioning);
 
-        subCurator.create(new Subscription(o, virtHost, new HashSet<Product>(),
-            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
-        subCurator.create(new Subscription(o, virtHostPlatform, new HashSet<Product>(),
-            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
+        List<Subscription> subscriptions = new LinkedList<Subscription>();
+        ImportSubscriptionServiceAdapter subAdapter
+            = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        subCurator.create(new Subscription(o, monitoring, new HashSet<Product>(),
-            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
-        subCurator.create(new Subscription(o, provisioning, new HashSet<Product>(),
-            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
+        Subscription sub1 = new Subscription(o, virtHost, new HashSet<Product>(),
+            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
+        Subscription sub2 = new Subscription(o, virtHostPlatform, new HashSet<Product>(),
+            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
 
-        poolManager.getRefresher().add(o).run();
+        Subscription sub3 = new Subscription(o, monitoring, new HashSet<Product>(),
+            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
+        Subscription sub4 = new Subscription(o, provisioning, new HashSet<Product>(),
+            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
+
+        sub1.setId(Util.generateDbUUID());
+        sub2.setId(Util.generateDbUUID());
+        sub3.setId(Util.generateDbUUID());
+        sub4.setId(Util.generateDbUUID());
+
+        subscriptions.add(sub1);
+        subscriptions.add(sub2);
+        subscriptions.add(sub3);
+        subscriptions.add(sub4);
+
+        poolManager.getRefresher(subAdapter).add(o).run();
 
         this.systemType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumerTypeCurator.create(systemType);
@@ -171,8 +184,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testQuantityCheck() throws Exception {
-        Pool monitoringPool = poolCurator.listByOwnerAndProduct(o,
-                monitoring.getId()).get(0);
+        Pool monitoringPool = poolCurator.listByOwnerAndProduct(o, monitoring.getId()).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
         AutobindData data = AutobindData.create(parentSystem).on(new Date())
                 .forProducts(new String [] {monitoring.getId()});
@@ -240,24 +252,30 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testEntitleByProductsWithModifierAndModifiee()
-        throws EntitlementRefusedException {
-        Product modifier = new Product("modifier", "modifier");
+    public void testEntitleByProductsWithModifierAndModifiee() throws EntitlementRefusedException {
+        Product modifier = new Product("modifier", "modifier", o);
 
         Set<String> modified = new HashSet<String>();
         modified.add(PRODUCT_VIRT_HOST);
-        Content content = new Content("modifier-content", "modifier-content",
+        Content content = new Content(this.o, "modifier-content", "modifier-content",
             "modifer-content", "yum", "us", "here", "here", "");
         content.setModifiedProductIds(modified);
         modifier.addContent(content);
 
         contentCurator.create(content);
-        productAdapter.createProduct(modifier);
+        productCurator.create(modifier);
 
-        subCurator.create(new Subscription(o, modifier, new HashSet<Product>(),
-            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
+        List<Subscription> subscriptions = new LinkedList<Subscription>();
+        ImportSubscriptionServiceAdapter subAdapter
+            = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        poolManager.getRefresher().add(o).run();
+        Subscription sub = new Subscription(o, modifier, new HashSet<Product>(),
+            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
+        sub.setId(Util.generateDbUUID());
+
+        subscriptions.add(sub);
+
+        poolManager.getRefresher(subAdapter).add(o).run();
 
 
         // This test simulates https://bugzilla.redhat.com/show_bug.cgi?id=676870
@@ -277,7 +295,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         }
         catch (EntityNotFoundException e) {
             throw e;
-//            fail("Hibernate failed to properly save entitlement certs!");
+           // fail("Hibernate failed to properly save entitlement certs!");
         }
 
         // If we get here, no exception was raised, so we're happy!
@@ -285,28 +303,32 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testRefreshPoolsWithChangedProductShouldUpdatePool() {
-        Product product1 = TestUtil.createProduct("product 1", "Product 1");
-        Product product2 = TestUtil.createProduct("product 2", "Product 2");
+        Product product1 = TestUtil.createProduct("product 1", "Product 1", o);
+        Product product2 = TestUtil.createProduct("product 2", "Product 2", o);
 
-        productAdapter.createProduct(product1);
-        productAdapter.createProduct(product2);
+        productCurator.create(product1);
+        productCurator.create(product2);
+
+        List<Subscription> subscriptions = new LinkedList<Subscription>();
+        ImportSubscriptionServiceAdapter subAdapter
+            = new ImportSubscriptionServiceAdapter(subscriptions);
 
         Subscription subscription = new Subscription(o, product1, new HashSet<Product>(),
             5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
-        subCurator.create(subscription);
+        subscription.setId(Util.generateDbUUID());
+        subscriptions.add(subscription);
 
         // set up initial pool
-        poolManager.getRefresher().add(o).run();
+        poolManager.getRefresher(subAdapter).add(o).run();
 
         List<Pool> pools = poolCurator.listByOwnerAndProduct(o, product1.getId());
         assertEquals(1, pools.size());
 
         // now alter the product behind the sub, and make sure the pool is also updated
         subscription.setProduct(product2);
-        subCurator.merge(subscription);
 
         // set up initial pool
-        poolManager.getRefresher().add(o).run();
+        poolManager.getRefresher(subAdapter).add(o).run();
 
         pools = poolCurator.listByOwnerAndProduct(o, product2.getId());
         assertEquals(1, pools.size());
@@ -320,7 +342,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
                 new PoolFilterBuilder(), new PageRequest());
         assertEquals(4, results.getPageData().size());
 
-        Pool pool = createPoolAndSub(o, socketLimitedProduct, 100L,
+        Pool pool = createPool(o, socketLimitedProduct, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
 
@@ -334,7 +356,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testListAllForConsumerExcludesErrors() {
-        Product p = new Product("test-product", "Test Product");
+        Product p = new Product("test-product", "Test Product", o);
         productCurator.create(p);
 
         Page<List<Pool>> results =
@@ -345,7 +367,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         // Creating a pool with no entitlements available, which will trigger
         // a rules error:
-        Pool pool = createPoolAndSub(o, p, 0L,
+        Pool pool = createPool(o, p, 0L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
 
@@ -359,7 +381,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testListAllForActKeyExcludesErrors() {
-        Product p = new Product("test-product", "Test Product");
+        Product p = new Product("test-product", "Test Product", o);
         productCurator.create(p);
 
         ActivationKey ak = new ActivationKey();
@@ -374,7 +396,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         // Creating a pool with no entitlements available, which does not trigger
         // a rules error:
-        Pool pool = createPoolAndSub(o, p, 0L,
+        Pool pool = createPool(o, p, 0L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
 
@@ -394,7 +416,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
                 new PoolFilterBuilder(), new PageRequest());
         assertEquals(4, results.getPageData().size());
 
-        Pool pool = createPoolAndSub(o, socketLimitedProduct, 100L,
+        Pool pool = createPool(o, socketLimitedProduct, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
 
@@ -410,7 +432,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testListAllForOldGuestExcludesTempPools() {
-        Pool pool = createPoolAndSub(o, virtGuest, 100L,
+        Pool pool = createPool(o, virtGuest, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         pool.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
         poolCurator.create(pool);

@@ -21,11 +21,11 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.Product;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.ValidationWarning;
 import org.candlepin.policy.js.JsRunner;
-import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.util.DateSource;
@@ -52,7 +52,6 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     protected Logger log = null;
     protected DateSource dateSource;
 
-    protected ProductCache productCache;
     protected I18n i18n;
     protected Map<String, Set<Rule>> attributesToRules;
     protected JsRunner jsRules;
@@ -282,7 +281,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     protected void runPostUnbind(PoolHelper postHelper, Entitlement entitlement) {
         Pool pool = entitlement.getPool();
 
-        if (pool.hasAttribute("virt_limit") || pool.hasProductAttribute("virt_limit")) {
+        if (pool.hasAttribute("virt_limit") || pool.getProduct().hasAttribute("virt_limit")) {
             Map<String, String> attributes = postHelper.getFlattenedAttributes(pool);
             Consumer c = entitlement.getConsumer();
             postUnbindVirtLimit(postHelper, entitlement, pool, c, attributes);
@@ -335,21 +334,21 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
     }
 
-    private void postBindVirtLimit(PoolHelper postHelper,
-        Entitlement entitlement, Pool pool, Consumer c,
-        Map<String, String> attributes) {
+    private void postBindVirtLimit(PoolHelper postHelper, Entitlement entitlement, Pool pool,
+        Consumer c, Map<String, String> attributes) {
+
         log.debug("Running virt_limit post-bind.");
         boolean hostLimited = attributes.containsKey("host_limited") &&
             attributes.get("host_limited").equals("true");
         if (!c.getType().isManifest() &&
             !"true".equalsIgnoreCase(c.getFact("virt.is_guest")) &&
             (config.getBoolean(ConfigProperties.STANDALONE) || hostLimited)) {
-            String productId = pool.getProductId();
+            Product product = pool.getProduct();
             String virtLimit = attributes.get("virt_limit");
 
             String stackId = attributes.get("stacking_id");
-            boolean createSubPool = stackId == null ?
-                true : poolCurator.getSubPoolForStackId(c, stackId) == null;
+            boolean createSubPool = stackId == null ||
+                poolCurator.getSubPoolForStackId(c, stackId) == null;
 
             if (createSubPool) {
                 log.debug("Creating a new sub-pool.");
@@ -364,15 +363,14 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                         return;
                     }
                 }
-                postHelper.createHostRestrictedPool(productId, pool, virtLimit);
+                postHelper.createHostRestrictedPool(product, pool, virtLimit);
             }
             else {
                 log.debug("Skipping sub-pool creation");
             }
         }
         else {
-            decrementHostedBonusPoolQuantity(postHelper, entitlement, pool, c,
-                attributes);
+            decrementHostedBonusPoolQuantity(postHelper, entitlement, pool, c, attributes);
         }
     }
 

@@ -225,6 +225,7 @@ public class ComplianceStatusHasherTest {
     @Test
     public void enssureDifferentHashWhenConsumerInstalledProductsChange() {
         Consumer consumer = createConsumer(owner);
+        Product product = TestUtil.createProduct("Test Product");
         ComplianceStatus testStatus = createInitialStatus(consumer);
         assertEquals(initialHash, generateHash(testStatus, consumer));
 
@@ -234,7 +235,8 @@ public class ComplianceStatusHasherTest {
 
         consumer.setInstalledProducts(new HashSet<ConsumerInstalledProduct>(initialInstalled));
         assertEquals(initialHash, generateHash(testStatus, consumer));
-        ConsumerInstalledProduct installed = new ConsumerInstalledProduct("tp1", "Test Product");
+        ConsumerInstalledProduct installed = new ConsumerInstalledProduct(product.getUuid(),
+                product.getName());
         consumer.addInstalledProduct(installed);
 
         String updatedHash = generateHash(testStatus, consumer);
@@ -327,10 +329,14 @@ public class ComplianceStatusHasherTest {
         consumer.setFact("ram", "4");
         consumer.setFact("cores", "2");
 
+        Product product1 = TestUtil.createProduct("installed-1");
+        Product product2 = TestUtil.createProduct("installed-2");
+
         Set<ConsumerInstalledProduct> installedProducts = new HashSet<ConsumerInstalledProduct>();
-        installedProducts.add(new ConsumerInstalledProduct("ip1", "Installed 1"));
-        installedProducts.add(new ConsumerInstalledProduct("ip2", "Installed 2"));
+        installedProducts.add(new ConsumerInstalledProduct(product1));
+        installedProducts.add(new ConsumerInstalledProduct(product2));
         consumer.setInstalledProducts(installedProducts);
+
         return consumer;
     }
 
@@ -377,8 +383,9 @@ public class ComplianceStatusHasherTest {
     }
 
     private Entitlement createEntitlement(Calendar cal, Owner owner, Consumer consumer,
-            String productId) {
-        Product product = TestUtil.createProduct(productId, productId);
+        String productId) {
+
+        Product product = TestUtil.createProduct(productId, productId, owner);
         Pool pool = TestUtil.createPool(owner, product);
         pool.setId(product.getId() + "pool");
         pool.setUpdated(cal.getTime());

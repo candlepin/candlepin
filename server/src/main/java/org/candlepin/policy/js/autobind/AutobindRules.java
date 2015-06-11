@@ -19,10 +19,8 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
-import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -53,14 +51,12 @@ public class AutobindRules {
 
     private JsRunner jsRules;
     private static Logger log = LoggerFactory.getLogger(AutobindRules.class);
-    private ProductCache productCache;
     private RulesObjectMapper mapper;
 
 
     @Inject
-    public AutobindRules(JsRunner jsRules, ProductCache productCache) {
+    public AutobindRules(JsRunner jsRules) {
         this.jsRules = jsRules;
-        this.productCache = productCache;
 
         mapper = RulesObjectMapper.instance();
         jsRules.init("autobind_name_space");
@@ -187,9 +183,7 @@ public class AutobindRules {
 
                 // Check each provided product, if *any* have too much content, we must
                 // skip the pool:
-                for (ProvidedProduct providedProd : p.getProvidedProducts()) {
-                    Product product = productCache.getProductById(
-                        providedProd.getProductId());
+                for (Product product : p.getProvidedProducts()) {
                     if (product.getProductContent().size() >
                         X509ExtensionUtil.V1_CONTENT_LIMIT) {
                         contentOk = false;

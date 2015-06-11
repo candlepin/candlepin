@@ -17,7 +17,6 @@ describe 'Import', :serial => true do
     @owners = [@owner, @dist_owner]
     @exporter = Export.new
     @exporters = [@exporter]
-
   end
 
   after(:all) do
@@ -73,6 +72,7 @@ describe 'Import', :serial => true do
     import_user_client.import(@dist_owner['key'], @exporter.export_filename)
     @cp.refresh_pools(@dist_owner['key'])
     pools = @cp.list_owner_pools(@dist_owner['key'], {:product => stacked_datacenter_product.id})
+    pools.size.should >= 1
 
     # need to ignore the unmapped guest pool
     filter_unmapped_guest_pools(pools)
@@ -98,7 +98,7 @@ describe 'Import', :serial => true do
     pools = @cp.list_owner_pools(@dist_owner['key'])
     # need to ignore the unmapped guest pool
     filter_unmapped_guest_pools(pools)
-    
+
     pools.each do |p|
       p.attributes.each do |a|
         if a.name == 'pool_derived' and a.value == 'true'

@@ -16,7 +16,6 @@ package org.candlepin.model;
 
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
-import org.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -43,15 +42,15 @@ import java.util.Set;
  */
 public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     private static Logger log = LoggerFactory.getLogger(EntitlementCurator.class);
-    private ProductServiceAdapter productAdapter;
+    private ProductCurator productCurator;
 
     /**
      * default ctor
      */
     @Inject
-    public EntitlementCurator(ProductServiceAdapter productAdapter) {
+    public EntitlementCurator(ProductCurator productCurator) {
         super(Entitlement.class);
-        this.productAdapter = productAdapter;
+        this.productCurator = productCurator;
     }
 
     // TODO: handles addition of new entitlements only atm!
@@ -160,9 +159,9 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 // Skip this entitlement:
                 continue;
             }
-            entitledProductIds.add(e.getPool().getProductId());
-            for (ProvidedProduct pp : e.getPool().getProvidedProducts()) {
-                entitledProductIds.add(pp.getProductId());
+            entitledProductIds.add(e.getPool().getProduct().getId());
+            for (Product pp : e.getPool().getProvidedProducts()) {
+                entitledProductIds.add(pp.getId());
             }
         }
         return entitledProductIds;
@@ -223,15 +222,16 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             // Empty collections break hibernate queries
             return modifying;
         }
+
         // Retrieve all products at once from the adapter
-        List<Product> products = productAdapter.getProductsByIds(pidEnts.keySet());
+        List<Product> products = productCurator.listAllByIds(entitlement.getOwner(), pidEnts.keySet());
+
         for (Product p : products) {
             boolean modifies = p.modifies(entitlement.getProductId());
-            Iterator<ProvidedProduct> ppit =
-                entitlement.getPool().getProvidedProducts().iterator();
+            Iterator<Product> ppit = entitlement.getPool().getProvidedProducts().iterator();
             // No need to continue checking once we have found a modified product
             while (!modifies && ppit.hasNext()) {
-                modifies = modifies || p.modifies(ppit.next().getProductId());
+                modifies = p.modifies(ppit.next().getId());
             }
             if (modifies) {
                 // Return all entitlements for the modified product
@@ -259,8 +259,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      */
     private void addToMap(Map<String, Set<Entitlement>> map, Entitlement e) {
         addProductIdToMap(map, e.getProductId(), e);
-        for (ProvidedProduct pp : e.getPool().getProvidedProducts()) {
-            addProductIdToMap(map, pp.getProductId(), e);
+        for (Product pp : e.getPool().getProvidedProducts()) {
+            addProductIdToMap(map, pp.getId(), e);
         }
     }
 
@@ -281,12 +281,13 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         Criteria query = createSecureCriteria()
             .add(Restrictions.eq("consumer", consumer))
             .createAlias("pool", "p")
+            .createAlias("p.product", "prod")
             .createAlias("p.providedProducts", "pp",
                 CriteriaSpecification.LEFT_JOIN)
             // Never show a consumer expired entitlements
             .add(Restrictions.ge("p.endDate", new Date()))
-            .add(Restrictions.or(Restrictions.eq("p.productId", productId),
-                Restrictions.eq("pp.productId", productId)));
+            .add(Restrictions.or(Restrictions.eq("prod.id", productId),
+                Restrictions.eq("pp.id", productId)));
 
         Page<List<Entitlement>> page = listByCriteria(query, pageRequest);
 
@@ -339,7 +340,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         Criteria activeNowQuery = currentSession().createCriteria(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer))
             .createAlias("pool", "ent_pool")
-            .createAlias("ent_pool.productAttributes", "attrs")
+            .createAlias("ent_pool.product", "product")
+            .createAlias("product.attributes", "attrs")
             .add(Restrictions.eq("attrs.name", "stacking_id"))
             .add(Restrictions.eq("attrs.value", stackId))
             .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
@@ -384,7 +386,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         Criteria activeNowQuery = currentSession().createCriteria(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer))
             .createAlias("pool", "ent_pool")
-            .createAlias("ent_pool.productAttributes", "attrs")
+            .createAlias("ent_pool.product", "product")
+            .createAlias("product.attributes", "attrs")
             .add(Restrictions.le("ent_pool.startDate", currentDate))
             .add(Restrictions.ge("ent_pool.endDate", currentDate))
             .add(Restrictions.eq("attrs.name", "stacking_id"))

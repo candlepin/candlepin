@@ -499,14 +499,14 @@ var Entitlement = {
 
     post_virt_limit: function() {
         if (standalone) {
-            var productId = pool.getProductId();
+            var product = pool.getProduct();
             var virt_limit = attributes.get("virt_limit");
             if ('unlimited'.equals(virt_limit)) {
-                post.createHostRestrictedPool(productId, pool, 'unlimited');
+                post.createHostRestrictedPool(product, pool, 'unlimited');
             } else {
                 var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
                 if (virt_quantity > 0) {
-                    post.createHostRestrictedPool(productId, pool,
+                    post.createHostRestrictedPool(product, pool,
                             virt_quantity.toString());
                 }
             }

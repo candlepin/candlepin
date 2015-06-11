@@ -14,15 +14,20 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 
 import org.junit.Test;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
+
+import java.util.Arrays;
+
 
 
 /**
@@ -35,20 +40,28 @@ public class RegenEntitlementCertsJobTest {
         // prep
         CandlepinPoolManager pm = mock(CandlepinPoolManager.class);
         JobExecutionContext jec = mock(JobExecutionContext.class);
+        OwnerCurator oc = mock(OwnerCurator.class);
         JobDetail detail = mock(JobDetail.class);
         JobDataMap jdm = mock(JobDataMap.class);
 
-        when(jdm.getString(eq("product_id"))).thenReturn("foobarbaz");
-        when(jdm.getBoolean(eq("lazy_regen"))).thenReturn(true);
+        String ownerId = "foo_owner";
+        String prodId = "bar_prod";
+        boolean lazyRegen = true;
+
+        Owner owner = new Owner(ownerId);
+
+        when(oc.listAll()).thenReturn(Arrays.asList(owner));
+
+        when(jdm.getString(eq(RegenProductEntitlementCertsJob.PROD_ID))).thenReturn(prodId);
+        when(jdm.getBoolean(eq(RegenProductEntitlementCertsJob.LAZY_REGEN))).thenReturn(lazyRegen);
         when(detail.getJobDataMap()).thenReturn(jdm);
         when(jec.getJobDetail()).thenReturn(detail);
 
         // test
-        RegenProductEntitlementCertsJob recj =
-            new RegenProductEntitlementCertsJob(pm);
+        RegenProductEntitlementCertsJob recj = new RegenProductEntitlementCertsJob(pm, oc);
         recj.execute(jec);
 
         // verification
-        verify(pm).regenerateCertificatesOf(eq("foobarbaz"), eq(true));
+        verify(pm).regenerateCertificatesOf(eq(owner), eq(prodId), eq(lazyRegen));
     }
 }

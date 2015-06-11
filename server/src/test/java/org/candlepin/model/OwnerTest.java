@@ -73,7 +73,7 @@ public class OwnerTest extends DatabaseTestFixture {
         Owner owner = new Owner("test-owner");
         // Product
         Product rhel = new Product("Red Hat Enterprise Linux",
-                "Red Hat Enterprise Linux");
+                "Red Hat Enterprise Linux", owner);
 
         // Consumer
         Consumer c = new Consumer();

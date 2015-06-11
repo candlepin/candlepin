@@ -17,9 +17,14 @@ describe 'Owner Resource' do
     consumer = owner_admin.register('somesystem')
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
 
-    product1 = create_product(random_string("test_id"),
+    product1 = create_product(
+      random_string("test_id"),
       random_string("test_name"),
-      {:attributes => {:support_level => 'VIP'}})
+      {
+        :attributes => {:support_level => 'VIP'},
+        :owner => owner['key']
+      }
+    )
     @cp.create_subscription(owner['key'], product1.id, 10)
 
     @cp.refresh_pools(owner['key'])
@@ -53,7 +58,7 @@ describe 'Owner Resource' do
 
   it "lets owners list pools" do
     owner = create_owner random_string("test_owner1")
-    product = create_product
+    product = create_product(nil, nil, :owner => owner['key'])
     @cp.create_subscription(owner['key'], product.id, 10)
     @cp.refresh_pools(owner['key'])
     pools = @cp.list_owner_pools(owner['key'])
@@ -62,7 +67,7 @@ describe 'Owner Resource' do
 
   it "lets owners list pools in pages" do
     owner = create_owner random_string("test_owner1")
-    product = create_product
+    product = create_product(nil, nil, :owner => owner['key'])
     (1..4).each do |i|
       @cp.create_subscription(owner['key'], product.id, 10)
     end
@@ -76,7 +81,7 @@ describe 'Owner Resource' do
     owner = create_owner random_string("test_owner1")
     user = user_client(owner, random_string("bob"))
     system = consumer_client(user, "system")
-    product = create_product
+    product = create_product(nil, nil, :owner => owner['key'])
     (1..4).each do |i|
       @cp.create_subscription(owner['key'], product.id, 10)
     end
@@ -105,7 +110,7 @@ describe 'Owner Resource' do
     owner = create_owner random_string('test_owner')
     ro_owner_client = user_client(owner, random_string('testuser'), true)
     rw_owner_client = user_client(owner, random_string('testuser'), true)
-    product = create_product
+    product = create_product(nil, nil, :owner => owner['key'])
     @cp.create_subscription(owner['key'], product.id, 10)
 
 
@@ -161,9 +166,14 @@ describe 'Owner Resource' do
   it "does allow the default service level only to get updated" do
     # information passed has no other data elements
     owner = create_owner random_string("test_owner")
-    product1 = create_product(random_string("test_id"),
+    product1 = create_product(
+      random_string("test_id"),
       random_string("test_name"),
-      {:attributes => {:support_level => 'VIP'}})
+      {
+        :attributes => {:support_level => 'VIP'},
+        :owner => owner['key']
+      }
+    )
     @cp.create_subscription(owner['key'], product1.id, 10)
     @cp.refresh_pools(owner['key'])
     owner = @cp.get_owner(owner['key'])
@@ -181,13 +191,25 @@ describe 'Owner Resource' do
 
     # Create a subscription with a service level so we have
     # something available:
-    product1 = create_product(random_string("test_id"),
+    product1 = create_product(
+      random_string("test_id"),
       random_string("test_name"),
-      {:attributes => {:support_level => 'VIP'}})
-    product2 = create_product(random_string("test_id"),
+      {
+        :attributes => {:support_level => 'VIP'},
+        :owner => owner['key']
+      }
+    )
+    product2 = create_product(
+      random_string("test_id"),
       random_string("test_name"),
-      {:attributes => {:support_level => 'Layered',
-                       :support_level_exempt => 'true'}})
+      {
+        :attributes => {
+          :support_level => 'Layered',
+          :support_level_exempt => 'true'
+        },
+        :owner => owner['key']
+      }
+    )
     @cp.create_subscription(owner['key'], product1.id, 10)
     @cp.create_subscription(owner['key'], product2.id, 10)
     @cp.refresh_pools(owner['key'])
@@ -236,17 +258,38 @@ describe 'Owner Resource' do
 
   it "lets owners show service levels" do
     owner = create_owner random_string("test_owner1")
-    product1 = create_product(random_string("test_id"),
-                              random_string("test_name"),
-                              {:attributes => {:support_level => 'Really High'}})
+    product1 = create_product(
+      random_string("test_id"),
+      random_string("test_name"),
+      {
+        :attributes => {
+          :support_level => 'Really High'
+        },
+        :owner => owner['key']
+      }
+    )
     @cp.create_subscription(owner['key'], product1.id, 10)
-    product2 = create_product(random_string("test_id"),
-                              random_string("test_name"),
-                              {:attributes => {:support_level => 'Really Low'}})
+    product2 = create_product(
+      random_string("test_id"),
+      random_string("test_name"),
+      {
+        :attributes => {
+          :support_level => 'Really Low'
+        },
+        :owner => owner['key']
+      }
+    )
     @cp.create_subscription(owner['key'], product2.id, 10)
-    product3 = create_product(random_string("test_id"),
-                              random_string("test_name"),
-                              {:attributes => {:support_level => 'Really Low'}})
+    product3 = create_product(
+      random_string("test_id"),
+      random_string("test_name"),
+      {
+        :attributes => {
+          :support_level => 'Really Low'
+        },
+        :owner => owner['key']
+      }
+    )
     @cp.create_subscription(owner['key'], product3.id, 10)
 
     @cp.refresh_pools(owner['key'])
@@ -261,18 +304,35 @@ describe 'Owner Resource' do
     consumer = owner_admin.register('somesystem')
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
 
-    product1 = create_product(random_string("test_id"),
+    product1 = create_product(
+      random_string("test_id"),
       random_string("test_name"),
-      {:attributes => {:support_level => 'VIP'}})
-    product2 = create_product(random_string("test_id"),
+      {
+        :attributes => {:support_level => 'VIP'},
+        :owner => owner['key']
+      }
+    )
+    product2 = create_product(
+      random_string("test_id"),
       random_string("test_name"),
-      {:attributes => {:support_level => 'Layered',
-                       :support_level_exempt => 'true'}})
+      {
+        :attributes => {
+          :support_level => 'Layered',
+          :support_level_exempt => 'true'
+        },
+        :owner => owner['key']
+      }
+    )
     # the exempt attribute will cover here as well
     # despite the casing
-    product3 = create_product(random_string("test_id"),
+    product3 = create_product(
+      random_string("test_id"),
       random_string("test_name"),
-      {:attributes => {:support_level => 'LAYered'}})
+      {
+        :attributes => {:support_level => 'LAYered'},
+        :owner => owner['key']
+      }
+    )
 
     @cp.create_subscription(owner['key'], product1.id, 10)
     @cp.create_subscription(owner['key'], product2.id, 10)
@@ -290,8 +350,11 @@ describe 'Owner Resource' do
 
   it 'should return calculated attributes' do
     owner = create_owner random_string("owner1")
-    product = create_product(random_string("test_id"),
-      random_string("test_name"))
+    product = create_product(
+      random_string("test_id"),
+      random_string("test_name"),
+      :owner => owner['key']
+    )
     @cp.create_subscription(owner['key'], product.id, 10)
     @cp.refresh_pools(owner['key'])
 
@@ -303,11 +366,43 @@ describe 'Owner Resource' do
     pool['calculatedAttributes']['suggested_quantity'].should == "1"
   end
 
+  it 'can create custom floating pools' do
+    owner = create_owner random_string("owner1")
+    prod = create_product(nil, nil, {:owner => owner['key']})
+    provided1 = create_product(nil, nil, {:owner => owner['key']})
+    provided2 = create_product(nil, nil, {:owner => owner['key']})
+    provided3 = create_product(nil, nil, {:owner => owner['key']})
+    provided4 = create_product(nil, nil, {:owner => owner['key']})
+    @cp.create_pool(owner['key'], prod['id'],
+      {
+        :provided_products => [provided1['id'], provided2['id']],
+        :derived_product_id => provided3['id'],
+        :derived_provided_products => [provided4['id']]
+    })
+    pools = @cp.list_owner_pools(owner['key'])
+    pools.size.should == 1
+    pool = pools[0]
+    pool['providedProducts'].size.should == 2
+    pool['derivedProductId'].should == provided3['id']
+    pool['derivedProvidedProducts'].size.should == 1
+
+    # Refresh should have no effect:
+    @cp.refresh_pools(owner['key'])
+    @cp.list_owner_pools(owner['key']).size.should == 1
+
+    # Satellite will need to be able to clean it up as well:
+    @cp.delete_pool(pool['id'])
+    @cp.list_owner_pools(owner['key']).size.should == 0
+  end
+
   it 'should not double bind when healing an org' do
     # BZ 988549
     owner = create_owner(random_string("owner1"))
-    product = create_product(random_string("test_id"),
-      random_string("test_name"))
+    product = create_product(
+      random_string("test_id"),
+      random_string("test_name"),
+      :owner => owner['key']
+    )
     @cp.create_subscription(owner['key'], product.id, 10)
     @cp.refresh_pools(owner['key'])
 

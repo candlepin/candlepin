@@ -68,9 +68,9 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Statistic> getStatisticsByProduct(String prodId, String vType,
+    public List<Statistic> getStatisticsByProduct(Owner owner, String prodId, String vType,
         Date from, Date to) {
-        return statisticCuratorQueries.getStatisticsByProduct(prodId, vType, from, to);
+        return statisticCuratorQueries.getStatisticsByProduct(owner, prodId, vType, from, to);
     }
 
     public void executeStatisticRun() {
@@ -100,7 +100,6 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
             ValueType.PHYSICAL, null, oi.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL),
             owner.getId());
         create(consumerCountStatistic);
-
     }
 
     private void totalConsumers(Owner owner) {
@@ -221,7 +220,7 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
     }
 
     private void perProduct(String ownerId) {
-        String productString = "select distinct p.productName, p.productId from Pool p" +
+        String productString = "select distinct p.product.name, p.product.id from Pool p" +
             " where p.owner.id = :ownerId";
         Query productQuery = currentSession().createQuery(productString)
             .setString("ownerId", ownerId);
@@ -248,7 +247,7 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
                 perProductDeletedCount;
 
             String totalProductCountString = "select sum(quantity) from Pool p" +
-                " where p.productName = :productName";
+                " where p.product.name = :productName";
             Query totalProductCountQuery = currentSession().createQuery(
                 totalProductCountString).setString("productName",
                 (String) productName[0]);

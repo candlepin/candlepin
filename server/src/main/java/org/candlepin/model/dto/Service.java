@@ -12,28 +12,33 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.model;
+package org.candlepin.model.dto;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * DerivedProductPoolAttribute
+ * Service
  */
-@Entity
-@Embeddable
-@JsonFilter("ProductPoolAttributeFilter")
-@DiscriminatorValue("derived")
-public class DerivedProductPoolAttribute extends ProductPoolAttribute {
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.PROPERTY)
+public class Service {
 
-    public DerivedProductPoolAttribute() {
-        super();
+    private String level;
+    private String type;
+
+    /**
+     * @param level
+     */
+    public void setLevel(String level) {
+        this.level = level;
     }
 
-    public DerivedProductPoolAttribute(String name, String val, String productId) {
-        super(name, val, productId);
+    /**
+     * @param type
+     */
+    public void setType(String type) {
+        this.type = type;
     }
 }

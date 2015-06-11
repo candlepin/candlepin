@@ -12,65 +12,71 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.json.model;
+package org.candlepin.model.dto;
+
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Order
+ * EntitlementBody
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Order {
+public class EntitlementBody {
 
-    private String number;
-    private Long quantity;
-    private String start;
-    private String end;
-    private String contract;
-    private String account;
+    private String consumer;
+    private Integer quantity;
+    private TinySubscription subscription;
+    private Order order;
+    private List<Product> products;
+    private Pool pool;
 
     /**
-     * @param number
+     * @param uuid
      */
-    public void setNumber(String number) {
-        this.number = number;
+    public void setConsumer(String uuid) {
+        this.consumer = uuid;
     }
 
     /**
      * @param quantity
      */
-    public void setQuantity(Long quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
     /**
-     * @param start
+     * @param subscription
      */
-    public void setStart(String start) {
-        this.start = start;
+    public void setSubscription(TinySubscription subscription) {
+        this.subscription = subscription;
     }
 
     /**
-     * @param end
+     * @param order
      */
-    public void setEnd(String end) {
-        this.end = end;
+    public void setOrder(Order order) {
+        this.order = order;
     }
 
     /**
-     * @param contract
+     * @param products
      */
-    public void setContract(String contract) {
-        this.contract = contract;
+    public void setProducts(List<Product> products) {
+        this.products = products;
+    }
+
+    public List<Product> getProducts() {
+        return this.products;
     }
 
     /**
-     * @param accountNumber
+     * @param pool the pool to set
      */
-    public void setAccount(String account) {
-        this.account = account;
+    public void setPool(Pool pool) {
+        this.pool = pool;
     }
 }

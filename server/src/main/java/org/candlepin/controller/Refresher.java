@@ -17,7 +17,7 @@ package org.candlepin.controller;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.Subscription;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
@@ -44,7 +44,6 @@ public class Refresher {
 
     private Set<Owner> owners = Util.newSet();
     private Set<Product> products = Util.newSet();
-    private Set<Subscription> subscriptions = Util.newSet();
 
     Refresher(CandlepinPoolManager poolManager, SubscriptionServiceAdapter subAdapter,
         boolean lazy) {
@@ -63,20 +62,34 @@ public class Refresher {
         return this;
     }
 
+    /**
+     * Add a product that has been changed to be refreshed globally.
+     *
+     * Will be used to lookup any subscription using the product, either as a SKU or a
+     * provided product, and trigger a refresh for that specific subscription.
+     *
+     * WARNING: Should only be used in upstream production environments, downstream should
+     * always be driven by manifest import, which should never trigger a global refresh
+     * for other orgs.
+     *
+     * @param product
+     * @return this Refresher instance
+     */
     public Refresher add(Product product) {
         products.add(product);
         return this;
     }
 
-    public Refresher add(Subscription subscription) {
-        subscriptions.add(subscription);
-        return this;
-    }
-
     public void run() {
-        Set<String> toRegen = new HashSet<String>();
 
+        // If products were specified on the refresher, lookup any subscriptions
+        // using them, regardless of organization, and trigger a refresh for those
+        // specific subscriptions.
+        Set<Subscription> subscriptions = Util.newSet();
         for (Product product : products) {
+            // TODO: This adapter call is not implemented in prod, and cannot be. We plan
+            // to fix this whole code path in near future by looking for pools using the
+            // given products to be refreshed.
             List<Subscription> subs = subAdapter.getSubscriptions(product);
             log.debug("Will refresh {} subscriptions in all orgs using product: ",
                     subs.size(), product.getId());
@@ -107,10 +120,12 @@ public class Refresher {
         }
 
         for (Owner owner : owners) {
-            poolManager.refreshPoolsWithRegeneration(owner, lazy);
+            poolManager.refreshPoolsWithRegeneration(subAdapter, owner, lazy);
         }
     }
 
+    // TODO: Ties into the refresh all pools using a product comment above, which is
+    // a broken code path and due to be fixed in near future.
     @Transactional
     private void refreshPoolsForSubscription(Subscription subscription, List<Pool> pools) {
         poolManager.removeAndDeletePoolsOnOtherOwners(pools, subscription);
@@ -118,7 +133,8 @@ public class Refresher {
         poolManager.createPoolsForSubscription(subscription, pools);
         // Regenerate certificates here, that way if it fails, the whole thing rolls back.
         // We don't want to refresh without marking ents dirty, they will never get regenerated
-        poolManager.regenerateCertificatesByEntIds(poolManager.updatePoolsForSubscription(
-            pools, subscription, true), lazy);
+        poolManager.regenerateCertificatesByEntIds(
+                poolManager.updatePoolsForSubscription(pools, subscription, true,
+                        new HashSet<Product>()), lazy);
     }
 }

@@ -16,10 +16,10 @@ package org.candlepin.model;
 
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.criteria.CriteriaRules;
-import org.candlepin.policy.js.ProductCache;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -61,9 +61,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     protected Injector injector;
 
     @Inject
-    protected ProductCache productCache;
-
-    @Inject
     public PoolCurator(CriteriaRules poolCriteria) {
         super(Pool.class);
         this.poolCriteria = poolCriteria;
@@ -92,6 +89,16 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> listByOwner(Owner o) {
         return listByOwner(o, null);
     }
+
+
+    @Transactional
+    public List<Pool> listByOwnerAndType(Owner o, PoolType t) {
+        Criteria crit = currentSession().createCriteria(Pool.class)
+            .add(Restrictions.eq("owner", o))
+            .add(Restrictions.eq("type", t));
+        return crit.list();
+    }
+
 
     /**
      * Returns list of pools owned by the given Owner.
@@ -158,8 +165,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     @SuppressWarnings("unchecked")
     @Transactional
-    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
-            String productId, Date activeOn, boolean activeOnly) {
+    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o, String productId,
+        Date activeOn, boolean activeOnly) {
+
         return listAvailableEntitlementPools(c, o, productId, activeOn, activeOnly,
             new PoolFilterBuilder(), null, false).getPageData();
     }
@@ -188,9 +196,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @SuppressWarnings("unchecked")
     @Transactional
-    public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o,
-            String productId, Date activeOn, boolean activeOnly, PoolFilterBuilder filters,
-            PageRequest pageRequest, boolean postFilter) {
+    public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o, String productId,
+        Date activeOn, boolean activeOnly, PoolFilterBuilder filters, PageRequest pageRequest,
+        boolean postFilter) {
+
         if (o == null && c != null) {
             o = c.getOwner();
         }
@@ -202,7 +211,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             log.debug("   product: " + productId);
         }
 
-        Criteria crit = createSecureCriteria();
+        Criteria crit = createSecureCriteria()
+            .createAlias("product", "product")
+            .createAlias("providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN)
+            .createAlias("provProd.productContent", "ppcw", CriteriaSpecification.LEFT_JOIN)
+            .createAlias("ppcw.content", "ppContent", CriteriaSpecification.LEFT_JOIN)
+            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+
         if (activeOnly) {
             crit.add(Restrictions.eq("activeSubscription", Boolean.TRUE));
         }
@@ -211,12 +226,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
             // Ask the rules for any business logic criteria to filter with for
             // this consumer
-            List<Criterion> filterCriteria = poolCriteria.availableEntitlementCriteria(
-                c);
+            List<Criterion> filterCriteria = poolCriteria.availableEntitlementCriteria(c);
 
             if (log.isDebugEnabled()) {
-                log.debug("Got " + filterCriteria.size() +
-                    "  query filters from database.");
+                log.debug("Got " + filterCriteria.size() + " query filters from database.");
             }
 
             for (Criterion rulesCriteria : filterCriteria) {
@@ -225,7 +238,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
         if (o != null) {
             crit.add(Restrictions.eq("owner", o));
-            crit.add(Restrictions.ne("productName", Product.ueberProductNameForOwner(o)));
+            crit.add(Restrictions.ne("product.name", Product.ueberProductNameForOwner(o)));
         }
         if (activeOn != null) {
             crit.add(Restrictions.le("startDate", activeOn));
@@ -233,11 +246,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
 
         if (productId != null) {
-            crit.createAlias("providedProducts", "providedProduct",
-                CriteriaSpecification.LEFT_JOIN);
-
-            crit.add(Restrictions.or(Restrictions.eq("productId", productId),
-                Restrictions.eq("providedProduct.productId", productId)));
+            crit.add(Restrictions.or(
+                Restrictions.eq("product.id", productId),
+                Restrictions.eq("provProd.id", productId)
+            ));
         }
 
         // Append any specified filters
@@ -258,8 +270,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @Transactional
     public Pool findUeberPool(Owner o) {
         return (Pool) createSecureCriteria()
+            .createAlias("product", "product")
             .add(Restrictions.eq("owner", o))
-            .add(Restrictions.eq("productName", Product.ueberProductNameForOwner(o)))
+            .add(Restrictions.eq("product.name", Product.ueberProductNameForOwner(o)))
             .uniqueResult();
     }
 
@@ -349,24 +362,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     @Transactional
     public Pool replicate(Pool pool) {
-        for (ProvidedProduct pp : pool.getProvidedProducts()) {
-            pp.setPool(pool);
-        }
-
-        for (DerivedProvidedProduct dpp : pool.getDerivedProvidedProducts()) {
-            dpp.setPool(pool);
-        }
-
         for (PoolAttribute pa : pool.getAttributes()) {
             pa.setPool(pool);
-        }
-
-        for (ProductPoolAttribute ppa : pool.getProductAttributes()) {
-            ppa.setPool(pool);
-        }
-
-        for (DerivedProductPoolAttribute dppa : pool.getDerivedProductAttributes()) {
-            dppa.setPool(pool);
         }
 
         pool.setSourceEntitlement(null);
@@ -469,12 +466,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return Set of levels based on exempt flag.
      */
     public Set<String> retrieveServiceLevelsForOwner(Owner owner, boolean exempt) {
-        String stmt = "select distinct a.name, a.value, a.productId " +
-                        "from ProductPoolAttribute as a " +
-                        "inner join a.pool as p " +
-                        "where p.owner.id = :owner_id and " +
-                        "(a.name = 'support_level' or a.name='support_level_exempt') " +
-                        "order by a.name DESC";
+        String stmt = "SELECT DISTINCT Attribute.name, Attribute.value, Product.id " +
+            "FROM Pool AS Pool " +
+            "  INNER JOIN Pool.product AS Product " +
+            "  INNER JOIN Product.attributes AS Attribute " +
+            "WHERE Pool.owner.id = :owner_id " +
+            "  AND (Attribute.name = 'support_level' OR Attribute.name = 'support_level_exempt') " +
+            "  ORDER BY Attribute.name DESC";
 
         Query q = currentSession().createQuery(stmt);
         q.setParameter("owner_id", owner.getId());
@@ -533,6 +531,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public void delete(Pool entity) {
         Pool toDelete = find(entity.getId());
         if (toDelete != null) {
+            log.debug("DELETING POOL w/SUBSCRIPTION ID: {}", toDelete.getSubscriptionId());
             currentSession().delete(toDelete);
             this.flush();
         }
@@ -564,16 +563,27 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .list();
     }
 
-    // Get rid of pools from subs that don't exist
+    /**
+     * Lookup all pools for subscriptions which are not in the given list of subscription
+     * IDs. Used for pool cleanup during refresh.
+     *
+     * @param owner
+     * @param expectedSubIds Full list of all expected subscription IDs.
+     * @return a list of pools for subscriptions not matching the specified subscription list
+     */
     @SuppressWarnings("unchecked")
-    public List<Pool> getPoolsFromBadSubs(Owner owner, Collection<String> subIds) {
+    public List<Pool> getPoolsFromBadSubs(Owner owner, Collection<String> expectedSubIds) {
         Criteria crit = currentSession().createCriteria(Pool.class)
                 .add(Restrictions.eq("owner", owner));
-        if (!subIds.isEmpty()) {
+
+        if (!expectedSubIds.isEmpty()) {
             crit.createAlias("sourceSubscription", "sourceSub");
-            crit.add(Restrictions.and(Restrictions.not(Restrictions.in("sourceSub.subscriptionId", subIds)),
-                    Restrictions.isNotNull("sourceSub.subscriptionId")));
+            crit.add(Restrictions.and(
+                Restrictions.not(Restrictions.in("sourceSub.subscriptionId", expectedSubIds)),
+                Restrictions.isNotNull("sourceSub.subscriptionId")
+            ));
         }
+
         crit.addOrder(Order.asc("id"));
         return crit.list();
     }
@@ -589,6 +599,32 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     @SuppressWarnings("unchecked")
+    public List<Pool> getPoolsBySubscriptionIds(Collection<String> subIds) {
+        return currentSession().createCriteria(Pool.class)
+            .createAlias("sourceSubscription", "sourceSub", JoinType.LEFT_OUTER_JOIN)
+            .add(Restrictions.in("sourceSub.subscriptionId", subIds))
+            .addOrder(Order.asc("id"))
+            .list();
+    }
+
+    @SuppressWarnings("unchecked")
+    public Pool getMasterPoolBySubscriptionId(String subscriptionId) {
+        return (Pool) currentSession().createCriteria(Pool.class)
+            .createAlias("sourceSubscription", "srcsub", JoinType.LEFT_OUTER_JOIN)
+            .add(Restrictions.eq("srcsub.subscriptionId", subscriptionId))
+            .add(Restrictions.eq("srcsub.subscriptionSubKey", "master"))
+            .uniqueResult();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Pool> listMasterPools() {
+        return this.currentSession().createCriteria(Pool.class)
+            .createAlias("sourceSubscription", "srcsub", JoinType.LEFT_OUTER_JOIN)
+            .add(Restrictions.eq("srcsub.subscriptionSubKey", "master"))
+            .list();
+    }
+
+    @SuppressWarnings("unchecked")
     public List<Pool> getOwnersFloatingPools(Owner owner) {
         return currentSession().createCriteria(Pool.class)
                 .add(Restrictions.eq("owner", owner))
@@ -600,10 +636,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     /**
-     * Retrieves a list of all known product IDs.
+     * Retrieves the set of all known product IDs, as determined by looking only at pool data. If
+     * there are no known products, this method returns an empty set.
      *
      * @return
-     *  the set of all known product IDs.
+     *  a set of all known product IDs.
      */
     @SuppressWarnings("unchecked")
     public Set<String> getAllKnownProductIds() {
@@ -612,64 +649,89 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Set<String> result = new HashSet<String>();
 
         Query query = this.currentSession().createQuery(
-            "SELECT DISTINCT P.productId " +
+            "SELECT DISTINCT P.product.id " +
             "FROM Pool P " +
-            "WHERE NULLIF(P.productId, '') IS NOT NULL"
+            "WHERE NULLIF(P.product.id, '') IS NOT NULL"
         );
         result.addAll(query.list());
 
         query = this.currentSession().createQuery(
-            "SELECT DISTINCT P.derivedProductId " +
+            "SELECT DISTINCT P.derivedProduct.id " +
             "FROM Pool P " +
-            "WHERE NULLIF(P.derivedProductId, '') IS NOT NULL"
+            "WHERE NULLIF(P.derivedProduct.id, '') IS NOT NULL"
         );
         result.addAll(query.list());
 
         query = this.currentSession().createQuery(
-            "SELECT DISTINCT PP.productId " +
+            "SELECT DISTINCT PP.id " +
             "FROM Pool P INNER JOIN P.providedProducts AS PP " +
-            "WHERE NULLIF(PP.productId, '') IS NOT NULL"
-        );
-        result.addAll(query.list());
-
-        query = this.currentSession().createQuery(
-            "SELECT DISTINCT PP.productId " +
-            "FROM Pool P INNER JOIN P.derivedProvidedProducts AS PP " +
-            "WHERE NULLIF(PP.productId, '') IS NOT NULL"
-        );
-        result.addAll(query.list());
-
-
-        // TODO: These may not be necessary if the subscriptions table is empty in Hosted. Though,
-        // if they're empty, then these queries will take virtually no time to run anyway.
-        query = this.currentSession().createQuery(
-            "SELECT DISTINCT S.product.id " +
-            "FROM Subscription S " +
-            "WHERE NULLIF(S.product.id, '') IS NOT NULL"
-        );
-        result.addAll(query.list());
-
-        query = this.currentSession().createQuery(
-            "SELECT DISTINCT S.derivedProduct.id " +
-            "FROM Subscription S " +
-            "WHERE NULLIF(S.derivedProduct.id, '') IS NOT NULL"
-        );
-        result.addAll(query.list());
-
-        query = this.currentSession().createQuery(
-            "SELECT DISTINCT PP.id " +
-            "FROM Subscription S INNER JOIN S.providedProducts AS PP " +
             "WHERE NULLIF(PP.id, '') IS NOT NULL"
         );
         result.addAll(query.list());
 
         query = this.currentSession().createQuery(
-            "SELECT DISTINCT PP.id " +
-            "FROM Subscription S INNER JOIN S.derivedProvidedProducts AS PP " +
-            "WHERE NULLIF(PP.id, '') IS NOT NULL"
+            "SELECT DISTINCT DPP.id " +
+            "FROM Pool P INNER JOIN P.derivedProvidedProducts AS DPP " +
+            "WHERE NULLIF(DPP.id, '') IS NOT NULL"
         );
         result.addAll(query.list());
 
+        // Return!
+        return result;
+    }
+
+    /**
+     * Retrieves the set of all known product IDs for the specified owner, as determined by looking
+     * only at pool data. If there are no known products for the given owner, this method returns an
+     * empty set.
+     *
+     * @param owner
+     *  The owner for which to retrieve all known product IDs
+     *
+     * @return
+     *  a set of all known product IDs for the specified owner
+     */
+    @SuppressWarnings("unchecked")
+    public Set<String> getAllKnownProductIdsForOwner(Owner owner) {
+        // Impl note:
+        // HQL does not (properly) support unions, so we have to do this query multiple times.
+        Set<String> result = new HashSet<String>();
+
+        Query query = this.currentSession().createQuery(
+            "SELECT DISTINCT P.product.id " +
+            "FROM Pool P " +
+            "WHERE NULLIF(P.product.id, '') IS NOT NULL " +
+            "AND P.owner = :owner"
+        );
+        query.setParameter("owner", owner);
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT P.derivedProduct.id " +
+            "FROM Pool P " +
+            "WHERE NULLIF(P.derivedProduct.id, '') IS NOT NULL " +
+            "AND P.owner = :owner"
+        );
+        query.setParameter("owner", owner);
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT PP.id " +
+            "FROM Pool P INNER JOIN P.providedProducts AS PP " +
+            "WHERE NULLIF(PP.id, '') IS NOT NULL " +
+            "AND P.owner = :owner"
+        );
+        query.setParameter("owner", owner);
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT DPP.id " +
+            "FROM Pool P INNER JOIN P.derivedProvidedProducts AS DPP " +
+            "WHERE NULLIF(DPP.id, '') IS NOT NULL " +
+            "AND P.owner = :owner"
+        );
+        query.setParameter("owner", owner);
+        result.addAll(query.list());
 
         // Return!
         return result;

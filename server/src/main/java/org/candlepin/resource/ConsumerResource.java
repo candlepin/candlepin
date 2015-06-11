@@ -70,6 +70,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.User;
 import org.candlepin.model.VirtConsumerMap;
@@ -89,7 +90,6 @@ import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.sync.ExportCreationException;
@@ -149,7 +149,7 @@ public class ConsumerResource {
     private static Logger log = LoggerFactory.getLogger(ConsumerResource.class);
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
-    private ProductServiceAdapter productAdapter;
+    private ProductCurator productCurator;
     private SubscriptionServiceAdapter subAdapter;
     private EntitlementCurator entitlementCurator;
     private IdentityCertServiceAdapter identityCertService;
@@ -179,7 +179,7 @@ public class ConsumerResource {
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        ProductServiceAdapter productAdapter,
+        ProductCurator productCurator,
         SubscriptionServiceAdapter subAdapter,
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
@@ -198,7 +198,7 @@ public class ConsumerResource {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
-        this.productAdapter = productAdapter;
+        this.productCurator = productCurator;
         this.subAdapter = subAdapter;
         this.entitlementCurator = entitlementCurator;
         this.identityCertService = identityCertService;
@@ -357,8 +357,7 @@ public class ConsumerResource {
             }
 
             // enrich with subscription data
-            consumer.setCanActivate(subAdapter
-                .canActivateSubscription(consumer));
+            consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
             // enrich with installed product data
             addDataToInstalledProducts(consumer);
         }
@@ -761,7 +760,7 @@ public class ConsumerResource {
                 log.info("Principal carries permission for owner that does not exist.");
                 log.info("Creating new owner: {}", owner.getKey());
                 existingOwner = ownerCurator.create(owner);
-                poolManager.getRefresher().add(existingOwner).run();
+                poolManager.getRefresher(subAdapter).add(existingOwner).run();
             }
         }
     }
@@ -1257,8 +1256,7 @@ public class ConsumerResource {
 
         log.debug("Getting client certificates for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        poolManager.regenerateDirtyEntitlements(
-            entitlementCurator.listByConsumer(consumer));
+        poolManager.regenerateDirtyEntitlements(entitlementCurator.listByConsumer(consumer));
 
         Set<Long> serialSet = this.extractSerials(serials);
 
@@ -1292,8 +1290,7 @@ public class ConsumerResource {
 
         log.debug("Getting client certificate zip file for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        poolManager.regenerateDirtyEntitlements(
-            entitlementCurator.listByConsumer(consumer));
+        poolManager.regenerateDirtyEntitlements(entitlementCurator.listByConsumer(consumer));
 
         Set<Long> serialSet = this.extractSerials(serials);
         // filtering requires a null set, so make this null if it is
@@ -1360,8 +1357,7 @@ public class ConsumerResource {
 
         log.debug("Getting client certificate serials for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        poolManager.regenerateDirtyEntitlements(
-            entitlementCurator.listByConsumer(consumer));
+        poolManager.regenerateDirtyEntitlements(entitlementCurator.listByConsumer(consumer));
 
         List<CertificateSerialDto> allCerts = new LinkedList<CertificateSerialDto>();
         for (EntitlementCertificate cert : entCertService
@@ -1597,7 +1593,7 @@ public class ConsumerResource {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         Page<List<Entitlement>> entitlementsPage;
         if (productId != null) {
-            Product p = productAdapter.getProductById(productId);
+            Product p = productCurator.lookupById(consumer.getOwner(), productId);
             if (p == null) {
                 throw new BadRequestException(i18n.tr(
                     "Product with ID ''{0}'' could not be found.", productId));
@@ -1706,7 +1702,8 @@ public class ConsumerResource {
         }
 
         throw new NotFoundException(i18n.tr(
-            "Entitlement with ID ''{0}'' could not be found.", dbid));
+            "Entitlement with ID ''{0}'' could not be found.", dbid
+        ));
     }
 
     /**
@@ -1835,8 +1832,7 @@ public class ConsumerResource {
                 i18n.tr("A CDN with label {0} does not exist on this system.", cdnLabel));
         }
 
-        poolManager.regenerateDirtyEntitlements(
-            entitlementCurator.listByConsumer(consumer));
+        poolManager.regenerateDirtyEntitlements(entitlementCurator.listByConsumer(consumer));
 
         File archive;
         try {
@@ -2034,15 +2030,16 @@ public class ConsumerResource {
 
     private void addDataToInstalledProducts(Consumer consumer) {
 
-        ComplianceStatus complianceStatus = complianceRules.getStatus(
-                           consumer, null, false);
+        ComplianceStatus complianceStatus = complianceRules.getStatus(consumer, null, false);
 
         ConsumerInstalledProductEnricher enricher = new ConsumerInstalledProductEnricher(
-            consumer, complianceStatus, complianceRules);
+            consumer, complianceStatus, complianceRules
+        );
 
         for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
             String prodId = cip.getProductId();
-            Product prod = productAdapter.getProductById(prodId);
+            Product prod = this.productCurator.lookupById(consumer.getOwner(), prodId);
+
             if (prod != null) {
                 enricher.enrich(cip, prod);
             }

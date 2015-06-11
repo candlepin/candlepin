@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.candlepin.test.TestUtil.*;
+import static org.candlepin.test.TestUtil.createIdCert;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -52,9 +52,9 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -176,15 +176,14 @@ public class ConsumerResourceTest {
         when(mockedEntitlementCurator.find(eq("9999"))).thenReturn(e);
         when(mockedSubscriptionServiceAdapter.getSubscription(eq("4444"))).thenReturn(s);
         when(mockedEntitlementCertServiceAdapter.generateEntitlementCert(
-            any(Entitlement.class), any(Subscription.class), any(Product.class)))
+            any(Entitlement.class), any(Product.class)))
             .thenThrow(new IOException());
 
         CandlepinPoolManager poolManager = new CandlepinPoolManager(null,
-            mockedSubscriptionServiceAdapter, null,
-            mockedEntitlementCertServiceAdapter, null, null,
+            null, mockedEntitlementCertServiceAdapter, null, null,
             new CandlepinCommonTestConfig(), null, null,
             mockedEntitlementCurator, mockedConsumerCurator, null, null, null,
-            mockedActivationKeyRules);
+            mockedActivationKeyRules, null, null);
 
         ConsumerResource consumerResource = new ConsumerResource(
             mockedConsumerCurator, null, null, null, mockedEntitlementCurator, null,
@@ -223,7 +222,7 @@ public class ConsumerResourceTest {
 
         CandlepinPoolManager mgr = mock(CandlepinPoolManager.class);
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
-            null, null, null, null, null, null, null, null, null, null, null,
+            null, mockedSubscriptionServiceAdapter, null, null, null, null, null, null, null, null, null,
             null, mgr, null, null, null, null, null, null, null, null,
             new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
         cr.regenerateEntitlementCertificates(consumer.getUuid(), null, true);

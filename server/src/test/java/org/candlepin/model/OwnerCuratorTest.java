@@ -14,10 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.test.DatabaseTestFixture;
@@ -81,13 +78,10 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
     }
 
     private void associateProductToOwner(Owner o, Product p, Product provided) {
-        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-        ProvidedProduct providedProduct = new ProvidedProduct(
-            provided.getId(), "Test Provided Product");
-        providedProducts.add(providedProduct);
+        Set<Product> providedProducts = new HashSet<Product>();
+        providedProducts.add(provided);
 
         Pool pool = TestUtil.createPool(o, p, providedProducts, 5);
-        providedProduct.setPool(pool);
         poolCurator.create(pool);
 
         Consumer c = createConsumer(o);
@@ -101,10 +95,10 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         Owner owner = createOwner();
         Owner owner2 = createOwner();
 
-        Product product = TestUtil.createProduct();
-        Product provided = TestUtil.createProduct();
-        Product product2 = TestUtil.createProduct();
-        Product provided2 = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
+        Product provided = TestUtil.createProduct(owner);
+        Product product2 = TestUtil.createProduct(owner2);
+        Product provided2 = TestUtil.createProduct(owner2);
         productCurator.create(product);
         productCurator.create(provided);
         productCurator.create(product2);
@@ -125,8 +119,8 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
     public void testLookupOwnerByActiveProduct() {
         Owner owner = createOwner();
 
-        Product product = TestUtil.createProduct();
-        Product provided = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
+        Product provided = TestUtil.createProduct(owner);
         productCurator.create(product);
         productCurator.create(provided);
 
@@ -144,23 +138,27 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
     public void testLookupOwnersByActiveProductWithExpiredEntitlements() {
         Owner owner = createOwner();
 
-        Product product = TestUtil.createProduct();
-        Product provided = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
+        Product provided = TestUtil.createProduct(owner);
         productCurator.create(product);
         productCurator.create(provided);
 
-        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-        ProvidedProduct providedProduct = new ProvidedProduct(
-            provided.getId(), "Test Provided Product");
-        providedProducts.add(providedProduct);
+        Set<Product> providedProducts = new HashSet<Product>();
+        providedProducts.add(provided);
 
         // Create pool with end date in the past.
-        Pool pool = new Pool(owner, product.getId(), product.getName(),
-            providedProducts, Long.valueOf(5), TestUtil.createDate(2009,
-                11, 30), TestUtil.createDate(2010, 11, 30), "SUB234598S",
-            "ACC123", "ORD222");
+        Pool pool = new Pool(
+            owner,
+            product,
+            providedProducts,
+            Long.valueOf(5),
+            TestUtil.createDate(2009, 11, 30),
+            TestUtil.createDate(2010, 11, 30),
+            "SUB234598S",
+            "ACC123",
+            "ORD222"
+        );
 
-        providedProduct.setPool(pool);
         poolCurator.create(pool);
 
         Consumer consumer = createConsumer(owner);

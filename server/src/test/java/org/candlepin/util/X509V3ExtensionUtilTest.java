@@ -15,7 +15,6 @@
 package org.candlepin.util;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
@@ -28,7 +27,7 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
-import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.model.Owner;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.X509V3ExtensionUtil.NodePair;
 import org.candlepin.util.X509V3ExtensionUtil.PathNode;
@@ -43,13 +42,13 @@ import java.util.List;
 import java.util.Set;
 
 
+
 /**
  * X509V3ExtensionUtilTest
  */
 public class X509V3ExtensionUtilTest {
     private Configuration config;
     private EntitlementCurator ec;
-    private ProductServiceAdapter psa;
     private X509V3ExtensionUtil util;
 
 
@@ -57,8 +56,7 @@ public class X509V3ExtensionUtilTest {
     public void init() {
         config = mock(Configuration.class);
         ec = mock(EntitlementCurator.class);
-        psa = mock(ProductServiceAdapter.class);
-        util = new X509V3ExtensionUtil(config, ec, psa);
+        util = new X509V3ExtensionUtil(config, ec);
     }
 
     @Test
@@ -102,7 +100,8 @@ public class X509V3ExtensionUtilTest {
 
     @Test
     public void testPrefixLogic() {
-        Product p = new Product("JarJar", "Binks");
+        Owner owner = new Owner("Test Corporation");
+        Product p = new Product("JarJar", "Binks", owner);
         Content c = new Content();
         c.setContentUrl("/some/path");
         ProductContent pc = new ProductContent(p, c, true);
@@ -136,17 +135,17 @@ public class X509V3ExtensionUtilTest {
     public void productWithBrandName() {
         String engProdId = "1000";
         String brandedName = "Branded Eng Product";
-        Product p = new Product(engProdId, "Eng Product 1000");
+        Owner owner = new Owner("Test Corporation");
+        Product p = new Product(engProdId, "Eng Product 1000", owner);
         p.setAttribute("brand_type", "OS");
         Set<Product> prods = new HashSet<Product>(Arrays.asList(p));
-        Product mktProd = new Product("mkt", "MKT SKU");
+        Product mktProd = new Product("mkt", "MKT SKU", owner);
         Pool pool = TestUtil.createPool(mktProd);
         pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
         Consumer consumer = new Consumer();
         Entitlement e = new Entitlement(pool, consumer, 10);
-        when(psa.getProductById(eq("mkt"))).thenReturn(mktProd);
 
-        List<org.candlepin.json.model.Product> certProds = util.createProducts(mktProd,
+        List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd,
                 prods, "", new HashMap<String, EnvironmentContent>(),  new Consumer(), e);
 
         assertEquals(1, certProds.size());
@@ -158,10 +157,11 @@ public class X509V3ExtensionUtilTest {
     public void productWithMultipleBrandNames() {
         String engProdId = "1000";
         String brandedName = "Branded Eng Product";
-        Product p = new Product(engProdId, "Eng Product 1000");
+        Owner owner = new Owner("Test Corporation");
+        Product p = new Product(engProdId, "Eng Product 1000", owner);
         p.setAttribute("brand_type", "OS");
         Set<Product> prods = new HashSet<Product>(Arrays.asList(p));
-        Product mktProd = new Product("mkt", "MKT SKU");
+        Product mktProd = new Product("mkt", "MKT SKU", owner);
         Pool pool = TestUtil.createPool(mktProd);
         pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
         pool.getBranding().add(new Branding(engProdId, "OS", "another brand name"));
@@ -172,9 +172,8 @@ public class X509V3ExtensionUtilTest {
         }
         Consumer consumer = new Consumer();
         Entitlement e = new Entitlement(pool, consumer, 10);
-        when(psa.getProductById(eq("mkt"))).thenReturn(mktProd);
 
-        List<org.candlepin.json.model.Product> certProds = util.createProducts(mktProd,
+        List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd,
                 prods, "", new HashMap<String, EnvironmentContent>(),  new Consumer(), e);
 
         assertEquals(1, certProds.size());

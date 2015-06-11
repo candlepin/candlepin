@@ -14,11 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.common.config.Configuration;
@@ -60,8 +56,8 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Before
     public void setUpTestObjects() {
         owner = new Owner("Example Corporation");
-        rhel = new Product("rhel", "Red Hat Enterprise Linux");
-        jboss = new Product("jboss", "JBoss");
+        rhel = new Product("rhel", "Red Hat Enterprise Linux", owner);
+        jboss = new Product("jboss", "JBoss", owner);
 
         ownerCurator.create(owner);
         productCurator.create(rhel);
@@ -212,9 +208,10 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testAddEntitlements() {
-        Product newProduct = TestUtil.createProduct();
+        Owner o = createOwner();
+        Product newProduct = TestUtil.createProduct(o);
         productCurator.create(newProduct);
-        Pool pool = createPoolAndSub(createOwner(), newProduct,
+        Pool pool = createPool(o, newProduct,
             1000L, TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));
         entityManager().persist(pool.getOwner());
@@ -456,10 +453,12 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testInstalledProducts() throws Exception {
         Consumer lookedUp = consumerCurator.find(consumer.getId());
-        lookedUp.addInstalledProduct(new ConsumerInstalledProduct("someproduct",
-            "someproductname"));
-        lookedUp.addInstalledProduct(new ConsumerInstalledProduct("someproduct2",
-            "someproductname2"));
+        lookedUp.addInstalledProduct(
+            new ConsumerInstalledProduct("someproduct", "someproductname")
+        );
+        lookedUp.addInstalledProduct(
+            new ConsumerInstalledProduct("someproduct2", "someproductname2")
+        );
         consumerCurator.update(lookedUp);
         lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(2, lookedUp.getInstalledProducts().size());

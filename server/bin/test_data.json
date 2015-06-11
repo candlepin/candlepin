@@ -30,7 +30,7 @@
             "gpg_url": "/foo/path/gpg/",
             "metadata_expire": 0
         },
-       {
+        {
             "name": "content-nogpg",
             "id": 234,
             "label": "content-label-no-gpg",
@@ -39,7 +39,7 @@
             "content_url": "/foo/path",
             "metadata_expire": 0
         },
-      {
+        {
             "name": "content-emptygpg",
             "id": 235,
             "label": "content-label-empty-gpg",
@@ -129,7 +129,7 @@
             "gpg_url": "/path/to/awesomeos/gpg/",
             "metadata_expire": 3600
         },
-       {
+        {
             "name": "awesomeos-ppc",
             "id": 11128,
             "label": "awesomeos-ppc",
@@ -139,7 +139,6 @@
             "gpg_url": "/path/to/awesomeos/gpg/",
             "metadata_expire": 3600
         },
-
         {
             "name": "awesomeos-s390x",
             "id": 11121,
@@ -150,7 +149,6 @@
             "gpg_url": "/path/to/awesomeos/gpg/",
             "metadata_expire": 3600
         },
-
         {
             "name": "awesomeos-all",
             "id": 11130,
@@ -227,7 +225,6 @@
             "arches": "ppc",
             "metadata_expire": 3600
         },
-
         {
             "name": "awesomeos-ia64-only-content",
             "id": 64000,
@@ -283,11 +280,217 @@
     "owners": [
         {
             "name": "admin",
-            "displayName": "Admin Owner"
+            "displayName": "Admin Owner",
+            "content": [
+                {
+                    "name": "admin-content",
+                    "id": 5000,
+                    "label": "content-label",
+                    "type": "yum",
+                    "vendor": "test-vendor",
+                    "content_url": "/admin/foo/path",
+                    "gpg_url": "/admin/foo/path/gpg/",
+                    "metadata_expire": 0
+                },
+                {
+                    "name": "admin-tagged-content",
+                    "id": 5001,
+                    "label": "tagged-content",
+                    "type": "yum",
+                    "vendor": "test-vendor",
+                    "content_url": "/admin/foo/path/always",
+                    "gpg_url": "/admin/foo/path/always/gpg",
+                    "required_tags": "TAG1,TAG2"
+                },
+                {
+                    "name": "never-enabled-content",
+                    "id": 5002,
+                    "label": "never-enabled-content",
+                    "type": "yum",
+                    "vendor": "test-vendor",
+                    "content_url": "/admin/foo/path/never",
+                    "gpg_url": "/admin/foo/path/never/gpg",
+                    "metadata_expire": 600
+                }
+            ],
+            "products": [
+                {
+                    "name": "Admin OS Premium Architecture Bits",
+                    "id": "5050",
+                    "version": "6.1",
+                    "arch": "ppc64",
+                    "provided_products": [
+                        "37060"
+                    ],
+                    "attributes": {
+                        "sockets": 2,
+                        "vcpu": 4,
+                        "warning_period": 30
+                    },
+                    "content": [
+                        [5000, false]
+                    ]
+                },
+                {
+                    "name": "Admin OS Developer Bits",
+                    "id": "5051",
+                    "content": [
+                        [5000, false],
+                        [5001, false]
+                    ]
+                },
+                {
+                    "name": "Admin OS Server Bundled (2 Sockets, Standard Support)",
+                    "id": "adminos-server-2-socket-std",
+                    "version": "6.1",
+                    "type": "MKT",
+                    "provided_products": [
+                        "37065",
+                        "37070",
+                        "37067",
+                        "37068",
+                        "37069",
+                        "37060",
+                        "5050",
+                        "5051"
+                    ],
+                    "attributes": {
+                        "sockets": 2,
+                        "vcpu": 4,
+                        "warning_period": 30,
+                        "management_enabled" : 1,
+                        "support_level" : "Standard",
+                        "support_type" : "L1-L3"
+                    }
+                },
+                {
+                    "name": "Admin OS Instance Based one socket",
+                    "id": "adminos-onesocketib",
+                    "type": "MKT",
+                    "provided_products": [
+                        "32060",
+                        "5050",
+                        "5051"
+                    ],
+                    "attributes": {
+                        "instance_multiplier": 2,
+                        "sockets": 1,
+                        "virt_limit": 1,
+                        "host_limited": "true",
+                        "stacking_id": 15,
+                        "multi-entitlement": "yes",
+                        "support_level" : "Standard",
+                        "support_type" : "L1-L3"
+                    }
+                }
+            ]
         },
         {
             "name": "snowwhite",
-            "displayName": "Snow White"
+            "displayName": "Snow White",
+            "content": [
+                {
+                    "name": "snowy-content",
+                    "id": 6000,
+                    "label": "content-label",
+                    "type": "yum",
+                    "vendor": "test-vendor",
+                    "content_url": "/snowy/foo/path",
+                    "gpg_url": "/snowy/foo/path/gpg/",
+                    "metadata_expire": 0
+                },
+                {
+                    "name": "snowy-tagged-content",
+                    "id": 6001,
+                    "label": "tagged-content",
+                    "type": "yum",
+                    "vendor": "test-vendor",
+                    "content_url": "/snowy/foo/path/always",
+                    "gpg_url": "/snowy/foo/path/always/gpg",
+                    "required_tags": "TAG1,TAG2"
+                },
+                {
+                    "name": "never-enabled-content",
+                    "id": 6002,
+                    "label": "never-enabled-content",
+                    "type": "yum",
+                    "vendor": "test-vendor",
+                    "content_url": "/snowy/foo/path/never",
+                    "gpg_url": "/snowy/foo/path/never/gpg",
+                    "metadata_expire": 600
+                }
+            ],
+            "products": [
+                {
+                    "name": "Snowy OS Premium Architecture Bits",
+                    "id": "6050",
+                    "version": "6.1",
+                    "arch": "ppc64",
+                    "provided_products": [
+                        "37060"
+                    ],
+                    "attributes": {
+                        "sockets": 2,
+                        "vcpu": 4,
+                        "warning_period": 30
+                    },
+                    "content": [
+                        [6000, false]
+                    ]
+                },
+                {
+                    "name": "Snowy OS Developer Bits",
+                    "id": "6051",
+                    "content": [
+                        [6000, false],
+                        [6001, false]
+                    ]
+                },
+                {
+                    "name": "Snowy OS Server Bundled (2 Sockets, Standard Support)",
+                    "id": "snowyos-server-2-socket-std",
+                    "version": "6.1",
+                    "type": "MKT",
+                    "provided_products": [
+                        "37065",
+                        "37070",
+                        "37067",
+                        "37068",
+                        "37069",
+                        "37060",
+                        "6050",
+                        "6051"
+                    ],
+                    "attributes": {
+                        "sockets": 2,
+                        "vcpu": 4,
+                        "warning_period": 30,
+                        "management_enabled" : 1,
+                        "support_level" : "Standard",
+                        "support_type" : "L1-L3"
+                    }
+                },
+                {
+                    "name": "Snowy OS Instance Based one socket",
+                    "id": "snowyos-onesocketib",
+                    "type": "MKT",
+                    "provided_products": [
+                        "32060",
+                        "6050",
+                        "6051"
+                    ],
+                    "attributes": {
+                        "instance_multiplier": 2,
+                        "sockets": 1,
+                        "virt_limit": 1,
+                        "host_limited": "true",
+                        "stacking_id": 15,
+                        "multi-entitlement": "yes",
+                        "support_level" : "Standard",
+                        "support_type" : "L1-L3"
+                    }
+                }
+            ]
         },
         {
             "name": "donaldduck",
@@ -557,8 +760,7 @@
                 "vcpu": 4,
                 "warning_period": 30
             },
-            "content": [
-]
+            "content": []
         },
         {
             "name": "Shared File System Bits",
@@ -700,8 +902,6 @@
                 "support_type" : "Level 3"
             }
         },
-
-
         {
             "name": "Awesome OS Server Basic",
             "id": "awesomeos-server-basic",
@@ -739,9 +939,7 @@
             "name": "Awesome OS Server Basic (data center)",
             "id": "awesomeos-server-basic-dc",
             "type": "MKT",
-            "provided_products": [
-
-            ],
+            "provided_products": [],
             "attributes": {
                 "sockets": 4,
                 "vcpu": 8,
@@ -775,7 +973,6 @@
                 "multi-entitlement" : "yes"
             }
         },
-
         {
             "name": "Awesome OS Workstation Basic",
             "id": "awesomeos-workstation-basic",
@@ -1322,7 +1519,7 @@
                 "warning_period": 30
             }
         },
-       {
+        {
             "name": "Awesome OS for x86 Bits",
             "id": "100000000000020",
             "version": "8.6",
@@ -1376,7 +1573,6 @@
                 [11121, false]
             ]
         },
-
         {
             "name": "Awesome OS for x86_64/i686/ia64/ppc/ppc64/s390x/s390",
             "id": "awesomeos-everything",
@@ -1496,7 +1692,6 @@
                 "warning_period": 30
             }
         },
-
         {
             "name": "Management Add-On",
             "id": "management-100",

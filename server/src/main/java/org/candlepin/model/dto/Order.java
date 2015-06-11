@@ -12,33 +12,65 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.json.model;
+package org.candlepin.model.dto;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Service
+ * Order
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Service {
+public class Order {
 
-    private String level;
-    private String type;
+    private String number;
+    private Long quantity;
+    private String start;
+    private String end;
+    private String contract;
+    private String account;
 
     /**
-     * @param level
+     * @param number
      */
-    public void setLevel(String level) {
-        this.level = level;
+    public void setNumber(String number) {
+        this.number = number;
     }
 
     /**
-     * @param type
+     * @param quantity
      */
-    public void setType(String type) {
-        this.type = type;
+    public void setQuantity(Long quantity) {
+        this.quantity = quantity;
+    }
+
+    /**
+     * @param start
+     */
+    public void setStart(String start) {
+        this.start = start;
+    }
+
+    /**
+     * @param end
+     */
+    public void setEnd(String end) {
+        this.end = end;
+    }
+
+    /**
+     * @param contract
+     */
+    public void setContract(String contract) {
+        this.contract = contract;
+    }
+
+    /**
+     * @param accountNumber
+     */
+    public void setAccount(String account) {
+        this.account = account;
     }
 }

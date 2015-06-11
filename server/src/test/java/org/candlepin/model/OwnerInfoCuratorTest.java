@@ -55,14 +55,14 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         owner = createOwner();
         ownerCurator.create(owner);
 
-        Product product1 = TestUtil.createProduct();
+        Product product1 = TestUtil.createProduct(owner);
         productCurator.create(product1);
 
-        pool1 = createPoolAndSub(owner, product1, 1L,
+        pool1 = createPool(owner, product1, 1L,
             Util.yesterday(), Util.tomorrow());
         poolCurator.create(pool1);
 
-        Product product2 = TestUtil.createProduct();
+        Product product2 = TestUtil.createProduct(owner);
         productCurator.create(product2);
 
         ConsumerType consumerType = new ConsumerType("system");
@@ -252,8 +252,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     @Test
     public void testOwnerPoolEntitlementCountProductOnly() {
         ConsumerType type = consumerTypeCurator.lookupByLabel("system");
-        pool1.setProductAttribute("requires_consumer_type", type.getLabel(),
-            pool1.getProductId());
+        pool1.getProduct().setAttribute("requires_consumer_type", type.getLabel());
         owner.addEntitlementPool(pool1);
 
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
@@ -274,8 +273,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         ConsumerType type = consumerTypeCurator.lookupByLabel("domain");
         ConsumerType type2 = consumerTypeCurator.lookupByLabel("system");
         pool1.setAttribute("requires_consumer_type", type.getLabel());
-        pool1.setProductAttribute("requires_consumer_type", type2.getLabel(),
-            pool1.getProductId());
+        pool1.getProduct().setAttribute("requires_consumer_type", type2.getLabel());
         owner.addEntitlementPool(pool1);
 
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
@@ -369,8 +367,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     @Test
     public void testOwnerPoolEnabledCountProductOnly() {
         ConsumerType type = consumerTypeCurator.lookupByLabel("system");
-        pool1.setProductAttribute("enabled_consumer_types", type.getLabel(),
-            pool1.getProductId());
+        pool1.getProduct().setAttribute("enabled_consumer_types", type.getLabel());
         owner.addEntitlementPool(pool1);
 
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
@@ -389,8 +386,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         ConsumerType type = consumerTypeCurator.lookupByLabel("domain");
         ConsumerType type2 = consumerTypeCurator.lookupByLabel("system");
         pool1.setAttribute("enabled_consumer_types", type.getLabel());
-        pool1.setProductAttribute("enabled_consumer_types", type2.getLabel(),
-            pool1.getProductId());
+        pool1.getProduct().setAttribute("enabled_consumer_types", type2.getLabel());
         owner.addEntitlementPool(pool1);
 
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
@@ -495,8 +491,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         owner.addEntitlementPool(pool1);
 
         pool1.setAttribute("product_family", "test family");
-        pool1.setProductAttribute("product_family", "bad test family",
-            pool1.getProductId());
+        pool1.getProduct().setAttribute("product_family", "bad test family");
 
         ConsumerType type = consumerTypeCurator.lookupByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
@@ -524,7 +519,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     public void testOwnerInfoEntitlementsConsumedByFamilySortsByFamily() {
         owner.addEntitlementPool(pool1);
 
-        pool1.setProductAttribute("product_family", "test family", pool1.getProductId());
+        pool1.getProduct().setAttribute("product_family", "test family");
 
         ConsumerType type = consumerTypeCurator.lookupByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
@@ -553,7 +548,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         // other tests look at physical, so just do virtual
         owner.addEntitlementPool(pool1);
 
-        pool1.setProductAttribute("virt_only", "true", pool1.getProductId());
+        pool1.getProduct().setAttribute("virt_only", "true");
 
         ConsumerType type = consumerTypeCurator.lookupByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
@@ -582,8 +577,8 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     public void testOwnerInfoEntitlementsConsumedByFamilySeperatesVirtExplicitFamily() {
         owner.addEntitlementPool(pool1);
 
-        pool1.setProductAttribute("product_family", "test family", pool1.getProductId());
-        pool1.setProductAttribute("virt_only", "true", pool1.getProductId());
+        pool1.getProduct().setAttribute("product_family", "test family");
+        pool1.getProduct().setAttribute("virt_only", "true");
 
         ConsumerType type = consumerTypeCurator.lookupByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);

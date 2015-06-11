@@ -36,6 +36,7 @@ import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Before;
@@ -62,6 +63,7 @@ public class EntitlerTest {
     private Consumer consumer;
     private ConsumerCurator cc;
     private EntitlementRulesTranslator translator;
+    private SubscriptionServiceAdapter subAdapter;
     private EntitlementCurator entitlementCurator;
 
     private ValidationResult fakeOutResult(String msg) {
@@ -85,6 +87,7 @@ public class EntitlerTest {
             I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK
         );
         translator = new EntitlementRulesTranslator(i18n);
+        subAdapter = mock(SubscriptionServiceAdapter.class);
         entitler = new Entitler(pm, cc, i18n, ef, sink, translator, entitlementCurator);
     }
 
@@ -321,9 +324,9 @@ public class EntitlerTest {
 
     @Test
     public void testRevokesLapsedUnmappedGuestEntitlementsOnAutoHeal() throws Exception {
-        Product product = TestUtil.createProduct();
-
         Owner owner1 = new Owner("o1");
+
+        Product product = TestUtil.createProduct(owner1);
 
         Pool p1 = TestUtil.createPool(owner1, product);
 
@@ -358,13 +361,14 @@ public class EntitlerTest {
 
     @Test
     public void testUnmappedGuestRevocation() throws Exception {
-        Product product = TestUtil.createProduct();
-
         Owner owner1 = new Owner("o1");
         Owner owner2 = new Owner("o2");
 
-        Pool p1 = TestUtil.createPool(owner1, product);
-        Pool p2 = TestUtil.createPool(owner2, product);
+        Product product1 = TestUtil.createProduct(owner1);
+        Product product2 = TestUtil.createProduct(owner2);
+
+        Pool p1 = TestUtil.createPool(owner1, product1);
+        Pool p2 = TestUtil.createPool(owner2, product2);
 
         p1.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
         p2.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));

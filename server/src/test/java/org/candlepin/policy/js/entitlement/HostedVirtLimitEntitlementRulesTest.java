@@ -29,7 +29,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
-import org.candlepin.model.Subscription;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.pool.PoolHelper;
 
 import org.junit.Test;
@@ -52,8 +52,9 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         enforcer.postEntitlement(consumer, postHelper, e);
 
-        verify(postHelper, never()).createHostRestrictedPool(pool.getProductId(),
-            pool, pool.getAttributeValue("virt_limit"));
+        verify(postHelper, never()).createHostRestrictedPool(
+            pool.getProduct(), pool, pool.getAttributeValue("virt_limit")
+        );
     }
 
     @Test
@@ -75,10 +76,10 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         // Quantity on bonus pool should be virt limit * sub quantity:
         assertEquals(new Long(100), virtBonusPool.getQuantity());
         assertEquals("true", virtBonusPool.getAttributeValue("virt_only"));
-        assertEquals("10", virtBonusPool.getProductAttribute("virt_limit").getValue());
+        assertEquals("10", virtBonusPool.getProduct().getAttributeValue("virt_limit"));
 
         Entitlement e = new Entitlement(physicalPool, consumer, 1);
-        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, e);
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
         when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId())))
@@ -110,7 +111,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         assertEquals(0, physicalPool.getAttributes().size());
 
         Entitlement e = new Entitlement(physicalPool, consumer, 1);
-        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, e);
 
         enforcer.postEntitlement(consumer, postHelper, e);
         verify(poolManagerMock).createPool(any(Pool.class));
@@ -134,11 +135,10 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         // Quantity on bonus pool should be -1:
         assertEquals(new Long(-1), virtBonusPool.getQuantity());
         assertEquals("true", virtBonusPool.getAttributeValue("virt_only"));
-        assertEquals("unlimited", virtBonusPool.getProductAttribute("virt_limit")
-            .getValue());
+        assertEquals("unlimited", virtBonusPool.getProduct().getAttributeValue("virt_limit"));
 
         Entitlement e = new Entitlement(physicalPool, consumer, 1);
-        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, e);
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
         when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId())))
@@ -173,11 +173,10 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         // Quantity on bonus pool should be -1:
         assertEquals(new Long(-1), virtBonusPool.getQuantity());
         assertEquals("true", virtBonusPool.getAttributeValue("virt_only"));
-        assertEquals("unlimited", virtBonusPool.getProductAttribute("virt_limit")
-            .getValue());
+        assertEquals("unlimited", virtBonusPool.getProduct().getAttributeValue("virt_limit"));
 
         Entitlement e = new Entitlement(physicalPool, consumer, 1);
-        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, e);
 
         enforcer.postEntitlement(consumer, postHelper, e);
         verify(poolManagerMock, never()).createPool(any(Pool.class));
@@ -207,13 +206,12 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         // Quantity on bonus pool should be -1:
         assertEquals(new Long(-1), virtBonusPool.getQuantity());
         assertEquals("true", virtBonusPool.getAttributeValue("virt_only"));
-        assertEquals("unlimited", virtBonusPool.getProductAttribute("virt_limit")
-            .getValue());
+        assertEquals("unlimited", virtBonusPool.getProduct().getAttributeValue("virt_limit"));
 
         Entitlement e = new Entitlement(physicalPool, consumer, 10);
         physicalPool.setConsumed(10L);
         physicalPool.setExported(10L);
-        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, e);
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
         when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId())))
@@ -240,7 +238,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         virtBonusPool.setAttribute("pool_derived", "true");
 
         Entitlement e = new Entitlement(virtBonusPool, consumer, 1);
-        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, e);
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
         when(poolManagerMock.lookupBySubscriptionId(eq(virtBonusPool.getSubscriptionId())))

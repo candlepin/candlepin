@@ -14,22 +14,18 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.ProductContent;
+import org.candlepin.model.ProductCertificateCurator;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
-import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
 import org.candlepin.resource.util.ResourceDateParser;
-import org.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
 
@@ -39,9 +35,9 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -64,44 +60,56 @@ import javax.ws.rs.core.MediaType;
 public class ProductResource {
 
     private static Logger log = LoggerFactory.getLogger(ProductResource.class);
-    private ProductServiceAdapter prodAdapter;
-    private ContentCurator contentCurator;
-    private StatisticCurator statisticCurator;
+    private ProductCurator productCurator;
     private OwnerCurator ownerCurator;
+    private ProductCertificateCurator productCertCurator;
+    private StatisticCurator statisticCurator;
     private I18n i18n;
 
-    /**
-     * default ctor
-     *
-     * @param prodAdapter
-     *            Product Adapter used to interact with multiple services.
-     */
     @Inject
-    public ProductResource(ProductServiceAdapter prodAdapter,
-                           StatisticCurator statisticCurator,
-                           ContentCurator contentCurator,
-                           OwnerCurator ownerCurator,
-                           I18n i18n) {
-        this.prodAdapter = prodAdapter;
-        this.contentCurator = contentCurator;
+    public ProductResource(ProductCurator productCurator, OwnerCurator ownerCurator,
+        ProductCertificateCurator productCertCurator, StatisticCurator statisticCurator,
+        I18n i18n) {
+
+        this.productCurator = productCurator;
+        this.productCertCurator = productCertCurator;
         this.statisticCurator = statisticCurator;
         this.ownerCurator = ownerCurator;
         this.i18n = i18n;
     }
 
     /**
-     * Retrieves a list of Products
+     * Attempts to find a product with the specified ID. The Product returned will be the first
+     * found for any owner. Subsequent calls to this method with the same product ID are not
+     * guaranteed to return the same product.
      *
-     * @param productIds if specified, the list of product ids to return product info for
-     * @return a list of Product objects
-     * @httpcode 200
+     * @param productId
+     *  The ID of the product to find
+     *
+     * @throws NotFoundException
+     *  if a product with the specified ID could not be found
+     *
+     * @return
+     *  a product instance with the specified product ID
      */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Product> list(@QueryParam("product") List<String> productIds) {
-        return productIds.isEmpty() ?
-            prodAdapter.getProducts() :
-            prodAdapter.getProductsByIds(productIds);
+    private Product findProduct(String productId) {
+        Product product = null;
+
+        for (Owner owner : this.ownerCurator.listAll()) {
+            product = this.productCurator.lookupById(owner, productId);
+
+            if (product != null) {
+                break;
+            }
+        }
+
+        if (product == null) {
+            throw new NotFoundException(
+                i18n.tr("Product with ID ''{0}'' could not be found.", productId)
+            );
+        }
+
+        return product;
     }
 
     /**
@@ -126,24 +134,25 @@ public class ProductResource {
      * }
      * </pre>
      *
-     * @param pid uuid of the product sought.
+     * @param productId uuid of the product sought.
      * @return a Product object
      * @httpcode 404
      * @httpcode 200
      */
     @GET
-    @Path("/{product_uuid}")
+    @Path("/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
-    public Product getProduct(@PathParam("product_uuid") String pid) {
-        Product toReturn = prodAdapter.getProductById(pid);
+    public Product getProduct(@PathParam("product_id") String productId) {
+        Product product = this.findProduct(productId);
 
-        if (toReturn != null) {
-            return toReturn;
-        }
+        // Make sure the owner cannot be identified from the returned product
+        // TODO: It may be better/cleaner to evict the object (and its related objects) from
+        // Hibernate's session cache rather than creating a copy.
+        Product censored = (Product) product.clone();
+        censored.setOwner(null);
 
-        throw new NotFoundException(
-            i18n.tr("Product with UUID ''{0}'' could not be found.", pid));
+        return censored;
     }
 
     /**
@@ -154,20 +163,12 @@ public class ProductResource {
      * @httpcode 200
      */
     @GET
-    @Path("/{product_uuid}/certificate")
+    @Path("/{product_id}/certificate")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
-    public ProductCertificate getProductCertificate(
-        @PathParam("product_uuid") String productId) {
-
-        Product product = prodAdapter.getProductById(productId);
-
-        if (product == null) {
-            throw new NotFoundException(
-                i18n.tr("Product with UUID ''{0}'' could not be found.", productId));
-        }
-
-        return prodAdapter.getProductCertificate(product);
+    public ProductCertificate getProductCertificate(@PathParam("product_id") String productId) {
+        Product product = this.findProduct(productId);
+        return this.productCertCurator.getCertForProduct(product);
     }
 
     /**
@@ -182,7 +183,9 @@ public class ProductResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public Product createProduct(Product product) {
-        return prodAdapter.createProduct(product);
+        throw new BadRequestException(this.i18n.tr(
+            "Organization-agnostic product write operations are not supported."
+        ));
     }
 
     /**
@@ -193,66 +196,14 @@ public class ProductResource {
      * @httpcode 200
      */
     @PUT
-    @Path("/{product_uuid}")
+    @Path("/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Product updateProduct(
-        @PathParam("product_uuid") @Verify(Product.class) String productId,
+        @PathParam("product_id") String productId,
         Product product) {
-        Product toUpdate = getProduct(productId);
-
-        if (performProductUpdates(toUpdate, product)) {
-            this.prodAdapter.mergeProduct(toUpdate);
-        }
-
-        return toUpdate;
-    }
-
-    protected boolean performProductUpdates(Product existing, Product incoming) {
-        boolean changesMade = false;
-
-        if (incoming.getName() != null && !existing.getName().equals(incoming.getName()) &&
-            !incoming.getName().isEmpty()) {
-
-            log.debug("Updating product name");
-            changesMade = true;
-            existing.setName(incoming.getName());
-        }
-
-        if (incoming.getAttributes() != null &&
-            !existing.getAttributes().equals(incoming.getAttributes())) {
-
-            log.debug("Updating product attributes");
-
-            // clear and addall here instead of replacing instance so there are no
-            // dangling memory references
-            existing.getAttributes().clear();
-            existing.getAttributes().addAll(incoming.getAttributes());
-            changesMade = true;
-        }
-
-        if (incoming.getDependentProductIds() != null &&
-            !existing.getDependentProductIds().equals(incoming.getDependentProductIds())) {
-
-            log.debug("Updating dependent product ids");
-
-            // clear and addall here instead of replacing instance so there are no
-            // dangling memory references
-            existing.getDependentProductIds().clear();
-            existing.getDependentProductIds().addAll(incoming.getDependentProductIds());
-            changesMade = true;
-        }
-
-        if (incoming.getMultiplier() != null &&
-            existing.getMultiplier().longValue() != incoming.getMultiplier().longValue()) {
-
-            log.debug("Updating product multiplier");
-            changesMade = true;
-            existing.setMultiplier(incoming.getMultiplier());
-        }
-
-        // not calling setHref() it's a no op and pointless to call.
-
-        return changesMade;
+        throw new BadRequestException(this.i18n.tr(
+            "Organization-agnostic product write operations are not supported."
+        ));
     }
 
     /**
@@ -266,17 +217,12 @@ public class ProductResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{product_uuid}/batch_content")
-    public Product addBatchContent(@PathParam("product_uuid") String pid,
-                              Map<String, Boolean> contentMap) {
-        Product product = prodAdapter.getProductById(pid);
-        for (Entry<String, Boolean> entry : contentMap.entrySet()) {
-            Content content = contentCurator.find(entry.getKey());
-            ProductContent productContent = new ProductContent(product, content,
-                entry.getValue());
-            product.getProductContent().add(productContent);
-        }
-        return prodAdapter.getProductById((product.getId()));
+    @Path("/{product_id}/batch_content")
+    public Product addBatchContent(@PathParam("product_id") String productId,
+                                   Map<String, Boolean> contentMap) {
+        throw new BadRequestException(this.i18n.tr(
+            "Organization-agnostic product write operations are not supported."
+        ));
     }
 
     /**
@@ -289,16 +235,13 @@ public class ProductResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{product_uuid}/content/{content_id}")
-    public Product addContent(@PathParam("product_uuid") String pid,
+    @Path("/{product_id}/content/{content_id}")
+    public Product addContent(@PathParam("product_id") String productId,
                               @PathParam("content_id") String contentId,
                               @QueryParam("enabled") Boolean enabled) {
-        Product product = prodAdapter.getProductById(pid);
-        Content content = contentCurator.find(contentId);
-
-        ProductContent productContent = new ProductContent(product, content, enabled);
-        product.getProductContent().add(productContent);
-        return prodAdapter.getProductById((product.getId()));
+        throw new BadRequestException(this.i18n.tr(
+            "Organization-agnostic product write operations are not supported."
+        ));
     }
 
     /**
@@ -308,10 +251,12 @@ public class ProductResource {
      */
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{product_uuid}/content/{content_id}")
-    public void removeContent(@PathParam("product_uuid") String pid,
+    @Path("/{product_id}/content/{content_id}")
+    public void removeContent(@PathParam("product_id") String productId,
                               @PathParam("content_id") String contentId) {
-        prodAdapter.removeContent(pid, contentId);
+        throw new BadRequestException(this.i18n.tr(
+            "Organization-agnostic product write operations are not supported."
+        ));
     }
 
     /**
@@ -323,20 +268,11 @@ public class ProductResource {
      */
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{product_uuid}")
-    public void deleteProduct(@PathParam("product_uuid") String pid) {
-        Product product = prodAdapter.getProductById(pid);
-        if (product == null) {
-            throw new NotFoundException(
-                i18n.tr("Product with UUID ''{0}'' could not be found.", pid));
-        }
-        if (prodAdapter.productHasSubscriptions(product)) {
-            throw new BadRequestException(
-                i18n.tr("Product with UUID ''{0}'' cannot be deleted " +
-                    "while subscriptions exist.", pid));
-        }
-
-        prodAdapter.deleteProduct(product);
+    @Path("/{product_id}")
+    public void deleteProduct(@PathParam("product_id") String productId) {
+        throw new BadRequestException(this.i18n.tr(
+            "Organization-agnostic product write operations are not supported."
+        ));
     }
 
     /**
@@ -347,16 +283,14 @@ public class ProductResource {
      * @httpcode 200
      */
     @GET
-    @Path("/{prod_id}/statistics")
+    @Path("/{product_id}/statistics")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getProductStats(@PathParam("prod_id") String id,
+    public List<Statistic> getProductStats(@PathParam("product_id") String productId,
                             @QueryParam("from") String from,
                             @QueryParam("to") String to,
                             @QueryParam("days") String days) {
 
-        return statisticCurator.getStatisticsByProduct(id, null,
-                                ResourceDateParser.getFromDate(from, to, days),
-                                ResourceDateParser.parseDateString(to));
+        return this.getProductStats(productId, null, from, to, days);
     }
 
     /**
@@ -369,17 +303,32 @@ public class ProductResource {
      * @httpcode 200
      */
     @GET
-    @Path("/{prod_id}/statistics/{vtype}")
+    @Path("/{product_id}/statistics/{vtype}")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getProductStats(@PathParam("prod_id") String id,
+    public List<Statistic> getProductStats(@PathParam("product_id") String productId,
                             @PathParam("vtype") String valueType,
                             @QueryParam("from") String from,
                             @QueryParam("to") String to,
                             @QueryParam("days") String days) {
 
-        return statisticCurator.getStatisticsByProduct(id, valueType,
-                                ResourceDateParser.getFromDate(from, to, days),
-                                ResourceDateParser.parseDateString(to));
+        Product product = this.findProduct(productId);
+
+        List<Statistic> stats =  statisticCurator.getStatisticsByProduct(product.getOwner(),
+             productId, valueType, ResourceDateParser.getFromDate(from, to, days),
+             ResourceDateParser.parseDateString(to)
+        );
+
+        List<Statistic> censored = new LinkedList<Statistic>();
+
+        for (Statistic src : stats) {
+            Statistic dest = new Statistic(src.getEntryType(), src.getValueType(),
+                src.getValueReference(), src.getValue(), null
+            );
+
+            censored.add(dest);
+        }
+
+        return censored;
     }
 
     /**
@@ -392,8 +341,8 @@ public class ProductResource {
     @GET
     @Path("/owners")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Owner> getActiveProductOwners(@QueryParam("product") String[] productIds) {
-        List<String> ids = Arrays.asList(productIds);
+    public List<Owner> getActiveProductOwners(@QueryParam("product") String[] productId) {
+        List<String> ids = Arrays.asList(productId);
         if (ids.isEmpty()) {
             throw new BadRequestException(i18n.tr("Must specify product ID."));
         }
@@ -404,23 +353,19 @@ public class ProductResource {
     /**
      * Refreshes Pools by Product
      *
-     * @param pid
+     * @param productId
      * @param lazyRegen
      * @return a JobDetail object
      */
     @PUT
-    @Path("/{product_uuid}/subscriptions")
+    @Path("/{product_id}/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)
     public JobDetail refreshPoolsForProduct(
-        @PathParam("product_uuid") String pid,
+        @PathParam("product_id") String productId,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
-        Product product = prodAdapter.getProductById(pid);
-        if (product == null) {
-            throw new NotFoundException(
-                i18n.tr("Product with UUID ''{0}'' could not be found.", pid));
-        }
-
-        return RefreshPoolsForProductJob.forProduct(product, lazyRegen);
+        throw new BadRequestException(this.i18n.tr(
+            "Organization-agnostic product write operations are not supported."
+        ));
     }
 }

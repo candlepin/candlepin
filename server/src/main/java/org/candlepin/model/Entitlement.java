@@ -98,8 +98,7 @@ public class Entitlement extends AbstractHibernateObject
     // Not positive this should be mapped here, not all entitlements will have
     // certificates.
     @OneToMany(mappedBy = "entitlement", cascade = CascadeType.ALL)
-    private Set<EntitlementCertificate> certificates =
-        new HashSet<EntitlementCertificate>();
+    private Set<EntitlementCertificate> certificates = new HashSet<EntitlementCertificate>();
 
     private Integer quantity;
 
@@ -168,6 +167,9 @@ public class Entitlement extends AbstractHibernateObject
     @XmlTransient
     public String getProductId() {
         if (this.pool != null) {
+            if (pool.getImportedProductId() != null) {
+                return pool.getImportedProductId();
+            }
             return this.pool.getProductId();
         }
         return null;
@@ -267,7 +269,11 @@ public class Entitlement extends AbstractHibernateObject
     }
 
     public void setCertificates(Set<EntitlementCertificate> certificates) {
-        this.certificates = certificates;
+        this.certificates.clear();
+
+        if (certificates != null) {
+            this.certificates.addAll(certificates);
+        }
     }
 
     public void addCertificate(EntitlementCertificate certificate) {

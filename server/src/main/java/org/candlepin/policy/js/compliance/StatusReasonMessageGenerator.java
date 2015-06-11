@@ -103,10 +103,10 @@ public class StatusReasonMessageGenerator {
     private String getStackedMarketingName(String stackId, Consumer consumer, Date onDate) {
         Set<String> results = new HashSet<String>();
         for (Entitlement e : getEntitlementsOnDate(consumer, onDate)) {
-            if (e.getPool().getProductAttribute("stacking_id") != null) {
-                if (e.getPool().getProductAttribute("stacking_id")
+            if (e.getPool().getProduct().getAttribute("stacking_id") != null) {
+                if (e.getPool().getProduct().getAttribute("stacking_id")
                     .getValue().equals(stackId)) {
-                    results.add(e.getPool().getProductName());
+                    results.add(e.getPool().getProduct().getName());
                 }
             }
         }

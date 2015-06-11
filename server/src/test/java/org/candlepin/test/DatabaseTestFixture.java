@@ -43,16 +43,13 @@ import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ProductPoolAttribute;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Role;
 import org.candlepin.model.SourceSubscription;
-import org.candlepin.model.Subscription;
-import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.DateSource;
+import org.candlepin.util.Util;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -103,9 +100,9 @@ public class DatabaseTestFixture {
     @Inject protected PoolCurator poolCurator;
     @Inject protected ConsumerCurator consumerCurator;
     @Inject protected ConsumerTypeCurator consumerTypeCurator;
-    @Inject protected SubscriptionCurator subCurator;
     @Inject protected CertificateSerialCurator certSerialCurator;
     @Inject protected ContentCurator contentCurator;
+    @Inject protected SubscriptionServiceAdapter subAdapter;
 
     private static Injector parentInjector;
     private Injector injector;
@@ -206,24 +203,26 @@ public class DatabaseTestFixture {
     }
 
     /**
-     * Create an entitlement pool and matching subscription.
+     * Create an entitlement pool.
      *
-     * @return an entitlement pool and matching subscription.
+     * @return an entitlement pool
      */
-    protected Pool createPoolAndSub(Owner owner, Product product,
-        Long quantity, Date startDate, Date endDate) {
-        Pool p = new Pool(owner, product.getId(), product.getName(),
-            new HashSet<ProvidedProduct>(), quantity, startDate, endDate,
-            DEFAULT_CONTRACT, DEFAULT_ACCOUNT, DEFAULT_ORDER);
-        Subscription sub = new Subscription(owner, product,
-            new HashSet<Product>(), quantity, startDate, endDate,
-            TestUtil.createDate(2010, 2, 12));
-        subCurator.create(sub);
-        p.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
-        for (ProductAttribute pa : product.getAttributes()) {
-            p.addProductAttribute(new ProductPoolAttribute(pa.getName(),
-                pa.getValue(), product.getId()));
-        }
+    protected Pool createPool(Owner owner, Product product, Long quantity, Date startDate,
+        Date endDate) {
+
+        Pool p = new Pool(
+            owner,
+            product,
+            new HashSet<Product>(),
+            quantity,
+            startDate,
+            endDate,
+            DEFAULT_CONTRACT,
+            DEFAULT_ACCOUNT,
+            DEFAULT_ORDER
+        );
+
+        p.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
         return poolCurator.create(p);
     }
 
@@ -240,20 +239,6 @@ public class DatabaseTestFixture {
         Consumer c = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(c);
         return c;
-    }
-
-    protected Subscription createSubscription() {
-        Product p = TestUtil.createProduct();
-        productCurator.create(p);
-        Subscription sub = new Subscription(createOwner(),
-                                            p, new HashSet<Product>(),
-                                            1000L,
-                                            TestUtil.createDate(2000, 1, 1),
-                                            TestUtil.createDate(2010, 1, 1),
-                                            TestUtil.createDate(2000, 1, 1));
-        subCurator.create(sub);
-        return sub;
-
     }
 
     protected ActivationKey createActivationKey(Owner owner) {

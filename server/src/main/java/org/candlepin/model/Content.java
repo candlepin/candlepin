@@ -18,6 +18,7 @@ import org.candlepin.service.UniqueIdGenerator;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
 import java.util.HashSet;
@@ -27,8 +28,10 @@ import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -42,13 +45,21 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_content")
+@Table(name = "cpo_content")
 public class Content extends AbstractHibernateObject {
 
     public static final  String UEBER_CONTENT_NAME = "ueber_content";
 
+    // Object ID
     @Id
-    @Size(max = 255)
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @NotNull
+    private String uuid;
+
+    // Internal RH content ID
+    @Column(name = "content_id")
+    @Size(max = 32)
     @NotNull
     private String id;
 
@@ -62,7 +73,10 @@ public class Content extends AbstractHibernateObject {
     @NotNull
     private String label;
 
-    // Description?
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    @NotNull
+    private Owner owner;
 
     @Column(nullable = false)
     @Size(max = 255)
@@ -98,8 +112,8 @@ public class Content extends AbstractHibernateObject {
     private Long metadataExpire;
 
     @ElementCollection
-    @CollectionTable(name = "cp_content_modified_products",
-                     joinColumns = @JoinColumn(name = "cp_content_id"))
+    @CollectionTable(name = "cpo_content_modified_products",
+                     joinColumns = @JoinColumn(name = "content_uuid"))
     @Column(name = "element")
     @Size(max = 255)
     private Set<String> modifiedProductIds = new HashSet<String>();
@@ -108,8 +122,9 @@ public class Content extends AbstractHibernateObject {
     @Size(max = 255)
     private String arches;
 
-    public Content(String name, String id, String label, String type,
+    public Content(Owner owner, String name, String id, String label, String type,
         String vendor, String contentUrl, String gpgUrl, String arches) {
+        setOwner(owner);
         setName(name);
         setId(id);
         setLabel(label);
@@ -123,29 +138,74 @@ public class Content extends AbstractHibernateObject {
     public Content() {
     }
 
-    public static Content createUeberContent(
-        UniqueIdGenerator idGenerator, Owner o, Product p) {
+    /**
+     * ID-based constructor so API users can specify an ID in place of a full object.
+     *
+     * @param id
+     *  The ID for this content
+     */
+    public Content(String id) {
+        this.setId(id);
+    }
 
+    public static Content createUeberContent(UniqueIdGenerator idGenerator, Owner o, Product p) {
         return new Content(
-            UEBER_CONTENT_NAME, idGenerator.generateId(),
+            o, UEBER_CONTENT_NAME, idGenerator.generateId(),
             ueberContentLabelForProduct(p), "yum", "Custom",
             "/" + o.getKey(), "", "");
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.candlepin.model.Persisted#getId()
+    /**
+     * Retrieves this content's object/database UUID. While the content ID may exist multiple times
+     * in the database (if in use by multiple owners), this UUID uniquely identifies a
+     * content instance.
+     *
+     * @return
+     *  this content's database UUID.
      */
-    @Override
-    public String getId() {
-        return id;
+    public String getUuid() {
+        return uuid;
     }
 
     /**
-     * @param id product id
+     * Sets this content's object/database ID. Note that this ID is used to uniquely identify this
+     * particular object and has no baring on the Red Hat content ID.
+     *
+     * @param uuid
+     *  The object ID to assign to this content.
+     */
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
+
+    /**
+     * Retrieves this content's ID. Assigned by the content provider, and may exist in
+     * multiple owners, thus may not be unique in itself.
+     *
+     * @return
+     *  this content's ID.
+     */
+    public String getId() {
+        return this.id;
+    }
+
+    /**
+     * Sets the content ID for this content. The content ID is the Red Hat content ID and should not
+     * be confused with the object ID.
+     *
+     * @param id
+     *  The new content ID for this content.
      */
     public void setId(String id) {
         this.id = id;
+    }
+
+    public void setOwner(Owner owner) {
+        this.owner = owner;
+    }
+
+    public Owner getOwner() {
+        return this.owner;
     }
 
     public String getLabel() {
@@ -215,25 +275,46 @@ public class Content extends AbstractHibernateObject {
         if (this == other) {
             return true;
         }
+
         if (other instanceof Content) {
             Content that = (Content) other;
-            return new EqualsBuilder().append(this.contentUrl, that.contentUrl)
+            return new EqualsBuilder()
+                .append(this.contentUrl, that.contentUrl)
                 .append(this.gpgUrl, that.gpgUrl)
                 .append(this.label, that.label)
+                .append(this.metadataExpire, that.metadataExpire)
                 .append(this.name, that.name)
+                .append(this.releaseVer, that.releaseVer)
+                .append(this.requiredTags, that.requiredTags)
                 .append(this.type, that.type)
-                .append(this.vendor, that.vendor).isEquals();
+                .append(this.vendor, that.vendor)
+                .append(this.arches, that.arches)
+                .append(this.modifiedProductIds, that.modifiedProductIds)
+                .append(this.owner, that.owner)
+                .isEquals();
         }
+
         return false;
     }
 
     @Override
     public int hashCode() {
         // This must always be a subset of equals
-        return new HashCodeBuilder(37, 7).append(this.contentUrl)
-            .append(this.gpgUrl).append(this.label).append(this.name)
-            .append(this.type).append(this.vendor).toHashCode();
+        return new HashCodeBuilder(37, 7)
+            .append(this.contentUrl)
+            .append(this.gpgUrl)
+            .append(this.label)
+            .append(this.metadataExpire)
+            .append(this.name)
+            .append(this.releaseVer)
+            .append(this.requiredTags)
+            .append(this.type)
+            .append(this.vendor)
+            .append(this.arches)
+            .append(this.modifiedProductIds)
+            .toHashCode();
     }
+
 
     public Long getMetadataExpire() {
         return metadataExpire;
@@ -260,7 +341,7 @@ public class Content extends AbstractHibernateObject {
     }
 
     public static String ueberContentLabelForProduct(Product p) {
-        return p.getId() + "_" + UEBER_CONTENT_NAME;
+        return p.getUuid() + "_" + UEBER_CONTENT_NAME;
     }
 
     /**
@@ -290,18 +371,17 @@ public class Content extends AbstractHibernateObject {
      * @return current Content object with updated properties
      */
     public Content copyProperties(Content from) {
-        setType(from.getType());
-        setLabel(from.getLabel());
-        setName(from.getName());
-        setVendor(from.getVendor());
         setContentUrl(from.getContentUrl());
-        setRequiredTags(from.getRequiredTags());
-        setReleaseVer(from.getReleaseVer());
         setGpgUrl(from.getGpgUrl());
+        setLabel(from.getLabel());
         setMetadataExpire(from.getMetadataExpire());
-        setModifiedProductIds(defaultIfNull(from.getModifiedProductIds(),
-            new HashSet<String>()));
+        setName(from.getName());
+        setReleaseVer(from.getReleaseVer());
+        setRequiredTags(from.getRequiredTags());
+        setType(from.getType());
+        setVendor(from.getVendor());
         setArches(from.getArches());
+        setModifiedProductIds(defaultIfNull(from.getModifiedProductIds(), new HashSet<String>()));
 
         return this;
     }

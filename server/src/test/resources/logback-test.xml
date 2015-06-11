@@ -7,11 +7,16 @@
     </encoder>
   </appender>
   <logger name="org.candlepin.util.filters.DumpFilter" level="INFO"/>
-  <logger name="org.candlepin" level="INFO"/>
-  <logger name="org.candlepin.policy.js" level="INFO"/>
+  <logger name="org.candlepin" level="DEBUG"/>
   <logger name="org.hibernate.tool.hbm2ddl" level="WARN"/>
   <logger name="org.hibernate.id.UUIDHexGenerator" level="ERROR"/>
   <logger name="liquibase" level="ERROR"/>
+
+<!--
+  <logger name="org.hibernate.SQL" level="DEBUG"/>
+  <logger name="org.hibernate.type" level="TRACE"/>
+-->
+
   <root level="WARN">
     <appender-ref ref="RootAppender"/>
   </root>

@@ -15,11 +15,11 @@
 
 package org.candlepin.model;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
@@ -34,11 +34,12 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
- * See Attributes interface for documentation.
+ * See Attributes interface for documentation.f
  */
 @Entity
-@Table(name = "cp_product_attribute")
+@Table(name = "cpo_product_attributes")
 @Embeddable
+@JsonFilter("ProductAttributeFilter")
 public class ProductAttribute extends AbstractHibernateObject implements Attribute {
 
     @Id
@@ -56,13 +57,11 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
     @Size(max = 255)
     protected String value;
 
-
     @ManyToOne
-    @ForeignKey(name = "fk_product_attrib_product_id")
-    @JoinColumn(nullable = false)
-    @Index(name = "cp_prodattribute_prod_fk_idx")
+    @JoinColumn(name = "product_uuid", nullable = false)
     @NotNull
     private Product product;
+
 
     public ProductAttribute() {
     }

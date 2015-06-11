@@ -19,17 +19,15 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
-import org.candlepin.model.ProductPoolAttribute;
-import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
-import org.candlepin.model.Subscription;
-import org.candlepin.policy.js.ProductCache;
+import org.candlepin.model.dto.Subscription;
 
 import com.google.inject.Inject;
 
@@ -54,18 +52,18 @@ public class PoolRules {
     private static Logger log = LoggerFactory.getLogger(PoolRules.class);
 
     private PoolManager poolManager;
-    private ProductCache productCache;
     private Configuration config;
     private EntitlementCurator entCurator;
-
+    private ProductCurator prodCurator;
 
     @Inject
-    public PoolRules(PoolManager poolManager, ProductCache productCache, Configuration config,
-        EntitlementCurator entCurator) {
+    public PoolRules(PoolManager poolManager, Configuration config, EntitlementCurator entCurator,
+        ProductCurator prodCurator) {
+
         this.poolManager = poolManager;
-        this.productCache = productCache;
         this.config = config;
         this.entCurator = entCurator;
+        this.prodCurator = prodCurator;
     }
 
     private long calculateQuantity(Subscription sub) {
@@ -78,7 +76,7 @@ public class PoolRules {
             sub.getUpstreamPoolId() == null) {
 
             int instanceMultiplier = Integer.parseInt(
-                sub.getProduct().getAttribute("instance_multiplier").getValue());
+                sub.getProduct().getAttributeValue("instance_multiplier"));
             log.debug("Increasing pool quantity for instance multiplier: " +
                 instanceMultiplier);
             quantity = quantity * instanceMultiplier;
@@ -90,55 +88,46 @@ public class PoolRules {
         return createPools(sub, new LinkedList<Pool>());
     }
 
+    /**
+     * Create any pools that need to be created for the given subscription.
+     *
+     * In some scenarios, due to attribute changes, pools may need to be created even though
+     * pools already exist for the subscription. A list of pre-existing pools for the given
+     * sub are provided to help this method determine if something needs to be done or not.
+     *
+     * For a genuine new subscription, the existing pools list will be empty.
+     *
+     * @param sub
+     * @param existingPools
+     * @return a list of pools created for the given subscription
+     */
     public List<Pool> createPools(Subscription sub, List<Pool> existingPools) {
-        log.info("Checking if pools need to be created for: {}", sub);
-        PoolHelper helper = new PoolHelper(this.poolManager,
-            this.productCache, null);
+        if (sub == null) {
+            throw new IllegalArgumentException("subscription is null");
+        }
+
+        log.info("Checking if pools need to be created for subscription: {}", sub);
+        PoolHelper helper = new PoolHelper(this.poolManager, null);
 
         List<Pool> pools = new LinkedList<Pool>();
-        Map<String, String> attributes =
-            helper.getFlattenedAttributes(sub.getProduct());
+        Map<String, String> attributes = helper.getFlattenedAttributes(sub.getProduct());
         long quantity = calculateQuantity(sub);
-        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
 
         if (!hasMasterPool(existingPools)) {
-            Pool newPool = new Pool(sub.getOwner(), sub.getProduct().getId(),
-                    sub.getProduct().getName(), providedProducts, quantity, sub.getStartDate(),
-                    sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
-                    sub.getOrderNumber());
+            Pool newPool = new Pool(sub.getOwner(), sub.getProduct(), null, quantity,
+                sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
+                sub.getAccountNumber(), sub.getOrderNumber()
+            );
 
-            if (sub.getProvidedProducts() != null) {
-                for (Product p : sub.getProvidedProducts()) {
-                    ProvidedProduct providedProduct = new ProvidedProduct(p.getId(),
-                        p.getName());
-                    providedProduct.setPool(newPool);
-                    providedProducts.add(providedProduct);
-                }
-            }
+            // Add all product references
+            newPool.setProvidedProducts(sub.getProvidedProducts());
+            newPool.setDerivedProduct(sub.getDerivedProduct());
+            newPool.setDerivedProvidedProducts(sub.getDerivedProvidedProducts());
 
-            if (sub.getDerivedProvidedProducts() != null) {
-                for (Product p : sub.getDerivedProvidedProducts()) {
-                    DerivedProvidedProduct providedProduct =
-                        new DerivedProvidedProduct(p.getId(), p.getName());
-                    providedProduct.setPool(newPool);
-                    newPool.getDerivedProvidedProducts().add(providedProduct);
-                }
-            }
-
-            helper.copyProductAttributesOntoPool(sub.getProduct().getId(), newPool);
-
-            if (sub.getDerivedProduct() != null) {
-                newPool.setDerivedProductId(sub.getDerivedProduct().getId());
-                newPool.setDerivedProductName(sub.getDerivedProduct().getName());
-                helper.copySubProductAttributesOntoPool(sub.getDerivedProduct().getId(),
-                        newPool);
-            }
-
+            // Add in branding
             for (Branding b : sub.getBranding()) {
-                newPool.getBranding().add(new Branding(b.getProductId(), b.getType(),
-                    b.getName()));
+                newPool.getBranding().add(new Branding(b.getProductId(), b.getType(), b.getName()));
             }
-
 
             newPool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
             ProductAttribute virtAtt = sub.getProduct().getAttribute("virt_only");
@@ -146,11 +135,17 @@ public class PoolRules {
             // note: the product attributes are getting copied above, but the following will
             // make virt_only a pool attribute. That makes the pool explicitly virt_only to
             // subscription manager and any other downstream comsumer.
-            if (virtAtt != null && virtAtt.getValue() != null &&
-                !virtAtt.getValue().equals("")) {
-                newPool.addAttribute(new org.candlepin.model.PoolAttribute("virt_only",
-                    virtAtt.getValue()));
+            if (virtAtt != null && virtAtt.getValue() != null && !virtAtt.getValue().equals("")) {
+                newPool.addAttribute(new PoolAttribute("virt_only", virtAtt.getValue()));
             }
+
+            // Copy over upstream details...?
+            newPool.setUpstreamPoolId(sub.getUpstreamPoolId());
+            newPool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
+            newPool.setUpstreamConsumerId(sub.getUpstreamConsumerId());
+
+            newPool.setCdn(sub.getCdn());
+            newPool.setCertificate(sub.getCertificate());
 
             pools.add(newPool);
 
@@ -177,23 +172,23 @@ public class PoolRules {
 
             String virtQuantity = getVirtQuantity(attributes.get("virt_limit"), quantity);
             if (virtQuantity != null) {
-                Product poolProduct = sub.getProduct();
                 // Favor derived products if they are available
-                // Set the pool's product to the sub's derived product
-                if (sub.getDerivedProduct() != null) {
-                    poolProduct = sub.getDerivedProduct();
-                }
+                Product sku = sub.getDerivedProduct() != null ?
+                    sub.getDerivedProduct() :
+                    sub.getProduct();
 
-                Pool newPool = helper.createPool(sub, poolProduct.getId(),
-                    virtQuantity, virtAttributes);
+                Pool derivedPool = helper.createPool(
+                    sub, sku, virtQuantity, virtAttributes, prodCurator
+                );
 
                 // Using derived here because only one derived pool
                 // is created for this subscription
-                newPool.setSourceSubscription(new SourceSubscription(sub.getId(), "derived"));
-                pools.add(newPool);
-                log.info("Creating new derived pool: {}", newPool);
+                derivedPool.setSourceSubscription(new SourceSubscription(sub.getId(), "derived"));
+                pools.add(derivedPool);
+                log.info("Creating new derived pool: {}", derivedPool);
             }
         }
+
         return pools;
     }
 
@@ -245,7 +240,8 @@ public class PoolRules {
      * @param floatingPools pools with no subscription ID
      * @return pool updates
      */
-    public List<PoolUpdate> updatePools(List<Pool> floatingPools) {
+    public List<PoolUpdate> updatePools(List<Pool> floatingPools,
+            Set<Product> changedProducts) {
         List<PoolUpdate> updates = new LinkedList<PoolUpdate>();
         for (Pool p : floatingPools) {
 
@@ -260,7 +256,7 @@ public class PoolRules {
                     log.error("Stack derived pool has no source consumer: " + p.getId());
                 }
                 else {
-                    PoolUpdate update = updatePoolFromStack(p);
+                    PoolUpdate update = updatePoolFromStack(p, changedProducts);
                     if (update.changed()) {
                         updates.add(update);
                     }
@@ -270,15 +266,29 @@ public class PoolRules {
         return updates;
     }
 
-    public List<PoolUpdate> updatePools(Subscription sub, List<Pool> existingPools) {
-        PoolHelper helper = new PoolHelper(this.poolManager, this.productCache, null);
+    public List<PoolUpdate> updatePools(Subscription sub, List<Pool> existingPools,
+            Set<Product> changedProducts) {
+
+        //local.setCertificate(subscription.getCertificate());
+
+        log.debug("Refreshing pools for existing subscription: " + sub);
+        log.debug("  existing pools: " + existingPools.size());
+        PoolHelper helper = new PoolHelper(this.poolManager, null);
 
         List<PoolUpdate> poolsUpdated = new LinkedList<PoolUpdate>();
-        Map<String, String> attributes =
-            helper.getFlattenedAttributes(sub.getProduct());
+        Map<String, String> attributes = helper.getFlattenedAttributes(sub.getProduct());
         for (Pool existingPool : existingPools) {
-
             log.debug("Checking pool: " + existingPool.getId());
+
+            // Ensure subscription details are maintained on the master pool
+            if ("master".equalsIgnoreCase(existingPool.getSubscriptionSubKey())) {
+                existingPool.setUpstreamPoolId(sub.getUpstreamPoolId());
+                existingPool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
+                existingPool.setUpstreamConsumerId(sub.getUpstreamConsumerId());
+
+                existingPool.setCdn(sub.getCdn());
+                existingPool.setCertificate(sub.getCertificate());
+            }
 
             // Used to track if anything has changed:
             PoolUpdate update = new PoolUpdate(existingPool);
@@ -290,34 +300,22 @@ public class PoolRules {
                 checkForQuantityChange(sub, existingPool, existingPools, attributes));
 
             if (!existingPool.isMarkedForDelete()) {
-                // Checks product name, ID, and provided products. Attributes are handled
-                // separately.
-                // TODO: should they be separate? ^^
-
                 boolean useDerived = BooleanUtils.toBoolean(existingPool.getAttributeValue("pool_derived")) &&
                     sub.getDerivedProduct() != null;
-                String prodId = useDerived ?
-                    sub.getDerivedProduct().getId() : sub.getProduct().getId();
-                String prodName = useDerived ?
-                    sub.getDerivedProduct().getName() : sub.getProduct().getName();
 
                 update.setProductsChanged(
                     checkForChangedProducts(
-                        prodId,
-                        prodName,
+                        sub.getProduct(),
                         getExpectedProvidedProducts(sub, existingPool, useDerived),
-                        existingPool));
+                        existingPool,
+                        changedProducts
+                    )
+                );
 
                 if (!useDerived) {
                     update.setDerivedProductsChanged(
-                        checkForChangedDerivedProducts(sub, existingPool));
+                        checkForChangedDerivedProducts(sub, existingPool, changedProducts));
                 }
-
-                update.setProductAttributesChanged(checkForProductAttributeChanges(sub,
-                    helper, existingPool));
-
-                update.setDerivedProductAttributesChanged(
-                    checkForSubProductAttributeChanges(sub, helper, existingPool));
 
                 update.setOrderChanged(checkForOrderDataChanges(sub, helper,
                     existingPool));
@@ -344,14 +342,16 @@ public class PoolRules {
      *
      * @return pool update specifics
      */
-    public PoolUpdate updatePoolFromStack(Pool pool) {
+    public PoolUpdate updatePoolFromStack(Pool pool, Set<Product> changedProducts) {
         List<Entitlement> stackedEnts = this.entCurator.findByStackId(
-            pool.getSourceConsumer(), pool.getSourceStackId());
-        return this.updatePoolFromStackedEntitlements(pool, stackedEnts);
+            pool.getSourceConsumer(), pool.getSourceStackId()
+        );
+
+        return this.updatePoolFromStackedEntitlements(pool, stackedEnts, changedProducts);
     }
 
-    public PoolUpdate updatePoolFromStackedEntitlements(Pool pool,
-            List<Entitlement> stackedEnts) {
+    public PoolUpdate updatePoolFromStackedEntitlements(Pool pool, List<Entitlement> stackedEnts,
+        Set<Product> changedProducts) {
 
         PoolUpdate update = new PoolUpdate(pool);
 
@@ -363,8 +363,7 @@ public class PoolRules {
         pool.setSourceEntitlement(null);
         pool.setSourceSubscription(null);
 
-        StackedSubPoolValueAccumulator acc =
-            new StackedSubPoolValueAccumulator(pool, stackedEnts);
+        StackedSubPoolValueAccumulator acc = new StackedSubPoolValueAccumulator(pool, stackedEnts);
 
         // Check if the quantity should be changed. If there was no
         // virt limiting entitlement, then we leave the quantity alone,
@@ -376,8 +375,8 @@ public class PoolRules {
             String virtLimit =
                 eldestWithVirtLimit.getPool().getProductAttributeValue("virt_limit");
 
-            Long quantity = virtLimit.equalsIgnoreCase("unlimited") ?
-                -1L : Long.parseLong(virtLimit);
+            Long quantity =
+                virtLimit.equalsIgnoreCase("unlimited") ? -1L : Long.parseLong(virtLimit);
 
             if (!quantity.equals(pool.getQuantity())) {
                 pool.setQuantity(quantity);
@@ -385,42 +384,27 @@ public class PoolRules {
             }
         }
 
-        update.setDatesChanged(checkForDateChange(acc.getStartDate(), acc.getEndDate(),
-            pool));
+        update.setDatesChanged(checkForDateChange(acc.getStartDate(), acc.getEndDate(), pool));
 
         // We use the "oldest" entitlement as the master for determining values that
         // could have come from the various subscriptions.
         Entitlement eldest = acc.getEldest();
         Pool eldestEntPool = eldest.getPool();
-        boolean useDerived = eldestEntPool.getDerivedProductId() != null;
-        String prodId = useDerived ?
-            eldestEntPool.getDerivedProductId() : eldestEntPool.getProductId();
-        String prodName = useDerived ?
-            eldestEntPool.getDerivedProductName() : eldestEntPool.getProductName();
+        boolean useDerived = eldestEntPool.getDerivedProduct() != null;
+        Product product = useDerived ? eldestEntPool.getDerivedProduct() : eldestEntPool.getProduct();
+
+        update.setProductAttributesChanged(
+            !pool.getProductAttributes().equals(product.getAttributes())
+        );
 
         // Check if product ID, name, or provided products have changed.
-        update.setProductsChanged(checkForChangedProducts(prodId, prodName,
-            acc.getExpectedProvidedProds(), pool));
+        update.setProductsChanged(checkForChangedProducts(
+            product, acc.getExpectedProvidedProds(), pool, changedProducts
+        ));
 
-        // Check if product attributes have changed.
-        Set<ProductPoolAttribute> expectedAttrs = acc.getExpectedAttributes();
-        if (!pool.getProductAttributes().equals(
-            new HashSet<ProductPoolAttribute>(expectedAttrs))) {
-            // Make sure each attribute has correct product ID on it,
-            // and update the pool.
-            pool.getProductAttributes().clear();
-            for (ProductPoolAttribute attr : expectedAttrs) {
-                attr.setProductId(pool.getProductId());
-                pool.addProductAttribute(attr);
-            }
-            update.setProductAttributesChanged(true);
-        }
-
-        if (!StringUtils.equals(eldestEntPool.getContractNumber(),
-            pool.getContractNumber()) ||
+        if (!StringUtils.equals(eldestEntPool.getContractNumber(), pool.getContractNumber()) ||
             !StringUtils.equals(eldestEntPool.getOrderNumber(), pool.getOrderNumber()) ||
-            !StringUtils.equals(eldestEntPool.getAccountNumber(),
-                pool.getAccountNumber())) {
+            !StringUtils.equals(eldestEntPool.getAccountNumber(), pool.getAccountNumber())) {
 
             pool.setContractNumber(eldestEntPool.getContractNumber());
             pool.setAccountNumber(eldestEntPool.getAccountNumber());
@@ -447,32 +431,6 @@ public class PoolRules {
             existingPool.setContractNumber(sub.getContractNumber());
         }
         return orderDataChanged;
-    }
-
-    private boolean checkForProductAttributeChanges(Subscription sub,
-        PoolHelper helper, Pool existingPool) {
-        boolean prodAttrsChanged = false;
-        // Transfer the subscription's sub-product attributes instead if applicable:
-        if (existingPool.hasAttribute("pool_derived") && sub.getDerivedProduct() != null) {
-            prodAttrsChanged = helper.copyProductAttributesOntoPool(
-                sub.getDerivedProduct().getId(), existingPool);
-        }
-        else {
-            prodAttrsChanged = helper.copyProductAttributesOntoPool(
-                sub.getProduct().getId(), existingPool);
-        }
-
-        return prodAttrsChanged;
-    }
-
-    private boolean checkForSubProductAttributeChanges(Subscription sub,
-        PoolHelper helper, Pool existingPool) {
-        boolean subProdAttrsChanged = false;
-        if (!existingPool.hasAttribute("pool_derived") && sub.getDerivedProduct() != null) {
-            subProdAttrsChanged = helper.copySubProductAttributesOntoPool(
-                sub.getDerivedProduct().getId(), existingPool);
-        }
-        return subProdAttrsChanged;
     }
 
     private boolean checkForBrandingChanges(Subscription sub, Pool existingPool) {
@@ -508,64 +466,60 @@ public class PoolRules {
         }
     }
 
-    private Set<ProvidedProduct> getExpectedProvidedProducts(Subscription sub,
-        Pool existingPool, boolean useDerived) {
-        Set<ProvidedProduct> incomingProvided = new HashSet<ProvidedProduct>();
-        Set<Product> subscriptionSet = null;
-        if (useDerived) {
-            subscriptionSet = sub.getDerivedProvidedProducts();
-        }
-        else {
-            subscriptionSet = sub.getProvidedProducts();
+    private Set<Product> getExpectedProvidedProducts(Subscription sub, Pool existingPool,
+        boolean useDerived) {
+
+        Set<Product> incomingProvided = new HashSet<Product>();
+        Set<Product> source = useDerived ?
+            sub.getDerivedProvidedProducts() :
+            sub.getProvidedProducts();
+
+        if (source != null && !source.isEmpty()) {
+            incomingProvided.addAll(source);
         }
 
-        if (subscriptionSet != null) {
-            for (Product p : subscriptionSet) {
-                incomingProvided.add(new ProvidedProduct(p.getId(), p.getName(),
-                    existingPool));
-            }
-        }
         return incomingProvided;
     }
 
-    private boolean checkForChangedProducts(String incomingProductId,
-        String incomingProductName, Set<ProvidedProduct> incomingProvided, Pool existingPool) {
+    private boolean checkForChangedProducts(Product incomingProduct, Set<Product> incomingProvided,
+        Pool existingPool, Set<Product> changedProducts) {
 
-        boolean productsChanged = false;
-        productsChanged = productsChanged || !incomingProductId.equals(existingPool.getProductId());
-        productsChanged = productsChanged || !incomingProductName.equals(existingPool.getProductName());
-        productsChanged = productsChanged || !incomingProvided.equals(existingPool.getProvidedProducts());
+        Product existingProduct = existingPool.getProduct();
+        Set<Product> currentProvided = existingPool.getProvidedProducts();
+
+        // TODO: ideally we would differentiate between these different product changes
+        // a little, but in the end it probably doesn't matter:
+        boolean productsChanged =
+            !incomingProduct.getId().equals(existingProduct.getId()) ||
+            (changedProducts != null && changedProducts.contains(existingProduct)) ||
+            !currentProvided.equals(incomingProvided);
 
         if (productsChanged) {
-            existingPool.setProductId(incomingProductId);
-            existingPool.setProductName(incomingProductName);
-            existingPool.getProvidedProducts().clear();
-            existingPool.getProvidedProducts().addAll(incomingProvided);
+            existingPool.setProduct(incomingProduct);
+            existingPool.setProvidedProducts(incomingProvided);
         }
+
         return productsChanged;
     }
 
-    private boolean checkForChangedDerivedProducts(Subscription sub,
-        Pool existingPool) {
+    private boolean checkForChangedDerivedProducts(Subscription sub, Pool existingPool,
+            Set<Product> changedProducts) {
 
         boolean productsChanged = false;
         if (sub.getDerivedProduct() != null) {
             productsChanged = !sub.getDerivedProduct().getId().equals(
-                existingPool.getDerivedProductId());
+                existingPool.getDerivedProduct().getId());
             productsChanged = productsChanged ||
-                !sub.getDerivedProduct().getName().equals(
-                    existingPool.getDerivedProductName());
+                    (changedProducts != null &&
+                    changedProducts.contains(sub.getDerivedProduct()));
         }
 
         // Build expected set of ProvidedProducts and compare:
-        Set<DerivedProvidedProduct> currentProvided =
-            existingPool.getDerivedProvidedProducts();
-        Set<DerivedProvidedProduct> incomingProvided =
-            new HashSet<DerivedProvidedProduct>();
+        Set<Product> currentProvided = existingPool.getDerivedProvidedProducts();
+        Set<Product> incomingProvided = new HashSet<Product>();
         if (sub.getDerivedProvidedProducts() != null) {
             for (Product p : sub.getDerivedProvidedProducts()) {
-                incomingProvided.add(new DerivedProvidedProduct(p.getId(), p.getName(),
-                    existingPool));
+                incomingProvided.add(p);
             }
         }
         productsChanged = productsChanged || !currentProvided.equals(incomingProvided);
@@ -576,13 +530,11 @@ public class PoolRules {
             // we ignore the fact that it may be null. So we will
             // now check for null to avoid blowing up.
             if (sub.getDerivedProduct() != null) {
-                existingPool.setDerivedProductName(sub.getDerivedProduct().getName());
-                existingPool.setDerivedProductId(sub.getDerivedProduct().getId());
+                existingPool.setDerivedProduct(sub.getDerivedProduct());
             }
             else {
                 // subscription no longer has a derived product
-                existingPool.setDerivedProductName(null);
-                existingPool.setDerivedProductId(null);
+                existingPool.setDerivedProduct(null);
             }
             existingPool.getDerivedProvidedProducts().clear();
             if (incomingProvided != null && !incomingProvided.isEmpty()) {
@@ -639,7 +591,7 @@ public class PoolRules {
          */
         if (existingPool.hasAttribute("pool_derived") &&
             existingPool.attributeEquals("virt_only", "true") &&
-            (attributes.containsKey("virt_limit") || existingPool.hasProductAttribute("virt_limit"))) {
+            (attributes.containsKey("virt_limit") || existingPool.getProduct().hasAttribute("virt_limit"))) {
 
             if (!attributes.containsKey("virt_limit")) {
                 log.warn("virt_limit attribute has been removed from subscription, " +

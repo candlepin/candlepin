@@ -29,6 +29,7 @@ import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.export.ExportRules;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.junit.Before;
@@ -72,8 +73,8 @@ public class ExportRulesTest {
         Entitlement entitlement = mock(Entitlement.class);
         Consumer consumer = mock(Consumer.class);
         ConsumerType type = mock(ConsumerType.class);
+        Product p = TestUtil.createProduct("12345");
         Pool pool = new Pool();
-        pool.setProductId("12345");
         pool.setAttribute("pool_derived", "true");
 
         when(entitlement.getPool()).thenReturn(pool);

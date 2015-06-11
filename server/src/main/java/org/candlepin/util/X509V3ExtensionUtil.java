@@ -16,11 +16,6 @@ package org.candlepin.util;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.json.model.Content;
-import org.candlepin.json.model.EntitlementBody;
-import org.candlepin.json.model.Order;
-import org.candlepin.json.model.Service;
-import org.candlepin.json.model.Subscription;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -29,9 +24,13 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
+import org.candlepin.model.dto.Content;
+import org.candlepin.model.dto.EntitlementBody;
+import org.candlepin.model.dto.Order;
+import org.candlepin.model.dto.Service;
+import org.candlepin.model.dto.TinySubscription;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
-import org.candlepin.service.ProductServiceAdapter;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -71,7 +70,6 @@ public class X509V3ExtensionUtil extends X509Util {
     private static Logger log = LoggerFactory.getLogger(X509V3ExtensionUtil.class);
     private Configuration config;
     private EntitlementCurator entCurator;
-    private ProductServiceAdapter prodAdapter;
     private String thisVersion = "3.2";
 
     private long pathNodeId = 0;
@@ -79,12 +77,10 @@ public class X509V3ExtensionUtil extends X509Util {
     private static final Object END_NODE = new Object();
     private static boolean treeDebug = false;
     @Inject
-    public X509V3ExtensionUtil(Configuration config, EntitlementCurator entCurator,
-            ProductServiceAdapter prodAdapter) {
+    public X509V3ExtensionUtil(Configuration config, EntitlementCurator entCurator) {
         // Output everything in UTC
         this.config = config;
         this.entCurator = entCurator;
-        this.prodAdapter = prodAdapter;
     }
 
     public Set<X509ExtensionWrapper> getExtensions(Entitlement ent,
@@ -102,7 +98,7 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public Set<X509ByteExtensionWrapper> getByteExtensions(Product sku,
-            List<org.candlepin.json.model.Product> productModels,
+            List<org.candlepin.model.dto.Product> productModels,
             Entitlement ent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent) throws IOException {
         Set<X509ByteExtensionWrapper> toReturn =
@@ -121,7 +117,7 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public byte[] createEntitlementDataPayload(Product skuProduct,
-            List<org.candlepin.json.model.Product> productModels,
+            List<org.candlepin.model.dto.Product> productModels,
             Entitlement ent, String contentPrefix,
             Map<String, EnvironmentContent> promotedContent)
         throws UnsupportedEncodingException, IOException {
@@ -155,7 +151,7 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public EntitlementBody createEntitlementBody(Product skuProduct,
-            List<org.candlepin.json.model.Product> productModels,
+            List<org.candlepin.model.dto.Product> productModels,
             Entitlement ent, String contentPrefix,
             Map<String, EnvironmentContent> promotedContent) {
 
@@ -171,7 +167,7 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public EntitlementBody createEntitlementBodyContent(Product sku,
-            List<org.candlepin.json.model.Product> productModels,
+            List<org.candlepin.model.dto.Product> productModels,
         Entitlement ent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent) {
 
@@ -181,16 +177,16 @@ public class X509V3ExtensionUtil extends X509Util {
         return toReturn;
     }
 
-    public Subscription createSubscription(
+    public TinySubscription createSubscription(
         Entitlement ent) {
-        Subscription toReturn = new Subscription();
+        TinySubscription toReturn = new TinySubscription();
         Pool pool = ent.getPool();
+        Product product = pool.getProduct();
 
-        toReturn.setSku(pool.getProductId());
-        toReturn.setName(pool.getProductName());
+        toReturn.setSku(product.getId());
+        toReturn.setName(product.getName());
 
-        String warningPeriod = pool.getProductAttributeValue(
-            "warning_period");
+        String warningPeriod = product.getAttributeValue("warning_period");
         if (warningPeriod != null && !warningPeriod.trim().equals("")) {
             // only included if not the default value of 0
             if (!warningPeriod.equals("0")) {
@@ -198,22 +194,22 @@ public class X509V3ExtensionUtil extends X509Util {
             }
         }
 
-        String socketLimit = pool.getProductAttributeValue("sockets");
+        String socketLimit = product.getAttributeValue("sockets");
         if (socketLimit != null && !socketLimit.trim().equals("")) {
             toReturn.setSockets(new Integer(socketLimit));
         }
 
-        String ramLimit = pool.getProductAttributeValue("ram");
+        String ramLimit = product.getAttributeValue("ram");
         if (ramLimit != null && !ramLimit.trim().equals("")) {
             toReturn.setRam(new Integer(ramLimit));
         }
 
-        String coreLimit = pool.getProductAttributeValue("cores");
+        String coreLimit = product.getAttributeValue("cores");
         if (coreLimit != null && !coreLimit.trim().equals("")) {
             toReturn.setCores(new Integer(coreLimit));
         }
 
-        String management = pool.getProductAttributeValue("management_enabled");
+        String management = product.getAttributeValue("management_enabled");
         if (management != null && !management.trim().equals("")) {
             // only included if not the default value of false
             if (management.equalsIgnoreCase("true") ||
@@ -222,7 +218,7 @@ public class X509V3ExtensionUtil extends X509Util {
             }
         }
 
-        String stackingId = pool.getProductAttributeValue("stacking_id");
+        String stackingId = product.getAttributeValue("stacking_id");
         if (stackingId != null && !stackingId.trim().equals("")) {
             toReturn.setStackingId(stackingId);
         }
@@ -242,13 +238,13 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     private Service createService(Pool pool) {
-        if (pool.getProductAttributeValue("support_level") == null &&
-            pool.getProductAttributeValue("support_type") == null) {
+        if (pool.getProduct().getAttributeValue("support_level") == null &&
+            pool.getProduct().getAttributeValue("support_type") == null) {
             return null;
         }
         Service toReturn = new Service();
-        toReturn.setLevel(pool.getProductAttributeValue("support_level"));
-        toReturn.setType(pool.getProductAttributeValue("support_type"));
+        toReturn.setLevel(pool.getProduct().getAttributeValue("support_level"));
+        toReturn.setType(pool.getProduct().getAttributeValue("support_type"));
 
         return toReturn;
     }
@@ -275,40 +271,42 @@ public class X509V3ExtensionUtil extends X509Util {
         return toReturn;
     }
 
-    public List<org.candlepin.json.model.Product> createProducts(Product sku,
-            Set<Product> products,
-        String contentPrefix, Map<String, EnvironmentContent> promotedContent,
-        Consumer consumer, Entitlement ent) {
-        List<org.candlepin.json.model.Product> toReturn =
-            new ArrayList<org.candlepin.json.model.Product>();
+    public List<org.candlepin.model.dto.Product> createProducts(Product sku,
+            Set<Product> products, String contentPrefix,
+            Map<String, EnvironmentContent> promotedContent, Consumer consumer, Entitlement ent) {
+
+        List<org.candlepin.model.dto.Product> toReturn =
+            new ArrayList<org.candlepin.model.dto.Product>();
 
         Set<String> entitledProductIds = entCurator.listEntitledProductIds(consumer,
-                ent.getStartDate(), ent.getEndDate());
-        for (Product p : Collections2
-            .filter(products, PROD_FILTER_PREDICATE)) {
+            ent.getStartDate(), ent.getEndDate());
+
+        for (Product p : Collections2.filter(products, PROD_FILTER_PREDICATE)) {
             toReturn.add(mapProduct(p, sku, contentPrefix, promotedContent, consumer, ent,
-                    entitledProductIds));
+                entitledProductIds));
         }
+
         return toReturn;
     }
 
-    public org.candlepin.json.model.Pool createPool(Entitlement ent) {
-        org.candlepin.json.model.Pool toReturn = new org.candlepin.json.model.Pool();
+    public org.candlepin.model.dto.Pool createPool(Entitlement ent) {
+        org.candlepin.model.dto.Pool toReturn = new org.candlepin.model.dto.Pool();
         toReturn.setId(ent.getPool().getId());
         return toReturn;
     }
 
-    private org.candlepin.json.model.Product mapProduct(Product engProduct, Product sku,
+    private org.candlepin.model.dto.Product mapProduct(Product engProduct, Product sku,
         String contentPrefix, Map<String, EnvironmentContent> promotedContent,
         Consumer consumer, Entitlement ent, Set<String> entitledProductIds) {
 
-        org.candlepin.json.model.Product toReturn = new org.candlepin.json.model.Product();
+        org.candlepin.model.dto.Product toReturn = new org.candlepin.model.dto.Product();
 
         toReturn.setId(engProduct.getId());
         toReturn.setName(engProduct.getName());
 
         String version = engProduct.hasAttribute("version") ?
             engProduct.getAttributeValue("version") : "";
+
         toReturn.setVersion(version);
 
         Branding brand = getBranding(ent.getPool(), engProduct.getId());
@@ -408,12 +406,10 @@ public class X509V3ExtensionUtil extends X509Util {
             Set<String> contentArches = Arch.parseArches(pc.getContent()
                 .getArches());
             if (contentArches.isEmpty()) {
-                archesList.addAll(Arch.parseArches(product
-                    .getAttributeValue(PRODUCT_ARCH_ATTR)));
+                archesList.addAll(Arch.parseArches(product.getAttributeValue(PRODUCT_ARCH_ATTR)));
             }
             else {
-                archesList
-                    .addAll(Arch.parseArches(pc.getContent().getArches()));
+                archesList.addAll(Arch.parseArches(pc.getContent().getArches()));
             }
             content.setArches(archesList);
 
@@ -504,8 +500,8 @@ public class X509V3ExtensionUtil extends X509Util {
     protected List<Content> getContentList(EntitlementBody eb) {
         // collect content URL's
         List<Content> contentList = new ArrayList<Content>();
-        for (org.candlepin.json.model.Product p : eb.getProducts()) {
-            for (org.candlepin.json.model.Content c : p.getContent()) {
+        for (org.candlepin.model.dto.Product p : eb.getProducts()) {
+            for (org.candlepin.model.dto.Content c : p.getContent()) {
                 contentList.add(c);
             }
         }
@@ -1092,9 +1088,11 @@ public class X509V3ExtensionUtil extends X509Util {
             // if no PathNode, we just bail. No need to cause an NPE.
             return;
         }
+
         if (root.getChildren().size() == 0) {
             urls.add(aPath.toString());
         }
+
         for (NodePair child : root.getChildren()) {
             StringBuffer childPath = new StringBuffer(aPath.substring(0));
             childPath.append("/");

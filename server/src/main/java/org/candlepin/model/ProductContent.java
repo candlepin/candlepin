@@ -16,7 +16,6 @@ package org.candlepin.model;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.hibernate.annotations.Index;
 import org.hibernate.annotations.Parent;
 
 import java.io.Serializable;
@@ -26,6 +25,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlTransient;
+
+
 
 /**
  * ProductContent
@@ -38,8 +39,7 @@ public class ProductContent extends AbstractHibernateObject {
     private Product product;
 
     @ManyToOne
-    @JoinColumn(name = "content_id", nullable = false, updatable = false)
-    @Index(name = "cp_prodcont_cont_fk_idx")
+    @JoinColumn(name = "content_uuid", nullable = false, updatable = false)
     @NotNull
     private Content content;
 

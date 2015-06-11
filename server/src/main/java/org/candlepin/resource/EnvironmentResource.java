@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.quartz.JobBuilder.*;
+import static org.quartz.JobBuilder.newJob;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.interceptor.Verify;
@@ -25,6 +25,8 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
@@ -37,6 +39,8 @@ import com.google.inject.Inject;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.HashSet;
@@ -63,18 +67,20 @@ import javax.ws.rs.core.MediaType;
 @Path("/environments")
 public class EnvironmentResource {
 
+    private static Logger log = LoggerFactory.getLogger(AdminResource.class);
+
     private EnvironmentCurator envCurator;
     private I18n i18n;
     private EnvironmentContentCurator envContentCurator;
     private ConsumerResource consumerResource;
     private PoolManager poolManager;
     private ConsumerCurator consumerCurator;
+    private ContentCurator contentCurator;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
-        EnvironmentContentCurator envContentCurator,
-        ConsumerResource consumerResource, PoolManager poolManager,
-        ConsumerCurator consumerCurator) {
+        EnvironmentContentCurator envContentCurator, ConsumerResource consumerResource,
+        PoolManager poolManager, ConsumerCurator consumerCurator, ContentCurator contentCurator) {
 
         this.envCurator = envCurator;
         this.i18n = i18n;
@@ -82,6 +88,7 @@ public class EnvironmentResource {
         this.consumerResource = consumerResource;
         this.poolManager = poolManager;
         this.consumerCurator = consumerCurator;
+        this.contentCurator = contentCurator;
     }
 
     /**
@@ -146,6 +153,51 @@ public class EnvironmentResource {
     }
 
     /**
+     * Verifies that the content specified by the given content object's ID exists.
+     *
+     * @param environment
+     *  The environment with which the content will be associated
+     *
+     * @param contentId
+     *  The ID of the content to resolve
+     *
+     * @throws BadRequestException
+     *  if either environment or contentId is null, or the given environment is not associated with
+     *  a valid owner
+     *
+     * @throws NotFoundException
+     *  if the specified content object does not represent a valid content object for the given
+     *  environment
+     *
+     * @return
+     *  the resolved content instance.
+     */
+    private Content resolveContent(Environment environment, String contentId) {
+        if (environment == null || environment.getOwner() == null) {
+            throw new BadRequestException(
+                i18n.tr("No environment specified, or environment lacks owner information")
+            );
+        }
+
+        if (contentId == null) {
+            throw new BadRequestException(
+                i18n.tr("No content ID specified")
+            );
+        }
+
+        Content resolved = this.contentCurator.lookupById(environment.getOwner(), contentId);
+
+        if (resolved == null) {
+            throw new NotFoundException(i18n.tr(
+                "Unable to find content with the ID \"{0}\".", contentId
+            ));
+        }
+
+        return resolved;
+    }
+
+
+    /**
      * Promotes a Content into an Environment.
      * <p>
      * This call accepts multiple content sets to promote at once, after which
@@ -169,7 +221,7 @@ public class EnvironmentResource {
     @Path("/{env_id}/content")
     public JobDetail promoteContent(
             @PathParam("env_id") @Verify(Environment.class) String envId,
-            List<EnvironmentContent> contentToPromote,
+            List<org.candlepin.model.dto.EnvironmentContent> contentToPromote,
             @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
         Environment env = lookupEnvironment(envId);
@@ -179,8 +231,17 @@ public class EnvironmentResource {
         // Impl note:
         // We have to do this in a separate loop or we'll end up with an undefined state, should
         // there be a problem with the request.
-        for (EnvironmentContent promoteMe : contentToPromote) {
-            if (this.envContentCurator.lookupByEnvironmentAndContent(env, promoteMe.getContentId()) != null) {
+        for (org.candlepin.model.dto.EnvironmentContent promoteMe : contentToPromote) {
+            log.debug(
+                "EnvironmentContent to promote: {}:{}",
+                promoteMe.getEnvironmentId(), promoteMe.getContentId()
+            );
+
+            EnvironmentContent existing = this.envContentCurator.lookupByEnvironmentAndContent(
+                env, promoteMe.getContentId()
+            );
+
+            if (existing != null) {
                 throw new ConflictException(i18n.tr(
                     "The content with id {0} has already been promoted in this environment.",
                     promoteMe.getContentId()
@@ -188,12 +249,16 @@ public class EnvironmentResource {
             }
         }
 
-        for (EnvironmentContent promoteMe : contentToPromote) {
+        for (org.candlepin.model.dto.EnvironmentContent promoteMe : contentToPromote) {
             // Make sure the content exists:
-            promoteMe.setContentId(promoteMe.getContentId());
-            promoteMe.setEnvironment(env);
-            envContentCurator.create(promoteMe);
-            env.getEnvironmentContent().add(promoteMe);
+            EnvironmentContent envcontent = new EnvironmentContent();
+
+            envcontent.setEnvironment(env);
+            envcontent.setContent(this.resolveContent(env, promoteMe.getContentId()));
+            envcontent.setEnabled(promoteMe.getEnabled());
+
+            envContentCurator.create(envcontent);
+            env.getEnvironmentContent().add(envcontent);
             contentIds.add(promoteMe.getContentId());
         }
 

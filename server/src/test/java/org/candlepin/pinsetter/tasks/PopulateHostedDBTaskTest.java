@@ -14,12 +14,13 @@
  */
 package org.candlepin.pinsetter.tasks;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Content;
+import org.candlepin.model.Owner;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
@@ -30,10 +31,12 @@ import org.candlepin.test.TestUtil;
 import org.junit.Test;
 import org.quartz.JobExecutionContext;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -53,53 +56,43 @@ public class PopulateHostedDBTaskTest extends DatabaseTestFixture {
         PoolCurator poolCuratorSpy = spy(this.poolCurator);
         ProductServiceAdapter psa = mock(ProductServiceAdapter.class);
 
-        HashSet<String> productIds = new HashSet<String>();
-        productIds.add("prod1");
-        productIds.add("prod2");
-        productIds.add("prod3");
+        Set<String> productIds1 = new HashSet<String>(Arrays.asList("prod1"));
+        Set<String> productIds2 = new HashSet<String>(Arrays.asList("prod2", "prod3"));
+        Set<String> dependentProductIds1 = new HashSet<String>(Arrays.asList("dprod1", "dprod2", "prod3"));
+        Set<String> dependentProductIds1b = new HashSet<String>(Arrays.asList("dprod1", "dprod2"));
+        Set<String> dependentProductIds2 = new HashSet<String>(Arrays.asList("dprod3", "dprod4", "dprod2"));
+        Set<String> dependentProductIds2b = new HashSet<String>(Arrays.asList("dprod3", "dprod4"));
 
-        HashSet<String> dependentProductIds1 = new HashSet<String>();
-        dependentProductIds1.add("dprod1");
-        dependentProductIds1.add("dprod2");
-        dependentProductIds1.add("prod3");
+        Owner owner1 = TestUtil.createOwner();
+        Owner owner2 = TestUtil.createOwner();
+        this.ownerCurator.create(owner1);
+        this.ownerCurator.create(owner2);
 
-        HashSet<String> dependentProductIds1b = new HashSet<String>();
-        dependentProductIds1b.add("dprod1");
-        dependentProductIds1b.add("dprod2");
+        when(poolCuratorSpy.getAllKnownProductIdsForOwner(owner1)).thenReturn(productIds1);
+        when(poolCuratorSpy.getAllKnownProductIdsForOwner(owner2)).thenReturn(productIds2);
 
-        HashSet<String> dependentProductIds2 = new HashSet<String>();
-        dependentProductIds2.add("dprod3");
-        dependentProductIds2.add("dprod4");
-        dependentProductIds2.add("dprod2");
-
-        HashSet<String> dependentProductIds2b = new HashSet<String>();
-        dependentProductIds2b.add("dprod3");
-        dependentProductIds2b.add("dprod4");
-
-        when(poolCuratorSpy.getAllKnownProductIds()).thenReturn(productIds);
-
-        Product p1 = TestUtil.createProduct("prod1", "prod1");
-        p1.addContent(TestUtil.createContent("p1-content-1"));
-        Product p2 = TestUtil.createProduct("prod2", "prod2");
-        p2.addContent(TestUtil.createContent("p2-content-1"));
-        p2.addContent(TestUtil.createContent("p2-content-2"));
+        Product p1 = TestUtil.createProduct("prod1", "prod1", owner1);
+        p1.addContent(TestUtil.createContent(owner1, "p1-content-1"));
+        Product p2 = TestUtil.createProduct("prod2", "prod2", owner2);
+        p2.addContent(TestUtil.createContent(owner2, "p2-content-1"));
+        p2.addContent(TestUtil.createContent(owner2, "p2-content-2"));
         p2.setDependentProductIds(dependentProductIds1);
-        Product p3 = TestUtil.createProduct("prod3", "prod3");
-        p3.addContent(TestUtil.createContent("p3-content-1"));
-        p3.addContent(TestUtil.createContent("p3-content-2"));
-        p3.addContent(TestUtil.createContent("p3-content-3"));
+        Product p3 = TestUtil.createProduct("prod3", "prod3", owner2);
+        p3.addContent(TestUtil.createContent(owner2, "p3-content-1"));
+        p3.addContent(TestUtil.createContent(owner2, "p3-content-2"));
+        p3.addContent(TestUtil.createContent(owner2, "p3-content-3"));
 
-        Product dp1 = TestUtil.createProduct("dprod1", "dprod1");
-        dp1.addContent(TestUtil.createContent("dp1-content-1"));
-        Product dp2 = TestUtil.createProduct("dprod2", "dprod2");
-        dp2.addContent(TestUtil.createContent("dp2-content-1"));
+        Product dp1 = TestUtil.createProduct("dprod1", "dprod1", owner2);
+        dp1.addContent(TestUtil.createContent(owner2, "dp1-content-1"));
+        Product dp2 = TestUtil.createProduct("dprod2", "dprod2", owner2);
+        dp2.addContent(TestUtil.createContent(owner2, "dp2-content-1"));
         dp2.setDependentProductIds(dependentProductIds2);
-        Product dp3 = TestUtil.createProduct("dprod3", "dprod3");
-        dp3.addContent(TestUtil.createContent("dp3-content-1"));
-        dp3.addContent(TestUtil.createContent("dp3-content-2"));
-        Product dp4 = TestUtil.createProduct("dprod4", "dprod4");
-        dp4.addContent(TestUtil.createContent("dp4-content-1"));
-        dp4.addContent(TestUtil.createContent("dp4-content-2"));
+        Product dp3 = TestUtil.createProduct("dprod3", "dprod3", owner2);
+        dp3.addContent(TestUtil.createContent(owner2, "dp3-content-1"));
+        dp3.addContent(TestUtil.createContent(owner2, "dp3-content-2"));
+        Product dp4 = TestUtil.createProduct("dprod4", "dprod4", owner2);
+        dp4.addContent(TestUtil.createContent(owner2, "dp4-content-1"));
+        dp4.addContent(TestUtil.createContent(owner2, "dp4-content-2"));
 
         HashMap<String, Product> productMap = new HashMap<String, Product>();
         productMap.put(p1.getId(), p1);
@@ -110,34 +103,19 @@ public class PopulateHostedDBTaskTest extends DatabaseTestFixture {
         productMap.put(dp3.getId(), dp3);
         productMap.put(dp4.getId(), dp4);
 
-        LinkedList<Product> products = new LinkedList<Product>();
-        products.add(p1);
-        products.add(p2);
-        products.add(p3);
+        LinkedList<Product> products1 = new LinkedList<Product>(Arrays.asList(p1));
+        LinkedList<Product> products2 = new LinkedList<Product>(Arrays.asList(p2, p3));
+        LinkedList<Product> dependentProducts1 = new LinkedList<Product>(Arrays.asList(dp1, dp2, p3));
+        LinkedList<Product> dependentProducts1b = new LinkedList<Product>(Arrays.asList(dp1, dp2));
+        LinkedList<Product> dependentProducts2 = new LinkedList<Product>(Arrays.asList(dp3, dp4, dp2));
+        LinkedList<Product> dependentProducts2b = new LinkedList<Product>(Arrays.asList(dp3, dp4));
 
-        LinkedList<Product> dependentProducts1 = new LinkedList<Product>();
-        dependentProducts1.add(dp1);
-        dependentProducts1.add(dp2);
-        dependentProducts1.add(p3);
-
-        LinkedList<Product> dependentProducts1b = new LinkedList<Product>();
-        dependentProducts1b.add(dp1);
-        dependentProducts1b.add(dp2);
-
-        LinkedList<Product> dependentProducts2 = new LinkedList<Product>();
-        dependentProducts2.add(dp3);
-        dependentProducts2.add(dp4);
-        dependentProducts2.add(dp2);
-
-        LinkedList<Product> dependentProducts2b = new LinkedList<Product>();
-        dependentProducts2b.add(dp3);
-        dependentProducts2b.add(dp4);
-
-        when(psa.getProductsByIds(productIds)).thenReturn(products);
-        when(psa.getProductsByIds(dependentProductIds1)).thenReturn(dependentProducts1);
-        when(psa.getProductsByIds(dependentProductIds1b)).thenReturn(dependentProducts1b);
-        when(psa.getProductsByIds(dependentProductIds2)).thenReturn(dependentProducts2);
-        when(psa.getProductsByIds(dependentProductIds2b)).thenReturn(dependentProducts2b);
+        when(psa.getProductsByIds(owner1, productIds1)).thenReturn(products1);
+        when(psa.getProductsByIds(owner2, productIds2)).thenReturn(products2);
+        when(psa.getProductsByIds(owner2, dependentProductIds1)).thenReturn(dependentProducts1);
+        when(psa.getProductsByIds(owner2, dependentProductIds1b)).thenReturn(dependentProducts1b);
+        when(psa.getProductsByIds(owner2, dependentProductIds2)).thenReturn(dependentProducts2);
+        when(psa.getProductsByIds(owner2, dependentProductIds2b)).thenReturn(dependentProducts2b);
 
         assertEquals(0, this.productCurator.listAll().size());
         assertEquals(0, this.contentCurator.listAll().size());
@@ -147,7 +125,7 @@ public class PopulateHostedDBTaskTest extends DatabaseTestFixture {
 
         // Test
         PopulateHostedDBTask task = new PopulateHostedDBTask(
-            psa, this.productCurator, this.contentCurator, poolCuratorSpy, config
+            psa, this.productCurator, this.contentCurator, poolCuratorSpy, this.ownerCurator, config
         );
 
         task.execute(jec);
@@ -156,14 +134,16 @@ public class PopulateHostedDBTaskTest extends DatabaseTestFixture {
         verify(jec).setResult(eq("Finished populating Hosted DB. Received 7 product(s) and 12 content"));
 
         for (Entry<String, Product> entry : productMap.entrySet()) {
-            Product existing = this.productCurator.find(entry.getKey());
+            Product existing = this.productCurator.lookupById(entry.getValue().getOwner(), entry.getKey());
 
             assertNotNull("Product database entry missing for product id: " + entry.getKey(), existing);
             assertEquals("Product mismatch for product id: " + entry.getKey(), entry.getValue(), existing);
 
             for (ProductContent pc : entry.getValue().getProductContent()) {
                 Content expected = pc.getContent();
-                Content content = this.contentCurator.find(expected.getId());
+                Content content = this.contentCurator.lookupById(
+                    entry.getValue().getOwner(), expected.getId()
+                );
 
                 assertNotNull("Content database entry missing for content id: " + expected.getId(), content);
                 assertEquals("Content mismatch for product id: " + expected.getId(), expected, content);
@@ -185,8 +165,8 @@ public class PopulateHostedDBTaskTest extends DatabaseTestFixture {
 
         // Test
         PopulateHostedDBTask task = new PopulateHostedDBTask(
-            psa, this.productCurator, this.contentCurator, poolCuratorSpy, config
-        );
+            psa, this.productCurator, this.contentCurator, poolCuratorSpy, this.ownerCurator,
+            config);
 
         task.execute(jec);
 

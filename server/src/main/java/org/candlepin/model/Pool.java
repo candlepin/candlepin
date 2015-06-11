@@ -18,20 +18,17 @@ import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.util.DateSource;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-import org.hibernate.annotations.Where;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -39,12 +36,13 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.Enumerated;
 import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -106,7 +104,18 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         ENTITLEMENT_DERIVED,
         STACK_DERIVED,
         BONUS,
-        UNMAPPED_GUEST
+        UNMAPPED_GUEST;
+
+        public boolean isDerivedType() {
+            switch (this) {
+                case ENTITLEMENT_DERIVED:
+                case STACK_DERIVED:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
     }
 
     @Id
@@ -121,9 +130,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     private PoolType type;
 
     @ManyToOne
-    @ForeignKey(name = "fk_pool_owner")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_pool_owner_fk_idx")
     @NotNull
     private Owner owner;
 
@@ -133,9 +140,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * Allows us to know that we need to clean this pool up if that entitlement
      * if ever revoked. */
     @ManyToOne
-    @ForeignKey(name = "fk_pool_source_entitlement")
     @JoinColumn(nullable = true)
-    @Index(name = "cp_pool_entitlement_fk_idx")
     private Entitlement sourceEntitlement;
 
     /**
@@ -170,50 +175,35 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @NotNull
     private Date endDate;
 
-    @Column(nullable = false)
-    @Size(max = 255)
+    @ManyToOne
+    @JoinColumn(name = "product_uuid", nullable = false)
     @NotNull
-    private String productId;
+    private Product product;
 
-    @Column
-    @Size(max = 255)
-    private String derivedProductId;
+    @ManyToOne
+    @JoinColumn(name = "derived_product_uuid")
+    private Product derivedProduct;
 
-    @OneToMany(targetEntity = ProvidedProduct.class)
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    @JoinColumn(name = "pool_id", insertable = false, updatable = false)
-    @Where(clause = "dtype='provided'")
-    private Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+    @ManyToMany
+    @JoinTable(
+        name = "cpo_pool_provided_products",
+        joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
+        inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
+    )
+    private Set<Product> providedProducts = new HashSet<Product>();
 
-    @OneToMany(targetEntity = DerivedProvidedProduct.class)
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    @JoinColumn(name = "pool_id", insertable = false, updatable = false)
-    @Where(clause = "dtype='derived'")
-    private Set<DerivedProvidedProduct> derivedProvidedProducts =
-        new HashSet<DerivedProvidedProduct>();
+    @ManyToMany
+    @JoinTable(
+        name = "cpo_pool_derived_products",
+        joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
+        inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
+    )
+    private Set<Product> derivedProvidedProducts = new HashSet<Product>();
 
     @OneToMany(mappedBy = "pool")
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
-
-    @OneToMany
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    @JoinColumn(name = "pool_id", insertable = false, updatable = false)
-    @Where(clause = "dtype='product'")
-    private Set<ProductPoolAttribute> productAttributes =
-        new HashSet<ProductPoolAttribute>();
-
-    @OneToMany
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    @JoinColumn(name = "pool_id", insertable = false, updatable = false)
-    @Where(clause = "dtype='derived'")
-    private Set<DerivedProductPoolAttribute> derivedProductAttributes =
-        new HashSet<DerivedProductPoolAttribute>();
 
     @OneToMany(mappedBy = "pool", cascade = CascadeType.ALL)
     @LazyCollection(LazyCollectionOption.EXTRA)
@@ -240,16 +230,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         "and cons.type_id = ctype.id and ctype.manifest = 'Y')")
     private Long exported;
 
-    // TODO: May not still be needed, IIRC a temporary hack for client.
-    @Size(max = 255)
-    private String productName;
-
-    @Size(max = 255)
-    private String derivedProductName;
-
     @OneToMany
-    @ForeignKey(name = "fk_pool_branding_branding_id",
-            inverseName = "fk_pool_branding_pool_id")
     @JoinTable(name = "cp_pool_branding",
         joinColumns = @JoinColumn(name = "pool_id"),
         inverseJoinColumns = @JoinColumn(name = "branding_id"))
@@ -266,16 +247,52 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @Transient
     private boolean markedForDelete = false;
 
+    /*
+     * These DTO collections are only used when importing manifests. For backward
+     * compatability reasons we serialize a DTO for the provided products, not the full
+     * product object itself.
+     */
+    @Transient
+    private Set<ProvidedProduct> providedProductDtos = null;
+
+    @Transient
+    private Set<ProvidedProduct> derivedProvidedProductDtos = null;
+
+    /*
+     * Only used for importing legacy manifests.
+     */
+    @Transient
+    private String importedProductId = null;
+
+    @Column(name = "upstream_pool_id")
+    @Size(max = 255)
+    private String upstreamPoolId;
+
+    @Column(name = "upstream_entitlement_id")
+    @Size(max = 37)
+    private String upstreamEntitlementId;
+
+    @Column(name = "upstream_consumer_id")
+    @Size(max = 255)
+    private String upstreamConsumerId;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "certificate_id")
+    private SubscriptionsCertificate cert;
+
+    @OneToOne
+    @JoinColumn(name = "cdn_id")
+    private Cdn cdn;
+
+
     public Pool() {
     }
 
-    public Pool(Owner ownerIn, String productId, String productName,
-        Set<ProvidedProduct> providedProducts,
+    public Pool(Owner ownerIn, Product product, Set<Product> providedProducts,
         Long quantityIn, Date startDateIn, Date endDateIn, String contractNumber,
         String accountNumber, String orderNumber) {
 
-        this.productId = productId;
-        this.productName = productName;
+        this.product = product;
         this.owner = ownerIn;
         this.quantity = quantityIn;
         this.startDate = startDateIn;
@@ -283,7 +300,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.contractNumber = contractNumber;
         this.accountNumber = accountNumber;
         this.orderNumber = orderNumber;
-        this.providedProducts = providedProducts;
+
+        if (providedProducts != null) {
+            this.setProvidedProducts(providedProducts);
+        }
     }
 
     /** {@inheritDoc} */
@@ -397,19 +417,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      */
     @HateoasInclude
     public String getProductName() {
-        return productName;
+        return (this.getProduct() != null ? this.getProduct().getName() : null);
     }
 
-    /**
-     * The Marketing/Operations product name for the
-     * <code>productId</code>.
-     *
-     * @param productName the productName to set
-     */
-    public void setProductName(String productName) {
-        this.productName = productName;
+    public String getDerivedProductName() {
+        return (this.getDerivedProduct() != null ? this.getDerivedProduct().getName() : null);
     }
-
     /**
      * Return the contract for this pool's subscription.
      *
@@ -445,7 +458,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public boolean hasAttribute(String key) {
-        return findAttribute(this.attributes, key) != null;
+        return this.findAttribute(key) != null;
     }
 
     /**
@@ -467,38 +480,60 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public Set<PoolAttribute> getAttributes() {
-        if (attributes == null) {
-            return new HashSet<PoolAttribute>();
-        }
         return attributes;
     }
 
     public String getAttributeValue(String name) {
-        return findAttributeValue(this.attributes, name);
+        PoolAttribute attribute = this.findAttribute(name);
+        return attribute != null ? attribute.getValue() : null;
     }
 
     public void setAttributes(Set<PoolAttribute> attributes) {
-        this.attributes = attributes;
+        this.attributes.clear();
+
+        if (attributes != null) {
+            this.attributes.addAll(attributes);
+        }
     }
 
     public void addAttribute(PoolAttribute attrib) {
-        if (this.attributes == null) {
-            this.attributes = new HashSet<PoolAttribute>();
-        }
         attrib.setPool(this);
         this.attributes.add(attrib);
     }
 
     public void setAttribute(String key, String value) {
-        PoolAttribute existing = findAttribute(this.attributes, key);
+        PoolAttribute existing = this.findAttribute(key);
+
         if (existing != null) {
             existing.setValue(value);
         }
         else {
-            PoolAttribute attr = new PoolAttribute(key, value);
-            attr.setPool(this);
-            addAttribute(attr);
+            this.addAttribute(new PoolAttribute(key, value));
         }
+    }
+
+    private PoolAttribute findAttribute(String name) {
+        for (PoolAttribute attribute : this.attributes) {
+            if (attribute.getName().equals(name)) {
+                return attribute;
+            }
+        }
+
+        return null;
+    }
+
+    public boolean hasMergedAttribute(String name) {
+        return this.getMergedAttribute(name) != null;
+    }
+
+    public Attribute getMergedAttribute(String name) {
+        Attribute attribute = this.findAttribute(name);
+
+        if (attribute == null) {
+            attribute = this.product.getAttribute(name);
+        }
+
+        return attribute;
     }
 
     /**
@@ -512,7 +547,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      *  the last value of the removed attribute, or null if the attribute did not exist
      */
     public String removeAttribute(String key) {
-        PoolAttribute attrib = this.findAttribute(this.attributes, key);
+        PoolAttribute attrib = this.findAttribute(key);
         String value = null;
 
         if (attrib != null) {
@@ -612,42 +647,79 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public String toString() {
-        return "Pool<type=" + getType() + ", product=" + getProductId() +
-            ", productName=" + productName + ", id=" + getId() +
-            ", quantity=" + getQuantity() + ">";
+        return String.format(
+            "Pool<type=%s, product=%s, productName=%s, id=%s, quantity=%s>",
+            this.getType(),
+            this.getProductId(),
+            this.getProductName(),
+            this.getId(),
+            this.getQuantity()
+        );
     }
 
-    public Set<ProvidedProduct> getProvidedProducts() {
-        return providedProducts;
+    @JsonIgnore
+    public Set<Product> getProvidedProducts() {
+        return this.providedProducts;
     }
 
-    public void addProvidedProduct(ProvidedProduct provided) {
-        provided.setPool(this);
-        providedProducts.add(provided);
+    public void addProvidedProduct(Product provided) {
+        this.providedProducts.add(provided);
     }
 
-    public void setProvidedProducts(Set<ProvidedProduct> providedProducts) {
-        this.providedProducts = providedProducts;
+    public void setProvidedProducts(Set<Product> providedProducts) {
+        this.providedProducts.clear();
+
+        if (providedProducts != null) {
+            this.providedProducts.addAll(providedProducts);
+        }
+    }
+
+    @JsonProperty("providedProducts")
+    public Set<ProvidedProduct> getProvidedProductDtos() {
+        Set<ProvidedProduct> prods = new HashSet<ProvidedProduct>();
+
+        // TODO:
+        // These DTOs need to be resolved or we could start running into conflicts. Including these
+        // DTOs in the list is not a long-term solution.
+        if (this.providedProductDtos != null) {
+            prods.addAll(this.providedProductDtos);
+        }
+
+        for (Product p : getProvidedProducts()) {
+            prods.add(new ProvidedProduct(p));
+        }
+
+        return prods;
+    }
+
+    /*
+     * Used temporarily while importing a manifest.
+     */
+    public void setProvidedProductDtos(Set<ProvidedProduct> dtos) {
+        providedProductDtos = dtos;
     }
 
     /**
-     * Check if this pool provides the given product ID.
+     * Check if this pool provides the given product
      *
      * @param productId
+     *  The Red Hat product ID for which to search.
+     *
      * @return true if pool provides this product
      */
     public Boolean provides(String productId) {
-        if (this.productId.equals(productId)) {
+        if (this.getProductId().equals(productId)) {
             return true;
         }
 
         if (providedProducts != null) {
-            for (ProvidedProduct p : providedProducts) {
-                if (p.getProductId().equals(productId)) {
+            for (Product product : providedProducts) {
+                if (product.getId().equals(productId)) {
                     return true;
                 }
             }
         }
+
         return false;
     }
 
@@ -662,21 +734,21 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * @return true if pool provides this product
      */
     public Boolean providesDerived(String productId) {
-        if (this.getDerivedProductId() != null) {
-            if (getDerivedProductId().equals(productId)) {
+        if (this.getDerivedProduct() != null) {
+            if (getDerivedProduct().equals(productId)) {
                 return true;
             }
 
             if (getDerivedProvidedProducts() != null) {
-                for (DerivedProvidedProduct p : getDerivedProvidedProducts()) {
-                    if (p.getProductId().equals(productId)) {
+                for (Product product : getDerivedProvidedProducts()) {
+                    if (product.getId().equals(productId)) {
                         return true;
                     }
                 }
             }
         }
         else {
-            return provides(productId);
+            return this.provides(productId);
         }
         return false;
     }
@@ -689,11 +761,36 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      */
     @HateoasInclude
     public String getProductId() {
-        return productId;
+        return (this.getProduct() != null ? this.getProduct().getId() : null);
     }
 
     public void setProductId(String productId) {
-        this.productId = productId;
+        this.importedProductId = productId;
+    }
+
+    @XmlTransient
+    public String getImportedProductId() {
+        return this.importedProductId;
+    }
+
+    /**
+     * Retrieves the Product representing the top-level product for this pool.
+     *
+     * @return
+     *  the top-level product for this pool.
+     */
+    public Product getProduct() {
+        return this.product;
+    }
+
+    /**
+     * Sets the Product to represent the top-level product for this pool.
+     *
+     * @param product
+     *  The Product to assign as the top-level product for this pool.
+     */
+    public void setProduct(Product product) {
+        this.product = product;
     }
 
     /**
@@ -742,116 +839,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         return "/pools/" + getId();
     }
 
-    public void setProductAttributes(Set<ProductPoolAttribute> attrs) {
-        this.productAttributes = attrs;
-    }
-
-    public Set<ProductPoolAttribute> getProductAttributes() {
-        return productAttributes;
-    }
-
-    public Set<DerivedProductPoolAttribute> getDerivedProductAttributes() {
-        return derivedProductAttributes;
-    }
-
-    public void addProductAttribute(ProductPoolAttribute attrib) {
-        attrib.setPool(this);
-        this.productAttributes.add(attrib);
-    }
-
-    public void addSubProductAttribute(DerivedProductPoolAttribute attrib) {
-        attrib.setPool(this);
-        this.derivedProductAttributes.add(attrib);
-    }
-
-    public void setProductAttribute(String key, String value, String productId) {
-        ProductPoolAttribute existing =
-            findAttribute(this.productAttributes, key);
-        if (existing != null) {
-            existing.setValue(value);
-            existing.setProductId(productId);
-        }
-        else {
-            ProductPoolAttribute attr = new ProductPoolAttribute(key,
-                value, productId);
-            addProductAttribute(attr);
-        }
-    }
-
-    public void setDerivedProductAttribute(String key, String value, String productId) {
-        DerivedProductPoolAttribute existing =
-            findAttribute(this.derivedProductAttributes, key);
-        if (existing != null) {
-            existing.setValue(value);
-            existing.setProductId(productId);
-        }
-        else {
-            DerivedProductPoolAttribute attr = new DerivedProductPoolAttribute(key,
-                value, productId);
-            addSubProductAttribute(attr);
-        }
-    }
-
-    public boolean hasProductAttribute(String name) {
-        return findAttribute(this.productAttributes, name) != null;
-    }
-
-    public boolean hasSubProductAttribute(String name) {
-        return findAttribute(this.derivedProductAttributes, name) != null;
-    }
-
-    public ProductPoolAttribute getProductAttribute(String name) {
-        return findAttribute(this.productAttributes, name);
-    }
-
-    public String getProductAttributeValue(String name) {
-        return findAttributeValue(this.productAttributes, name);
-    }
-
-    public boolean hasMergedAttribute(String name) {
-        return this.getMergedAttribute(name) != null;
-    }
-
-    /*
-     * Gets either pool or product attributes, not derived attributes
-     */
-    public AbstractPoolAttribute getMergedAttribute(String name) {
-        AbstractPoolAttribute result = findAttribute(this.attributes, name);
-        if (result == null) {
-            result = findAttribute(this.productAttributes, name);
-        }
-        return result;
-    }
-
-    public DerivedProductPoolAttribute getDerivedProductAttribute(String name) {
-        return findAttribute(this.derivedProductAttributes, name);
-    }
-
-    private <A extends AbstractPoolAttribute> A findAttribute(Set<A> attributes,
-        String key) {
-        if (attributes == null) {
-            return null;
-        }
-        for (A a : attributes) {
-            if (a.getName().equals(key)) {
-                return a;
-            }
-        }
-        return null;
-    }
-
-    private <A extends AbstractPoolAttribute> String findAttributeValue(Set<A> toSearch,
-        String key) {
-        if (toSearch == null) {
-            return null;
-        }
-        for (A a : toSearch) {
-            if (a.getName().equals(key)) {
-                return a.getValue();
-            }
-        }
-        return null;
-    }
 
     /**
      * @return the subscriptionSubKey
@@ -861,6 +848,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         if (this.getSourceSubscription() != null) {
             return this.getSourceSubscription().getSubscriptionSubKey();
         }
+
         return null;
     }
 
@@ -872,37 +860,85 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.calculatedAttributes = calculatedAttributes;
     }
 
-    public void addCalculatedAttribute(String name, String value) {
-        if (calculatedAttributes == null) {
-            calculatedAttributes = new HashMap<String, String>();
-        }
-
-        calculatedAttributes.put(name, value);
+    public Product getDerivedProduct() {
+        return this.derivedProduct;
     }
 
     public String getDerivedProductId() {
-        return derivedProductId;
+        if (derivedProduct == null) {
+            return null;
+        }
+        return this.derivedProduct.getId();
     }
 
-    public void setDerivedProductId(String subProductId) {
-        this.derivedProductId = subProductId;
+    public Set<ProductAttribute> getProductAttributes() {
+        return this.getProduct() != null ?
+            this.getProduct().getAttributes() :
+            new HashSet<ProductAttribute>();
     }
 
-    public Set<DerivedProvidedProduct> getDerivedProvidedProducts() {
+    public Set<ProductAttribute> getDerivedProductAttributes() {
+        return this.getDerivedProduct() != null ?
+            this.getDerivedProduct().getAttributes() :
+            new HashSet<ProductAttribute>();
+    }
+
+    @XmlTransient
+    public ProductAttribute getProductAttribute(String key) {
+        if (key != null) {
+            for (ProductAttribute attribute : this.getProductAttributes()) {
+                if (key.equalsIgnoreCase(attribute.getName())) {
+                    return attribute;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @XmlTransient
+    public String getProductAttributeValue(String key) {
+        ProductAttribute attribute = this.getProductAttribute(key);
+        return attribute != null ? attribute.getValue() : null;
+    }
+
+    public void setDerivedProduct(Product derived) {
+        this.derivedProduct = derived;
+    }
+
+    @JsonIgnore
+    public Set<Product> getDerivedProvidedProducts() {
         return derivedProvidedProducts;
     }
 
-    public void setDerivedProvidedProducts(
-        Set<DerivedProvidedProduct> subProvidedProducts) {
-        this.derivedProvidedProducts = subProvidedProducts;
+    public void setDerivedProvidedProducts(Set<Product> derivedProvidedProducts) {
+        this.derivedProvidedProducts.clear();
+
+        if (derivedProvidedProducts != null) {
+            this.derivedProvidedProducts.addAll(derivedProvidedProducts);
+        }
     }
 
-    public String getDerivedProductName() {
-        return derivedProductName;
+    @JsonProperty("derivedProvidedProducts")
+    public Set<ProvidedProduct> getDerivedProvidedProductDtos() {
+        Set<ProvidedProduct> prods = new HashSet<ProvidedProduct>();
+
+        if (this.derivedProvidedProductDtos != null) {
+            prods.addAll(this.derivedProvidedProductDtos);
+        }
+
+        for (Product p : getDerivedProvidedProducts()) {
+            prods.add(new ProvidedProduct(p));
+        }
+
+        return prods;
     }
 
-    public void setDerivedProductName(String subProductName) {
-        this.derivedProductName = subProductName;
+    /*
+     * Used temporarily while importing a manifest.
+     */
+    public void setDerivedProvidedProductDtos(Set<ProvidedProduct> dtos) {
+        derivedProvidedProductDtos = dtos;
     }
 
     /*
@@ -959,11 +995,11 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public boolean isStacked() {
-        return hasProductAttribute("stacking_id");
+        return (this.getProduct() != null ? this.getProduct().hasAttribute("stacking_id") : false);
     }
 
     public String getStackId() {
-        return getProductAttributeValue("stacking_id");
+        return (this.getProduct() != null ? this.getProduct().getAttributeValue("stacking_id") : null);
     }
 
     public Set<Branding> getBranding() {
@@ -1046,4 +1082,46 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         super.onCreate();
         this.type = this.getType();
     }
+
+    public String getUpstreamPoolId() {
+        return upstreamPoolId;
+    }
+
+    public void setUpstreamPoolId(String upstreamPoolId) {
+        this.upstreamPoolId = upstreamPoolId;
+    }
+
+    public String getUpstreamEntitlementId() {
+        return upstreamEntitlementId;
+    }
+
+    public void setUpstreamEntitlementId(String upstreamEntitlementId) {
+        this.upstreamEntitlementId = upstreamEntitlementId;
+    }
+
+    public String getUpstreamConsumerId() {
+        return upstreamConsumerId;
+    }
+
+    public void setUpstreamConsumerId(String upstreamConsumerId) {
+        this.upstreamConsumerId = upstreamConsumerId;
+    }
+
+    public Cdn getCdn() {
+        return cdn;
+    }
+
+    public void setCdn(Cdn cdn) {
+        this.cdn = cdn;
+    }
+
+    @XmlTransient
+    public SubscriptionsCertificate getCertificate() {
+        return this.cert;
+    }
+
+    public void setCertificate(SubscriptionsCertificate cert) {
+        this.cert = cert;
+    }
+
 }

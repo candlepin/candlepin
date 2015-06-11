@@ -48,7 +48,7 @@ public class Branding extends AbstractHibernateObject {
     @NotNull
     private String id;
 
-    @Column(nullable = false)
+    @Column(name = "product_id", nullable = false)
     @NotNull
     @Size(max = 255)
     private String productId;

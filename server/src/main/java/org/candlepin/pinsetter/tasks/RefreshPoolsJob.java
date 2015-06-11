@@ -21,6 +21,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.pinsetter.core.RetryJobException;
 import org.candlepin.pinsetter.core.model.JobStatus;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -43,16 +44,20 @@ import javax.persistence.PersistenceException;
 public class RefreshPoolsJob extends UniqueByOwnerJob {
 
     private static Logger log = LoggerFactory.getLogger(RefreshPoolsJob.class);
-    private OwnerCurator ownerCurator;
-    private PoolManager poolManager;
+    protected OwnerCurator ownerCurator;
+    protected PoolManager poolManager;
+    protected SubscriptionServiceAdapter subAdapter;
 
     public static final String LAZY_REGEN = "lazy_regen";
-    protected static String prefix = "refresh_pools_";
+    public static final String JOB_NAME_PREFIX = "refresh_pools_";
 
     @Inject
-    public RefreshPoolsJob(OwnerCurator ownerCurator, PoolManager poolManager) {
+    public RefreshPoolsJob(OwnerCurator ownerCurator, PoolManager poolManager,
+            SubscriptionServiceAdapter subAdapter) {
+
         this.ownerCurator = ownerCurator;
         this.poolManager = poolManager;
+        this.subAdapter = subAdapter;
     }
 
     /**
@@ -75,7 +80,7 @@ public class RefreshPoolsJob extends UniqueByOwnerJob {
             }
 
             // Assume that we verified the request in the resource layer:
-            poolManager.getRefresher(lazy).setUnitOfWork(unitOfWork).add(owner).run();
+            poolManager.getRefresher(subAdapter, lazy).setUnitOfWork(unitOfWork).add(owner).run();
             context.setResult("Pools refreshed for owner " + owner.getDisplayName());
         }
         catch (PersistenceException e) {
@@ -123,7 +128,7 @@ public class RefreshPoolsJob extends UniqueByOwnerJob {
         // Not sure if this is the best way to go:
         // Give each job a UUID to ensure that it is unique
         JobDetail detail = newJob(RefreshPoolsJob.class)
-            .withIdentity("refresh_pools_" + Util.generateUUID())
+            .withIdentity(JOB_NAME_PREFIX + Util.generateUUID())
             .requestRecovery(true) // recover the job upon restarts
             .usingJobData(map)
             .storeDurably(true) // required if we have to postpone the job

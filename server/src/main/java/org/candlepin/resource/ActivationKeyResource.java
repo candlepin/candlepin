@@ -17,13 +17,14 @@ package org.candlepin.resource;
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.ServiceLevelValidator;
 
 import com.google.inject.Inject;
@@ -52,7 +53,7 @@ import javax.ws.rs.core.MediaType;
 public class ActivationKeyResource {
     private static Logger log = LoggerFactory.getLogger(ActivationKeyResource.class);
     private ActivationKeyCurator activationKeyCurator;
-    private ProductServiceAdapter productAdapter;
+    private ProductCurator productCurator;
     private PoolManager poolManager;
     private I18n i18n;
     private ServiceLevelValidator serviceLevelValidator;
@@ -63,13 +64,13 @@ public class ActivationKeyResource {
         I18n i18n, PoolManager poolManager,
         ServiceLevelValidator serviceLevelValidator,
         ActivationKeyRules activationKeyRules,
-        ProductServiceAdapter productAdapter) {
+        ProductCurator productCurator) {
         this.activationKeyCurator = activationKeyCurator;
         this.i18n = i18n;
         this.poolManager = poolManager;
         this.serviceLevelValidator = serviceLevelValidator;
         this.activationKeyRules = activationKeyRules;
-        this.productAdapter = productAdapter;
+        this.productCurator = productCurator;
     }
 
     /**
@@ -232,7 +233,7 @@ public class ActivationKeyResource {
         @PathParam("product_id") String productId) {
 
         ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
-        Product product = confirmProduct(productId);
+        Product product = confirmProduct(key.getOwner(), productId);
 
         // Make sure we don't try to register the product ID twice.
         if (key.hasProduct(product)) {
@@ -260,7 +261,7 @@ public class ActivationKeyResource {
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("product_id") String productId) {
         ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
-        Product product = confirmProduct(productId);
+        Product product = confirmProduct(key.getOwner(), productId);
         key.removeProduct(product);
         activationKeyCurator.update(key);
         return key;
@@ -308,8 +309,8 @@ public class ActivationKeyResource {
         return pool;
     }
 
-    private Product confirmProduct(String prodId) {
-        Product prod = productAdapter.getProductById(prodId);
+    private Product confirmProduct(Owner o, String prodId) {
+        Product prod = productCurator.lookupById(o, prodId);
 
         if (prod == null) {
             throw new BadRequestException(i18n.tr(

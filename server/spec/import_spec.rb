@@ -71,21 +71,20 @@ describe 'Import', :serial => true do
   end
 
   it 'can be undone' do
-    # Make a custom subscription so we can be sure it does not get wiped
+    # Make a custom pool so we can be sure it does not get wiped
     # out during either the undo or a subsequent re-import:
-    custom_product = create_product(random_string(), random_string())
-    custom_sub = @cp.create_subscription(@import_owner['key'], custom_product['id'])
+    prod = create_product(random_string(), random_string(), {:owner => @import_owner['key']})
+    custom_pool = @cp.create_pool(@import_owner['key'], prod['id'])
 
     job = @import_owner_client.undo_import(@import_owner['key'])
     wait_for_job(job['id'], 30)
+
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
     pools.length.should == 1 # this is our custom pool
-    pools[0]['subscriptionId'].should == custom_sub['id']
+    pools[0]['id'].should == custom_pool['id']
+
     o = @cp.get_owner(@import_owner['key'])
     o['upstreamConsumer'].should be_nil
-
-    # Make sure this still exists:
-    custom_sub = @cp.get_subscription(custom_sub['id'])
 
     # should be able to re-import without an "older than existing" error:
     @cp.import(@import_owner['key'], @cp_export_file)
@@ -96,10 +95,16 @@ describe 'Import', :serial => true do
     # same manifest:
     job = @import_owner_client.undo_import(@import_owner['key'])
     wait_for_job(job['id'], 30)
+
+    # Verify our custom sub still exists
+    pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
+    pools.length.should == 1 # this is our custom pool
+    pools[0]['id'].should == custom_pool['id']
+
     another_owner = @cp.create_owner(random_string('testowner'))
     @cp.import(another_owner['key'], @cp_export_file)
     @cp.delete_owner(another_owner['key'])
-    @cp.delete_subscription(custom_sub['id'])
+    @cp.delete_pool(custom_pool['id'])
 
     # Re-import so the rest of the tests can pass:
     @cp.import(@import_owner['key'], @cp_export_file)
@@ -244,7 +249,7 @@ describe 'Import', :serial => true do
   end
 
   it 'should import arch content correctly' do
-      contents = @cp.list_content()
+      contents = @cp.list_content(@import_owner['key'])
       contents.each do |content|
         if content.has_key('content_url')
           if content['content_url'] == '/path/to/arch/specific/content'
@@ -289,8 +294,10 @@ describe 'Import', :serial => true do
     sub = sublist.find_all {
       |s| s.product.id.start_with?("prod2")
     }
+
     # use sub.first.id because find_all returns an array, but there
     # can only be one, HIGHLANDER!
+    sub.length.should == 1
     cert = @cp.get_subscription_cert sub.first.id
     cert[0..26].should == "-----BEGIN CERTIFICATE-----"
     cert.include?("-----BEGIN RSA PRIVATE KEY-----").should == true
@@ -326,6 +333,7 @@ describe 'Import', :serial => true do
     pool = @cp.list_pools(:owner => @import_owner.id,
       :product => @cp_export.products[:product3].id)[0]
     pool.should_not be_nil
+
     pool["derivedProductId"].should == @cp_export.products[:derived_product].id
     pool["derivedProvidedProducts"].length.should == 1
     pool["derivedProvidedProducts"][0]["productId"].should == @cp_export.products[:derived_provided_prod].id

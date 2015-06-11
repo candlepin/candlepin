@@ -15,21 +15,16 @@
 package org.candlepin.policy.js.pool;
 
 import org.candlepin.controller.PoolManager;
-import org.candlepin.model.Attribute;
 import org.candlepin.model.Branding;
-import org.candlepin.model.DerivedProductPoolAttribute;
-import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductPoolAttribute;
-import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
-import org.candlepin.model.Subscription;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.AttributeHelper;
-import org.candlepin.policy.js.ProductCache;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -40,6 +35,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+
+
 /**
  * Post Entitlement Helper, this object is provided as a global variable to the
  * post entitlement javascript functions allowing them to perform a specific set
@@ -48,73 +45,73 @@ import java.util.Set;
 public class PoolHelper extends AttributeHelper {
 
     private PoolManager poolManager;
-    private ProductCache productCache;
     private Entitlement sourceEntitlement;
 
-    public PoolHelper(PoolManager poolManager, ProductCache productCache,
-        Entitlement sourceEntitlement) {
+    public PoolHelper(PoolManager poolManager, Entitlement sourceEntitlement) {
         this.poolManager = poolManager;
-        this.productCache = productCache;
         this.sourceEntitlement = sourceEntitlement;
     }
 
     /**
      * Create a pool only for virt guests of a particular host consumer.
      *
-     *
-     *
-     * @param productId Label of the product the pool is for.
+     * @param product Label of the product the pool is for.
      * @param pool Pool this host restricted pool is being derived from.
      * @param quantity Number of entitlements for this pool, also accepts "unlimited".
      * @return the pool which was created
      */
-    public Pool createHostRestrictedPool(String productId, Pool pool,
-        String quantity) {
+    public Pool createHostRestrictedPool(Product product, Pool pool, String quantity) {
 
         Pool consumerSpecificPool = null;
-        if (pool.getDerivedProductId() == null) {
-            consumerSpecificPool = createPool(productId, pool.getOwner(),
-                quantity, pool.getStartDate(), pool.getEndDate(),
-                pool.getContractNumber(), pool.getAccountNumber(), pool.getOrderNumber(),
-                pool.getProvidedProducts());
+        if (pool.getDerivedProduct() == null) {
+            consumerSpecificPool = this.createPool(
+                product,
+                pool.getOwner(),
+                quantity,
+                pool.getStartDate(),
+                pool.getEndDate(),
+                pool.getContractNumber(),
+                pool.getAccountNumber(),
+                pool.getOrderNumber(),
+                pool.getProvidedProducts()
+            );
         }
         else {
-            // If a sub product id is on the pool, we want to define the sub pool
-            // with the sub product data that was defined on the parent pool,
-            // allowing the sub pool to have different attributes than the parent.
-            Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-            for (DerivedProvidedProduct subProvided : pool.getDerivedProvidedProducts()) {
-                providedProducts.add(new ProvidedProduct(subProvided.getProductId(),
-                                                         subProvided.getProductName()));
-            }
-
-            consumerSpecificPool = createPool(pool.getDerivedProductId(), pool.getOwner(),
-                quantity, pool.getStartDate(), pool.getEndDate(),
-                pool.getContractNumber(), pool.getAccountNumber(), pool.getOrderNumber(),
-                providedProducts);
-
+            // If a derived product is on the pool, we want to define the derived pool
+            // with the derived product data that was defined on the parent pool,
+            // allowing the derived pool to have different attributes than the parent.
+            consumerSpecificPool = this.createPool(
+                pool.getDerivedProduct(),
+                pool.getOwner(),
+                quantity,
+                pool.getStartDate(),
+                pool.getEndDate(),
+                pool.getContractNumber(),
+                pool.getAccountNumber(),
+                pool.getOrderNumber(),
+                pool.getDerivedProvidedProducts()
+            );
         }
 
-        consumerSpecificPool.setAttribute("requires_host",
-            sourceEntitlement.getConsumer().getUuid());
+        consumerSpecificPool.setAttribute("requires_host", sourceEntitlement.getConsumer().getUuid());
         consumerSpecificPool.setAttribute("pool_derived", "true");
         consumerSpecificPool.setAttribute("virt_only", "true");
         consumerSpecificPool.setAttribute("physical_only", "false");
 
-        this.copyProductAttributesOntoPool(consumerSpecificPool.getProductId(),
-            consumerSpecificPool);
-
         // If the originating pool is stacked, we want to create the derived pool based on
         // the entitlements in the stack, instead of just the parent pool.
         if (pool.isStacked()) {
-            poolManager.updatePoolFromStack(consumerSpecificPool);
+            poolManager.updatePoolFromStack(consumerSpecificPool, null);
         }
         else {
             // attribute per 795431, useful for rolling up pool info in headpin
             consumerSpecificPool.setAttribute("source_pool_id", pool.getId());
             consumerSpecificPool.setSourceSubscription(
-                new SourceSubscription(pool.getSubscriptionId(),
-                    sourceEntitlement.getId()));
+                new SourceSubscription(
+                    pool.getSubscriptionId(),
+                    sourceEntitlement.getId()
+                )
+            );
         }
 
         poolManager.createPool(consumerSpecificPool);
@@ -159,114 +156,65 @@ public class PoolHelper extends AttributeHelper {
      * @param source subscription
      * @param destination pool
      */
-    private void copyProvidedProducts(Subscription source, Pool destination) {
-        // Use derived product data if it exists, as this is a derived bonus pool:
+    private void copyProvidedProducts(Subscription source, Pool destination,
+        ProductCurator prodCurator) {
+
+        Set<Product> products;
+
         if (source.getDerivedProduct() != null) {
-            Set<ProvidedProduct> provided = new HashSet<ProvidedProduct>();
-            if (source.getDerivedProvidedProducts() != null) {
-                for (Product p : source.getDerivedProvidedProducts()) {
-                    provided.add(new ProvidedProduct(p.getId(), p.getName(), destination));
-                }
-            }
-            destination.setProvidedProducts(provided);
+            products = source.getDerivedProvidedProducts();
         }
         else {
-            for (Product providedProduct : source.getProvidedProducts()) {
-                destination.addProvidedProduct(
-                    new ProvidedProduct(providedProduct.getId(), providedProduct.getName()));
+            products = source.getProvidedProducts();
+        }
+
+        for (Product product : products) {
+            // If no result is returned here, the product has not been correctly imported
+            // into the organization, indicating a problem somewhere in the sync or refresh code:
+            Product destprod = prodCurator.lookupById(destination.getOwner(), product.getId());
+            if (destprod == null) {
+                throw new RuntimeException("Product " + product.getId() +
+                        " has not been imported into org " +
+                        destination.getOwner().getKey());
             }
+            destination.addProvidedProduct(destprod);
         }
     }
 
-    public Pool createPool(Subscription sub, String productId,
-            String quantity, Map<String, String> newPoolAttributes) {
+    public Pool createPool(Subscription sub, Product product, String quantity,
+        Map<String, String> attributes, ProductCurator prodCurator) {
 
-        Pool pool = createPool(productId, sub.getOwner(), quantity, sub.getStartDate(),
-            sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
-            sub.getOrderNumber(), new HashSet<ProvidedProduct>());
+        Pool pool = createPool(
+            product,
+            sub.getOwner(),
+            quantity,
+            sub.getStartDate(),
+            sub.getEndDate(),
+            sub.getContractNumber(),
+            sub.getAccountNumber(),
+            sub.getOrderNumber(),
+            new HashSet<Product>()
+        );
+
         pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
 
-        copyProvidedProducts(sub, pool);
+        copyProvidedProducts(sub, pool, prodCurator);
 
         // Add in the new attributes
-        for (Entry<String, String> entry : newPoolAttributes.entrySet()) {
+        for (Entry<String, String> entry : attributes.entrySet()) {
             pool.setAttribute(entry.getKey(), entry.getValue());
         }
-
-        copyProductAttributesOntoPool(productId, pool);
 
         for (Branding b : sub.getBranding()) {
             pool.getBranding().add(new Branding(b.getProductId(), b.getType(),
                 b.getName()));
         }
-
         return pool;
     }
 
-    /**
-     * Copies all of the {@link Products} attributes onto the pool.
-     * If an attribute already exists, it will be updated. Any attributes that are
-     * on the {@link Pool} but not on the {@link Product} will be removed.
-     *
-     * @param productId
-     * @param pool
-     *
-     * @return true if the pools attributes changed, false otherwise.
-     */
-    protected boolean copyProductAttributesOntoPool(String productId, Pool pool) {
-        boolean hasChanged = false;
-        Product product = productCache.getProductById(productId);
-
-        // Build a set of what we would expect and compare them to the current:
-        Set<ProductPoolAttribute> currentAttrs = pool.getProductAttributes();
-        Set<ProductPoolAttribute> incomingAttrs = new HashSet<ProductPoolAttribute>();
-        if (product != null) {
-            for (Attribute attr : product.getAttributes()) {
-                ProductPoolAttribute newAttr = new ProductPoolAttribute(attr.getName(),
-                    attr.getValue(), product.getId());
-                newAttr.setPool(pool);
-                incomingAttrs.add(newAttr);
-            }
-        }
-
-        if (!currentAttrs.equals(incomingAttrs)) {
-            hasChanged = true;
-            pool.getProductAttributes().clear();
-            pool.getProductAttributes().addAll(incomingAttrs);
-        }
-
-        return hasChanged;
-    }
-
-    protected boolean copySubProductAttributesOntoPool(String productId, Pool pool) {
-        boolean hasChanged = false;
-        Product product = productCache.getProductById(productId);
-
-        // Build a set of what we would expect and compare them to the current:
-        Set<DerivedProductPoolAttribute> currentAttrs = pool.getDerivedProductAttributes();
-        Set<DerivedProductPoolAttribute> incomingAttrs =
-            new HashSet<DerivedProductPoolAttribute>();
-        if (product != null) {
-            for (Attribute attr : product.getAttributes()) {
-                DerivedProductPoolAttribute newAttr = new DerivedProductPoolAttribute(
-                    attr.getName(), attr.getValue(), product.getId());
-                newAttr.setPool(pool);
-                incomingAttrs.add(newAttr);
-            }
-        }
-
-        if (!currentAttrs.equals(incomingAttrs)) {
-            hasChanged = true;
-            pool.getDerivedProductAttributes().clear();
-            pool.getDerivedProductAttributes().addAll(incomingAttrs);
-        }
-
-        return hasChanged;
-    }
-
-    private Pool createPool(String productId, Owner owner, String quantity, Date startDate,
+    private Pool createPool(Product product, Owner owner, String quantity, Date startDate,
         Date endDate, String contractNumber, String accountNumber, String orderNumber,
-        Set<ProvidedProduct> providedProducts) {
+        Set<Product> providedProducts) {
 
         Long q = null;
         if (quantity.equalsIgnoreCase("unlimited")) {
@@ -281,17 +229,21 @@ public class PoolHelper extends AttributeHelper {
             }
         }
 
-        Product derivedProduct = productCache.getProductById(productId);
-        Pool pool = new Pool(owner, productId,
-            derivedProduct.getName(),
-            new HashSet<ProvidedProduct>(), q,
-            startDate, endDate,
-            contractNumber, accountNumber, orderNumber);
+        Pool pool = new Pool(
+            owner,
+            product,
+            new HashSet<Product>(),
+            q,
+            startDate,
+            endDate,
+            contractNumber,
+            accountNumber,
+            orderNumber
+        );
 
         // Must be sure to copy the provided products, not try to re-use them directly:
-        for (ProvidedProduct pp : providedProducts) {
-            pool.addProvidedProduct(
-                new ProvidedProduct(pp.getProductId(), pp.getProductName()));
+        for (Product pp : providedProducts) {
+            pool.addProvidedProduct(pp);
         }
 
         if (sourceEntitlement != null && sourceEntitlement.getPool() != null) {

@@ -14,19 +14,16 @@
  */
 package org.candlepin.policy.js.pool;
 
-import org.candlepin.model.DerivedProductPoolAttribute;
-import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
-import org.candlepin.model.ProductPoolAttribute;
-import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.Product;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+
+
 
 /**
  * This class is responsible for determining the accumulated values
@@ -40,22 +37,15 @@ public class StackedSubPoolValueAccumulator {
     private Entitlement eldestWithVirtLimit;
     private Date startDate;
     private Date endDate;
-    private Set<ProvidedProduct> expectedProvidedProds = new HashSet<ProvidedProduct>();
+    private Set<Product> expectedProvidedProds = new HashSet<Product>();
 
-    // Store the product pool attributes in a map by name so that
-    // we don't end up with multiple attributes with the same name.
-    private Map<String, ProductPoolAttribute> expectedAttrs =
-        new HashMap<String, ProductPoolAttribute>();
-
-    public StackedSubPoolValueAccumulator(Pool stackedSubPool,
-        List<Entitlement> stackedEnts) {
+    public StackedSubPoolValueAccumulator(Pool stackedSubPool, List<Entitlement> stackedEnts) {
         for (Entitlement nextStacked : stackedEnts) {
             Pool nextStackedPool = nextStacked.getPool();
             updateEldest(nextStacked);
             accumulateDateRange(nextStacked);
             updateEldestWithVirtLimit(nextStacked);
             accumulateProvidedProducts(stackedSubPool, nextStackedPool);
-            accumulateProductAttributes(stackedSubPool, nextStackedPool);
         }
     }
 
@@ -98,7 +88,7 @@ public class StackedSubPoolValueAccumulator {
     private void updateEldestWithVirtLimit(Entitlement nextStacked) {
         // Keep track of the eldest with virt limit so that we can change the
         // quantity of the sub pool.
-        if (nextStacked.getPool().hasProductAttribute("virt_limit")) {
+        if (nextStacked.getPool().hasMergedAttribute("virt_limit")) {
             if (eldestWithVirtLimit == null ||
                 nextStacked.getCreated().before(eldestWithVirtLimit.getCreated())) {
                 eldestWithVirtLimit = nextStacked;
@@ -114,49 +104,18 @@ public class StackedSubPoolValueAccumulator {
      * @param nextStackedPool
      */
     private void accumulateProvidedProducts(Pool stackedSubPool, Pool nextStackedPool) {
-        if (nextStackedPool.getDerivedProductId() == null) {
-            for (ProvidedProduct pp : nextStackedPool.getProvidedProducts()) {
-                expectedProvidedProds.add(
-                    new ProvidedProduct(pp.getProductId(), pp.getProductName(),
-                        stackedSubPool));
+        Product product = nextStackedPool.getDerivedProduct() != null ?
+            nextStackedPool.getDerivedProduct() :
+            nextStackedPool.getProduct();
+
+        if (nextStackedPool.getDerivedProduct() == null) {
+            for (Product provided : nextStackedPool.getProvidedProducts()) {
+                this.expectedProvidedProds.add(provided);
             }
         }
         else {
-            for (DerivedProvidedProduct pp :
-                nextStackedPool.getDerivedProvidedProducts()) {
-                expectedProvidedProds.add(
-                    new ProvidedProduct(pp.getProductId(), pp.getProductName(),
-                        stackedSubPool));
-            }
-        }
-    }
-
-    /**
-     * Update the product pool attributes - we need to be sure to check for any
-     * derived products for the sub pool. If it exists, then we need to use the
-     * derived product pool attributes.
-     *
-     * Using the pool's *current* product ID here, we may have to change it later
-     * if it changes.
-     *
-     * @param stackedSubPool
-     * @param nextStackedPool
-     */
-    private void accumulateProductAttributes(Pool stackedSubPool, Pool nextStackedPool) {
-
-        if (nextStackedPool.getDerivedProductId() == null) {
-            for (ProductPoolAttribute attr : nextStackedPool.getProductAttributes()) {
-                expectedAttrs.put(attr.getName(),
-                    new ProductPoolAttribute(attr.getName(), attr.getValue(),
-                        stackedSubPool.getProductId()));
-            }
-        }
-        else {
-            for (DerivedProductPoolAttribute attr :
-                nextStackedPool.getDerivedProductAttributes()) {
-                expectedAttrs.put(attr.getName(),
-                    new ProductPoolAttribute(attr.getName(), attr.getValue(),
-                        stackedSubPool.getProductId()));
+            for (Product provided : nextStackedPool.getDerivedProvidedProducts()) {
+                this.expectedProvidedProds.add(provided);
             }
         }
     }
@@ -177,12 +136,8 @@ public class StackedSubPoolValueAccumulator {
         return endDate;
     }
 
-    public Set<ProvidedProduct> getExpectedProvidedProds() {
+    public Set<Product> getExpectedProvidedProds() {
         return expectedProvidedProds;
-    }
-
-    public Set<ProductPoolAttribute> getExpectedAttributes() {
-        return new HashSet<ProductPoolAttribute>(expectedAttrs.values());
     }
 
 }

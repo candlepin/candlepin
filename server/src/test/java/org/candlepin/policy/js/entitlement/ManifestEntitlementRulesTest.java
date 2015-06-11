@@ -15,17 +15,15 @@
 package org.candlepin.policy.js.entitlement;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
@@ -55,13 +53,14 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         ConsumerType type = mock(ConsumerType.class);
         Pool pool = mock(Pool.class);
         Product product = mock(Product.class);
+        Owner owner = mock(Owner.class);
 
         when(e.getPool()).thenReturn(pool);
         when(e.getConsumer()).thenReturn(c);
         when(c.getType()).thenReturn(type);
         when(type.isManifest()).thenReturn(true);
         when(pool.getProductId()).thenReturn("testProd");
-        when(prodAdapter.getProductById(eq("testProd"))).thenReturn(product);
+        when(prodAdapter.getProductById(eq(owner), eq("testProd"))).thenReturn(product);
         when(product.getAttributes()).thenReturn(new HashSet<ProductAttribute>());
         when(pool.getAttributes()).thenReturn(new HashSet<PoolAttribute>());
 
@@ -75,7 +74,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.setFact("cpu.socket(s)", "12");
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
         prod.setAttribute("sockets", "2");
         Pool p = TestUtil.createPool(prod);
 
@@ -93,7 +92,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.setCapabilities(caps);
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
         prod.setAttribute("cores", "2");
         Pool p = TestUtil.createPool(prod);
 
@@ -113,7 +112,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.setCapabilities(caps);
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
         prod.setAttribute("cores", "2");
         Pool p = TestUtil.createPool(prod);
 
@@ -135,7 +134,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.setCapabilities(caps);
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
         prod.setAttribute("cores", "2");
         Pool p = TestUtil.createPool(prod);
 
@@ -154,7 +153,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.setCapabilities(caps);
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
         prod.setAttribute("ram", "2");
         Pool p = TestUtil.createPool(prod);
 
@@ -174,7 +173,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.setCapabilities(caps);
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
         prod.setAttribute("ram", "2");
         Pool p = TestUtil.createPool(prod);
 
@@ -196,7 +195,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.setCapabilities(caps);
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
         prod.setAttribute("ram", "2");
         Pool p = TestUtil.createPool(prod);
 
@@ -214,7 +213,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.setCapabilities(caps);
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
         prod.setAttribute("instance_multiplier", "2");
         Pool p = TestUtil.createPool(prod);
 
@@ -233,7 +232,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.setCapabilities(caps);
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
         prod.setAttribute("instance_multiplier", "2");
         Pool p = TestUtil.createPool(prod);
 
@@ -255,7 +254,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.setCapabilities(caps);
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
         prod.setAttribute("instance_multiplier", "2");
         Pool p = TestUtil.createPool(prod);
 
@@ -270,7 +269,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         Consumer c = TestUtil.createConsumer();
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
         Pool p = TestUtil.createPool(prod);
         p.setAttribute("virt_only", "true");
         p.setAttribute("pool_derived", "true");
@@ -287,7 +286,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         Consumer c = TestUtil.createConsumer();
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
         Pool p = TestUtil.createPool(prod);
         p.setAttribute("virt_only", "true");
         p.setAttribute("pool_derived", "true");
@@ -304,7 +303,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         Consumer c = TestUtil.createConsumer();
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
         Pool p = TestUtil.createPool(prod);
         p.setAttribute("virt_only", "true");
         p.setAttribute("requires_host", "true");
@@ -321,7 +320,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         Consumer c = TestUtil.createConsumer();
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
         Pool p = TestUtil.createPool(prod);
         p.setAttribute("virt_only", "true");
         p.setAttribute("requires_host", "true");
@@ -339,7 +338,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         Consumer c = TestUtil.createConsumer();
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
         Pool p = TestUtil.createPool(prod);
         p.setQuantity(5L);
 
@@ -356,9 +355,10 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.setCapabilities(new HashSet<ConsumerCapability>());
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
+        Product derived = TestUtil.createProduct("sub-prod-id");
         Pool p = TestUtil.createPool(prod);
-        p.setDerivedProductId("sub-prod-id");
+        p.setDerivedProduct(derived);
 
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BIND);
         assertNotNull(results);
@@ -376,9 +376,10 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.setCapabilities(new HashSet<ConsumerCapability>());
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
+        Product derived = TestUtil.createProduct("sub-prod-id");
         Pool p = TestUtil.createPool(prod);
-        p.setDerivedProductId("sub-prod-id");
+        p.setDerivedProduct(derived);
 
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.LIST_POOLS);
         assertNotNull(results);
@@ -396,9 +397,10 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.setCapabilities(new HashSet<ConsumerCapability>());
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
+        Product derived = TestUtil.createProduct("sub-prod-id");
         Pool p = TestUtil.createPool(prod);
-        p.setDerivedProductId("sub-prod-id");
+        p.setDerivedProduct(derived);
 
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BEST_POOLS);
         assertNotNull(results);
@@ -418,9 +420,10 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.setCapabilities(capabilities);
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
+        Product derived = TestUtil.createProduct("sub-prod-id");
         Pool p = TestUtil.createPool(prod);
-        p.setDerivedProductId("sub-prod-id");
+        p.setDerivedProduct(derived);
 
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BIND);
         assertNotNull(results);
@@ -435,9 +438,10 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.setCapabilities(capabilities);
         c.getType().setManifest(true);
 
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(c.getOwner());
+        Product derived = TestUtil.createProduct("sub-prod-id");
         Pool p = TestUtil.createPool(prod);
-        p.setDerivedProductId("sub-prod-id");
+        p.setDerivedProduct(derived);
 
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BEST_POOLS);
         assertNotNull(results);

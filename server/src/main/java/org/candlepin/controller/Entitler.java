@@ -57,9 +57,8 @@ public class Entitler {
     private EntitlementCurator entitlementCurator;
 
     @Inject
-    public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n,
-        EventFactory evtFactory, EventSink sink,
-        EntitlementRulesTranslator messageTranslator,
+    public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n, EventFactory evtFactory,
+        EventSink sink, EntitlementRulesTranslator messageTranslator,
         EntitlementCurator entitlementCurator) {
 
         this.poolManager = pm;

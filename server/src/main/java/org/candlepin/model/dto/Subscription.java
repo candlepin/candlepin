@@ -12,139 +12,64 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.model;
+package org.candlepin.model.dto;
+
+import org.candlepin.model.Branding;
+import org.candlepin.model.Cdn;
+import org.candlepin.model.Named;
+import org.candlepin.model.Owned;
+import org.candlepin.model.Owner;
+import org.candlepin.model.Product;
+import org.candlepin.model.SubscriptionsCertificate;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+
 
 /**
  * Represents a Subscription
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@Entity
-@Table(name = "cp_subscription")
-public class Subscription extends AbstractHibernateObject implements Owned, Named {
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonFilter("DefaultFilter")
+public class Subscription implements Owned, Named {
 
-    @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    @Column(length = 32)
-    @NotNull
     private String id;
-
-    @ManyToOne
-    @ForeignKey(name = "fk_subscription_owner")
-    @JoinColumn(nullable = false)
-    @Index(name = "cp_subscription_owner_fk_idx")
-    @NotNull
+    private Date created;
+    private Date updated;
     private Owner owner;
-
-    @ManyToOne
-    @ForeignKey(name = "fk_subscription_product")
-    @JoinColumn(nullable = false)
-    @NotNull
     private Product product;
-
-    @ManyToOne
-    @ForeignKey(name = "fk_sub_derivedprod")
-    @JoinColumn(nullable = true)
     private Product derivedProduct;
-
-    @ManyToMany(targetEntity = Product.class)
-    @ForeignKey(name = "fk_subscription_id",
-            inverseName = "fk_product_id")
-    @JoinTable(name = "cp_subscription_products",
-        joinColumns = @JoinColumn(name = "subscription_id"),
-        inverseJoinColumns = @JoinColumn(name = "product_id"))
     private Set<Product> providedProducts = new HashSet<Product>();
-
-    @ManyToMany(targetEntity = Product.class)
-    @ForeignKey(name = "fk_product_id",
-            inverseName = "fk_subscription_id")
-    @JoinTable(name = "cp_sub_derivedprods",
-        joinColumns = @JoinColumn(name = "subscription_id"),
-        inverseJoinColumns = @JoinColumn(name = "product_id"))
     private Set<Product> derivedProvidedProducts = new HashSet<Product>();
-
-    @OneToMany
-    @ForeignKey(name = "fk_sub_branding_branding_id",
-            inverseName = "fk_sub_branding_sub_id")
-    @JoinTable(name = "cp_sub_branding",
-        joinColumns = @JoinColumn(name = "subscription_id"),
-        inverseJoinColumns = @JoinColumn(name = "branding_id"))
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<Branding> branding = new HashSet<Branding>();
-
-    @Column(nullable = false)
-    @NotNull
     private Long quantity;
-
-    @Column(nullable = false)
-    @NotNull
     private Date startDate;
-
-    @Column(nullable = false)
-    @NotNull
     private Date endDate;
-
-    @Size(max = 255)
     private String contractNumber;
-
-    @Size(max = 255)
     private String accountNumber;
-
     private Date modified;
-
-    @Size(max = 255)
     private String orderNumber;
-
-    @Column(name = "upstream_pool_id")
-    @Size(max = 255)
     private String upstreamPoolId;
-
-    @Column(name = "upstream_entitlement_id")
-    @Size(max = 37)
     private String upstreamEntitlementId;
-
-    @Column(name = "upstream_consumer_id")
-    @Size(max = 255)
     private String upstreamConsumerId;
-
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "certificate_id")
     private SubscriptionsCertificate cert;
-
-    @OneToOne
-    @JoinColumn(name = "cdn_id")
     private Cdn cdn;
+
 
     public Subscription() {
     }
@@ -316,13 +241,13 @@ public class Subscription extends AbstractHibernateObject implements Owned, Name
      */
     public Boolean provides(String desiredProductId) {
         // Direct match?
-        if (this.product.getId().equals(desiredProductId)) {
+        if (this.product.getUuid().equals(desiredProductId)) {
             return true;
         }
 
         // Check provided products:
         for (Product p : providedProducts) {
-            if (p.getId().equals(desiredProductId)) {
+            if (p.getUuid().equals(desiredProductId)) {
                 return true;
             }
         }
@@ -334,7 +259,11 @@ public class Subscription extends AbstractHibernateObject implements Owned, Name
     }
 
     public void setProvidedProducts(Set<Product> providedProducts) {
-        this.providedProducts = providedProducts;
+        this.providedProducts.clear();
+
+        if (providedProducts != null) {
+            this.providedProducts.addAll(providedProducts);
+        }
     }
 
     public void setUpstreamPoolId(String upstreamPoolId) {
@@ -382,7 +311,11 @@ public class Subscription extends AbstractHibernateObject implements Owned, Name
     }
 
     public void setDerivedProvidedProducts(Set<Product> subProvidedProducts) {
-        this.derivedProvidedProducts = subProvidedProducts;
+        this.derivedProvidedProducts.clear();
+
+        if (subProvidedProducts != null) {
+            this.derivedProvidedProducts.addAll(subProvidedProducts);
+        }
     }
 
     public Cdn getCdn() {
@@ -419,12 +352,29 @@ public class Subscription extends AbstractHibernateObject implements Owned, Name
         return !StringUtils.isBlank(virtLimit) && !"0".equals(virtLimit);
     }
 
-    @Override
     @XmlTransient
     public String getName() {
         if (getProduct() != null) {
             return getProduct().getName();
         }
         return null;
+    }
+
+    @XmlElement
+    public Date getCreated() {
+        return created;
+    }
+
+    public void setCreated(Date created) {
+        this.created = created;
+    }
+
+    @XmlElement
+    public Date getUpdated() {
+        return updated;
+    }
+
+    public void setUpdated(Date updated) {
+        this.updated = updated;
     }
 }

@@ -32,10 +32,11 @@ import java.util.Set;
  */
 public class RegenEnvEntitlementCertsJob extends KingpinJob {
 
-    private PoolManager poolManager;
     public static final String ENV = "env_id";
     public static final String CONTENT = "content_ids";
     public static final String LAZY_REGEN = "lazy_regen";
+
+    private PoolManager poolManager;
 
     @Inject
     public RegenEnvEntitlementCertsJob(PoolManager poolManager) {

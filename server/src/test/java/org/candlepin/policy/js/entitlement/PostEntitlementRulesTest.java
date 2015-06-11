@@ -53,8 +53,9 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         enforcer.postEntitlement(consumer, postHelper, e);
 
         // Pool quantity should be virt_limit:
-        verify(postHelper).createHostRestrictedPool(eq(pool.getProductId()),
-            eq(pool), eq("10"));
+        verify(postHelper).createHostRestrictedPool(
+            eq(pool.getProduct()), eq(pool), eq("10")
+        );
     }
 
     @Test
@@ -70,8 +71,9 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         enforcer.postEntitlement(consumer, postHelper, e);
 
         // Pool quantity should be virt_limit * entitlement quantity:
-        verify(postHelper).createHostRestrictedPool(eq(pool.getProductId()),
-            eq(pool), eq("unlimited"));
+        verify(postHelper).createHostRestrictedPool(
+            eq(pool.getProduct()), eq(pool), eq("unlimited")
+        );
     }
 
     // Sub-pools should not be created when distributors bind:
@@ -82,7 +84,7 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         Pool pool = setupVirtLimitPool();
         Entitlement e = new Entitlement(pool, consumer, 1);
 
-        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, e);
 
         enforcer.postEntitlement(consumer, postHelper, e);
         verify(poolManagerMock, never()).createPool(any(Pool.class));
@@ -101,7 +103,7 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         consumer.setFact("virt.is_guest", "true");
         Entitlement e = new Entitlement(pool, consumer, 1);
 
-        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, e);
 
         enforcer.postEntitlement(consumer, postHelper, e);
         verify(poolManagerMock, never()).createPool(any(Pool.class));

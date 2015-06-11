@@ -26,7 +26,6 @@ describe 'Entitlement Certificate' do
     monitoring = create_product()
 
     @cp.create_subscription(@owner['key'], monitoring.id, 10)
-    @cp.refresh_pools(@owner['key'])
 
     @user = user_client(@owner, random_string('billy'))
 
@@ -60,7 +59,6 @@ describe 'Entitlement Certificate' do
     old_ids = old_certs.map { |cert| cert['serial']['id']}
     new_ids = new_certs.map { |cert| cert['serial']['id']}
     (old_ids & new_ids).size.should == 0
-
   end
 
   it 'can be manually regenerated for a product' do
@@ -167,6 +165,73 @@ describe 'Entitlement Certificate' do
     lambda do
       @system2.regenerate_entitlement_certificates_for_entitlement(ents.first.id, @system.uuid)
     end.should raise_exception(RestClient::ResourceNotFound)
+  end
+
+  it "regenerates entitlement certificates by product for all owners" do
+    owner1 = create_owner(random_string("test_owner_1"))
+    owner2 = create_owner(random_string("test_owner_2"))
+    owner3 = create_owner(random_string("test_owner_3"))
+
+    prod_id = "test_prod"
+    safe_prod_id = "safe_prod"
+
+    prod1 = create_product(prod_id, "test product", {:owner => owner1['key']})
+    safe_prod1 = create_product(safe_prod_id, "safe product", {:owner => owner1['key']})
+    prod2 = create_product(prod_id, "test product", {:owner => owner2['key']})
+    safe_prod2 = create_product(safe_prod_id, "safe product", {:owner => owner2['key']})
+    prod3 = create_product(prod_id, "test product", {:owner => owner3['key']})
+    safe_prod3 = create_product(safe_prod_id, "safe product", {:owner => owner3['key']})
+
+    @cp.create_subscription(owner1['key'], prod1.id, 10)
+    @cp.create_subscription(owner1['key'], safe_prod1.id, 10)
+    @cp.create_subscription(owner2['key'], prod2.id, 10)
+    @cp.create_subscription(owner2['key'], safe_prod2.id, 10)
+    @cp.create_subscription(owner3['key'], prod3.id, 10)
+    @cp.create_subscription(owner3['key'], safe_prod3.id, 10)
+
+    user1 = user_client(owner1, random_string('user1'))
+    user2 = user_client(owner2, random_string('user2'))
+    user3 = user_client(owner3, random_string('user3'))
+
+    system1 = consumer_client(user1, random_string('system1'))
+    system2 = consumer_client(user2, random_string('system2'))
+    system3 = consumer_client(user3, random_string('system3'))
+
+    system1.consume_product(prod1.id)
+    system1.consume_product(safe_prod1.id)
+    system2.consume_product(prod2.id)
+    system2.consume_product(safe_prod2.id)
+    system3.consume_product(prod3.id)
+    system3.consume_product(safe_prod3.id)
+
+    sys1_old_certs = system1.list_certificates()
+    sys2_old_certs = system2.list_certificates()
+    sys3_old_certs = system3.list_certificates()
+    sys1_old_certs.length.should == 2
+    sys2_old_certs.length.should == 2
+    sys3_old_certs.length.should == 2
+
+    result = @cp.regenerate_entitlement_certificates_for_product(prod_id)
+
+    sys1_new_certs = system1.list_certificates()
+    sys2_new_certs = system2.list_certificates()
+    sys3_new_certs = system3.list_certificates()
+    sys1_new_certs.length.should == 2
+    sys2_new_certs.length.should == 2
+    sys3_new_certs.length.should == 2
+
+    # Cert IDs should have changed across the board for prod, but safe_prod should remain untouched.
+    sys1_old_ids = sys1_old_certs.map { |cert| cert['serial']['id'] }
+    sys1_new_ids = sys1_new_certs.map { |cert| cert['serial']['id'] }
+    (sys1_old_ids & sys1_new_ids).size.should == 1
+
+    sys2_old_ids = sys2_old_certs.map { |cert| cert['serial']['id'] }
+    sys2_new_ids = sys2_new_certs.map { |cert| cert['serial']['id'] }
+    (sys2_old_ids & sys2_new_ids).size.should == 1
+
+    sys3_old_ids = sys3_old_certs.map { |cert| cert['serial']['id'] }
+    sys3_new_ids = sys3_new_certs.map { |cert| cert['serial']['id'] }
+    (sys3_old_ids & sys3_new_ids).size.should == 1
   end
 
 end

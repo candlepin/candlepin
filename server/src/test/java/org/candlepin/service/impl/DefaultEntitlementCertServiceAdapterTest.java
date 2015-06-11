@@ -39,8 +39,7 @@ import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
-import org.candlepin.model.ProductPoolAttribute;
-import org.candlepin.model.Subscription;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
@@ -160,13 +159,15 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     private static KeyPair keyPair;
 
-    private String[] testUrls = {"/content/dist/rhel/$releasever/$basearch/os",
+    private String[] testUrls = {
+        "/content/dist/rhel/$releasever/$basearch/os",
         "/content/dist/rhel/$releasever/$basearch/debug",
         "/content/dist/rhel/$releasever/$basearch/source/SRPMS",
         "/content/dist/jboss/source",
         "/content/beta/rhel/$releasever/$basearch/os",
         "/content/beta/rhel/$releasever/$basearch/debug",
-        "/content/beta/rhel/$releasever/$basearch/source/SRPMS"};
+        "/content/beta/rhel/$releasever/$basearch/source/SRPMS"
+    };
 
     static {
         Security.addProvider(new BouncyCastleProvider());
@@ -199,17 +200,16 @@ public class DefaultEntitlementCertServiceAdapterTest {
         );
         injector.injectMembers(this);
 
-        v3extensionUtil = new X509V3ExtensionUtil(config, entCurator, productAdapter);
+        v3extensionUtil = new X509V3ExtensionUtil(config, entCurator);
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
             mockedPKI, extensionUtil, v3extensionUtil,
-            mock(EntitlementCertificateCurator.class), keyPairCurator,
-            serialCurator, productAdapter, entCurator,
+            mock(EntitlementCertificateCurator.class),
+            keyPairCurator, serialCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config);
 
-        product = new Product("12345", "a product", "variant", "version",
-            ARCH_LABEL, "SVC");
-        largeContentProduct = new Product("67890", "large content product", "variant",
+        product = new Product("12345", "a product", owner, "variant", "version", ARCH_LABEL, "SVC");
+        largeContentProduct = new Product("67890", "large content product", owner, "variant",
             "version", ARCH_LABEL, "SVC");
 
         content = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
@@ -250,25 +250,37 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABEL));
         }
 
-        subscription = new Subscription(null, product, new HashSet<Product>(),
-            1L, new Date(), new Date(), new Date());
-        subscription.setId("1");
-        largeContentSubscription = new Subscription(null, largeContentProduct,
+        subscription = new Subscription(
+            null,
+            product,
             new HashSet<Product>(),
-            1L, new Date(), new Date(), new Date());
+            1L,
+            new Date(),
+            new Date(),
+            new Date()
+        );
+        subscription.setId("1");
+
+        largeContentSubscription = new Subscription(
+            null,
+            largeContentProduct,
+            new HashSet<Product>(),
+            1L,
+            new Date(),
+            new Date(),
+            new Date()
+        );
         largeContentSubscription.setId("2");
 
         owner = new Owner();
 
         pool = new Pool();
         pool.setQuantity(1L);
-        pool.setProductId(product.getId());
-        pool.setProductName(product.getName());
+        pool.setProduct(product);
         pool.setStartDate(subscription.getStartDate());
         pool.setEndDate(subscription.getEndDate());
         largeContentPool = new Pool();
-        largeContentPool.setProductId(largeContentProduct.getId());
-        largeContentPool.setProductName(largeContentProduct.getName());
+        largeContentPool.setProduct(largeContentProduct);
 
         consumer = new Consumer("Test Consumer", "bob", owner,
                 new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
@@ -286,14 +298,17 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         product.setContent(Collections.singleton(content));
 
-        when(productAdapter.getProductById(eq(product.getId()))).thenReturn(product);
-        when(productAdapter.getProductById(eq(largeContentProduct.getId())))
-            .thenReturn(largeContentProduct);
+        // when(productAdapter.getProductById(eq(product.getOwner()), eq(product.getId())))
+        //     .thenReturn(product);
+        // when(productAdapter.getProductById(
+        //     eq(largeContentProduct.getOwner()), eq(largeContentProduct.getId()))
+        // ).thenReturn(largeContentProduct);
     }
 
     private Content createContent(String name, String id, String label,
         String type, String vendor, String url, String gpgUrl, String arches) {
-        Content c = new Content(name, id, label, type, vendor, url, gpgUrl, arches);
+        Owner owner = new Owner("Example-Corporation");
+        Content c = new Content(owner, name, id, label, type, vendor, url, gpgUrl, arches);
 
         return c;
     }
@@ -307,8 +322,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // Set up an adapter with a real PKIUtil
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
             realPKI, extensionUtil, v3extensionUtil,
-            mock(EntitlementCertificateCurator.class), keyPairCurator,
-            serialCurator, productAdapter, entCurator,
+            mock(EntitlementCertificateCurator.class),
+            keyPairCurator, serialCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config);
 
@@ -330,12 +345,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test(expected = CertificateSizeException.class)
     public void tooManyContentSetsAcrossMultipleProducts() throws Exception {
         Set<Product> providedProducts = new HashSet<Product>();
-        Product pp1 = new Product("12346", "Provided 1", "variant", "version",
+        Product pp1 = new Product("12346", "Provided 1", owner, "variant", "version",
             ARCH_LABEL, "SVC");
         pp1.setContent(generateContent(100, "PP1"));
         providedProducts.add(pp1);
 
-        Product pp2 = new Product("12347", "Provided 2", "variant", "version",
+        Product pp2 = new Product("12347", "Provided 2", owner, "variant", "version",
             ARCH_LABEL, "SVC");
         pp2.setContent(generateContent(100, "PP2"));
         providedProducts.add(pp2);
@@ -401,8 +416,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         // Environment, with promoted content:
         Environment e = new Environment("env1", "Env 1", owner);
-        e.getEnvironmentContent().add(new EnvironmentContent(e, content.getId(), true));
-        consumer.setEnvironment(e);
+
+        e.getEnvironmentContent().add(new EnvironmentContent(e, content, true));
+        this.consumer.setEnvironment(e);
 
         Map<String, EnvironmentContent> promotedContent =
             new HashMap<String, EnvironmentContent>();
@@ -468,8 +484,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         // Setup an environment for the consumer:
         Environment e = new Environment("env1", "Awesome Environment #1", owner);
-        e.getEnvironmentContent().add(new EnvironmentContent(e, content.getId(), true));
-        consumer.setEnvironment(e);
+        e.getEnvironmentContent().add(new EnvironmentContent(e, content, true));
+        this.consumer.setEnvironment(e);
 
         certServiceAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(),
@@ -490,8 +506,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         // Setup an environment for the consumer:
         Environment e = new Environment("env1", "Awesome Environment #1", owner);
-        e.getEnvironmentContent().add(new EnvironmentContent(e, content.getId(), true));
-        consumer.setEnvironment(e);
+        e.getEnvironmentContent().add(new EnvironmentContent(e, content, true));
+        this.consumer.setEnvironment(e);
 
         certServiceAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(),
@@ -540,7 +556,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void testBlankPrefixesShouldNotEffectAnything() throws Exception {
         owner.setContentPrefix("");
-
         certServiceAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(),
             getProductModels(product, new HashSet<Product>(), "prefix", entitlement),
@@ -569,7 +584,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void testFilterProductContent() {
-        Product modProduct = new Product("12345", "a product", "variant",
+        Product modProduct = new Product("12345", "a product", owner, "variant",
             "version", ARCH_LABEL, "SVC");
 
         // Use this set for successful providing queries:
@@ -615,10 +630,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Environment environment = new Environment();
         consumer.setEnvironment(environment);
 
-        Map<String, EnvironmentContent> promotedContent =
-            new HashMap<String, EnvironmentContent>();
-        promotedContent.put(normalContent.getId(), new EnvironmentContent(environment,
-            "content", true));
+        Map<String, EnvironmentContent> promotedContent = new HashMap<String, EnvironmentContent>();
+        promotedContent.put(
+            normalContent.getId(),
+            new EnvironmentContent(environment, normalContent, true)
+        );
 
         assertEquals(1,
             extensionUtil.filterProductContent(modProduct, entitlement, entCurator,
@@ -673,7 +689,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void managementEnabledByAttribute() throws Exception {
 
-        pool.addProductAttribute(new ProductPoolAttribute("management_enabled", "1", "p"));
+        pool.getProduct().setAttribute("management_enabled", "1");
         certServiceAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(),
             getProductModels(product, new HashSet<Product>(), "prefix", entitlement),
@@ -688,7 +704,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void stackingIdByAttribute() throws Exception {
 
-        pool.addProductAttribute(new ProductPoolAttribute("stacking_id", "3456", "p"));
+        pool.getProduct().setAttribute("stacking_id", "3456");
         certServiceAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(),
             getProductModels(product, new HashSet<Product>(), "prefix", entitlement),
@@ -733,8 +749,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void supportValuesPresentOnCertIfAttributePresent() throws Exception {
 
-        pool.setProductAttribute("support_level", "Premium", "p");
-        pool.setProductAttribute("support_type", "Level 3", "p");
+        pool.getProduct().setAttribute("support_level", "Premium");
+        pool.getProduct().setAttribute("support_type", "Level 3");
 
         certServiceAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(),
@@ -766,8 +782,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         DefaultEntitlementCertServiceAdapter entAdapter =
             new DefaultEntitlementCertServiceAdapter(
                 mockedPKI, mockExtensionUtil, mockV3extensionUtil,
-                mock(EntitlementCertificateCurator.class), keyPairCurator,
-                serialCurator, productAdapter, entCurator,
+                mock(EntitlementCertificateCurator.class),
+                keyPairCurator, serialCurator, entCurator,
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
                 mockConfig);
 
@@ -808,8 +824,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         DefaultEntitlementCertServiceAdapter entAdapter =
             new DefaultEntitlementCertServiceAdapter(
                 mockedPKI, mockExtensionUtil, mockV3extensionUtil,
-                mock(EntitlementCertificateCurator.class), keyPairCurator,
-                serialCurator, productAdapter, entCurator,
+                mock(EntitlementCertificateCurator.class),
+                keyPairCurator, serialCurator, entCurator,
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
                 mockConfig);
 
@@ -840,8 +856,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         DefaultEntitlementCertServiceAdapter entAdapter =
             new DefaultEntitlementCertServiceAdapter(
                 mockedPKI, mockExtensionUtil, mockV3extensionUtil,
-                mock(EntitlementCertificateCurator.class), keyPairCurator,
-                serialCurator, productAdapter, entCurator,
+                mock(EntitlementCertificateCurator.class),
+                keyPairCurator, serialCurator, entCurator,
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
                 mockConfig);
 
@@ -869,8 +885,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         DefaultEntitlementCertServiceAdapter entAdapter =
             new DefaultEntitlementCertServiceAdapter(
                 mockedPKI, mockExtensionUtil, mockV3extensionUtil,
-                mock(EntitlementCertificateCurator.class), keyPairCurator,
-                serialCurator, productAdapter, entCurator,
+                mock(EntitlementCertificateCurator.class),
+                keyPairCurator, serialCurator, entCurator,
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
                 mockConfig);
 
@@ -895,8 +911,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         DefaultEntitlementCertServiceAdapter entAdapter =
             new DefaultEntitlementCertServiceAdapter(
                 mockedPKI, mockExtensionUtil, mockV3extensionUtil,
-                mock(EntitlementCertificateCurator.class), keyPairCurator,
-                serialCurator, productAdapter, entCurator,
+                mock(EntitlementCertificateCurator.class),
+                keyPairCurator, serialCurator, entCurator,
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
                 mockConfig);
 
@@ -994,7 +1010,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // product with no compatible content, but marked as 'ALL' arch
-        Product wrongArchProduct = new Product("12345", "a product",
+        Product wrongArchProduct = new Product("12345", "a product", owner,
             "variant", "version", "ALL", "SVC");
 
         // no x86_64, ie ARCH_LABEL
@@ -1025,7 +1041,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // product with a kickstart content
-        Product kickstartProduct = new Product("12345", "a product",
+        Product kickstartProduct = new Product("12345", "a product", owner,
             "variant", "version", "ALL", "SVC");
 
         kickstartProduct.setContent(Collections.singleton(kickstartContent));
@@ -1056,7 +1072,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // product with a kickstart content
-        Product fileProduct = new Product("12345", "a product",
+        Product fileProduct = new Product("12345", "a product", owner,
             "variant", "version", "ALL", "SVC");
 
         fileProduct.setContent(Collections.singleton(fileContent));
@@ -1088,7 +1104,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // product with a kickstart content
-        Product unknownContentTypeProduct = new Product("12345", "a product",
+        Product unknownContentTypeProduct = new Product("12345", "a product", owner,
             "variant", "version", ARCH_LABEL, "SVC");
 
         unknownContentTypeProduct.setContent(Collections.singleton(unknownTypeContent));
@@ -1121,7 +1137,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // product with a kickstart content
-        Product product = new Product("12345", "a product",
+        Product product = new Product("12345", "a product", owner,
             "variant", "version", ARCH_LABEL, "SVC");
 
         Set<Content> multipleContents = new HashSet<Content>();
@@ -1166,9 +1182,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
         assertFalse(extMapHasContentType(unknownTypeContent, extMap, "null"));
     }
 
-    private List<org.candlepin.json.model.Product> getProductModels(Product sku,
+    private List<org.candlepin.model.dto.Product> getProductModels(Product sku,
             Set<Product> providedProducts, String prefix, Entitlement e) {
-        List<org.candlepin.json.model.Product> productModels =
+        List<org.candlepin.model.dto.Product> productModels =
                 v3extensionUtil.createProducts(sku, providedProducts, prefix,
                         new HashMap<String, EnvironmentContent>(),
                         e.getConsumer(), e);
@@ -1183,15 +1199,17 @@ public class DefaultEntitlementCertServiceAdapterTest {
         consumer.setFact("system.certificate_version", "3.2");
         consumer.setFact("uname.machine", "x86_64");
 
-        pool.setProductAttribute("warning_period", "20", "p");
-        pool.setProductAttribute("sockets", "4", "p");
-        pool.setProductAttribute("ram", "8", "p");
-        pool.setProductAttribute("cores", "4", "p");
-        pool.setProductAttribute("management_enabled", "true", "p");
-        pool.setProductAttribute("stacking_id", "45678", "p");
+        Product product = pool.getProduct();
+
+        product.setAttribute("warning_period", "20");
+        product.setAttribute("sockets", "4");
+        product.setAttribute("ram", "8");
+        product.setAttribute("cores", "4");
+        product.setAttribute("management_enabled", "true");
+        product.setAttribute("stacking_id", "45678");
         pool.setAttribute("virt_only", "true");
-        pool.setProductAttribute("support_level", "slevel", "p");
-        pool.setProductAttribute("support_type", "stype", "p");
+        product.setAttribute("support_level", "slevel");
+        product.setAttribute("support_type", "stype");
         pool.setAccountNumber("account1");
         pool.setContractNumber("contract1");
         pool.setOrderNumber("order1");
@@ -1290,15 +1308,17 @@ public class DefaultEntitlementCertServiceAdapterTest {
         consumer.setFact("system.certificate_version", certVersion);
         consumer.setFact("uname.machine", consumerArch);
 
-        subscription.getProduct().setAttribute("warning_period", "20");
-        subscription.getProduct().setAttribute("sockets", "4");
-        subscription.getProduct().setAttribute("ram", "8");
-        subscription.getProduct().setAttribute("cores", "4");
-        subscription.getProduct().setAttribute("management_enabled", "true");
-        subscription.getProduct().setAttribute("stacking_id", "45678");
+        Product product = subscription.getProduct();
+
+        product.setAttribute("warning_period", "20");
+        product.setAttribute("sockets", "4");
+        product.setAttribute("ram", "8");
+        product.setAttribute("cores", "4");
+        product.setAttribute("management_enabled", "true");
+        product.setAttribute("stacking_id", "45678");
         entitlement.getPool().setAttribute("virt_only", "true");
-        subscription.getProduct().setAttribute("support_level", "slevel");
-        subscription.getProduct().setAttribute("support_type", "stype");
+        product.setAttribute("support_level", "slevel");
+        product.setAttribute("support_type", "stype");
         subscription.setAccountNumber("account1");
         subscription.setContractNumber("contract1");
         subscription.setOrderNumber("order1");
@@ -1368,13 +1388,17 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // our content with no arch should inherit this arch
-        Product inheritedArchProduct = new Product("12345", "a product",
+        Product inheritedArchProduct = new Product("12345", "a product", owner,
             "variant", "version", ARCH_LABEL, "SVC");
 
         inheritedArchProduct.setContent(Collections.singleton(noArchContent));
         products.add(inheritedArchProduct);
-        when(productAdapter.getProductById(eq(inheritedArchProduct.getId())))
-            .thenReturn(inheritedArchProduct);
+
+        when(productAdapter.getProductById(
+            eq(inheritedArchProduct.getOwner()),
+            eq(inheritedArchProduct.getId()))
+        ).thenReturn(inheritedArchProduct);
+
         setupEntitlements(ARCH_LABEL, "3.2");
 
         Set<X509ExtensionWrapper> extensions =
@@ -1432,7 +1456,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // product with no compatible content, but marked as 'ALL' arch
-        Product wrongArchProduct = new Product("12345", "a product",
+        Product wrongArchProduct = new Product("12345", "a product", owner,
             "variant", "version", "ALL", "SVC");
 
         // no x86_64, ie ARCH_LABEL
@@ -1545,10 +1569,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testPrepareV3EntitlementDataForBooleans() throws IOException {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
+
+        consumer.setUuid("test-consumer");
         consumer.setFact("system.certificate_version", "3.2");
         consumer.setFact("uname.machine", "x86_64");
 
-        pool.setProductAttribute("management_enabled", "1", "p");
+        pool.getProduct().setAttribute("management_enabled", "1");
         entitlement.getPool().setAttribute("virt_only", "1");
 
         Set<X509ExtensionWrapper> extensions =
@@ -1597,8 +1623,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         when(serialCurator.create(any(CertificateSerial.class))).thenReturn(serial);
 
         EntitlementCertificate cert =
-            certServiceAdapter.generateEntitlementCert(entitlement, subscription,
-                product);
+            certServiceAdapter.generateEntitlementCert(entitlement, product);
 
         assertTrue(!cert.getCert().contains("ENTITLEMENT DATA"));
     }
@@ -1724,7 +1749,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void testContentExtensionLargeSet() throws IOException {
         Set<Product> products = new HashSet<Product>();
-        Product extremeProduct = new Product("12345", "a product", "variant", "version",
+        Product extremeProduct = new Product("12345", "a product", owner, "variant", "version",
             ARCH_LABEL, "SVC");
         products.add(extremeProduct);
         Set<Content> extremeContent = new HashSet<Content>();
@@ -1734,8 +1759,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABEL));
         }
         extremeProduct.setContent(extremeContent);
+
+        consumer.setUuid("test-consumer");
         consumer.setFact("system.certificate_version", "3.2");
-        when(productAdapter.getProductById(eq(extremeProduct.getId()))).thenReturn(extremeProduct);
+        consumer.setFact("uname.machine", "x86_64");
+
+        when(productAdapter.getProductById(eq(extremeProduct.getOwner()), eq(extremeProduct.getId())))
+            .thenReturn(extremeProduct);
 
         certServiceAdapter.prepareV3Extensions(entitlement, "prefix", null);
         Set<X509ByteExtensionWrapper> byteExtensions =
@@ -1766,11 +1796,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void testPathTreeCommonHeadAndTail() {
-        List<org.candlepin.json.model.Content> contentList =
-            new ArrayList<org.candlepin.json.model.Content>();
+        List<org.candlepin.model.dto.Content> contentList =
+            new ArrayList<org.candlepin.model.dto.Content>();
         for (int i = 0; i < 20; i++) {
-            org.candlepin.json.model.Content cont =
-                new org.candlepin.json.model.Content();
+            org.candlepin.model.dto.Content cont =
+                new org.candlepin.model.dto.Content();
             cont.setPath("/head/neck/shoulders/heart" + i + "/waist" +
                 i + "/leg/foot/heel");
             contentList.add(cont);
@@ -1839,14 +1869,14 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void testPathTreeSortsChildNodesAlphabetically() {
-        List<org.candlepin.json.model.Content> contentList =
-            new ArrayList<org.candlepin.json.model.Content>();
+        List<org.candlepin.model.dto.Content> contentList =
+            new ArrayList<org.candlepin.model.dto.Content>();
 
-        org.candlepin.json.model.Content contentA = new org.candlepin.json.model.Content();
+        org.candlepin.model.dto.Content contentA = new org.candlepin.model.dto.Content();
         contentA.setPath("/AAA");
-        org.candlepin.json.model.Content contentB = new org.candlepin.json.model.Content();
+        org.candlepin.model.dto.Content contentB = new org.candlepin.model.dto.Content();
         contentB.setPath("/BBB");
-        org.candlepin.json.model.Content contentC = new org.candlepin.json.model.Content();
+        org.candlepin.model.dto.Content contentC = new org.candlepin.model.dto.Content();
         contentC.setPath("/CCC");
 
         contentList.add(contentB);
@@ -1864,22 +1894,22 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void testPathDictionary() throws IOException {
-        List<org.candlepin.json.model.Content> contentList =
-            new ArrayList<org.candlepin.json.model.Content>();
-        org.candlepin.json.model.Content cont = null;
+        List<org.candlepin.model.dto.Content> contentList =
+            new ArrayList<org.candlepin.model.dto.Content>();
+        org.candlepin.model.dto.Content cont = null;
         for (int i = 0; i < 20; i++) {
-            cont = new org.candlepin.json.model.Content();
+            cont = new org.candlepin.model.dto.Content();
             cont.setPath("/head/neck/shoulders/heart" + i + "/waist" +
                 i + "/leg/foot/heel");
             contentList.add(cont);
         }
-        cont = new org.candlepin.json.model.Content();
+        cont = new org.candlepin.model.dto.Content();
         cont.setPath("/head/neck/shoulders/chest/leg");
         contentList.add(cont);
-        cont = new org.candlepin.json.model.Content();
+        cont = new org.candlepin.model.dto.Content();
         cont.setPath("/head/neck/shoulders/chest/foot");
         contentList.add(cont);
-        cont = new org.candlepin.json.model.Content();
+        cont = new org.candlepin.model.dto.Content();
         cont.setPath("/head/neck/shoulders/chest/torso/leg");
         contentList.add(cont);
 

@@ -21,7 +21,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.SourceSubscription;
-import org.candlepin.model.Subscription;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
@@ -31,6 +31,7 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * RefresherTest
@@ -59,7 +60,7 @@ public class RefresherTest {
         refresher.add(owner);
         refresher.run();
 
-        verify(poolManager, times(1)).refreshPoolsWithRegeneration(eq(owner), eq(false));
+        verify(poolManager, times(1)).refreshPoolsWithRegeneration(eq(subAdapter), eq(owner), eq(false));
     }
 
     @Test
@@ -78,7 +79,7 @@ public class RefresherTest {
         Owner owner = mock(Owner.class);
         Product product = mock(Product.class);
 
-        when(product.getId()).thenReturn("product id");
+        when(product.getUuid()).thenReturn("product id");
 
         Pool pool = new Pool();
         pool.setSourceSubscription(new SourceSubscription("subId", "master"));
@@ -102,9 +103,9 @@ public class RefresherTest {
         refresher.add(product);
         refresher.run();
 
-        verify(poolManager, times(1)).refreshPoolsWithRegeneration(eq(owner), eq(false));
+        verify(poolManager, times(1)).refreshPoolsWithRegeneration(eq(subAdapter), eq(owner), eq(false));
         verify(poolManager, times(0)).updatePoolsForSubscription(any(List.class),
-            any(Subscription.class), eq(false));
+            any(Subscription.class), eq(false), any(Set.class));
     }
 
     @Test
@@ -112,8 +113,8 @@ public class RefresherTest {
         Product product = mock(Product.class);
         Product product2 = mock(Product.class);
 
-        when(product.getId()).thenReturn("product id");
-        when(product2.getId()).thenReturn("product id 2");
+        when(product.getUuid()).thenReturn("product id");
+        when(product2.getUuid()).thenReturn("product id 2");
 
         Pool pool = new Pool();
         pool.setSourceSubscription(new SourceSubscription("subId", "master"));
@@ -134,6 +135,6 @@ public class RefresherTest {
         refresher.run();
 
         verify(poolManager, times(1)).updatePoolsForSubscription(any(List.class),
-            any(Subscription.class), eq(true));
+            any(Subscription.class), eq(true), any(Set.class));
     }
 }

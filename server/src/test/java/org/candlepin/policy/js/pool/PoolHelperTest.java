@@ -14,25 +14,19 @@
  */
 package org.candlepin.policy.js.pool;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductPoolAttribute;
-import org.candlepin.model.ProvidedProduct;
-import org.candlepin.model.Subscription;
-import org.candlepin.policy.js.ProductCache;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 
@@ -53,7 +47,7 @@ public class PoolHelperTest {
     private PoolManager pm;
     private ProductServiceAdapter psa;
     private Entitlement ent;
-    private ProductCache productCache;
+    private Owner owner;
 
     @Before
     public void init() {
@@ -65,11 +59,12 @@ public class PoolHelperTest {
 
         Configuration config = mock(Configuration.class);
         when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
-        productCache = new ProductCache(config, psa);
 
         // default to an empty list, override in the test
         when(pool.getProvidedProducts()).thenReturn(Collections.EMPTY_SET);
         when(sub.getProvidedProducts()).thenReturn(Collections.EMPTY_SET);
+
+        owner = TestUtil.createOwner();
     }
 
     @Test
@@ -81,7 +76,7 @@ public class PoolHelperTest {
         when(sub.getAccountNumber()).thenReturn("456");
         when(sub.getContractNumber()).thenReturn("789");
 
-        PoolHelper ph = new PoolHelper(pm, productCache, null);
+        PoolHelper ph = new PoolHelper(pm, null);
         assertTrue(ph.checkForOrderChanges(pool, sub));
     }
 
@@ -94,7 +89,7 @@ public class PoolHelperTest {
         when(sub.getAccountNumber()).thenReturn("456");
         when(sub.getContractNumber()).thenReturn("789");
 
-        PoolHelper ph = new PoolHelper(pm, productCache, null);
+        PoolHelper ph = new PoolHelper(pm, null);
         assertTrue(ph.checkForOrderChanges(pool, sub));
     }
 
@@ -107,7 +102,7 @@ public class PoolHelperTest {
         when(sub.getAccountNumber()).thenReturn("456");
         when(sub.getContractNumber()).thenReturn("789");
 
-        PoolHelper ph = new PoolHelper(pm, productCache, null);
+        PoolHelper ph = new PoolHelper(pm, null);
         assertTrue(ph.checkForOrderChanges(pool, sub));
     }
 
@@ -120,7 +115,7 @@ public class PoolHelperTest {
         when(sub.getAccountNumber()).thenReturn("456");
         when(sub.getContractNumber()).thenReturn("789");
 
-        PoolHelper ph = new PoolHelper(pm, productCache, null);
+        PoolHelper ph = new PoolHelper(pm, null);
         assertFalse(ph.checkForOrderChanges(pool, sub));
     }
 
@@ -133,120 +128,13 @@ public class PoolHelperTest {
         when(sub.getAccountNumber()).thenReturn("456");
         when(sub.getContractNumber()).thenReturn("789");
 
-        PoolHelper ph = new PoolHelper(pm, productCache, null);
+        PoolHelper ph = new PoolHelper(pm, null);
         assertFalse(ph.checkForOrderChanges(pool, sub));
     }
 
     @Test
-    public void copyProductAttributesOntoPoolAddsNewAttribute() {
-        Product targetProduct = TestUtil.createProduct();
-        targetProduct.getAttributes().clear();
-        targetProduct.setAttribute("A1", "V1");
-        targetProduct.setAttribute("A2", "V2");
-        Subscription sourceSub = TestUtil.createSubscription(targetProduct);
-
-        Pool targetPool = TestUtil.createPool(targetProduct);
-        // createPool will simulate the copy automatically - reset them.
-        targetPool.setProductAttributes(new HashSet<ProductPoolAttribute>());
-
-        PoolHelper ph = new PoolHelper(pm, productCache, null);
-        when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
-        assertTrue("Update expected.",
-            ph.copyProductAttributesOntoPool(sourceSub.getProduct().getId(), targetPool));
-        assertEquals(2, targetPool.getProductAttributes().size());
-        assertTrue(targetPool.hasProductAttribute("A1"));
-        assertTrue(targetPool.hasProductAttribute("A2"));
-    }
-
-    @Test
-    public void copyProductAttributesOntoPoolUpdatesExistingAttribute() {
-        Product targetProduct = TestUtil.createProduct();
-        targetProduct.getAttributes().clear();
-        targetProduct.setAttribute("A1", "V-updated");
-        Subscription sourceSub = TestUtil.createSubscription(targetProduct);
-
-        Pool targetPool = TestUtil.createPool(targetProduct);
-        targetPool.setProductAttribute("A1", "V1", targetProduct.getId());
-
-        PoolHelper ph = new PoolHelper(pm, productCache, null);
-        when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
-        assertTrue("Update expected.",
-            ph.copyProductAttributesOntoPool(sourceSub.getProduct().getId(), targetPool));
-        assertEquals(1, targetPool.getProductAttributes().size());
-        assertTrue(targetPool.hasProductAttribute("A1"));
-        assertEquals("V-updated", targetPool.getProductAttribute("A1").getValue());
-    }
-
-    @Test
-    public void copyProductAttributesOntoPoolWithNulls() {
-        Product targetProduct = TestUtil.createProduct();
-        targetProduct.getAttributes().clear();
-        targetProduct.setAttribute("A1", "V-updated");
-        Subscription sourceSub = TestUtil.createSubscription(targetProduct);
-
-        Pool targetPool = TestUtil.createPool(targetProduct);
-        targetPool.setProductAttribute("A1", null, targetProduct.getId());
-
-        PoolHelper ph = new PoolHelper(pm, productCache, null);
-        when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
-        assertTrue("Update expected.",
-            ph.copyProductAttributesOntoPool(sourceSub.getProduct().getId(), targetPool));
-        assertEquals(1, targetPool.getProductAttributes().size());
-        assertTrue(targetPool.hasProductAttribute("A1"));
-        assertEquals("V-updated", targetPool.getProductAttribute("A1").getValue());
-
-        targetProduct = TestUtil.createProduct();
-        targetProduct.getAttributes().clear();
-        targetProduct.setAttribute("A1", null);
-        sourceSub = TestUtil.createSubscription(targetProduct);
-
-        targetPool = TestUtil.createPool(targetProduct);
-        targetPool.setProductAttribute("A1", "V-updated-new", targetProduct.getId());
-
-        ph = new PoolHelper(pm, productCache, null);
-        when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
-        assertTrue("Update expected.",
-            ph.copyProductAttributesOntoPool(sourceSub.getProduct().getId(), targetPool));
-        assertEquals(1, targetPool.getProductAttributes().size());
-        assertTrue(targetPool.hasProductAttribute("A1"));
-        assertEquals(null, targetPool.getProductAttribute("A1").getValue());
-
-        targetProduct = TestUtil.createProduct();
-        targetProduct.getAttributes().clear();
-        targetProduct.setAttribute("A1", null);
-        sourceSub = TestUtil.createSubscription(targetProduct);
-
-        targetPool = TestUtil.createPool(targetProduct);
-        targetPool.setProductAttribute("A1", null, targetProduct.getId());
-
-        ph = new PoolHelper(pm, productCache, null);
-        when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
-        assertFalse("No update expected.",
-            ph.copyProductAttributesOntoPool(sourceSub.getProduct().getId(), targetPool));
-        assertEquals(1, targetPool.getProductAttributes().size());
-        assertTrue(targetPool.hasProductAttribute("A1"));
-        assertEquals(null, targetPool.getProductAttribute("A1").getValue());
-    }
-
-    @Test
-    public void copyProductAttributesOntoPoolRemovesNonExistingAttribute() {
-        Product targetProduct = TestUtil.createProduct();
-        targetProduct.getAttributes().clear();
-        Subscription sourceSub = TestUtil.createSubscription(targetProduct);
-        Pool targetPool = TestUtil.createPool(targetProduct);
-
-        targetPool.setProductAttribute("A1", "V1", targetProduct.getId());
-
-        PoolHelper ph = new PoolHelper(pm, productCache, null);
-        when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
-        assertTrue("Update expected.",
-            ph.copyProductAttributesOntoPool(sourceSub.getProduct().getId(), targetPool));
-        assertTrue(targetPool.getProductAttributes().isEmpty());
-    }
-
-    @Test
     public void copyProductAttributesForHostRestrictedPools() {
-        Product targetProduct = TestUtil.createProduct();
+        Product targetProduct = TestUtil.createProduct(owner);
         Consumer cons = TestUtil.createConsumer();
         targetProduct.getAttributes().clear();
         targetProduct.setAttribute("A1", "V1");
@@ -254,18 +142,17 @@ public class PoolHelperTest {
         Pool targetPool = TestUtil.createPool(targetProduct);
         targetPool.setId("jso_speedwagon");
 
-        when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
+        // when(psa.getProductById(targetProduct.getUuid())).thenReturn(targetProduct);
         when(ent.getConsumer()).thenReturn(cons);
 
-        PoolHelper ph = new PoolHelper(pm, productCache, ent);
-        Pool hostRestrictedPool = ph.createHostRestrictedPool(targetProduct.getId(),
-            targetPool, "unlimited");
+        PoolHelper ph = new PoolHelper(pm, ent);
+        Pool hostRestrictedPool = ph.createHostRestrictedPool(targetProduct, targetPool, "unlimited");
 
         assertEquals(targetPool.getId(),
             hostRestrictedPool.getAttributeValue("source_pool_id"));
-        assertEquals(2, hostRestrictedPool.getProductAttributes().size());
-        assertTrue(hostRestrictedPool.hasProductAttribute("A1"));
-        assertTrue(hostRestrictedPool.hasProductAttribute("A2"));
+        assertEquals(2, hostRestrictedPool.getProduct().getAttributes().size());
+        assertTrue(hostRestrictedPool.getProduct().hasAttribute("A1"));
+        assertTrue(hostRestrictedPool.getProduct().hasAttribute("A2"));
     }
 
     @Test
@@ -274,58 +161,51 @@ public class PoolHelperTest {
 
         // Create a product for the main pool to be sure that
         // the attributes do not get copied to the sub pool.
-        Product mainPoolProduct = TestUtil.createProduct();
+        Product mainPoolProduct = TestUtil.createProduct(owner);
         mainPoolProduct.getAttributes().clear();
         mainPoolProduct.setAttribute("A1", "V1");
         mainPoolProduct.setAttribute("A2", "V2");
 
-        DerivedProvidedProduct subProvided1 =
-            new DerivedProvidedProduct("sub-pp-1", "Sub Provided 1");
-        DerivedProvidedProduct subProvided2 =
-            new DerivedProvidedProduct("sub-pp-2", "Sub Provided 2");
+        Product derivedProduct1 = TestUtil.createProduct("sub-pp-1", "Sub Provided 1", owner);
+        Product derivedProduct2 = TestUtil.createProduct("sub-pp-2", "Sub Provided 2", owner);
 
-        Set<DerivedProvidedProduct> subProvidedProducts =
-            new HashSet<DerivedProvidedProduct>();
-        subProvidedProducts.add(subProvided1);
-        subProvidedProducts.add(subProvided2);
+        Set<Product> derivedProducts = new HashSet<Product>();
+        derivedProducts.add(derivedProduct1);
+        derivedProducts.add(derivedProduct2);
 
-        Product subProduct = TestUtil.createProduct();
+        Product subProduct = TestUtil.createProduct(owner);
         subProduct.getAttributes().clear();
         subProduct.setAttribute("SA1", "SV1");
         subProduct.setAttribute("SA2", "SV2");
 
         Pool targetPool = TestUtil.createPool(mainPoolProduct);
         targetPool.setId("sub-prod-pool");
-        targetPool.setDerivedProductId(subProduct.getId());
-        targetPool.setDerivedProductName(subProduct.getName());
-        targetPool.setDerivedProvidedProducts(subProvidedProducts);
+        targetPool.setDerivedProduct(subProduct);
 
-        when(psa.getProductById(subProduct.getId())).thenReturn(subProduct);
+        targetPool.setDerivedProvidedProducts(derivedProducts);
+
+        // when(psa.getProductById(subProduct.getUuid())).thenReturn(subProduct);
         when(ent.getConsumer()).thenReturn(cons);
 
-        PoolHelper ph = new PoolHelper(pm, productCache, ent);
+        PoolHelper ph = new PoolHelper(pm, ent);
         Pool hostRestrictedPool = ph.createHostRestrictedPool(
-            targetPool.getDerivedProductId(), targetPool, "unlimited");
+            targetPool.getDerivedProduct(), targetPool, "unlimited"
+        );
 
-        assertEquals(targetPool.getId(),
-            hostRestrictedPool.getAttributeValue("source_pool_id"));
+        assertEquals(targetPool.getId(), hostRestrictedPool.getAttributeValue("source_pool_id"));
         assertEquals(-1L, (long) hostRestrictedPool.getQuantity());
-        assertEquals(2, hostRestrictedPool.getProductAttributes().size());
-        assertTrue(hostRestrictedPool.hasProductAttribute("SA1"));
-        assertEquals("SV1", hostRestrictedPool.getProductAttribute("SA1").getValue());
-        assertTrue(hostRestrictedPool.hasProductAttribute("SA2"));
-        assertEquals("SV2", hostRestrictedPool.getProductAttribute("SA2").getValue());
+        assertEquals(2, hostRestrictedPool.getProduct().getAttributes().size());
+        assertTrue(hostRestrictedPool.getProduct().hasAttribute("SA1"));
+        assertEquals("SV1", hostRestrictedPool.getProduct().getAttributeValue("SA1"));
+        assertTrue(hostRestrictedPool.getProduct().hasAttribute("SA2"));
+        assertEquals("SV2", hostRestrictedPool.getProduct().getAttributeValue("SA2"));
 
         // Check that the sub provided products made it to the sub pool
-        Set<String> providedProdIds = new HashSet<String>();
-        for (ProvidedProduct pp : hostRestrictedPool.getProvidedProducts()) {
-            providedProdIds.add(pp.getProductId());
-            // Make sure that the correct pool was associated
-            assertEquals(hostRestrictedPool, pp.getPool());
-        }
-        assertEquals(2, providedProdIds.size());
-        assertTrue(providedProdIds.contains(subProvided1.getProductId()));
-        assertTrue(providedProdIds.contains(subProvided2.getProductId()));
+        Set<Product> providedProducts = hostRestrictedPool.getProvidedProducts();
+
+        assertEquals(2, providedProducts.size());
+        assertTrue(providedProducts.contains(derivedProduct1));
+        assertTrue(providedProducts.contains(derivedProduct2));
     }
 
 }

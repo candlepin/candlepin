@@ -17,6 +17,8 @@ package org.candlepin.pinsetter.tasks;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ContentCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
@@ -50,17 +52,20 @@ public class PopulateHostedDBTask extends KingpinJob {
     private ProductCurator productCurator;
     private ContentCurator contentCurator;
     private PoolCurator poolCurator;
+    private OwnerCurator ownerCurator;
     private Configuration config;
 
 
     @Inject
     public PopulateHostedDBTask(ProductServiceAdapter productService, ProductCurator productCurator,
-        ContentCurator contentCurator, PoolCurator poolCurator, Configuration config) {
+        ContentCurator contentCurator, PoolCurator poolCurator,
+        OwnerCurator ownerCurator, Configuration config) {
 
         this.productService = productService;
         this.productCurator = productCurator;
         this.contentCurator = contentCurator;
         this.poolCurator = poolCurator;
+        this.ownerCurator = ownerCurator;
         this.config = config;
     }
 
@@ -76,35 +81,37 @@ public class PopulateHostedDBTask extends KingpinJob {
         int ccount = 0;
         log.info("Populating Hosted DB");
 
-        Set<String> productCache = new HashSet<String>();
-        Set<String> productIds = this.poolCurator.getAllKnownProductIds();
-        log.info("Importing data for known products...");
+        for (Owner owner : this.ownerCurator.listAll()) {
+            Set<String> productCache = new HashSet<String>();
+            Set<String> productIds = this.poolCurator.getAllKnownProductIdsForOwner(owner);
+            log.info("Importing data for known products for owner {}...", owner);
 
-        do {
-            Set<String> dependentProducts = new HashSet<String>();
+            do {
+                Set<String> dependentProducts = new HashSet<String>();
 
-            for (Product product : this.productService.getProductsByIds(productIds)) {
-                log.info("Storing product: {}", product);
+                for (Product product : this.productService.getProductsByIds(owner, productIds)) {
+                    log.info("Storing product: {}", product);
 
-                dependentProducts.addAll(product.getDependentProductIds());
+                    dependentProducts.addAll(product.getDependentProductIds());
 
-                for (ProductContent pcontent : product.getProductContent()) {
-                    log.info("  Storing product content: {}", pcontent.getContent());
-                    this.contentCurator.createOrUpdate(pcontent.getContent());
-                    ++ccount;
+                    for (ProductContent pcontent : product.getProductContent()) {
+                        log.info("  Storing product content: {}", pcontent.getContent());
+                        this.contentCurator.createOrUpdate(pcontent.getContent());
+                        ++ccount;
+                    }
+
+                    this.productCurator.createOrUpdate(product);
+                    ++pcount;
                 }
 
-                this.productCurator.createOrUpdate(product);
-                ++pcount;
-            }
+                log.info("Importing data for dependent products...");
+                productCache.addAll(productIds);
+                dependentProducts.removeAll(productCache);
+                productIds = dependentProducts;
+            } while (productIds.size() > 0);
+        }
 
-            log.info("Importing data for dependent products...");
-            productCache.addAll(productIds);
-            dependentProducts.removeAll(productCache);
-            productIds = dependentProducts;
-        } while (productIds.size() > 0);
-
-        // TODO: Should this be translated?
+        // TODO: Should this be translated...?
         String result = String.format(
             "Finished populating Hosted DB. Received %d product(s) and %d content",
             pcount, ccount

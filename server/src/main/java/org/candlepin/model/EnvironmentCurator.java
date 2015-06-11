@@ -44,7 +44,8 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
     public List<Environment> listWithContent(Set<String> contentIds) {
         return currentSession().createCriteria(Environment.class)
             .createCriteria("environmentContent")
-            .add(Restrictions.in("contentId", contentIds))
+            .createCriteria("content")
+            .add(Restrictions.in("id", contentIds))
             .list();
     }
 

@@ -75,7 +75,6 @@ public class OwnerInfoCurator {
             if (count > 0) {
                 info.addToEnabledConsumerTypeCountByPool(type, count);
             }
-
         }
 
         int activePools = getActivePoolCount(owner, now);
@@ -204,7 +203,7 @@ public class OwnerInfoCurator {
         }
 
         queryStr = "select distinct prod.value from Pool p " +
-            "join p.productAttributes as prod " +
+            "join p.product.attributes as prod " +
             "where p.owner = :owner " +
             "and p.startDate < :date and p.endDate > :date " +
             "and prod.name = 'product_family' " +
@@ -241,7 +240,7 @@ public class OwnerInfoCurator {
                 "and (p in (select p from Pool p join p.attributes as attr " +
                 "           where p.owner = :owner " +
                 "           and attr.name = 'product_family' and attr.value = :family)" +
-                "     or (p in (select p from Pool p join p.productAttributes as prod " +
+                "     or (p in (select p from Pool p join p.product.attributes as prod " +
                 "              where p.owner = :owner " +
                 "              and prod.name = 'product_family' " +
                 "              and prod.value = :family) " +
@@ -257,7 +256,7 @@ public class OwnerInfoCurator {
                         "           where attr.name = 'virt_only' " +
                         "           and attr.value = 'true') " +
                         "     or (p in (select p from Pool p " +
-                        "               join p.productAttributes as prod " +
+                        "               join p.product.attributes as prod " +
                         "               where p.owner = :owner " +
                         "               and prod.name = 'virt_only' " +
                         "               and prod.value = 'true')" +

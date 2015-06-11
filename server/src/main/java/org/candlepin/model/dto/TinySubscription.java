@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.json.model;
+package org.candlepin.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -20,12 +20,14 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+
+
 /**
  * EntitlementBody
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Subscription {
+public class TinySubscription {
 
     private String sku;
     private String name;

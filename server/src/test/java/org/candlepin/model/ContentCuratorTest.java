@@ -30,14 +30,20 @@ import javax.inject.Inject;
  */
 public class ContentCuratorTest extends DatabaseTestFixture {
     @Inject private ContentCurator contentCurator;
+    @Inject private OwnerCurator ownerCurator;
 
     private Content updates;
+    private Owner owner;
 
     /* FIXME: Add Arches here */
 
     @Before
     public void setUp() {
+        this.owner = new Owner("Example-Corporation");
+        ownerCurator.create(owner);
+
         updates = new Content(
+            this.owner,
             "Test Content 1", "100",
             "test-content-label-1", "yum-1", "test-vendor-1",
             "test-content-url-1", "test-gpg-url-1", "test-arch1,test-arch2");
@@ -50,11 +56,13 @@ public class ContentCuratorTest extends DatabaseTestFixture {
     @Test
     public void shouldUpdateContentWithNewValues() {
         Content toBeUpdated = new Content(
+            this.owner,
             "Test Content", updates.getId(),
             "test-content-label", "yum", "test-vendor",
             "test-content-url", "test-gpg-url", "test-arch1");
         contentCurator.create(toBeUpdated);
 
+        updates.setUuid(toBeUpdated.getUuid());
         toBeUpdated = contentCurator.createOrUpdate(updates);
 
         assertEquals(toBeUpdated.getName(), updates.getName());
@@ -67,5 +75,16 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         assertEquals(toBeUpdated.getMetadataExpire(), updates.getMetadataExpire());
         assertEquals(toBeUpdated.getModifiedProductIds(), updates.getModifiedProductIds());
         assertEquals(toBeUpdated.getArches(), updates.getArches());
+    }
+
+    @Test
+    public void importSameContentForMultipleProducts() {
+        Content c1 = new Content(owner, "mycontent", "5006", "mycontent", "yum",
+                "vendor", "nobodycares", "nobodystillcares", "x86_64");
+        Content c2 = new Content(owner, "mycontent", "5006", "mycontent", "yum",
+                "vendor", "nobodycares", "nobodystillcares", "x86_64");
+        contentCurator.createOrUpdate(c1);
+        contentCurator.createOrUpdate(c2);
+
     }
 }

@@ -17,9 +17,9 @@ package org.candlepin.model;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.common.exceptions.ConcurrentModificationException;
-import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.guice.PrincipalProvider;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -245,8 +245,26 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return Criteria Final criteria query with all filters applied.
      */
     protected Criteria createSecureCriteria() {
+        return this.createSecureCriteria(null);
+    }
+
+
+    /**
+     * Gives the permissions a chance to add aliases and then restrictions to the query.
+     * Uses an "or" so a principal could carry permissions for multiple owners
+     * (for example), but still have their results filtered without one of the perms
+     * hiding the results from the other.
+     *
+     * @param alias
+     *  The alias to assign to the entity managed by the resultant Criteria.
+     *
+     * @return Criteria Final criteria query with all filters applied.
+     */
+    protected Criteria createSecureCriteria(String alias) {
         Principal principal = principalProvider.get();
-        Criteria query = currentSession().createCriteria(entityType);
+        Criteria query = (alias != null && !alias.equals("")) ?
+            currentSession().createCriteria(entityType, alias) :
+            currentSession().createCriteria(entityType);
 
         /*
          * There are situations where consumer queries are run before there is a principal,

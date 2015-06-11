@@ -14,16 +14,45 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.X509ExtensionWrapper;
+import org.candlepin.util.X509ExtensionUtil;
+
+import com.google.inject.Inject;
+
 import org.hibernate.criterion.Restrictions;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.math.BigInteger;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.cert.X509Certificate;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Set;
+
+
 
 /**
  * ProductCertificateCurator
  */
-public class ProductCertificateCurator
-    extends AbstractHibernateCurator<ProductCertificate> {
+public class ProductCertificateCurator extends AbstractHibernateCurator<ProductCertificate> {
+    private static Logger log = LoggerFactory.getLogger(ProductCertificateCurator.class);
 
-    public ProductCertificateCurator() {
+
+    private PKIUtility pki;
+    private X509ExtensionUtil extensionUtil;
+
+
+    @Inject
+    public ProductCertificateCurator(PKIUtility pki, X509ExtensionUtil extensionUtil) {
         super(ProductCertificate.class);
+
+        this.pki = pki;
+        this.extensionUtil = extensionUtil;
     }
 
     public ProductCertificate findForProduct(Product product) {
@@ -31,6 +60,57 @@ public class ProductCertificateCurator
             .createCriteria(ProductCertificate.class)
             .add(Restrictions.eq("product", product))
             .uniqueResult();
+    }
+
+    /**
+     * Gets the certificate that defines the given product, creating one if necessary.
+     *
+     * @param product
+     * @return the stored or created {@link ProductCertificate}
+     */
+    public ProductCertificate getCertForProduct(Product product) {
+        ProductCertificate cert = this.findForProduct(product);
+
+        if (cert == null) {
+            // TODO: Do something better with these exceptions!
+            try {
+                cert = this.createCertForProduct(product);
+                this.create(cert);
+            }
+            catch (GeneralSecurityException e) {
+                log.error("Error creating product certificate!", e);
+            }
+            catch (IOException e) {
+                log.error("Error creating product certificate!", e);
+            }
+        }
+
+        return cert;
+    }
+
+    private ProductCertificate createCertForProduct(Product product)
+        throws GeneralSecurityException, IOException {
+
+        KeyPair keyPair = this.pki.generateNewKeyPair();
+        Set<X509ExtensionWrapper> extensions = this.extensionUtil.productExtensions(product);
+
+        // TODO: Should this use the RH product ID, or the object's UUID?
+        BigInteger serial = BigInteger.valueOf(product.getId().hashCode()).abs();
+
+        Calendar future = Calendar.getInstance();
+        future.add(Calendar.YEAR, 10);
+
+        X509Certificate x509Cert = this.pki.createX509Certificate(
+            "CN=" + product.getId(), extensions, null, new Date(), future.getTime(), keyPair,
+            serial, null
+        );
+
+        ProductCertificate cert = new ProductCertificate();
+        cert.setKeyAsBytes(this.pki.getPemEncoded(keyPair.getPrivate()));
+        cert.setCertAsBytes(this.pki.getPemEncoded(x509Cert));
+        cert.setProduct(product);
+
+        return cert;
     }
 
 }

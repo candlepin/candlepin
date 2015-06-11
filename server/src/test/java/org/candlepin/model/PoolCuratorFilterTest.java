@@ -14,8 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
@@ -34,6 +33,7 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;
     @Inject private ProductCurator productCurator;
     @Inject private PoolCurator poolCurator;
+    @Inject private ContentCurator contentCurator;
 
     private Owner owner;
     private PageRequest req = new PageRequest();
@@ -55,17 +55,29 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
     }
 
     private Pool createSearchPools() {
-        Product searchProduct = new Product("awesomeos-server",
-                "Awesome OS Server Premium");
-        searchProduct.addAttribute(new ProductAttribute("support_level",
-                "CustomSupportLevel"));
+        Content content = new Content(
+            owner, "Content One", "content1", "C-Label One", "ctype", "content vendor one",
+            "www.content.com", "gpgurl", "x86"
+        );
+        this.contentCurator.create(content);
+
+        Product searchProduct = new Product("awesomeos-server", "Awesome OS Server Premium", owner);
+        searchProduct.addAttribute(new ProductAttribute("support_level", "CustomSupportLevel"));
         productCurator.create(searchProduct);
-        Pool searchPool = createPoolAndSub(owner, searchProduct, 100L,
+
+        Pool searchPool = createPool(owner, searchProduct, 100L,
                 TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));
-        searchPool.addProvidedProduct(TestUtil.createProvidedProduct("101111",
-                "Server Bits"));
-        searchPool.addProvidedProduct(TestUtil.createProvidedProduct("202222",
-                "Containers In This One"));
+
+        Product provided = TestUtil.createProduct("101111", "Server Bits", owner);
+        provided.addContent(content);
+
+        productCurator.create(provided);
+        searchPool.addProvidedProduct(provided);
+
+        provided = TestUtil.createProduct("202222", "Containers In This One", owner);
+        productCurator.create(provided);
+        searchPool.addProvidedProduct(provided);
+
         searchPool.setContractNumber("mycontract");
         searchPool.setOrderNumber("myorder");
         searchPool.setAttribute("hello", "true");
@@ -73,12 +85,15 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         poolCurator.create(searchPool);
 
         // Create another we don't intend to see in the results:
-        Product hideProduct = TestUtil.createProduct();
+        Product hideProduct = new Product("hidden-product", "Not-So-Awesome OS Home Edition", owner);
         productCurator.create(hideProduct);
-        hidePool = createPoolAndSub(owner, hideProduct, 100L,
+        hidePool = createPool(owner, hideProduct, 100L,
                 TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));
-        hidePool.addProvidedProduct(TestUtil.createProvidedProduct("101",
-                "Workstation Bits"));
+
+        provided = TestUtil.createProduct("101", "Workstation Bits", owner);
+        productCurator.create(provided);
+        hidePool.addProvidedProduct(provided);
+
         poolCurator.create(hidePool);
 
         return searchPool;
@@ -86,9 +101,10 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
 
     private void searchTest(PoolFilterBuilder filters, int expectedResults, String ... expectedIds) {
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, null, null, false, filters,
-            req, false);
+            null, owner, null, null, false, filters, req, false
+        );
         List<Pool> results = page.getPageData();
+
         assertEquals(expectedResults, results.size());
         for (String id : expectedIds) {
             boolean found = false;
@@ -194,5 +210,21 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         searchTest("*Cus*port*", 1, searchPool.getId());
         searchTest("*Cus???Su??ortLevel*", 1, searchPool.getId());
         searchTest("*Self-Service*", 0, new String [] {});
+    }
+
+    @Test
+    public void availablePoolsCanBeFilteredByContentName() throws Exception {
+        searchTest("Content One", 1, searchPool.getId());
+        searchTest("*on*nt* one", 1, searchPool.getId());
+        searchTest("*con???t??n*", 1, searchPool.getId());
+        searchTest("*New Content*", 0, new String [] {});
+    }
+
+    @Test
+    public void availablePoolsCanBeFilteredByContentLabel() throws Exception {
+        searchTest("C-Label One", 1, searchPool.getId());
+        searchTest("*-l*l*one", 1, searchPool.getId());
+        searchTest("*c-l???l??n*", 1, searchPool.getId());
+        searchTest("*Content Label One*", 0, new String [] {});
     }
 }

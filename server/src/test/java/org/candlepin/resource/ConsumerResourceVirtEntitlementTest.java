@@ -14,11 +14,9 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
@@ -32,12 +30,13 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.Subscription;
-import org.candlepin.model.SubscriptionCurator;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
+import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.Util;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
@@ -59,7 +58,6 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
     @Inject private ProductCurator productCurator;
     @Inject private ConsumerCurator consumerCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private SubscriptionCurator subCurator;
     @Inject private ConsumerResource consumerResource;
     @Inject private PoolManager poolManager;
 
@@ -81,6 +79,9 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
+        List<Subscription> subscriptions = new ArrayList<Subscription>();
+        subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
+
         manifestType = consumerTypeCurator.create(
             new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN));
         systemType = consumerTypeCurator.create(
@@ -95,7 +96,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         consumerCurator.create(systemConsumer);
 
         // create a physical pool with numeric virt_limit
-        productLimit = TestUtil.createProduct();
+        productLimit = TestUtil.createProduct(owner);
         productLimit.setAttribute("virt_limit", "10");
         productLimit.setAttribute("multi-entitlement", "yes");
         productCurator.create(productLimit);
@@ -106,12 +107,13 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             TestUtil.createDate(2010, 1, 1),
             TestUtil.createDate(2020, 1, 1),
             TestUtil.createDate(2000, 1, 1));
-        subCurator.create(limitSub);
+        limitSub.setId(Util.generateDbUUID());
+        subscriptions.add(limitSub);
 
         limitPools = poolManager.createPoolsForSubscription(limitSub);
 
         // create a physical pool with unlimited virt_limit
-        productUnlimit = TestUtil.createProduct();
+        productUnlimit = TestUtil.createProduct(owner);
         productUnlimit.setAttribute("virt_limit", "unlimited");
         productUnlimit.setAttribute("multi-entitlement", "yes");
         productCurator.create(productUnlimit);
@@ -122,7 +124,8 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             TestUtil.createDate(2010, 1, 1),
             TestUtil.createDate(2020, 1, 1),
             TestUtil.createDate(2000, 1, 1));
-        subCurator.create(unlimitSub);
+        unlimitSub.setId(Util.generateDbUUID());
+        subscriptions.add(unlimitSub);
 
         unlimitPools = poolManager.createPoolsForSubscription(unlimitSub);
     }
@@ -203,7 +206,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
                     10, null, null, false, null, null);
                 assertTrue(p.getConsumed() == 20);
                 assertTrue(p.getQuantity() == -1);
-                poolManager.getRefresher().add(owner).run();
+                poolManager.getRefresher(subAdapter).add(owner).run();
                 // double check after pools refresh
                 assertTrue(p.getConsumed() == 20);
                 assertTrue(p.getQuantity() == -1);

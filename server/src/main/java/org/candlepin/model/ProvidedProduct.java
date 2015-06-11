@@ -17,29 +17,10 @@ package org.candlepin.model;
 import com.fasterxml.jackson.annotation.JsonFilter;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * Represents a product provided by a Pool
@@ -47,52 +28,19 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@Entity
-@Table(name = "cp_pool_products")
 @JsonFilter("ProvidedProductFilter")
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
-@DiscriminatorValue("provided")
-public class ProvidedProduct extends AbstractHibernateObject {
+public class ProvidedProduct {
 
-    @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    @Column(length = 32)
-    @NotNull
-    private String id;
-
-    @Column(name = "product_id", nullable = false)
-    @Size(max = 255)
-    @NotNull
     private String productId;
-
-    @Column(name = "product_name")
-    @Size(max = 255)
-    @NotNull
     private String productName;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_pool_provided_product")
-    @JoinColumn(nullable = false)
-    @XmlTransient
-    @Index(name = "cp_providedproduct_pool_fk_idx")
-    @NotNull
-    private Pool pool;
 
     public ProvidedProduct() {
 
     }
 
-    public ProvidedProduct(String productId, String productName) {
-        this.productId = productId;
-        this.productName = productName;
-    }
-
-    public ProvidedProduct(String productId, String productName, Pool pool) {
-        this.productId = productId;
-        this.productName = productName;
-        this.pool = pool;
+    public ProvidedProduct(Product p) {
+        this.productId = p.getId();
+        this.productName = p.getName();
     }
 
     /**
@@ -122,43 +70,6 @@ public class ProvidedProduct extends AbstractHibernateObject {
      */
     public void setProductName(String productName) {
         this.productName = productName;
-    }
-
-    /**
-     * @return the id
-     */
-    public String getId() {
-        return id;
-    }
-
-    /**
-     * @param id the id to set
-     */
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    /**
-     * @return the pool
-     */
-    @XmlTransient
-    public Pool getPool() {
-        return pool;
-    }
-
-    /**
-     * @param pool the pool to set
-     */
-    public void setPool(Pool pool) {
-        this.pool = pool;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(productName).append("(").append(productId).append(") ");
-        sb.append("Pool: [").append(pool).append("] ");
-        return sb.toString();
     }
 
     @Override

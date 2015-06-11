@@ -29,13 +29,26 @@ public class EnvironmentContentCurator extends
     }
 
     public EnvironmentContent lookupByEnvironmentAndContent(Environment e, String contentId) {
-        return (EnvironmentContent) this.currentSession().createCriteria(
-            EnvironmentContent.class).add(Restrictions.eq("environment", e))
-            .add(Restrictions.eq("contentId", contentId)).uniqueResult();
+        return (EnvironmentContent) this.currentSession().createCriteria(EnvironmentContent.class)
+            .createAlias("content", "content")
+            .add(Restrictions.eq("environment", e))
+            .add(Restrictions.eq("content.id", contentId))
+            .uniqueResult();
     }
 
-    public List<EnvironmentContent> lookupByContent(String contentId) {
-        return this.currentSession().createCriteria(
-            EnvironmentContent.class).add(Restrictions.eq("contentId", contentId)).list();
+    public EnvironmentContent lookupByEnvironmentAndContent(Environment e, Content content) {
+        return (EnvironmentContent) this.currentSession().createCriteria(EnvironmentContent.class)
+            .add(Restrictions.eq("environment", e))
+            .add(Restrictions.eq("content", content))
+            .uniqueResult();
+    }
+
+    public List<EnvironmentContent> lookupByContent(Owner owner, String contentId) {
+        return this.currentSession().createCriteria(EnvironmentContent.class)
+            .createAlias("environment", "environment")
+            .createAlias("content", "content")
+            .add(Restrictions.eq("environment.owner", owner))
+            .add(Restrictions.eq("content.id", contentId))
+            .list();
     }
 }

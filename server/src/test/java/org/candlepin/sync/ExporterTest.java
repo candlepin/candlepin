@@ -33,7 +33,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.model.DistributorVersionCurator;
@@ -44,7 +43,7 @@ import org.candlepin.model.KeyPair;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.pki.PKIUtility;
@@ -156,44 +155,38 @@ public class ExporterTest {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
         Consumer consumer = mock(Consumer.class);
         Entitlement ent = mock(Entitlement.class);
-        ProvidedProduct pp = mock(ProvidedProduct.class);
-        DerivedProvidedProduct spp = mock(DerivedProvidedProduct.class);
         Pool pool = mock(Pool.class);
         Rules mrules = mock(Rules.class);
         Principal principal = mock(Principal.class);
         IdentityCertificate idcert = new IdentityCertificate();
 
-        Set<ProvidedProduct> ppset = new HashSet<ProvidedProduct>();
-        ppset.add(pp);
-
-        Set<DerivedProvidedProduct> sppSet = new HashSet<DerivedProvidedProduct>();
-        sppSet.add(spp);
-
         Set<Entitlement> entitlements = new HashSet<Entitlement>();
         entitlements.add(ent);
 
-        Product prod = new Product("12345", "RHEL Product");
+        Owner owner = new Owner("Example-Corporation");
+
+        Product prod = new Product("12345", "RHEL Product", owner);
         prod.setMultiplier(1L);
         prod.setCreated(new Date());
         prod.setUpdated(new Date());
         prod.setHref("http://localhost");
         prod.setAttributes(Collections.EMPTY_SET);
 
-        Product prod1 = new Product("MKT-prod", "RHEL Product");
+        Product prod1 = new Product("MKT-prod", "RHEL Product", owner);
         prod1.setMultiplier(1L);
         prod1.setCreated(new Date());
         prod1.setUpdated(new Date());
         prod1.setHref("http://localhost");
         prod1.setAttributes(Collections.EMPTY_SET);
 
-        Product subProduct = new Product("MKT-sub-prod", "Sub Product");
+        Product subProduct = new Product("MKT-sub-prod", "Sub Product", owner);
         subProduct.setMultiplier(1L);
         subProduct.setCreated(new Date());
         subProduct.setUpdated(new Date());
         subProduct.setHref("http://localhost");
         subProduct.setAttributes(Collections.EMPTY_SET);
 
-        Product subProvidedProduct = new Product("332211", "Sub Product");
+        Product subProvidedProduct = new Product("332211", "Sub Product", owner);
         subProvidedProduct.setMultiplier(1L);
         subProvidedProduct.setCreated(new Date());
         subProvidedProduct.setUpdated(new Date());
@@ -206,13 +199,17 @@ public class ExporterTest {
         pcert.setCreated(new Date());
         pcert.setUpdated(new Date());
 
-        when(pp.getProductId()).thenReturn("12345");
+        Set<Product> ppset = new HashSet<Product>();
+        ppset.add(prod);
+
+        Set<Product> sppSet = new HashSet<Product>();
+        sppSet.add(subProvidedProduct);
+
         when(pool.getProvidedProducts()).thenReturn(ppset);
-        when(pool.getProductId()).thenReturn("MKT-prod");
+        when(pool.getProduct()).thenReturn(prod1);
 
         when(pool.getDerivedProvidedProducts()).thenReturn(sppSet);
-        when(pool.getDerivedProductId()).thenReturn(subProduct.getId());
-        when(spp.getProductId()).thenReturn(subProvidedProduct.getId());
+        when(pool.getDerivedProduct()).thenReturn(subProduct);
 
         when(ent.getPool()).thenReturn(pool);
         when(mrules.getRules()).thenReturn("foobar");
@@ -220,10 +217,10 @@ public class ExporterTest {
             "signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(consumer.getEntitlements()).thenReturn(entitlements);
-        when(psa.getProductById("12345")).thenReturn(prod);
-        when(psa.getProductById("MKT-prod")).thenReturn(prod1);
-        when(psa.getProductById("MKT-sub-prod")).thenReturn(subProduct);
-        when(psa.getProductById("332211")).thenReturn(subProvidedProduct);
+        when(psa.getProductById(prod.getOwner(), "12345")).thenReturn(prod);
+        when(psa.getProductById(prod1.getOwner(), "MKT-prod")).thenReturn(prod1);
+        when(psa.getProductById(subProduct.getOwner(), "MKT-sub-prod")).thenReturn(subProduct);
+        when(psa.getProductById(subProvidedProduct.getOwner(), "332211")).thenReturn(subProvidedProduct);
         when(psa.getProductCertificate(any(Product.class))).thenReturn(pcert);
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
@@ -236,10 +233,8 @@ public class ExporterTest {
 
         KeyPair keyPair = createKeyPair();
         when(consumer.getKeyPair()).thenReturn(keyPair);
-        when(pki.getPemEncoded(keyPair.getPrivateKey()))
-            .thenReturn("privateKey".getBytes());
-        when(pki.getPemEncoded(keyPair.getPublicKey()))
-            .thenReturn("publicKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,

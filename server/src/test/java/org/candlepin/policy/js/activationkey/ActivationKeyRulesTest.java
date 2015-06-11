@@ -15,14 +15,16 @@
 package org.candlepin.policy.js.activationkey;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
+import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.junit.Before;
@@ -47,6 +49,7 @@ public class ActivationKeyRulesTest {
     @Mock private RulesCurator rulesCuratorMock;
     private I18n i18n;
     private JsRunnerProvider provider;
+    private Owner owner = TestUtil.createOwner();
 
     @Before
     public void setUp() {
@@ -243,6 +246,8 @@ public class ActivationKeyRulesTest {
         pool.setQuantity(10L);
         pool.setConsumed(4L);
         pool.setAttribute("multi-entitlement", "yes");
+        pool.setOwner(owner);
+        pool.setProduct(TestUtil.createProduct(owner));
         return pool;
     }
 

@@ -32,18 +32,13 @@ describe 'Import Update', :serial => true do
     new_sublist = @cp.list_subscriptions(@import_owner['key'])
     new_sublist.size().should == 6
 
-    hasChanged = false
     new_sublist.each do |new_sub|
       @sublist.each do |sub|
         if(sub.id == new_sub.id)
-          if(sub.certificate.serial.id != new_sub.certificate.serial.id)
-            hasChanged = true
-          end
+          sub.certificate.serial.id.should_not == new_sub.certificate.serial.id
         end
       end
     end
-
-    hasChanged.should be_true
   end
 
 

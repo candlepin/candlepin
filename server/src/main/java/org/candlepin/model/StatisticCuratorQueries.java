@@ -112,7 +112,13 @@ public class StatisticCuratorQueries extends AbstractHibernateCurator<Statistic>
 
         return getStatisticsBy(null, "PERPRODUCT", prodId, vType, from,
             to, VALID_VTYPES.get("byPool"));
+    }
 
+    public List<Statistic> getStatisticsByProduct(Owner owner, String prodId, String vType,
+        Date from, Date to) {
+
+        return getStatisticsBy(owner, "PERPRODUCT", prodId, vType, from,
+            to, VALID_VTYPES.get("byPool"));
     }
 
     @SuppressWarnings("unchecked")

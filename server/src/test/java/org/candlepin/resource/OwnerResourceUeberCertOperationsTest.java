@@ -14,9 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
@@ -40,7 +38,6 @@ import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.User;
-import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ServiceLevelValidator;
@@ -63,7 +60,6 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;
     @Inject private ProductCurator productCurator;
     @Inject private PoolCurator poolCurator;
-    @Inject private SubscriptionServiceAdapter subAdapter;
     @Inject private ConsumerCurator consumerCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private EntitlementCurator entitlementCurator;
@@ -98,17 +94,17 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         consumerTypeCurator.create(ueberCertType);
 
         or = new OwnerResource(ownerCurator,
-            null, null, consumerCurator, null, i18n, null, null, null,
-            null, null, poolManager, null, null, null, subAdapter,
+            null, consumerCurator, null, i18n, null, null, null,
+            null, null, poolManager, null, null, null,
             null, consumerTypeCurator, entCertCurator, entitlementCurator,
             ueberCertGenerator, null, null, contentOverrideValidator,
-            serviceLevelValidator, null);
+            serviceLevelValidator, null, null, null, null);
     }
 
     @Test
     public void testUeberProductIsCreated() throws Exception {
         or.createUeberCertificate(principal, owner.getKey());
-        assertNotNull(productCurator.lookupByName(owner.getKey() + UEBER_PRODUCT));
+        assertNotNull(productCurator.lookupByName(owner, owner.getKey() + UEBER_PRODUCT));
     }
 
     @Test
@@ -127,14 +123,14 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     public void testUeberCertIsRegeneratedOnNextInvocation() throws Exception {
         EntitlementCertificate firstCert
             = or.createUeberCertificate(principal, owner.getKey());
-        Product firstProduct = productCurator.lookupByName(owner.getKey() + UEBER_PRODUCT);
+        Product firstProduct = productCurator.lookupByName(owner, owner.getKey() + UEBER_PRODUCT);
 
         EntitlementCertificate secondCert
             = or.createUeberCertificate(principal, owner.getKey());
-        Product secondProduct = productCurator.lookupByName(owner.getKey() + UEBER_PRODUCT);
+        Product secondProduct = productCurator.lookupByName(owner, owner.getKey() + UEBER_PRODUCT);
 
         //make sure we didn't regenerate the whole thing
-        assertTrue(firstProduct.getId() == secondProduct.getId());
+        assertTrue(firstProduct.getUuid() == secondProduct.getUuid());
         // only the ueber cert
         assertFalse(firstCert.getId() == secondCert.getId());
     }

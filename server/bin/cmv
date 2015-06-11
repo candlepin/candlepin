@@ -125,33 +125,10 @@ class CMVCommand
             end
             puts "done."
 
-            # list subscriptions and store in orgs/<org>/subscriptions/<subscription>.json
-            print "  Retrieving subscriptions...  "
-            subscriptions = candlepin.list_subscriptions(org)
-            subscriptions.each do |subscription|
-                yield "orgs[#{org}].subscriptions[#{subscription['id']}]", "orgs/#{org}/subscriptions/#{subscription['id']}.json", subscription
-
-                # We also need to grab product IDs from the subscription as well
-                product_ids << subscription['product']['id']
-
-                if subscription['derivedProduct'] then
-                    product_ids << subscription['derivedProduct']['id']
-                end
-
-                subscription['providedProducts'].each do |product|
-                    product_ids << product['id']
-                end
-
-                subscription['derivedProvidedProducts'].each do |product|
-                    product_ids << product['id']
-                end
-            end
-            puts "done."
-
             # list products and store in orgs/<org>/products/<product>.json
             print "  Retrieving products...       "
             product_ids.each do |pid|
-                product = candlepin.get_product(pid)
+                product = candlepin.get_product(org, pid)
 
                 yield "orgs[#{org}].products[#{product['id']}]", "orgs/#{org}/products/#{product['id']}.json", product
             end
@@ -206,21 +183,6 @@ class VerifyCommand < CMVCommand
             'orgs.products.attributes' => 'name',
             'orgs.products.productContent' => 'content.id',
             'orgs.products.productContent.content' => 'id',
-
-            'orgs.subscriptions' => 'id',
-            'orgs.subscriptions.branding' => 'productId',
-            'orgs.subscriptions.derivedProduct.attributes' => 'name',
-            'orgs.subscriptions.derivedProvidedProducts' => 'id',
-            'orgs.subscriptions.derivedProvidedProducts.attributes' => 'name',
-            'orgs.subscriptions.derivedProvidedProducts.attributes' => 'name',
-            'orgs.subscriptions.derivedProvidedProducts.productContent' => 'content.id',
-            'orgs.subscriptions.derivedProvidedProducts.productContent.content' => 'id',
-            'orgs.subscriptions.product.attributes' => 'name',
-            'orgs.subscriptions.providedProducts' => 'id',
-            'orgs.subscriptions.providedProducts.attributes' => 'name',
-            'orgs.subscriptions.providedProducts.attributes' => 'name',
-            'orgs.subscriptions.providedProducts.productContent' => 'content.id',
-            'orgs.subscriptions.providedProducts.productContent.content' => 'id',
         }
 
         # Common paths we should expect to exclude
@@ -228,7 +190,8 @@ class VerifyCommand < CMVCommand
             'orgs.pools.productAttributes.updated',
             'orgs.products.attributes.updated',
             'orgs.products.updated',
-            'orgs.products.productContent.content.updated'
+            'orgs.products.productContent.content.updated',
+            'orgs.subscriptions'
         ]
 
         exclude.each do |path|

@@ -151,7 +151,6 @@ public class SourceStack extends AbstractHibernateObject {
     /**
      * @return the id
      */
-    @Override
     @HateoasInclude
     public String getId() {
         return id;

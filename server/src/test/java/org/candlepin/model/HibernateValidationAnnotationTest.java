@@ -133,6 +133,7 @@ public class HibernateValidationAnnotationTest {
     @Test
     public void contentTest() throws Exception {
         Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<Field, Matcher<AnnotatedElement>>();
+        fm.put(Content.class.getDeclaredField("uuid"), notNull);
         fm.put(Content.class.getDeclaredField("id"), sizeAndNotNull);
         fm.put(Content.class.getDeclaredField("type"), sizeAndNotNull);
         fm.put(Content.class.getDeclaredField("label"), sizeAndNotNull);
@@ -218,7 +219,7 @@ public class HibernateValidationAnnotationTest {
         Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<Field, Matcher<AnnotatedElement>>();
         fm.put(EnvironmentContent.class.getDeclaredField("id"), notNull);
         fm.put(EnvironmentContent.class.getDeclaredField("environment"), notNull);
-        fm.put(EnvironmentContent.class.getDeclaredField("contentId"), sizeAndNotNull);
+        fm.put(EnvironmentContent.class.getDeclaredField("content"), notNull);
         runMap(fm);
     }
 
@@ -320,14 +321,11 @@ public class HibernateValidationAnnotationTest {
         fm.put(Pool.class.getDeclaredField("quantity"), notNull);
         fm.put(Pool.class.getDeclaredField("startDate"), notNull);
         fm.put(Pool.class.getDeclaredField("endDate"), notNull);
-        fm.put(Pool.class.getDeclaredField("productId"), sizeAndNotNull);
-        fm.put(Pool.class.getDeclaredField("derivedProductId"), size);
+        fm.put(Pool.class.getDeclaredField("product"), notNull);
         fm.put(Pool.class.getDeclaredField("restrictedToUsername"), size);
         fm.put(Pool.class.getDeclaredField("contractNumber"), size);
         fm.put(Pool.class.getDeclaredField("accountNumber"), size);
         fm.put(Pool.class.getDeclaredField("orderNumber"), size);
-        fm.put(Pool.class.getDeclaredField("productName"), size);
-        fm.put(Pool.class.getDeclaredField("derivedProductName"), size);
         runMap(fm);
     }
 
@@ -366,23 +364,6 @@ public class HibernateValidationAnnotationTest {
     }
 
     @Test
-    public void productPoolAttributeTest() throws Exception {
-        Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<Field, Matcher<AnnotatedElement>>();
-        fm.put(ProductPoolAttribute.class.getDeclaredField("productId"), notNull);
-        runMap(fm);
-
-    }
-    @Test
-    public void providedProductTest() throws Exception {
-        Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<Field, Matcher<AnnotatedElement>>();
-        fm.put(ProvidedProduct.class.getDeclaredField("id"), notNull);
-        fm.put(ProvidedProduct.class.getDeclaredField("productId"), sizeAndNotNull);
-        fm.put(ProvidedProduct.class.getDeclaredField("productName"), sizeAndNotNull);
-        fm.put(ProvidedProduct.class.getDeclaredField("pool"), notNull);
-        runMap(fm);
-    }
-
-    @Test
     public void roleTest() throws Exception {
         Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<Field, Matcher<AnnotatedElement>>();
         fm.put(Role.class.getDeclaredField("id"), notNull);
@@ -416,24 +397,6 @@ public class HibernateValidationAnnotationTest {
         fm.put(Statistic.class.getDeclaredField("valueReference"), size);
         fm.put(Statistic.class.getDeclaredField("value"), notNull);
         fm.put(Statistic.class.getDeclaredField("ownerId"), size);
-        runMap(fm);
-    }
-
-    @Test
-    public void subscriptionTest() throws Exception {
-        Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<Field, Matcher<AnnotatedElement>>();
-        fm.put(Subscription.class.getDeclaredField("id"), notNull);
-        fm.put(Subscription.class.getDeclaredField("owner"), notNull);
-        fm.put(Subscription.class.getDeclaredField("product"), notNull);
-        fm.put(Subscription.class.getDeclaredField("quantity"), notNull);
-        fm.put(Subscription.class.getDeclaredField("startDate"), notNull);
-        fm.put(Subscription.class.getDeclaredField("endDate"), notNull);
-        fm.put(Subscription.class.getDeclaredField("contractNumber"), size);
-        fm.put(Subscription.class.getDeclaredField("accountNumber"), size);
-        fm.put(Subscription.class.getDeclaredField("orderNumber"), size);
-        fm.put(Subscription.class.getDeclaredField("upstreamPoolId"), size);
-        fm.put(Subscription.class.getDeclaredField("upstreamEntitlementId"), size);
-        fm.put(Subscription.class.getDeclaredField("upstreamConsumerId"), size);
         runMap(fm);
     }
 

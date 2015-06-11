@@ -14,7 +14,10 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.service.UniqueIdGenerator;
+
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
@@ -29,9 +32,10 @@ import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -40,6 +44,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+
 
 /**
  * Represents a Product that can be consumed and entitled. Products define the
@@ -50,15 +56,20 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_product")
-public class Product extends AbstractHibernateObject implements Linkable {
+@Table(name = "cpo_products")
+public class Product extends AbstractHibernateObject implements Linkable, Cloneable {
 
     public static final  String UEBER_PRODUCT_POSTFIX = "_ueber_product";
 
-    // Product ID is stored as a string.
-    // This is a subset of the product OID known as the hash.
+    // Object ID
     @Id
-    @Column(length = 32, unique = true)
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @NotNull
+    private String uuid;
+
+    // Internal RH product ID,
+    @Column(name = "product_id")
     @NotNull
     private String id;
 
@@ -66,6 +77,11 @@ public class Product extends AbstractHibernateObject implements Linkable {
     @Size(max = 255)
     @NotNull
     private String name;
+
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    @NotNull
+    private Owner owner;
 
     /**
      * How many entitlements per quantity
@@ -82,79 +98,142 @@ public class Product extends AbstractHibernateObject implements Linkable {
     private Set<ProductAttribute> attributes;
 
     @ElementCollection
-    @CollectionTable(name = "cp_product_content",
-                     joinColumns = @JoinColumn(name = "product_id"))
+    @CollectionTable(name = "cpo_product_content",
+                     joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
     private List<ProductContent> productContent;
 
-    @ManyToMany(mappedBy = "providedProducts")
-    private List<Subscription> subscriptions;
-
     @ElementCollection
-    @CollectionTable(name = "cp_product_dependent_products",
-                     joinColumns = @JoinColumn(name = "cp_product_id"))
+    @CollectionTable(name = "cpo_product_dependent_products",
+                     joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
-    private Set<String> dependentProductIds;
+    private Set<String> dependentProductIds; // Should these be product references?
+
+    protected Product() {
+
+    }
 
     /**
      * Constructor Use this variant when creating a new object to persist.
      *
-     * @param id Product label
+     * @param productId The Red Hat product ID for the new product.
      * @param name Human readable Product name
      */
-    public Product(String id, String name) {
-        this(id, name, 1L);
+    public Product(String productId, String name, Owner owner) {
+        this(productId, name, owner, 1L);
     }
 
-    public Product(String id, String name, Long multiplier) {
-        setId(id);
+    public Product(String productId, String name, Owner owner, Long multiplier) {
+        setId(productId);
         setName(name);
+        setOwner(owner);
         setMultiplier(multiplier);
         setAttributes(new HashSet<ProductAttribute>());
         setProductContent(new LinkedList<ProductContent>());
-        setSubscriptions(new LinkedList<Subscription>());
         setDependentProductIds(new HashSet<String>());
     }
 
-    public Product(String id, String name, String variant, String version,
+    public Product(String productId, String name, Owner owner, String variant, String version,
         String arch, String type) {
-        setId(id);
-        setName(name);
-        setMultiplier(1L);
-        setAttributes(new HashSet<ProductAttribute>());
-        setProductContent(new LinkedList<ProductContent>());
-        setSubscriptions(new LinkedList<Subscription>());
-        setDependentProductIds(new HashSet<String>());
+        this(productId, name, owner, 1L);
+
         setAttribute("version", version);
         setAttribute("variant", variant);
         setAttribute("type", type);
         setAttribute("arch", arch);
     }
 
-    public static Product createUeberProductForOwner(Owner o) {
-        return new Product(null, ueberProductNameForOwner(o), 1L);
+    /**
+     * Creates a shallow copy of the specified source product. Owners, attributes and content are
+     * not duplicated, but the joining objects are (ProductAttribute, ProductContent, etc.).
+     *
+     * @param source
+     *  The Product instance to copy
+     */
+    protected Product(Product source) {
+        this.setUuid(source.getUuid());
+        this.setId(source.getId());
+        this.setName(source.getName());
+        this.setOwner(source.getOwner());
+        this.setMultiplier(source.getMultiplier());
+
+        // Copy attributes
+        Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
+        for (ProductAttribute src : source.getAttributes()) {
+            ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
+            dest.setCreated(src.getCreated());
+            dest.setUpdated(src.getUpdated());
+            dest.setProduct(this);
+
+            attributes.add(dest);
+        }
+        this.setAttributes(attributes);
+
+        // Copy content
+        List<ProductContent> content = new LinkedList<ProductContent>();
+        for (ProductContent src : source.getProductContent()) {
+            ProductContent dest = new ProductContent(this, src.getContent(), src.getEnabled());
+            dest.setCreated(src.getCreated());
+            dest.setUpdated(src.getUpdated());
+
+            content.add(dest);
+        }
+        this.setProductContent(content);
+
+        this.setDependentProductIds(source.getDependentProductIds());
+
+        this.setCreated(source.getCreated());
+        this.setUpdated(source.getUpdated());
     }
 
-    protected Product() {
-    }
-
-    /** {@inheritDoc} */
-    public String getId() {
-        return id;
-
+    public static Product createUeberProductForOwner(UniqueIdGenerator idGenerator, Owner owner) {
+        return new Product(idGenerator.generateId(), ueberProductNameForOwner(owner), owner, 1L);
     }
 
     /**
-     * @param id product id
+     * Retrieves this product's object/database UUID. While the product ID may exist multiple times
+     * in the database (if in use by multiple owners), this UUID uniquely identifies a
+     * product instance.
+     *
+     * @return
+     *  this product's database UUID.
      */
-    public void setId(String id) {
-        this.id = id;
+    public String getUuid() {
+        return uuid;
     }
 
-    @Override
-    public String toString() {
-        return "Product [id = " + id + ", name = " + name + "]";
+    /**
+     * Sets this product's object/database ID. Note that this ID is used to uniquely identify this
+     * particular object and has no baring on the Red Hat product ID.
+     *
+     * @param uuid
+     *  The object ID to assign to this product.
+     */
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
+
+    /**
+     * Retrieves this product's ID. Assigned by the content provider, and may exist in
+     * multiple owners, thus may not be unique in itself.
+     *
+     * @return
+     *  this product's ID.
+     */
+    public String getId() {
+        return this.id;
+    }
+
+    /**
+     * Sets the product ID for this product. The product ID is the Red Hat product ID and should not
+     * be confused with the object ID.
+     *
+     * @param productId
+     *  The new product ID for this product.
+     */
+    public void setId(String productId) {
+        this.id = productId;
     }
 
     /**
@@ -171,6 +250,24 @@ public class Product extends AbstractHibernateObject implements Linkable {
      */
     public void setName(String name) {
         this.name = name;
+    }
+
+
+    /**
+     * @return The product's owner/organization
+     */
+    public Owner getOwner() {
+        return this.owner;
+    }
+
+    /**
+     * Sets the product's owner.
+     *
+     * @param owner
+     * The new owner/organization for this product.
+     */
+    public void setOwner(Owner owner) {
+        this.owner = owner;
     }
 
     /**
@@ -193,7 +290,15 @@ public class Product extends AbstractHibernateObject implements Linkable {
     }
 
     public void setAttributes(Set<ProductAttribute> attributes) {
-        this.attributes = attributes;
+        if (this.attributes == null) {
+            this.attributes = new HashSet<ProductAttribute>();
+        }
+
+        this.attributes.clear();
+
+        if (attributes != null) {
+            this.attributes.addAll(attributes);
+        }
     }
 
     public void setAttribute(String key, String value) {
@@ -212,6 +317,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
         if (this.attributes == null) {
             this.attributes = new HashSet<ProductAttribute>();
         }
+
         attrib.setProduct(this);
         this.attributes.add(attrib);
     }
@@ -228,6 +334,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
                 }
             }
         }
+
         return null;
     }
 
@@ -239,6 +346,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
                 }
             }
         }
+
         return null;
     }
 
@@ -251,6 +359,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
                 toReturn.add(attribute.getName());
             }
         }
+
         return toReturn;
     }
 
@@ -262,6 +371,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
                 }
             }
         }
+
         return false;
     }
 
@@ -273,7 +383,13 @@ public class Product extends AbstractHibernateObject implements Linkable {
                 }
             }
         }
+
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return "Product [id = " + id + ", name = " + name + "]";
     }
 
     @Override
@@ -287,39 +403,52 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
         Product another = (Product) anObject;
 
-        return id.equals(another.getId()) && name.equals(another.getName());
+        // TODO: Maybe checking the UUID would be better here...?
+        return (this.getOwner() != null ? this.getOwner().equals(another.getOwner()) :
+            another.getOwner() == null) && getId().equals(another.getId()) &&
+            name.equals(another.getName());
+    }
+
+    @Override
+    public Object clone() {
+        return new Product(this);
     }
 
     @Override
     public int hashCode() {
-        return id.hashCode() * 31;
+        if (id != null) {
+            return id.hashCode() * 31;
+        }
+        return 31;
     }
 
     /**
      * @param content
      */
     public void addContent(Content content) {
-        if (productContent == null) {
-            productContent = new LinkedList<ProductContent>();
-        }
-        productContent.add(new ProductContent(this, content, false));
+        this.addProductContent(new ProductContent(this, content, false));
     }
 
     /**
      * @param content
      */
     public void addEnabledContent(Content content) {
-        if (productContent == null) {
-            productContent = new LinkedList<ProductContent>();
-        }
-        productContent.add(new ProductContent(this, content, true));
+        this.addProductContent(new ProductContent(this, content, true));
     }
 
     /**
      * @param productContent the productContent to set
      */
     public void setProductContent(List<ProductContent> productContent) {
-        this.productContent = productContent;
+        if (this.productContent == null) {
+            this.productContent = new LinkedList<ProductContent>();
+        }
+
+        this.productContent.clear();
+
+        for (ProductContent pc : productContent) {
+            this.addProductContent(pc);
+        }
     }
 
     /**
@@ -329,46 +458,40 @@ public class Product extends AbstractHibernateObject implements Linkable {
         return productContent;
     }
 
-    // FIXME: this seems wrong, shouldn't this reset the content
-    // not add to it?
+    public void addProductContent(ProductContent content) {
+        if (this.productContent == null) {
+            this.productContent = new LinkedList<ProductContent>();
+        }
+
+        content.setProduct(this);
+        this.productContent.add(content);
+    }
+
     public void setContent(Set<Content> content) {
         if (content == null) {
             return;
         }
-        if (productContent == null) {
-            productContent = new LinkedList<ProductContent>();
-        }
+
+        this.productContent = new LinkedList<ProductContent>();
+
         for (Content newContent : content) {
-            productContent.add(new ProductContent(this, newContent, false));
+            this.productContent.add(new ProductContent(this, newContent, false));
         }
-    }
-
-    public void setEnabledContent(Set<Content> content) {
-        if (content == null) {
-            return;
-        }
-        if (productContent == null) {
-            productContent = new LinkedList<ProductContent>();
-        }
-        for (Content newContent : content) {
-            productContent.add(new ProductContent(this, newContent, true));
-        }
-    }
-
-    @XmlTransient
-    public List<Subscription> getSubscriptions() {
-        return subscriptions;
-    }
-
-    public void setSubscriptions(List<Subscription> subscriptions) {
-        this.subscriptions = subscriptions;
     }
 
     /**
      * @param dependentProductIds the dependentProductIds to set
      */
     public void setDependentProductIds(Set<String> dependentProductIds) {
-        this.dependentProductIds = dependentProductIds;
+        if (this.dependentProductIds == null) {
+            this.dependentProductIds = new HashSet<String>();
+        }
+
+        this.dependentProductIds.clear();
+
+        if (dependentProductIds != null) {
+            this.dependentProductIds.addAll(dependentProductIds);
+        }
     }
 
     /**
@@ -380,7 +503,10 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
     @Override
     public String getHref() {
-        return "/products/" + getId();
+        // If we don't have an owner here, we're in a bit of trouble.
+        return (this.getOwner() != null && this.getOwner().getKey() != null && this.getId() != null) ?
+            "/owners/" + this.getOwner().getKey() + "/products/" + this.getId() :
+            "";
     }
 
     @Override

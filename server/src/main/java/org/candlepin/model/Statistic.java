@@ -89,8 +89,9 @@ public class Statistic extends AbstractHibernateObject {
     public Statistic() {
     }
 
-    public Statistic(EntryType entryType, ValueType valueType,
-        String valueReference, int value, String ownerId) {
+    public Statistic(EntryType entryType, ValueType valueType, String valueReference, int value,
+        String ownerId) {
+
         this.entryType = entryType;
         this.valueType = valueType;
         this.valueReference = valueReference;
