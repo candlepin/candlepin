@@ -415,21 +415,7 @@ public class ConsumerResource {
 
         Owner owner = setupOwner(principal, ownerKey);
         // Raise an exception if none of the keys specified exist for this owner.
-        List<ActivationKey> keys = new ArrayList<ActivationKey>();
-        for (String keyString : keyStrings) {
-            ActivationKey key = null;
-            try {
-                key = findKey(keyString, owner);
-                keys.add(key);
-            }
-            catch (NotFoundException e) {
-                log.warn(e.getMessage());
-            }
-        }
-        if ((principal instanceof NoAuthPrincipal) && keys.isEmpty()) {
-            throw new BadRequestException(i18n.tr(
-                    "None of the activation keys specified exist for this org."));
-        }
+        List<ActivationKey> keys = checkActivationKeys(principal, owner, keyStrings);
 
         userName = setUserName(consumer, principal, userName);
 
@@ -490,7 +476,13 @@ public class ConsumerResource {
         consumerBindUtil.validateServiceLevel(owner, consumer.getServiceLevel());
 
         try {
+            Date createdDate = consumer.getCreated();
+            // create sets created to current time.
             consumer = consumerCurator.create(consumer);
+            //  If we sent in a created date, we want it persisted at the update below
+            if (createdDate != null) {
+                consumer.setCreated(createdDate);
+            }
             if (identityCertCreation) {
                 IdentityCertificate idCert = generateIdCert(consumer, false);
                 consumer.setIdCert(idCert);
@@ -520,6 +512,26 @@ public class ConsumerResource {
             throw new BadRequestException(i18n.tr(
                 "Problem creating unit {0}", consumer));
         }
+    }
+
+    private List<ActivationKey>  checkActivationKeys(Principal principal, Owner owner,
+            Set<String> keyStrings) throws BadRequestException {
+        List<ActivationKey> keys = new ArrayList<ActivationKey>();
+        for (String keyString : keyStrings) {
+            ActivationKey key = null;
+            try {
+                key = findKey(keyString, owner);
+                keys.add(key);
+            }
+            catch (NotFoundException e) {
+                log.warn(e.getMessage());
+            }
+        }
+        if ((principal instanceof NoAuthPrincipal) && keys.isEmpty()) {
+            throw new BadRequestException(i18n.tr(
+                    "None of the activation keys specified exist for this org."));
+        }
+        return keys;
     }
 
     /**
