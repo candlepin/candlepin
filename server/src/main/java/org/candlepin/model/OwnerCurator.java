@@ -16,12 +16,14 @@ package org.candlepin.model;
 
 import com.google.inject.persist.Transactional;
 
+import org.hibernate.Criteria;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
+import org.hibernate.sql.JoinType;
 
 import java.util.Collection;
 import java.util.Date;
@@ -98,6 +100,34 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
 
         return currentSession().createCriteria(Owner.class, "o")
             .add(Subqueries.propertyIn("o.key", distinctQuery))
+            .list();
+    }
+
+    /**
+     * Retrieves a list of owners which have pools referencing the specified product IDs. If no
+     * owners are associated with the given products, this method returns an empty list.
+     *
+     * @param productIds
+     *  The product IDs for which to retrieve owners
+     *
+     * @return
+     *  a list of owners associated with the specified products
+     */
+    @SuppressWarnings("checkstyle:indentation")
+    public List<Owner> lookupOwnersWithProduct(List<String> productIds) {
+        return this.currentSession().createCriteria(Owner.class, "Owner")
+            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
+            .createAlias("Owner.pools", "Pool")
+            .createAlias("Pool.product", "Prod", JoinType.LEFT_OUTER_JOIN)
+            .createAlias("Pool.derivedProduct", "DProd", JoinType.LEFT_OUTER_JOIN)
+            .createAlias("Pool.providedProducts", "PProd", JoinType.LEFT_OUTER_JOIN)
+            .createAlias("Pool.derivedProvidedProducts", "DPProd", JoinType.LEFT_OUTER_JOIN)
+            .add(Restrictions.or(
+                Restrictions.in("Prod.id", productIds),
+                Restrictions.in("DProd.id", productIds),
+                Restrictions.in("PProd.id", productIds),
+                Restrictions.in("DPProd.id", productIds)
+            ))
             .list();
     }
 

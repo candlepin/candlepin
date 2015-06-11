@@ -25,6 +25,7 @@ import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
+import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.resource.util.ResourceDateParser;
 
 import com.google.inject.Inject;
@@ -341,13 +342,14 @@ public class ProductResource {
     @GET
     @Path("/owners")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Owner> getActiveProductOwners(@QueryParam("product") String[] productId) {
+    public List<Owner> getProductOwners(@QueryParam("product") String[] productId) {
         List<String> ids = Arrays.asList(productId);
+
         if (ids.isEmpty()) {
-            throw new BadRequestException(i18n.tr("Must specify product ID."));
+            throw new BadRequestException(i18n.tr("No product IDs specified"));
         }
 
-        return ownerCurator.lookupOwnersByActiveProduct(ids);
+        return this.ownerCurator.lookupOwnersWithProduct(ids);
     }
 
     /**
@@ -358,14 +360,24 @@ public class ProductResource {
      * @return a JobDetail object
      */
     @PUT
-    @Path("/{product_id}/subscriptions")
+    @Path("/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)
-    public JobDetail refreshPoolsForProduct(
-        @PathParam("product_id") String productId,
+    public JobDetail[] refreshPoolsForProduct(
+        @QueryParam("product") String[] productId,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
-        throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic product write operations are not supported."
-        ));
+        List<String> ids = Arrays.asList(productId);
+        if (ids.isEmpty()) {
+            throw new BadRequestException(i18n.tr("No product IDs specified"));
+        }
+
+        List<Owner> owners = this.ownerCurator.lookupOwnersWithProduct(ids);
+        List<JobDetail> jobs = new LinkedList<JobDetail>();
+
+        for (Owner owner : owners) {
+            jobs.add(RefreshPoolsJob.forOwner(owner, lazyRegen));
+        }
+
+        return jobs.toArray(new JobDetail[0]);
     }
 }

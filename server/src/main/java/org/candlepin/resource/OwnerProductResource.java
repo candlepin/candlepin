@@ -453,26 +453,6 @@ public class OwnerProductResource {
                                 ResourceDateParser.parseDateString(to));
     }
 
-    // TODO: Not sure what use this method has before OR after multiorg.
-    // /**
-    //  * Retrieves a list of Owners by Product
-    //  *
-    //  * @return a list of Owner objects
-    //  * @httpcode 200
-    //  * @httpcode 400
-    //  */
-    // @GET
-    // @Path("/owners")
-    // @Produces(MediaType.APPLICATION_JSON)
-    // public List<Owner> getActiveProductOwners(@QueryParam("product") String[] productId) {
-    //     List<String> ids = Arrays.asList(productId);
-    //     if (ids.isEmpty()) {
-    //         throw new BadRequestException(i18n.tr("Must specify product ID."));
-    //     }
-
-    //     return ownerCurator.lookupOwnersByActiveProduct(ids);
-    // }
-
     /**
      * Refreshes Pools by Product
      *

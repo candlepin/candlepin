@@ -240,6 +240,16 @@ class Candlepin
     get(url)
   end
 
+  def get_owners_with_product(product_ids = [])
+    path = "/products/owners?"
+
+    product_ids.each do |pid|
+      path << "product=#{pid}&"
+    end
+
+    return get(path)
+  end
+
   def create_owner(key, params={})
     parent = params[:parent] || nil
     name = params['name'] || key
@@ -626,6 +636,16 @@ class Candlepin
       url << "product=#{pid}&"
     end
     get(url)
+  end
+
+  def refresh_pools_for_orgs_with_product(product_ids, immediate=false, lazy_regen=true)
+    url = "/products/subscriptions?"
+    product_ids.each do |pid|
+      url << "product=#{pid}&"
+    end
+    url << "lazy_regen=false&" if !lazy_regen
+
+    put(url)
   end
 
   def refresh_pools_for_product(owner_key, product_id, immediate=false, lazy_regen=true)
