@@ -10,22 +10,88 @@
 # Add: INSECURE_REGISTRY='--insecure-registry docker.usersys.redhat.com'
 # To: /etc/sysconfig/docker
 
+SCRIPT_NAME=`basename "$0"`
+
+usage() {
+    cat <<HELP
+Usage: $SCRIPT_NAME [options]
+
+OPTIONS:
+  -p         Push images to a repository or registry
+  -d <repo>  Specify the destination repo to receive the images; implies -p;
+             defaults to "candlepin-base docker.usersys.redhat.com/candlepin"
+  -v         Enable verbose/debug output
+HELP
+}
+
+while getopts ":pd:" opt; do
+    case $opt in
+        p  ) PUSH="1";;
+        d  ) PUSH="1"
+             PUSH_DEST="${OPTARG}";;
+        ?  ) usage; exit;;
+    esac
+done
+
+if [ "$PUSH_DEST" == "" ]; then
+    PUSH_DEST="docker.usersys.redhat.com/candlepin"
+fi
+
+
+# Base
 cd base
 docker build -t candlepin-base .
-docker tag -f candlepin-base docker.usersys.redhat.com/candlepin/candlepin-base
-docker push docker.usersys.redhat.com/candlepin/candlepin-base
 
+if [ "$PUSH" == "1" ]; then
+    docker tag -f candlepin-base $REPO_DEST/candlepin-base
+    docker push $REPO_DEST/candlepin-base
+fi
+
+# Postgresql
 cd ../postgresql
 docker build -t candlepin-postgresql .
-docker tag -f candlepin-postgresql docker.usersys.redhat.com/candlepin/candlepin-postgresql
-docker push docker.usersys.redhat.com/candlepin/candlepin-postgresql
 
+if [ "$PUSH" == "1" ]; then
+    docker tag -f candlepin-postgresql $REPO_DEST/candlepin-postgresql
+    docker push $REPO_DEST/candlepin-postgresql
+fi
+
+# Oracle
 cd ../oracle
 docker build -t candlepin-oracle .
-docker tag -f candlepin-oracle docker.usersys.redhat.com/candlepin/candlepin-oracle
-docker push docker.usersys.redhat.com/candlepin/candlepin-oracle
 
+if [ "$PUSH" == "1" ]; then
+    docker tag -f candlepin-oracle $REPO_DEST/candlepin-oracle
+    docker push $REPO_DEST/candlepin-oracle
+fi
+
+# MySQL
 cd ../mysql
 docker build -t candlepin-mysql .
-docker tag -f candlepin-mysql docker.usersys.redhat.com/candlepin/candlepin-mysql
-docker push docker.usersys.redhat.com/candlepin/candlepin-mysql
+
+if [ "$PUSH" == "1" ]; then
+    docker tag -f candlepin-mysql $REPO_DEST/candlepin-mysql
+    docker push $REPO_DEST/candlepin-mysql
+fi
+
+
+# Build argument string for our pass-through scripts
+PTARGS=""
+
+if [ "$PUSH" == "1" ]; then
+    PTARGS="$PTARGS -p -d \"$PUSH_DEST\""
+fi
+
+# RHEL 6
+cd ../candlepin-rhel6-base
+./build.sh $PTARGS
+
+cd ../candlepin-rhel6
+./build.sh $PTARGS
+
+# RHEL 7
+cd ../candlepin-rhel7-base
+./build.sh $PTARGS
+
+cd ../candlepin-rhel7
+./build.sh $PTARGS

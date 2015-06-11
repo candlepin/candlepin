@@ -1,0 +1,2 @@
+A Candlepin container utilizing the latest official builds from brew.
+

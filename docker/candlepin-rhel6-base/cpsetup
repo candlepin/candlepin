@@ -111,21 +111,11 @@ class TomcatSetup(object):
         run_command("chown tomcat:tomcat -R /var/lib/" + TOMCAT)
         run_command("chown tomcat:tomcat -R /var/cache/" + TOMCAT)
 
-    # If supervisord tomcat.conf exists, assume this is a docker container
-    # and use supervisorctl to manage the service instead:
     def stop(self):
-        if os.path.exists('/etc/supervisor/conf.d/tomcat.conf'):
-            print("Supervisord tomcat config exists, using supervisorctl stop.")
-            run_command("supervisorctl stop tomcat")
-        else:
-            run_command("/sbin/service " + TOMCAT + " stop")
+        run_command("/sbin/service " + TOMCAT +" stop")
 
     def restart(self):
-        if os.path.exists('/etc/supervisor/conf.d/tomcat.conf'):
-            print("Supervisord tomcat config exists, using supervisorctl restart.")
-            #run_command("supervisorctl restart tomcat")
-        else:
-            run_command("/sbin/service " + TOMCAT + " restart")
+        run_command("/sbin/service " + TOMCAT + " restart")
 
     def wait_for_startup(self):
         print("Waiting for tomcat to restart...")

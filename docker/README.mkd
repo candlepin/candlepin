@@ -1,6 +1,64 @@
 # Overview
 
-Containers for running Candlepin tests in a development environment.
+This directory contains several containers for running Candlepin in a variety
+of ways.
+
+## Building
+
+The top level rebuild-all.sh script will build all containers and attempt to publish to the registry we use internally for testing. An external user can modify this script to skip this publish step and just build locally.
+
+Most containers contain their own build.sh script if you just with to build a specific container.
+
+## Rpm Containers
+
+These containers reference some internal Red Hat URLs and registries which will not be accessible to anyone building/using these containers externally. However, updating them to use CentOS and external Candlepin repos should be a trivial exercise for the reader.
+
+These containers use external containers for database connectivity. Currently only PostgreSQL is supported here but MySQL and Oracle may be added in the future.
+
+### Launching a Database
+
+Most recent Candlepin containers require a database to be linked in. At present, only Postgres is supported:
+
+```
+docker run -P -e POSTGRES_PASSWORD=candlepin --name=postgres -d postgres
+```
+
+### candlepin-rhel6-base / candlepin-rhel7-base
+
+These containers are prepped to install Candlepin RPMs, but no Candlepin packages have been installed yet. The startup script will look for the YUM_REPO URL environment variable defined in docker run command with -e. This will be used to configure a candlepin.repo, and then a ```yum install candlepin``` will be attempted. Note that this container takes a little while to startup as a result of this.
+
+```
+$ docker run --name candlepin -d -P -e "YUM_REPO=http://download.devel.redhat.com/brewroot/repos/candlepin-mead-rhel-6-build/latest/x86_64" --link postgres:db candlepin/candlepin-rhel6-base
+$ docker attach candlepin
+```
+
+The attach console output will indicate when the install has completed, this can take several minutes.
+
+### candlepin-rhel6 / candlepin-rhel7
+
+These containers are fully functional Candlepin installations from latest brew RPMs. They are tagged according to Candlepin version. Startup script simply configures your instance (generates certs, populates db), and within a few seconds you should have a live REST API.
+
+```
+$ docker run -d -P --name cp-rhel6 --link postgres:db candlepin/candlepin-rhel6
+$ docker attach cp-rhel6
+$ docker ps
+CONTAINER ID        IMAGE                              COMMAND                CREATED             STATUS              PORTS                     NAMES
+c7d0599b588f        candlepin/candlepin-rhel6:latest   "/bin/bash /root/sta   44 seconds ago      Up 43 seconds       0.0.0.0:32769->8443/tcp   cp-rhel6
+2870b85addc2        postgres:latest                    "/docker-entrypoint.   2 minutes ago       Up 2 minutes        0.0.0.0:32768->5432/tcp   postgres
+$ curl -k "https://localhost:32769/candlepin/status"
+{"result":true,"version":"0.9.49.1","rulesVersion":"5.16","release":"1","standalone":true,"timeUTC":"2015-06-03T12:24:25.554+0000","managerCapabilities":["cores","ram","instance_multiplier","derived_product","cert_v3","guest_limit","vcpu"],"rulesSource":"DEFAULT"}%
+```
+
+## Development Containers
+
+The development containers are currently located in the base/ mysql/ oracle/
+and postgresql/ directories. The base container uses a Fedora source checkout
+of Candlepin, optionally mounting your own local source if desired. The other
+database specific containers build on base to bundle in the db resulting in a
+self container container.
+
+*NOTE*: These containers will soon be re-done to use an external database
+container linked in.
 
 These containers can be used to quickly fire up a container with candlepin and
 a fresh database. They can run unit or spec tests against supported databases,
@@ -15,30 +73,27 @@ Based on Fedora, this uses supervisord instead of systemd (as this is not yet
 ready for running services in containers) to keep postgresql and tomcat
 up and running.
 
-rebuild.sh is used to rebuild the containers and push to our internal docker
-registry.
-
 The included scripts actually make a fairly good guide for setting up a
 development environment.
 
-The containers are hosted on an internal server (sorry world!), but you can
-build them yourself if you wish.
-
-# Example Usage
+### Usage
 
   * Create a fresh candlepin server and postgresql database, leave a shell open:
-
+    ```
     docker run -i -P -t --rm docker.usersys.redhat.com/candlepin/candlepin-postgresql cp-test -s -d
+    ```
 
     Use docker ps to see the port mappings if you wanted to actually hit the candlepin API.
 
   * Run the unit tests:
-
+    ```
     docker run -i -P -t --rm docker.usersys.redhat.com/candlepin/candlepin-base cp-test -u
+    ```
 
   * Run the spec test suite against postgresql (or oracle or mysql):
-
+    ```
     docker run -i -P -t --rm docker.usersys.redhat.com/candlepin/candlepin-postgresql cp-test -r
+    ```
 
   * Specify -v /home/dgoodwin/src/candlepin/:/candlepin-dev/ to use your
     current source checkout *instead* of the remote git repo. This could be
