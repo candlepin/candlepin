@@ -15,7 +15,13 @@ docker build -t candlepin-base .
 docker tag -f candlepin-base docker.usersys.redhat.com/candlepin/candlepin-base
 docker push docker.usersys.redhat.com/candlepin/candlepin-base
 
-cd ../postgresql
+cd ../rhel7/base
+# This build needs the host to have valid RHEL ent certs
+docker build -t candlepin-base-rhel7 .
+docker tag -f candlepin-base-rhel7 docker.usersys.redhat.com/candlepin/candlepin-base-rhel7
+docker push docker.usersys.redhat.com/candlepin/candlepin-base-rhel-7
+
+cd ../../postgresql
 docker build -t candlepin-postgresql .
 docker tag -f candlepin-postgresql docker.usersys.redhat.com/candlepin/candlepin-postgresql
 docker push docker.usersys.redhat.com/candlepin/candlepin-postgresql
