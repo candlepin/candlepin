@@ -126,7 +126,7 @@ public class AdminResource {
 
         // Impl note: We don't need to bother doing this
         if (config.getBoolean(ConfigProperties.STANDALONE)) {
-            log.warn("Ignoring populate DB request due to standalone config.");
+            log.warn("Ignoring populate DB request in standalone environment");
             return null;
         }
 
