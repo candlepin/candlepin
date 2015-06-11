@@ -16,7 +16,7 @@
 %endif
 
 Name: gutterball
-Version: 2.0.1
+Version: 2.0.2
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -76,6 +76,9 @@ rm -rf %{buildroot}
 
 #raw
 %changelog
+* Thu Jun 11 2015 Alex Wood <awood@redhat.com> 2.0.2-1
+- Correct wrapper RPM names in MEAD chain. (awood@redhat.com)
+
 * Thu Jun 11 2015 Alex Wood <awood@redhat.com> 2.0.1-1
 - Perform MEAD builds with a Maven chain. (awood@redhat.com)
 - Rename source tarballs to reflect new assemblies. (awood@redhat.com)
