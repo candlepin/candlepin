@@ -69,7 +69,7 @@ class Candlepin
   def register(name, type=:system, uuid=nil, facts={}, username=nil,
               owner_key=nil, activation_keys=[], installedProducts=[],
               environment=nil, capabilities=[], hypervisor_id=nil,
-              content_tags=[])
+              content_tags=[], created_date=nil, last_checkin_date=nil)
     consumer = {
       :type => {:label => type},
       :name => name,
@@ -82,6 +82,10 @@ class Candlepin
     consumer[:uuid] = uuid if not uuid.nil?
 
     consumer[:hypervisorId] = {:hypervisorId => hypervisor_id} if hypervisor_id
+
+    consumer[:created] = created_date if created_date
+
+    consumer[:lastCheckin] = last_checkin_date if last_checkin_date
 
     if environment.nil?
       path = get_path("consumers") + "?"

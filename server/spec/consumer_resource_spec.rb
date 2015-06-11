@@ -266,6 +266,18 @@ describe 'Consumer Resource' do
     consumer['contentTags'].should =~ tags
   end
 
+  it 'should let a consumer register and set created and last checkin dates' do
+    owner = create_owner(random_string('owner'))
+    user_name = random_string('user')
+    client = user_client(owner, user_name)
+    created_date = '2015-05-09T13:23:55.689+0000'
+    checkin_date = '2015-05-19T13:23:55.689+0000'
+    consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
+              owner['key'], [], [], nil, [], nil, [], created_date, checkin_date)
+    consumer['lastCheckin'].should == checkin_date
+    consumer['created'].should == created_date
+  end
+
   it "should not let a consumer register with a used hypervisorId in same the org" do
     some_owner = create_owner(random_string('someowner'))
     client = user_client(some_owner, random_string('bob'))
