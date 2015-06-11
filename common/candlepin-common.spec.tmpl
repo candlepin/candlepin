@@ -10,7 +10,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin-common
-Version: 2.0.0
+Version: 2.0.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -19,7 +19,7 @@ Summary: Common code for Candlepin and related projects
 
 URL: http://www.candlepinproject.org
 License: GPLv2
-Source0: %{name}-%{version}-project.tar.gz
+Source0: %{name}-%{version}-complete.tar.gz
 Source1: %{name}-%{version}.jar
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
@@ -52,6 +52,10 @@ rm -rf %{buildroot}
 
 #raw
 %changelog
+* Tue Jun 09 2015 Alex Wood <awood@redhat.com> 2.0.1-1
+- Added the filtermode query parameter (crog@redhat.com)
+- Added enhancements to JSON attribute filtering (crog@redhat.com)
+
 * Thu May 21 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 2.0.0-1
 - Convert candlepin-common to use Mead. (awood@redhat.com)
 

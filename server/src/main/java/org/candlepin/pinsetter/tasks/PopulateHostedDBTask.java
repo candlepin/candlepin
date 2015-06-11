@@ -14,6 +14,8 @@
  */
 package org.candlepin.pinsetter.tasks;
 
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -51,21 +53,30 @@ public class PopulateHostedDBTask extends KingpinJob {
     private ContentCurator contentCurator;
     private PoolCurator poolCurator;
     private OwnerCurator ownerCurator;
+    private Configuration config;
 
 
     @Inject
     public PopulateHostedDBTask(ProductServiceAdapter productService, ProductCurator productCurator,
-        ContentCurator contentCurator, PoolCurator poolCurator, OwnerCurator ownerCurator) {
+        ContentCurator contentCurator, PoolCurator poolCurator,
+        OwnerCurator ownerCurator, Configuration config) {
 
         this.productService = productService;
         this.productCurator = productCurator;
         this.contentCurator = contentCurator;
         this.poolCurator = poolCurator;
         this.ownerCurator = ownerCurator;
+        this.config = config;
     }
 
     @Override
     public void toExecute(JobExecutionContext context) throws JobExecutionException {
+        if (this.config.getBoolean(ConfigProperties.STANDALONE)) {
+            log.warn("Aborting populate DB task in standalone environment");
+            context.setResult("Aborting populate DB task in standalone environment");
+            return;
+        }
+
         int pcount = 0;
         int ccount = 0;
         log.info("Populating Hosted DB");
@@ -115,7 +126,7 @@ public class PopulateHostedDBTask extends KingpinJob {
     public static JobDetail createAsyncTask() {
         JobDetail detail = JobBuilder.newJob(PopulateHostedDBTask.class)
             .withIdentity("populated_hosted_db-" + Util.generateUUID())
-            .requestRecovery(true) // TODO: Do we need recovery for this task?
+            .requestRecovery(true)
             .build();
 
         return detail;

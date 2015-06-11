@@ -1,3 +1,5 @@
+require 'rexml/document'
+
 module Candlepin
   module Util
     def self.included(base)
@@ -80,6 +82,12 @@ module Candlepin
           end
         end
         return "Unknown"
+      end
+
+      def pom_version(pom_file)
+        doc = REXML::Document.new(File.open(pom_file))
+        node = REXML::XPath.first(doc, '/project/version')
+        return node.text.strip
       end
     end
   end

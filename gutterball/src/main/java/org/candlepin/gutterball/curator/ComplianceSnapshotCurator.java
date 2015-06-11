@@ -32,8 +32,10 @@ import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
+import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,17 +101,38 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  A list of statuses to use to filter the results. If provided, only compliances with a status
      *  matching the list will be retrieved.
      *
+     * @param productNameFilters
+     *  A list of product names to use to filter compliances. If provided, only compliances for
+     *  consumers having installed the specified products will be retrieved.
+     *
+     * @param subscriptionSkuFilters
+     *  A list of subscription skus to use to filter compliances. If provided, only compliances for
+     *  the specified subscription skus will be retrieved.
+     *
+     * @param subscriptionNameFilters
+     *  A list of subscription names to use to filter compliances. If provided, only compliances for
+     *  the specified subscription names will be retrieved.
+     *
+     * @param attributeFilters
+     *  A map of entitlement attributes to use to filter compliances. If provided, only compliances
+     *  for entitlements having the specified values for the given attributes will be retrieved.
+     *
      * @return
      *  An iterator over the compliance snapshots for the target date.
      */
     public Iterator<Compliance> getSnapshotIterator(Date targetDate, List<String> consumerUuids,
-        List<String> ownerFilters, List<String> statusFilters, Map<String, String> attributeFilters) {
+        List<String> ownerFilters, List<String> statusFilters, List<String> productNameFilters,
+        List<String> subscriptionSkuFilters, List<String> subscriptionNameFilters,
+        Map<String, String> attributeFilters) {
 
         Page<Iterator<Compliance>> result = this.getSnapshotIterator(
             targetDate,
             consumerUuids,
             ownerFilters,
             statusFilters,
+            productNameFilters,
+            subscriptionSkuFilters,
+            subscriptionNameFilters,
             attributeFilters,
             null
         );
@@ -136,6 +159,22 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  A list of statuses to use to filter the results. If provided, only compliances with a status
      *  matching the list will be retrieved.
      *
+     * @param productNameFilters
+     *  A list of product names to use to filter compliances. If provided, only compliances for
+     *  consumers having installed the specified products will be retrieved.
+     *
+     * @param subscriptionSkuFilters
+     *  A list of subscription skus to use to filter compliances. If provided, only compliances for
+     *  the specified subscription skus will be retrieved.
+     *
+     * @param subscriptionNameFilters
+     *  A list of subscription names to use to filter compliances. If provided, only compliances for
+     *  the specified subscription names will be retrieved.
+     *
+     * @param attributeFilters
+     *  A map of entitlement attributes to use to filter compliances. If provided, only compliances
+     *  for entitlements having the specified values for the given attributes will be retrieved.
+     *
      * @param pageRequest
      *  A PageRequest instance containing paging information from the request. If null, no paging
      *  will be performed.
@@ -145,8 +184,9 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  the paging information for the query.
      */
     public Page<Iterator<Compliance>> getSnapshotIterator(Date targetDate, List<String> consumerUuids,
-        List<String> ownerFilters, List<String> statusFilters, Map<String, String> attributeFilters,
-        PageRequest pageRequest) {
+        List<String> ownerFilters, List<String> statusFilters, List<String> productNameFilters,
+        List<String> subscriptionSkuFilters, List<String> subscriptionNameFilters,
+        Map<String, String> attributeFilters, PageRequest pageRequest) {
 
         Page<Iterator<Compliance>> page = new Page<Iterator<Compliance>>();
         page.setPageRequest(pageRequest);
@@ -180,18 +220,20 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                 .add(Projections.groupProperty("c.uuid"))
         );
 
-        // Post query filter on Status.
         Session session = this.currentSession();
-        Criteria query = session.createCriteria(Compliance.class)
-            .createAlias("consumer", "cs")
-            .add(Subqueries.propertiesIn(new String[] {"date", "cs.uuid"}, subquery))
+        Criteria query = session.createCriteria(Compliance.class, "comp")
+            .createAlias("comp.consumer", "cs")
+            .add(Subqueries.propertiesIn(new String[] {"comp.date", "cs.uuid"}, subquery))
             .setCacheMode(CacheMode.IGNORE)
             .setReadOnly(true);
 
 
         if ((statusFilters != null && !statusFilters.isEmpty()) ||
-                (attributeFilters != null && attributeFilters.containsKey("management_enabled"))) {
-            query.createAlias("status", "stat");
+            (attributeFilters != null && attributeFilters.containsKey("management_enabled")) ||
+            (productNameFilters != null && !productNameFilters.isEmpty())) {
+
+            query.createAlias("comp.status", "stat");
+
             if (statusFilters != null && !statusFilters.isEmpty()) {
                 query.add(Restrictions.in("stat.status", statusFilters));
             }
@@ -200,6 +242,46 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                 boolean managementEnabledFilter =
                         PropertyConverter.toBoolean(attributeFilters.get("management_enabled"));
                 query.add(Restrictions.eq("stat.managementEnabled", managementEnabledFilter));
+            }
+
+            if (productNameFilters != null && !productNameFilters.isEmpty()) {
+                query.createAlias("stat.compliantProducts", "cprod", JoinType.LEFT_OUTER_JOIN)
+                    .createAlias("stat.partiallyCompliantProducts", "pcprod", JoinType.LEFT_OUTER_JOIN)
+                    .createAlias("stat.nonCompliantProducts", "ncprod", JoinType.LEFT_OUTER_JOIN);
+
+                DetachedCriteria prodQuery = DetachedCriteria.forClass(Compliance.class, "comp2");
+                prodQuery.createAlias("comp2.consumer", "cons2");
+                prodQuery.createAlias("cons2.installedProducts", "installed");
+                prodQuery.add(Restrictions.and(
+                    Restrictions.in("installed.productName", productNameFilters),
+                    Restrictions.eqProperty("comp2.id", "comp.id")
+                ));
+                prodQuery.setProjection(Projections.property("installed.productId"));
+
+                query.add(
+                    Restrictions.or(
+                        Property.forName("cprod.productId").in(prodQuery),
+                        Property.forName("pcprod.productId").in(prodQuery),
+                        Property.forName("ncprod.productId").in(prodQuery)
+                    )
+                );
+            }
+        }
+
+        // Add subscription filters, if necessary
+        if ((subscriptionSkuFilters != null && !subscriptionSkuFilters.isEmpty()) ||
+            (subscriptionNameFilters != null && !subscriptionNameFilters.isEmpty())) {
+
+            // Impl note: We have to be very careful with alias names, as Hibernate has a tendancy
+            // to errorneously truncate "long" ones. Actual property/field names are safe, though.
+            query.createAlias("comp.entitlements", "entsnap");
+
+            if (subscriptionSkuFilters != null && !subscriptionSkuFilters.isEmpty()) {
+                query.add(Restrictions.in("entsnap.productId", subscriptionSkuFilters));
+            }
+
+            if (subscriptionNameFilters != null && !subscriptionNameFilters.isEmpty()) {
+                query.add(Restrictions.in("entsnap.productName", subscriptionNameFilters));
             }
         }
 
@@ -388,7 +470,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      */
     public Map<Date, Map<String, Integer>> getComplianceStatusCounts(Date startDate, Date endDate,
         String ownerKey, List<String> consumerUuids, String sku, String subscriptionName,
-        Map<String, String> attributes) {
+        String productName, Map<String, String> attributes) {
 
         Page<Map<Date, Map<String, Integer>>> result = this.getComplianceStatusCounts(
             startDate,
@@ -397,6 +479,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
             consumerUuids,
             sku,
             subscriptionName,
+            productName,
             attributes,
             null
         );
@@ -430,6 +513,10 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  A subscription name to use to filter compliance status counts. If provided, only consumers
      *  using subscriptions with the specified product name will be counted.
      *
+     * @param productName
+     *  A product name to use to filter compliance status counts. If provided, only consumers with
+     *  an installed product with the specified product name will be counted.
+     *
      * @param attributes
      *  A map of entitlement attributes to use to filter compliance status counts. If provided, only
      *  consumers with entitlements having the specified values for the given attributes will be
@@ -449,7 +536,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      */
     public Page<Map<Date, Map<String, Integer>>> getComplianceStatusCounts(Date startDate, Date endDate,
         String ownerKey, List<String> consumerUuids,  String sku, String subscriptionName,
-        Map<String, String> attributes, PageRequest pageRequest) {
+        String productName, Map<String, String> attributes, PageRequest pageRequest) {
 
         Page<Map<Date, Map<String, Integer>>> page = new Page<Map<Date, Map<String, Integer>>>();
         page.setPageRequest(pageRequest);
@@ -465,6 +552,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
             consumerUuids,
             sku,
             subscriptionName,
+            productName,
             attributes
         );
 
@@ -739,6 +827,10 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  A product name to use to filter compliance status counts. If provided, only consumers using
      *  subscriptions which provide the specified product name will be counted.
      *
+     * @param productName
+     *  A product name to use to filter compliance status counts. If provided, only consumers with
+     *  an installed product with the specified product name will be counted.
+     *
      * @param attributes
      *  A map of entitlement attributes to use to filter compliance status counts. If provided, only
      *  consumers with entitlements having the specified values for the given attributes will be
@@ -754,7 +846,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
     @SuppressWarnings("checkstyle:methodlength")
     private Query buildComplianceStatusCountQuery(Session session, Date startDate, Date endDate,
         String ownerKey, List<String> consumerUuids, String sku, String subscriptionName,
-        Map<String, String> attributes) {
+        String productName, Map<String, String> attributes) {
 
         List<Object> parameters = new LinkedList<Object>();
         int counter = 0;
@@ -808,7 +900,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
         // Add our reporting criteria...
         if (sku != null || subscriptionName != null || (attributes != null && attributes.size() > 0) ||
-            ownerKey != null || (consumerUuids != null && consumerUuids.size() > 0)) {
+            ownerKey != null || (consumerUuids != null && consumerUuids.size() > 0) || productName != null) {
 
             List<String> criteria = new LinkedList<String>();
             StringBuffer inner = new StringBuffer(
@@ -831,6 +923,32 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
             if (subscriptionName != null) {
                 criteria.add("EntitlementSnap.productName = ?" + ++counter);
                 parameters.add(subscriptionName);
+            }
+
+            if (productName != null) {
+                criteria.add(String.format(
+                    "?%d IN (" +
+                    "SELECT Installed.productName " +
+                    "FROM " +
+                        "Consumer AS ConsumerSnapP " +
+                        "INNER JOIN ConsumerSnapP.installedProducts AS Installed " +
+                        "INNER JOIN ConsumerSnapP.complianceSnapshot AS ComplianceSnapP " +
+                        "INNER JOIN ComplianceSnapP.status AS ComplianceStatusSnapP " +
+                        "LEFT JOIN ComplianceStatusSnapP.compliantProducts AS CProduct " +
+                        "LEFT JOIN ComplianceStatusSnapP.nonCompliantProducts AS NCProduct " +
+                        "LEFT JOIN ComplianceStatusSnapP.partiallyCompliantProducts AS PCProduct " +
+                    "WHERE " +
+                        "ComplianceStatusSnapP.id = ComplianceStatusSnap.id " +
+                        "AND (" +
+                            "Installed.productId = CProduct.productId " +
+                            "OR Installed.productId = NCProduct.productId " +
+                            "OR Installed.productId = PCProduct.productId " +
+                        ")" +
+                    ")",
+                    ++counter
+                ));
+
+                parameters.add(productName);
             }
 
             if (attributes != null && attributes.size() > 0) {
@@ -960,6 +1078,8 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
         // Add our grouping...
         hql.append("ORDER BY ComplianceStatusSnap.date ASC");
+
+        // log.debug("\nFINAL QUERY: {}", hql.toString());
 
         // Build our query object and set the parameters...
         Query query = session.createQuery(hql.toString());

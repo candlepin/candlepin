@@ -40,7 +40,6 @@ import javax.ws.rs.core.MultivaluedMap;
  * ConsumerStatusListReport
  */
 public class ConsumerStatusReport extends Report<ReportResult> {
-
     private static final String CUSTOM_RESULTS_PARAM = "custom_results";
     private ComplianceSnapshotCurator complianceSnapshotCurator;
     private StatusReasonMessageGenerator messageGenerator;
@@ -87,10 +86,26 @@ public class ConsumerStatusReport extends Report<ReportResult> {
                 .getParameter()
         );
 
-        addParameter(
+        this.addParameter(
+            builder.init("product_name", i18n.tr("The name of a product on which to filter"))
+                .getParameter()
+        );
+
+        this.addParameter(
+            builder.init("sku", i18n.tr("The entitlement sku on which to filter"))
+                .getParameter()
+        );
+
+        this.addParameter(
+            builder.init("subscription_name", i18n.tr("The name of a subscription on which to filter"))
+                .getParameter()
+        );
+
+        this.addParameter(
             builder.init(
                 "management_enabled",
-                i18n.tr("Filter on subscriptions which have management enabled set to this value (boolean)"))
+                i18n.tr("Filter on subscriptions which have management enabled set to this value (boolean)")
+            )
                 .getParameter()
         );
 
@@ -113,17 +128,18 @@ public class ConsumerStatusReport extends Report<ReportResult> {
                 .mustNotHave("include")
                 .multiValued()
                 .getParameter());
-
     }
 
     @Override
     protected ReportResult execute(MultivaluedMap<String, String> queryParams, PageRequest pageRequest) {
         // At this point we would execute a lookup against the DW data store to formulate
         // the report result set.
-
         List<String> consumerIds = queryParams.get("consumer_uuid");
         List<String> statusFilters = queryParams.get("status");
         List<String> ownerFilters = queryParams.get("owner");
+        List<String> productNameFilters = queryParams.get("product_name");
+        List<String> subscriptionSkuFilters = queryParams.get("sku");
+        List<String> subscriptionNameFilters = queryParams.get("subscription_name");
 
         Date targetDate = queryParams.containsKey("on_date") ?
             parseDateTime(queryParams.getFirst("on_date")) :
@@ -156,6 +172,9 @@ public class ConsumerStatusReport extends Report<ReportResult> {
             consumerIds,
             ownerFilters,
             statusFilters,
+            productNameFilters,
+            subscriptionSkuFilters,
+            subscriptionNameFilters,
             attributeFilters,
             pageRequest
         );

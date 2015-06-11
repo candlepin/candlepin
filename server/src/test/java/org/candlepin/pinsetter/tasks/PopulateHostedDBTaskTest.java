@@ -14,12 +14,14 @@
  */
 package org.candlepin.pinsetter.tasks;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Content;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.service.ProductServiceAdapter;
@@ -36,12 +38,15 @@ import java.util.LinkedList;
 import java.util.Map.Entry;
 import java.util.Set;
 
-
+import javax.inject.Inject;
 
 /**
  * PopulateHostedDBTaskTest
  */
 public class PopulateHostedDBTaskTest extends DatabaseTestFixture {
+
+    @Inject
+    private Configuration config;
 
     @Test
     public void testExecute() throws Exception {
@@ -115,9 +120,12 @@ public class PopulateHostedDBTaskTest extends DatabaseTestFixture {
         assertEquals(0, this.productCurator.listAll().size());
         assertEquals(0, this.contentCurator.listAll().size());
 
+        // Ensure our config is for a hosted environment for the task.
+        this.config.setProperty(ConfigProperties.STANDALONE, "false");
+
         // Test
         PopulateHostedDBTask task = new PopulateHostedDBTask(
-            psa, this.productCurator, this.contentCurator, poolCuratorSpy, this.ownerCurator
+            psa, this.productCurator, this.contentCurator, poolCuratorSpy, this.ownerCurator, config
         );
 
         task.execute(jec);
@@ -144,6 +152,26 @@ public class PopulateHostedDBTaskTest extends DatabaseTestFixture {
 
         assertEquals(7, this.productCurator.listAll().size());
         assertEquals(12, this.contentCurator.listAll().size());
+    }
+
+    @Test
+    public void testWontRunInStandalone() throws Exception {
+        JobExecutionContext jec = mock(JobExecutionContext.class);
+
+        PoolCurator poolCuratorSpy = spy(this.poolCurator);
+        ProductServiceAdapter psa = mock(ProductServiceAdapter.class);
+
+        this.config.setProperty(ConfigProperties.STANDALONE, "true");
+
+        // Test
+        PopulateHostedDBTask task = new PopulateHostedDBTask(
+            psa, this.productCurator, this.contentCurator, poolCuratorSpy, this.ownerCurator,
+            config);
+
+        task.execute(jec);
+
+        // Verify
+        verify(jec).setResult(eq("Aborting populate DB task in standalone environment"));
     }
 
 }

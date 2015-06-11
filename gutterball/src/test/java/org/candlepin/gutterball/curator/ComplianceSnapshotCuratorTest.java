@@ -29,11 +29,14 @@ import org.candlepin.gutterball.model.Event;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
 import org.candlepin.gutterball.model.snapshot.Consumer;
+import org.candlepin.gutterball.model.snapshot.ConsumerInstalledProduct;
 import org.candlepin.gutterball.model.snapshot.Entitlement;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -45,6 +48,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -56,6 +60,7 @@ import java.util.TreeMap;
 
 @RunWith(JUnitParamsRunner.class)
 public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
+    private static Logger log = LoggerFactory.getLogger(ComplianceSnapshotCuratorTest.class);
 
     private Date baseTestingDate;
 
@@ -99,6 +104,10 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
                 }
             }
         );
+        entitlement1.setProvidedProducts(new HashMap<String, String>() { {
+                this.put("p1", "p1");
+            }
+        });
 
         Entitlement entitlement2 = createEntitlement(
             "testsku2",
@@ -112,6 +121,10 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
                 }
             }
         );
+        entitlement2.setProvidedProducts(new HashMap<String, String>() { {
+                this.put("p2", "p2");
+            }
+        });
 
         Entitlement entitlement3 = createEntitlement(
             "testsku3",
@@ -125,16 +138,28 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
                 }
             }
         );
+        entitlement3.setProvidedProducts(new HashMap<String, String>() { {
+                this.put("p3", "p3");
+            }
+        });
 
         this.beginTransaction();
 
+        // Consumer products
+        Set<String> c1prods = new HashSet(Arrays.asList("p1"));
+        Set<String> c2prods = new HashSet(Arrays.asList("p1", "p2"));
+        Set<String> c3prods = new HashSet(Arrays.asList("p3", "p4"));
+        Set<String> c4prods = new HashSet(Arrays.asList("p1", "p4"));
+
         // Consumer created
         cal.set(Calendar.MONTH, Calendar.MARCH);
-        compliance = createInitialConsumer(cal.getTime(), "c1", "o1", "invalid");
+        compliance = createInitialConsumerWithCompliances(cal.getTime(), "c1", "o1", "invalid",
+            c1prods, null, null, c1prods);
         attachEntitlement(compliance, entitlement1);
         // Simulate status change
         cal.set(Calendar.MONTH, Calendar.MAY);
-        compliance = createSnapshot(cal.getTime(), "c1", "o1", "valid");
+        compliance = createSnapshotWithProductsAndCompliances(cal.getTime(), "c1", "o1", "valid",
+            c1prods, c1prods, null, null);
         attachEntitlement(compliance, entitlement1);
         // Consumer was deleted
         cal.set(Calendar.MONTH, Calendar.JUNE);
@@ -142,33 +167,60 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         attachEntitlement(compliance, entitlement1);
 
         cal.set(Calendar.MONTH, Calendar.APRIL);
-        compliance = createInitialConsumer(cal.getTime(), "c2", "o1", "invalid");
+        compliance = createInitialConsumerWithCompliances(cal.getTime(), "c2", "o1", "invalid",
+            c2prods, null, null, c2prods);
         attachEntitlement(compliance, entitlement1);
         attachEntitlement(compliance, entitlement2);
 
         cal.set(Calendar.MONTH, Calendar.MAY);
-        compliance = createInitialConsumer(cal.getTime(), "c3", "o2", "invalid");
+        compliance = createInitialConsumerWithCompliances(cal.getTime(), "c3", "o2", "invalid",
+            c3prods, null, null, c3prods);
         attachEntitlement(compliance, entitlement2);
         cal.set(Calendar.MONTH, Calendar.JUNE);
-        compliance = createSnapshot(cal.getTime(), "c3", "o2", "partial");
+        compliance = createSnapshotWithProductsAndCompliances(cal.getTime(), "c3", "o2", "partial",
+            c3prods, new HashSet(Arrays.asList("p3")), new HashSet(Arrays.asList("p4")), null);
         attachEntitlement(compliance, entitlement2);
 
         cal.set(Calendar.MONTH, Calendar.MAY);
-        compliance = createInitialConsumer(cal.getTime(), "c4", "o3", "invalid");
+        compliance = createInitialConsumerWithCompliances(cal.getTime(), "c4", "o3", "invalid",
+            c4prods, null, null, c4prods);
         attachEntitlement(compliance, entitlement2);
         attachEntitlement(compliance, entitlement3);
         cal.set(Calendar.MONTH, Calendar.JUNE);
-        compliance = createSnapshot(cal.getTime(), "c4", "o3", "partial");
+        compliance = createSnapshotWithProductsAndCompliances(cal.getTime(), "c4", "o3", "partial",
+            c4prods, null, c4prods, null);
         attachEntitlement(compliance, entitlement2);
         attachEntitlement(compliance, entitlement3);
         cal.set(Calendar.MONTH, Calendar.JULY);
-        compliance = createSnapshot(cal.getTime(), "c4", "o3", "valid");
+        compliance = createSnapshotWithProductsAndCompliances(cal.getTime(), "c4", "o3", "valid",
+            c4prods, c4prods, null, null);
         attachEntitlement(compliance, entitlement2);
         attachEntitlement(compliance, entitlement3);
 
         this.commitTransaction();
 
         /*
+            Entitlements:
+                testsku1 - p1
+                testsku2 - p2
+                testsku3 - p3, p4
+
+            Installed Products:
+                c1:
+                    p1
+
+                c2:
+                    p1
+                    p2
+
+                c3:
+                    p3
+                    p4
+
+                c4:
+                    p1
+                    p4
+
             Entitlement distribution:
                 c1:
                     testsku1 (test product 1)
@@ -196,7 +248,6 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
                         attrib3: val3
                     testsku3 (test product 3)
                         attrib2: val2
-
 
             Timeline of the above events:
                 March 10th:
@@ -239,8 +290,16 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     public void testGetAllLatestStatusReportsIterator() {
         // c1 was deleted before the report date.
         List<String> expectedConsumerUuids = Arrays.asList("c2", "c3", "c4");
-        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(null, null, null, null,
-                null);
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+        );
 
         int received = 0;
         while (snaps.hasNext()) {
@@ -260,8 +319,16 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
 
         Map<String, String> attributeFilters = new HashMap<String, String>();
         attributeFilters.put("management_enabled", "1");
-        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(null, null, null, null,
-                attributeFilters);
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            attributeFilters
+        );
 
         int received = 0;
         Compliance comp = null;
@@ -281,8 +348,16 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
 
         Map<String, String> attributeFilters = new HashMap<String, String>();
         attributeFilters.put("management_enabled", "0");
-        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(null, null, null, null,
-                attributeFilters);
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            attributeFilters
+        );
 
         int received = 0;
         while (snaps.hasNext()) {
@@ -314,6 +389,9 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
 
         Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
             cal.getTime(),
+            null,
+            null,
+            null,
             null,
             null,
             null,
@@ -385,6 +463,9 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
                 null,
                 null,
                 null,
+                null,
+                null,
+                null,
                 pageRequest
             );
 
@@ -418,6 +499,9 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
             null,
             null,
             null,
+            null,
+            null,
+            null,
             null
         );
 
@@ -441,6 +525,9 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
             null,
             Arrays.asList(expectedOwner),
             null,
+            null,
+            null,
+            null,
             null
         );
 
@@ -457,6 +544,9 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
             new Date(),
             Arrays.asList("c1", "c4"),
+            null,
+            null,
+            null,
             null,
             null,
             null
@@ -498,6 +588,9 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
             null,
             null,
             Arrays.asList(expectedStatus),
+            null,
+            null,
+            null,
             null
         );
 
@@ -506,6 +599,123 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
 
         assertEquals("c3", compliance.getConsumer().getUuid());
         assertFalse(snaps.hasNext());
+    }
+
+
+    @Test
+    public void testGetIteratorByProductName() {
+        String expectedProduct = "p1";
+
+        // Note: c1 is deleted before the test is run (June 10, 2012)
+        List<String> expectedConsumerUuids = Arrays.asList("c2", "c4");
+
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
+            null,
+            null,
+            null,
+            null,
+            Arrays.asList(expectedProduct),
+            null,
+            null,
+            null
+        );
+
+        int received = 0;
+        while (snaps.hasNext()) {
+            Compliance comp = snaps.next();
+            assertTrue(expectedConsumerUuids.contains(comp.getConsumer().getUuid()));
+
+            // Ensure the product was listed.
+            boolean found = false;
+            for (ConsumerInstalledProduct product : comp.getConsumer().getInstalledProducts()) {
+                if (expectedProduct.equalsIgnoreCase(product.getProductName())) {
+                    found = true;
+                    break;
+                }
+            }
+
+            assertTrue("Expected product not found in consumer's installed product list.", found);
+
+            ++received;
+        }
+
+        assertEquals(expectedConsumerUuids.size(), received);
+    }
+
+    @Test
+    public void testGetIteratorBySubscriptionSku() {
+        String expectedSku = "testsku2";
+        List<String> expectedConsumerUuids = Arrays.asList("c2", "c3", "c4");
+
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
+            null,
+            null,
+            null,
+            null,
+            null,
+            Arrays.asList(expectedSku),
+            null,
+            null
+        );
+
+        int received = 0;
+        while (snaps.hasNext()) {
+            Compliance comp = snaps.next();
+            assertTrue(expectedConsumerUuids.contains(comp.getConsumer().getUuid()));
+
+            // Ensure the product was listed.
+            boolean found = false;
+            for (Entitlement entitlement : comp.getEntitlements()) {
+                if (expectedSku.equalsIgnoreCase(entitlement.getProductId())) {
+                    found = true;
+                    break;
+                }
+            }
+
+            assertTrue("Expected subscription sku not found in compliance entitlement list.", found);
+
+            ++received;
+        }
+
+        assertEquals(expectedConsumerUuids.size(), received);
+    }
+
+    @Test
+    public void testGetIteratorBySubscriptionName() {
+        String expectedSubscription = "test product 2";
+        List<String> expectedConsumerUuids = Arrays.asList("c2", "c3", "c4");
+
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            Arrays.asList(expectedSubscription),
+            null
+        );
+
+        int received = 0;
+        while (snaps.hasNext()) {
+            Compliance comp = snaps.next();
+            assertTrue(expectedConsumerUuids.contains(comp.getConsumer().getUuid()));
+
+            // Ensure the product was listed.
+            boolean found = false;
+            for (Entitlement entitlement : comp.getEntitlements()) {
+                if (expectedSubscription.equalsIgnoreCase(entitlement.getProductName())) {
+                    found = true;
+                    break;
+                }
+            }
+
+            assertTrue("Expected subscription name not found in compliance entitlement list.", found);
+
+            ++received;
+        }
+
+        assertEquals(expectedConsumerUuids.size(), received);
     }
 
     @Test
@@ -597,7 +807,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     public void testGetComplianceStatusCounts() {
         Map<Date, Map<String, Integer>> expected = this.buildMapForAllStatusCounts();
         Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator
-            .getComplianceStatusCounts(null, null, null, null, null, null, null);
+            .getComplianceStatusCounts(null, null, null, null, null, null, null, null);
 
         assertEquals(expected, actual);
     }
@@ -618,7 +828,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
             pageRequest.setPage(p);
 
             Page<Map<Date, Map<String, Integer>>> page = this.complianceSnapshotCurator
-                .getComplianceStatusCounts(null, null, null, null, null, null, null, pageRequest);
+                .getComplianceStatusCounts(null, null, null, null, null, null, null, null, pageRequest);
 
             if (pages == 0) {
                 pages = page.getMaxRecords();
@@ -646,7 +856,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     @Parameters(method = "buildMapForStatusCountsAfterDate")
     public void testGetComplianceStatusCountsAfterDate(Date date, Map<Date, Map<String, Integer>> expected) {
         Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator
-            .getComplianceStatusCounts(date, null, null, null, null, null, null);
+            .getComplianceStatusCounts(date, null, null, null, null, null, null, null);
 
         assertEquals(expected, actual);
     }
@@ -655,7 +865,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     @Parameters(method = "buildMapForStatusCountsBeforeDate")
     public void testGetComplianceStatusCountsBeforeDate(Date date, Map<Date, Map<String, Integer>> expected) {
         Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator
-            .getComplianceStatusCounts(null, date, null, null, null, null, null);
+            .getComplianceStatusCounts(null, date, null, null, null, null, null, null);
 
         assertEquals(expected, actual);
     }
@@ -666,7 +876,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         Map<Date, Map<String, Integer>> expected) {
 
         Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator
-            .getComplianceStatusCounts(startDate, endDate, null, null, null, null, null);
+            .getComplianceStatusCounts(startDate, endDate, null, null, null, null, null, null);
 
         assertEquals(expected, actual);
     }
@@ -678,7 +888,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         Map<Date, Map<String, Integer>> actual;
 
         actual = this.complianceSnapshotCurator
-            .getComplianceStatusCounts(startDate, endDate, null, null, sku, null, null);
+            .getComplianceStatusCounts(startDate, endDate, null, null, sku, null, null, null);
 
         assertEquals(expected, actual);
     }
@@ -690,7 +900,23 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         Map<Date, Map<String, Integer>> actual;
 
         actual = this.complianceSnapshotCurator
-            .getComplianceStatusCounts(startDate, endDate, null, null, null, subscriptionName, null);
+            .getComplianceStatusCounts(startDate, endDate, null, null, null, subscriptionName, null, null);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    @Parameters(method = "buildMapForStatusCountsWithProducts")
+    public void testGetComplianceStatusCountsWithProduct(Date startDate, Date endDate,
+        String productName, Map<Date, Map<String, Integer>> expected) {
+        Map<Date, Map<String, Integer>> actual;
+
+        log.debug("Retriving status counts for product: {} (in dates: {} to {})", productName, startDate, endDate);
+
+        actual = this.complianceSnapshotCurator
+            .getComplianceStatusCounts(startDate, endDate, null, null, null, null, productName, null);
+
+        log.debug("Received: {}", actual);
 
         assertEquals(expected, actual);
     }
@@ -702,7 +928,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         Map<Date, Map<String, Integer>> actual;
 
         actual = this.complianceSnapshotCurator
-            .getComplianceStatusCounts(startDate, endDate, null, null, null, null, attributes);
+            .getComplianceStatusCounts(startDate, endDate, null, null, null, null, null, attributes);
 
         assertEquals(expected, actual);
     }
@@ -713,7 +939,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         Map<Date, Map<String, Integer>> expected) {
 
         Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator
-            .getComplianceStatusCounts(null, null, null, consumers, null, null, null);
+            .getComplianceStatusCounts(null, null, null, consumers, null, null, null, null);
 
         assertEquals(expected, actual);
     }
@@ -724,7 +950,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         List<String> consumers, Map<Date, Map<String, Integer>> expected) {
 
         Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator
-            .getComplianceStatusCounts(startDate, endDate, null, consumers, null, null, null);
+            .getComplianceStatusCounts(startDate, endDate, null, consumers, null, null, null, null);
 
         assertEquals(expected, actual);
     }
@@ -958,6 +1184,37 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         return tests.toArray();
     }
 
+    public Object[] buildMapForStatusCountsWithProducts() {
+        LinkedList<Object[]> tests = new LinkedList<Object[]>();
+        Object[][] beforeSet = this.buildMapForStatusCountsBeforeDate();
+        Object[][] afterSet = this.buildMapForStatusCountsAfterDate();
+        Object[][] productSet = this.buildSubMapForStatusCountsWithProduct();
+
+        // Impl note:
+        // This intersection stuff to check date filtering does not work with dates beyond our data
+        // set. If our dates require extrapolating the data, the expected output will be missing
+        // all of the necessary extrapolated statuses.
+
+        for (Object[] before : beforeSet) {
+            for (Object[] after : afterSet) {
+                for (Object[] product : productSet) {
+                    tests.add(new Object[] {
+                        after[0],
+                        before[0],
+                        product[0],
+                        this.intersect(
+                            (Map<Date, Map<String, Integer>>) after[1],
+                            (Map<Date, Map<String, Integer>>) before[1],
+                            (Map<Date, Map<String, Integer>>) product[1]
+                        )
+                    });
+                }
+            }
+        }
+
+        return tests.toArray();
+    }
+
     public Object[] buildMapForStatusCountsWithAttributes() {
         LinkedList<Object[]> tests = new LinkedList<Object[]>();
         Object[][] beforeSet = this.buildMapForStatusCountsBeforeDate();
@@ -1043,6 +1300,112 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         expected.put(cal.getTime(), counts);
 
         return expected;
+    }
+
+    private Object[][] buildSubMapForStatusCountsWithProduct() {
+        Calendar cal = this.getCalendar();
+        cal.set(Calendar.YEAR, 2012);
+        cal.set(Calendar.DAY_OF_MONTH, 10);
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        cal.set(Calendar.MILLISECOND, 999);
+
+        Map<Date, Map<String, Integer>> expected;
+        Map<Date, Map<String, Integer>> actual;
+        HashMap<String, Integer> counts;
+
+        Object[][] output = new Object[4][];
+
+        output[0] = $(null, this.buildMapForAllStatusCounts());
+
+
+        expected = new TreeMap<Date, Map<String, Integer>>();
+
+        cal.set(Calendar.MONTH, Calendar.MARCH);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 1);
+        for (int i = 0; i < 31; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 2);
+        for (int i = 0; i < 30; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Integer>();
+        counts.put("valid", 1);
+        counts.put("invalid", 2);
+        for (int i = 0; i < 31; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 1);
+        counts.put("partial", 1);
+        for (int i = 0; i < 30; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.JULY);
+        counts = new HashMap<String, Integer>();
+        counts.put("valid", 1);
+        counts.put("invalid", 1);
+        expected.put(cal.getTime(), counts);
+
+        output[1] = $("p1", expected);
+
+
+        expected = new TreeMap<Date, Map<String, Integer>>();
+
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 1);
+        for (int i = 0; i < 30; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+
+        expected = new TreeMap<Date, Map<String, Integer>>();
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 2);
+        for (int i = 0; i < 31; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        counts = new HashMap<String, Integer>();
+        counts.put("partial", 2);
+        for (int i = 0; i < 30; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.JULY);
+        counts = new HashMap<String, Integer>();
+        counts.put("valid", 1);
+        counts.put("partial", 1);
+        expected.put(cal.getTime(), counts);
+
+        output[2] = $("p4", expected);
+
+
+        output[3] = $("bad_product", new HashMap<Date, Map<String, Integer>>());
+
+        return output;
     }
 
     private Object[][] buildSubMapForStatusCountsWithSku() {
@@ -1595,9 +1958,44 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         return intersection;
     }
 
-    private Compliance createInitialConsumer(Date createdOn, String uuid, String owner, String status) {
-        Compliance snapshot = createSnapshot(createdOn, uuid, owner, status);
-        consumerStateCurator.create(new ConsumerState(uuid, owner, createdOn));
+    private Compliance createInitialConsumer(Date createdOn, String uuid, String owner,
+        String status, Set<String> products) {
+
+        Compliance snapshot = this.createSnapshotWithProducts(createdOn, uuid, owner, status, products);
+        this.consumerStateCurator.create(new ConsumerState(uuid, owner, createdOn));
+
+        return snapshot;
+    }
+
+    private Compliance createInitialConsumerWithCompliances(Date createdOn, String uuid, String owner,
+        String status, Set<String> products, Set<String> compliant, Set<String> partiallyCompliant,
+        Set<String> nonCompliant) {
+
+        Compliance snapshot = this.createSnapshotWithProductsAndCompliances(createdOn, uuid, owner,
+            status, products, compliant, partiallyCompliant, nonCompliant);
+
+        this.consumerStateCurator.create(new ConsumerState(uuid, owner, createdOn));
+
+        return snapshot;
+    }
+
+    private Compliance createSnapshotWithProducts(Date date, String uuid, String owner,
+        String status, Set<String> products) {
+
+        Compliance snapshot = createComplianceSnapshotWithProducts(date, uuid, owner, status, null,
+            products);
+        complianceSnapshotCurator.create(snapshot);
+
+        return snapshot;
+    }
+
+    private Compliance createSnapshotWithProductsAndCompliances(Date date, String uuid, String owner,
+        String status, Set<String> products, Set<String> compliant, Set<String> partiallyCompliant,
+        Set<String> nonCompliant) {
+
+        Compliance snapshot = createComplianceSnapshotWithProductsAndCompliances(date, uuid, owner,
+            status, null, products, compliant, partiallyCompliant, nonCompliant);
+        complianceSnapshotCurator.create(snapshot);
 
         return snapshot;
     }
