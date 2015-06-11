@@ -25,6 +25,17 @@ ENV['nopo'] ||= 'de'
 Buildr will automatically evaluate that file and set `nopo` to "de" unless
 the variable is already set.
 
+## Check for Dependencies with CVEs
+* `buildr dependency:check`
+
+The `dependency:check` task will check a project (and all sub-projects) using
+the [OWASP Dependency
+Check](https://www.owasp.org/index.php/OWASP_Dependency_Check) to see if any
+dependencies have CVEs reported against them.  The maximum allowable CVSS
+score can be modified by setting the `max_allowed_cvss` to a float value
+between 1.0 and 10.0.  Any CVEs above the maximum allowed CVSS score will
+cause the build to fail.
+
 ## Checkstyle
 * `buildr checkstyle`
 

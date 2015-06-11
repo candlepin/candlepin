@@ -61,6 +61,7 @@
     <com.fasterxml.jackson.module-jackson-module-jsonSchema.version>2.3.0</com.fasterxml.jackson.module-jackson-module-jsonSchema.version>
     <com.fasterxml.jackson.module-jackson-module-jaxb-annotations.version>2.3.0</com.fasterxml.jackson.module-jackson-module-jaxb-annotations.version>
     <com.fasterxml.jackson.datatype-jackson-datatype-hibernate4.version>2.3.0</com.fasterxml.jackson.datatype-jackson-datatype-hibernate4.version>
+    <org.liquibase-liquibase-core.version>3.1.0</org.liquibase-liquibase-core.version>
     <ch.qos.logback-logback-core.version>1.0.13</ch.qos.logback-logback-core.version>
     <ch.qos.logback-logback-classic.version>1.0.13</ch.qos.logback-logback-classic.version>
     <org.slf4j-jcl-over-slf4j.version>1.7.5</org.slf4j-jcl-over-slf4j.version>
@@ -591,6 +592,17 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>org.liquibase</groupId>
+      <artifactId>liquibase-core</artifactId>
+      <version>${org.liquibase-liquibase-core.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-core</artifactId>
       <version>${ch.qos.logback-logback-core.version}</version>
@@ -844,6 +856,10 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
       </plugin>
     </plugins>
   </build>

@@ -2,59 +2,118 @@ require 'buildr/checkstyle'
 require 'rexml/document'
 
 module AntTaskCheckstyle
-  class << self
+  class CheckstyleTask < Rake::Task
+    class << self
+      def run_local(format)
+        fail("Only 'html', 'xml', and 'plain' formats are supported") unless %w(plain xml html).include?(format)
+        results = {}
+        Project.local_projects do |local_project|
+          projects = [local_project] + local_project.projects
+          fail_on_error = local_project.checkstyle.fail_on_error?
+          projects.each do |p|
+            results[p] = p.task("checkstyle:#{format}").invoke if p.checkstyle.enabled?
+          end
+          results.each do |project, did_fail|
+            warn("Checkstyle found errors in #{project}") if did_fail
+          end
+          failed = results.values.any?
+          fail("Checkstyle failed") if failed && fail_on_error
+        end
+      end
+    end
+
+    attr_reader :project
+
     def dependencies
+      # TODO - This is a pretty old version
       Buildr.transitive('com.puppycrawl.tools:checkstyle:jar:5.7')
     end
 
-    def checkstyle(conf_file, format, output_file, source_paths, options={})
-      dependencies = (options[:dependencies] || []) + AntTaskCheckstyle.dependencies
-      cp = Buildr.artifacts(dependencies).each { |a| a.invoke() if a.respond_to?(:invoke) }.map(&:to_s).join(File::PATH_SEPARATOR)
-      options[:properties] ||= {}
-      options[:profiles] ||= []
-      begin
-        info("Running Checkstyle on #{options[:project]}")
+    def execute(*args)
+      cs = project.checkstyle
+      deps = (cs.extra_dependencies || []) + dependencies
+      cp = Buildr.artifacts(deps).each { |a| a.invoke() if a.respond_to?(:invoke) }.map(&:to_s).join(File::PATH_SEPARATOR)
 
-        # See http://checkstyle.sourceforge.net/anttask.html
-        failed = false
-        Buildr.ant('checkstyle') do |ant|
-          ant.taskdef(:classpath => cp, :resource => "checkstyletask.properties")
-          options[:profiles].each do |profile|
-            next unless profile.enabled == "true"
+      format = self.name.split(':').last
 
-            profile_properties = options[:properties].merge(profile.properties)
-            profile.properties.values.map! do |v|
-              # basedir is set in the properties method of Config's superclass: Buildr::Checkstyle::Config
-              v.gsub!("${basedir}", profile_properties[:basedir])
+      case format
+      when "xml"
+        output_file = cs.xml_output_file
+      when "html"
+        # The HTML report is really just the XML report run through
+        # an XSLT
+        output_file = cs.xml_output_file
+        format = "xml"
+        run_html = true
+      else
+
+        output_file = cs.plain_output_file
+      end
+
+      source_paths = cs.source_paths.flatten.compact
+
+      properties = cs.properties || {}
+      profiles = cs.eclipse_properties || []
+
+      info("Running Checkstyle on #{project}")
+
+      # See http://checkstyle.sourceforge.net/anttask.html
+      failed = false
+      Buildr.ant('checkstyle') do |ant|
+        ant.taskdef(:classpath => cp, :resource => "checkstyletask.properties")
+        profiles.each do |profile|
+          next unless profile.enabled == "true"
+
+          profile_properties = properties.merge(profile.properties)
+          profile.properties.values.map! do |v|
+            # basedir is set in the properties method of Config's superclass: Buildr::Checkstyle::Config
+            v.gsub!("${basedir}", profile_properties[:basedir])
+          end
+
+          patterns = profile.patterns || Pattern.new(".*\.java", true)
+          ant.checkstyle(:classpath => cp, :config => cs.configuration_file,
+              :failOnViolation => false, :failureProperty => 'checkstyleFailed') do
+            format_opts = { :type => format }
+            format_opts[:toFile] = output_file unless output_file.nil?
+            ant.formatter(format_opts)
+            profile.properties.each do |k, v|
+              ant.property(:key => k, :value => v)
             end
-
-            patterns = profile.patterns || Pattern.new(".*\.java", true)
-            ant.checkstyle(:classpath => cp, :config => conf_file,
-                :failOnViolation => false, :failureProperty => 'checkstyleFailed') do
-              format_opts = { :type => format }
-              format_opts[:toFile] = output_file unless output_file.nil?
-              ant.formatter(format_opts)
-              profile.properties.each do |k, v|
-                ant.property(:key => k, :value => v)
-              end
-              source_paths.each do |source_path|
-                ant.fileset(:dir => source_path) do
-                  patterns.each do |pattern|
-                    ant.filename(:regex => pattern.pattern, :negate => !pattern.is_include)
-                    if pattern.is_include
-                      info("Checking #{File.join(source_path, pattern.pattern)}")
-                    end
+            source_paths.each do |source_path|
+              ant.fileset(:dir => source_path) do
+                patterns.each do |pattern|
+                  ant.filename(:regex => pattern.pattern, :negate => !pattern.is_include)
+                  if pattern.is_include
+                    info("Checking #{File.join(source_path, pattern.pattern)}")
                   end
                 end
               end
             end
           end
-          failed ||= true if ant.project.getProperty('checkstyleFailed')
         end
-        fail("Checkstyle failed") if failed && options[:fail_on_error]
-      rescue
-        warn("Checkstyle found errors in #{options[:project]}")
+        failed ||= true if ant.project.getProperty('checkstyleFailed')
       end
+
+      if cs.html_enabled? && run_html
+        info("Converting XML to HTML")
+        mkdir_p(File.dirname(cs.html_output_file))
+        if File.exist?(cs.xml_output_file)
+          Buildr.ant('checkstyle') do |ant|
+            ant.xslt(:in => cs.xml_output_file,
+                     :out => cs.html_output_file,
+                     :style => cs.style_file)
+          end
+          puts Buildr::Console.color("Report written to file://#{cs.html_output_file}", :green)
+        end
+      end
+
+      return (cs.fail_on_error?) ? failed : false
+    end
+
+    protected
+
+    def associate_with(project)
+      @project = project
     end
   end
 
@@ -108,6 +167,7 @@ module AntTaskCheckstyle
       @properties
     end
 
+    # Read properties to send to Checkstyle out of the Eclipse CS configuration file
     def eclipse_properties
       unless File.exist?(eclipse_xml)
         warn("Could not find #{eclipse_xml} for #{project}.  This is probably an error.") if enabled?
@@ -163,14 +223,40 @@ module AntTaskCheckstyle
     end
 
     first_time do
+      task('checkstyle:xml').clear
+      task('checkstyle:html').clear
+
       desc "Run Checkstyle"
-      Project.local_task('checkstyle')
+      Project.local_task('checkstyle') do
+        CheckstyleTask.run_local("plain")
+      end
 
       desc "Create Checkstyle XML report"
-      Project.local_task('checkstyle:xml')
+      Project.local_task('checkstyle:xml') do
+        CheckstyleTask.run_local("xml")
+      end
 
       desc "Create Checkstyle HTML report"
-      Project.local_task('checkstyle:html')
+      Project.local_task('checkstyle:html') do
+        CheckstyleTask.run_local("html")
+      end
+    end
+
+    before_define do |project|
+      task('checkstyle:clear') do |task|
+        reports_dir = project.path_to(:reports, :checkstyle)
+        rm_rf(reports_dir)
+        mkdir_p(reports_dir)
+      end
+
+      checkstyle_task = CheckstyleTask.define_task('checkstyle:plain' => 'checkstyle:clear')
+      checkstyle_task.send(:associate_with, project)
+
+      checkstyle_xml_task = CheckstyleTask.define_task('checkstyle:xml' => 'checkstyle:clear')
+      checkstyle_xml_task.send(:associate_with, project)
+
+      checkstyle_report_task = CheckstyleTask.define_task('checkstyle:html' => 'checkstyle:clear')
+      checkstyle_report_task.send(:associate_with, project)
     end
 
     after_define do |project|
@@ -180,47 +266,6 @@ module AntTaskCheckstyle
         unless ide.natures.empty?
           ide.natures('net.sf.eclipsecs.core.CheckstyleNature')
           ide.builders('net.sf.eclipsecs.core.CheckstyleBuilder')
-        end
-
-        task('checkstyle:xml').clear
-        task('checkstyle:html').clear
-
-        project.recursive_task('checkstyle') do |task|
-          AntTaskCheckstyle.checkstyle(cs.configuration_file,
-                                       'plain',
-                                       cs.plain_output_file,
-                                       cs.source_paths.flatten.compact,
-                                       :profiles => cs.eclipse_properties,
-                                       :properties => cs.properties,
-                                       :fail_on_error => cs.fail_on_error?,
-                                       :dependencies => cs.extra_dependencies,
-                                       :project => project)
-        end
-
-        project.recursive_task('checkstyle:xml') do |task|
-          reports_dir = project.path_to(:reports, :checkstyle)
-          rm_rf(reports_dir)
-          mkdir_p(reports_dir)
-          AntTaskCheckstyle.checkstyle(cs.configuration_file,
-                                       'xml',
-                                       cs.xml_output_file,
-                                       cs.source_paths.flatten.compact,
-                                       :profiles => cs.eclipse_properties,
-                                       :properties => cs.properties,
-                                       :fail_on_error => false,
-                                       :dependencies => cs.extra_dependencies,
-                                       :project => project)
-        end
-        if cs.html_enabled?
-          project.recursive_task('checkstyle:html' => 'checkstyle:xml') do |task|
-            info("Converting XML to HTML")
-            mkdir_p(File.dirname(cs.html_output_file))
-            Buildr.ant('checkstyle') do |ant|
-              ant.xslt(:in => cs.xml_output_file,
-                       :out => cs.html_output_file,
-                       :style => cs.style_file)
-            end
-          end
         end
       end
     end
