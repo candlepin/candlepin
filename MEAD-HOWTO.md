@@ -66,30 +66,64 @@ $ git clone --bare git://github.com/candlepin/candlepin
 ```
 
 With the source available, you're ready to actually try a build using Brew's
-`maven-build` sub-command.
+`maven-build` or `maven-chain` subcommands.
+
+## Building
+The `maven-build` command is appropriate when you are building from the very
+top of your source tree or if you have a very simple project.  With Candlepin,
+however, you'll want to use `maven-chain` which gets around some of the
+limitations of Maven.
+
+Maven does not handle sibling dependencies well (if at all) such as the ones we
+have with the code in the "common" project.  Building from the root of the source
+tree would solve the problem, but would result in the final build artifact being
+marked as "org.candlepin-candlepin-parent" (the project name in the top level POM
+file) instead of as "gutterball" or "candlepin".  The solution is to chain several
+MEAD builds together so that we can build the dependencies we need.  Each shipped
+project has a `mead.chain` file.  The file is an INI style with each section as
+a different link in the chain.  The section title is in the "groupId-artifactId"
+format and contains a value for `scmurl` which is a pointer to the SCM containing
+the code and a pointer to the git ref to use.  For example
 
 ```
-$ brew maven-build candlepin-mead-rhel-6-maven-candidate --scratch
-"git://git.engineering.redhat.com/users/KERB_ID/candlepin.git#REF_NAME"
+scmurl=git://example.com/candlepin?server#candlepin-2.0.0-1
 ```
 
-`REF_NAME` can be any git ref.  I frequently run my build like
+Note that the SCM URL can be followed by a "?" and a subdirectory and that
+the git ref is placed at the end after a "#".
+
+Other options:
+
+* `buildrequires` - a space delimited list of all sections that must be built
+  beforehand
+* `type` - set this to `wrapper` to add a wrapper RPM step.  Wrapper RPM steps
+  need to have a `buildrequires` on the actual Maven build step.
+* `packages` - a space delimited list of additional YUM packages to install
+  before building
+* `maven_options` - command line flags to pass to Maven
+* `properties` - "key=value" list of properties to set with `-D`
+
+Our `mead.chain` file is actually a simple Python template that is rendered
+by Tito to alleviate the need for setting the git ref by hand.  If you need
+to perform a manual build, you'll need to substitute in the values for the
+SCM URL and git ref.
+
+A scratch build is then triggered like so
 
 ```
-$ brew maven-build candlepin-mead-rhel-6-maven-candidate --scratch "git://git.engineering.redhat.com/users/awood/candlepin.git#$(git
- rev-parse HEAD)"
+$ brew maven-chain --scratch BREW_TARGET CHAIN_FILE
 ```
 
-so the `git rev-parse` will expand out to the hash of the last commit on the
-branch.
+The `rhpkg` tool command for chain builds is similar if you are working in dist-git.
 
-The `maven-build` command can take several different arguments to tweak the
-build process so be sure to check out the help message.
+```
+$ rhpkg maven-chain --target BREW_TARGET --ini CHAIN_FILE
+```
 
 ## Spec File Template Rendering
 Once a Maven build is complete, Mead can take a
 [Cheetah](http://www.cheetahtemplate.org) of a RPM spec file use it to create
-an actual RPM for the build.
+a wrapper RPM for the build.
 
 A few special variables are made available to the Cheetah template.
 
@@ -141,34 +175,3 @@ Other Cheetah notes:
   with the template failing to render when non-ASCII characters appeared in it.
 * Always surround the entire `%changelog` section in `#raw` and `#end raw` tags
   so that people's changelog entries won't break the template.
-
-## Putting It All Together
-To build a wrapper-RPM all in one shot, you can use the `--specfile` option in
-the `maven-build` subcommand.
-
-```
-$ brew maven-build candlepin-mead-rhel-6-maven-candidate --scratch --specfile "git://git.engineering.redhat.com/users/awood/candlepin.git?server#gutterball-1.0.17-1" "git://git.engineering.redhat.com/users/awood/candlepin.git#gutterball-1.0.17-1"
-```
-
-Notice in the `--specfile` option, I'm giving a URL to the **directory** with
-the template in it as well as a pointer to the Git reference I want to build.
-
-The `rhpkg` tool command is similar if you are working in dist-git, but you can
-pass "." as an argument to `--specfile` and it will use the template checked-in
-to dist-git.
-
-```
-$ rhpkg maven-build --scratch --sources="git://git.engineering.redhat.com/users/awood/candlepin.git#gutterball-1.0.17-1" --specfile=.  --scratch
-```
-
-`rhpkg maven-build` can also send options to Maven with `--maven-option` or
-`--property`.  However, if you use `--maven-option`, use an equals sign to
-connect it to the arguments so that `rhpkg` doesn't interpret the option that
-should be going to Maven.  For example, `--maven-options='--debug'`.
-
-## Gotchas
-Maven and MEAD do not automatically handle building sibling projects.  For
-example, Candlepin depends on Common.  Neither Maven nor Mead will
-automatically build Common for you unless you build from the top.  If you
-are building Candlepin and Common has been updated, you need to make sure to
-run a MEAD build for Common first so that it will be in the repository.
