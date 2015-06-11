@@ -23,8 +23,8 @@ cp = Candlepin.new(ADMIN_USERNAME, ADMIN_PASSWORD, nil, nil, HOST, PORT)
 
 owner = cp.create_owner random_string("export_me")
 
-product1 = cp.create_product(random_string(), random_string())
-product2 = cp.create_product(random_string(), random_string())
+product1 = cp.create_product(owner['key'], random_string(), random_string())
+product2 = cp.create_product(owner['key'], random_string(), random_string())
 
 end_date = Date.new(2025, 5, 29)
 sub1 = cp.create_subscription(owner['key'], product1['id'], 20, [], '', '12345', nil, nil, end_date)
