@@ -22,7 +22,9 @@ import org.candlepin.test.TestUtil;
 
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -218,5 +220,91 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         assertTrue(result.contains(c1.getUuid()));
         assertTrue(result.contains(c2.getUuid()));
         assertFalse(result.contains(c3.getUuid()));
+    }
+
+
+    private List<Owner> setupDBForLookupOwnersForProductTests() {
+        Owner owner1 = this.ownerCurator.create(new Owner("owner1"));
+        Owner owner2 = this.ownerCurator.create(new Owner("owner2"));
+        Owner owner3 = this.ownerCurator.create(new Owner("owner3"));
+
+        Product prod1o1 = this.productCurator.create(TestUtil.createProduct("p1", "p1", owner1));
+        Product prod1o2 = this.productCurator.create(TestUtil.createProduct("p1", "p1", owner2));
+        Product prod1o3 = this.productCurator.create(TestUtil.createProduct("p1", "p1", owner3));
+
+        Product prod2o1 = this.productCurator.create(TestUtil.createProduct("p2", "p2", owner1));
+        Product prod2o2 = this.productCurator.create(TestUtil.createProduct("p2", "p2", owner2));
+
+        Product prod3o2 = this.productCurator.create(TestUtil.createProduct("p3", "p3", owner2));
+        Product prod3o3 = this.productCurator.create(TestUtil.createProduct("p3", "p3", owner3));
+
+        Product prod4 = this.productCurator.create(TestUtil.createProduct("p4", "p4", owner1));
+        Product prod4d = this.productCurator.create(TestUtil.createProduct("p4d", "p4d", owner1));
+        Product prod5 = this.productCurator.create(TestUtil.createProduct("p5", "p5", owner2));
+        Product prod5d = this.productCurator.create(TestUtil.createProduct("p5d", "p5d", owner2));
+        Product prod6 = this.productCurator.create(TestUtil.createProduct("p6", "p6", owner3));
+        Product prod6d = this.productCurator.create(TestUtil.createProduct("p6d", "p6d", owner3));
+
+        Pool pool1 = new Pool();
+        pool1.setOwner(owner1);
+        pool1.setProduct(prod4);
+        pool1.setDerivedProduct(prod4d);
+        pool1.setProvidedProducts(new HashSet<Product>(Arrays.asList(prod1o1)));
+        pool1.setDerivedProvidedProducts(new HashSet<Product>(Arrays.asList(prod2o1)));
+        pool1.setStartDate(TestUtil.createDate(2000, 1, 1));
+        pool1.setEndDate(TestUtil.createDate(3000, 1, 1));
+        pool1.setQuantity(5L);
+
+        Pool pool2 = new Pool();
+        pool2.setOwner(owner2);
+        pool2.setProduct(prod5);
+        pool2.setDerivedProduct(prod5d);
+        pool2.setProvidedProducts(new HashSet<Product>(Arrays.asList(prod1o2, prod2o2)));
+        pool2.setDerivedProvidedProducts(new HashSet<Product>(Arrays.asList(prod3o2)));
+        pool2.setStartDate(TestUtil.createDate(1000, 1, 1));
+        pool2.setEndDate(TestUtil.createDate(2000, 1, 1));
+        pool2.setQuantity(5L);
+
+        Pool pool3 = new Pool();
+        pool3.setOwner(owner3);
+        pool3.setProduct(prod6);
+        pool3.setDerivedProduct(prod6d);
+        pool3.setProvidedProducts(new HashSet<Product>(Arrays.asList(prod1o3)));
+        pool3.setDerivedProvidedProducts(new HashSet<Product>(Arrays.asList(prod3o3)));
+        pool3.setStartDate(new Date());
+        pool3.setEndDate(new Date());
+        pool3.setQuantity(5L);
+
+        this.poolCurator.create(pool1);
+        this.poolCurator.create(pool2);
+        this.poolCurator.create(pool3);
+
+        return Arrays.asList(owner1, owner2, owner3);
+    }
+
+    @Test
+    public void lookupOwnersWithProduct() {
+        List<Owner> owners = this.setupDBForLookupOwnersForProductTests();
+        Owner owner1 = owners.get(0);
+        Owner owner2 = owners.get(1);
+        Owner owner3 = owners.get(2);
+
+        owners = this.ownerCurator.lookupOwnersWithProduct(Arrays.asList("p4"));
+        assertEquals(Arrays.asList(owner1), owners);
+
+        owners = this.ownerCurator.lookupOwnersWithProduct(Arrays.asList("p5d"));
+        assertEquals(Arrays.asList(owner2), owners);
+
+        owners = this.ownerCurator.lookupOwnersWithProduct(Arrays.asList("p1"));
+        assertEquals(Arrays.asList(owner1, owner2, owner3), owners);
+
+        owners = this.ownerCurator.lookupOwnersWithProduct(Arrays.asList("p3"));
+        assertEquals(Arrays.asList(owner2, owner3), owners);
+
+        owners = this.ownerCurator.lookupOwnersWithProduct(Arrays.asList("p4", "p6"));
+        assertEquals(Arrays.asList(owner1, owner3), owners);
+
+        owners = this.ownerCurator.lookupOwnersWithProduct(Arrays.asList("nope"));
+        assertEquals(0, owners.size());
     }
 }
