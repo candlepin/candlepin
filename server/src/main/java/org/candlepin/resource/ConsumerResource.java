@@ -1643,8 +1643,10 @@ public class ConsumerResource {
         @QueryParam("product") String productId,
         @QueryParam("regen") @DefaultValue("true") Boolean regen,
         @Context PageRequest pageRequest) {
+        log.info("Starting list entitlements request.");
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        log.info("Looked up consumer: " + consumer.getName());
         Page<List<Entitlement>> entitlementsPage;
         if (productId != null) {
             Product p = productAdapter.getProductById(productId);
@@ -1658,14 +1660,17 @@ public class ConsumerResource {
         else {
             entitlementsPage = entitlementCurator.listByConsumer(consumer, pageRequest);
         }
+        log.info("Looked up entitlements page.");
 
         // Store the page for the LinkHeaderPostInterceptor
         ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);
 
         List<Entitlement> returnedEntitlements = entitlementsPage.getPageData();
+        log.info("Loaded {} entitlements.", returnedEntitlements.size());
         for (Entitlement ent : returnedEntitlements) {
             addCalculatedAttributes(ent);
         }
+        log.info("Finished adding calculated attributes.");
 
         if (regen) {
             poolManager.regenerateDirtyEntitlements(returnedEntitlements);
@@ -1673,6 +1678,7 @@ public class ConsumerResource {
         else {
             log.debug("Skipping certificate regeneration.");
         }
+        log.info("Returning.");
 
         return returnedEntitlements;
     }
