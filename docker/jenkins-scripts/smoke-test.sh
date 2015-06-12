@@ -73,13 +73,15 @@ try:
     try:
         try:
             print "Starting containers..."
-            output = run_command("docker run -e POSTGRES_PASSWORD=candlepin -d postgres")
+            db_container_name = "db_%s" % hex(hash(time.time()))[2:]
+            output = run_command("docker run -e POSTGRES_PASSWORD=candlepin -d --name %s postgres"
+                % db_container_name)
             db_container_id = output[-1]
             time.sleep(3)
 
             # Launch the candlepin container:
             output = run_command("docker run -P -d -e \"YUM_REPO=%s\" --link %s:db %s"
-                % (cp_repo_url, db_container_id, image_name))
+                % (cp_repo_url, db_container_name, image_name))
             server_container_id = output[-1]
             time.sleep(3)
 
