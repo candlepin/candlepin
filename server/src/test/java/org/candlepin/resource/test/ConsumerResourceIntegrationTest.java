@@ -44,6 +44,7 @@ import org.candlepin.paging.PageRequest;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.impl.BouncyCastlePKIReader;
 import org.candlepin.resource.ConsumerResource;
+import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestDateUtil;
@@ -345,7 +346,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerResource.unbindBySerial(consumer.getUuid(), serials.get(0)
             .getSerial().getId());
         assertEquals(0,
-            consumerResource.listEntitlements(consumer.getUuid(), null, true, null).size());
+            consumerResource.listEntitlements(consumer.getUuid(), null, true,
+                    "", new ArrayList<KeyValueParameter>(), null).size());
     }
 
     @Test(expected = NotFoundException.class)
@@ -472,7 +474,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertEquals(3,
-            consumerResource.listEntitlements(consumer.getUuid(), null, true, null).size());
+            consumerResource.listEntitlements(consumer.getUuid(), null, true,
+                    "", new ArrayList<KeyValueParameter>(), null).size());
     }
 
     @Test(expected = NotFoundException.class)
@@ -491,7 +494,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(evilConsumer));
         securityInterceptor.enable();
 
-        consumerResource.listEntitlements(consumer.getUuid(), null, true, null);
+        consumerResource.listEntitlements(consumer.getUuid(), null, true,
+                "", new ArrayList<KeyValueParameter>(), null);
     }
 
     @Test(expected = NotFoundException.class)
@@ -509,7 +513,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         setupPrincipal(evilOwner, Access.ALL);
 
-        consumerResource.listEntitlements(consumer.getUuid(), null, true, null);
+        consumerResource.listEntitlements(consumer.getUuid(), null, true,
+                "", new ArrayList<KeyValueParameter>(), null);
     }
 
     @Test
@@ -524,7 +529,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertEquals(3,
-            consumerResource.listEntitlements(consumer.getUuid(), null, true, null).size());
+            consumerResource.listEntitlements(consumer.getUuid(), null, true,
+                    "", new ArrayList<KeyValueParameter>(), null).size());
     }
 
     @Test

@@ -689,8 +689,29 @@ class Candlepin
     path << "per_page=#{params[:per_page]}&" if params[:per_page]
     path << "order=#{params[:order]}&" if params[:order]
     path << "sort_by=#{params[:sort_by]}&" if params[:sort_by]
+
+    attr_filters = params[:attr_filters] || []
+    attr_filters.each do | attr_name, attr_value |
+      path << "attribute=#{attr_name}:#{attr_value}&"
+    end
+    path << "matches=#{params[:matches]}" if params[:matches]
     results = get(path)
     return results
+  end
+
+  # NOTE: Purely for testing via the entitlement resource.
+  #       Very similar to list_entitlements above (consumer resource)
+  def list_ents_via_entitlements_resource(params={})
+    path = "/entitlements?"
+    path << "consumer=#{params[:consumer_uuid]}&" if params[:consumer_uuid]
+
+    attr_filters = params[:attr_filters] || []
+    attr_filters.each do | attr_name, attr_value |
+      path << "attribute=#{attr_name}:#{attr_value}&"
+    end
+
+    path << "matches=#{params[:matches]}" if params[:matches]
+    get(path)
   end
 
   def list_pool_entitlements(pool_id, params={})

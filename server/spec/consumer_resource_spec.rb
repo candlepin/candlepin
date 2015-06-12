@@ -20,6 +20,38 @@ describe 'Consumer Resource' do
     @consumer2 = consumer_client(@user2, random_string("consumer2"))
   end
 
+  it 'should receive paged data back when requested' do
+    id_list = []
+    (1..4).each do |i|
+      prod = create_product(nil, nil, { :owner => @owner1['key'] })
+      @cp.create_subscription(@owner1['key'], prod.id, 6)
+      id_list.push(prod.id)
+    end
+    @cp.refresh_pools(@owner1['key'])
+
+    id_list.each do |id|
+      @consumer1.consume_product(id)
+    end
+
+    entitlements = @consumer1.list_entitlements({:page => 1, :per_page => 2, :sort_by => "id", :order => "asc"})
+    entitlements.length.should == 2
+    (entitlements[0].id <=> entitlements[1].id).should == -1
+  end
+
+  it 'does not allow a consumer to view entitlements from a different consumer' do
+    # Given
+    bad_owner = create_owner random_string 'baddie'
+    bad_user = user_client(bad_owner, 'bad_dude')
+    system = consumer_client(bad_user, 'wrong_system')
+
+    # When
+    lambda do
+      system.list_entitlements(:uuid => @consumer1.uuid)
+
+      # Then
+    end.should raise_exception(RestClient::ResourceNotFound)
+  end
+
   it "should block consumers from using other org's pools" do
     product1 = create_product
     sub = @cp.create_subscription(@owner1['key'], product1.id)

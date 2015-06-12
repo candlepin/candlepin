@@ -20,6 +20,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -30,7 +31,6 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -57,6 +57,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     private Product parentProduct;
     private Product providedProduct1;
     private Product providedProduct2;
+    private Product testProduct;
 
     @Before
     public void setUp() {
@@ -70,12 +71,14 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         consumer.setEnvironment(environment);
         consumerCurator.create(consumer);
 
-        Product product = TestUtil.createProduct();
-        productCurator.create(product);
+        testProduct = TestUtil.createProduct();
+        testProduct.setAttribute("variant", "Starter Pack");
+        productCurator.create(testProduct);
 
-        Pool firstPool = createPoolAndSub(owner, product, 1L,
+        Pool firstPool = createPoolAndSub(owner, testProduct, 1L,
             dateSource.currentDate(), createDate(2020, 1, 1));
-        poolCurator.create(firstPool);
+        firstPool.setAttribute("pool_attr_1", "attr1");
+        poolCurator.merge(firstPool);
 
         firstCertificate = createEntitlementCertificate("key", "certificate");
 
@@ -84,6 +87,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(firstEntitlement);
 
         Product product1 = TestUtil.createProduct();
+        product1.setAttribute("enabled_consumer_types", "satellite");
         productCurator.create(product1);
 
         Pool secondPool = createPoolAndSub(owner, product1, 1L,
@@ -378,7 +382,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void listByConsumerExpired() {
-        List<Entitlement> ents = entitlementCurator.listByConsumer(consumer);
+        List<Entitlement> ents = entitlementCurator.listByConsumer(consumer,
+            new EntitlementFilterBuilder());
         // Should be 2 entitlements already
         assertEquals(2, ents.size());
 
@@ -397,6 +402,44 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         // Do not show the expired entitlements, size should be the same as before
         assertEquals(2, ents.size());
+    }
+
+    @Test
+    public void listByConsumerFilteringByProductAttribute() {
+        EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
+        filters.addAttributeFilter("variant", "Starter Pack");
+
+        // Should be 2 entitlements already
+        List<Entitlement> ents = entitlementCurator.listByConsumer(consumer, filters);
+        assertEquals(1, ents.size());
+
+        assertEquals(testProduct.getId(), ents.get(0).getPool().getProductId());
+    }
+
+    @Test
+    public void listByConsumerFilterByMatches() {
+        EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
+        filters.addMatchesFilter(testProduct.getName());
+
+        // Should be 2 entitlements already
+        List<Entitlement> ents = entitlementCurator.listByConsumer(consumer, filters);
+        assertEquals(1, ents.size());
+        assertEquals(ents.get(0).getPool().getName(), testProduct.getName());
+        assertEquals(ents.get(0).getPool().getProductId(), testProduct.getId());
+    }
+
+    @Test
+    public void listByConsumersFilteringByPoolAttribute() {
+        EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
+        filters.addAttributeFilter("pool_attr_1", "attr1");
+
+        // Should be 2 entitlements already
+        List<Entitlement> ents = entitlementCurator.listByConsumer(consumer, filters);
+        assertEquals(1, ents.size());
+
+        Pool p = ents.get(0).getPool();
+        assertTrue("Did not find ent by pool attribute 'pool_attr_1'", p.hasAttribute("pool_attr_1"));
+        assertEquals(p.getAttributeValue("pool_attr_1"), "attr1");
     }
 
     @Test

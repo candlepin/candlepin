@@ -74,12 +74,15 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     public Page<List<Entitlement>> listByConsumer(Consumer consumer,
-        PageRequest pageRequest) {
-        Criteria query = createSecureCriteria()
-            .createAlias("pool", "p")
-            .add(Restrictions.eq("consumer", consumer))
-            // Never show a consumer expired entitlements
-            .add(Restrictions.ge("p.endDate", new Date()));
+        EntitlementFilterBuilder filterBuilder, PageRequest pageRequest) {
+        Criteria query = createSecureCriteria().createAlias("pool", "p");
+        if (filterBuilder.hasMatchFilters()) {
+            query.createAlias("p.providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN);
+        }
+        query.add(Restrictions.eq("consumer", consumer));
+        // Never show a consumer expired entitlements
+        query.add(Restrictions.ge("p.endDate", new Date()));
+        filterBuilder.applyTo(query);
         return listByCriteria(query, pageRequest);
     }
 
@@ -91,13 +94,24 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      */
     @SuppressWarnings("unchecked")
     public List<Entitlement> listByConsumer(Consumer consumer) {
-        return createSecureCriteria()
-            .createAlias("pool", "p")
-            .add(Restrictions.eq("consumer", consumer))
-            // Never show a consumer expired entitlements
-            .add(Restrictions.ge("p.endDate", new Date()))
-            .addOrder(Order.asc("p.id"))
-            .list();
+        return listByConsumer(consumer, new EntitlementFilterBuilder());
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Entitlement> listByConsumer(Consumer consumer, EntitlementFilterBuilder filters) {
+        Criteria c = createSecureCriteria();
+        c.createAlias("pool", "p");
+
+        // Add the required aliases for the filter builder only if required.
+        if (filters.hasMatchFilters()) {
+            c.createAlias("p.providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN);
+        }
+        c.add(Restrictions.eq("consumer", consumer));
+        // Never show a consumer expired entitlements
+        c.add(Restrictions.ge("p.endDate", new Date()));
+        filters.applyTo(c);
+        c.addOrder(Order.asc("p.id"));
+        return c.list();
     }
 
     public List<Entitlement> listByEnvironment(Environment environment) {
@@ -375,6 +389,12 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .addOrder(Order.asc("created")) // eldest entitlement
             .setMaxResults(1);
         return (Entitlement) activeNowQuery.uniqueResult();
+    }
+
+    public Page<List<Entitlement>> listAll(EntitlementFilterBuilder filters, PageRequest pageRequest) {
+        Criteria criteria = createSecureCriteria();
+        filters.applyTo(criteria);
+        return listByCriteria(criteria, pageRequest);
     }
 
 }
