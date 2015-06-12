@@ -84,8 +84,7 @@ public class PoolFilterBuilder extends FilterBuilder {
         textOr.add(new FilterLikeExpression(alias + "contractNumber", matches, true));
         textOr.add(new FilterLikeExpression(alias + "orderNumber", matches, true));
 
-        textOr.add(new FilterLikeExpression("provProd.productId", matches, true));
-        textOr.add(new FilterLikeExpression("provProd.productName", matches, true));
+        textOr.add(Subqueries.exists(createProvidedProductCriteria(matches)));
 
         textOr.add(Subqueries.exists(
             this.createAttributeCriteria(ProductPoolAttribute.class,
@@ -96,6 +95,27 @@ public class PoolFilterBuilder extends FilterBuilder {
 
         this.otherCriteria.add(textOr);
     }
+
+    private DetachedCriteria createProvidedProductCriteria(String searchString) {
+
+        DetachedCriteria attrMatch = DetachedCriteria.forClass(
+            ProvidedProduct.class, "provided");
+
+        List<Criterion> providedOrs = new ArrayList<Criterion>();
+        providedOrs.add(new FilterLikeExpression("productId", searchString, true));
+        providedOrs.add(new FilterLikeExpression("productName", searchString, true));
+
+        attrMatch.add(Restrictions.or(
+            providedOrs.toArray(new Criterion[providedOrs.size()]))
+        );
+
+        String originalPoolAlias = this.alias.isEmpty() ? "this." : alias;
+        attrMatch.add(Property.forName(originalPoolAlias + "id").eqProperty("provided.pool.id"));
+        attrMatch.setProjection(Projections.property("provided.id"));
+
+        return attrMatch;
+    }
+
 
     @Override
     protected Criterion buildCriteriaForKey(String key, List<String> values) {
@@ -131,7 +151,8 @@ public class PoolFilterBuilder extends FilterBuilder {
             conjunction.add(
                 Restrictions.not(
                     Restrictions.or(
-                        Subqueries.exists(this.createAttributeCriteria(ProductPoolAttribute.class, key, negatives)),
+                        Subqueries.exists(this.createAttributeCriteria(ProductPoolAttribute.class, key,
+                                negatives)),
                         Subqueries.exists(this.createAttributeCriteria(PoolAttribute.class, key, negatives))
                     )
                 )
@@ -183,68 +204,5 @@ public class PoolFilterBuilder extends FilterBuilder {
         }
         return attrMatch;
     }
-
-//    private DetachedCriteria createPoolAttributeCriteria(String attribute, List<String> values) {
-//        DetachedCriteria subquery = DetachedCriteria.forClass(PoolAttribute.class, "attr");
-//        subquery.add(new FilterLikeExpression("name", attribute, false));
-//
-//        // It would be nice to be able to use an 'in' restriction here, but
-//        // hibernate does not support ignoring case with its 'in' restriction.
-//        // We could probably roll our own, but would involve duplicating some
-//        // hibernate code to achieve it.
-//        Disjunction disjunction = Restrictions.disjunction();
-//        for (String value : values) {
-//            if (value == null || value.isEmpty()) {
-//                disjunction.add(Restrictions.isNull("value"));
-//                disjunction.add(Restrictions.eq("value", ""));
-//            }
-//            else {
-//                disjunction.add(new FilterLikeExpression("value", value, true));
-//            }
-//        }
-//
-//        subquery.add(disjunction);
-//
-//        String originalPoolAlias = this.alias.isEmpty() ? "this." : alias;
-//        subquery.add(Property.forName(originalPoolAlias + "id").eqProperty("attr.pool.id"));
-//        subquery.setProjection(Projections.property("attr.id"));
-//
-//        return subquery;
-//    }
-//
-//    private DetachedCriteria createProductAttributeCriteria(String attribute, List<String> values) {
-//        DetachedCriteria subquery = DetachedCriteria.forClass(Pool.class, "PoolI")
-//            .createAlias("PoolI.product", "ProdI")
-//            .createAlias("ProdI.attributes", "ProdAttrI");
-//
-//        subquery.add(new FilterLikeExpression("ProdAttrI.name", attribute, false));
-//
-//        Disjunction disjunction = Restrictions.disjunction();
-//        for (String value : values) {
-//            if (value == null || value.isEmpty()) {
-//                disjunction.add(Restrictions.isNull("ProdAttrI.value"));
-//                disjunction.add(Restrictions.eq("ProdAttrI.value", ""));
-//            }
-//            else {
-//                disjunction.add(new FilterLikeExpression("ProdAttrI.value", value, true));
-//            }
-//        }
-//
-//        subquery.add(disjunction);
-//
-//        String originalPoolAlias = this.alias.isEmpty() ? "this." : alias;
-//        subquery.add(Property.forName(originalPoolAlias + "id").eqProperty("PoolI.id"));
-//        subquery.setProjection(Projections.property("PoolI.id"));
-//
-//        // We don't want to match Product Attributes that have been overridden
-//        DetachedCriteria overridden = DetachedCriteria.forClass(PoolAttribute.class, "PoolAttrI")
-//            // If we're using wildcards in the name, we should block exact matches
-//            .add(Restrictions.eqProperty("PoolAttrI.name", "ProdAttrI.name"))
-//            .add(Restrictions.eqProperty("PoolI.id", "PoolAttrI.pool.id"))
-//            .setProjection(Projections.property("PoolAttrI.pool.id"));
-//        subquery.add(Subqueries.notExists(overridden));
-//
-//        return subquery;
-//    }
 
 }

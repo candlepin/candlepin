@@ -76,9 +76,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     public Page<List<Entitlement>> listByConsumer(Consumer consumer,
         EntitlementFilterBuilder filterBuilder, PageRequest pageRequest) {
         Criteria query = createSecureCriteria().createAlias("pool", "p");
-        if (filterBuilder.hasMatchFilters()) {
-            query.createAlias("p.providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN);
-        }
         query.add(Restrictions.eq("consumer", consumer));
         // Never show a consumer expired entitlements
         query.add(Restrictions.ge("p.endDate", new Date()));
@@ -101,11 +98,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     public List<Entitlement> listByConsumer(Consumer consumer, EntitlementFilterBuilder filters) {
         Criteria c = createSecureCriteria();
         c.createAlias("pool", "p");
-
-        // Add the required aliases for the filter builder only if required.
-        if (filters.hasMatchFilters()) {
-            c.createAlias("p.providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN);
-        }
         c.add(Restrictions.eq("consumer", consumer));
         // Never show a consumer expired entitlements
         c.add(Restrictions.ge("p.endDate", new Date()));
@@ -394,9 +386,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     public Page<List<Entitlement>> listAll(EntitlementFilterBuilder filters, PageRequest pageRequest) {
         Criteria criteria = createSecureCriteria();
         criteria.createAlias("pool", "p");
-        if (filters.hasMatchFilters()) {
-            criteria.createAlias("p.providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN);
-        }
         filters.applyTo(criteria);
         return listByCriteria(criteria, pageRequest);
     }
