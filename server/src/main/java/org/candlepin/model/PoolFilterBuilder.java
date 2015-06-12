@@ -17,6 +17,7 @@ package org.candlepin.model;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
+import org.hibernate.Criteria;
 import org.hibernate.criterion.Conjunction;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
@@ -26,8 +27,8 @@ import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -38,26 +39,61 @@ import java.util.List;
  */
 public class PoolFilterBuilder extends FilterBuilder {
 
+    private String alias = "";
+    private List<String> matchFilters = new ArrayList<String>();
+
+    public PoolFilterBuilder() {
+        super();
+    }
+
+    public PoolFilterBuilder(String aliasName) {
+        this.alias = aliasName + ".";
+    }
+
+    @Override
+    public void applyTo(Criteria parentCriteria) {
+        for (String matches : matchFilters) {
+            applyMatchFilter(matches);
+        }
+        super.applyTo(parentCriteria);
+    }
+
     /**
      * Add filters to search only for pools matching the given text. A number of
      * fields on the pool are searched including it's SKU, SKU product name,
      * contract number, SLA, and provided (engineering) product IDs and their names.
      *
+     * NOTE: Parent criteria requires that an alias exists for pool.product,
+     * pool.providedProduct and pool.providedProductContent.
+     *
      * @param matches Text to search for in various fields on the pool. Basic
      * wildcards are supported for everything or a single character. (* and ? respectively)
      */
     public void addMatchesFilter(String matches) {
+        this.matchFilters.add(matches);
+    }
 
+    public boolean hasMatchFilters() {
+        return !matchFilters.isEmpty();
+    }
+
+    private void applyMatchFilter(String matches) {
         Disjunction textOr = Restrictions.disjunction();
-        textOr.add(new FilterLikeExpression("productName", matches, true));
-        textOr.add(new FilterLikeExpression("productId", matches, true));
-        textOr.add(new FilterLikeExpression("contractNumber", matches, true));
-        textOr.add(new FilterLikeExpression("orderNumber", matches, true));
+        textOr.add(new FilterLikeExpression(alias + "productName", matches, true));
+        textOr.add(new FilterLikeExpression(alias + "productId", matches, true));
+        textOr.add(new FilterLikeExpression(alias + "contractNumber", matches, true));
+        textOr.add(new FilterLikeExpression(alias + "orderNumber", matches, true));
+
         textOr.add(Subqueries.exists(
                 createProvidedProductCriteria(matches)));
+
         textOr.add(Subqueries.exists(
-                createAttributeCriteria(ProductPoolAttribute.class, "support_level",
-                Arrays.asList(matches))));
+            this.createAttributeCriteria(ProductPoolAttribute.class,
+                "support_level",
+                Arrays.asList(matches)
+            )
+        ));
+
         this.otherCriteria.add(textOr);
     }
 
@@ -74,7 +110,8 @@ public class PoolFilterBuilder extends FilterBuilder {
             providedOrs.toArray(new Criterion[providedOrs.size()]))
         );
 
-        attrMatch.add(Property.forName("this.id").eqProperty("provided.pool.id"));
+        String originalPoolAlias = this.alias.isEmpty() ? "this." : alias;
+        attrMatch.add(Property.forName(originalPoolAlias + "id").eqProperty("provided.pool.id"));
         attrMatch.setProjection(Projections.property("provided.id"));
 
         return attrMatch;
@@ -102,31 +139,24 @@ public class PoolFilterBuilder extends FilterBuilder {
         Conjunction conjunction = new Conjunction();
 
         if (!values.isEmpty()) {
-            DetachedCriteria productPoolAttrMatch =
-                createAttributeCriteria(PoolAttribute.class, key, values);
-
-            DetachedCriteria poolAttrMatch =
-                createAttributeCriteria(ProductPoolAttribute.class, key, values);
-
-            Criterion positiveClause = Restrictions.or(
-                Subqueries.exists(productPoolAttrMatch),
-                Subqueries.exists(poolAttrMatch));
-
-            conjunction.add(positiveClause);
+            conjunction.add(
+                Restrictions.or(
+                    Subqueries.exists(this.createAttributeCriteria(ProductPoolAttribute.class, key, values)),
+                    Subqueries.exists(this.createAttributeCriteria(PoolAttribute.class, key, values))
+                )
+            );
         }
 
         if (!negatives.isEmpty()) {
-            DetachedCriteria productPoolAttrNegative =
-                createAttributeCriteria(ProductPoolAttribute.class, key, negatives);
-
-            DetachedCriteria poolAttrNegative =
-                createAttributeCriteria(PoolAttribute.class, key, negatives);
-
-            Criterion negativeClause = Restrictions.not(Restrictions.or(
-                Subqueries.exists(productPoolAttrNegative),
-                Subqueries.exists(poolAttrNegative)));
-
-            conjunction.add(negativeClause);
+            conjunction.add(
+                Restrictions.not(
+                    Restrictions.or(
+                        Subqueries.exists(this.createAttributeCriteria(ProductPoolAttribute.class, key,
+                                negatives)),
+                        Subqueries.exists(this.createAttributeCriteria(PoolAttribute.class, key, negatives))
+                    )
+                )
+            );
         }
 
         return conjunction;
@@ -159,7 +189,8 @@ public class PoolFilterBuilder extends FilterBuilder {
             attrOrs.toArray(new Criterion[attrOrs.size()]))
         );
 
-        attrMatch.add(Property.forName("this.id").eqProperty("attr.pool.id"));
+        String originalPoolAlias = this.alias.isEmpty() ? "this." : alias;
+        attrMatch.add(Property.forName(originalPoolAlias + "id").eqProperty("attr.pool.id"));
         attrMatch.setProjection(Projections.property("attr.id"));
 
         // We don't want to match Product Attributes that have been overridden
@@ -173,4 +204,5 @@ public class PoolFilterBuilder extends FilterBuilder {
         }
         return attrMatch;
     }
+
 }

@@ -26,6 +26,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Pool;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
@@ -36,6 +37,8 @@ import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.resteasy.parameter.CandlepinParam;
+import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -149,7 +152,18 @@ public class EntitlementResource {
     @Paginate
     public List<Entitlement> listAllForConsumer(
         @QueryParam("consumer") String consumerUuid,
+        @QueryParam("matches") String matches,
+        @QueryParam("attribute") @CandlepinParam(type = KeyValueParameter.class)
+        List<KeyValueParameter> attrFilters,
         @Context PageRequest pageRequest) {
+
+        EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
+        for (KeyValueParameter filterParam : attrFilters) {
+            filters.addAttributeFilter(filterParam.key(), filterParam.value());
+        }
+        if (!StringUtils.isEmpty(matches)) {
+            filters.addMatchesFilter(matches);
+        }
 
         Page<List<Entitlement>> p;
         if (consumerUuid != null) {
@@ -159,11 +173,10 @@ public class EntitlementResource {
                 throw new BadRequestException(
                     i18n.tr("Unit with ID ''{0}'' could not be found.", consumerUuid));
             }
-
-            p = entitlementCurator.listByConsumer(consumer, pageRequest);
+            p = entitlementCurator.listByConsumer(consumer, filters, pageRequest);
         }
         else {
-            p = entitlementCurator.listAll(pageRequest);
+            p = entitlementCurator.listAll(filters, pageRequest);
         }
 
         // Store the page for the LinkHeaderPostInterceptor

@@ -59,6 +59,7 @@ import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.EventCurator;
@@ -1569,10 +1570,14 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("product") String productId,
         @QueryParam("regen") @DefaultValue("true") Boolean regen,
+        @QueryParam("matches") String matches,
+        @QueryParam("attribute") @CandlepinParam(type = KeyValueParameter.class)
+        List<KeyValueParameter> attrFilters,
         @Context PageRequest pageRequest) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         Page<List<Entitlement>> entitlementsPage;
+        // No need to add filters when matching by product.
         if (productId != null) {
             Product p = productAdapter.getProductById(productId);
             if (p == null) {
@@ -1583,7 +1588,15 @@ public class ConsumerResource {
                 productId, pageRequest);
         }
         else {
-            entitlementsPage = entitlementCurator.listByConsumer(consumer, pageRequest);
+            // Build up any provided entitlement filters from query params.
+            EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
+            for (KeyValueParameter filterParam : attrFilters) {
+                filters.addAttributeFilter(filterParam.key(), filterParam.value());
+            }
+            if (!StringUtils.isEmpty(matches)) {
+                filters.addMatchesFilter(matches);
+            }
+            entitlementsPage = entitlementCurator.listByConsumer(consumer, filters, pageRequest);
         }
 
         // Store the page for the LinkHeaderPostInterceptor

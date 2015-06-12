@@ -144,10 +144,8 @@ public abstract class FilterBuilder {
             }
 
             // If regex didn't match anything it must be a plain search string:
-            String searchString = (searchBuf.length() > 0 ? searchBuf.toString() :
-                dbEscaped);
-            log.debug("Final database search string: {} -> {}", raw,
-                    searchString);
+            String searchString = (searchBuf.length() > 0 ? searchBuf.toString() : dbEscaped);
+            log.debug("Final database search string: {} -> {}", raw, searchString);
 
             return searchString;
         }

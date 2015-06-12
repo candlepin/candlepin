@@ -7,7 +7,8 @@ describe 'Entitlement Resource' do
 
   before do
     @owner = create_owner random_string 'test_owner'
-    @monitoring_prod = create_product(nil, 'monitoring')
+    @monitoring_prod = create_product(nil, 'monitoring',
+      :attributes => { 'variant' => "Satellite Starter Pack" })
     @virt_prod= create_product(nil, 'virtualization')
 
     #entitle owner for the virt and monitoring products.
@@ -24,22 +25,59 @@ describe 'Entitlement Resource' do
     @qowner = create_owner random_string 'test_owner'
   end
 
-  it 'should receive paged data back when requested' do
-    id_list = []
-    (1..4).each do |i|
-      prod = create_product()
-      @cp.create_subscription(@owner['key'], prod.id, 6)
-      id_list.push(prod.id)
-    end
-    @cp.refresh_pools(@owner['key'])
+  it 'can filter all entitlements by using matches param' do
+    @system.consume_product(@monitoring_prod.id)
+    @system.consume_product(@virt_prod.id)
 
-    id_list.each do |id|
-      @system.consume_product(id)
-    end
+    ents = @cp.list_ents_via_entitlements_resource(:matches => "virtualization")
+    ents.should have(1).things
+  end
 
-    entitlements = @system.list_entitlements({:page => 1, :per_page => 2, :sort_by => "id", :order => "asc"})
-    entitlements.length.should == 2
-    (entitlements[0].id <=> entitlements[1].id).should == -1
+  it 'can filter all entitlements by product attribute' do
+    @system.consume_product(@monitoring_prod.id)
+    @system.consume_product(@virt_prod.id)
+
+    ents = @cp.list_ents_via_entitlements_resource(
+      :attr_filters => { "variant" => "Satellite Starter Pack" })
+    ents.should have(1).things
+
+    found_attr = false
+    ents[0].pool.productAttributes.each do |attr|
+      if attr["name"] == 'variant' && attr["value"] == "Satellite Starter Pack"
+        found_attr = true
+        break
+      end
+    end
+    found_attr.should == true
+  end
+
+  it 'can filter consumer entitlements by product attribute' do
+    @system.consume_product(@monitoring_prod.id)
+    @system.consume_product(@virt_prod.id)
+    @cp.list_ents_via_entitlements_resource(:consumer_uuid => @system.uuid).should have(2).things
+
+    ents = @cp.list_ents_via_entitlements_resource(:consumer_uuid => @system.uuid,
+      :attr_filters => { "variant" => "Satellite Starter Pack" })
+    ents.should have(1).things
+
+    found_attr = false
+    ents[0].pool.productAttributes.each do |attr|
+      if attr["name"] == 'variant' && attr["value"] == "Satellite Starter Pack"
+        found_attr = true
+        break
+      end
+    end
+    found_attr.should == true
+  end
+
+  it 'can filter consumer entitlements by using matches param' do
+    @system.consume_product(@monitoring_prod.id)
+    @system.consume_product(@virt_prod.id)
+    @cp.list_ents_via_entitlements_resource(:consumer_uuid => @system.uuid).should have(2).things
+
+    ents = @cp.list_ents_via_entitlements_resource(:consumer_uuid => @system.uuid,
+      :matches => "virtualization")
+    ents.should have(1).things
   end
 
   it 'should allow entitlement certificate regeneration based on product id' do
@@ -77,20 +115,6 @@ describe 'Entitlement Resource' do
   it 'allows listing certificates by serial numbers' do
     @system.consume_product(@monitoring_prod.id)
     @system.list_certificate_serials.length.should == 1
-  end
-
-  it 'does not allow a consumer to view entitlements from a different consumer' do
-    # Given
-    bad_owner = create_owner random_string 'baddie'
-    bad_user = user_client(bad_owner, 'bad_dude')
-    system2 = consumer_client(bad_user, 'wrong_system')
-
-    # When
-    lambda do
-      system2.list_entitlements(:uuid => @system.uuid)
-
-      # Then
-    end.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it 'should allow consumer to change entitlement quantity' do
