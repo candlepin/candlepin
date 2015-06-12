@@ -43,8 +43,8 @@ cd base
 docker build -t candlepin-base .
 
 if [ "$PUSH" == "1" ]; then
-    docker tag -f candlepin-base $REPO_DEST/candlepin-base
-    docker push $REPO_DEST/candlepin-base
+    docker tag -f candlepin-base $PUSH_DEST/candlepin-base
+    docker push $PUSH_DEST/candlepin-base
 fi
 
 # Postgresql
@@ -52,8 +52,8 @@ cd ../postgresql
 docker build -t candlepin-postgresql .
 
 if [ "$PUSH" == "1" ]; then
-    docker tag -f candlepin-postgresql $REPO_DEST/candlepin-postgresql
-    docker push $REPO_DEST/candlepin-postgresql
+    docker tag -f candlepin-postgresql $PUSH_DEST/candlepin-postgresql
+    docker push $PUSH_DEST/candlepin-postgresql
 fi
 
 # Oracle
@@ -61,8 +61,8 @@ cd ../oracle
 docker build -t candlepin-oracle .
 
 if [ "$PUSH" == "1" ]; then
-    docker tag -f candlepin-oracle $REPO_DEST/candlepin-oracle
-    docker push $REPO_DEST/candlepin-oracle
+    docker tag -f candlepin-oracle $PUSH_DEST/candlepin-oracle
+    docker push $PUSH_DEST/candlepin-oracle
 fi
 
 # MySQL
@@ -70,8 +70,8 @@ cd ../mysql
 docker build -t candlepin-mysql .
 
 if [ "$PUSH" == "1" ]; then
-    docker tag -f candlepin-mysql $REPO_DEST/candlepin-mysql
-    docker push $REPO_DEST/candlepin-mysql
+    docker tag -f candlepin-mysql $PUSH_DEST/candlepin-mysql
+    docker push $PUSH_DEST/candlepin-mysql
 fi
 
 
@@ -79,7 +79,7 @@ fi
 PTARGS=""
 
 if [ "$PUSH" == "1" ]; then
-    PTARGS="$PTARGS -p -d \"$PUSH_DEST\""
+    PTARGS="$PTARGS -p -d $PUSH_DEST"
 fi
 
 # RHEL 6
