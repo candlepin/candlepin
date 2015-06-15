@@ -10,25 +10,35 @@ OPTIONS:
   -p         Push images to a repository or registry
   -d <repo>  Specify the destination repo to receive the images; implies -p;
              defaults to "candlepin-base docker.usersys.redhat.com/candlepin"
-  -v         Enable verbose/debug output
+  -c         Use cached layers when building containers
 HELP
 }
 
-while getopts ":pd:" opt; do
+while getopts ":pd:c" opt; do
     case $opt in
         p  ) PUSH="1";;
         d  ) PUSH="1"
              PUSH_DEST="${OPTARG}";;
+        c  ) USE_CACHE="1";;
         ?  ) usage; exit;;
     esac
 done
+
 
 if [ "$PUSH_DEST" == "" ]; then
     PUSH_DEST="docker.usersys.redhat.com/candlepin"
 fi
 
+# Setup build arguments
+BUILD_ARGS=""
 
-docker build -t candlepin/candlepin-rhel6:latest .
+if [ "$USE_CACHE" == "1" ]; then
+    BUILD_ARGS="$BUILD_ARGS --no-cache=false"
+else
+    BUILD_ARGS="$BUILD_ARGS --no-cache=true"
+fi
+
+docker build $BUILD_ARGS -t candlepin/candlepin-rhel6:latest .
 CP_VERSION=`docker run -ti candlepin/candlepin-rhel6:latest rpm -q --queryformat '%{VERSION}' candlepin`
 echo "Built container for candlepin: $CP_VERSION"
 
