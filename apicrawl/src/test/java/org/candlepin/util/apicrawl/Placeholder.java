@@ -12,6 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
+package org.candlepin.util.apicrawl;
 
 public class Placeholder {
     private Placeholder() {
