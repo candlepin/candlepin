@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.2
+Version: 2.0.3
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -208,6 +208,23 @@ fi
 
 #raw
 %changelog
+* Mon Jun 15 2015 Alex Wood <awood@redhat.com> 2.0.3-1
+- Massive changes to enable per-org product information.
+  (crog@redhat.com)
+- Migration tasks to enable users to upgrade to per-org product
+  (crog@redhat.com)
+- Added per-org/product pool refreshing and by-product owner lookups
+  (crog@redhat.com)
+- Build task to check for usage of libraries with vulnerabilities.
+  (awood@redhat.com)
+- Perform builds with MEAD. (awood@redhat.com)
+- Improve bind performance by filtering content only once.
+  (dgoodwin@redhat.com)
+- 1123560: Allow consumer with service level to autobind to pool without
+  (wpoteat@redhat.com)
+- 1110427: Hypervisor Resource expanded to allow fact enhancement for
+  hypervisor consumers (wpoteat@redhat.com)
+
 * Wed May 27 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 2.0.2-1
 - Rebuild with new parent pom version.
 
