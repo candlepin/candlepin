@@ -85,5 +85,6 @@
     <include file="db/changelog/20150416090438-mysql-quartz-longblob.xml"/>
     <include file="db/changelog/20150424150412-add-owner-id-to-jobstatus.xml"/>
     <include file="db/changelog/20150430115844-job-status-result-data.xml"/>
+    <include file="db/changelog/20150615155037-add-consumer-annotations.xml"/>
     <include file="db/changelog/20150616090156-per-org-products-column-def-fix.xml"/>
 </databaseChangeLog>
