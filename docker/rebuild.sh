@@ -20,27 +20,37 @@ OPTIONS:
   -p         Push images to a repository or registry
   -d <repo>  Specify the destination repo to receive the images; implies -p;
              defaults to "candlepin-base docker.usersys.redhat.com/candlepin"
-  -v         Enable verbose/debug output
+  -c         Use cached layers when building containers
 HELP
 }
 
-while getopts ":pd:" opt; do
+while getopts ":pd:c" opt; do
     case $opt in
         p  ) PUSH="1";;
         d  ) PUSH="1"
              PUSH_DEST="${OPTARG}";;
+        c  ) USE_CACHE="1";;
         ?  ) usage; exit;;
     esac
 done
+
 
 if [ "$PUSH_DEST" == "" ]; then
     PUSH_DEST="docker.usersys.redhat.com/candlepin"
 fi
 
+# Setup build arguments
+BUILD_ARGS=""
+
+if [ "$USE_CACHE" == "1" ]; then
+    BUILD_ARGS="$BUILD_ARGS --no-cache=false"
+else
+    BUILD_ARGS="$BUILD_ARGS --no-cache=true"
+fi
 
 # Base
 cd base
-docker build -t candlepin-base .
+docker build $BUILD_ARGS -t candlepin-base .
 
 if [ "$PUSH" == "1" ]; then
     docker tag -f candlepin-base $PUSH_DEST/candlepin-base
@@ -49,7 +59,7 @@ fi
 
 # Postgresql
 cd ../postgresql
-docker build -t candlepin-postgresql .
+docker build $BUILD_ARGS -t candlepin-postgresql .
 
 if [ "$PUSH" == "1" ]; then
     docker tag -f candlepin-postgresql $PUSH_DEST/candlepin-postgresql
@@ -58,7 +68,7 @@ fi
 
 # Oracle
 cd ../oracle
-docker build -t candlepin-oracle .
+docker build $BUILD_ARGS -t candlepin-oracle .
 
 if [ "$PUSH" == "1" ]; then
     docker tag -f candlepin-oracle $PUSH_DEST/candlepin-oracle
@@ -67,7 +77,7 @@ fi
 
 # MySQL
 cd ../mysql
-docker build -t candlepin-mysql .
+docker build $BUILD_ARGS -t candlepin-mysql .
 
 if [ "$PUSH" == "1" ]; then
     docker tag -f candlepin-mysql $PUSH_DEST/candlepin-mysql
@@ -80,6 +90,10 @@ PTARGS=""
 
 if [ "$PUSH" == "1" ]; then
     PTARGS="$PTARGS -p -d $PUSH_DEST"
+fi
+
+if [ "$USE_CACHE" == "1" ]; then
+    PTARGS="$PTARGS -c"
 fi
 
 # RHEL 6
