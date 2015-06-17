@@ -7,7 +7,7 @@ require './tasks/util'
 # resolving all the dependencies is more comprehensive than ours.  It handles adding
 # test, and optional dependencies, for example.
 module PomTask
-  include Candlepin::Util
+  include ::Candlepin::Util
 
   class Config
     def initialize(project)
