@@ -2103,8 +2103,19 @@ public class ConsumerResource {
 
     private void addDataToInstalledProducts(Consumer consumer) {
 
-        ComplianceStatus complianceStatus = complianceRules.getStatus(
-                           consumer, null, false);
+        if (consumer.getInstalledProducts().size() == 0) {
+            /*
+             * No installed products implies nothing to enrich.
+             *
+             * Distributors can have many entitlements, but no installed products.
+             * Calculating the status can be quite expensive but the data isn't
+             * actually used if there's nothing installed.
+             */
+            return;
+        }
+
+        ComplianceStatus complianceStatus = complianceRules.getStatus(consumer, null,
+                false);
 
         ConsumerInstalledProductEnricher enricher = new ConsumerInstalledProductEnricher(
             consumer, complianceStatus, complianceRules);
