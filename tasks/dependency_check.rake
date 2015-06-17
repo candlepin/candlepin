@@ -1,4 +1,5 @@
 require 'rexml/document'
+require './tasks/util'
 
 # Plugin to run the OWASP Dependency Checker (https://www.owasp.org/index.php/OWASP_Dependency_Check)
 # to check dependencies for reported security vulnerabilities.
@@ -8,7 +9,7 @@ require 'rexml/document'
 # vulnerability.  Users can set this in their project by setting dependency_check.max_allowed_cvss
 # to a float between 1.0 and 10.0 on the project object.
 module DependencyCheck
-  include Candlepin::Util
+  include ::Candlepin::Util
 
   class DependencyCheckReportTask < Rake::Task
     attr_reader :project
