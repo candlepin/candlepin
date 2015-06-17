@@ -10,30 +10,32 @@
 # Add: INSECURE_REGISTRY='--insecure-registry docker.usersys.redhat.com'
 # To: /etc/sysconfig/docker
 
-SCRIPT_NAME=`basename "$0"`
+SCRIPT_NAME=$( basename "$0" )
+SCRIPT_HOME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 usage() {
     cat <<HELP
 Usage: $SCRIPT_NAME [options]
 
 OPTIONS:
-  -p         Push images to a repository or registry
-  -d <repo>  Specify the destination repo to receive the images; implies -p;
-             defaults to "candlepin-base docker.usersys.redhat.com/candlepin"
-  -c         Use cached layers when building containers
+  -p          Push images to a repository or registry
+  -d <repo>   Specify the destination repo to receive the images; implies -p;
+              defaults to "candlepin-base docker.usersys.redhat.com/candlepin"
+  -c          Use cached layers when building containers
+  -v          Enable verbose/debug output
 HELP
 }
 
-while getopts ":pd:c" opt; do
+while getopts ":pd:cv" opt; do
     case $opt in
         p  ) PUSH="1";;
         d  ) PUSH="1"
              PUSH_DEST="${OPTARG}";;
         c  ) USE_CACHE="1";;
+        v  ) set -x;;
         ?  ) usage; exit;;
     esac
 done
-
 
 if [ "$PUSH_DEST" == "" ]; then
     PUSH_DEST="docker.usersys.redhat.com/candlepin"
