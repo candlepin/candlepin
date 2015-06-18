@@ -11,7 +11,10 @@ describe 'Entitlements' do
     @virt = create_product(nil, random_string('virtualization_host'),
       {:attributes => {"multi-entitlement" => "yes"}})
     @super_awesome = create_product(nil, random_string('super_awesome'),
-                                    :attributes => { 'cpu.cpu_socket(s)' => 4 })
+                                    :attributes => {
+                                      'cpu.cpu_socket(s)' => 4,
+                                      'variant' => "Satellite Starter Pack"
+                                    })
     @virt_limit = create_product(nil, random_string('virt_limit'),
       {:attributes => {"virt_limit" => "10"}})
 
@@ -84,6 +87,36 @@ describe 'Entitlements' do
 
     entitlements = @system.list_entitlements(:product_id => @monitoring.id)
     entitlements.should have(1).things
+  end
+
+  it 'should filter entitlements by product attribute' do
+    @system.consume_pool find_pool(@virt_limit).id
+    @system.consume_pool find_pool(@super_awesome).id
+    @system.list_entitlements().should have(2).things
+
+    entitlements = @system.list_entitlements(:attr_filters => {:variant => "Satellite*"})
+    entitlements.should have(1).things
+
+    found_attr = false
+    entitlements[0].pool.productAttributes.each do |attr|
+      if attr["name"] == 'variant' && attr["value"] == "Satellite Starter Pack"
+        found_attr = true
+        break
+      end
+    end
+    found_attr.should == true
+  end
+
+  it 'should filter consumer entitlements by matches parameter' do
+    @system.consume_pool find_pool(@virt_limit).id
+    @system.consume_pool find_pool(@super_awesome).id
+    @system.list_entitlements().should have(2).things
+
+    entitlements = @system.list_entitlements(:matches => @virt_limit.name)
+    entitlements.should have(1).things
+
+    found_attr = false
+    entitlements[0].pool.product.name.should == @virt_limit.name
   end
 
   it 'should be removed after revoking all entitlements' do
