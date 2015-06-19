@@ -22,7 +22,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.15.1
+Version: 1.0.15.2
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -217,6 +217,9 @@ rm -rf %{buildroot}
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
+* Fri Jun 19 2015 Michael Stead <mstead@redhat.com> 1.0.15.2-1
+- Fixed requirements for liqibase (mstead@redhat.com)
+
 * Fri Jun 19 2015 Michael Stead <mstead@redhat.com> 1.0.15.1-1
 - Lifted the limitation on combined filters in the consumer status report
   (crog@redhat.com)
