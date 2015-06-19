@@ -44,6 +44,7 @@ jboss-logging
 jcl-over-slf4j
 jms
 jta
+liquibase
 logback-classic
 logback-core
 oauth/oauth

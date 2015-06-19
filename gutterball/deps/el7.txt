@@ -39,6 +39,7 @@ javassist
 jboss-logging
 jms
 jta
+liquibase
 logback/logback-classic
 logback/logback-core
 oauth/oauth
