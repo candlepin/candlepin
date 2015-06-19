@@ -79,7 +79,7 @@ def create_owner(cp, new_owner)
   cp.create_activation_key(owner['key'], "awesome_os_pool")
 end
 
-thread_pool = Pool.new(4)
+thread_pool = Pool.new(5)
 data['owners'].each do |new_owner|
     thread_pool.schedule do
         create_owner(cp, new_owner)
@@ -101,7 +101,7 @@ def create_user(cp, new_user)
 end
 
 puts "Create some users"
-thread_pool = Pool.new(4)
+thread_pool = Pool.new(5)
 data['users'].each do |new_user|
     thread_pool.schedule do
         create_user(cp, new_user)
@@ -132,7 +132,7 @@ def create_role(cp, new_role)
 
 end
 
-thread_pool = Pool.new(4)
+thread_pool = Pool.new(5)
 data['roles'].each do |new_role|
     thread_pool.schedule do
         create_role(cp, new_role)
@@ -174,7 +174,7 @@ def create_content(cp, owner, content)
   )
 end
 
-thread_pool = Pool.new(4)
+thread_pool = Pool.new(5)
 data['owners'].each do |owner|
     if owner.has_key?('content')
         owner['content'].each do |content|
@@ -239,7 +239,7 @@ def create_eng_product(cp, thread_pool, owner, product)
   product_content = product['content'] || []
 
   # Generate a product id cert in generated_certs for each engineering product
-  product_cert = cp.get_product_cert(product_ret['id'])
+  product_cert = cp.get_product_cert(owner['name'], product_ret['id'])
   cert_file = File.new(CERT_DIR + '/' + product_ret['id'] + '.pem', 'w+')
   cert_file.puts(product_cert['cert'])
 
@@ -379,7 +379,7 @@ end
 thread_pool.shutdown
 
 # Refresh to create pools for all subscriptions just created:
-thread_pool = Pool.new(4)
+thread_pool = Pool.new(5)
 owner_keys.each do |owner_key|
     thread_pool.schedule do
         puts "refreshing pools for " + owner_key

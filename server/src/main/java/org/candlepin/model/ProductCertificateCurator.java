@@ -56,6 +56,8 @@ public class ProductCertificateCurator extends AbstractHibernateCurator<ProductC
     }
 
     public ProductCertificate findForProduct(Product product) {
+        log.debug("Finding cert for product: {}", product);
+
         return (ProductCertificate) currentSession()
             .createCriteria(ProductCertificate.class)
             .add(Restrictions.eq("product", product))
@@ -69,6 +71,7 @@ public class ProductCertificateCurator extends AbstractHibernateCurator<ProductC
      * @return the stored or created {@link ProductCertificate}
      */
     public ProductCertificate getCertForProduct(Product product) {
+        log.debug("Retrieving cert for product: {}", product);
         ProductCertificate cert = this.findForProduct(product);
 
         if (cert == null) {
@@ -90,6 +93,7 @@ public class ProductCertificateCurator extends AbstractHibernateCurator<ProductC
 
     private ProductCertificate createCertForProduct(Product product)
         throws GeneralSecurityException, IOException {
+        log.debug("Generating cert for product: {}", product);
 
         KeyPair keyPair = this.pki.generateNewKeyPair();
         Set<X509ExtensionWrapper> extensions = this.extensionUtil.productExtensions(product);

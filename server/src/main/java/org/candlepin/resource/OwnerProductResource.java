@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.persistence.LockModeType;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -358,10 +359,15 @@ public class OwnerProductResource {
         Product product = this.getProduct(ownerKey, productId);
         Content content = this.getContent(product.getOwner(), contentId);
 
+        this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
+
         ProductContent productContent = new ProductContent(product, content, enabled);
         product.addProductContent(productContent);
 
-        return productCurator.find((product.getUuid()));
+        this.productCurator.merge(product);
+        this.productCurator.flush();
+
+        return product;
     }
 
     /**

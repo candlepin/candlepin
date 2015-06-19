@@ -16,7 +16,7 @@ describe 'Product Certificate' do
     }
     @product = create_product(nil, random_string('test-product'))
 
-    cert_data = @cp.get_product_cert(@product.id)
+    cert_data = @cp.get_product_cert(@owner['key'], @product.id)
     @cert = OpenSSL::X509::Certificate.new(cert_data.cert)
   end
 

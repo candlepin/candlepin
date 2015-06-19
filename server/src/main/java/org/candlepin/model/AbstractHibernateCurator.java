@@ -44,6 +44,7 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 import javax.persistence.OptimisticLockException;
 
 /**
@@ -418,6 +419,10 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         getEntityManager().refresh(object);
     }
 
+    public void lock(E object, LockModeType lmt) {
+        this.getEntityManager().lock(object, lmt);
+    }
+
     public void evict(E object) {
         currentSession().evict(object);
     }
@@ -440,4 +445,5 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     private String getConcurrentModificationMessage() {
         return i18n.tr("Request failed due to concurrent modification, please re-try.");
     }
+
 }
