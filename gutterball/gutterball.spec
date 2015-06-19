@@ -22,7 +22,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.15.0
+Version: 1.0.15.1
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -215,6 +215,20 @@ rm -rf %{buildroot}
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
+* Fri Jun 19 2015 Michael Stead <mstead@redhat.com> 1.0.15.1-1
+- Lifted the limitation on combined filters in the consumer status report
+  (crog@redhat.com)
+- Checkstyle and PR fixes (crog@redhat.com)
+- Replaced the JSON deserializer with converters and event handlers
+  (crog@redhat.com)
+- Added a deserializer for ComplianceStatus (crog@redhat.com)
+- Changed GB model on ComplianceStatus (crog@redhat.com)
+- Added additional filtering to the consumer status report (crog@redhat.com)
+- Checkstyle changes (crog@redhat.com)
+- Added product name filtering to the status trend report (crog@redhat.com)
+- 1217058: Fixed broken changeset affecting upgrade (mstead@redhat.com)
+- Added consumer filtering to the status trend report (crog@redhat.com)
+
 * Tue Apr 28 2015 Michael Stead <mstead@redhat.com> 1.0.15.0-1
 - Adjusted default QPID connection timeouts/retries (mstead@redhat.com)
 - Properly close qpid connection on shutdown (mstead@redhat.com)
