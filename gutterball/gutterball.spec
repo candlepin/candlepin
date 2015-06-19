@@ -62,6 +62,7 @@ BuildRequires: postgresql-jdbc
 BuildRequires: jta
 BuildRequires: apache-mime4j = 0:0.6
 BuildRequires: antlr >= 0:2.7.7
+BuildRequires: liquibase >= 0:2.0.5
 
 %global jackson_version 0:2.3.0
 BuildRequires: jackson-annotations >= %{jackson_version}
@@ -125,6 +126,7 @@ Requires: postgresql-jdbc
 Requires: jta
 Requires: apache-mime4j = 0:0.6
 Requires: antlr >= 0:2.7.7
+Requires: liquibase >= 0:2.0.5
 
 Requires: jackson-annotations >= %{jackson_version}
 Requires: jackson-core >= %{jackson_version}
