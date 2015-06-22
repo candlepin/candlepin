@@ -1,9 +1,5 @@
 #!/bin/sh
 
-if [ $(id -u) != 0 ]; then
-    exec sudo -- "$0" "$@"
-fi
-
 unset CDPATH
 SCRIPT_NAME=$( basename "$0" )
 SCRIPT_HOME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )

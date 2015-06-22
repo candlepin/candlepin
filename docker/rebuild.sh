@@ -10,11 +10,6 @@
 # Add: INSECURE_REGISTRY='--insecure-registry docker.usersys.redhat.com'
 # To: /etc/sysconfig/docker
 
-if [ $(id -u) != 0 ]; then
-    exec sudo -- "$0" "$@"
-fi
-
-
 SCRIPT_NAME=$( basename "$0" )
 SCRIPT_HOME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
@@ -62,6 +57,7 @@ if [ "$VERBOSE" == "1" ]; then
     PTARGS="$PTARGS -v"
 fi
 
+cd $SCRIPT_HOME
 ./candlepin-base/build.sh $PTARGS
 
 if [ "$?" != "0" ]; then
