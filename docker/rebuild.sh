@@ -32,60 +32,11 @@ while getopts ":pd:cv" opt; do
         d  ) PUSH="1"
              PUSH_DEST="${OPTARG}";;
         c  ) USE_CACHE="1";;
-        v  ) set -x;;
+        v  ) VERBOSE="1"
+             set -x;;
         ?  ) usage; exit;;
     esac
 done
-
-if [ "$PUSH_DEST" == "" ]; then
-    PUSH_DEST="docker.usersys.redhat.com/candlepin"
-fi
-
-# Setup build arguments
-BUILD_ARGS=""
-
-if [ "$USE_CACHE" == "1" ]; then
-    BUILD_ARGS="$BUILD_ARGS --no-cache=false"
-else
-    BUILD_ARGS="$BUILD_ARGS --no-cache=true"
-fi
-
-# Base
-cd base
-docker build $BUILD_ARGS -t candlepin-base .
-
-if [ "$PUSH" == "1" ]; then
-    docker tag -f candlepin-base $PUSH_DEST/candlepin-base
-    docker push $PUSH_DEST/candlepin-base
-fi
-
-# Postgresql
-cd ../postgresql
-docker build $BUILD_ARGS -t candlepin-postgresql .
-
-if [ "$PUSH" == "1" ]; then
-    docker tag -f candlepin-postgresql $PUSH_DEST/candlepin-postgresql
-    docker push $PUSH_DEST/candlepin-postgresql
-fi
-
-# Oracle
-cd ../oracle
-docker build $BUILD_ARGS -t candlepin-oracle .
-
-if [ "$PUSH" == "1" ]; then
-    docker tag -f candlepin-oracle $PUSH_DEST/candlepin-oracle
-    docker push $PUSH_DEST/candlepin-oracle
-fi
-
-# MySQL
-cd ../mysql
-docker build $BUILD_ARGS -t candlepin-mysql .
-
-if [ "$PUSH" == "1" ]; then
-    docker tag -f candlepin-mysql $PUSH_DEST/candlepin-mysql
-    docker push $PUSH_DEST/candlepin-mysql
-fi
-
 
 # Build argument string for our pass-through scripts
 PTARGS=""
@@ -98,16 +49,21 @@ if [ "$USE_CACHE" == "1" ]; then
     PTARGS="$PTARGS -c"
 fi
 
-# RHEL 6
-cd ../candlepin-rhel6-base
-./build.sh $PTARGS
+if [ "$VERBOSE" == "1" ]; then
+    PTARGS="$PTARGS -v"
+fi
 
-cd ../candlepin-rhel6
-./build.sh $PTARGS
+./candlepin-base/build.sh $PTARGS
 
-# RHEL 7
-cd ../candlepin-rhel7-base
-./build.sh $PTARGS
+if [ "$?" != "0" ]; then
+    echo "Unable to build candlepin-base; skipping dependant images"
+    exit 1
+fi
 
-cd ../candlepin-rhel7
-./build.sh $PTARGS
+./candlepin-mysql/build.sh $PTARGS
+./candlepin-oracle/build.sh $PTARGS
+./candlepin-postgresql/build.sh $PTARGS
+./candlepin-rhel6-base/build.sh $PTARGS
+./candlepin-rhel6/build.sh $PTARGS
+./candlepin-rhel7-base/build.sh $PTARGS
+./candlepin-rhel7/build.sh $PTARGS
