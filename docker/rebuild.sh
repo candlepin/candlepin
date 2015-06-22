@@ -10,6 +10,11 @@
 # Add: INSECURE_REGISTRY='--insecure-registry docker.usersys.redhat.com'
 # To: /etc/sysconfig/docker
 
+if [ $(id -u) != 0 ]; then
+    exec sudo -- "$0" "$@"
+fi
+
+
 SCRIPT_NAME=$( basename "$0" )
 SCRIPT_HOME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
@@ -42,7 +47,11 @@ done
 PTARGS=""
 
 if [ "$PUSH" == "1" ]; then
-    PTARGS="$PTARGS -p -d $PUSH_DEST"
+    PTARGS="$PTARGS -p"
+
+    if [ "$PUSH_DEST" != "" ]; then
+        PTARGS="$PTARGS -d $PUSH_DEST"
+    fi
 fi
 
 if [ "$USE_CACHE" == "1" ]; then
