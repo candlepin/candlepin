@@ -220,7 +220,7 @@ module ModifiedRSpec
 
   module ProjectExtension
     include Extension
-    include Candlepin::Util
+    include ::Candlepin::Util
 
     TEST_SPECIFIC_REGEX = /^rspec:(.+)/
 

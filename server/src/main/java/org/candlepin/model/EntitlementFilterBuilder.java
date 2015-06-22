@@ -12,14 +12,19 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.util.apicrawl;
 
-public class Placeholder {
-    private Placeholder() {
+package org.candlepin.model;
+
+/**
+ * A filter builder that allows filtering Entitlements based on it's pools product
+ * attributes. When using this builder, a criteria is expected to have the Pool
+ * class aliased as 'p'.
+ */
+public class EntitlementFilterBuilder extends PoolFilterBuilder {
+
+    public EntitlementFilterBuilder() {
+        // Requires that the parent criteria has an alias set on the Pool class.
+        super("p");
     }
 
-    public static void main(String[] args) {
-        System.out.println("This class is a placeholder to keep Buildr " +
-            "from failing which it would if there were no tests at all.");
-    }
 }
