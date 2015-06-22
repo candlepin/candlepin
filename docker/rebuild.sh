@@ -10,88 +10,69 @@
 # Add: INSECURE_REGISTRY='--insecure-registry docker.usersys.redhat.com'
 # To: /etc/sysconfig/docker
 
-SCRIPT_NAME=`basename "$0"`
+if [ $(id -u) != 0 ]; then
+    exec sudo -- "$0" "$@"
+fi
+
+
+SCRIPT_NAME=$( basename "$0" )
+SCRIPT_HOME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 usage() {
     cat <<HELP
 Usage: $SCRIPT_NAME [options]
 
 OPTIONS:
-  -p         Push images to a repository or registry
-  -d <repo>  Specify the destination repo to receive the images; implies -p;
-             defaults to "candlepin-base docker.usersys.redhat.com/candlepin"
-  -v         Enable verbose/debug output
+  -p          Push images to a repository or registry
+  -d <repo>   Specify the destination repo to receive the images; implies -p;
+              defaults to "candlepin-base docker.usersys.redhat.com/candlepin"
+  -c          Use cached layers when building containers
+  -v          Enable verbose/debug output
 HELP
 }
 
-while getopts ":pd:" opt; do
+while getopts ":pd:cv" opt; do
     case $opt in
         p  ) PUSH="1";;
         d  ) PUSH="1"
              PUSH_DEST="${OPTARG}";;
+        c  ) USE_CACHE="1";;
+        v  ) VERBOSE="1"
+             set -x;;
         ?  ) usage; exit;;
     esac
 done
-
-if [ "$PUSH_DEST" == "" ]; then
-    PUSH_DEST="docker.usersys.redhat.com/candlepin"
-fi
-
-
-# Base
-cd base
-docker build -t candlepin-base .
-
-if [ "$PUSH" == "1" ]; then
-    docker tag -f candlepin-base $PUSH_DEST/candlepin-base
-    docker push $PUSH_DEST/candlepin-base
-fi
-
-# Postgresql
-cd ../postgresql
-docker build -t candlepin-postgresql .
-
-if [ "$PUSH" == "1" ]; then
-    docker tag -f candlepin-postgresql $PUSH_DEST/candlepin-postgresql
-    docker push $PUSH_DEST/candlepin-postgresql
-fi
-
-# Oracle
-cd ../oracle
-docker build -t candlepin-oracle .
-
-if [ "$PUSH" == "1" ]; then
-    docker tag -f candlepin-oracle $PUSH_DEST/candlepin-oracle
-    docker push $PUSH_DEST/candlepin-oracle
-fi
-
-# MySQL
-cd ../mysql
-docker build -t candlepin-mysql .
-
-if [ "$PUSH" == "1" ]; then
-    docker tag -f candlepin-mysql $PUSH_DEST/candlepin-mysql
-    docker push $PUSH_DEST/candlepin-mysql
-fi
-
 
 # Build argument string for our pass-through scripts
 PTARGS=""
 
 if [ "$PUSH" == "1" ]; then
-    PTARGS="$PTARGS -p -d $PUSH_DEST"
+    PTARGS="$PTARGS -p"
+
+    if [ "$PUSH_DEST" != "" ]; then
+        PTARGS="$PTARGS -d $PUSH_DEST"
+    fi
 fi
 
-# RHEL 6
-cd ../candlepin-rhel6-base
-./build.sh $PTARGS
+if [ "$USE_CACHE" == "1" ]; then
+    PTARGS="$PTARGS -c"
+fi
 
-cd ../candlepin-rhel6
-./build.sh $PTARGS
+if [ "$VERBOSE" == "1" ]; then
+    PTARGS="$PTARGS -v"
+fi
 
-# RHEL 7
-cd ../candlepin-rhel7-base
-./build.sh $PTARGS
+./candlepin-base/build.sh $PTARGS
 
-cd ../candlepin-rhel7
-./build.sh $PTARGS
+if [ "$?" != "0" ]; then
+    echo "Unable to build candlepin-base; skipping dependant images"
+    exit 1
+fi
+
+./candlepin-mysql/build.sh $PTARGS
+./candlepin-oracle/build.sh $PTARGS
+./candlepin-postgresql/build.sh $PTARGS
+./candlepin-rhel6-base/build.sh $PTARGS
+./candlepin-rhel6/build.sh $PTARGS
+./candlepin-rhel7-base/build.sh $PTARGS
+./candlepin-rhel7/build.sh $PTARGS
