@@ -393,6 +393,10 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
     public Page<List<Entitlement>> listAll(EntitlementFilterBuilder filters, PageRequest pageRequest) {
         Criteria criteria = createSecureCriteria();
+        criteria.createAlias("pool", "p");
+        if (filters.hasMatchFilters()) {
+            criteria.createAlias("p.providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN);
+        }
         filters.applyTo(criteria);
         return listByCriteria(criteria, pageRequest);
     }
