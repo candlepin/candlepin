@@ -18,6 +18,8 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.model.User;
 import org.candlepin.model.UserCurator;
 import org.candlepin.service.UserServiceAdapter;
@@ -35,12 +37,14 @@ public class AdminResourceTest {
     private UserServiceAdapter usa;
     private AdminResource ar;
     private UserCurator uc;
+    private Configuration config;
 
     @Before
     public void init() {
+        config = new CandlepinCommonTestConfig();
         usa = mock(DefaultUserServiceAdapter.class);
         uc = mock(UserCurator.class);
-        ar = new AdminResource(usa, uc, null);
+        ar = new AdminResource(usa, uc, null, config);
     }
 
     @Test
@@ -52,7 +56,7 @@ public class AdminResourceTest {
 
     @Test
     public void initWithNonDefaultUserService() {
-        ar = new AdminResource(mock(UserServiceAdapter.class), uc, null);
+        ar = new AdminResource(mock(UserServiceAdapter.class), uc, null, config);
         assertEquals("Already initialized.", ar.initialize());
     }
 

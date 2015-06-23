@@ -14,9 +14,11 @@
  */
 package org.candlepin.pinsetter.tasks;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Content;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
@@ -137,9 +139,11 @@ public class PopulateHostedDBTaskTest extends DatabaseTestFixture {
         assertEquals(0, this.productCurator.listAll().size());
         assertEquals(0, this.contentCurator.listAll().size());
 
+        CandlepinCommonTestConfig config = new CandlepinCommonTestConfig();
+        config.setProperty(ConfigProperties.STANDALONE, "false");
         // Test
         PopulateHostedDBTask task = new PopulateHostedDBTask(
-            psa, this.productCurator, this.contentCurator, poolCuratorSpy
+            psa, this.productCurator, this.contentCurator, poolCuratorSpy, config
         );
 
         task.execute(jec);
