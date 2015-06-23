@@ -765,7 +765,6 @@ class Candlepin
     end
 
     path << "matches=#{params[:matches]}" if params[:matches]
-    puts path
     get(path)
   end
 
