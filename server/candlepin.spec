@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.26.10
+Version: 0.9.26.11
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -390,6 +390,9 @@ fi
 
 
 %changelog
+* Wed Jun 24 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.26.11-1
+- Applying entitlement attribute filter backport fixes (mstead@redhat.com)
+
 * Tue Jun 23 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.26.10-1
 - Do not calculate compliance status if there are no installed products.
   (dgoodwin@redhat.com)
