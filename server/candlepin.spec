@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.51
+Version: 0.9.51.0
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,19 @@ fi
 
 
 %changelog
+* Thu Jun 25 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.51.0-1
+- Added filter options to Consumer/Entitlement resource ent lookups
+  (mstead@redhat.com)
+- Do not calculate compliance status if there are no installed products.
+  (dgoodwin@redhat.com)
+- Test fixes for merge problems. (dgoodwin@redhat.com)
+- Improved grammar in error message (crog@redhat.com)
+- The populate hosted DB task no longer runs on standalone configurations
+  (crog@redhat.com)
+- Improve bind performance by filtering content only once.
+  (dgoodwin@redhat.com)
+- Major bind time reduction for large SKUs. (dgoodwin@redhat.com)
+
 * Wed May 20 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.51-1
 - Added a new data validation utility (crog@redhat.com)
 - Logging improvements for refresh pools. (dgoodwin@redhat.com)
