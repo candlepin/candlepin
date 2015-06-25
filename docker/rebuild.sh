@@ -12,6 +12,7 @@
 
 SCRIPT_NAME=$( basename "$0" )
 SCRIPT_HOME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+cd $SCRIPT_HOME
 
 usage() {
     cat <<HELP
@@ -21,7 +22,7 @@ OPTIONS:
   -p          Push images to a repository or registry
   -d <repo>   Specify the destination repo to receive the images; implies -p;
               defaults to "candlepin-base docker.usersys.redhat.com/candlepin"
-  -c          Use cached layers when building containers
+  -c          Use cached layers when building containers; defaults to false
   -v          Enable verbose/debug output
 HELP
 }
@@ -38,37 +39,73 @@ while getopts ":pd:cv" opt; do
     esac
 done
 
-# Build argument string for our pass-through scripts
-PTARGS=""
+# Build argument string to be passed through to each individual build script
+BUILD_ARGS=""
 
 if [ "$PUSH" == "1" ]; then
-    PTARGS="$PTARGS -p"
+    BUILD_ARGS="$BUILD_ARGS -p"
 
     if [ "$PUSH_DEST" != "" ]; then
-        PTARGS="$PTARGS -d $PUSH_DEST"
+        BUILD_ARGS="$BUILD_ARGS -d $PUSH_DEST"
     fi
 fi
 
 if [ "$USE_CACHE" == "1" ]; then
-    PTARGS="$PTARGS -c"
+    BUILD_ARGS="$BUILD_ARGS -c"
 fi
 
 if [ "$VERBOSE" == "1" ]; then
-    PTARGS="$PTARGS -v"
+    BUILD_ARGS="$BUILD_ARGS -v"
 fi
 
-cd $SCRIPT_HOME
-./candlepin-base/build.sh $PTARGS
+MESSAGES=""
+EXIT_CODE=0
 
-if [ "$?" != "0" ]; then
-    echo "Unable to build candlepin-base; skipping dependant images"
-    exit 1
+build_image() {
+    IMAGE_NAME=$1
+
+    ./$IMAGE_NAME/build.sh $BUILD_ARGS
+    RESULT=$?
+
+    if [ "$RESULT" != "0" ]; then
+        EXIT_CODE=1
+        ERR_MSG="Unable to build image \"$IMAGE_NAME\""
+
+        if [ "$MESSAGES" != "" ] && [ "$ERR_MSG" != "" ]; then
+            MESSAGES="$MESSAGES\n"
+        fi
+
+        MESSAGES="$MESSAGES$ERR_MSG"
+    fi
+
+    return $RESULT
+}
+
+
+if build_image "candlepin-base"; then
+    build_image "candlepin-mysql"
+    build_image "candlepin-oracle"
+    build_image "candlepin-postgresql"
+else
+    echo "Unable to build candlepin-base image; skipping dependant images..." >&2
 fi
 
-./candlepin-mysql/build.sh $PTARGS
-./candlepin-oracle/build.sh $PTARGS
-./candlepin-postgresql/build.sh $PTARGS
-./candlepin-rhel6-base/build.sh $PTARGS
-./candlepin-rhel6/build.sh $PTARGS
-./candlepin-rhel7-base/build.sh $PTARGS
-./candlepin-rhel7/build.sh $PTARGS
+if build_image "candlepin-rhel6-base"; then
+    build_image "candlepin-rhel6"
+else
+    echo "Unable to build candlepin-rhel6-base image; skipping rhel6 image..." >&2
+fi
+
+if build_image "candlepin-rhel7-base"; then
+    build_image "candlepin-rhel7"
+else
+    echo "Unable to build candlepin-rhel7-base image; skipping rhel7 image..." >&2
+fi
+
+if [ "$MESSAGES" != "" ]; then
+    echo -e $MESSAGES >&2
+else
+    echo "Images built successfully"
+fi
+
+exit $EXIT_CODE

@@ -1,4 +1,4 @@
-FROM candlepin-base
+FROM candlepin/candlepin-base
 MAINTAINER Devan Goodwin <dgoodwin@redhat.com>
 
 # Configure postgresql:

@@ -14,10 +14,6 @@ RUN rpm -e --nodeps fakesystemd
 ADD setup-supervisor.sh /root/
 RUN /bin/bash /root/setup-supervisor.sh
 
-# TODO: Temporary until I get correct code into a build:
-ADD cpdb /root/cpdb
-ADD cpsetup /root/cpsetup
-
 EXPOSE 8443
 
 ADD startup.sh /root/startup.sh
