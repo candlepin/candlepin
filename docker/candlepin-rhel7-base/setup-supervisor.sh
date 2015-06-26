@@ -1,5 +1,7 @@
 #! /bin/bash
 
+set -e
+
 setup_supervisor() {
     pip install supervisor
     mkdir -p /var/log/supervisor

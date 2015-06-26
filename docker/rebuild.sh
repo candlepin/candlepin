@@ -93,13 +93,13 @@ fi
 if build_image "candlepin-rhel6-base"; then
     build_image "candlepin-rhel6"
 else
-    echo "Unable to build candlepin-rhel6-base image; skipping rhel6 image..." >&2
+    echo "Unable to build candlepin-rhel6-base image; skipping rhel6 child images..." >&2
 fi
 
 if build_image "candlepin-rhel7-base"; then
     build_image "candlepin-rhel7"
 else
-    echo "Unable to build candlepin-rhel7-base image; skipping rhel7 image..." >&2
+    echo "Unable to build candlepin-rhel7-base image; skipping rhel7 child images..." >&2
 fi
 
 if [ "$MESSAGES" != "" ]; then

@@ -1,5 +1,7 @@
 #! /bin/bash
 
+set -e
+
 setup_supervisor() {
     yum install -y supervisor
     mkdir -p /var/log/supervisor

@@ -1,5 +1,6 @@
 #! /bin/bash
 
+set -e
 env
 
 # Create a candlepin.repo file with the URL we were given via env var:
