@@ -703,8 +703,8 @@ class Candlepin
     delete("/owners/#{owner_key}/products/#{product_id}")
   end
 
-  def get_product_cert(product_id)
-    get("/products/#{product_id}/certificate")
+  def get_product_cert(owner_key, product_id)
+    get("/owners/#{owner_key}/products/#{product_id}/certificate")
   end
 
   # TODO: Should we change these to bind to better match terminology?
