@@ -1,5 +1,7 @@
 #! /bin/bash
 
+set -e
+
 setup_postgresql() {
     yum install -y postgresql postgresql-server postgresql-jdbc
     echo 'NETWORKING=yes' > /etc/sysconfig/network

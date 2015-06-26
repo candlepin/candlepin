@@ -1,5 +1,7 @@
 #! /bin/bash
 
+set -e
+
 setup_mysql() {
     yum install -y mysql-server mysql-connector-java
 

@@ -1,5 +1,6 @@
 #! /bin/bash
 
+set -e
 env
 
 # Can specify either a YUM_REPO or a RPM_URL to install candlepin from:

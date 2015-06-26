@@ -1,5 +1,6 @@
 #! /bin/bash
 
+set -e
 env
 
 # TODO: use env variables to check which database we're linked to, for now

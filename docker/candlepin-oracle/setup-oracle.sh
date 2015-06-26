@@ -1,5 +1,7 @@
 #! /bin/bash
 
+set -e
+
 setup_oracle() {
 
     mkdir -p /var/lock/subsys

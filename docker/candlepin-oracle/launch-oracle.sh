@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/sh
 
 # Oracle is annoying.  I could not find a way to run it in the foreground
 # so normal supervisor options are not appropriate.  Nor could I find a way
@@ -8,6 +8,8 @@
 # This script will start Oracle and then remain in the foreground as long
 # as Oracle is running.  When it receives SIGINT or SIGTERM it will stop
 # Oracle.
+
+set -e
 
 stop_oracle() {
     /etc/init.d/oracle-xe stop

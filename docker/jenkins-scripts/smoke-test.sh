@@ -62,6 +62,7 @@ if len(sys.argv) < 3:
 image_name = sys.argv[1]
 cp_repo_url = sys.argv[2]
 max_wait_time = 600
+max_log_lines = 50
 
 server_container_id = None
 db_container_id = None
@@ -80,7 +81,7 @@ try:
             time.sleep(3)
 
             # Launch the candlepin container:
-            output = run_command("docker run -P -d -e \"YUM_REPO=%s\" --link %s:db %s"
+            output = run_command("docker run --log-driver=\"json-file\" -P -d -e \"YUM_REPO=%s\" --link %s:db %s"
                 % (cp_repo_url, db_container_name, image_name))
             server_container_id = output[-1]
             time.sleep(3)
@@ -135,11 +136,14 @@ try:
                         # just silently ignore them and hope for the best.
                         pass
 
-                    time.sleep(3)
+                    time.sleep(1)
                     remaining = max_wait_time - (time.time() - start_time)
 
                 if not response_received:
                     print "Failed to receive a response in %.1fs" % (time.time() - start_time)
+                    print "Candlepin container log:"
+                    run_command("docker logs --tail=%s %s" % (max_log_lines, server_container_id), False, True)
+
             else:
                 print "ERROR: Unable to determine port for the Candlepin server's container"
         except RunCommandException as e:
