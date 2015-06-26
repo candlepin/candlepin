@@ -25,7 +25,33 @@ describe 'Entitlement Resource' do
     @qowner = create_owner random_string 'test_owner'
   end
 
-  it 'can filter entitlements by product attribute' do
+  it 'can filter all entitlements by using matches param' do
+    @system.consume_product(@monitoring_prod.id)
+    @system.consume_product(@virt_prod.id)
+
+    ents = @cp.list_ents_via_entitlements_resource(:matches => "virtualization")
+    ents.should have(1).things
+  end
+
+  it 'can filter all entitlements by product attribute' do
+    @system.consume_product(@monitoring_prod.id)
+    @system.consume_product(@virt_prod.id)
+
+    ents = @cp.list_ents_via_entitlements_resource(
+      :attr_filters => { "variant" => "Satellite Starter Pack" })
+    ents.should have(1).things
+
+    found_attr = false
+    ents[0].pool.productAttributes.each do |attr|
+      if attr["name"] == 'variant' && attr["value"] == "Satellite Starter Pack"
+        found_attr = true
+        break
+      end
+    end
+    found_attr.should == true
+  end
+
+  it 'can filter consumer entitlements by product attribute' do
     @system.consume_product(@monitoring_prod.id)
     @system.consume_product(@virt_prod.id)
     @cp.list_ents_via_entitlements_resource(:consumer_uuid => @system.uuid).should have(2).things
@@ -44,7 +70,7 @@ describe 'Entitlement Resource' do
     found_attr.should == true
   end
 
-  it 'can filter entitlements by using matches param' do
+  it 'can filter consumer entitlements by using matches param' do
     @system.consume_product(@monitoring_prod.id)
     @system.consume_product(@virt_prod.id)
     @cp.list_ents_via_entitlements_resource(:consumer_uuid => @system.uuid).should have(2).things
