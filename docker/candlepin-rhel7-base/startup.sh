@@ -14,7 +14,6 @@ CANDLEPIN
 cat /etc/yum.repos.d/candlepin.repo
 yum install -y candlepin
 
-/root/cpsetup -u postgres --dbhost $DB_PORT_5432_TCP_ADDR --dbport $DB_PORT_5432_TCP_PORT
-#/usr/share/candlepin/cpsetup
+/usr/share/candlepin/cpsetup -u postgres --dbhost $DB_PORT_5432_TCP_ADDR --dbport $DB_PORT_5432_TCP_PORT
 
 /usr/bin/supervisord -c /etc/supervisord.conf

@@ -1,4 +1,4 @@
-FROM candlepin-base
+FROM candlepin/candlepin-base
 MAINTAINER Chris Rog <crog@redhat.com>
 
 ADD setup-mysql.sh /root/

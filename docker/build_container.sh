@@ -13,7 +13,7 @@ OPTIONS:
   -p          Push images to a repository or registry
   -d <repo>   Specify the destination repo to receive the images; implies -p;
               defaults to "candlepin-base docker.usersys.redhat.com/candlepin"
-  -c          Use cached layers when building containers
+  -c          Use cached layers when building containers; defaults to false
   -v          Enable verbose/debug output
 HELP
 }
@@ -38,6 +38,9 @@ fi
 # Setup build arguments
 BUILD_ARGS=""
 
+# Impl note: At the time of writing, Docker defaults to using cache, which is the opposite of our
+# desired behavior. To be certain we get Docker doing what we want, we specify the no-cache option
+# in either case.
 if [ "$USE_CACHE" == "1" ]; then
     BUILD_ARGS="$BUILD_ARGS --no-cache=false"
 else
@@ -46,11 +49,10 @@ fi
 
 # Determine image name
 if [ "$1" != "" ]; then
-  IMAGE_NAME=$1
+    IMAGE_NAME=$1
 fi
 
-
-
+echo "Building image $IMAGE_NAME..."
 cd $SCRIPT_HOME
 docker build $BUILD_ARGS -t candlepin/$IMAGE_NAME:latest .
 
@@ -61,7 +63,7 @@ fi
 if [ "$PUSH" == "1" ]; then
     CP_VERSION=`docker run -ti candlepin/$IMAGE_NAME:latest rpm -q --queryformat '%{VERSION}' candlepin`
     if [ "$CP_VERSION" != "" ]; then
-        echo "Unable to determine Candlepin version for tagging"
+        echo "Unable to determine Candlepin version for tagging image $IMAGE_NAME" >&2
         exit 1
     fi
 
