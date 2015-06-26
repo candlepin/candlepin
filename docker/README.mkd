@@ -27,6 +27,8 @@ docker run -P -e POSTGRES_PASSWORD=candlepin --name=postgres -d postgres
 
 These containers are prepped to install Candlepin RPMs, but no Candlepin packages have been installed yet. The startup script will look for the YUM_REPO URL environment variable defined in docker run command with -e. This will be used to configure a candlepin.repo, and then a ```yum install candlepin``` will be attempted. Note that this container takes a little while to startup as a result of this.
 
+It is also possible to instead specify a RPM_URL environment variable for a candlepin RPM to install, which should work for newer builds. (2.0+)
+
 ```
 $ docker run --name candlepin -d -P -e "YUM_REPO=http://download.devel.redhat.com/brewroot/repos/candlepin-mead-rhel-6-build/latest/x86_64" --link postgres:db candlepin/candlepin-rhel6-base
 $ docker attach candlepin
