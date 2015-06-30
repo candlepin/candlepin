@@ -787,10 +787,7 @@ public class OwnerResource {
             activeOnDate, true, listAll, poolFilters, pageRequest
         );
         List<Pool> poolList = page.getPageData();
-
-        if (c != null) {
-            calculatedAttributesUtil.setCalculatedAttributes(poolList, c, activeOnDate);
-        }
+        calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);
 
         // Store the page for the LinkHeaderPostInterceptor
         ResteasyProviderFactory.pushContext(Page.class, page);

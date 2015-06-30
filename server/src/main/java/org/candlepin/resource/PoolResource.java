@@ -178,12 +178,7 @@ public class PoolResource {
             productId, activeOnDate, true, listAll, new PoolFilterBuilder(), pageRequest);
         List<Pool> poolList = page.getPageData();
 
-        if (c != null) {
-            for (Pool p : poolList) {
-                p.setCalculatedAttributes(
-                    calculatedAttributesUtil.buildCalculatedAttributes(p, c, activeOnDate));
-            }
-        }
+        calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);
 
         // Store the page for the LinkHeaderPostInterceptor
         ResteasyProviderFactory.pushContext(Page.class, page);
@@ -245,8 +240,8 @@ public class PoolResource {
                 activeOnDate = ResourceDateParser.parseDateString(activeOn);
             }
             toReturn.setCalculatedAttributes(
-                calculatedAttributesUtil
-                    .buildCalculatedAttributes(toReturn, c, activeOnDate));
+                calculatedAttributesUtil.buildCalculatedAttributes(toReturn, activeOnDate)
+            );
             return toReturn;
         }
 
