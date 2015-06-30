@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.49.4
+Version: 0.9.49.5
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,10 @@ fi
 
 
 %changelog
+* Tue Jun 30 2015 Michael Stead <mstead@redhat.com> 0.9.49.5-1
+- 1212122: Allow created date and last checkin to be passed in for registration
+  (wpoteat@redhat.com)
+
 * Thu Jun 04 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.49.4-1
 - 5x bind performance for large SKUs. (dgoodwin@redhat.com)
 
