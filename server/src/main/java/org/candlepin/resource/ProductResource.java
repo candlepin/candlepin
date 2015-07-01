@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -35,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -167,9 +167,15 @@ public class ProductResource {
     @Path("/{product_id}/certificate")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
-    public ProductCertificate getProductCertificate(@PathParam("product_id") String productId) {
-        Product product = this.findProduct(productId);
-        return this.productCertCurator.getCertForProduct(product);
+    public ProductCertificate getProductCertificate(
+        @PathParam("product_id") String productId) {
+
+        throw new BadRequestException(this.i18n.tr(
+            "Organization-agnostic product write operations are not supported."
+        ));
+
+        // Product product = this.findProduct(productId);
+        // return this.productCertCurator.getCertForProduct(product);
     }
 
     /**
@@ -219,8 +225,10 @@ public class ProductResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/batch_content")
-    public Product addBatchContent(@PathParam("product_id") String productId,
-                                   Map<String, Boolean> contentMap) {
+    public Product addBatchContent(
+        @PathParam("product_id") String productId,
+        Map<String, Boolean> contentMap) {
+
         throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic product write operations are not supported."
         ));
@@ -237,9 +245,11 @@ public class ProductResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/content/{content_id}")
-    public Product addContent(@PathParam("product_id") String productId,
-                              @PathParam("content_id") String contentId,
-                              @QueryParam("enabled") Boolean enabled) {
+    public Product addContent(
+        @PathParam("product_id") String productId,
+        @PathParam("content_id") String contentId,
+        @QueryParam("enabled") Boolean enabled) {
+
         throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic product write operations are not supported."
         ));
@@ -253,8 +263,10 @@ public class ProductResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/content/{content_id}")
-    public void removeContent(@PathParam("product_id") String productId,
-                              @PathParam("content_id") String contentId) {
+    public void removeContent(
+        @PathParam("product_id") String productId,
+        @PathParam("content_id") String contentId) {
+
         throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic product write operations are not supported."
         ));
@@ -270,7 +282,9 @@ public class ProductResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}")
-    public void deleteProduct(@PathParam("product_id") String productId) {
+    public void deleteProduct(
+        @PathParam("product_id") String productId) {
+
         throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic product write operations are not supported."
         ));
@@ -286,10 +300,11 @@ public class ProductResource {
     @GET
     @Path("/{product_id}/statistics")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getProductStats(@PathParam("product_id") String productId,
-                            @QueryParam("from") String from,
-                            @QueryParam("to") String to,
-                            @QueryParam("days") String days) {
+    public List<Statistic> getProductStats(
+        @Verify(Product.class) @PathParam("product_id") String productId,
+        @QueryParam("from") String from,
+        @QueryParam("to") String to,
+        @QueryParam("days") String days) {
 
         return this.getProductStats(productId, null, from, to, days);
     }
@@ -306,11 +321,12 @@ public class ProductResource {
     @GET
     @Path("/{product_id}/statistics/{vtype}")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getProductStats(@PathParam("product_id") String productId,
-                            @PathParam("vtype") String valueType,
-                            @QueryParam("from") String from,
-                            @QueryParam("to") String to,
-                            @QueryParam("days") String days) {
+    public List<Statistic> getProductStats(
+        @Verify(Product.class) @PathParam("product_id") String productId,
+        @PathParam("vtype") String valueType,
+        @QueryParam("from") String from,
+        @QueryParam("to") String to,
+        @QueryParam("days") String days) {
 
         Product product = this.findProduct(productId);
 
@@ -342,20 +358,20 @@ public class ProductResource {
     @GET
     @Path("/owners")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Owner> getProductOwners(@QueryParam("product") String[] productId) {
-        List<String> ids = Arrays.asList(productId);
+    public List<Owner> getProductOwners(
+        @Verify(Product.class) @QueryParam("product") List<String> productIds) {
 
-        if (ids.isEmpty()) {
+        if (productIds.isEmpty()) {
             throw new BadRequestException(i18n.tr("No product IDs specified"));
         }
 
-        return this.ownerCurator.lookupOwnersWithProduct(ids);
+        return this.ownerCurator.lookupOwnersWithProduct(productIds);
     }
 
     /**
      * Refreshes Pools by Product
      *
-     * @param productId
+     * @param productIds
      * @param lazyRegen
      * @return a JobDetail object
      */
@@ -363,15 +379,14 @@ public class ProductResource {
     @Path("/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)
     public JobDetail[] refreshPoolsForProduct(
-        @QueryParam("product") String[] productId,
+        @Verify(Product.class) @QueryParam("product") List<String> productIds,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
-        List<String> ids = Arrays.asList(productId);
-        if (ids.isEmpty()) {
+        if (productIds.isEmpty()) {
             throw new BadRequestException(i18n.tr("No product IDs specified"));
         }
 
-        List<Owner> owners = this.ownerCurator.lookupOwnersWithProduct(ids);
+        List<Owner> owners = this.ownerCurator.lookupOwnersWithProduct(productIds);
         List<JobDetail> jobs = new LinkedList<JobDetail>();
 
         for (Owner owner : owners) {

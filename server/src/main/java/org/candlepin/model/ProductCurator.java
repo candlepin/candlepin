@@ -75,6 +75,24 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
+     * Performs an owner-agnostic product lookup by product ID.
+     *
+     * @deprecated
+     *  This method is provided for legacy functionality only and may return the incorrect product
+     *  instance in situations where multiple owners exist with the same product.Use lookupById with
+     *  a specific owner to get accurate results.
+     *
+     * @param id Product ID to lookup. (note: not the database ID)
+     * @return the Product which matches the given id.
+     */
+    @Deprecated
+    @Transactional
+    public Product lookupById(String id) {
+        return (Product) this.createSecureCriteria()
+            .add(Restrictions.eq("id", id)).uniqueResult();
+    }
+
+    /**
      * @param owner owner to lookup product for
      * @param id Product ID to lookup. (note: not the database ID)
      * @return the Product which matches the given id.

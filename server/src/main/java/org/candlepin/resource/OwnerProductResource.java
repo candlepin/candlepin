@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -118,8 +119,9 @@ public class OwnerProductResource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Product> list(@PathParam("owner_key") String ownerKey,
-                              @QueryParam("product") List<String> productIds) {
+    public List<Product> list(
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
+        @Verify(Product.class) @QueryParam("product") List<String> productIds) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
 
@@ -159,8 +161,9 @@ public class OwnerProductResource {
     @Path("/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
-    public Product getProduct(@PathParam("owner_key") String ownerKey,
-                              @PathParam("product_id") String productId) {
+    public Product getProduct(
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
+        @Verify(Product.class) @PathParam("product_id") String productId) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Product product = productCurator.lookupById(owner, productId);
@@ -185,8 +188,10 @@ public class OwnerProductResource {
     @Path("/{product_id}/certificate")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
-    public ProductCertificate getProductCertificate(@PathParam("owner_key") String ownerKey,
-                                                    @PathParam("product_id") String productId) {
+    public ProductCertificate getProductCertificate(
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
+        @Verify(Product.class) @PathParam("product_id") String productId) {
+
         Product product = this.getProduct(ownerKey, productId);
         return this.productCertCurator.getCertForProduct(product);
     }
@@ -202,7 +207,10 @@ public class OwnerProductResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    public Product createProduct(@PathParam("owner_key") String ownerKey, Product product) {
+    public Product createProduct(
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
+        Product product) {
+
         Owner owner = this.getOwnerByKey(ownerKey);
 
         product.setOwner(owner);
@@ -221,8 +229,8 @@ public class OwnerProductResource {
     @Path("/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Product updateProduct(
-        @PathParam("owner_key") String ownerKey,
-        @PathParam("product_id") String productId,
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
+        @Verify(Product.class) @PathParam("product_id") String productId,
         Product product) {
 
         Product toUpdate = this.getProduct(ownerKey, productId);
@@ -322,9 +330,10 @@ public class OwnerProductResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/batch_content")
-    public Product addBatchContent(@PathParam("owner_key") String ownerKey,
-                                   @PathParam("product_id") String productId,
-                                   Map<String, Boolean> contentMap) {
+    public Product addBatchContent(
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
+        @Verify(Product.class) @PathParam("product_id") String productId,
+        Map<String, Boolean> contentMap) {
 
         Product product = this.getProduct(ownerKey, productId);
         List<ProductContent> productContent = new LinkedList<ProductContent>();
@@ -351,10 +360,11 @@ public class OwnerProductResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/content/{content_id}")
-    public Product addContent(@PathParam("owner_key") String ownerKey,
-                              @PathParam("product_id") String productId,
-                              @PathParam("content_id") String contentId,
-                              @QueryParam("enabled") Boolean enabled) {
+    public Product addContent(
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
+        @Verify(Product.class) @PathParam("product_id") String productId,
+        @PathParam("content_id") String contentId,
+        @QueryParam("enabled") Boolean enabled) {
 
         Product product = this.getProduct(ownerKey, productId);
         Content content = this.getContent(product.getOwner(), contentId);
@@ -378,9 +388,10 @@ public class OwnerProductResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/content/{content_id}")
-    public void removeContent(@PathParam("owner_key") String ownerKey,
-                              @PathParam("product_id") String productId,
-                              @PathParam("content_id") String contentId) {
+    public void removeContent(
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
+        @Verify(Product.class) @PathParam("product_id") String productId,
+        @PathParam("content_id") String contentId) {
 
         Product product = this.getProduct(ownerKey, productId);
         Content content = this.getContent(product.getOwner(), contentId);
@@ -398,8 +409,9 @@ public class OwnerProductResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}")
-    public void deleteProduct(@PathParam("owner_key") String ownerKey,
-                              @PathParam("product_id") String productId) {
+    public void deleteProduct(
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
+        @Verify(Product.class) @PathParam("product_id") String productId) {
 
         Product product = this.getProduct(ownerKey, productId);
 
@@ -425,11 +437,13 @@ public class OwnerProductResource {
     @GET
     @Path("/{product_id}/statistics")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getProductStats(@PathParam("owner_key") String ownerKey,
-                                           @PathParam("product_id") String productId,
-                                           @QueryParam("from") String from,
-                                           @QueryParam("to") String to,
-                                           @QueryParam("days") String days) {
+    public List<Statistic> getProductStats(
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
+        @Verify(Product.class) @PathParam("product_id") String productId,
+        @QueryParam("from") String from,
+        @QueryParam("to") String to,
+        @QueryParam("days") String days) {
+
         return this.getProductStats(ownerKey, productId, null, from, to, days);
     }
 
@@ -445,12 +459,13 @@ public class OwnerProductResource {
     @GET
     @Path("/{product_id}/statistics/{vtype}")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getProductStats(@PathParam("owner_key") String ownerKey,
-                                           @PathParam("product_id") String productId,
-                                           @PathParam("vtype") String valueType,
-                                           @QueryParam("from") String from,
-                                           @QueryParam("to") String to,
-                                           @QueryParam("days") String days) {
+    public List<Statistic> getProductStats(
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
+        @Verify(Product.class) @PathParam("product_id") String productId,
+        @PathParam("vtype") String valueType,
+        @QueryParam("from") String from,
+        @QueryParam("to") String to,
+        @QueryParam("days") String days) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
 
@@ -470,8 +485,8 @@ public class OwnerProductResource {
     @Path("/{product_id}/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)
     public JobDetail refreshPoolsForProduct(
-        @PathParam("owner_key") String ownerKey,
-        @PathParam("product_id") String productId,
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
+        @Verify(Product.class) @PathParam("product_id") String productId,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
         Product product = this.getProduct(ownerKey, productId);
