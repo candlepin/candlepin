@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -209,6 +210,15 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     // WARNING: can't initialize to a default value here, we need to be able to see
     // if it was specified on an incoming update, so it must be null if no value came in.
     private Boolean autoheal;
+
+    /**
+     * Length of field is required by hypersonic in the unit tests only
+     *
+     * 4194304 bytes = 4 MB
+     */
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "annotations", length = 4194304)
+    private String annotations;
 
     public Consumer(String name, String userName, Owner owner, ConsumerType type) {
         this();
@@ -744,5 +754,13 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
             String entitlementVersion = getFact("system.certificate_version");
             return entitlementVersion != null && entitlementVersion.startsWith("3.");
         }
+    }
+
+    public String getAnnotations() {
+        return this.annotations;
+    }
+
+    public void setAnnotations(String annotations) {
+        this.annotations = annotations;
     }
 }

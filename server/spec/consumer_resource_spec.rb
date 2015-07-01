@@ -299,6 +299,14 @@ describe 'Consumer Resource' do
     consumer['contentTags'].should =~ tags
   end
 
+  it 'should let a consumer register with annotations' do
+    some_owner = create_owner(random_string('someowner'))
+    client = user_client(some_owner, random_string('bob'))
+    annotations = "here is a piece of information, here is another piece."
+    consumer = client.register(random_string('system1'), :system, random_string("someuuid"), {}, random_string("uname"), some_owner['key'], [], [], nil, [], nil, nil, nil, nil, annotations)
+    consumer['annotations'].should == annotations
+  end
+
   it 'should let a consumer register and set created and last checkin dates' do
     owner = create_owner(random_string('owner'))
     user_name = random_string('user')
