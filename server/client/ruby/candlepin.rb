@@ -893,7 +893,7 @@ module Candlepin
 
         opts = verify_and_merge(opts, defaults)
         params = opts.dup.delete(:key)
-        params = select_from(opts, params))
+        params = select_from(opts, params)
         params[:attributes] = opts[:attributes].map do |k, v|
           { :name => k, :value => v }
         end
