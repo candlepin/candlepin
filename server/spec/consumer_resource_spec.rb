@@ -317,6 +317,10 @@ describe 'Consumer Resource' do
               owner['key'], [], [], nil, [], nil, [], created_date, checkin_date)
     consumer['lastCheckin'].should == checkin_date
     consumer['created'].should == created_date
+    #reload to be sure it was persisted
+    consumer = client.get_consumer(consumer['uuid'])
+    consumer['lastCheckin'].should == checkin_date
+    consumer['created'].should == created_date
   end
 
   it "should not let a consumer register with a used hypervisorId in same the org" do
