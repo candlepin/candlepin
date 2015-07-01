@@ -12,12 +12,20 @@ describe 'Derived Products' do
 
     #create_product() creates products with numeric IDs by default
     @eng_product = create_product()
+    @eng_product_2 = create_product()
+    @modified_product = create_product()
 
     @eng_product_content = create_content({:gpg_url => 'gpg_url',
                                          :content_url => '/content/dist/rhel/$releasever/$basearch/os',
                                          :metadata_expire => 6400})
 
+    @product_modifier_content = create_content({:gpg_url => 'gpg_url',
+                                         :content_url => '/this/modifies/product',
+                                         :metadata_expire => 6400,
+                                         :modified_products => [@modified_product["id"]]})
+
     @cp.add_content_to_product(@eng_product.id, @eng_product_content.id, true)
+    @cp.add_content_to_product(@eng_product_2.id, @product_modifier_content.id, true)
 
     installed_prods = [{'productId' => @eng_product['id'],
       'productName' => @eng_product['name']}]
@@ -34,7 +42,7 @@ describe 'Derived Products' do
     @guest1 = @user.register(random_string('guest'), :system, nil,
       {'virt.uuid' => @uuid, 'virt.is_guest' => 'true'}, nil, nil,
       [], installed_prods)
-    @guest_client = Candlepin.new(nil, nil, @guest1['idCert']['cert'], @guest1['idCert']['key']) 
+    @guest_client = Candlepin.new(nil, nil, @guest1['idCert']['cert'], @guest1['idCert']['key'])
     # create subscription with sub-pool data:
     @datacenter_product = create_product(nil, nil, {
       :attributes => {
@@ -44,10 +52,23 @@ describe 'Derived Products' do
         'multi-entitlement' => "yes"
       }
     })
+
+    @datacenter_product_2 = create_product(nil, nil, {
+      :attributes => {
+        :virt_limit => "unlimited",
+      }
+    })
+
     @derived_product = create_product(nil, nil, {
       :attributes => {
           :cores => 2,
           :sockets=>4
+      }
+    })
+
+    @derived_product_2 = create_product(nil, nil, {
+      :attributes => {
+          :cores => 2
       }
     })
 
@@ -57,11 +78,20 @@ describe 'Derived Products' do
         'derived_product_id' => @derived_product['id'],
         'derived_provided_products' => [@eng_product['id']]
       })
+
+    @sub2 = @cp.create_subscription(@owner['key'], @datacenter_product_2.id,
+      10, [], '', '', '', nil, nil,
+      {
+        'derived_product_id' => @derived_product_2['id'],
+        'derived_provided_products' => [@eng_product_2['id'], @modified_product['id']]
+      })
+
     @cp.refresh_pools(@owner['key'])
     @pools = @cp.list_pools :owner => @owner.id, \
       :product => @datacenter_product.id
     @pools.size.should == 1
     @main_pool = @pools[0]
+
 
     @distributor = @user.register(random_string('host'), :candlepin, nil,
       {}, nil, nil, [], [], nil)
@@ -110,7 +140,7 @@ describe 'Derived Products' do
     ents.size.should == 1
 
     # Guest should now see additional sub-pool:
-    @guest_client.list_pools({:consumer => @guest_client.uuid}).size.should == 2
+    @guest_client.list_pools({:consumer => @guest_client.uuid}).size.should == 3
     guest_pools = @guest_client.list_pools({:consumer => @guest_client.uuid,
         :product => @derived_product['id']})
     guest_pools.size.should == 1
@@ -144,16 +174,17 @@ describe 'Derived Products' do
     ents.size.should == 1
   end
 
-  it 'not be visible by distributor that does not have capability after basic search' do
+  it 'should not be visible by distributor that does not have capability after basic search' do
     pools = @distributor_client.list_pools :consumer => @distributor.uuid
     pools.size.should == 0
   end
 
-  it 'be visible by distributor that does not have capability after list all' do
+  it 'should be visible by distributor that does not have capability after list all' do
     pools = @distributor_client.list_pools :consumer => @distributor.uuid, :listall => "true"
-    pools.size.should == 1
+    pools.size.should == 2
 
-    pool = pools.first
+    pool = pools[0]
+    pool = pools[1] unless pool.id == @main_pool.id
     pool['derivedProductId'].should == @derived_product['id']
     pool['derivedProvidedProducts'].size.should == 1
     pool['derivedProvidedProducts'][0]['productId'].should ==
@@ -194,6 +225,42 @@ describe 'Derived Products' do
          content_sets = cert_product['content']
          content_sets.size.should == 1
          content_sets[0].id.should == @eng_product_content.id
+      end
+    end
+
+    found.should == true
+  end
+
+  it 'distributor entitlement cert includes derived modifier content' do
+    # Content for modified product is only included if it provides the modified product
+    # through derived provided products, provided products, or through another entitlement.
+    dist_name = random_string("CP Distributor")
+    create_distributor_version(dist_name,
+      "Subscription Asset Manager",
+      ["cert_v3", "derived_product"])
+
+    @distributor_client.update_consumer({:facts => {'distributor_version' => dist_name}})
+
+
+    pools = @cp.list_pools :owner => @owner.id, \
+      :product => @datacenter_product_2.id
+    pools.size.should == 1
+    target_pool = pools[0]
+
+    entitlement = @distributor_client.consume_pool target_pool['id']
+    entitlement.should_not be_nil
+
+    json_body = extract_payload(@distributor_client.list_certificates[0]['cert'])
+    products = json_body['products']
+    products.size.should == 4
+
+    found = false;
+    products.each do |cert_product|
+      if cert_product['id'] == @eng_product_2.id
+         found = true;
+         content_sets = cert_product['content']
+         content_sets.size.should == 1
+         content_sets[0]['id'].should == @product_modifier_content.id
       end
     end
 

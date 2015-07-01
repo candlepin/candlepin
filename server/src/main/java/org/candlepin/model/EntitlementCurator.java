@@ -158,6 +158,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * @return entitled product IDs
      */
     public Set<String> listEntitledProductIds(Consumer c, Date startDate, Date endDate) {
+        // FIXME Either address the TODO below, or move this method out of the curator.
         // TODO: Swap this to a db query if we're worried about memory:
         Set<String> entitledProductIds = new HashSet<String>();
         for (Entitlement e : c.getEntitlements()) {
@@ -166,13 +167,24 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 // Skip this entitlement:
                 continue;
             }
+
             entitledProductIds.add(e.getPool().getProductId());
             for (ProvidedProduct pp : e.getPool().getProvidedProducts()) {
                 entitledProductIds.add(pp.getProductId());
             }
+
+            // A distributor should technically be entitled to derived products and
+            // will need to be able to sync content downstream.
+            if (c.getType().isManifest() && p.getDerivedProductId() != null) {
+                entitledProductIds.add(p.getDerivedProductId());
+                if (p.getDerivedProvidedProducts() != null) {
+                    for (DerivedProvidedProduct dpp : p.getDerivedProvidedProducts()) {
+                        entitledProductIds.add(dpp.getProductId());
+                    }
+                }
+            }
         }
         return entitledProductIds;
-
     }
 
     private boolean poolOverlapsRange(Pool p, Date startDate, Date endDate) {
