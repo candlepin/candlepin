@@ -176,7 +176,6 @@ describe 'Pool Resource' do
     system = consumer_client(user, 'system')
 
     pool = @cp.get_pool(pool.id, system.uuid)
-    pool['calculatedAttributes']['suggested_quantity'].should == "1"
     pool['calculatedAttributes']['compliance_type'].should == "Standard"
   end
 

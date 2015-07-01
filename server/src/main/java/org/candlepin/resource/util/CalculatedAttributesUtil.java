@@ -14,12 +14,8 @@
  */
 package org.candlepin.resource.util;
 
-import org.candlepin.model.Consumer;
 import org.candlepin.model.Pool;
-import org.candlepin.policy.js.pooltype.PoolComplianceType;
-import org.candlepin.policy.js.pooltype.PoolComplianceTypeRules;
-import org.candlepin.policy.js.quantity.QuantityRules;
-import org.candlepin.policy.js.quantity.SuggestedQuantity;
+import org.candlepin.model.Pool.PoolComplianceType;
 
 import com.google.inject.Inject;
 
@@ -30,72 +26,36 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
+
 /**
  * CalculatedAttributesUtil
  */
 public class CalculatedAttributesUtil {
 
-    private QuantityRules quantityRules;
-    private PoolComplianceTypeRules poolTypeRules;
     private I18n i18n;
 
     @Inject
-    public CalculatedAttributesUtil(QuantityRules quantityRules,
-            PoolComplianceTypeRules poolTypeRules, I18n i18n) {
-        this.quantityRules = quantityRules;
-        this.poolTypeRules = poolTypeRules;
+    public CalculatedAttributesUtil(I18n i18n) {
         this.i18n = i18n;
     }
 
-    public Map<String, String> buildCalculatedAttributes(Pool p, Consumer c, Date date) {
+    public Map<String, String> buildCalculatedAttributes(Pool pool, Date date) {
         Map<String, String> attrMap = new HashMap<String, String>();
+        PoolComplianceType type = pool.getComplianceType();
 
-        PoolComplianceType type = poolTypeRules.getPoolType(p);
-        type.translatePoolType(i18n);
-        attrMap.put("compliance_type", type.getPoolType() +
-                ("true".equals(p.getAttributeValue("unmapped_guests_only")) ?
-                " " + i18n.tr("(Temporary)") : ""));
-
-        if (c == null) {
-            return attrMap;
-        }
-
-        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(p, c, date);
-
-        attrMap.put("suggested_quantity",
-            String.valueOf(suggested.getSuggested()));
-        attrMap.put("quantity_increment",
-            String.valueOf(suggested.getIncrement()));
+        // TODO: Check that this doesn't break our translation stuff. We may need to have the
+        // description strings translated instead.
+        attrMap.put("compliance_type",
+            i18n.tr("{0}{1}", type.getDescription(), (pool.isUnmappedGuestPool() ? " (Temporary)" : ""))
+        );
 
         return attrMap;
     }
 
-
-    public void setCalculatedAttributes(List<Pool> poolList, Consumer c, Date date) {
-        if (c == null) {
-            return;
-        }
-        Map<String, SuggestedQuantity> results = quantityRules.getSuggestedQuantities(
-                poolList, c, date);
-
-        for (Pool p : poolList) {
-            SuggestedQuantity suggested = results.get(p.getId());
-
-            Map<String, String> attrMap = new HashMap<String, String>();
-
-            PoolComplianceType type = poolTypeRules.getPoolType(p);
-            type.translatePoolType(i18n);
-            attrMap.put("compliance_type", type.getPoolType() +
-                    ("true".equals(p.getAttributeValue("unmapped_guests_only")) ?
-                    " " + i18n.tr("(Temporary)") : ""));
-
-
-            attrMap.put("suggested_quantity",
-                String.valueOf(suggested.getSuggested()));
-            attrMap.put("quantity_increment",
-                String.valueOf(suggested.getIncrement()));
-
-            p.setCalculatedAttributes(attrMap);
+    public void setCalculatedAttributes(List<Pool> poolList, Date date) {
+        for (Pool pool : poolList) {
+            pool.setCalculatedAttributes(this.buildCalculatedAttributes(pool, date));
         }
     }
 }

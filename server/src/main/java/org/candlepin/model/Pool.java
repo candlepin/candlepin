@@ -78,6 +78,20 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      */
     public static final String UNMAPPED_GUESTS_ATTRIBUTE = "unmapped_guests_only";
 
+    /**
+     * Product attribute used to identify stacked pools.
+     */
+    public static final String STACKING_ATTRIBUTE = "stacking_id";
+
+    /**
+     * Product attribute used to identify multi-entitlement enabled pools.
+     */
+    public static final String MULTI_ENTITLEMENT_ATTRIBUTE = "multi-entitlement";
+
+    /**
+     * Product attribute used to specify the instance multiplier for a pool.
+     */
+    public static final String INSTANCE_ATTRIBUTE = "instance_multiplier";
 
     /**
      * PoolType
@@ -106,6 +120,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         BONUS,
         UNMAPPED_GUEST;
 
+        /**
+         * Checks if this type represents a derived pool type
+         *
+         * @return
+         *  True if this PoolType instance represents a derived pool type; false otherwise
+         */
         public boolean isDerivedType() {
             switch (this) {
                 case ENTITLEMENT_DERIVED:
@@ -115,6 +135,34 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
                 default:
                     return false;
             }
+        }
+    }
+
+    /**
+     * PoolComplianceType
+     *
+     * Indicates how a pool can be used
+     */
+    public enum PoolComplianceType {
+        UNKNOWN("Other"),
+        STANDARD("Standard"),
+        INSTANCE_BASED("Instance Based"),
+        STACKABLE("Stackable"),
+        UNIQUE_STACKABLE("Stackable only with other subscriptions"),
+        MULTI_ENTITLEMENT("Multi-Entitleable");
+
+        private final String description;
+
+        PoolComplianceType(String description) {
+            if (description == null || description.length() < 1) {
+                throw new IllegalArgumentException("description is null or empty");
+            }
+
+            this.description = description;
+        }
+
+        public String getDescription() {
+            return this.description;
         }
     }
 
@@ -994,12 +1042,42 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         return PoolType.NORMAL;
     }
 
+    public PoolComplianceType getComplianceType() {
+        Product product = this.getProduct();
+
+        if (product != null) {
+            boolean isStacking = product.hasAttribute(STACKING_ATTRIBUTE);
+            boolean isMultiEnt = "yes".equalsIgnoreCase(
+                product.getAttributeValue(MULTI_ENTITLEMENT_ATTRIBUTE)
+            );
+
+            if (product.hasAttribute(INSTANCE_ATTRIBUTE)) {
+                if (isStacking && isMultiEnt) {
+                    return PoolComplianceType.INSTANCE_BASED;
+                }
+            }
+            else {
+                if (isStacking) {
+                    return isMultiEnt ? PoolComplianceType.STACKABLE : PoolComplianceType.UNIQUE_STACKABLE;
+                }
+
+                return isMultiEnt ? PoolComplianceType.MULTI_ENTITLEMENT : PoolComplianceType.STANDARD;
+            }
+        }
+
+        return PoolComplianceType.UNKNOWN;
+    }
+
     public boolean isStacked() {
-        return (this.getProduct() != null ? this.getProduct().hasAttribute("stacking_id") : false);
+        return (this.getProduct() != null ? this.getProduct().hasAttribute(STACKING_ATTRIBUTE) : false);
     }
 
     public String getStackId() {
-        return (this.getProduct() != null ? this.getProduct().getAttributeValue("stacking_id") : null);
+        return (this.getProduct() != null ? this.getProduct().getAttributeValue(STACKING_ATTRIBUTE) : null);
+    }
+
+    public boolean isUnmappedGuestPool() {
+        return "true".equalsIgnoreCase(this.getAttributeValue(UNMAPPED_GUESTS_ATTRIBUTE));
     }
 
     public Set<Branding> getBranding() {

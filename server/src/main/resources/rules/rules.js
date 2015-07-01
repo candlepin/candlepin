@@ -3004,6 +3004,8 @@ var Quantity = {
 /**
  * Namespace for determining the human readable type of pool we are dealing with
  * for display in the client.
+ *
+ * Note: This has been deprecated and should be removed in the next major version
  */
 var PoolType = {
 

@@ -192,8 +192,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
             product1.getId(), false, null, adminPrincipal, null);
         assertEquals(1, pools.size());
 
-        verify(attrUtil).buildCalculatedAttributes(any(Pool.class),
-            eq(passConsumer), any(Date.class));
+        verify(attrUtil, times(1)).setCalculatedAttributes(eq(pools), any(Date.class));
     }
 
     @Test(expected = NotFoundException.class)
@@ -218,8 +217,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
             null, adminPrincipal, null);
         assertEquals(2, pools.size());
 
-        verify(attrUtil, times(2)).buildCalculatedAttributes(any(Pool.class),
-            eq(passConsumer), any(Date.class));
+        verify(attrUtil, times(1)).setCalculatedAttributes(eq(pools), any(Date.class));
     }
 
     @Test(expected = NotFoundException.class)

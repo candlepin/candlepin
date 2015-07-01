@@ -2109,7 +2109,7 @@ public class ConsumerResource {
     private void addCalculatedAttributes(Entitlement ent) {
         // With no consumer/date, this will not build suggested quantity
         Map<String, String> calculatedAttributes =
-            calculatedAttributesUtil.buildCalculatedAttributes(ent.getPool(), null, null);
+            calculatedAttributesUtil.buildCalculatedAttributes(ent.getPool(), null);
         ent.getPool().setCalculatedAttributes(calculatedAttributes);
     }
 
