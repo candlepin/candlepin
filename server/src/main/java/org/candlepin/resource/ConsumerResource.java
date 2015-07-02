@@ -478,11 +478,17 @@ public class ConsumerResource {
 
         try {
             Date createdDate = consumer.getCreated();
+            Date lastCheckIn = consumer.getLastCheckin();
             // create sets created to current time.
             consumer = consumerCurator.create(consumer);
             //  If we sent in a created date, we want it persisted at the update below
             if (createdDate != null) {
                 consumer.setCreated(createdDate);
+            }
+            if (lastCheckIn != null) {
+                log.info("Creating with specific last checkin time: {}",
+                        consumer.getLastCheckin());
+                consumer.addCheckIn(lastCheckIn);
             }
             if (identityCertCreation) {
                 IdentityCertificate idCert = generateIdCert(consumer, false);
