@@ -311,8 +311,8 @@ describe 'Consumer Resource' do
     owner = create_owner(random_string('owner'))
     user_name = random_string('user')
     client = user_client(owner, user_name)
-    created_date = '2015-05-09T13:23:55.689+0000'
-    checkin_date = '2015-05-19T13:23:55.689+0000'
+    created_date = '2015-05-09T13:23:55.000+0000'
+    checkin_date = '2015-05-19T13:23:55.000+0000'
     consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
               owner['key'], [], [], nil, [], nil, [], created_date, checkin_date)
     consumer['lastCheckin'].should == checkin_date
