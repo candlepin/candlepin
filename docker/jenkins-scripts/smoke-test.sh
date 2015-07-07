@@ -81,7 +81,7 @@ try:
             time.sleep(3)
 
             # Launch the candlepin container:
-            output = run_command("docker run --log-driver=\"json-file\" -P -d -e \"YUM_REPO=%s\" --link %s:db %s"
+            output = run_command("docker run -P -d -e \"YUM_REPO=%s\" --link %s:db %s"
                 % (cp_repo_url, db_container_name, image_name))
             server_container_id = output[-1]
             time.sleep(3)
