@@ -102,6 +102,17 @@ module Candlepin
         expect(res.content['uuid'].length).to eq(36)
       end
 
+      it 'registers a consumer and gets a client' do
+        x509_client = user_client.register_and_get_client(
+          :owner => 'admin',
+          :username => 'admin',
+          :name => rand_string,
+        )
+
+        res = x509_client.get_consumer()
+        expect(res.content['uuid'].length).to eq(36)
+      end
+
       it 'gets deleted consumers' do
         res = user_client.get_deleted_consumers
         expect(res).to be_2xx

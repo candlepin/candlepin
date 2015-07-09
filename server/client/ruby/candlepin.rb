@@ -359,6 +359,15 @@ module Candlepin
     end
 
     module ConsumerResource
+      def register_and_get_client(opts = {})
+        consumer = register(opts)
+        opts = @client_opts.dup
+        opts.delete(:username)
+        opts.delete(:password)
+        x509_client = X509Client.from_consumer(consumer.content, opts)
+        x509_client
+      end
+
       def register(opts = {})
         defaults = {
           :name => nil,
@@ -1333,10 +1342,10 @@ module Candlepin
         :insecure => true,
         :connection_timeout => 3,
       }
-      opts = defaults.merge(opts)
+      @client_opts = defaults.merge(opts)
       # Subclasses must provide an attr_writer or attr_accessor for every key
       # in the options hash.  The snippet below sends the values to the setter methods.
-      opts.each do |k, v|
+      @client_opts.each do |k, v|
         self.send(:"#{k}=", v)
       end
       reload
@@ -1436,7 +1445,9 @@ module Candlepin
           :client_cert => client_cert,
           :client_key => client_key,
         }.merge(opts)
-        X509Client.new(opts)
+        client = X509Client.new(opts)
+        client.uuid = consumer_json['uuid']
+        client
       end
 
       def from_files(cert, key, opts = {})
