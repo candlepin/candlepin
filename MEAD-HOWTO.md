@@ -3,6 +3,15 @@ Mead is a Maven-based build system for Brew.  It works by building your
 project via Maven, rendering a RPM spec file from a template, and then packaging
 everything as an RPM with the rendered spec file.
 
+## TL;DR
+
+Adjust second command's parent version, and candlepin tag version per your build results from the first command:
+
+```
+$ tito release mead
+$ brew wrapper-rpm --create-build candlepin-mead-rhel-7-maven-candidate org.candlepin-candlepin-parent-2.0-3 "git://git.app.eng.bos.redhat.com/candlepin.git?server#candlepin-2.0.4-1"
+```
+
 ## Getting Started
 Clone the RCM utility-scripts repository.  All the scripts you'll need are in
 the `mead` directory.
