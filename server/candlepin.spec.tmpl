@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.3
+Version: 2.0.4
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -213,6 +213,27 @@ fi
 
 #raw
 %changelog
+* Fri Jul 10 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 2.0.4-1
+- Include derived modifier content in distributor ent cert (mstead@redhat.com)
+- 1212122: Last checkin date was getting returned in create json, but not
+  getting persisted (wpoteat@redhat.com)
+- 1124995: Add annotation field for additional user entered information
+  (wpoteat@redhat.com)
+- Spec tests no longer expect the suggested_quantity attribute
+  (crog@redhat.com)
+- Removed classes surrounding the PoolTypeRules functionality (crog@redhat.com)
+- Fixed broken filters when listing all entitlements (mstead@redhat.com)
+- Added additional locking functionality to curators (crog@redhat.com)
+- 1232821: Set new package to mark candlepin-tomcat obsolete.
+  (awood@redhat.com)
+- Set log level back to INFO (mstead@redhat.com)
+- Added filter options to Consumer/Entitlement resource ent lookups
+  (mstead@redhat.com)
+- Do not calculate compliance status if there are no installed products.
+  (dgoodwin@redhat.com)
+- Added changeset to fix incorrect column type in cpo_products
+  (crog@redhat.com)
+
 * Mon Jun 15 2015 Alex Wood <awood@redhat.com> 2.0.3-1
 - Massive changes to enable per-org product information.
   (crog@redhat.com)
