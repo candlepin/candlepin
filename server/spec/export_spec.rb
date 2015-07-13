@@ -63,6 +63,23 @@ describe 'Export', :serial => true do
     end.should be_empty
   end
 
+  # We export the old style of provided product DTOs, not the full
+  # new reference to an actual product.
+  it 'exports candlepin 0.x backward compatable product definitions' do
+    Dir["#{@cp_export.export_dir}/entitlements/*.json"].find_all do |ent|
+      json = parse_file(ent)
+      pool = json['pool']
+      pool['providedProducts'].each do |pp|
+        pp['productId'].should_not be_nil
+        pp['productName'].should_not be_nil
+      end
+      pool['derivedProvidedProducts'].each do |pp|
+        pp['productId'].should_not be_nil
+        pp['productName'].should_not be_nil
+      end
+    end
+  end
+
   it 'exports entitlement certificates' do
     entitlement_certs_dir = File.join(@cp_export.export_dir,
       'entitlement_certificates')

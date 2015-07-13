@@ -248,6 +248,22 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     )
     private Set<Product> derivedProvidedProducts = new HashSet<Product>();
 
+    /**
+     * Set of provided product DTOs used for compatibility with the pre-2.0 JSON.
+     * Used when serializing a pool to JSON over the API, and when importing a manifest.
+     * Collection is transient and should never make it to the database.
+     */
+    @Transient
+    private Set<ProvidedProduct> providedProductDtos = null;
+
+    /**
+     * Set of provided product DTOs used for compatibility with the pre-2.0 JSON.
+     * Used when serializing a pool to JSON over the API, and when importing a manifest.
+     * Collection is transient and should never make it to the database.
+     */
+    @Transient
+    private Set<ProvidedProduct> derivedProvidedProductDtos = null;
+
     @OneToMany(mappedBy = "pool")
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
@@ -294,17 +310,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     @Transient
     private boolean markedForDelete = false;
-
-    /*
-     * These DTO collections are only used when importing manifests. For backward
-     * compatability reasons we serialize a DTO for the provided products, not the full
-     * product object itself.
-     */
-    @Transient
-    private Set<ProvidedProduct> providedProductDtos = null;
-
-    @Transient
-    private Set<ProvidedProduct> derivedProvidedProductDtos = null;
 
     /*
      * Only used for importing legacy manifests.
@@ -722,6 +727,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         }
     }
 
+    /*
+     * Always exported as a DTO for API/import backward compatibility.
+     */
     @JsonProperty("providedProducts")
     public Set<ProvidedProduct> getProvidedProductDtos() {
         Set<ProvidedProduct> prods = new HashSet<ProvidedProduct>();
@@ -967,6 +975,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         }
     }
 
+    /*
+     * Always exported as a DTO for API/import backward compatibility.
+     */
     @JsonProperty("derivedProvidedProducts")
     public Set<ProvidedProduct> getDerivedProvidedProductDtos() {
         Set<ProvidedProduct> prods = new HashSet<ProvidedProduct>();
