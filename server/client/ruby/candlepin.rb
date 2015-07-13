@@ -174,6 +174,29 @@ module Candlepin
       end
     end
 
+    # Validate the value associated with a hash key.  By default, the method validates
+    # the key is not nil, but if a block is passed then the block will be evaluated and
+    # if the block returns a false value the value will be considered invalid.
+    def validate_keys(hash, *check_keys, &block)
+      if check_keys.empty?
+        check_keys = hash.keys
+      end
+
+      invalid = []
+
+      check_keys.each do |k|
+        if block_given?
+          invalid << k unless yield hash[k]
+        else
+          invalid << k if hash[k].nil?
+        end
+      end
+
+      unless invalid.empty?
+        raise RuntimeError.new("Hash #{hash} cannot have nil for keys #{invalid}")
+      end
+    end
+
     def verify_and_merge(opts, defaults)
       verify_keys(opts, defaults.keys)
       defaults.merge(opts)

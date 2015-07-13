@@ -940,6 +940,51 @@ module Candlepin
         camel_hash = UtilTest.new.camelize_hash(h, :hello_world)
         expect(camel_hash.keys.sort).to eq([:helloWorld])
       end
+
+      it 'validation fails for nil keys' do
+        h = {
+          :x => nil,
+          :y => nil,
+          :z => true,
+        }
+        expect do
+          UtilTest.new.validate_keys(h)
+        end.to raise_error
+      end
+
+      it 'validates specific keys' do
+        h = {
+          :x => nil,
+          :y => nil,
+          :z => true,
+        }
+        expect do
+          UtilTest.new.validate_keys(h, :z)
+        end.to_not raise_error
+      end
+
+
+      it 'validates keys are not nil' do
+        h = {
+          :z => true,
+        }
+
+        expect do
+          UtilTest.new.validate_keys(h)
+        end.not_to raise_error
+      end
+
+      it 'validates keys using a provided block' do
+        h = {
+          :z => 1,
+        }
+
+        expect do
+          UtilTest.new.validate_keys(h) do |k|
+            k > 5
+          end
+        end.to raise_error
+      end
     end
   end
 end
