@@ -173,9 +173,6 @@ public class ProductResource {
         throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic product write operations are not supported."
         ));
-
-        // Product product = this.findProduct(productId);
-        // return this.productCertCurator.getCertForProduct(product);
     }
 
     /**
