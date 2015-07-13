@@ -298,7 +298,7 @@ public class ProductResource {
     @Path("/{product_id}/statistics")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Statistic> getProductStats(
-        @Verify(Product.class) @PathParam("product_id") String productId,
+        @PathParam("product_id") String productId,
         @QueryParam("from") String from,
         @QueryParam("to") String to,
         @QueryParam("days") String days) {
@@ -319,7 +319,7 @@ public class ProductResource {
     @Path("/{product_id}/statistics/{vtype}")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Statistic> getProductStats(
-        @Verify(Product.class) @PathParam("product_id") String productId,
+        @PathParam("product_id") String productId,
         @PathParam("vtype") String valueType,
         @QueryParam("from") String from,
         @QueryParam("to") String to,
@@ -356,7 +356,7 @@ public class ProductResource {
     @Path("/owners")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Owner> getProductOwners(
-        @Verify(Product.class) @QueryParam("product") List<String> productIds) {
+        @QueryParam("product") List<String> productIds) {
 
         if (productIds.isEmpty()) {
             throw new BadRequestException(i18n.tr("No product IDs specified"));
@@ -376,7 +376,7 @@ public class ProductResource {
     @Path("/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)
     public JobDetail[] refreshPoolsForProduct(
-        @Verify(Product.class) @QueryParam("product") List<String> productIds,
+        @QueryParam("product") List<String> productIds,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
         if (productIds.isEmpty()) {
