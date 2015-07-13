@@ -1053,17 +1053,16 @@ module Candlepin
       end
     end
 
-    module ContentResource
-      def get_all_content
-        get("/content")
-      end
-
-      def get_content(opts = {})
-        get_by_id("/content", :content_id, opts)
-      end
-
+    module OwnerContentResource
       def delete_content(opts = {})
-        delete_by_id("/content", :content_id, opts)
+        defaults = {
+          :content_id => nil,
+          :key => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts)
+
+        delete("/owners/#{opts[:key]}/content/#{opts[:product_id]}")
       end
 
       def create_content(opts = {})
@@ -1079,14 +1078,27 @@ module Candlepin
           :arches => nil,
           :required_tags => nil,
           :metadata_expire => nil,
+          :key => nil,
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :key)
 
         content = opts.dup
         content.delete(:content_id)
         content = camelize_hash(content)
         content[:id] = opts[:content_id]
-        post("/content", content)
+        post("/owners/#{opts[:key]}/content", content)
+      end
+
+    end
+
+    module ContentResource
+      def get_all_content
+        get("/content")
+      end
+
+      def get_content(opts = {})
+        get_by_id("/content", :content_id, opts)
       end
     end
 
@@ -1100,7 +1112,26 @@ module Candlepin
       end
     end
 
-    module ProductResource
+    module OwnerProductResource
+      def get_owner_product(opts = {})
+        defaults = {
+          :key => nil,
+          :product_id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts)
+        get("/owners/#{opts[:key]}/products/#{opts[:product_id]}")
+      end
+
+      def get_all_owner_products(opts = {})
+        defaults = {
+          :key => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts)
+        get("/owners/#{opts[:key]}/products/")
+      end
+
       def create_product(opts = {})
         defaults = {
           :product_id => nil,
@@ -1111,8 +1142,10 @@ module Candlepin
           :dependent_product_ids => [],
           :product_content => [],
           :relies_on => [],
+          :key => nil,
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :key)
 
         product = camelize_hash(opts,
           :type,
@@ -1126,8 +1159,7 @@ module Candlepin
         product[:attributes] = opts[:attributes].map do |k, v|
           { :name => k, :value => v }
         end
-
-        post("/products", product)
+        post("/owners/#{opts[:key]}/products", product)
       end
 
       def update_product(opts = {})
@@ -1138,8 +1170,10 @@ module Candlepin
           :attributes => [],
           :dependent_product_ids => [],
           :relies_on => [],
+          :key => nil,
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :key)
 
         product = camelize_hash(opts, :name, :multiplier, :dependent_product_ids, :relies_on)
         product[:id] = opts[:product_id]
@@ -1147,9 +1181,59 @@ module Candlepin
           { :name => k, :value => v }
         end
 
-        put("/products/#{opts[:product_id]}", product)
+        put("/owners/#{opts[:key]}/products/#{opts[:product_id]}", product)
       end
 
+      def delete_product(opts = {})
+        defaults = {
+          :key => nil,
+          :product_id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts)
+
+        delete("/owners/#{opts[:key]}/products/#{opts[:product_id]}")
+      end
+
+      def get_product_cert(opts = {})
+        defaults = {
+          :product_id => nil,
+          :key => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts)
+
+        get("owners/#{opts[:key]}/products/#{opts[:product_id]}/certificate")
+      end
+
+      def update_product_content(opts = {})
+        defaults = {
+          :product_id => nil,
+          :content_id => nil,
+          :enabled => true,
+          :key => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts)
+
+        post("/owners/#{opts[:key]}/products/#{opts[:product_id]}/content/#{opts[:content_id]}",
+          :query => select_from(opts, :enabled))
+      end
+
+      def delete_product_content(opts = {})
+        defaults = {
+          :product_id => nil,
+          :content_id => nil,
+          :key => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts)
+
+        delete("/owners/#{opts[:key]}/products/#{opts[:product_id]}/content/#{opts[:content_id]}")
+      end
+    end
+
+    module ProductResource
       def get_product(opts = {})
         get_by_id("/products", :product_id, opts)
       end
@@ -1162,41 +1246,6 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
 
         get("/products/#{opts[:product_id]}/statistics/#{opts[:val_type]}")
-      end
-
-      def get_product_cert(opts = {})
-        defaults = {
-          :product_id => nil,
-        }
-        opts = verify_and_merge(opts, defaults)
-
-        get("/products/#{opts[:product_id]}/certificate")
-      end
-
-      def delete_product(opts = {})
-        delete_by_id("/products", :product_id, opts)
-      end
-
-      def update_product_content(opts = {})
-        defaults = {
-          :product_id => nil,
-          :content_id => nil,
-          :enabled => true,
-        }
-        opts = verify_and_merge(opts, defaults)
-
-        post("/products/#{opts[:product_id]}/content/#{opts[:content_id]}",
-          :query => select_from(opts, :enabled))
-      end
-
-      def delete_product_content(opts = {})
-        defaults = {
-          :product_id => nil,
-          :content_id => nil,
-        }
-        opts = verify_and_merge(opts, defaults)
-
-        delete("/products/#{opts[:product_id]}/content/#{opts[:content_id]}")
       end
     end
 

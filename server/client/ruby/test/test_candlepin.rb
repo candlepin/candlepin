@@ -74,6 +74,7 @@ module Candlepin
           :content_id => "hello",
           :name => "Hello",
           :label => "hello",
+          :key => owner['key'],
         ).content
       end
 
@@ -449,84 +450,106 @@ module Candlepin
         expect(res).to be_2xx
       end
 
-      it 'creates a product' do
+      it 'creates an owner product' do
         res = user_client.create_product(
           :product_id => rand_string,
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
+          :key => owner['key'],
         )
         expect(res).to be_2xx
         expect(res.content['multiplier']).to eq(2)
       end
 
-      it 'deletes a product' do
+      it 'deletes an owner product' do
         product = user_client.create_product(
           :product_id => rand_string,
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
+          :key => owner['key'],
         ).content
 
         res = user_client.delete_product(
-          :product_id => product['id']
+          :product_id => product['id'],
+          :key => owner['key'],
         )
         expect(res).to be_2xx
 
-        res = user_client.get_product(
-          :product_id => product['id']
+        res = user_client.get_owner_product(
+          :product_id => product['id'],
+          :key => owner['key'],
         )
         expect(res).to be_missing
       end
 
-      it 'updates a product' do
+      it 'updates an owner product' do
         product = user_client.create_product(
           :product_id => rand_string,
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
+          :key => owner['key'],
         ).content
 
         res = user_client.update_product(
           :product_id => product['id'],
           :multiplier => 8,
+          :key => owner['key'],
         )
         expect(res).to be_2xx
 
-        res = user_client.get_product(
-          :product_id => product['id']
+        res = user_client.get_owner_product(
+          :product_id => product['id'],
+          :key => owner['key'],
         )
         expect(res.content['multiplier']).to eq(8)
       end
 
-      it 'updates product content' do
+      it 'creates owner content' do
+        res = user_client.create_content(
+          :content_id => "hello",
+          :name => "Hello",
+          :label => "hello",
+          :key => owner['key'],
+        )
+
+        expect(res).to be_2xx
+      end
+
+      it 'updates owner content' do
         product = user_client.create_product(
           :product_id => rand_string,
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
+          :key => owner['key'],
         ).content
 
         res = user_client.update_product_content(
           :product_id => product['id'],
           :content_id => content['id'],
+          :key => owner['key'],
         )
 
         expect(res).to be_2xx
       end
 
-      it 'deletes product content' do
+      it 'deletes owner content' do
         product = user_client.create_product(
           :product_id => rand_string,
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
+          :key => owner['key'],
         ).content
         expect(product['productContent']).to be_empty
 
         res = user_client.update_product_content(
           :product_id => product['id'],
           :content_id => content['id'],
+          :key => owner['key'],
         )
         expect(res).to be_2xx
 
@@ -538,6 +561,7 @@ module Candlepin
         res = user_client.delete_product_content(
           :product_id => product['id'],
           :content_id => content['id'],
+          :key => owner['key'],
         )
         expect(res).to be_2xx
 
@@ -611,23 +635,6 @@ module Candlepin
           :type_id => type['id']
         )
         expect(res).to be_missing
-      end
-
-      it 'creates content' do
-        res = user_client.create_content(
-          :content_id => "hello",
-          :name => "Hello",
-          :label => "hello",
-        )
-
-        expect(res).to be_2xx
-      end
-
-      it 'deletes content' do
-        res = user_client.delete_content(
-          :content_id => content["id"],
-        )
-        expect(res).to be_2xx
       end
     end
 
