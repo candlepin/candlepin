@@ -974,6 +974,19 @@ module Candlepin
         post("/owners/#{opts[:key]}/uebercert")
       end
 
+      def refresh_pools(opts = {})
+        defaults = {
+          :key => nil,
+          :auto_create_owner => false,
+          :lazy_regen => false,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :key)
+
+        put("/owners/#{opts[:key]}/subscriptions",
+            :query => select_from(opts, :auto_create_owner, :lazy_regen))
+      end
+
       def update_owner(opts = {})
         defaults = {
           :key => nil,
