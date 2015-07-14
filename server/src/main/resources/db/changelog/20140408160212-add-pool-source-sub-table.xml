@@ -87,12 +87,22 @@
     </changeSet>
 
     <changeSet id="20140408160212-3" author="ckozak">
+        <preConditions onSqlOutput="FAIL" onFail="CONTINUE"/>
+
         <comment>Migrate subscriptions on duplicate pools to a single pool per set</comment>
         <customChange class="org.candlepin.liquibase.FixDuplicatePoolsLiquibaseWrapper">
         </customChange>
     </changeSet>
 
     <changeSet id="20140408160212-4" author="ckozak">
+        <preConditions onSqlOutput="TEST" onFail="CONTINUE">
+            <changeSetExecuted
+                changeLogFile="20140408160212-add-pool-source-sub-table.xml"
+                id="20140408160212-3"
+                author="ckozak"
+            />
+        </preConditions>
+
         <comment>Copy all pool source subscription data to the new table</comment>
         <!-- Everything with non-null values for both subid and subkey can be copied directly assuming we have properly removed duplicates -->
         <sql>
@@ -115,6 +125,14 @@
     </changeSet>
 
     <changeSet id="20140408160212-5" author="ckozak">
+        <preConditions onSqlOutput="TEST" onFail="CONTINUE">
+            <changeSetExecuted
+                changeLogFile="20140408160212-add-pool-source-sub-table.xml"
+                id="20140408160212-4"
+                author="ckozak"
+            />
+        </preConditions>
+
         <comment>Remove unused columns</comment>
 
         <dropUniqueConstraint
