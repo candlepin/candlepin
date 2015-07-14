@@ -27,6 +27,7 @@ import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.HttpServletRequest;
@@ -39,7 +40,7 @@ public class I18nProvider extends CommonI18nProvider implements Provider<I18n> {
 
     private static Logger log = LoggerFactory.getLogger(I18nProvider.class);
 
-    private static ConcurrentHashMap<Locale, I18n>
+    private static Map<Locale, I18n>
     cache = new ConcurrentHashMap<Locale, I18n>();
 
     @Inject
