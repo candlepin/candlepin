@@ -29,10 +29,20 @@
     </changeSet>
 
     <changeSet id="20150602102655-4" author="crog">
+        <preConditions onSqlOutput="FAIL" onFail="CONTINUE"/>
+
         <customChange class="org.candlepin.gutterball.liquibase.ComplianceStatusProductIdMigrationTaskLiquibaseWrapper"/>
     </changeSet>
 
     <changeSet id="20150602102655-5" author="crog">
+        <preConditions onSqlOutput="TEST" onFail="CONTINUE">
+            <changeSetExecuted
+                changeLogFile="20150602102655-compliance-status-products.xml"
+                id="20150602102655-4"
+                author="crog"
+            />
+        </preConditions>
+
         <addPrimaryKey
             columnNames="id"
             constraintName="gb_compprod_snap_pk"
@@ -41,6 +51,14 @@
     </changeSet>
 
     <changeSet id="20150602102655-6" author="crog">
+        <preConditions onSqlOutput="TEST" onFail="CONTINUE">
+            <changeSetExecuted
+                changeLogFile="20150602102655-compliance-status-products.xml"
+                id="20150602102655-4"
+                author="crog"
+            />
+        </preConditions>
+
         <addPrimaryKey
             columnNames="id"
             constraintName="gb_partcompprod_snap_pk"
@@ -49,6 +67,14 @@
     </changeSet>
 
     <changeSet id="20150602102655-7" author="crog">
+        <preConditions onSqlOutput="TEST" onFail="CONTINUE">
+            <changeSetExecuted
+                changeLogFile="20150602102655-compliance-status-products.xml"
+                id="20150602102655-4"
+                author="crog"
+            />
+        </preConditions>
+
         <addPrimaryKey
             columnNames="id"
             constraintName="gb_noncompprod_snap_pk"

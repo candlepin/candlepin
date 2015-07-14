@@ -15,12 +15,22 @@
     </changeSet>
 
     <changeSet id="20150401140006-2" author="crog">
+        <preConditions onSqlOutput="FAIL" onFail="CONTINUE"/>
+
         <comment>Add pool types to the existing pools</comment>
 
         <customChange class="org.candlepin.liquibase.PoolTypeUpgradeLiquibaseWrapper"/>
     </changeSet>
 
     <changeSet id="20150401140006-3" author="crog">
+        <preConditions onSqlOutput="TEST" onFail="CONTINUE">
+            <changeSetExecuted
+                changeLogFile="20150401140006-add-pool-type-to-db.xml"
+                id="20150401140006-2"
+                author="crog"
+            />
+        </preConditions>
+
         <comment>Add the not-null constraint to the new pool type column</comment>
 
         <addNotNullConstraint tableName="cp_pool" columnDataType="varchar(32)" columnName="type"/>
