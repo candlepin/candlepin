@@ -160,28 +160,6 @@ module Candlepin
       h
     end
 
-    # Verify that a hash supplied as the first argument contains only keys specified
-    # by subsequent arguments.  The purpose of this method is to help developers catch
-    # mistakes and typos in the option hashes supplied to methods.  Suppose a method
-    # expects to receive a hash with a ":name" key in it and the user sends in a hash with
-    # the key ":nsme".  Ordinarily that would be accepted and the incorrect key would be
-    # silently ignored.  However, calling verify_keys(hash, :name) would raise an error
-    # to alert the developer to the mistake.
-    #
-    # The valid_keys argument can either be a single array of valid keys or the valid keys
-    # listed inline.  For example:
-    #     verify_keys(hash, defaults.keys)
-    #     verify_keys(hash, :name, :rank, :serial_number)
-    def verify_keys(hash, *valid_keys)
-      keys = Set.new(hash.keys)
-      valid_keys = Set.new(valid_keys.flatten)
-      unless keys == valid_keys || keys.proper_subset?(valid_keys)
-        extra = keys.difference(valid_keys)
-        msg = "Hash #{hash} contains invalid keys: #{extra.to_a}"
-        raise RuntimeError.new(msg)
-      end
-    end
-
     # Validate the value associated with a hash key.  By default, the method validates
     # the key is not nil, but if a block is passed then the block will be evaluated and
     # if the block returns a false value the value will be considered invalid.
@@ -206,7 +184,7 @@ module Candlepin
     end
 
     def verify_and_merge(opts, defaults)
-      verify_keys(opts, defaults.keys)
+      opts.assert_valid_keys(*defaults.keys)
       defaults.merge(opts)
     end
   end
@@ -297,7 +275,11 @@ module Candlepin
       end
 
       def delete_by_id(resource, key, opts = {})
-        verify_keys(opts, key)
+        defaults = {
+          key => nil,
+        }
+
+        opts = verify_and_merge(opts, defaults)
         delete("#{resource}/#{opts[key]}")
       end
     end

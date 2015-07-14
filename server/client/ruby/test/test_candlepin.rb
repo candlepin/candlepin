@@ -889,35 +889,28 @@ module Candlepin
       end
 
       it 'raises an exception on invalid option keys' do
-        valid_keys = [:good, :bad, :ugly]
         hash = {
           :good => 'Clint Eastwood',
           :bad => 'Lee Van Cleef',
           :weird => 'Steve Buscemi',
         }
-        msg_regex = /contains invalid keys:.*weird/
+        defaults = { :good => '', :bad => '' }
+        msg_regex = /Unknown key: :weird/
 
         expect do
-          UtilTest.new.verify_keys(hash, *valid_keys)
-        end.to raise_error(RuntimeError, msg_regex)
-
-        expect do
-          UtilTest.new.verify_keys(hash, valid_keys)
-        end.to raise_error(RuntimeError, msg_regex)
+          UtilTest.new.verify_and_merge(hash, defaults)
+        end.to raise_error(ArgumentError, msg_regex)
       end
 
       it 'verifies valid keys' do
-        valid_keys = [:good, :bad, :ugly]
         hash = {
           :good => 'Clint Eastwood',
           :bad => 'Lee Van Cleef',
         }
-        expect do
-          UtilTest.new.verify_keys(hash, *valid_keys)
-        end.not_to raise_error
+        defaults = { :good => '', :bad => '' }
 
         expect do
-          UtilTest.new.verify_keys(hash, valid_keys)
+          UtilTest.new.verify_and_merge(hash, defaults)
         end.not_to raise_error
       end
 
