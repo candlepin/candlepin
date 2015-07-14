@@ -105,13 +105,6 @@ public class EntitlementImporter {
             }
         }
 
-        Set<Product> products = new HashSet<Product>();
-        for (Product providedProduct : entitlement.getPool().getProvidedProducts()) {
-            products.add(findProduct(productsById, providedProduct.getId()));
-        }
-
-        subscription.setProvidedProducts(products);
-
         // Add any sub product data to the subscription.
         if (entitlement.getPool().getDerivedProduct() != null) {
             subscription.setDerivedProduct(findProduct(
@@ -119,22 +112,7 @@ public class EntitlementImporter {
             ));
         }
 
-        Set<Product> subProvProds = new HashSet<Product>();
-        for (Product subProvProd : entitlement.getPool().getDerivedProvidedProducts()) {
-            subProvProds.add(findProduct(productsById, subProvProd.getId()));
-        }
-        entitlement.getPool().setDerivedProvidedProducts(null);
-
-        for (ProvidedProduct pp : entitlement.getPool().getDerivedProvidedProductDtos()) {
-            subProvProds.add(this.findProduct(productsById, pp.getProductId()));
-        }
-        entitlement.getPool().setDerivedProvidedProductDtos(null);
-
-        log.debug("Entitlement has {} dpp", entitlement.getPool().getDerivedProvidedProducts().size());
-        log.debug("Entitlement has {} dpp-dto", entitlement.getPool().getDerivedProvidedProductDtos().size());
-        log.debug("Subscription has {} derived provided products.", subProvProds.size());
-
-        subscription.setDerivedProvidedProducts(subProvProds);
+        associateProvidedProducts(productsById, entitlement, subscription);
 
         Set<EntitlementCertificate> certs = entitlement.getCertificates();
 
@@ -160,6 +138,46 @@ public class EntitlementImporter {
         }
 
         return subscription;
+    }
+
+    /*
+     * Transfer associations to provided and derived provided products over to the
+     * subscription.
+     *
+     * WARNING: This is a bit tricky due to backward compatibility issues. Prior to
+     * candlepin 2.0, pools serialized a collection of disjoint provided product info,
+     * an object with just a product ID and name, not directly linked to anything in the db.
+     *
+     * In candlepin 2.0 we have referential integrity and links to full product objects,
+     * but we need to maintain both API and import compatibility with old manifests and
+     * servers that may import new manifests.
+     *
+     * To do this, we serialize the providedProductDtos and derivedProvidedProductDtos
+     * collections on pool which keeps the API/manifest JSON identical to what it was
+     * before. On import we load into these transient collections, and here we transfer
+     * to the actual persisted location.
+     */
+    public void associateProvidedProducts(Map<String, Product> productsById,
+            Entitlement entitlement, Subscription subscription)
+        throws SyncDataFormatException {
+
+        // Associate main provided products:
+        Set<Product> providedProducts = new HashSet<Product>();
+        for (ProvidedProduct providedProduct : entitlement.getPool().getProvidedProductDtos()) {
+            providedProducts.add(findProduct(productsById, providedProduct.getProductId()));
+        }
+        subscription.setProvidedProducts(providedProducts);
+
+        // Associate derived provided products:
+        Set<Product> derivedProvidedProducts = new HashSet<Product>();
+        for (ProvidedProduct pp : entitlement.getPool().getDerivedProvidedProductDtos()) {
+            derivedProvidedProducts.add(this.findProduct(productsById, pp.getProductId()));
+        }
+        subscription.setDerivedProvidedProducts(derivedProvidedProducts);
+
+        log.debug("Subscription has {} provided products.", derivedProvidedProducts.size());
+        log.debug("Subscription has {} derived provided products.", derivedProvidedProducts.size());
+
     }
 
     private Product findProduct(Map<String, Product> productsById, String productId)
