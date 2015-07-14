@@ -13,6 +13,7 @@ gem 'stringex'
 gem 'pry'
 gem 'digest-murmurhash'
 gem 'httpclient'
+gem 'activesupport'
 
 group :development do
   gem 'webrick'

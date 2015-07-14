@@ -74,19 +74,19 @@ module Candlepin
           :content_id => "hello",
           :name => "Hello",
           :label => "hello",
-          :key => owner['key'],
+          :key => owner[:key],
         ).content
       end
 
       it 'gets a status as JSON' do
         res = no_auth_client.get('/status')
-        expect(res.content.key?('version')).to be_true
+        expect(res.content.key?(:version)).to be_true
       end
 
       it 'gets all owners with basic auth' do
         res = user_client.get_all_owners
         expect(res.content.empty?).to be_false
-        expect(res.content.first.key?('id')).to be_true
+        expect(res.content.first.key?(:id)).to be_true
       end
 
       it 'fails with bad password' do
@@ -100,7 +100,7 @@ module Candlepin
           :username => 'admin',
           :name => rand_string,
         )
-        expect(res.content['uuid'].length).to eq(36)
+        expect(res.content[:uuid].length).to eq(36)
       end
 
       it 'registers a consumer and gets a client' do
@@ -111,7 +111,7 @@ module Candlepin
         )
 
         res = x509_client.get_consumer()
-        expect(res.content['uuid'].length).to eq(36)
+        expect(res.content[:uuid].length).to eq(36)
       end
 
       it 'gets deleted consumers' do
@@ -129,8 +129,8 @@ module Candlepin
 
         res = user_client.update_consumer(
           :autoheal => false,
-          :uuid => consumer['uuid'],
-          :capabilities => ['cores'],
+          :uuid => consumer[:uuid],
+          :capabilities => [:cores],
         )
         expect(res).to be_2xx
       end
@@ -142,7 +142,7 @@ module Candlepin
           :name => rand_string,
         )
         consumer = res.content
-        user_client.uuid = consumer['uuid']
+        user_client.uuid = consumer[:uuid]
 
         res = user_client.update_consumer(
           :autoheal => false,
@@ -157,7 +157,7 @@ module Candlepin
           :name => rand_string,
         )
         consumer = res.content
-        user_client.uuid = consumer['uuid']
+        user_client.uuid = consumer[:uuid]
 
         res = user_client.update_all_guest_ids(
           :guest_ids => ['123', '456'],
@@ -172,7 +172,7 @@ module Candlepin
           :name => rand_string,
         )
         consumer = res.content
-        user_client.uuid = consumer['uuid']
+        user_client.uuid = consumer[:uuid]
 
         user_client.update_consumer(
           :guest_ids => ['x', 'y', 'z'],
@@ -186,82 +186,82 @@ module Candlepin
       end
 
       it 'creates users' do
-        expect(user["hashedPassword"].length).to eq(40)
+        expect(user[:hashedPassword].length).to eq(40)
       end
 
       it 'gets users' do
-        res = user_client.get_user(:username => user["username"])
-        expect(res.content["id"]).to eq(user["id"])
+        res = user_client.get_user(:username => user[:username])
+        expect(res.content[:id]).to eq(user[:id])
       end
 
       it 'updates users' do
-        res = user_client.update_user(:username => user["username"], :password => rand_string)
-        expect(res.content["hashedPassword"]).to_not eq(user["hashedPassword"])
+        res = user_client.update_user(:username => user[:username], :password => rand_string)
+        expect(res.content[:hashedPassword]).to_not eq(user[:hashedPassword])
       end
 
       it 'deletes users' do
-        res = user_client.delete_user(:username => user["username"])
+        res = user_client.delete_user(:username => user[:username])
         expect(res).to be_2xx
 
         res = user_client.get_all_users
-        existing_users = res.content.map { |u| u["username"] }
-        expect(existing_users).to_not include(user["username"])
+        existing_users = res.content.map { |u| u[:username] }
+        expect(existing_users).to_not include(user[:username])
       end
 
       it 'creates roles' do
-        expect(role["id"]).to_not be_nil
+        expect(role[:id]).to_not be_nil
       end
 
       it 'gets roles' do
         res = user_client.get_role(
-          :role_id => role["id"],
+          :role_id => role[:id],
         )
-        expect(res.content["id"]).to eq(role["id"])
+        expect(res.content[:id]).to eq(role[:id])
       end
 
       it 'updates roles' do
         res = user_client.update_role(
-          :role_id => role["id"],
+          :role_id => role[:id],
           :name => rand_string,
         )
-        expect(res.content["name"]).to_not eq(role["name"])
+        expect(res.content[:name]).to_not eq(role[:name])
       end
 
       it 'deletes roles' do
-        expect(role["id"]).to_not be_nil
+        expect(role[:id]).to_not be_nil
 
         res = user_client.delete_role(
-          :role_id => role["id"],
+          :role_id => role[:id],
         )
         expect(res).to be_2xx
       end
 
       it 'creates role users' do
         res = user_client.add_role_user(
-          :role_id => role["id"],
-          :username => user["username"],
+          :role_id => role[:id],
+          :username => user[:username],
         )
-        expect(res.content["users"].first["id"]).to eq(user["id"])
+        expect(res.content[:users].first[:id]).to eq(user[:id])
       end
 
       it 'deletes role users' do
         res = user_client.add_role_user(
-          :role_id => role["id"],
-          :username => user["username"],
+          :role_id => role[:id],
+          :username => user[:username],
         )
-        expect(res.content["users"].first["id"]).to eq(user["id"])
+        expect(res.content[:users].first[:id]).to eq(user[:id])
 
         res = user_client.delete_role_user(
-          :role_id => role["id"],
-          :username => user["username"],
+          :role_id => role[:id],
+          :username => user[:username],
         )
-        expect(res.content["users"]).to be_empty
+        expect(res.content[:users]).to be_empty
       end
 
       it 'adds role permissions' do
         res = user_client.add_role_permission(
-          :role_id => role['id'],
-          :owner => owner['key'],
+          :role_id => role[:id],
+          :owner => owner[:key],
           :type => 'OWNER',
           :access => 'ALL',
         )
@@ -270,15 +270,15 @@ module Candlepin
 
       it 'deletes role permissions' do
         perm = user_client.add_role_permission(
-          :role_id => role['id'],
-          :owner => owner['key'],
+          :role_id => role[:id],
+          :owner => owner[:key],
           :type => 'OWNER',
           :access => 'ALL',
         ).content
 
         res = user_client.delete_role_permission(
-          :role_id => role['id'],
-          :permission_id => perm['permissions'].first['id'],
+          :role_id => role[:id],
+          :permission_id => perm[:permissions].first[:id],
         )
         expect(res).to be_2xx
       end
@@ -289,76 +289,76 @@ module Candlepin
           :display_name => rand_string,
         )
         expect(res).to be_2xx
-        expect(res.content).to have_key('id')
+        expect(res.content).to have_key(:id)
       end
 
       it 'gets owner hypervisors' do
         host1 = user_client.register(
-          :owner => owner['key'],
+          :owner => owner[:key],
           :username => 'admin',
           :name => rand_string,
         ).content
 
         host2 = user_client.register(
-          :owner => owner['key'],
+          :owner => owner[:key],
           :username => 'admin',
           :name => rand_string,
         ).content
 
         user_client.register(
-          :owner => owner['key'],
+          :owner => owner[:key],
           :username => 'admin',
           :name => rand_string,
-          :hypervisor_id => host1["uuid"],
+          :hypervisor_id => host1[:uuid],
         ).content
 
         res = user_client.get_owner_hypervisors(
-          :key => owner['key'],
+          :key => owner[:key],
         )
         expect(res).to be_2xx
 
         res = user_client.get_owner_hypervisors(
-          :key => owner['key'],
-          :hypervisor_ids => [host1['uuid'], host2['uuid']],
+          :key => owner[:key],
+          :hypervisor_ids => [host1[:uuid], host2[:uuid]],
         )
         expect(res).to be_2xx
-        expect(res.content.length).to be(1)
+        expect(res.content.length).to eq(1)
       end
 
       it 'creates owner environments' do
         res = user_client.create_owner_environment(
-          :key => owner['key'],
+          :key => owner[:key],
           :id => rand_string,
           :description => rand_string,
           :name => rand_string
         )
         expect(res).to be_2xx
-        expect(res.content).to have_key('name')
+        expect(res.content).to have_key(:name)
       end
 
       it 'gets owner environments' do
         env = user_client.create_owner_environment(
-          :key => owner['key'],
+          :key => owner[:key],
           :id => rand_string,
           :description => rand_string,
           :name => rand_string
         ).content
 
         res = user_client.get_owner_environment(
-          :key => owner['key'],
-          :name => env['name']
+          :key => owner[:key],
+          :name => env[:name]
         )
         expect(res).to be_2xx
       end
 
       it 'deletes owners' do
         res = user_client.delete_owner(
-          :key => owner['key']
+          :key => owner[:key]
         )
         expect(res).to be_2xx
 
         res = user_client.get_owner(
-          :key => owner['key']
+          :key => owner[:key]
         )
         expect(res).to be_missing
       end
@@ -371,24 +371,24 @@ module Candlepin
           :parent_owner => parent,
         ).content
 
-        expect(child['parentOwner']['id']).to eq(parent['id'])
-        expect(parent['parentOwner']).to be_nil
+        expect(child[:parentOwner][:id]).to eq(parent[:id])
+        expect(parent[:parentOwner]).to be_nil
       end
 
       it 'updates owners' do
-        old_name = owner['displayName']
+        old_name = owner[:displayName]
 
         res = user_client.update_owner(
-          :key => owner['key'],
+          :key => owner[:key],
           :display_name => rand_string
         )
         expect(res).to be_2xx
-        expect(res.content['displayName']).to_not eq(old_name)
+        expect(res.content[:displayName]).to_not eq(old_name)
       end
 
       it 'gets owner service levels' do
         res = user_client.get_owner_service_levels(
-          :key => owner['key'],
+          :key => owner[:key],
           :exempt => true,
         )
 
@@ -397,45 +397,45 @@ module Candlepin
 
       it 'sets owner log level' do
         res = user_client.set_owner_log_level(
-          :key => owner['key'],
+          :key => owner[:key],
           :level => 'debug',
         )
         expect(res).to be_2xx
-        expect(res.content['logLevel']).to eq('DEBUG')
+        expect(res.content[:logLevel]).to eq('DEBUG')
       end
 
       it 'deletes owner log level' do
         res = user_client.set_owner_log_level(
-          :key => owner['key'],
+          :key => owner[:key],
           :level => 'debug',
         )
         expect(res).to be_2xx
-        expect(res.content['logLevel']).to eq('DEBUG')
+        expect(res.content[:logLevel]).to eq('DEBUG')
 
         res = user_client.delete_owner_log_level(
-          :key => owner['key'],
+          :key => owner[:key],
         )
         expect(res).to be_2xx
       end
 
       it 'gets owners' do
         res = user_client.get_owner(
-          :key => owner['key'],
+          :key => owner[:key],
         )
         expect(res).to be_2xx
-        expect(res.content['id']).to eq(owner['id'])
+        expect(res.content[:id]).to eq(owner[:id])
       end
 
       it 'gets owner info' do
         res = user_client.get_owner_info(
-          :key => owner['key'],
+          :key => owner[:key],
         )
         expect(res).to be_2xx
       end
 
       it "gets an owner's jobs" do
         res = user_client.get_owner_jobs(
-          :owner => owner['key'],
+          :owner => owner[:key],
         )
         expect(res).to be_2xx
       end
@@ -456,10 +456,10 @@ module Candlepin
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
-          :key => owner['key'],
+          :key => owner[:key],
         )
         expect(res).to be_2xx
-        expect(res.content['multiplier']).to eq(2)
+        expect(res.content[:multiplier]).to eq(2)
       end
 
       it 'deletes an owner product' do
@@ -468,18 +468,18 @@ module Candlepin
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
-          :key => owner['key'],
+          :key => owner[:key],
         ).content
 
         res = user_client.delete_product(
-          :product_id => product['id'],
-          :key => owner['key'],
+          :product_id => product[:id],
+          :key => owner[:key],
         )
         expect(res).to be_2xx
 
         res = user_client.get_owner_product(
-          :product_id => product['id'],
-          :key => owner['key'],
+          :product_id => product[:id],
+          :key => owner[:key],
         )
         expect(res).to be_missing
       end
@@ -490,21 +490,21 @@ module Candlepin
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
-          :key => owner['key'],
+          :key => owner[:key],
         ).content
 
         res = user_client.update_product(
-          :product_id => product['id'],
+          :product_id => product[:id],
           :multiplier => 8,
-          :key => owner['key'],
+          :key => owner[:key],
         )
         expect(res).to be_2xx
 
         res = user_client.get_owner_product(
-          :product_id => product['id'],
-          :key => owner['key'],
+          :product_id => product[:id],
+          :key => owner[:key],
         )
-        expect(res.content['multiplier']).to eq(8)
+        expect(res.content[:multiplier]).to eq(8)
       end
 
       it 'creates owner content' do
@@ -512,7 +512,7 @@ module Candlepin
           :content_id => "hello",
           :name => "Hello",
           :label => "hello",
-          :key => owner['key'],
+          :key => owner[:key],
         )
 
         expect(res).to be_2xx
@@ -524,13 +524,13 @@ module Candlepin
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
-          :key => owner['key'],
+          :key => owner[:key],
         ).content
 
         res = user_client.update_product_content(
-          :product_id => product['id'],
-          :content_id => content['id'],
-          :key => owner['key'],
+          :product_id => product[:id],
+          :content_id => content[:id],
+          :key => owner[:key],
         )
 
         expect(res).to be_2xx
@@ -542,33 +542,33 @@ module Candlepin
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
-          :key => owner['key'],
+          :key => owner[:key],
         ).content
-        expect(product['productContent']).to be_empty
+        expect(product[:productContent]).to be_empty
 
         res = user_client.update_product_content(
-          :product_id => product['id'],
-          :content_id => content['id'],
-          :key => owner['key'],
+          :product_id => product[:id],
+          :content_id => content[:id],
+          :key => owner[:key],
         )
         expect(res).to be_2xx
 
         product = user_client.get_product(
-          :product_id => product['id'],
+          :product_id => product[:id],
         ).content
-        expect(product['productContent']).to_not be_empty
+        expect(product[:productContent]).to_not be_empty
 
         res = user_client.delete_product_content(
-          :product_id => product['id'],
-          :content_id => content['id'],
-          :key => owner['key'],
+          :product_id => product[:id],
+          :content_id => content[:id],
+          :key => owner[:key],
         )
         expect(res).to be_2xx
 
         product = user_client.get_product(
-          :product_id => product['id'],
+          :product_id => product[:id],
         ).content
-        expect(product['productContent']).to be_empty
+        expect(product[:productContent]).to be_empty
       end
 
       it 'creates a distributor version' do
@@ -576,10 +576,10 @@ module Candlepin
         res = user_client.create_distributor_version(
           :name => name,
           :display_name => rand_string,
-          :capabilities => ['ram'],
+          :capabilities => [:ram],
         )
         expect(res).to be_2xx
-        expect(res.content['name']).to eq(name)
+        expect(res.content[:name]).to eq(name)
       end
 
       it 'deletes a distributor version' do
@@ -589,7 +589,7 @@ module Candlepin
         ).content
 
         res = user_client.delete_distributor_version(
-          :id => distributor['id']
+          :id => distributor[:id]
         )
         expect(res).to be_2xx
       end
@@ -598,20 +598,20 @@ module Candlepin
         distributor = user_client.create_distributor_version(
           :name => rand_string,
           :display_name => rand_string,
-          :capabilities => ['ram'],
+          :capabilities => [:ram],
         ).content
 
         new_display_name = rand_string
         res = user_client.update_distributor_version(
-          :id => distributor['id'],
+          :id => distributor[:id],
           :display_name => new_display_name,
         )
         expect(res).to be_2xx
 
         res = user_client.get_distributor_version(
-          :name => distributor['name']
+          :name => distributor[:name]
         )
-        expect(res.content.first['displayName']).to eq(new_display_name)
+        expect(res.content.first[:displayName]).to eq(new_display_name)
       end
 
       it 'creates a consumer type' do
@@ -627,12 +627,12 @@ module Candlepin
         ).content
 
         res = user_client.delete_consumer_type(
-          :type_id => type['id']
+          :type_id => type[:id]
         )
         expect(res).to be_2xx
 
         res = user_client.get_consumer_type(
-          :type_id => type['id']
+          :type_id => type[:id]
         )
         expect(res).to be_missing
       end
@@ -710,7 +710,7 @@ module Candlepin
           :insecure => false)
 
         res = simple_client.get('/status')
-        expect(res.content['message']).to eq("Hello")
+        expect(res.content[:message]).to eq("Hello")
       end
 
       it 'makes text/plain requests' do
@@ -718,6 +718,17 @@ module Candlepin
           :port => TEST_PORT)
         res = simple_client.get_text('/status')
         expect(res.content).to eq("Hello Text")
+      end
+
+      it 'uses an indifferent access hash' do
+        simple_client = NoAuthClient.new(
+          :ca_path => 'certs/test-ca.crt',
+          :port => TEST_PORT,
+          :insecure => false)
+
+        res = simple_client.get('/status')
+        expect(res.content[:message]).to eq("Hello")
+        expect(res.content[:message]).to eq("Hello")
       end
 
       it 'allows arbitrary accept headers' do
@@ -748,7 +759,7 @@ module Candlepin
           :client_key => client_key)
 
         res = cert_client.get('/status')
-        expect(res.content['message']).to eq("Hello")
+        expect(res.content[:message]).to eq("Hello")
       end
 
       it 'forbids a connection with an invalid client cert' do
@@ -813,7 +824,7 @@ module Candlepin
           :insecure => false)
 
         res = cert_client.get('/status')
-        expect(res.content['message']).to eq("Hello")
+        expect(res.content[:message]).to eq("Hello")
       end
 
       it 'fails to build client when given both consumer and cert info' do
@@ -839,7 +850,7 @@ module Candlepin
           :insecure => false)
 
         res = cert_client.get('/status')
-        expect(res.content['message']).to eq("Hello")
+        expect(res.content[:message]).to eq("Hello")
       end
 
       it 'fails to build client when given both cert objects and cert files' do

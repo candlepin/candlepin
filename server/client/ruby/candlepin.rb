@@ -1,3 +1,4 @@
+require 'active_support/all'
 require 'cgi'
 require 'forwardable'
 require 'httpclient'
@@ -14,7 +15,14 @@ module HTTP
     alias original_content content
     def content
       if JSONClient::CONTENT_TYPE_JSON_REGEX =~ content_type
-        JSON.parse(original_content)
+        json = JSON.parse(original_content)
+        if json.is_a?(Array)
+          json.map! do |i|
+            i.deep_symbolize_keys!
+          end
+        else
+          json.deep_symbolize_keys!
+        end
       else
         original_content
       end
@@ -1521,17 +1529,18 @@ module Candlepin
 
     class << self
       def from_consumer(consumer_json, opts = {})
+        consumer_json.deep_symbolize_keys!
         if opts.key?(:client_cert) || opts.key?(:client_key)
           raise ArgumentError.new("Cannot specify cert and key for this method")
         end
-        client_cert = OpenSSL::X509::Certificate.new(consumer_json['idCert']['cert'])
-        client_key = OpenSSL::PKey::RSA.new(consumer_json['idCert']['key'])
+        client_cert = OpenSSL::X509::Certificate.new(consumer_json[:idCert][:cert])
+        client_key = OpenSSL::PKey::RSA.new(consumer_json[:idCert][:key])
         opts = {
           :client_cert => client_cert,
           :client_key => client_key,
         }.merge(opts)
         client = X509Client.new(opts)
-        client.uuid = consumer_json['uuid']
+        client.uuid = consumer_json[:uuid]
         client
       end
 
