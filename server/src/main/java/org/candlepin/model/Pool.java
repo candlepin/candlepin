@@ -316,6 +316,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      */
     @Transient
     private String importedProductId = null;
+    @Transient
+    private String importedDerivedProductId = null;
 
     @Column(name = "upstream_pool_id")
     @Size(max = 255)
@@ -817,7 +819,13 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      */
     @HateoasInclude
     public String getProductId() {
-        return (this.getProduct() != null ? this.getProduct().getId() : null);
+        if (getProduct() != null) {
+            return this.getProduct().getId();
+        }
+        else if (getImportedProductId() != null) {
+            return getImportedProductId();
+        }
+        return null;
     }
 
     public void setProductId(String productId) {
@@ -827,6 +835,15 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @XmlTransient
     public String getImportedProductId() {
         return this.importedProductId;
+    }
+
+    public void setDerivedProductId(String productId) {
+        this.importedDerivedProductId = productId;
+    }
+
+    @XmlTransient
+    public String getDerivedImportedProductId() {
+        return this.importedDerivedProductId;
     }
 
     /**
@@ -921,10 +938,14 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public String getDerivedProductId() {
-        if (derivedProduct == null) {
-            return null;
+        if (getDerivedProduct() != null) {
+            return this.getDerivedProduct().getId();
         }
-        return this.derivedProduct.getId();
+        else if (getDerivedImportedProductId() != null) {
+            return getDerivedImportedProductId();
+        }
+        return null;
+
     }
 
     public Set<ProductAttribute> getProductAttributes() {

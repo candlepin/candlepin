@@ -125,7 +125,7 @@ public class EntitlementResource {
         verifyExistence(consumer, consumerUuid);
 
         for (Entitlement e : consumer.getEntitlements()) {
-            if (e.getProductId().equals(productId)) {
+            if (e.getPool().getProductId().equals(productId)) {
                 return e;
             }
         }

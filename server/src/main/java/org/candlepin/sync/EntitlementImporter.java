@@ -96,7 +96,7 @@ public class EntitlementImporter {
                 b.getName()));
         }
 
-        subscription.setProduct(findProduct(productsById, entitlement.getProductId()));
+        subscription.setProduct(findProduct(productsById, entitlement.getPool().getProductId()));
         String cdnLabel = meta.getCdnLabel();
         if (!StringUtils.isBlank(cdnLabel)) {
             Cdn cdn = cdnCurator.lookupByLabel(cdnLabel);
@@ -106,9 +106,9 @@ public class EntitlementImporter {
         }
 
         // Add any sub product data to the subscription.
-        if (entitlement.getPool().getDerivedProduct() != null) {
+        if (entitlement.getPool().getDerivedProductId() != null) {
             subscription.setDerivedProduct(findProduct(
-                productsById, entitlement.getPool().getDerivedProduct().getId()
+                productsById, entitlement.getPool().getDerivedProductId()
             ));
         }
 

@@ -386,7 +386,7 @@ public class Exporter {
             if (manifest && !this.exportRules.canExport(cert.getEntitlement())) {
                 if (log.isDebugEnabled()) {
                     log.debug("Skipping export of entitlement cert with product:  " +
-                            cert.getEntitlement().getProductId());
+                            cert.getEntitlement().getPool().getProductId());
                 }
                 continue;
             }
@@ -447,14 +447,14 @@ public class Exporter {
             if (!this.exportRules.canExport(ent)) {
                 if (log.isDebugEnabled()) {
                     log.debug("Skipping export of entitlement with product:  " +
-                            ent.getProductId());
+                            ent.getPool().getProductId());
                 }
 
                 continue;
             }
 
             if (log.isDebugEnabled()) {
-                log.debug("Exporting entitlement for product" + ent.getProductId());
+                log.debug("Exporting entitlement for product" + ent.getPool().getProductId());
             }
             FileWriter writer = null;
             try {

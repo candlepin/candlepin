@@ -1262,7 +1262,8 @@ public class CandlepinPoolManager implements PoolManager {
         List<Entitlement> allEnvEnts = entitlementCurator.listByEnvironment(e);
         Set<Entitlement> entsToRegen = new HashSet<Entitlement>();
         for (Entitlement ent : allEnvEnts) {
-            Product prod = productCurator.lookupById(ent.getOwner(), ent.getProductId());
+            Product prod = productCurator.lookupById(ent.getOwner(),
+                    ent.getPool().getProductId());
             for (String contentId : affectedContent) {
                 if (prod.hasContent(contentId)) {
                     entsToRegen.add(ent);
