@@ -487,6 +487,8 @@
 
     <!-- migration task -->
     <changeSet id="20150210094558-40" author="crog">
+        <preConditions onSqlOutput="FAIL" onFail="CONTINUE"/>
+
         <comment>Migrate data from obsoleted tables to new org-specific tables.</comment>
 
         <customChange class="org.candlepin.liquibase.PerOrgProductsUpgradeLiquibaseWrapper"/>
