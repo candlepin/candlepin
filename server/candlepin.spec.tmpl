@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.4
+Version: 2.0.5
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -213,6 +213,14 @@ fi
 
 #raw
 %changelog
+* Wed Jul 15 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 2.0.5-1
+- Fixed duplicate results when using Entitlement matches filter
+  (mstead@redhat.com)
+- Fix provided product import. (dgoodwin@redhat.com)
+- Added preconditions to custom change tasks (crog@redhat.com)
+- Fix cross-compile issue with ConcurrentHashMap. (awood@redhat.com)
+- Reduced required precision in check-in spec test (crog@redhat.com)
+
 * Fri Jul 10 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 2.0.4-1
 - Include derived modifier content in distributor ent cert (mstead@redhat.com)
 - 1212122: Last checkin date was getting returned in create json, but not
