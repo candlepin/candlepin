@@ -80,6 +80,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             query.createAlias("p.providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN);
             query.createAlias("provProd.productContent", "ppcw", CriteriaSpecification.LEFT_JOIN);
             query.createAlias("ppcw.content", "ppContent", CriteriaSpecification.LEFT_JOIN);
+            query.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
         }
         query.add(Restrictions.eq("consumer", consumer));
         // Never show a consumer expired entitlements
@@ -110,6 +111,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             c.createAlias("p.providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN);
             c.createAlias("provProd.productContent", "ppcw", CriteriaSpecification.LEFT_JOIN);
             c.createAlias("ppcw.content", "ppContent", CriteriaSpecification.LEFT_JOIN);
+            c.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
         }
         c.add(Restrictions.eq("consumer", consumer));
         // Never show a consumer expired entitlements

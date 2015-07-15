@@ -22,12 +22,24 @@ describe 'Entitlements' do
                                     :attributes => { 'instance_multiplier' => 2,
                                         'multi-entitlement' => 'yes' })
 
+    @ram = @cp.create_product(@owner['key'], random_string("ram-pack"), random_string("RAM Limiting Package"), {
+      :attributes => {"ram" => "4"}})
+
+    @ram_provided = create_product(nil, random_string("ram provided"), {})
+    content = create_content({:metadata_expire => 6000,
+                                  :required_tags => "TAG1,TAG2"})
+    content2 = create_content({:metadata_expire => 6000,
+                                      :required_tags => "TAG1,TAG2"})
+    @cp.add_content_to_product(@owner['key'], @ram_provided.id, content.id)
+    @cp.add_content_to_product(@owner['key'], @ram_provided.id, content2.id)
+
     #entitle owner for the virt and monitoring products.
     @cp.create_subscription(@owner['key'], @virt.id, 20)
     @cp.create_subscription(@owner['key'], @monitoring.id, 4)
     @cp.create_subscription(@owner['key'], @super_awesome.id, 4)
     @cp.create_subscription(@owner['key'], @virt_limit.id, 5)
     @cp.create_subscription(@owner['key'], @instance_based.id, 10)
+    @cp.create_subscription(@owner['key'], @ram.id, 4, [@ram_provided.id])
 
     @cp.refresh_pools(@owner['key'])
 
@@ -108,15 +120,15 @@ describe 'Entitlements' do
   end
 
   it 'should filter consumer entitlements by matches parameter' do
-    @system.consume_pool find_pool(@virt_limit).id
+    @system.consume_pool find_pool(@ram).id
     @system.consume_pool find_pool(@super_awesome).id
     @system.list_entitlements().should have(2).things
 
-    entitlements = @system.list_entitlements(:matches => @virt_limit.name)
+    entitlements = @system.list_entitlements(:matches => "*ram*")
     entitlements.should have(1).things
 
     found_attr = false
-    entitlements[0].pool.product.name.should == @virt_limit.name
+    entitlements[0].pool.product.name.should == @ram.name
   end
 
   it 'should be removed after revoking all entitlements' do
