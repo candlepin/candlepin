@@ -1177,7 +1177,7 @@ public class ConsumerResource {
             if (isVirtOnly(pool)) {
                 if (!requiredHost.equals(host.getUuid())) {
                     log.warn("Removing entitlement {} from guest {}.",
-                        entitlement.getProductId(), guest.getName());
+                        entitlement.getPool().getProductId(), guest.getName());
                     deletableGuestEntitlements.add(entitlement);
                 }
                 else if (isUnmappedGuestPool(pool)) {
@@ -1187,7 +1187,7 @@ public class ConsumerResource {
             }
             else {
                 log.info("Entitlement {} on {} is still valid and will not be removed.",
-                    entitlement.getProductId(), guest.getName());
+                    entitlement.getPool().getProductId(), guest.getName());
             }
         }
         // perform the entitlement revocation
