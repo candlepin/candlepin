@@ -9,7 +9,7 @@ Adjust second command's parent version, and candlepin tag version per your build
 
 ```
 $ tito release mead
-$ brew wrapper-rpm --create-build candlepin-mead-rhel-7-maven-candidate org.candlepin-candlepin-parent-2.0-3 "git://git.app.eng.bos.redhat.com/candlepin.git?server#candlepin-2.0.4-1"
+$ brew wrapper-rpm --create-build candlepin-mead-rhel-7-maven-candidate org.candlepin-candlepin-2.0.4-1 "git://git.app.eng.bos.redhat.com/candlepin.git?server#candlepin-2.0.4-1"
 ```
 
 ## Getting Started
