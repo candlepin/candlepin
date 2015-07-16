@@ -187,6 +187,7 @@ public class HypervisorUpdateJob extends UniqueByOwnerJob {
         JobDataMap map = new JobDataMap();
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, owner.getKey());
+        map.put(JobStatus.OWNER_ID, owner.getKey());
         map.put(CREATE, create);
         map.put(DATA, compress(data));
         map.put(PRINCIPAL, principal);
