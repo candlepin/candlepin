@@ -44,6 +44,7 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -131,7 +132,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         assertEquals(actual, expected);
     }
 
-    @Test
+    @Test(expected = BadRequestException.class)
     public void getProductCertificate() {
         Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
         Product p = productCurator.create(createProduct(owner));
@@ -187,22 +188,22 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Owner owner2 = owners.get(1);
         Owner owner3 = owners.get(2);
 
-        owners = productResource.getProductOwners(new String[] { "p1" });
+        owners = productResource.getProductOwners(Arrays.asList("p1"));
         assertEquals(Arrays.asList(owner1, owner2), owners);
 
-        owners = productResource.getProductOwners(new String[] { "p1", "p2" });
+        owners = productResource.getProductOwners(Arrays.asList("p1", "p2"));
         assertEquals(Arrays.asList(owner1, owner2, owner3), owners);
 
-        owners = productResource.getProductOwners(new String[] { "p3" });
+        owners = productResource.getProductOwners(Arrays.asList("p3"));
         assertEquals(Arrays.asList(owner3), owners);
 
-        owners = productResource.getProductOwners(new String[] { "nope" });
+        owners = productResource.getProductOwners(Arrays.asList("nope"));
         assertEquals(0, owners.size());
     }
 
     @Test(expected = BadRequestException.class)
     public void testGetOwnersForProductsInputValidation() {
-        productResource.getProductOwners(new String[] {});
+        productResource.getProductOwners(new LinkedList<String>());
     }
 
     private void verifyRefreshPoolsJobs(JobDetail[] jobs, List<Owner> owners, boolean lazyRegen) {
@@ -241,28 +242,28 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
         JobDetail[] jobs;
 
-        jobs = productResource.refreshPoolsForProduct(new String[] { "p1" }, true);
+        jobs = productResource.refreshPoolsForProduct(Arrays.asList("p1"), true);
         assertNotNull(jobs);
         assertEquals(2, jobs.length);
         this.verifyRefreshPoolsJobs(jobs, Arrays.asList(owner1, owner2), true);
 
-        jobs = productResource.refreshPoolsForProduct(new String[] { "p1", "p2" }, false);
+        jobs = productResource.refreshPoolsForProduct(Arrays.asList("p1", "p2"), false);
         assertNotNull(jobs);
         assertEquals(3, jobs.length);
         this.verifyRefreshPoolsJobs(jobs, Arrays.asList(owner1, owner2, owner3), false);
 
-        jobs = productResource.refreshPoolsForProduct(new String[] { "p3" }, false);
+        jobs = productResource.refreshPoolsForProduct(Arrays.asList("p3"), false);
         assertNotNull(jobs);
         assertEquals(1, jobs.length);
         this.verifyRefreshPoolsJobs(jobs, Arrays.asList(owner3), false);
 
-        jobs = productResource.refreshPoolsForProduct(new String[] { "nope" }, false);
+        jobs = productResource.refreshPoolsForProduct(Arrays.asList("nope"), false);
         assertNotNull(jobs);
         assertEquals(0, jobs.length);
     }
 
     @Test(expected = BadRequestException.class)
     public void testRefreshPoolsByProductInputValidation() {
-        productResource.refreshPoolsForProduct(new String[] {}, true);
+        productResource.refreshPoolsForProduct(new LinkedList<String>(), true);
     }
 }
