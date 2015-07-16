@@ -111,21 +111,11 @@ class TomcatSetup(object):
         run_command("chown tomcat:tomcat -R /var/lib/" + TOMCAT)
         run_command("chown tomcat:tomcat -R /var/cache/" + TOMCAT)
 
-    # If supervisord tomcat.conf exists, assume this is a docker container
-    # and use supervisorctl to manage the service instead:
     def stop(self):
-        if os.path.exists('/etc/supervisor/conf.d/tomcat.conf'):
-            print("Supervisord tomcat config exists, using supervisorctl stop.")
-            run_command("supervisorctl stop tomcat")
-        else:
-            run_command("/sbin/service " + TOMCAT + " stop")
+        run_command("/sbin/service " + TOMCAT + " stop")
 
     def restart(self):
-        if os.path.exists('/etc/supervisor/conf.d/tomcat.conf'):
-            print("Supervisord tomcat config exists, using supervisorctl restart.")
-            #run_command("supervisorctl restart tomcat")
-        else:
-            run_command("/sbin/service " + TOMCAT + " restart")
+        run_command("/sbin/service " + TOMCAT + " restart")
 
     def wait_for_startup(self):
         print("Waiting for tomcat to restart...")
@@ -263,6 +253,8 @@ def main(argv):
     parser.add_option("--oracle-password",
                   dest="oracle_password",
                   help="Oracle DBA password")
+    parser.add_option("--skip-service", dest="skip_service", action="store_true",
+        default=False, help="Skip attempting to stop/restart tomcat service.")
 
     (options, args) = parser.parse_args()
 
@@ -273,7 +265,8 @@ def main(argv):
     # Stop tomcat before we wipe the DB otherwise you get errors from pg
     tsetup = TomcatSetup('/etc/' + TOMCAT, options.keystorepwd)
     tsetup.fix_perms()
-    tsetup.stop()
+    if not options.skip_service:
+        tsetup.stop()
 
     # Call the cpdb script to create the candlepin database. Database creation will be
     # skipped if it already exists. The --schema-only option can be used if the database
@@ -310,10 +303,11 @@ def main(argv):
 
     tsetup = TomcatSetup('/etc/' + TOMCAT, options.keystorepwd)
     tsetup.update_config()
-    tsetup.restart()
-    tsetup.wait_for_startup()
 
-    run_command("wget -qO- http://localhost:8080/candlepin/admin/init")
+    if not options.skip_service:
+        tsetup.restart()
+        tsetup.wait_for_startup()
+        run_command("wget -qO- http://localhost:8080/candlepin/admin/init")
 
     print("Candlepin has been configured.")
 
