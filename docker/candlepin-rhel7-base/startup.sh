@@ -19,7 +19,7 @@ yum install -y candlepin
 # a build to get a change into the container. This should only be done in the base containers, not official
 # candlepin build containers.
 wget -O /usr/share/candlepin/cpsetup https://raw.githubusercontent.com/candlepin/candlepin/master/server/code/setup/cpsetup
-wget -O /usr/share/candlepin/cpsetup https://raw.githubusercontent.com/candlepin/candlepin/master/server/code/setup/cpsetup
+wget -O /usr/share/candlepin/cpdb https://raw.githubusercontent.com/candlepin/candlepin/master/server/code/setup/cpdb
 
 /usr/share/candlepin/cpsetup -u postgres --dbhost $DB_PORT_5432_TCP_ADDR --dbport $DB_PORT_5432_TCP_PORT --skip-service
 
