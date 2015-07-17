@@ -86,6 +86,9 @@ try:
             server_container_id = output[-1]
             time.sleep(3)
 
+            print "Server container: %s" % server_container_id
+            print "Docker ps: %s" % run_command("docker ps")
+
             # Determine the port used by the CP server...
             output = run_command("docker port %s 8443" % server_container_id)
             port = output[0].split(':')[1]
