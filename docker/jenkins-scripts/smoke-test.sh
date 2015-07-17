@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # USAGE: smoke-test.sh <image_name> <cp_repo_url>
-# Example: smoke-test.sh candlepin/candlepin-rhel6 http://download.devel.redhat.com/brewroot/repos/candlepin-mead-rhel-6-build/latest/x86_64
+# Example: smoke-test.sh candlepin/candlepin-rhel6-base http://download.devel.redhat.com/brewroot/repos/candlepin-mead-rhel-6-build/latest/x86_64
 
 import json
 import os
@@ -86,56 +86,58 @@ try:
             server_container_id = output[-1]
             time.sleep(3)
 
-            print "Server container: %s" % server_container_id
-            print "Docker ps: %s" % run_command("docker ps")
-
             # Determine the port used by the CP server...
-            output = run_command("docker port %s 8443" % server_container_id)
-            port = output[0].split(':')[1]
-            print "Candlepin container port: %s" % port
+            regex = re.compile(".*:(\\d+)\\s*\\Z")
+            output = run_command("docker port %s 8443/tcp" % server_container_id)
 
-            # Wait for it to start...
-            print "Containers started successfully. Waiting for Candlepin to start..."
+            match = regex.match(output[0])
+            if match:
+                port = match.group(1)
 
-            status_url = "https://localhost:%s/candlepin/status" % port
-            start_time = time.time()
-            remaining = max_wait_time
-            response_received = False
+                # Wait for it to start...
+                print "Containers started successfully using port %s. Waiting for Candlepin to start..." % port
 
-            while (remaining > 0):
-                try:
-                    response = urllib2.urlopen(status_url, None, remaining)
+                status_url = "https://localhost:%s/candlepin/status" % port
+                start_time = time.time()
+                remaining = max_wait_time
+                response_received = False
 
-                    response_received = True
-                    code = response.getcode()
-                    message = response.read()
-                    response.close()
+                while (remaining > 0):
+                    try:
+                        response = urllib2.urlopen(status_url, None, remaining)
 
-                    print "Response received (code: %s)\n%s\n" % (code, message)
-                    if response.getcode() == 200:
-                        status = json.loads(message)
+                        response_received = True
+                        code = response.getcode()
+                        message = response.read()
+                        response.close()
 
-                        # TODO: Maybe check some of the fields on status to verify it?
-                        success = True
-                        print "Received a valid response from the Candlepin server in %.1fs" % \
-                            (time.time() - start_time)
-                    else:
-                        print "Invalid response received"
+                        print "Response received (code: %s)\n%s\n" % (code, message)
+                        if response.getcode() == 200:
+                            status = json.loads(message)
 
-                    break
+                            # TODO: Maybe check some of the fields on status to verify it?
+                            success = True
+                            print "Received a valid response from the Candlepin server in %.1fs" % \
+                                (time.time() - start_time)
+                        else:
+                            print "Invalid response received"
 
-                except URLError as e:
-                    # We'll be expecting tons of errors while we wait for CP to start. So, we'll
-                    # just silently ignore them and hope for the best.
-                    pass
+                        break
 
-                time.sleep(1)
-                remaining = max_wait_time - (time.time() - start_time)
+                    except URLError as e:
+                        # We'll be expecting tons of errors while we wait for CP to start. So, we'll
+                        # just silently ignore them and hope for the best.
+                        pass
 
-            if not response_received:
-                print "Failed to receive a response in %.1fs" % (time.time() - start_time)
-                print "Candlepin container log:"
-                run_command("docker logs --tail=%s %s" % (max_log_lines, server_container_id), False, True)
+                    time.sleep(1)
+                    remaining = max_wait_time - (time.time() - start_time)
+
+                if not response_received:
+                    print "Failed to receive a response in %.1fs" % (time.time() - start_time)
+                    print "Candlepin container log:"
+                    run_command("docker logs --tail=%s %s" % (max_log_lines, server_container_id), False, True)
+            else:
+                print "ERROR: Unable to determine port for the Candlepin server's container"
         except RunCommandException as e:
             print "ERROR: Error returned from command: %s\n%s" % (e.args[0], e.args[2])
 
