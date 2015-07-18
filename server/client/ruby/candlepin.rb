@@ -185,7 +185,7 @@ module Candlepin
 
     def verify_and_merge(opts, defaults)
       opts.assert_valid_keys(*defaults.keys)
-      defaults.merge(opts)
+      defaults.deep_merge(opts)
     end
   end
 
@@ -571,6 +571,7 @@ module Candlepin
           :guest_id => nil,
         }
         opts = verify_and_merge(opts, defaults)
+        opts.validate_keys(:uuid, :guest_id)
 
         path = "/consumers/#{opts[:uuid]}/guestids/#{opts[:guest_id]}"
         put(path, camelize_hash(opts, :guest_id))
@@ -581,6 +582,7 @@ module Candlepin
           :uuid => uuid,
         }
         opts = verify_and_merge(opts, defaults)
+        opts.validate_keys(:uuid)
 
         get("/consumers/#{opts[:uuid]}/guestids")
       end
@@ -591,6 +593,7 @@ module Candlepin
           :guest_id => nil,
         }
         opts = verify_and_merge(opts, defaults)
+
         get("/consumers/#{opts[:uuid]}/guestids/#{opts[:guest_id]}")
       end
 
@@ -601,6 +604,7 @@ module Candlepin
           :unregister => false,
         }
         opts = verify_and_merge(opts, defaults)
+        opts.validate_keys(:uuid, :guest_id)
 
         path = "/consumers/#{opts[:uuid]}/guestids/#{opts[:guest_id]}"
         delete(path, select_from(opts, :unregister))
@@ -618,6 +622,18 @@ module Candlepin
 
       def delete_environment(opts = {})
         delete_by_id("/environments", :id, opts)
+      end
+
+      def promote_content
+        defaults = {
+          :env_id => nil,
+          :content => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        opts.validate_keys(:env_id)
+
+    url = "/environments/#{env_id}/content"
+    post(url, content_promotions)
       end
     end
 
@@ -1239,6 +1255,14 @@ module Candlepin
     module ProductResource
       def get_product(opts = {})
         get_by_id("/products", :product_id, opts)
+      end
+
+      def get_product_certificate(opts = {})
+        defaults = {
+          :product_ids => [],
+        }
+        opts = verify_and_merge(opts, defaults)
+        get("/products/#{opts[:product_id]}/certificate")
       end
 
       def get_per_product_statistics(opts = {})
