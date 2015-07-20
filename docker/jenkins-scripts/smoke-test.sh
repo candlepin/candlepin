@@ -62,7 +62,7 @@ if len(sys.argv) < 3:
 image_name = sys.argv[1]
 cp_repo_url = sys.argv[2]
 max_wait_time = 600
-max_log_lines = 50
+max_log_lines = "all"
 
 server_container_id = None
 db_container_id = None
@@ -78,16 +78,17 @@ try:
             output = run_command("docker run -e POSTGRES_PASSWORD=candlepin -d --name %s postgres"
                 % db_container_name)
             db_container_id = output[-1]
-            time.sleep(3)
+            print "Postgres container: %s" % db_container_id
+            # Postgres might need to be fully up if we're testing a container that has candlepin
+            # preinstalled, thus cpdb run happens *quick*. Give postgres a little time:
+            time.sleep(10)
 
             # Launch the candlepin container:
             output = run_command("docker run -P -d -e \"YUM_REPO=%s\" --link %s:db %s"
                 % (cp_repo_url, db_container_name, image_name))
             server_container_id = output[-1]
+            print "Candlepin container: %s" % db_container_id
             time.sleep(3)
-
-            print "Server container: %s" % server_container_id
-            print "Docker ps: %s" % run_command("docker ps")
 
             # Determine the port used by the CP server...
             output = run_command("docker port %s 8443" % server_container_id)
@@ -95,7 +96,7 @@ try:
             print "Candlepin container port: %s" % port
 
             # Wait for it to start...
-            print "Containers started successfully. Waiting for Candlepin to start..."
+            print "Containers started successfully. Waiting for Candlepin to respond..."
 
             status_url = "https://localhost:%s/candlepin/status" % port
             start_time = time.time()
@@ -104,6 +105,7 @@ try:
 
             while (remaining > 0):
                 try:
+                    print "Opening: %s" % status_url
                     response = urllib2.urlopen(status_url, None, remaining)
 
                     response_received = True
@@ -129,8 +131,9 @@ try:
                     # just silently ignore them and hope for the best.
                     pass
 
-                time.sleep(1)
+                time.sleep(10)
                 remaining = max_wait_time - (time.time() - start_time)
+                print "No response, will continue re-trying for another %s seconds." % int(remaining)
 
             if not response_received:
                 print "Failed to receive a response in %.1fs" % (time.time() - start_time)
