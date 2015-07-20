@@ -87,7 +87,9 @@
     </changeSet>
 
     <changeSet id="20140408160212-3" author="ckozak">
-        <preConditions onSqlOutput="FAIL" onFail="CONTINUE"/>
+        <preConditions onSqlOutput="FAIL" onFail="CONTINUE">
+            <tableExists schemaName="candlepin" tableName="cp_pool"/>
+        </preConditions>
 
         <comment>Migrate subscriptions on duplicate pools to a single pool per set</comment>
         <customChange class="org.candlepin.liquibase.FixDuplicatePoolsLiquibaseWrapper">

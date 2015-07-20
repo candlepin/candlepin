@@ -487,7 +487,9 @@
 
     <!-- migration task -->
     <changeSet id="20150210094558-40" author="crog">
-        <preConditions onSqlOutput="FAIL" onFail="CONTINUE"/>
+        <preConditions onSqlOutput="FAIL" onFail="CONTINUE">
+            <tableExists schemaName="candlepin" tableName="cp_pool"/>
+        </preConditions>
 
         <comment>Migrate data from obsoleted tables to new org-specific tables.</comment>
 
