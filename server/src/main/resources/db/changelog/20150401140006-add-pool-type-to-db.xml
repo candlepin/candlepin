@@ -16,7 +16,7 @@
 
     <changeSet id="20150401140006-2" author="crog">
         <preConditions onSqlOutput="FAIL" onFail="CONTINUE">
-            <tableExists schemaName="candlepin" tableName="cp_pool"/>
+            <sqlCheck expectedResult="1">SELECT 1</sqlCheck>
         </preConditions>
 
         <comment>Add pool types to the existing pools</comment>
