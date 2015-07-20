@@ -139,9 +139,12 @@ try:
                         break
 
                     except URLError as e:
-                        # We'll be expecting tons of errors while we wait for CP to start. So, we'll
-                        # just silently ignore them and hope for the best.
-                        pass
+                        # We're expecting a bunch of connection resets, but we may want to catch
+                        # some of the other issues
+                        if e.reason.errno != 104:
+                            print "ERROR: Unable to query Candlpin status: %s" % e
+                            response_received = True
+                            break
 
                     time.sleep(1)
                     remaining = max_wait_time - (time.time() - start_time)
