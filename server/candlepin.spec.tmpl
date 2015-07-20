@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.5
+Version: 2.0.6
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -213,6 +213,15 @@ fi
 
 #raw
 %changelog
+* Mon Jul 20 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 2.0.6-1
+- Fix EL7 docker rpm container test. (dgoodwin@redhat.com)
+- Fix InsufficientPermission error when checking HypervisorCheckIn Job
+  (rnovacek@redhat.com)
+- Fix derived product import with 0.9 manifests. (dgoodwin@redhat.com)
+- Increased required permissions on several API calls (crog@redhat.com)
+- Removed commented-out, dead code (crog@redhat.com)
+- Updated @Verify to use owner when checking products (crog@redhat.com)
+
 * Wed Jul 15 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 2.0.5-1
 - Fixed duplicate results when using Entitlement matches filter
   (mstead@redhat.com)
