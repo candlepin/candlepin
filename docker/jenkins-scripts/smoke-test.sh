@@ -16,7 +16,6 @@ import urllib2
 from urllib2 import URLError
 
 
-
 class RunCommandException(Exception):
     pass
 
@@ -70,6 +69,18 @@ db_container_id = None
 success = False
 script_start = time.time()
 
+ssl_context = None
+
+
+try:
+    import ssl
+
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+except NameError:
+    pass
+
 try:
     try:
         try:
@@ -89,8 +100,8 @@ try:
             # Determine the port used by the CP server...
             regex = re.compile(".*:(\\d+)\\s*\\Z")
             output = run_command("docker port %s 8443/tcp" % server_container_id)
-
             match = regex.match(output[0])
+
             if match:
                 port = match.group(1)
 
@@ -104,7 +115,10 @@ try:
 
                 while (remaining > 0):
                     try:
-                        response = urllib2.urlopen(status_url, None, remaining)
+                        if ssl_context:
+                            response = urllib2.urlopen(status_url, None, remaining, context=ssl_context)
+                        else:
+                            response = urllib2.urlopen(status_url, None, remaining)
 
                         response_received = True
                         code = response.getcode()
