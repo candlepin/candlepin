@@ -62,7 +62,7 @@ if len(sys.argv) < 3:
 image_name = sys.argv[1]
 cp_repo_url = sys.argv[2]
 max_wait_time = 600
-max_log_lines = 50
+max_log_lines = "all"
 
 server_container_id = None
 db_container_id = None
@@ -111,7 +111,7 @@ try:
                         message = response.read()
                         response.close()
 
-                        print "Response received (code: %s)\n%s\n" % (code, message)
+                        print "Response received (code: %s):\n%s\n" % (code, message)
                         if response.getcode() == 200:
                             status = json.loads(message)
 
