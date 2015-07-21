@@ -80,6 +80,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             query.createAlias("p.providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN);
             query.createAlias("provProd.productContent", "ppcw", CriteriaSpecification.LEFT_JOIN);
             query.createAlias("ppcw.content", "ppContent", CriteriaSpecification.LEFT_JOIN);
+            query.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
         }
         query.add(Restrictions.eq("consumer", consumer));
         // Never show a consumer expired entitlements
@@ -110,6 +111,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             c.createAlias("p.providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN);
             c.createAlias("provProd.productContent", "ppcw", CriteriaSpecification.LEFT_JOIN);
             c.createAlias("ppcw.content", "ppContent", CriteriaSpecification.LEFT_JOIN);
+            c.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
         }
         c.add(Restrictions.eq("consumer", consumer));
         // Never show a consumer expired entitlements
@@ -258,7 +260,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         List<Product> products = productCurator.listAllByIds(entitlement.getOwner(), pidEnts.keySet());
 
         for (Product p : products) {
-            boolean modifies = p.modifies(entitlement.getProductId());
+            boolean modifies = p.modifies(entitlement.getPool().getProductId());
             Iterator<Product> ppit = entitlement.getPool().getProvidedProducts().iterator();
             // No need to continue checking once we have found a modified product
             while (!modifies && ppit.hasNext()) {
@@ -289,7 +291,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * productId as well as those if its provided products.
      */
     private void addToMap(Map<String, Set<Entitlement>> map, Entitlement e) {
-        addProductIdToMap(map, e.getProductId(), e);
+        addProductIdToMap(map, e.getPool().getProductId(), e);
         for (Product pp : e.getPool().getProvidedProducts()) {
             addProductIdToMap(map, pp.getId(), e);
         }

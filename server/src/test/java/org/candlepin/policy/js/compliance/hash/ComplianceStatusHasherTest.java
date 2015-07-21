@@ -98,7 +98,7 @@ public class ComplianceStatusHasherTest {
         Entitlement ent = createEntitlement(Calendar.getInstance(), owner, consumer, "test-ent");
         HashSet<Entitlement> ents = new HashSet<Entitlement>();
         ents.add(ent);
-        testStatus.getCompliantProducts().put(ent.getProductId(), ents);
+        testStatus.getCompliantProducts().put(ent.getPool().getProductId(), ents);
 
         assertNotEquals(initialHash, generateHash(testStatus, consumer));
     }
@@ -112,7 +112,7 @@ public class ComplianceStatusHasherTest {
         Entitlement ent = createEntitlement(Calendar.getInstance(), owner, consumer, "test-ent");
         HashSet<Entitlement> ents = new HashSet<Entitlement>();
         ents.add(ent);
-        testStatus.getPartiallyCompliantProducts().put(ent.getProductId(), ents);
+        testStatus.getPartiallyCompliantProducts().put(ent.getPool().getProductId(), ents);
 
         assertNotEquals(initialHash, generateHash(testStatus, consumer));
     }

@@ -248,6 +248,22 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     )
     private Set<Product> derivedProvidedProducts = new HashSet<Product>();
 
+    /**
+     * Set of provided product DTOs used for compatibility with the pre-2.0 JSON.
+     * Used when serializing a pool to JSON over the API, and when importing a manifest.
+     * Collection is transient and should never make it to the database.
+     */
+    @Transient
+    private Set<ProvidedProduct> providedProductDtos = null;
+
+    /**
+     * Set of provided product DTOs used for compatibility with the pre-2.0 JSON.
+     * Used when serializing a pool to JSON over the API, and when importing a manifest.
+     * Collection is transient and should never make it to the database.
+     */
+    @Transient
+    private Set<ProvidedProduct> derivedProvidedProductDtos = null;
+
     @OneToMany(mappedBy = "pool")
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
@@ -296,21 +312,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     private boolean markedForDelete = false;
 
     /*
-     * These DTO collections are only used when importing manifests. For backward
-     * compatability reasons we serialize a DTO for the provided products, not the full
-     * product object itself.
-     */
-    @Transient
-    private Set<ProvidedProduct> providedProductDtos = null;
-
-    @Transient
-    private Set<ProvidedProduct> derivedProvidedProductDtos = null;
-
-    /*
      * Only used for importing legacy manifests.
      */
     @Transient
     private String importedProductId = null;
+    @Transient
+    private String importedDerivedProductId = null;
 
     @Column(name = "upstream_pool_id")
     @Size(max = 255)
@@ -722,6 +729,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         }
     }
 
+    /*
+     * Always exported as a DTO for API/import backward compatibility.
+     */
     @JsonProperty("providedProducts")
     public Set<ProvidedProduct> getProvidedProductDtos() {
         Set<ProvidedProduct> prods = new HashSet<ProvidedProduct>();
@@ -809,7 +819,13 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      */
     @HateoasInclude
     public String getProductId() {
-        return (this.getProduct() != null ? this.getProduct().getId() : null);
+        if (getProduct() != null) {
+            return this.getProduct().getId();
+        }
+        else if (getImportedProductId() != null) {
+            return getImportedProductId();
+        }
+        return null;
     }
 
     public void setProductId(String productId) {
@@ -819,6 +835,15 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @XmlTransient
     public String getImportedProductId() {
         return this.importedProductId;
+    }
+
+    public void setDerivedProductId(String productId) {
+        this.importedDerivedProductId = productId;
+    }
+
+    @XmlTransient
+    public String getDerivedImportedProductId() {
+        return this.importedDerivedProductId;
     }
 
     /**
@@ -913,10 +938,14 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public String getDerivedProductId() {
-        if (derivedProduct == null) {
-            return null;
+        if (getDerivedProduct() != null) {
+            return this.getDerivedProduct().getId();
         }
-        return this.derivedProduct.getId();
+        else if (getDerivedImportedProductId() != null) {
+            return getDerivedImportedProductId();
+        }
+        return null;
+
     }
 
     public Set<ProductAttribute> getProductAttributes() {
@@ -967,6 +996,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         }
     }
 
+    /*
+     * Always exported as a DTO for API/import backward compatibility.
+     */
     @JsonProperty("derivedProvidedProducts")
     public Set<ProvidedProduct> getDerivedProvidedProductDtos() {
         Set<ProvidedProduct> prods = new HashSet<ProvidedProduct>();

@@ -137,4 +137,43 @@ describe 'Consumer Resource Activation Key' do
     consumer.uuid.should_not be_nil
     @cp.get_pool(pool1.id).consumed.should == 4
   end
+
+  it 'should allow a consumer to register with an activation key with an auto-attach across pools' do
+    # create extra product/pool to show selectivity
+    prod1 = create_product(random_string('product1'), random_string('product1'))
+    subs1 = @cp.create_subscription(@owner['key'], prod1.id, 1)
+    subs2 = @cp.create_subscription(@owner['key'], prod1.id, 1)
+    subs3 = @cp.create_subscription(@owner['key'], prod1.id, 2)
+    @cp.refresh_pools(@owner['key'])
+    pools = @cp.list_pools(:owner => @owner['id'], :product => prod1.id)
+
+    key1 = @cp.create_activation_key(@owner['key'], 'key1')
+    @cp.update_activation_key({'id' => key1['id'], "autoAttach" => "true"})
+    @cp.add_pool_to_key(key1['id'], pools[0]['id'], 1)
+    @cp.add_pool_to_key(key1['id'], pools[1]['id'], 1)
+    @cp.add_pool_to_key(key1['id'], pools[2]['id'], 1)
+    @cp.add_prod_id_to_key(key1['id'], prod1.id)
+    consumer1 = @client.register(random_string('machine'), :system, nil, {}, nil,
+      @owner['key'], ["key1"])
+    consumer1.uuid.should_not be_nil
+    consumer2 = @client.register(random_string('machine'), :system, nil, {}, nil,
+      @owner['key'], ["key1"])
+    consumer2.uuid.should_not be_nil
+    consumer3 = @client.register(random_string('machine'), :system, nil, {}, nil,
+      @owner['key'], ["key1"])
+    consumer3.uuid.should_not be_nil
+    consumer4 = @client.register(random_string('machine'), :system, nil, {}, nil,
+      @owner['key'], ["key1"])
+    consumer4.uuid.should_not be_nil
+
+    pools.each do |p|
+      this_pool = @cp.get_pool(p.id)
+      this_pool.consumed.should == this_pool.quantity
+    end
+
+    consumer5 = @client.register(random_string('machine'), :system, nil, {}, nil,
+      @owner['key'], ["key1"])
+    consumer5.uuid.should_not be_nil
+    consumer5.entitlementCount.should == 0
+  end
 end

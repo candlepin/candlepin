@@ -203,13 +203,11 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
     public ServerResponse preProcess(HttpRequest request, ResourceMethod method)
         throws Failure, WebApplicationException {
 
-        SecurityHole securityHole = AuthUtil.checkForSecurityHoleAnnotation(
-            method.getMethod());
-
+        SecurityHole securityHole = AuthUtil.checkForSecurityHoleAnnotation(method.getMethod());
         Principal principal = establishPrincipal(request, method, securityHole);
+
         try {
-            verifyAccess(method.getMethod(), principal, getArguments(request, method),
-                securityHole);
+            verifyAccess(method.getMethod(), principal, getArguments(request, method), securityHole);
         }
         finally {
             /* If a turbo filter returns ACCEPT, a logger will return true for
@@ -245,9 +243,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
 
         Principal principal = null;
 
-        if (log.isDebugEnabled()) {
-            log.debug("Authentication check for " + request.getUri().getPath());
-        }
+        log.debug("Authentication check for {}", request.getUri().getPath());
 
         // Check for anonymous calls, and let them through
         if (securityHole != null && securityHole.anon()) {
@@ -296,8 +292,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         SecurityHole securityHole) {
 
         if (securityHole != null) {
-            log.debug("Allowing invokation to proceed with no authentication: {}",
-                method.getName());
+            log.debug("Allowing invokation to proceed with no authentication: {}", method.getName());
             return;
         }
 
@@ -324,7 +319,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
                     // Use the correct curator (in storeMap) to look up the actual
                     // entity with the annotated argument
                     if (!storeMap.containsKey(verifyType)) {
-                        log.error("No store configured to verify: " + verifyType);
+                        log.error("No store configured to verify: {}", verifyType);
                         throw new IseException(i18nProvider.get().tr("Unable to verify request."));
                     }
 
@@ -344,10 +339,20 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
                     }
                     if (argument instanceof String) {
                         String verifyParam = (String) argument;
-                        log.debug("Verifying " + requiredAccess +
-                            " access to " + verifyType + ": " + verifyParam);
+                        log.debug("Verifying {} access to {}: {}", requiredAccess, verifyType, verifyParam);
 
-                        Object entity = storeMap.get(verifyType).lookup(verifyParam);
+                        Object entity = null;
+
+                        if (owner != null && Product.class.isAssignableFrom(verifyType)) {
+                            // We want to use the owner with the lookup, if available
+                            log.debug("Using org-specific entity lookup");
+                            entity = ((ProductStore) storeMap.get(verifyType)).lookup(verifyParam, owner);
+                        }
+                        else {
+                            log.debug("Using org-agnostic entity lookup");
+                            entity = storeMap.get(verifyType).lookup(verifyParam);
+                        }
+
                         // If the request is just for a single item, throw an exception
                         // if it is not found.
                         if (entity == null) {
@@ -358,8 +363,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
                             if (typeName.equals("Owner")) {
                                 typeName = i18nProvider.get().tr("Organization");
                             }
-                            log.info("No such entity: " + typeName + " id: " +
-                                verifyParam);
+                            log.info("No such entity: {}, id: {}", typeName, verifyParam);
 
                             throw new NotFoundException(i18nProvider.get().tr(
                                 "{0} with id {1} could not be found.",
@@ -370,8 +374,9 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
                     }
                     else {
                         Collection<String> verifyParams = (Collection<String>) argument;
-                        log.debug("Verifying " + requiredAccess +
-                            " access to collection of {}: {}", verifyType, verifyParams);
+                        log.debug("Verifying {} access to collection of {}: {}",
+                            requiredAccess, verifyType, verifyParams);
+
                         // If the request is for a list of items, we'll leave it
                         // up to the requester to determine if something is missing or not.
                         if (verifyParams != null && !verifyParams.isEmpty()) {
@@ -389,8 +394,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
 
                             if (o != null) {
                                 if (owner != null && !o.equals(owner)) {
-                                    log.warn("Found entities from multiple orgs in " +
-                                        "one request.");
+                                    log.warn("Found entities from multiple orgs in one request.");
                                 }
                                 owner = o;
                             }
@@ -421,8 +425,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
      * @return
      */
     protected Object[] getArguments(HttpRequest request, ResourceMethod method) {
-        HttpResponse response =
-            ResteasyProviderFactory.getContextData(HttpResponse.class);
+        HttpResponse response = ResteasyProviderFactory.getContextData(HttpResponse.class);
 
         MethodInjector methodInjector =
             ResteasyProviderFactory.getInstance().getInjectorFactory()
@@ -432,8 +435,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
     }
 
     protected void denyAccess(Principal principal, Method method) {
-        log.warn("Refusing principal: {} access to: {} ", principal,
-                    method.getName());
+        log.warn("Refusing principal: {} access to: {} ", principal, method.getName());
 
         String error = "Insufficient permissions";
         throw new ForbiddenException(i18nProvider.get().tr(error));
@@ -548,7 +550,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         public Consumer lookup(String key) {
             initialize();
             if (deletedConsumerCurator.countByConsumerUuid(key) > 0) {
-                log.debug("Key " + key + " is deleted, throwing GoneException");
+                log.debug("Key {} is deleted, throwing GoneException", key);
                 throw new GoneException(i18nProvider.get().tr("Unit {0} has been deleted", key), key);
             }
 
@@ -663,7 +665,12 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         @Override
         public Product lookup(String key) {
             initialize();
-            return productCurator.secureFind(key);
+            return productCurator.lookupById(key);
+        }
+
+        public Product lookup(String key, Owner owner) {
+            initialize();
+            return owner == null ? this.lookup(key) : productCurator.lookupById(owner.getId(), key);
         }
 
         @Override
@@ -672,10 +679,14 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
             return productCurator.listAllByIds(keys);
         }
 
+        public List<Product> lookup(Collection<String> keys, Owner owner) {
+            initialize();
+            return productCurator.listAllByIds(owner, keys);
+        }
+
         @Override
         public Owner getOwner(Product entity) {
-            // Products do not belong to an org:
-            return null;
+            return entity.getOwner();
         }
     }
 

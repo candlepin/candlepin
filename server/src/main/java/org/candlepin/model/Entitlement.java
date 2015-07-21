@@ -162,20 +162,6 @@ public class Entitlement extends AbstractHibernateObject
     }
 
     /**
-     * @return Returns the product.
-     */
-    @XmlTransient
-    public String getProductId() {
-        if (this.pool != null) {
-            if (pool.getImportedProductId() != null) {
-                return pool.getImportedProductId();
-            }
-            return this.pool.getProductId();
-        }
-        return null;
-    }
-
-    /**
      * @return Returns the pool.
      */
     public Pool getPool() {
@@ -285,7 +271,7 @@ public class Entitlement extends AbstractHibernateObject
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Entitlement[id=").append(id);
-        sb.append(", product=").append(getProductId());
+        sb.append(", product=").append(getPool().getProductId());
         if (pool != null) {
             sb.append(", pool=").append(pool.getId());
         }

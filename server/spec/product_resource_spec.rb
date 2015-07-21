@@ -20,25 +20,31 @@ describe 'Product Resource' do
       })
   end
 
-  it 'throws exception on write operation' do
+  it 'throws exception on write operations' do
     lambda do
       @cp.post("/products", {})
     end.should raise_exception(RestClient::BadRequest)
 
     lambda do
-      @cp.put("/products/dummyid", {})
+      @cp.put("/products/#{@product.id}", {})
     end.should raise_exception(RestClient::BadRequest)
 
     lambda do
-      @cp.post("/products/dummyid/batch_content", {})
+      @cp.post("/products/#{@product.id}/batch_content", {})
     end.should raise_exception(RestClient::BadRequest)
 
     lambda do
-      @cp.post("/products/dummyid/content/contentid", {})
+      @cp.post("/products/#{@product.id}/content/contentid", {})
     end.should raise_exception(RestClient::BadRequest)
 
     lambda do
-      @cp.delete("/products/dummyid")
+      @cp.delete("/products/#{@product.id}")
+    end.should raise_exception(RestClient::BadRequest)
+
+    # This may look like a read operation, but it generates the certificate if it doesn't exist;
+    # making this a write operation at times.
+    lambda do
+      @cp.get("/products/#{@product.id}/certificate")
     end.should raise_exception(RestClient::BadRequest)
   end
 
@@ -202,7 +208,7 @@ describe 'Product Resource' do
 
   it 'throws exception on get_owners with no products' do
     lambda do
-      @cp.put("/products/owners", {})
+      @cp.get("/products/owners")
     end.should raise_exception(RestClient::BadRequest)
   end
 

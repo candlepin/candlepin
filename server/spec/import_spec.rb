@@ -36,6 +36,25 @@ describe 'Import', :serial => true do
   it 'creates pools' do
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
     pools.length.should == 6
+
+    # Some of these pools must carry provided/derived provided products,
+    # don't care which pool just need to be sure that they're getting
+    # imported at all:
+    provided_found = false
+    derived_found = false
+    pools.each do |pool|
+      if pool['providedProducts'].size > 0
+        provided_found = true
+      end
+      if pool['derivedProvidedProducts'].size > 0
+        derived_found = true
+      end
+    end
+    provided_found.should be_true
+    derived_found.should be_true
+  end
+
+  it 'created unmapped guest derived pool' do
   end
 
   it 'ignores multiplier for pool quantity' do

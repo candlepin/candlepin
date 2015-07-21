@@ -28,6 +28,7 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.TestUtil;
 
@@ -64,6 +65,12 @@ public class EntitlementImporterTest {
     private Owner owner;
     private EntitlementImporter importer;
     private I18n i18n;
+    private Consumer consumer;
+    private ConsumerDto consumerDto;
+    private EntitlementCertificate cert;
+    private Reader reader;
+    private Meta meta;
+    private Cdn testCdn;
 
 
     @Before
@@ -73,57 +80,52 @@ public class EntitlementImporterTest {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.importer = new EntitlementImporter(certSerialCurator, cdnCurator,
             i18n);
+
+        consumer = TestUtil.createConsumer(owner);
+        consumerDto = new ConsumerDto(consumer.getUuid(), consumer.getName(),
+            consumer.getType(), consumer.getOwner(), "", "");
+
+        cert = createEntitlementCertificate("my-test-key", "my-cert");
+        reader = mock(Reader.class);
+
+        meta = new Meta();
+        meta.setCdnLabel("test-cdn");
+        testCdn = new Cdn("test-cdn", "Test CDN", "https://test.url.com");
+        when(cdnCurator.lookupByLabel("test-cdn")).thenReturn(testCdn);
     }
 
     @Test
-    public void importObject() throws Exception {
-        Consumer consumer = TestUtil.createConsumer(owner);
-        ConsumerDto consumerDto = new ConsumerDto(consumer.getUuid(), consumer.getName(),
-            consumer.getType(), consumer.getOwner(), "", "");
-
+    public void fullImport() throws Exception {
         Product parentProduct = TestUtil.createProduct(owner);
-        Product pp1 = TestUtil.createProduct(owner);
 
-        Set<Product> provided = new HashSet<Product>();
-        provided.add(pp1);
+        Product derivedProduct = TestUtil.createProduct(owner);
 
-        // Sub product setup
-        Product subProduct = TestUtil.createProduct(owner);
-        Product subProvided1 = TestUtil.createProduct(owner);
+        Product provided1 = TestUtil.createProduct(owner);
+        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+        providedProducts.add(new ProvidedProduct(provided1));
 
-        Set<Product> subProvidedProducts = new HashSet<Product>();
-        subProvidedProducts.add(subProvided1);
+        Product derivedProvided1 = TestUtil.createProduct(owner);
+        Set<ProvidedProduct> derivedProvidedProducts = new HashSet<ProvidedProduct>();
+        derivedProvidedProducts.add(new ProvidedProduct(derivedProvided1));
 
         Pool pool = TestUtil.createPool(
-            owner, parentProduct, provided, subProduct, subProvidedProducts, 3
+            owner, parentProduct, new HashSet<Product>(), derivedProduct, new HashSet<Product>(), 3
         );
+        // Add the provided products as DTOs:
+        pool.setProvidedProductDtos(providedProducts);
+        pool.setDerivedProvidedProductDtos(derivedProvidedProducts);
 
-        EntitlementCertificate cert = createEntitlementCertificate("my-test-key", "my-cert");
+
         Entitlement ent = TestUtil.createEntitlement(owner, consumer, pool, cert);
         ent.setQuantity(3);
-
-        Reader reader = mock(Reader.class);
         when(om.readValue(reader, Entitlement.class)).thenReturn(ent);
 
         // Create our expected products
-        Map<String, Product> productsById = new HashMap<String, Product>();
-        productsById.put(parentProduct.getId(), parentProduct);
-        productsById.put(
-            pp1.getId(),
-            TestUtil.createProduct(pp1.getId(), pp1.getName(), owner)
-        );
-        productsById.put(subProduct.getId(), subProduct);
-        productsById.put(
-            subProvided1.getId(),
-            TestUtil.createProduct(subProvided1.getId(), subProvided1.getName(), owner)
-        );
+        Map<String, Product> productsById = buildProductCache(
+                parentProduct, provided1, derivedProduct, derivedProvided1);
 
-        Meta meta = new Meta();
-        meta.setCdnLabel("test-cdn");
-        Cdn testCdn = new Cdn("test-cdn", "Test CDN", "https://test.url.com");
-        when(cdnCurator.lookupByLabel("test-cdn")).thenReturn(testCdn);
-
-        Subscription sub = importer.importObject(om, reader, owner, productsById, consumerDto, meta);
+        Subscription sub = importer.importObject(om, reader, owner, productsById,
+                consumerDto, meta);
 
         assertEquals(pool.getId(), sub.getUpstreamPoolId());
         assertEquals(consumer.getUuid(), sub.getUpstreamConsumerId());
@@ -140,16 +142,16 @@ public class EntitlementImporterTest {
         assertEquals(ent.getQuantity().intValue(), sub.getQuantity().intValue());
 
         assertEquals(parentProduct, sub.getProduct());
-        assertEquals(provided.size(), sub.getProvidedProducts().size());
+        assertEquals(providedProducts.size(), sub.getProvidedProducts().size());
         assertEquals(
-            pp1.getId(),
+            provided1.getId(),
             sub.getProvidedProducts().iterator().next().getId()
         );
 
-        assertEquals(subProduct, sub.getDerivedProduct());
+        assertEquals(derivedProduct, sub.getDerivedProduct());
         assertEquals(1, sub.getDerivedProvidedProducts().size());
         assertEquals(
-            subProvided1.getId(),
+            derivedProvided1.getId(),
             sub.getDerivedProvidedProducts().iterator().next().getId()
         );
 
@@ -161,6 +163,14 @@ public class EntitlementImporterTest {
         assertEquals(cert.getSerial().getUpdated(), serial.getUpdated());
 
         assertEquals(sub.getCdn().getLabel(), meta.getCdnLabel());
+    }
+
+    private Map<String, Product> buildProductCache(Product... products) {
+        Map<String, Product> productsById = new HashMap<String, Product>();
+        for (Product p : products) {
+            productsById.put(p.getId(), p);
+        }
+        return productsById;
     }
 
     protected EntitlementCertificate createEntitlementCertificate(String key,
