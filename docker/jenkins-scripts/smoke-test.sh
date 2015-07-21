@@ -69,16 +69,15 @@ db_container_id = None
 success = False
 script_start = time.time()
 
+# Try to disable SSL hostname checking if on a newer Python version
+# that does so by default. If this fails because of an AttributeError
+# we're likely on older Python, which doesn't check hostnames by default.
 ssl_context = None
-
-
 try:
-    import ssl
-
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
     ssl_context.check_hostname = False
     ssl_context.verify_mode = ssl.CERT_NONE
-except NameError:
+except AttributeError:
     pass
 
 try:
