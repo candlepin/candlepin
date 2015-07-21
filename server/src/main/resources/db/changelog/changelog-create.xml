@@ -1,5 +1,8 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <property name="project.name" value="candlepin"/>
+
     <changeSet author="dgoodwin" id="1332854949306-1000" dbms="postgresql">
         <createTable tableName="cp_activation_key">
             <column name="id" type="VARCHAR(32)">

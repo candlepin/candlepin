@@ -488,7 +488,7 @@
     <!-- migration task -->
     <changeSet id="20150210094558-40" author="crog">
         <preConditions onSqlOutput="FAIL" onFail="CONTINUE">
-            <sqlCheck expectedResult="1">SELECT 1</sqlCheck>
+            <changeLogPropertyDefined property="project.name"/>
         </preConditions>
 
         <comment>Migrate data from obsoleted tables to new org-specific tables.</comment>
