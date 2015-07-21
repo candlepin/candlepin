@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+    <property name="project.name" value="candlepin"/>
+
     <!--
       This file should only run DDL statements.  For performance reasons the
       CandlepinLiquibaseResource only runs a Liquibase update at the beginning of a test
@@ -2027,7 +2029,7 @@
     </changeSet>
     <changeSet author="awood" id="1413225753032-290">
         <comment>
-             Add the default quartz lock columns. 
+             Add the default quartz lock columns.
         </comment>
         <insert tableName="QRTZ_LOCKS">
             <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>
