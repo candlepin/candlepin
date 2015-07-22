@@ -109,7 +109,7 @@ try:
                 port = match.group(1)
 
                 # Wait for it to start...
-                print "Containers started successfully using port %s. Waiting for Candlepin to start..." % port
+                print "Containers started successfully. Waiting for Candlepin to respond on port %s..." % port
 
                 status_url = "https://localhost:%s/candlepin/status" % port
                 start_time = time.time()
@@ -144,9 +144,8 @@ try:
                     except URLError as e:
                         # We're expecting a bunch of connection resets, but we may want to catch
                         # some of the other issues
-                        if e.reason.errno != 104:
+                        if not e.reason.errno in [104]:
                             print "ERROR: Unable to query Candlpin status: %s" % e
-                            response_received = True
                             break
 
                     time.sleep(10)
