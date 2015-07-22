@@ -169,7 +169,6 @@ module Candlepin
       end
 
       invalid = []
-
       check_keys.each do |k|
         if block_given?
           invalid << k unless yield hash[k]
@@ -604,7 +603,7 @@ module Candlepin
           :unregister => false,
         }
         opts = verify_and_merge(opts, defaults)
-        opts.validate_keys(:uuid, :guest_id)
+        validate_keys(opts, :uuid, :guest_id)
 
         path = "/consumers/#{opts[:uuid]}/guestids/#{opts[:guest_id]}"
         delete(path, select_from(opts, :unregister))
