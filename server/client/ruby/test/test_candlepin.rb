@@ -697,10 +697,11 @@ module Candlepin
       end
 
       after(:each) do
-        server.shutdown
-        client_cert_server.shutdown
-        @server_thread.kill unless @server_thread.nil?
-        @client_cert_server_thread.kill unless @client_cert_server_thread.nil?
+        server.shutdown unless server.nil?
+        @server_thread.join unless @server_thread.nil?
+
+        client_cert_server.shutdown unless client_cert_server.nil?
+        @client_cert_server_thread.join unless @client_cert_server_thread.nil?
       end
 
       it 'uses CA if given' do
