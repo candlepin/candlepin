@@ -3,6 +3,7 @@
 set -e
 
 setup_supervisor() {
+    pip install meld3==1.0.0
     pip install supervisor
     mkdir -p /var/log/supervisor
     mkdir -p /etc/supervisor/conf.d
