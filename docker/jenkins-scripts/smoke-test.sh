@@ -144,7 +144,7 @@ try:
                     except URLError as e:
                         # We're expecting a bunch of connection resets, but we may want to catch
                         # some of the other issues
-                        if not e.reason.errno in [8, 104]:
+                        if not e.reason.errno in [8, 104, 111]:
                             print "ERROR: Unable to query Candlpin status: %s" % e
                             break
 
