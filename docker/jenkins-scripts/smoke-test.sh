@@ -13,6 +13,7 @@ import sys
 import time
 import urllib2
 
+from optparse import OptionParser
 from urllib2 import URLError
 
 
@@ -50,18 +51,29 @@ def run_command(command, silent=True, ignore_error=False):
 
 ##################################################
 
-if len(sys.argv) < 3:
+parser = OptionParser()
+parser.add_option("-t", "--time",
+              action="store", dest="wait_time", default="600",
+              help="Amount of time to wait for a response from Candlepin; defaults to 600")
+parser.add_option("-l", "--log-lines",
+              action="store", dest="log_lines", default="all",
+              help="The number of log lines to print on failure or if a response isn't received; defaults to \"all\"")
+
+(options, args) = parser.parse_args()
+
+
+if len(args) < 2:
     script_file = os.path.basename(__file__)
-    print "USAGE: %s <image_name> <cp_repo_url>" % script_file
+    print "USAGE: %s [-t #][-l #] <image_name> <cp_repo_url>" % script_file
     print "Example: %s candlepin/candlepin-rhel6 http://download.devel.redhat.com/brewroot/repos/" \
         "candlepin-mead-rhel-6-build/latest/x86_64" % script_file
 
     sys.exit(1)
 
-image_name = sys.argv[1]
-cp_repo_url = sys.argv[2]
-max_wait_time = 600
-max_log_lines = "all"
+image_name = args[0]
+cp_repo_url = args[1]
+max_wait_time = int(options.wait_time) if re.match("\\A0*[123456789]\\d*\\Z", options.wait_time) else 600
+max_log_lines = options.log_lines if re.match("\\A(?:0*[123456789]\\d*)|(?:all)\\Z", options.wait_time) else "all"
 
 server_container_id = None
 db_container_id = None
@@ -97,7 +109,7 @@ try:
             output = run_command("docker run -P -d -e \"YUM_REPO=%s\" --link %s:db %s"
                 % (cp_repo_url, db_container_name, image_name))
             server_container_id = output[-1]
-            print "Candlepin container: %s" % db_container_id
+            print "Candlepin container: %s" % server_container_id
             time.sleep(3)
 
             # Determine the port used by the CP server...
@@ -109,7 +121,7 @@ try:
                 port = match.group(1)
 
                 # Wait for it to start...
-                print "Containers started successfully using port %s. Waiting for Candlepin to start..." % port
+                print "Containers started successfully. Waiting for Candlepin to respond on port %s..." % port
 
                 status_url = "https://localhost:%s/candlepin/status" % port
                 start_time = time.time()
@@ -144,17 +156,18 @@ try:
                     except URLError as e:
                         # We're expecting a bunch of connection resets, but we may want to catch
                         # some of the other issues
-                        if e.reason.errno != 104:
+                        if not e.reason.errno in [8, 104]:
                             print "ERROR: Unable to query Candlpin status: %s" % e
-                            response_received = True
                             break
 
-                    time.sleep(10)
-                    remaining = max_wait_time - (time.time() - start_time)
-                    print "No response, will continue re-trying for another %s seconds." % int(remaining)
+                    remaining = int(max_wait_time - (time.time() - start_time))
+
+                    if remaining > 0:
+                        print "No response; will continue re-trying for another %s seconds..." % remaining
+                        time.sleep(10 if remaining > 10 else remaining)
 
                 if not response_received:
-                    print "Failed to receive a response in %.1fs" % (time.time() - start_time)
+                    print "Failed to receive a response in %.1fs" % (int(time.time() - start_time))
                     print "Candlepin container log:"
                     run_command("docker logs --tail=%s %s" % (max_log_lines, server_container_id), False, True)
             else:
