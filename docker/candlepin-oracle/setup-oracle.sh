@@ -1,17 +1,21 @@
 #! /bin/bash
 
-set -e
+
+set -x
+
 
 setup_oracle() {
 
-    mkdir -p /var/lock/subsys
-    yum install -y bc net-tools
+    trap 'echo TRAPPED AN ERROR' ERR
+
+    mkdir -p /run/lock/subsys
+    dnf install -y bc net-tools
     /usr/sbin/groupadd -r dba
     /usr/sbin/useradd -r -M -g dba -d /u01/app/oracle -s /bin/bash -u 499 oracle
 
-    yum localinstall -y --nogpgcheck /root/oracle/*.rpm
-    #yum install -y http://yum.spacewalkproject.org/1.9/RHEL/6/x86_64/spacewalk-repo-1.9-1.el6.noarch.rpm
-    #yum install -y oracle-xe-selinux oracle-instantclient-selinux oracle-instantclient-sqlplus-selinux
+    dnf install -y --nogpgcheck /root/oracle/*.rpm
+    #dnf install -y http://yum.spacewalkproject.org/1.9/RHEL/6/x86_64/spacewalk-repo-1.9-1.el6.noarch.rpm
+    #dnf install -y oracle-xe-selinux oracle-instantclient-selinux oracle-instantclient-sqlplus-selinux
 
     cat >> /root/.candlepinrc << CANDLEPINRC
 USE_ORACLE="1"
@@ -40,3 +44,5 @@ ORACLE_SUPERVISOR
 }
 
 setup_oracle
+
+less /etc/rc.d/init.d/oracle-xe
