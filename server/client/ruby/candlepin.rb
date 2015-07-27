@@ -266,10 +266,9 @@ module Candlepin
         defaults = {
           key => nil,
         }
-
-        # TODO Could use keyword_argument(opts, key) to allow these
-        # calls to be made without having to pass in a hash
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts)
+
         get("#{resource}/#{opts[key]}")
       end
 
@@ -277,8 +276,9 @@ module Candlepin
         defaults = {
           key => nil,
         }
-
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts)
+
         delete("#{resource}/#{opts[key]}")
       end
     end
@@ -570,7 +570,7 @@ module Candlepin
           :guest_id => nil,
         }
         opts = verify_and_merge(opts, defaults)
-        opts.validate_keys(:uuid, :guest_id)
+        validate_keys(opts, :uuid, :guest_id)
 
         path = "/consumers/#{opts[:uuid]}/guestids/#{opts[:guest_id]}"
         put(path, camelize_hash(opts, :guest_id))
@@ -581,7 +581,7 @@ module Candlepin
           :uuid => uuid,
         }
         opts = verify_and_merge(opts, defaults)
-        opts.validate_keys(:uuid)
+        validate_keys(opts, :uuid)
 
         get("/consumers/#{opts[:uuid]}/guestids")
       end
@@ -629,7 +629,7 @@ module Candlepin
           :content => nil,
         }
         opts = verify_and_merge(opts, defaults)
-        opts.validate_keys(:env_id)
+        validate_keys(opts, :env_id)
 
     url = "/environments/#{env_id}/content"
     post(url, content_promotions)
@@ -650,6 +650,7 @@ module Candlepin
           :id => nil,
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :id)
 
         get("/activation_keys/#{opts[:id]}/pools")
       end
@@ -929,6 +930,8 @@ module Candlepin
         }.merge(page_options)
 
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :key)
+
         params = opts.dup.delete(:key)
         params = select_from(opts, params)
         params[:attributes] = opts[:attributes].map do |k, v|
