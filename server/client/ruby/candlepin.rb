@@ -132,7 +132,7 @@ module Candlepin
 
     # Convert all keys to camel case.
     def camelize_hash(h, *args)
-      h = select_from(h, *args) unless args.nil? || args.empty?
+      h = h.slice(*args) unless args.nil? || args.empty?
       camelized = h.each.map do |entry|
         [camel_case(entry.first), entry.last]
       end
@@ -421,7 +421,7 @@ module Candlepin
           path = "/environments/#{opts[:environment]}/consumers"
         end
 
-        query_args = select_from(opts, :username, :owner)
+        query_args = opts.slice(:username, :owner)
         keys = opts[:activation_keys].join(",")
         query_args[:activation_keys] = keys unless keys.empty?
 
@@ -606,7 +606,7 @@ module Candlepin
         validate_keys(opts, :uuid, :guest_id)
 
         path = "/consumers/#{opts[:uuid]}/guestids/#{opts[:guest_id]}"
-        delete(path, select_from(opts, :unregister))
+        delete(path, opts.slice(:unregister))
       end
     end
 
@@ -670,7 +670,7 @@ module Candlepin
          opts = verify_and_merge(opts, defaults)
 
          body = opts[:host_guest_mapping]
-         post('/hypervisors', :query => select_from(opts, :owner, :create_missing), :body => body)
+         post('/hypervisors', :query => opts.slice(:owner, :create_missing), :body => body)
       end
     end
 
@@ -719,7 +719,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
 
         path = "/entitlements/#{opts[:id]}"
-        put(path, select_from(opts, :to_consumer, :quantity))
+        put(path, opts.slice(:to_consumer, :quantity))
       end
     end
 
@@ -837,7 +837,7 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        permission = select_from(opts, :owner, :access, :type)
+        permission = opts.slice(:owner, :access, :type)
         post("/roles/#{opts[:role_id]}/permissions/", permission)
       end
 
@@ -903,7 +903,7 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        get("/owners/#{opts[:key]}/servicelevels", select_from(opts, :exempt))
+        get("/owners/#{opts[:key]}/servicelevels", opts.slice(:exempt))
       end
 
       def get_owner_environment(opts = {})
@@ -913,7 +913,7 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        get("/owners/#{opts[:key]}/environments", select_from(opts, :name))
+        get("/owners/#{opts[:key]}/environments", opts.slice(:name))
       end
 
       def get_all_owners
@@ -932,8 +932,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :key)
 
-        params = opts.dup.delete(:key)
-        params = select_from(opts, params)
+        params = opts.deep_dup.except!(:key)
         params[:attributes] = opts[:attributes].map do |k, v|
           { :name => k, :value => v }
         end
@@ -970,7 +969,7 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        post("/owners/#{opts[:key]}/environments", select_from(opts, :id, :name, :description))
+        post("/owners/#{opts[:key]}/environments", opts.slice(:id, :name, :description))
       end
 
       def create_ueber_cert(opts = {})
@@ -1006,7 +1005,9 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        body = camelize_hash(opts, *opts.keys.reject { |k| k == :key || opts[k].nil? })
+        body = camelize_hash(
+          opts.deep_dup.compact.except(:key)
+        )
         put("/owners/#{opts[:key]}", body)
       end
 
@@ -1017,7 +1018,7 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        put("/owners/#{opts[:key]}/log", :query => select_from(opts, :level))
+        put("/owners/#{opts[:key]}/log", :query => opts.slice(:level))
       end
 
       def delete_owner_log_level(opts = {})
@@ -1035,7 +1036,7 @@ module Candlepin
           :revoke => false,
         }
         opts = verify_and_merge(opts, defaults)
-        delete("/owners/#{opts[:key]}", select_from(opts, :revoke))
+        delete("/owners/#{opts[:key]}", opts.slice(:revoke))
       end
     end
 
@@ -1238,7 +1239,7 @@ module Candlepin
         validate_keys(opts)
 
         post("/owners/#{opts[:key]}/products/#{opts[:product_id]}/content/#{opts[:content_id]}",
-          :query => select_from(opts, :enabled))
+          :query => opts.slice(:enabled))
       end
 
       def delete_product_content(opts = {})
@@ -1337,7 +1338,7 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        query = select_from(opts, :capability)
+        query = opts.slice(:capability)
         query['name_search'] = opts[:name]
 
         get("/distributor_versions", query)
@@ -1370,7 +1371,7 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        put("/cdn/#{opts[:label]}", select_from(opts, :name, :url, :certificate))
+        put("/cdn/#{opts[:label]}", opts.slice(:name, :url, :certificate))
       end
 
       def get_all_cdns
