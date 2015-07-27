@@ -179,6 +179,7 @@ public class PoolResource {
         List<Pool> poolList = page.getPageData();
 
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);
+        calculatedAttributesUtil.setQuantityAttributes(poolList, c, activeOnDate);
 
         // Store the page for the LinkHeaderPostInterceptor
         ResteasyProviderFactory.pushContext(Page.class, page);
@@ -242,6 +243,7 @@ public class PoolResource {
             toReturn.setCalculatedAttributes(
                 calculatedAttributesUtil.buildCalculatedAttributes(toReturn, activeOnDate)
             );
+            calculatedAttributesUtil.setQuantityAttributes(toReturn, c, activeOnDate);
             return toReturn;
         }
 

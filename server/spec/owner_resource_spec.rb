@@ -363,6 +363,7 @@ describe 'Owner Resource' do
 
     pools = @cp.list_owner_pools(owner['key'], {:consumer => system.uuid})
     pool = pools.select { |p| p['owner']['key'] == owner['key'] }.first
+    pool['calculatedAttributes']['suggested_quantity'].should == "1"
   end
 
   it 'can create custom floating pools' do
