@@ -631,8 +631,8 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :env_id)
 
-    url = "/environments/#{env_id}/content"
-    post(url, content_promotions)
+        url = "/environments/#{env_id}/content"
+        post(url, content_promotions)
       end
     end
 
@@ -991,7 +991,42 @@ module Candlepin
         validate_keys(opts, :key)
 
         put("/owners/#{opts[:key]}/subscriptions",
-            :query => select_from(opts, :auto_create_owner, :lazy_regen))
+            :query => opts.slice(:auto_create_owner, :lazy_regen))
+      end
+
+      def create_subscription(opts = {})
+        defaults = {
+          :key => nil,
+          :start_date => Date.today,
+          :end_date => Date.today + 365,
+          :quantity => 1,
+          :account_number => '',
+          :order_number => '',
+          :contract_number => '',
+          :product_id => nil,
+          :provided_products => [],
+          :derived_products => [],
+          :derived_provided_products => [],
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        body = camelize_hash(
+          opts.deep_dup.compact.except(:key, :product_id)
+        )
+
+        body[:product] = { :id => opts[:product_id] }
+        opts.slice(
+          :provided_products,
+          :derived_products,
+          :derived_provided_products).each do |k, v|
+            body[k] = []
+            v = [v] unless v.respond_to?(:each)
+            v.each do |p|
+              body[k] << { :id => p }
+            end
+        end
+
+        post("/owners/#{opts[:key]}/subscriptions", body)
       end
 
       def update_owner(opts = {})
@@ -1084,7 +1119,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts)
 
-        delete("/owners/#{opts[:key]}/content/#{opts[:product_id]}")
+        delete("/owners/#{opts[:key]}/content/#{opts[:content_id]}")
       end
 
       def create_content(opts = {})
@@ -1258,6 +1293,17 @@ module Candlepin
     module ProductResource
       def get_product(opts = {})
         get_by_id("/products", :product_id, opts)
+      end
+
+      def get_owners_with_product(opts = {})
+        defaults = {
+          :product_ids => [],
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :product_ids) do |k|
+          not k.empty?
+        end
+        get("/products/owners", :query => {'product' => opts[:product_ids]})
       end
 
       def get_product_certificate(opts = {})

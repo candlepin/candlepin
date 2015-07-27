@@ -78,6 +78,16 @@ module Candlepin
         ).content
       end
 
+      let(:product) do
+        user_client.create_product(
+          :product_id => rand_string,
+          :name => rand_string,
+          :multiplier => 2,
+          :attributes => { :arch => 'x86_64' },
+          :key => owner[:key],
+        ).content
+      end
+
       it 'gets a status as JSON' do
         res = no_auth_client.get('/status')
         expect(res.content.key?(:version)).to be_true
@@ -375,9 +385,8 @@ module Candlepin
         expect(parent[:parentOwner]).to be_nil
       end
 
-      it 'updates owners' do
+      it 'updates an owner' do
         old_name = owner[:displayName]
-
         res = user_client.update_owner(
           :key => owner[:key],
           :display_name => rand_string
@@ -433,7 +442,7 @@ module Candlepin
         expect(res).to be_2xx
       end
 
-      it "gets an owner's jobs" do
+      it "gets owner jobs" do
         res = user_client.get_owner_jobs(
           :owner => owner[:key],
         )
@@ -569,6 +578,33 @@ module Candlepin
           :product_id => product[:id],
         ).content
         expect(product[:productContent]).to be_empty
+      end
+
+      it 'creates subscriptions' do
+        res = user_client.create_subscription(
+          :key => owner[:key],
+          :product_id => product[:id],
+        )
+        expect(res).to be_2xx
+      end
+
+      it 'gets owners with pools of a product' do
+        id1 = rand_string
+        user_client.create_product(
+          :product_id => id1,
+          :name => rand_string,
+          :multiplier => 2,
+          :attributes => { :arch => 'x86_64' },
+          :key => owner[:key],
+        )
+
+        user_client.create_subscription(
+          :key => owner[:key],
+          :product_id => id1,
+        )
+
+        results = user_client.get_owners_with_product(:product_ids => [id1]).content
+        expect(results.first[:key]).to eq(owner[:key])
       end
 
       it 'creates a distributor version' do
