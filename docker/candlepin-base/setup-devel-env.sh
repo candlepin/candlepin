@@ -10,6 +10,7 @@ export HOME=/root
 
 # Install & configure dev environment
 PACKAGES=(
+    epel-release
     rsyslog
     wget
     vim-enhanced
@@ -28,7 +29,7 @@ PACKAGES=(
     tmux
 )
 
-dnf install -y ${PACKAGES[@]}
+yum install -y ${PACKAGES[@]}
 
 # Setup for autoconf:
 mkdir /etc/candlepin
