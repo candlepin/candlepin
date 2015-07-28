@@ -5,10 +5,12 @@
 
 set -e
 
-export JAVA_HOME=/usr/lib/jvm/java-1.7.0/
+export JAVA_HOME=/usr/lib/jvm/java-1.8.0/
 export HOME=/root
 
+# Install & configure dev environment
 PACKAGES=(
+    epel-release
     rsyslog
     wget
     vim-enhanced
@@ -19,7 +21,7 @@ PACKAGES=(
     ruby-devel
     gcc
     tomcat
-    java-1.7.0-openjdk-devel
+    java-1.8.0-openjdk-devel
     liquibase
     libxml2-python
     openssl
@@ -27,7 +29,7 @@ PACKAGES=(
     tmux
 )
 
-yum -y install ${PACKAGES[@]}
+yum install -y ${PACKAGES[@]}
 
 # Setup for autoconf:
 mkdir /etc/candlepin

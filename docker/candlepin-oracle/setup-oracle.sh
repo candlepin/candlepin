@@ -1,15 +1,12 @@
 #! /bin/bash
 
-set -e
-
 setup_oracle() {
-
-    mkdir -p /var/lock/subsys
+    mkdir -p /run/lock/subsys
     yum install -y bc net-tools
     /usr/sbin/groupadd -r dba
     /usr/sbin/useradd -r -M -g dba -d /u01/app/oracle -s /bin/bash -u 499 oracle
 
-    yum localinstall -y --nogpgcheck /root/oracle/*.rpm
+    yum install -y --nogpgcheck /root/oracle/*.rpm
     #yum install -y http://yum.spacewalkproject.org/1.9/RHEL/6/x86_64/spacewalk-repo-1.9-1.el6.noarch.rpm
     #yum install -y oracle-xe-selinux oracle-instantclient-selinux oracle-instantclient-sqlplus-selinux
 
