@@ -428,6 +428,28 @@ module Candlepin
         post(path, :query => query_args, :body => consumer_json)
       end
 
+      def bind(opts = {})
+        defaults = {
+          :uuid => uuid,
+          :product => nil,
+          :quantity => 1,
+          :async => false,
+          :entitle_date => Date.today,
+          :pool => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid)
+
+        query_args = opts.slice(
+          :product,
+          :quantity,
+          :async,
+          :entitle_date,
+          :pool,
+        )
+        post("/consumers/#{opts[:uuid]}/entitlements", :query => query_args)
+      end
+
       def delete_deletion_record(opts = {})
         defaults = {
           :deleted_uuid => nil,

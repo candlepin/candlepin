@@ -88,6 +88,13 @@ module Candlepin
         ).content
       end
 
+      let(:pool) do
+        user_client.create_subscription(
+          :key => owner[:key],
+          :product_id => product[:id],
+        ).content
+      end
+
       it 'gets a status as JSON' do
         res = no_auth_client.get('/status')
         expect(res.content.key?(:version)).to be_true
@@ -115,13 +122,28 @@ module Candlepin
 
       it 'registers a consumer and gets a client' do
         x509_client = user_client.register_and_get_client(
-          :owner => 'admin',
-          :username => 'admin',
+          :owner => owner[:key],
+          :username => owner[:key],
           :name => rand_string,
         )
 
         res = x509_client.get_consumer()
         expect(res.content[:uuid].length).to eq(36)
+      end
+
+      it 'binds to a pool ID' do
+        x509_client = user_client.register_and_get_client(
+          :owner => owner[:key],
+          :username => owner[:key],
+          :name => rand_string,
+        )
+
+        x509_client.debug
+        user_client.debug
+        user_client.refresh_pools(:key => owner[:key])
+        res = x509_client.bind(:pool => pool[:id])
+
+
       end
 
       it 'gets deleted consumers' do
@@ -586,6 +608,7 @@ module Candlepin
           :product_id => product[:id],
         )
         expect(res).to be_2xx
+        expect(res.content[:product][:id]).to eq(product[:id])
       end
 
       it 'gets owners with pools of a product' do
