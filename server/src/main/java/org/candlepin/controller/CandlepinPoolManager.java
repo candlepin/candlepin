@@ -794,7 +794,10 @@ public class CandlepinPoolManager implements PoolManager {
                 String key = e.getResult().getErrors().get(0).getResourceKey();
 
                 if (key.equals("rulefailed.no.entitlements.available") && retries-- > 0) {
-                    log.info("No entitlements available while attempting to entitle; retrying");
+                    log.info(
+                        "Entitlements exhausted between select best pools and bind operations; retrying"
+                    );
+
                     continue;
                 }
 
