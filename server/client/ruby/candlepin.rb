@@ -789,7 +789,7 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        all_roles = success_content(get_all_roles)
+        all_roles = ok_content(get_all_roles)
 
         role_name = "#{opts[:key]}-ALL"
 
@@ -800,11 +800,11 @@ module Candlepin
           else
             perm = ro_owner_permission(opts[:key])
           end
-          role = success_content(create_role(:name => role_name, :permissions => perm))
+          role = ok_content(create_role(:name => role_name, :permissions => perm))
         end
 
-        user = success_content(create_user(opts.slice(:username, :password, :super_admin)))
-        success_content(add_role_user(:role_id => role[:id], :username => opts[:username]))
+        user = ok_content(create_user(opts.slice(:username, :password, :super_admin)))
+        ok_content(add_role_user(:role_id => role[:id], :username => opts[:username]))
 
         # Add password to returned user so it can be passed in to a new
         # BasicAuthClient
@@ -1581,6 +1581,9 @@ module Candlepin
     attr_accessor :ca_path
     attr_accessor :connection_timeout
     attr_accessor :client
+
+    # Shorten the name of this useful method
+    alias_method :ok_content, :success_content
 
     # Build a connection without any authentication
     #
