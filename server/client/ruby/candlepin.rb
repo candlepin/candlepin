@@ -248,8 +248,8 @@ module Candlepin
     def page_options
       return {
         :page => nil,
-        :per_page => 10,
-        :order => 'asc',
+        :per_page => nil,
+        :order => nil,
         :sort_by => nil,
       }
     end
@@ -396,6 +396,10 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
+        unless opts[:installed_products].kind_of?(Array)
+          opts[:installed_products] = [opts[:installed_products]]
+        end
+
         consumer_json = select_from(opts, :name, :facts, :uuid) do |h|
           if opts[:hypervisor_id]
             h[:hypervisorId] = {
@@ -412,8 +416,16 @@ module Candlepin
 
         consumer_json = {
           :type => { :label => opts[:type] },
-          :installedProducts => opts[:installed_products],
         }.merge(consumer_json)
+
+        consumer_json[:installed_products] = []
+        opts[:installed_products].each do |ip|
+          if ip.kind_of?(Hash)
+            consumer_json[:installed_products] << { :id => ip[:id] }
+          else
+            consumer_json[:installed_products] << { :id => ip }
+          end
+        end
 
         if opts[:environment].nil?
           path = "/consumers"
@@ -429,12 +441,24 @@ module Candlepin
       end
 
       def bind(opts = {})
+        # Entitle dates are not allowed in bind by product.
+        default_date = Date.today
+        if opts.key?(:pool)
+          default_date = nil
+        end
+
+        # Quantities are not allowed in auto-binds
+        default_quantity = 1
+        if opts.key?(:product)
+          default_quantity = nil
+        end
+
         defaults = {
           :uuid => uuid,
           :product => nil,
-          :quantity => 1,
+          :quantity => default_quantity,
           :async => false,
-          :entitle_date => Date.today,
+          :entitle_date => default_date,
           :pool => nil,
         }
         opts = verify_and_merge(opts, defaults)
@@ -446,7 +470,7 @@ module Candlepin
           :async,
           :entitle_date,
           :pool,
-        )
+        ).compact
         post("/consumers/#{opts[:uuid]}/entitlements", :query => query_args)
       end
 
@@ -986,6 +1010,7 @@ module Candlepin
 
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :key)
+        opts.compact!
 
         params = opts.deep_dup.except!(:key)
         params[:attributes] = opts[:attributes].map do |k, v|
@@ -1066,7 +1091,13 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
 
         body = camelize_hash(
-          opts.deep_dup.compact.except(:key, :product_id)
+          opts.deep_dup.compact.except(
+            :key,
+            :product_id,
+            :provided_products,
+            :derived_products,
+            :derived_provided_products,
+          )
         )
 
         body[:product] = { :id => opts[:product_id] }
@@ -1074,11 +1105,12 @@ module Candlepin
           :provided_products,
           :derived_products,
           :derived_provided_products).each do |k, v|
-            body[k] = []
-            v = [v] unless v.respond_to?(:each)
+            prods = []
+            v = [v] unless v.kind_of?(Array)
             v.each do |p|
-              body[k] << { :id => p }
+              prods << { :id => p }
             end
+            body[camel_case(k)] = prods unless prods.empty?
         end
 
         post("/owners/#{opts[:key]}/subscriptions", body)
@@ -1249,7 +1281,7 @@ module Candlepin
           :product_id => nil,
           :type => "SVC",
           :name => nil,
-          :multiplier => nil,
+          :multiplier => 1,
           :attributes => [],
           :dependent_product_ids => [],
           :product_content => [],
@@ -1271,6 +1303,8 @@ module Candlepin
         product[:attributes] = opts[:attributes].map do |k, v|
           { :name => k, :value => v }
         end
+        product.compact!
+
         post("/owners/#{opts[:key]}/products", product)
       end
 

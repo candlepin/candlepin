@@ -38,9 +38,13 @@ end
 
 module Candlepin
   describe "Candlepin" do
-    def rand_string(len = 9)
+    def rand_string(opts = {})
+      len = opts[:len] || 9
+      prefix = opts[:prefix] || ''
       o = [('a'..'z'), ('A'..'Z'), ('1'..'9')].map { |range| range.to_a }.flatten
-      (0...len).map { o[rand(o.length)] }.join
+      rand = (0...len).map { o[rand(o.length)] }.join
+
+      return (prefix.empty?) ? rand : "#{prefix}-#{rand}"
     end
 
     context "in a functional context", :functional => true do
@@ -49,16 +53,25 @@ module Candlepin
       let!(:no_auth_client) { NoAuthClient.new }
 
       let(:owner) do
-        key = rand_string
+        key = rand_string(:prefix => 'owner')
         user_client.create_owner(
           :key => key,
           :display_name => key,
         ).content
       end
 
+      let(:owner_user) do
+        user_client.create_user_under_owner(
+          :username => rand_string,
+          :password => rand_string,
+          :key => owner[:key],
+          :super_admin => false,
+        )
+      end
+
       let(:user) do
         user_client.create_user(
-          :username => rand_string,
+          :username => rand_string(:prefix => 'user'),
           :password => rand_string,
           :super_admin => false,
         ).content
@@ -66,7 +79,7 @@ module Candlepin
 
       let(:role) do
         user_client.create_role(
-          :name => rand_string,
+          :name => rand_string(:prefix => 'role'),
         ).content
       end
 
@@ -80,19 +93,13 @@ module Candlepin
       end
 
       let(:product) do
+        p = rand_string(:prefix => 'product')
         user_client.create_product(
-          :product_id => rand_string,
-          :name => rand_string,
+          :product_id => p,
+          :name => "Product #{p}",
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
           :key => owner[:key],
-        ).content
-      end
-
-      let(:pool) do
-        user_client.create_subscription(
-          :key => owner[:key],
-          :product_id => product[:id],
         ).content
       end
 
@@ -102,6 +109,10 @@ module Candlepin
       end
 
       it 'gets all owners with basic auth' do
+        user_client.create_owner(
+          :key => rand_string,
+          :display_name => rand_string,
+        )
         res = user_client.get_all_owners
         expect(res.content.empty?).to be_false
         expect(res.content.first.key?(:id)).to be_true
@@ -114,8 +125,8 @@ module Candlepin
 
       it 'registers a consumer' do
         res = user_client.register(
-          :owner => 'admin',
-          :username => 'admin',
+          :owner => owner[:key],
+          :username => owner_user[:username],
           :name => rand_string,
         )
         expect(res.content[:uuid].length).to eq(36)
@@ -133,18 +144,48 @@ module Candlepin
       end
 
       it 'binds to a pool ID' do
+        user_client.create_subscription(
+          :key => owner[:key],
+          :product_id => product[:id],
+        ).content
+
+        pools = user_client.get_owner_pools(:key => owner[:key]).content
+        expect(pools.first[:product][:id]).to eq(product[:id])
+
         x509_client = user_client.register_and_get_client(
           :owner => owner[:key],
-          :username => owner[:key],
           :name => rand_string,
         )
 
-        x509_client.debug
-        user_client.debug
-        user_client.refresh_pools(:key => owner[:key])
-        res = x509_client.bind(:pool => pool[:id])
+        res = x509_client.bind(:pool => pools.first[:id])
+        expect(res).to be_2xx
 
+        entitlement = res.content.first
+        expect(entitlement[:certificates]).to_not be_empty
+        expect(entitlement[:certificates].first.key?(:key)).to be_true
+      end
 
+      it 'binds to a product ID' do
+        user_client.create_subscription(
+          :key => owner[:key],
+          :product_id => product[:id],
+        )
+
+        pools = user_client.get_owner_pools(:key => owner[:key]).content
+        expect(pools.first[:product][:id]).to eq(product[:id])
+
+        x509_client = user_client.register_and_get_client(
+          :owner => owner[:key],
+          :name => rand_string,
+          :installed_products => product,
+        )
+
+        res = x509_client.bind(:product => product[:id])
+        expect(res).to be_2xx
+
+        entitlement = res.content.first
+        expect(entitlement[:certificates]).to_not be_empty
+        expect(entitlement[:certificates].first.key?(:key)).to be_true
       end
 
       it 'gets deleted consumers' do
@@ -154,8 +195,8 @@ module Candlepin
 
       it 'updates a consumer' do
         res = user_client.register(
-          :owner => 'admin',
-          :username => 'admin',
+          :owner => owner[:key],
+          :username => owner_user[:username],
           :name => rand_string,
         )
         consumer = res.content
@@ -170,8 +211,8 @@ module Candlepin
 
       it 'allows a client to set a sticky uuid' do
         res = user_client.register(
-          :owner => 'admin',
-          :username => 'admin',
+          :owner => owner[:key],
+          :username => owner_user[:username],
           :name => rand_string,
         )
         consumer = res.content
@@ -185,8 +226,8 @@ module Candlepin
 
       it 'updates a consumer guest id list' do
         res = user_client.register(
-          :owner => 'admin',
-          :username => 'admin',
+          :owner => owner[:key],
+          :username => owner_user[:username],
           :name => rand_string,
         )
         consumer = res.content
@@ -200,8 +241,8 @@ module Candlepin
 
       it 'deletes a guest id' do
         res = user_client.register(
-          :owner => 'admin',
-          :username => 'admin',
+          :owner => owner[:key],
+          :username => owner_user[:username],
           :name => rand_string,
         )
         consumer = res.content
