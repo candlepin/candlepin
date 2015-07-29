@@ -756,6 +756,31 @@ module Candlepin
         post("/users", camelize_hash(opts))
       end
 
+      def create_user_under_owner(opts = {})
+        defaults = {
+          :username => nil,
+          :password => nil,
+          :super_admin => false,
+          :key => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        role = create_role(:name => "#{opts[:key]}-ALL").content
+        add_role_permission(
+          :role_id => role[:id],
+          :owner => opts[:key],
+          :type => 'OWNER',
+          :access => 'ALL')
+
+        user = create_user(opts.slice(:username, :password, :super_admin)).content
+        add_role_user(:role_id => role[:id], :username => opts[:username])
+
+        # Add password to returned user so it can be passed in to a new
+        # BasicAuthClient
+        user[:password] = opts[:password]
+        user
+      end
+
       def update_user(opts = {})
         defaults = {
           :username => nil,
@@ -1692,6 +1717,17 @@ module Candlepin
       }
       opts = defaults.merge(opts)
       super(opts)
+    end
+
+    def switch_auth(*args)
+      if args.length == 1 && args.first.kind_of?(Hash)
+        @username = args.first[:username]
+        @password = args.first[:password]
+      else
+        @username = args[0]
+        @password = args[1]
+      end
+      reload
     end
 
     def raw_client

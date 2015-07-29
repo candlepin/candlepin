@@ -49,9 +49,10 @@ module Candlepin
       let!(:no_auth_client) { NoAuthClient.new }
 
       let(:owner) do
+        key = rand_string
         user_client.create_owner(
-          :key => rand_string,
-          :display_name => rand_string,
+          :key => key,
+          :display_name => key,
         ).content
       end
 
@@ -219,6 +220,57 @@ module Candlepin
 
       it 'creates users' do
         expect(user[:hashedPassword].length).to eq(40)
+      end
+
+      it 'creates users under owners' do
+        name = rand_string
+        password = rand_string
+        user = user_client.create_user_under_owner(
+          :username => name,
+          :password => password,
+          :key => owner[:key])
+        expect(user[:username]).to eq(name)
+        expect(user[:password]).to eq(password)
+
+        res = user_client.get_user_roles(:username => user[:username])
+        roles = res.content.map { |r| r[:name] }
+        expect(roles).to include("#{owner[:key]}-ALL")
+      end
+
+      it 'resets a client to a given user' do
+        name = rand_string
+        password = rand_string
+        user = user_client.create_user_under_owner(
+          :username => name,
+          :password => password,
+          :key => owner[:key])
+
+        expect(user_client.username).to eq('admin')
+        user_client.switch_auth(user[:username], user[:password])
+
+        expect(user_client.username).to eq(name)
+
+        res = user_client.get_user_roles(:username => user[:username])
+        roles = res.content.map { |r| r[:name] }
+        expect(roles).to include("#{owner[:key]}-ALL")
+      end
+
+      it 'resets a client to a given user by passing in a user' do
+        name = rand_string
+        password = rand_string
+        user = user_client.create_user_under_owner(
+          :username => name,
+          :password => password,
+          :key => owner[:key])
+
+        expect(user_client.username).to eq('admin')
+        user_client.switch_auth(user)
+
+        expect(user_client.username).to eq(name)
+
+        res = user_client.get_user_roles(:username => user[:username])
+        roles = res.content.map { |r| r[:name] }
+        expect(roles).to include("#{owner[:key]}-ALL")
       end
 
       it 'gets users' do
