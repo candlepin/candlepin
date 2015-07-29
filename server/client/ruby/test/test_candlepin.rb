@@ -62,19 +62,20 @@ module Candlepin
 
       let(:owner_user) do
         user_client.create_user_under_owner(
-          :username => rand_string,
+          :username => rand_string(:prefix => 'owner_user'),
           :password => rand_string,
           :key => owner[:key],
           :super_admin => false,
         )
       end
 
-      let(:user) do
-        user_client.create_user(
-          :username => rand_string(:prefix => 'user'),
+      let(:owner_admin) do
+        user_client.create_user_under_owner(
+          :username => rand_string(:prefix => 'owner_admin'),
           :password => rand_string,
-          :super_admin => false,
-        ).content
+          :key => owner[:key],
+          :super_admin => trutrue,
+        )
       end
 
       let(:role) do
@@ -97,8 +98,6 @@ module Candlepin
         user_client.create_product(
           :product_id => p,
           :name => "Product #{p}",
-          :multiplier => 2,
-          :attributes => { :arch => 'x86_64' },
           :key => owner[:key],
         ).content
       end
@@ -177,6 +176,7 @@ module Candlepin
         x509_client = user_client.register_and_get_client(
           :owner => owner[:key],
           :name => rand_string,
+          :username => owner_user[:username],
           :installed_products => product,
         )
 
@@ -260,6 +260,12 @@ module Candlepin
       end
 
       it 'creates users' do
+        res = user_client.create_user(
+          :username => rand_string(:prefix => 'user'),
+          :password => rand_string,
+        )
+        expect(res).to be_2xx
+        user = res.content
         expect(user[:hashedPassword].length).to eq(40)
       end
 
@@ -341,26 +347,36 @@ module Candlepin
       end
 
       it 'gets users' do
+        user = user_client.create_user(
+          :username => rand_string(:prefix => 'user'),
+          :password => rand_string,
+        ).content
+
         res = user_client.get_user(:username => user[:username])
         expect(res.content[:id]).to eq(user[:id])
       end
 
       it 'updates users' do
-        res = user_client.update_user(:username => user[:username], :password => rand_string)
-        expect(res.content[:hashedPassword]).to_not eq(user[:hashedPassword])
+        res = user_client.update_user(:username => owner_user[:username], :password => rand_string)
+        expect(res.content[:hashedPassword]).to_not eq(owner_user[:hashedPassword])
       end
 
       it 'deletes users' do
-        res = user_client.delete_user(:username => user[:username])
+        res = user_client.delete_user(:username => owner_user[:username])
         expect(res).to be_2xx
 
         res = user_client.get_all_users
         existing_users = res.content.map { |u| u[:username] }
-        expect(existing_users).to_not include(user[:username])
+        expect(existing_users).to_not include(owner_user[:username])
       end
 
       it 'creates roles' do
-        expect(role[:id]).to_not be_nil
+        res = user_client.create_role(
+          :name => rand_string(:prefix => 'role'),
+        )
+        expect(res).to be_2xx
+
+        expect(res.content[:id]).to_not be_nil
       end
 
       it 'gets roles' do
@@ -388,6 +404,11 @@ module Candlepin
       end
 
       it 'creates role users' do
+        user = user_client.create_user(
+          :username => rand_string(:prefix => 'user'),
+          :password => rand_string,
+        ).content
+
         res = user_client.add_role_user(
           :role_id => role[:id],
           :username => user[:username],
@@ -396,6 +417,11 @@ module Candlepin
       end
 
       it 'deletes role users' do
+        user = user_client.create_user(
+          :username => rand_string(:prefix => 'user'),
+          :password => rand_string,
+        ).content
+
         res = user_client.add_role_user(
           :role_id => role[:id],
           :username => user[:username],

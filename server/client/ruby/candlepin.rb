@@ -795,14 +795,13 @@ module Candlepin
 
         role = all_roles.select { |r| r[:name] == role_name }.first
         if role.nil?
-          role = success_content(create_role(:name => role_name))
+          if opts[:super_admin]
+            perm = all_owner_permission(opts[:key])
+          else
+            perm = ro_owner_permission(opts[:key])
+          end
+          role = success_content(create_role(:name => role_name, :permissions => perm))
         end
-
-        success_content(add_role_permission(
-          :role_id => role[:id],
-          :owner => opts[:key],
-          :type => 'OWNER',
-          :access => 'ALL'))
 
         user = success_content(create_user(opts.slice(:username, :password, :super_admin)))
         success_content(add_role_user(:role_id => role[:id], :username => opts[:username]))
@@ -860,7 +859,27 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
+        unless opts[:permissions].kind_of?(Array)
+          opts[:permissions] = [opts[:permissions]]
+        end
+
         post("/roles", opts)
+      end
+
+      def all_owner_permission(key)
+        perm = {}
+        perm[:access] = 'ALL'
+        perm[:type] = 'OWNER'
+        perm[:owner] = { :key => key }
+        perm
+      end
+
+      def ro_owner_permission(key)
+        perm = {}
+        perm[:access] = 'READ_ONLY'
+        perm[:type] = 'OWNER'
+        perm[:owner] = { :key => key }
+        perm
       end
 
       def update_role(opts = {})
@@ -1282,7 +1301,7 @@ module Candlepin
           :type => "SVC",
           :name => nil,
           :multiplier => 1,
-          :attributes => [],
+          :attributes => {},
           :dependent_product_ids => [],
           :product_content => [],
           :relies_on => [],
@@ -1290,9 +1309,13 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :key)
+        validate_keys(opts, :attributes) do |x|
+          x.kind_of?(Hash)
+        end
+
+        opts[:attributes][:type] = opts.extract!(:type)[:type]
 
         product = camelize_hash(opts,
-          :type,
           :name,
           :multiplier,
           :dependent_product_ids,
