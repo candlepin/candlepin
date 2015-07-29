@@ -1,4 +1,4 @@
-FROM centos:7
+FROM fedora:21
 MAINTAINER Devan Goodwin <dgoodwin@redhat.com>
 
 ENV LANG en_US.UTF-8

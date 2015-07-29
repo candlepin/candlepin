@@ -10,7 +10,7 @@ export HOME=/root
 
 # Install & configure dev environment
 PACKAGES=(
-    epel-release
+    hostname
     rsyslog
     wget
     vim-enhanced
