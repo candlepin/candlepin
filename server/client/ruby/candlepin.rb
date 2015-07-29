@@ -14,7 +14,7 @@ module HTTP
     # Returns JSON object of message body
     alias original_content content
     def content
-      if JSONClient::CONTENT_TYPE_JSON_REGEX =~ content_type
+      if JSONClient::CONTENT_TYPE_JSON_REGEX =~ content_type && !original_content.empty?
         json = JSON.parse(original_content)
         if json.is_a?(Array)
           json.map! do |i|
