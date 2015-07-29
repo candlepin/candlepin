@@ -765,15 +765,23 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        role = create_role(:name => "#{opts[:key]}-ALL").content
-        add_role_permission(
+        all_roles = success_content(get_all_roles)
+
+        role_name = "#{opts[:key]}-ALL"
+
+        role = all_roles.select { |r| r[:name] == role_name }.first
+        if role.nil?
+          role = success_content(create_role(:name => role_name))
+        end
+
+        success_content(add_role_permission(
           :role_id => role[:id],
           :owner => opts[:key],
           :type => 'OWNER',
-          :access => 'ALL')
+          :access => 'ALL'))
 
-        user = create_user(opts.slice(:username, :password, :super_admin)).content
-        add_role_user(:role_id => role[:id], :username => opts[:username])
+        user = success_content(create_user(opts.slice(:username, :password, :super_admin)))
+        success_content(add_role_user(:role_id => role[:id], :username => opts[:username]))
 
         # Add password to returned user so it can be passed in to a new
         # BasicAuthClient
@@ -1487,9 +1495,11 @@ module Candlepin
     #
     # HTTPClient has many methods, but the below seemed like the most useful.
     def_delegators :@client,
+      :create_request,
       :debug_dev=,
       :delete,
       :delete_async,
+      :follow_redirect,
       :get,
       :get_async,
       :get_content,
@@ -1503,6 +1513,7 @@ module Candlepin
       :options,
       :request,
       :request_async,
+      :success_content,
       :trace
 
     attr_accessor :use_ssl

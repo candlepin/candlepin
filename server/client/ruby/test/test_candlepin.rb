@@ -237,6 +237,32 @@ module Candlepin
         expect(roles).to include("#{owner[:key]}-ALL")
       end
 
+      it 'creates multiple users under an owner' do
+        name = rand_string
+        password = rand_string
+        user = user_client.create_user_under_owner(
+          :username => name,
+          :password => password,
+          :key => owner[:key])
+        expect(user[:username]).to eq(name)
+        expect(user[:password]).to eq(password)
+
+        name2 = rand_string
+        password2 = rand_string
+        user2 = user_client.create_user_under_owner(
+          :username => name2,
+          :password => password2,
+          :key => owner[:key])
+        expect(user2[:username]).to eq(name2)
+        expect(user2[:password]).to eq(password2)
+
+        [user[:username], user2[:username]].each do |n|
+          res = user_client.get_user_roles(:username => n)
+          roles = res.content.map { |r| r[:name] }
+          expect(roles).to include("#{owner[:key]}-ALL")
+        end
+      end
+
       it 'resets a client to a given user' do
         name = rand_string
         password = rand_string
