@@ -1,6 +1,6 @@
 require 'base64'
 require 'zip/zip'
-require 'thread'
+
 
 module CleanupHooks
   def cleanup_before
@@ -152,37 +152,5 @@ class Hash
     else
         self[method.to_s]
     end
-  end
-end
-
-# Stolen from import_products
-# Originally from http://burgestrand.se/articles/quick-and-simple-ruby-thread-pool.html
-class Pool
-  def initialize(size)
-    @size = size
-    @jobs = Queue.new
-    @pool = Array.new(@size) do |i|
-      Thread.new do
-        Thread.current[:id] = i
-        catch(:exit) do
-          loop do
-            job, args = @jobs.pop
-            job.call(*args)
-          end
-        end
-      end
-    end
-  end
-
-  def schedule(*args, &block)
-    @jobs << [block, args]
-  end
-
-  def shutdown
-    @size.times do
-      schedule { throw :exit }
-    end
-
-    @pool.map(&:join)
   end
 end
