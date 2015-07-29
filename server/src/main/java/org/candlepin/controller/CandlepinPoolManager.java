@@ -92,6 +92,8 @@ public class CandlepinPoolManager implements PoolManager {
     private PoolCurator poolCurator;
     private static Logger log = LoggerFactory.getLogger(CandlepinPoolManager.class);
 
+    private static final int MAX_ENTITLE_RETRIES = 3;
+
     private EventSink sink;
     private EventFactory eventFactory;
     private Configuration config;
@@ -761,28 +763,44 @@ public class CandlepinPoolManager implements PoolManager {
         Date entitleDate = data.getOnDate();
         Owner owner = consumer.getOwner();
 
-        List<Entitlement> entitlements = new LinkedList<Entitlement>();
+        int retries = MAX_ENTITLE_RETRIES;
 
-        List<PoolQuantity> bestPools = getBestPools(consumer, productIds,
-            entitleDate, owner, null, fromPools);
+        while (true) {
+            try {
+                List<Entitlement> entitlements = new LinkedList<Entitlement>();
 
-        if (bestPools == null) {
-            List<String> fullList = new ArrayList<String>();
-            fullList.addAll(Arrays.asList(productIds));
-            for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
-                fullList.add(cip.getId());
+                List<PoolQuantity> bestPools = getBestPools(consumer, productIds,
+                    entitleDate, owner, null, fromPools);
+
+                if (bestPools == null) {
+                    List<String> fullList = new ArrayList<String>();
+                    fullList.addAll(Arrays.asList(productIds));
+                    for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
+                        fullList.add(cip.getId());
+                    }
+                    log.info("No entitlements available for products: {}", fullList);
+                    return null;
+                }
+
+                // now make the entitlements
+                for (PoolQuantity entry : bestPools) {
+                    entitlements.add(addOrUpdateEntitlement(consumer, entry.getPool(),
+                        null, entry.getQuantity(), false, CallerType.BIND));
+                }
+
+                return entitlements;
             }
-            log.info("No entitlements available for products: {}", fullList);
-            return null;
-        }
+            catch (EntitlementRefusedException e) {
+                String key = e.getResult().getErrors().get(0).getResourceKey();
 
-        // now make the entitlements
-        for (PoolQuantity entry : bestPools) {
-            entitlements.add(addOrUpdateEntitlement(consumer, entry.getPool(),
-                null, entry.getQuantity(), false, CallerType.BIND));
-        }
+                if (key.equals("rulefailed.no.entitlements.available") && retries-- > 0) {
+                    log.info("No entitlements available while attempting to entitle; retrying");
+                    continue;
+                }
 
-        return entitlements;
+                throw e;
+            }
+        }
     }
 
     /**
