@@ -112,7 +112,7 @@ pools.each do |p|
   end
 end
 
-# Count the number of consumers which registered, but could not consume an entitlement
+# Verify entitlement counts
 exp_entitlement_counts = {
   1 => 3,
   2 => 2
