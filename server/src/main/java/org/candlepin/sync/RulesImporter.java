@@ -18,6 +18,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.common.util.VersionUtil;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.policy.js.JsRunnerProvider;
 
 import com.google.inject.Inject;
 
@@ -35,11 +36,13 @@ public class RulesImporter {
 
     private RulesCurator curator;
     private EventSink sink;
+    private JsRunnerProvider jsProvider;
 
     @Inject
-    RulesImporter(RulesCurator curator, EventSink sink) {
+    RulesImporter(RulesCurator curator, EventSink sink, JsRunnerProvider jsProvider) {
         this.curator = curator;
         this.sink = sink;
+        this.jsProvider = jsProvider;
     }
 
     public void importObject(Reader reader) throws IOException {
@@ -53,6 +56,9 @@ public class RulesImporter {
                 existingRules.getVersion() + " new version: " + newRules.getVersion());
             curator.update(newRules);
             sink.emitRulesModified(existingRules, newRules);
+
+            // Trigger a recompile of the rules:
+            jsProvider.compileRules();
         }
         else {
             log.info("Ignoring older rules in manifest, current version: " +
