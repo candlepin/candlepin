@@ -925,14 +925,13 @@ module Candlepin
         expect(res.content).to eq("Hello Text")
       end
 
-      it 'uses an indifferent access hash' do
+      it 'uses an symbol access hashes' do
         simple_client = NoAuthClient.new(
           :ca_path => 'certs/test-ca.crt',
           :port => TEST_PORT,
           :insecure => false)
 
         res = simple_client.get('/status')
-        expect(res.content[:message]).to eq("Hello")
         expect(res.content[:message]).to eq("Hello")
       end
 
