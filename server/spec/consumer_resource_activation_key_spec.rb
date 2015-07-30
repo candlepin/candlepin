@@ -156,15 +156,22 @@ describe 'Consumer Resource Activation Key' do
     consumer1 = @client.register(random_string('machine'), :system, nil, {}, nil,
       @owner['key'], ["key1"])
     consumer1.uuid.should_not be_nil
+    @cp.list_entitlements(:uuid => consumer1.uuid).size.should == 1
+
     consumer2 = @client.register(random_string('machine'), :system, nil, {}, nil,
       @owner['key'], ["key1"])
     consumer2.uuid.should_not be_nil
+    @cp.list_entitlements(:uuid => consumer2.uuid).size.should == 1
+
     consumer3 = @client.register(random_string('machine'), :system, nil, {}, nil,
       @owner['key'], ["key1"])
     consumer3.uuid.should_not be_nil
+    @cp.list_entitlements(:uuid => consumer3.uuid).size.should == 1
+
     consumer4 = @client.register(random_string('machine'), :system, nil, {}, nil,
       @owner['key'], ["key1"])
     consumer4.uuid.should_not be_nil
+    @cp.list_entitlements(:uuid => consumer4.uuid).size.should == 1
 
     pools.each do |p|
       this_pool = @cp.get_pool(p.id)
@@ -174,6 +181,56 @@ describe 'Consumer Resource Activation Key' do
     consumer5 = @client.register(random_string('machine'), :system, nil, {}, nil,
       @owner['key'], ["key1"])
     consumer5.uuid.should_not be_nil
-    consumer5.entitlementCount.should == 0
+    @cp.list_entitlements(:uuid => consumer5.uuid).size.should == 0
+  end
+
+  it 'should allow consumers to register with an activation key with an auto-attach across pools in parallel' do
+    # create extra product/pool to show selectivity
+    prod1 = create_product(random_string('product1'), random_string('product1'))
+    subs1 = @cp.create_subscription(@owner['key'], prod1.id, 1)
+    subs2 = @cp.create_subscription(@owner['key'], prod1.id, 1)
+    subs3 = @cp.create_subscription(@owner['key'], prod1.id, 2)
+    @cp.refresh_pools(@owner['key'])
+    pools = @cp.list_pools(:owner => @owner['id'], :product => prod1.id)
+
+    key1 = @cp.create_activation_key(@owner['key'], 'key1')
+    @cp.update_activation_key({'id' => key1['id'], "autoAttach" => "true"})
+    @cp.add_pool_to_key(key1['id'], pools[0]['id'], 1)
+    @cp.add_pool_to_key(key1['id'], pools[1]['id'], 1)
+    @cp.add_pool_to_key(key1['id'], pools[2]['id'], 1)
+    @cp.add_prod_id_to_key(key1['id'], prod1.id)
+
+    count = 5
+    consumers = []
+    thread_pool = Pool.new(count)
+
+    for i in 0..(count - 1) do
+      thread_pool.schedule do
+        consumer = @client.register(
+          random_string('machine'), :system, nil, {}, nil, @owner['key'], ["key1"]
+        )
+
+        consumers.push(consumer)
+      end
+    end
+
+    # Shutdown & join on the thread pool
+    thread_pool.shutdown
+
+    pools.each do |p|
+      this_pool = @cp.get_pool(p.id)
+      this_pool.consumed.should == this_pool.quantity
+    end
+
+    # Count the number of consumers which registered, but could not consume an entitlement
+    fail_count = 0
+    consumers.each do |consumer|
+      consumer.uuid.should_not be_nil
+
+      certs = @cp.list_entitlements(:uuid => consumer.uuid)
+      fail_count += 1 if (certs.length == 0)
+    end
+
+    fail_count.should == 1
   end
 end
