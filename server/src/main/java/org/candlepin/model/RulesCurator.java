@@ -106,7 +106,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         return dbRules;
     }
 
-    private Date getUpdatedFromDB() {
+    public Date getUpdatedFromDB() {
         return (Date) this.currentSession().createCriteria(Rules.class)
             .setProjection(Projections.projectionList()
                 .add(Projections.max("updated")))
@@ -158,4 +158,5 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
     protected String getDefaultRulesFile() {
         return DEFAULT_RULES_FILE;
     }
+
 }

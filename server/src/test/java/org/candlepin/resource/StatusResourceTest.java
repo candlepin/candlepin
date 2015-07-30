@@ -14,19 +14,14 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Status;
+import org.candlepin.policy.js.JsRunnerProvider;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -53,6 +48,7 @@ public class StatusResourceTest {
 
     @Mock private RulesCurator rulesCurator;
     @Mock private Configuration config;
+    @Mock private JsRunnerProvider jsProvider;
 
     @Before
     public void setUp() {
@@ -67,7 +63,7 @@ public class StatusResourceTest {
             .getClassLoader().getResource("version.properties").toURI()));
         ps.println("version=${version}");
         ps.println("release=${release}");
-        StatusResource sr = new StatusResource(rulesCurator, config);
+        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider);
         Status s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -81,7 +77,7 @@ public class StatusResourceTest {
         PrintStream ps = new PrintStream(new File(this.getClass()
             .getClassLoader().getResource("version.properties").toURI()));
         ps.println("foo");
-        StatusResource sr = new StatusResource(rulesCurator, config);
+        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider);
         Status s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -96,8 +92,8 @@ public class StatusResourceTest {
             .getClassLoader().getResource("version.properties").toURI()));
         ps.println("version=${version}");
         ps.println("release=${release}");
-        when(rulesCurator.listAll()).thenThrow(new RuntimeException());
-        StatusResource sr = new StatusResource(rulesCurator, config);
+        when(rulesCurator.getUpdatedFromDB()).thenThrow(new RuntimeException());
+        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider);
         Status s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -120,7 +116,7 @@ public class StatusResourceTest {
             .getClassLoader().getResource("version.properties").toURI()));
         ps.println("version=${version}");
         ps.println("release=${release}");
-        StatusResource sr = new StatusResource(rulesCurator, null);
+        StatusResource sr = new StatusResource(rulesCurator, null, jsProvider);
         Status s = sr.status();
         ps.close();
 
