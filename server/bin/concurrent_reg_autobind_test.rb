@@ -66,11 +66,12 @@ end
 # create extra product/pool to show selectivity
 owner = @cp.create_owner(random_string('owner'))
 prod1 = @cp.create_product(owner['key'], random_string('product1'), random_string('product1'), {})
-subs1 = @cp.create_subscription(owner['key'], prod1["id"], 1)
-subs2 = @cp.create_subscription(owner['key'], prod1["id"], 1)
-subs3 = @cp.create_subscription(owner['key'], prod1["id"], 2)
+prod2 = @cp.create_product(owner['key'], random_string('product2'), random_string('product2'), {})
+subs1 = @cp.create_subscription(owner['key'], prod1["id"], 10)
+subs2 = @cp.create_subscription(owner['key'], prod2["id"], 1)
+subs3 = @cp.create_subscription(owner['key'], prod2["id"], 1)
 @cp.refresh_pools(owner['key'])
-pools = @cp.list_pools(:owner => owner['id'], :product => prod1["id"])
+pools = @cp.list_pools(:owner => owner['id'])
 
 key1 = @cp.create_activation_key(owner['key'], 'key1')
 @cp.update_activation_key({'id' => key1['id'], "autoAttach" => "true"})
@@ -78,6 +79,7 @@ key1 = @cp.create_activation_key(owner['key'], 'key1')
 @cp.add_pool_to_key(key1['id'], pools[1]['id'], 1)
 @cp.add_pool_to_key(key1['id'], pools[2]['id'], 1)
 @cp.add_prod_id_to_key(key1['id'], prod1["id"])
+@cp.add_prod_id_to_key(key1['id'], prod2["id"])
 
 count = 5
 consumers = []
@@ -98,24 +100,42 @@ thread_pool.shutdown
 
 pools.each do |p|
   this_pool = @cp.get_pool(p["id"])
-  if (this_pool["consumed"] != this_pool["quantity"])
-    abort("Pool quantity consumed is not equal to its provided quantity. Expected: #{this_pool["quantity"]}, Actual: #{this_pool["consumed"]}")
+
+  if this_pool["quantity"] > 5
+    expected = 5
+  else
+    expected = this_pool["quantity"]
+  end
+
+  if (this_pool["consumed"] != expected)
+    abort("Pool quantity consumed is not equal to the expected quantity consumed. Expected: #{expected}, Actual: #{this_pool["consumed"]}")
   end
 end
 
 # Count the number of consumers which registered, but could not consume an entitlement
-fail_count = 0
+exp_entitlement_counts = {
+  1 => 3,
+  2 => 2
+}
+
+act_entitlement_counts = {}
+
 consumers.each do |consumer|
   if (consumer["uuid"] == nil)
     abort("Consumer uuid is nil. Expected: not nil")
   end
 
-  certs = @cp.list_entitlements(:uuid => consumer["uuid"])
-  fail_count += 1 if (certs.length == 0)
+  entitlements = @cp.list_entitlements(:uuid => consumer["uuid"])
+
+  if act_entitlement_counts.has_key?(entitlements.length)
+    act_entitlement_counts[entitlements.length] += 1
+  else
+    act_entitlement_counts[entitlements.length] = 1
+  end
 end
 
-if (fail_count != 1)
-  abort("Expected number of consumers without entitlements differs from actual number. Expected: 1, Actual: #{fail_count}")
+if act_entitlement_counts != exp_entitlement_counts
+  abort("Expected consumer entitlement count mismatch. Expected: #{exp_entitlement_counts}, Actual: #{act_entitlement_counts}")
 end
 
 puts "Parallel auto-attaches completed successfully"
