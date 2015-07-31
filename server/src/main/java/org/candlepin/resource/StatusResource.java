@@ -20,8 +20,12 @@ import org.candlepin.common.util.VersionUtil;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Status;
+import org.candlepin.policy.js.JsRunnerProvider;
 
 import com.google.inject.Inject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
@@ -35,6 +39,7 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("/status")
 public class StatusResource {
+    private static Logger log = LoggerFactory.getLogger(StatusResource.class);
 
     /**
      * The current version of candlepin
@@ -49,10 +54,11 @@ public class StatusResource {
     private boolean standalone = true;
 
     private RulesCurator rulesCurator;
+    private JsRunnerProvider jsProvider;
 
     @Inject
     public StatusResource(RulesCurator rulesCurator,
-                          Configuration config) {
+                          Configuration config, JsRunnerProvider jsProvider) {
         this.rulesCurator = rulesCurator;
 
         Map<String, String> map = VersionUtil.getVersionMap();
@@ -62,6 +68,7 @@ public class StatusResource {
         if (config == null || !config.getBoolean(ConfigProperties.STANDALONE)) {
             standalone = false;
         }
+        this.jsProvider = jsProvider;
     }
 
     /**
@@ -89,17 +96,23 @@ public class StatusResource {
     @Produces({ MediaType.APPLICATION_JSON})
     @SecurityHole(noAuth = true, anon = true)
     public Status status() {
+        /*
+         * Originally this was used to indicate database connectivity being good/bad.
+         * In reality it could never be false, the request would fail. This check has
+         * been moved to GET /status/db.
+         */
         boolean good = true;
         try {
-            if (rulesCurator != null) {
-                rulesCurator.listAll();
-            }
+            rulesCurator.getUpdatedFromDB();
         }
         catch (Exception e) {
+            log.error("Error checking database connection", e);
             good = false;
         }
+
         Status status = new Status(good, version, release, standalone,
-            rulesCurator.getRules().getVersion(), rulesCurator.getRules().getRulesSource());
+            jsProvider.getRulesVersion(), jsProvider.getRulesSource());
         return status;
     }
+
 }

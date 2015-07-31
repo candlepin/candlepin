@@ -14,14 +14,13 @@
  */
 package org.candlepin.policy.js;
 
-import org.candlepin.auth.Principal;
-import org.candlepin.auth.SystemPrincipal;
+import org.candlepin.model.Rules;
+import org.candlepin.model.Rules.RulesSourceEnum;
 import org.candlepin.model.RulesCurator;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.Script;
@@ -47,6 +46,11 @@ public class JsRunnerProvider implements Provider<JsRunner> {
     private Script script;
     private Scriptable scope;
     private volatile Date updated;
+
+    // Store the version and source of the compiled rules:
+    private String rulesVersion;
+    private RulesSourceEnum rulesSource;
+
     // Use this lock to access script, scope and updated
     private ReadWriteLock scriptLock = new ReentrantReadWriteLock();
 
@@ -76,7 +80,7 @@ public class JsRunnerProvider implements Provider<JsRunner> {
 
         log.debug("Compiling rules for initial load");
         this.rulesCurator.updateDbRules();
-        this.compileRules(this.rulesCurator);
+        this.compileRules();
     }
 
     /**
@@ -86,13 +90,9 @@ public class JsRunnerProvider implements Provider<JsRunner> {
      *
      * @param rulesCurator
      */
-    private void compileRules(RulesCurator rulesCurator) {
+    public void compileRules() {
         scriptLock.writeLock().lock();
         try {
-            // XXX: we need a principal to access the rules,
-            // but pushing and popping system principal could be a bad idea
-            Principal systemPrincipal = new SystemPrincipal();
-            ResteasyProviderFactory.pushContext(Principal.class, systemPrincipal);
             // Check to see if we need to recompile. we do this inside the write lock
             // just to avoid race conditions where we might double compile
             Date newUpdated = rulesCurator.getUpdated();
@@ -100,14 +100,17 @@ public class JsRunnerProvider implements Provider<JsRunner> {
                 return;
             }
 
-            log.debug("Recompiling rules with timestamp: " + newUpdated);
+            log.info("Recompiling rules with timestamp: " + newUpdated);
 
             Context context = Context.enter();
             context.setOptimizationLevel(9);
             scope = context.initStandardObjects(null, true);
             try {
+                Rules rules = rulesCurator.getRules();
+                rulesVersion = rules.getVersion();
+                rulesSource = rules.getRulesSource();
                 script = context.compileString(
-                    rulesCurator.getRules().getRules(), "rules", 1, null);
+                    rules.getRules(), "rules", 1, null);
                 script.exec(context, scope);
                 ((ScriptableObject) scope).sealObject();
                 this.updated = newUpdated;
@@ -117,7 +120,6 @@ public class JsRunnerProvider implements Provider<JsRunner> {
             }
         }
         finally {
-            ResteasyProviderFactory.popContextData(Principal.class);
             scriptLock.writeLock().unlock();
         }
     }
@@ -129,7 +131,7 @@ public class JsRunnerProvider implements Provider<JsRunner> {
          */
         // Avoid a write lock if we can
         if (!rulesCurator.getUpdated().equals(this.updated)) {
-            compileRules(this.rulesCurator);
+            compileRules();
         }
         Scriptable rulesScope;
         scriptLock.readLock().lock();
@@ -145,6 +147,20 @@ public class JsRunnerProvider implements Provider<JsRunner> {
         }
 
         return new JsRunner(rulesScope);
+    }
+
+    public String getRulesVersion() {
+        if (rulesVersion == null) {
+            compileRules();
+        }
+        return rulesVersion;
+    }
+
+    public RulesSourceEnum getRulesSource() {
+        if (rulesSource == null) {
+            compileRules();
+        }
+        return rulesSource;
     }
 
 }
