@@ -3,7 +3,7 @@
 set -e
 
 setup_supervisor() {
-    yum install -y supervisor
+    dnf install -y supervisor
     mkdir -p /var/log/supervisor
     mkdir -p /etc/supervisor/conf.d
     cat > /etc/supervisord.conf <<SUPERVISOR
@@ -42,7 +42,7 @@ TOMCAT_SUPERVISOR
 }
 
 setup_ssh() {
-    yum install -y openssh-server
+    dnf install -y openssh-server
     echo 'root:redhat' |chpasswd
     RSA_KEY=/etc/ssh/ssh_host_rsa_key
     DSA_KEY=/etc/ssh/ssh_host_dsa_key
