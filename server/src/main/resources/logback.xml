@@ -38,8 +38,7 @@
         </filter>
     </appender>
 
-    <!-- If you see this, I forgot to revert this file -->
-    <logger name="org.candlepin" level="DEBUG"/>
+    <logger name="org.candlepin" level="INFO"/>
 
     <root level="WARN">
         <appender-ref ref="CandlepinAppender" />
