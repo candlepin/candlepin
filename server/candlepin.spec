@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.51.3
+Version: 0.9.51.4
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,12 @@ fi
 
 
 %changelog
+* Tue Aug 04 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.51.4-1
+- Add logging for thread name and HornetQ debugging. (dgoodwin@redhat.com)
+- Log execution time for checking subscription term acceptance.
+  (dgoodwin@redhat.com)
+- Reduce database chatter in GET /status. (dgoodwin@redhat.com)
+
 * Thu Jul 16 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.51.3-1
 - Added valid checksums to the last guest update table changeset
   (crog@redhat.com)
