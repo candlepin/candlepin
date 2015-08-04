@@ -18,6 +18,18 @@ done
 
 shift $(($OPTIND - 1))
 
+if [ $(id -u) -ne 0 ]; then
+    if ( command -v sudo >/dev/null 2>&1 ) then
+        SUDO="sudo"
+        echo "SUDO SET"
+    else
+        echo "WARNING: sudo is not available. This command may need to be re-run with root access to complete successfully." >&2
+    fi
+else
+    echo "User is root, don't need sudo"
+fi
+
+
 
 rpm -q openssl > /dev/null
 if [ "$?" -ne 0 ]; then
@@ -27,11 +39,11 @@ fi
 
 if [ ! -d $CERTS_HOME ]; then
     echo "Creating $CERTS_HOME"
-    sudo mkdir -p $CERTS_HOME
+    $SUDO mkdir -p $CERTS_HOME
 fi
 if [ ! -d $UPSTREAM_CERTS_HOME ]; then
     echo "Creating $UPSTREAM_CERTS_HOME"
-    sudo mkdir -p $UPSTREAM_CERTS_HOME
+    $SUDO mkdir -p $UPSTREAM_CERTS_HOME
 fi
 
 HOSTNAME=${HOSTNAME:-$(hostname)}
@@ -40,13 +52,13 @@ if [ -f $CA_KEY ] && [ -f $CA_CERT ] && [ "$FORCECERT" != "1" ]; then
     echo "Certificates are already present."
 else
     echo "Creating CA private key"
-    sudo openssl genrsa -out $CA_KEY 1024
+    $SUDO openssl genrsa -out $CA_KEY 1024
     echo "Creating CA public key"
-    sudo openssl rsa -pubout -in $CA_KEY -out $CA_PUB_KEY
+    $SUDO openssl rsa -pubout -in $CA_KEY -out $CA_PUB_KEY
     echo "Creating CA certificate"
-    sudo openssl req -new -x509 -days 365 -key $CA_KEY -out $CA_CERT -subj "/CN=$HOSTNAME/C=US/L=Raleigh/"
-    sudo su -c "echo -n "password" > $KEYSTORE_PASSWORD"
-    sudo openssl pkcs12 -export -in $CA_CERT -inkey $CA_KEY -out $KEYSTORE -name tomcat -CAfile $CA_CERT -caname root -chain -password file:$KEYSTORE_PASSWORD
-    sudo cp $CA_REDHAT_CERT $CA_UPSTREAM_CERT
-    sudo chmod a+r $KEYSTORE
+    $SUDO openssl req -new -x509 -days 365 -key $CA_KEY -out $CA_CERT -subj "/CN=$HOSTNAME/C=US/L=Raleigh/"
+    $SUDO su -c "echo -n "password" > $KEYSTORE_PASSWORD"
+    $SUDO openssl pkcs12 -export -in $CA_CERT -inkey $CA_KEY -out $KEYSTORE -name tomcat -CAfile $CA_CERT -caname root -chain -password file:$KEYSTORE_PASSWORD
+    $SUDO cp $CA_REDHAT_CERT $CA_UPSTREAM_CERT
+    $SUDO chmod a+r $KEYSTORE
 fi

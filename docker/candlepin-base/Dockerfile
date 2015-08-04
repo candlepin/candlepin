@@ -1,4 +1,4 @@
-FROM fedora:22
+FROM centos:7
 MAINTAINER Devan Goodwin <dgoodwin@redhat.com>
 
 ENV LANG en_US.UTF-8
@@ -16,4 +16,4 @@ ADD cp-test /usr/bin/
 
 EXPOSE 8443 22
 
-CMD ["/usr/bin/cp-test", "-u"]
+CMD ["/usr/bin/cp-test", "-t", "-u", "-r"]

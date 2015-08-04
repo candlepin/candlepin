@@ -9,8 +9,8 @@ export JAVA_VERSION=1.8.0
 export JAVA_HOME=/usr/lib/jvm/java-$JAVA_VERSION
 
 # Install & configure dev environment
-# NOTE: The JAVA_HOME environment variable needs to be set in the dockerfile to match the version
-# being installed here
+yum install -y epel-release
+
 PACKAGES=(
     hostname
     rsyslog
@@ -31,7 +31,7 @@ PACKAGES=(
     tmux
 )
 
-dnf install -y ${PACKAGES[@]}
+yum install -y ${PACKAGES[@]}
 
 # Setup for autoconf:
 mkdir /etc/candlepin

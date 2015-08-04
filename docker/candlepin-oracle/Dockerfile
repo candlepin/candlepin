@@ -14,4 +14,4 @@ ADD launch-oracle.sh /usr/bin/
 
 RUN /bin/bash /root/setup-oracle.sh
 
-CMD ["/usr/bin/cp-test", "-r -o"]
+CMD ["/usr/bin/cp-test", "-t", "-u", "-r"]

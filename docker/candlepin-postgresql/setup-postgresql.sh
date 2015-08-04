@@ -3,7 +3,7 @@
 set -e
 
 setup_postgresql() {
-    dnf install -y postgresql postgresql-server postgresql-jdbc
+    yum install -y postgresql postgresql-server postgresql-jdbc
     echo 'NETWORKING=yes' > /etc/sysconfig/network
     cat > /etc/supervisor/conf.d/postgres.conf <<POSTGRES_SUPERVISOR
 [program:postgres]
