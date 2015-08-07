@@ -106,15 +106,14 @@ describe 'Owner Resource' do
     pools.length.should == 0
   end
 
-  it "does not let read only users refresh pools" do
+  it "lets only superadmin users refresh pools" do
     owner = create_owner random_string('test_owner')
     ro_owner_client = user_client(owner, random_string('testuser'), true)
-    rw_owner_client = user_client(owner, random_string('testuser'), true)
+    rw_owner_client = user_client(owner, random_string('testuser'), false)
+    super_admin_client = user_client(owner, random_string('testuser'), false, true)
     product = create_product(nil, nil, :owner => owner['key'])
     @cp.create_subscription(owner['key'], product.id, 10)
 
-
-    #these should both fail, only superadmin can refresh pools
     lambda do
       ro_owner_client.refresh_pools(owner['key'])
     end.should raise_exception(RestClient::Forbidden)
@@ -122,6 +121,8 @@ describe 'Owner Resource' do
     lambda do
       rw_owner_client.refresh_pools(owner['key'])
     end.should raise_exception(RestClient::Forbidden)
+
+    super_admin_client.refresh_pools(owner['key'])
 
   end
 
