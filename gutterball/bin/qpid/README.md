@@ -1,6 +1,12 @@
 Install qpid:
 
-    sudo yum install qpid-cpp-server-store qpid-cpp-server qpid-tools
+    sudo yum install qpid-cpp-server qpid-tools
+    sudo yum install qpid-cpp-server-linearstore || sudo yum install qpid-cpp-server-store
+
+QPid requires a package to be installed to persist items to disk.  The old
+implementation was "qpid-cpp-server-store" and the newer one is
+"qpid-cpp-server-linearstore".  You need one of them or else everything vanishes
+once the service is restarted.
 
 Now configure qpid to work with SSL:
 
