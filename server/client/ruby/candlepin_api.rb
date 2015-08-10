@@ -736,11 +736,8 @@ class Candlepin
     post(path)
   end
 
-  # TODO: Could also fetch from /entitlements, a bit ambiguous:
-  def list_entitlements(params={})
-    uuid = params[:uuid] || @uuid
-
-    path = "/consumers/#{uuid}/entitlements?"
+  def get_entitlement_list_path(params={})
+    path = "entitlements?"
     path << "product=#{params[:product_id]}&" if params[:product_id]
     path << "page=#{params[:page]}&" if params[:page]
     path << "per_page=#{params[:per_page]}&" if params[:per_page]
@@ -751,7 +748,15 @@ class Candlepin
     attr_filters.each do | attr_name, attr_value |
       path << "attribute=#{attr_name}:#{attr_value}&"
     end
-    path << "matches=#{params[:matches]}" if params[:matches]
+    path << "matches=#{params[:matches]}&" if params[:matches]
+    return path
+  end
+
+  # TODO: Could also fetch from /entitlements, a bit ambiguous:
+  def list_entitlements(params={})
+    path = get_entitlement_list_path(params)
+    uuid = params[:uuid] || @uuid
+    path = "/consumers/#{uuid}/#{path}"
     results = get(path)
     return results
   end
@@ -759,15 +764,15 @@ class Candlepin
   # NOTE: Purely for testing via the entitlement resource.
   #       Very similar to list_entitlements above (consumer resource)
   def list_ents_via_entitlements_resource(params={})
-    path = "/entitlements?"
+    path = get_entitlement_list_path(params)
     path << "consumer=#{params[:consumer_uuid]}&" if params[:consumer_uuid]
+    get(path)
+  end
 
-    attr_filters = params[:attr_filters] || []
-    attr_filters.each do | attr_name, attr_value |
-      path << "attribute=#{attr_name}:#{attr_value}&"
-    end
-
-    path << "matches=#{params[:matches]}" if params[:matches]
+  # NOTE: Purely for testing via the owner resource.
+  def list_ents_via_owners_resource(params={})
+    path = get_entitlement_list_path(params)
+    path << "owner_key=#{params[:owner_key]}&" if params[:owner_key]
     get(path)
   end
 
