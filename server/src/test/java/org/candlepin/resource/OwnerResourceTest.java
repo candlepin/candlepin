@@ -1240,4 +1240,19 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(1, result.size());
         assertEquals("getAllEntitlementsForOwner",result.get(0).getId());
     }
+
+    @Test(expected = NotFoundException.class)
+    public void getEntitlementsForNonExistantOwner() {
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+
+        OwnerCurator oc = mock(OwnerCurator.class);
+        OwnerResource ownerres = new OwnerResource(oc, null,
+                null, null, i18n, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null);
+
+        ownerres.ownerEntitlements("Taylor Swift", null, false, null, null, req);
+    }
 }
