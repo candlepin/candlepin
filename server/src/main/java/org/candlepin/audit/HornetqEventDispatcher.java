@@ -84,6 +84,7 @@ public class HornetqEventDispatcher  {
             catch (HornetQException e) {
                 throw new RuntimeException(e);
             }
+            log.info("Created new HornetQ session.");
             sessions.set(session);
         }
         return session;
@@ -98,13 +99,14 @@ public class HornetqEventDispatcher  {
             catch (HornetQException e) {
                 throw new RuntimeException(e);
             }
+            log.info("Created new HornetQ producer.");
             producers.set(producer);
         }
         return producer;
     }
 
     public void sendEvent(Event event) {
-        log.debug("Sending event: " + event);
+        log.info("Sending event: {}", event);
         try {
             ClientMessage message = getClientSession().createMessage(true);
             String eventString = mapper.writeValueAsString(event);

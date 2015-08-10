@@ -256,9 +256,17 @@ while getopts ":c" opt; do
     esac
 done
 
-if ! is_rpm_installed qpid-cpp-server qpid-tools qpid-cpp-server qpid-cpp-server-store; then
+if ! is_rpm_installed qpid-cpp-server qpid-tools qpid-cpp-server; then
     echo "installing Qpid"
-    sudo yum -y install qpid-cpp-server qpid-tools qpid-cpp-server qpid-cpp-server-store
+    sudo yum -y install qpid-cpp-server qpid-tools qpid-cpp-server 
+fi
+
+# QPid needs a package to provide persistent storage or else everything
+# vanishes after a restart of the service.  Two different storage packages
+# exist depending on the version of RHEL or Fedora.  Try to get one of
+# them installed.  (The linearstore is the newer implementation).
+if ! is_rpm_installed qpid-cpp-server-linearstore || ! is_rpm_installed qpid-cpp-server-store; then
+    sudo yum -y install qpid-cpp-server-linearstore || sudo yum -y install qpid-cpp-server-store
 fi
 
 # create working directory

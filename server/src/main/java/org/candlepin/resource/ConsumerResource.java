@@ -1469,9 +1469,12 @@ public class ConsumerResource {
         try {
             // I hate double negatives, but if they have accepted all
             // terms, we want comeToTerms to be true.
+            long subTermsStart = System.currentTimeMillis();
             if (subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
                 return Response.serverError().build();
             }
+            log.info("Checked if consumer has unaccepted subscription terms in {}ms",
+                    (System.currentTimeMillis() - subTermsStart));
         }
         catch (CandlepinException e) {
             log.debug(e.getMessage());
