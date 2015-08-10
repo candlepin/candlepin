@@ -17,9 +17,13 @@ package org.candlepin.resource;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.isA;
+import static org.mockito.Mockito.anyString;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
@@ -27,7 +31,9 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Owner;
+import org.candlepin.model.Pool;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SubscriptionsCertificate;
@@ -35,7 +41,6 @@ import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,6 +49,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 
@@ -212,5 +219,52 @@ public class EntitlementResourceTest {
             .thenReturn(destConsumer);
 
         entResource.migrateEntitlement(e.getId(), destConsumer.getUuid(), 15);
+    }
+
+    @Test
+    public void getAllEntitlements() {
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+
+        Entitlement e = TestUtil.createEntitlement();
+        e.setId("getEntitlementList");
+        List <Entitlement> entitlements = new ArrayList<Entitlement>();
+        entitlements.add(e);
+        Page<List<Entitlement>> page = new Page<List<Entitlement>>();
+        page.setPageData(entitlements);
+
+        when(entitlementCurator.listAll(isA(EntitlementFilterBuilder.class), isA(PageRequest.class))).thenReturn(page);
+
+        List<Entitlement> result = entResource.listAllForConsumer(null, null, null, req);
+
+        assertEquals(1, result.size());
+        assertEquals("getEntitlementList",result.get(0).getId());
+    }
+
+    @Test
+    public void getAllEntitlementsForConsumer() {
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+
+        Owner owner = TestUtil.createOwner();
+        Consumer consumer = TestUtil.createConsumer(owner);
+        Pool pool = TestUtil.createPool(owner, TestUtil.createProduct(owner));
+
+        Entitlement e = TestUtil.createEntitlement(owner, consumer, pool, null);
+        e.setId("getAllEntitlementsForConsumer");
+        List <Entitlement> entitlements = new ArrayList<Entitlement>();
+        entitlements.add(e);
+        Page<List<Entitlement>> page = new Page<List<Entitlement>>();
+        page.setPageData(entitlements);
+
+        when(consumerCurator.findByUuid(eq(consumer.getUuid()))).thenReturn(consumer);
+        when(entitlementCurator.listByConsumer(isA(Consumer.class), anyString(), isA(EntitlementFilterBuilder.class), isA(PageRequest.class))).thenReturn(page);
+
+        List<Entitlement> result = entResource.listAllForConsumer(consumer.getUuid(), null, null, req);
+
+        assertEquals(1, result.size());
+        assertEquals("getAllEntitlementsForConsumer",result.get(0).getId());
     }
 }

@@ -11,8 +11,10 @@ public class EntitlementFinderUtil {
     public static EntitlementFilterBuilder createFilter(String matches,
         List<KeyValueParameter> attrFilters) {
             EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
-            for (KeyValueParameter filterParam : attrFilters) {
-                filters.addAttributeFilter(filterParam.key(), filterParam.value());
+            if(attrFilters!=null) {
+                for (KeyValueParameter filterParam : attrFilters) {
+                    filters.addAttributeFilter(filterParam.key(), filterParam.value());
+                }
             }
             if (!StringUtils.isEmpty(matches)) {
                 filters.addMatchesFilter(matches);
