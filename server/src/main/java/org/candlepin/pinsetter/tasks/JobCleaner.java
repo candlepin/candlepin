@@ -49,4 +49,9 @@ public class JobCleaner extends KingpinJob {
         this.jobCurator.cleanupAllOldJobs(failedJobDeadLineDt);
     }
 
+    @Override
+    protected boolean logExecutionTime() {
+        return false;
+    }
+
 }

@@ -14,6 +14,7 @@
  */
 package org.candlepin.pinsetter.tasks;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
@@ -23,6 +24,8 @@ import com.google.inject.Inject;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -33,6 +36,7 @@ import java.util.List;
 public class ImportRecordJob extends KingpinJob {
 
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
+    private static Logger log = LoggerFactory.getLogger(ImportRecordJob.class);
 
     // TODO:  Pull this in from the config?
     private static final int DEFAULT_KEEP = 10;
@@ -42,7 +46,7 @@ public class ImportRecordJob extends KingpinJob {
 
     @Inject
     public ImportRecordJob(ImportRecordCurator importRecordCurator,
-            OwnerCurator ownerCurator) {
+            OwnerCurator ownerCurator, Configuration config) {
         this.importRecordCurator = importRecordCurator;
         this.ownerCurator = ownerCurator;
     }
