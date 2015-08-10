@@ -86,6 +86,7 @@ import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerInstalledProductEnricher;
+import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
@@ -1613,28 +1614,9 @@ public class ConsumerResource {
         @Context PageRequest pageRequest) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        Page<List<Entitlement>> entitlementsPage;
-        // No need to add filters when matching by product.
-        if (productId != null) {
-            Product p = productCurator.lookupById(consumer.getOwner(), productId);
-            if (p == null) {
-                throw new BadRequestException(i18n.tr(
-                    "Product with ID ''{0}'' could not be found.", productId));
-            }
-            entitlementsPage = entitlementCurator.listByConsumerAndProduct(consumer,
-                productId, pageRequest);
-        }
-        else {
-            // Build up any provided entitlement filters from query params.
-            EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
-            for (KeyValueParameter filterParam : attrFilters) {
-                filters.addAttributeFilter(filterParam.key(), filterParam.value());
-            }
-            if (!StringUtils.isEmpty(matches)) {
-                filters.addMatchesFilter(matches);
-            }
-            entitlementsPage = entitlementCurator.listByConsumer(consumer, filters, pageRequest);
-        }
+
+        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
+        Page<List<Entitlement>> entitlementsPage = entitlementCurator.listByConsumer(consumer, productId, filters, pageRequest);
 
         // Store the page for the LinkHeaderPostInterceptor
         ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);
