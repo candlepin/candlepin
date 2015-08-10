@@ -52,6 +52,17 @@ describe 'Consumer Resource' do
     end.should raise_exception(RestClient::ResourceNotFound)
   end
 
+  it 'should not re-calculate attributes when fetching entitlements' do
+    prod = create_product(nil, nil, { :owner => @owner1['key'] })
+    @cp.create_subscription(@owner1['key'], prod.id, 6)
+    @cp.refresh_pools(@owner1['key'])
+    @consumer1.consume_product(prod.id)
+
+    entitlements = @consumer1.list_entitlements()
+    entitlements.length.should == 1
+    entitlements[0].pool.calculatedAttributes.should be_nil
+  end
+
   it "should block consumers from using other org's pools" do
     product_id = random_string('prod')
     product = create_product(product_id, product_id, {:owner => @owner1['key']})
