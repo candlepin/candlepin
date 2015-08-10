@@ -770,9 +770,10 @@ class Candlepin
   end
 
   # NOTE: Purely for testing via the owner resource.
+  #       expects an owner_key param
   def list_ents_via_owners_resource(params={})
     path = get_entitlement_list_path(params)
-    path << "owner_key=#{params[:owner_key]}&" if params[:owner_key]
+    path = "/owners/#{params[:owner_key]}/#{path}"
     get(path)
   end
 

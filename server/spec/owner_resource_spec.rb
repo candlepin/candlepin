@@ -665,7 +665,7 @@ describe 'Owner Resource Entitlement List Tests' do
 
   it 'can fetch all entitlements of an owner' do
     ents = @cp.list_ents_via_owners_resource(:owner_key => @owner['key'])
-    ents.should have(4).things
+    ents.should have(2).things
   end
 
   it 'can filter all entitlements by using matches param' do
