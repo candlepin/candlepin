@@ -1,6 +1,7 @@
 require 'base64'
 require 'zip/zip'
 
+
 module CleanupHooks
   def cleanup_before
     @cp = Candlepin.new('admin', 'admin')

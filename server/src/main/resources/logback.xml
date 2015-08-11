@@ -11,7 +11,7 @@
     <appender name="CandlepinAppender" class="ch.qos.logback.core.FileAppender">
         <file>/var/log/candlepin/candlepin.log</file>
         <encoder>
-            <pattern>%d{ISO8601} [%X{requestType}=%X{requestUuid}, org=%X{org}] %-5p %c - %m%n</pattern>
+            <pattern>%d{ISO8601} [thread=%thread] [%X{requestType}=%X{requestUuid}, org=%X{org}] %-5p %c - %m%n</pattern>
         </encoder>
         <!-- The LoggingFilter is invoked before we know the org, so to make sure we print the request
              with the org, the AuthInterceptor reprints the request.  The statements that do this
@@ -31,15 +31,14 @@
     <appender name="ErrorAppender" class="ch.qos.logback.core.FileAppender">
         <file>/var/log/candlepin/error.log</file>
         <encoder>
-            <pattern>%d{ISO8601} [%X{requestType}=%X{requestUuid}, org=%X{org}] %-5p %c - %m%n</pattern>
+            <pattern>%d{ISO8601} [thread=%thread] [%X{requestType}=%X{requestUuid}, org=%X{org}] %-5p %c - %m%n</pattern>
         </encoder>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>WARN</level>
         </filter>
     </appender>
 
-    <!-- If you see this, I forgot to revert this file -->
-    <logger name="org.candlepin" level="DEBUG"/>
+    <logger name="org.candlepin" level="INFO"/>
 
     <root level="WARN">
         <appender-ref ref="CandlepinAppender" />

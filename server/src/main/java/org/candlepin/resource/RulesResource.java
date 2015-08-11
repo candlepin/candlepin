@@ -20,6 +20,7 @@ import org.candlepin.common.exceptions.ServiceUnavailableException;
 import org.candlepin.model.CuratorException;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.policy.js.JsRunnerProvider;
 
 import com.google.inject.Inject;
 
@@ -47,6 +48,7 @@ public class RulesResource {
     private RulesCurator rulesCurator;
     private I18n i18n;
     private EventSink sink;
+    private JsRunnerProvider jsProvider;
 
     /**
      * Default ctor
@@ -54,10 +56,11 @@ public class RulesResource {
      */
     @Inject
     public RulesResource(RulesCurator rulesCurator,
-        I18n i18n, EventSink sink) {
+        I18n i18n, EventSink sink, JsRunnerProvider jsProvider) {
         this.rulesCurator = rulesCurator;
         this.i18n = i18n;
         this.sink = sink;
+        this.jsProvider = jsProvider;
     }
 
     /**
@@ -91,7 +94,12 @@ public class RulesResource {
         }
         Rules oldRules = rulesCurator.getRules();
         rulesCurator.update(rules);
+
         sink.emitRulesModified(oldRules, rules);
+
+        // Trigger a recompile of the JS rules so version/source are set correctly:
+        jsProvider.compileRules();
+
         return rulesBuffer;
     }
 
@@ -130,6 +138,10 @@ public class RulesResource {
     public void delete() {
         Rules deleteRules = rulesCurator.getRules();
         rulesCurator.delete(deleteRules);
+
         sink.emitRulesDeleted(deleteRules);
+
+        // Trigger a recompile of the JS rules so version/source are set correctly:
+        jsProvider.compileRules();
     }
 }

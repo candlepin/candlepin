@@ -20,6 +20,7 @@ import static org.mockito.Mockito.*;
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Before;
@@ -42,11 +43,12 @@ public class RulesImporterTest extends DatabaseTestFixture {
     @Inject private EventSink sink;
 
     @Mock private RulesCurator curator;
+    @Mock private JsRunnerProvider jsProvider;
     private RulesImporter importer;
 
     @Before
     public void setUp() {
-        importer = new RulesImporter(curator, sink);
+        importer = new RulesImporter(curator, sink, jsProvider);
     }
 
     @Test

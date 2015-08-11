@@ -285,7 +285,7 @@
                 {
                     "name": "admin-content",
                     "id": 5000,
-                    "label": "content-label",
+                    "label": "admin-content-label",
                     "type": "yum",
                     "vendor": "test-vendor",
                     "content_url": "/admin/foo/path",
@@ -295,7 +295,7 @@
                 {
                     "name": "admin-tagged-content",
                     "id": 5001,
-                    "label": "tagged-content",
+                    "label": "admin-tagged-content",
                     "type": "yum",
                     "vendor": "test-vendor",
                     "content_url": "/admin/foo/path/always",
@@ -303,9 +303,9 @@
                     "required_tags": "TAG1,TAG2"
                 },
                 {
-                    "name": "never-enabled-content",
+                    "name": "admin-never-enabled-content",
                     "id": 5002,
-                    "label": "never-enabled-content",
+                    "label": "admin-never-enabled-content",
                     "type": "yum",
                     "vendor": "test-vendor",
                     "content_url": "/admin/foo/path/never",
@@ -392,7 +392,7 @@
                 {
                     "name": "snowy-content",
                     "id": 6000,
-                    "label": "content-label",
+                    "label": "snowy-content-label",
                     "type": "yum",
                     "vendor": "test-vendor",
                     "content_url": "/snowy/foo/path",
@@ -402,7 +402,7 @@
                 {
                     "name": "snowy-tagged-content",
                     "id": 6001,
-                    "label": "tagged-content",
+                    "label": "snowy-tagged-content",
                     "type": "yum",
                     "vendor": "test-vendor",
                     "content_url": "/snowy/foo/path/always",
@@ -410,9 +410,9 @@
                     "required_tags": "TAG1,TAG2"
                 },
                 {
-                    "name": "never-enabled-content",
+                    "name": "snowy-never-enabled-content",
                     "id": 6002,
-                    "label": "never-enabled-content",
+                    "label": "snowy-never-enabled-content",
                     "type": "yum",
                     "vendor": "test-vendor",
                     "content_url": "/snowy/foo/path/never",

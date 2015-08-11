@@ -156,15 +156,22 @@ describe 'Consumer Resource Activation Key' do
     consumer1 = @client.register(random_string('machine'), :system, nil, {}, nil,
       @owner['key'], ["key1"])
     consumer1.uuid.should_not be_nil
+    @cp.list_entitlements(:uuid => consumer1.uuid).size.should == 1
+
     consumer2 = @client.register(random_string('machine'), :system, nil, {}, nil,
       @owner['key'], ["key1"])
     consumer2.uuid.should_not be_nil
+    @cp.list_entitlements(:uuid => consumer2.uuid).size.should == 1
+
     consumer3 = @client.register(random_string('machine'), :system, nil, {}, nil,
       @owner['key'], ["key1"])
     consumer3.uuid.should_not be_nil
+    @cp.list_entitlements(:uuid => consumer3.uuid).size.should == 1
+
     consumer4 = @client.register(random_string('machine'), :system, nil, {}, nil,
       @owner['key'], ["key1"])
     consumer4.uuid.should_not be_nil
+    @cp.list_entitlements(:uuid => consumer4.uuid).size.should == 1
 
     pools.each do |p|
       this_pool = @cp.get_pool(p.id)
@@ -174,6 +181,7 @@ describe 'Consumer Resource Activation Key' do
     consumer5 = @client.register(random_string('machine'), :system, nil, {}, nil,
       @owner['key'], ["key1"])
     consumer5.uuid.should_not be_nil
-    consumer5.entitlementCount.should == 0
+    @cp.list_entitlements(:uuid => consumer5.uuid).size.should == 0
   end
+
 end
