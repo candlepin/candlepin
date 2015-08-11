@@ -21,12 +21,9 @@ shift $(($OPTIND - 1))
 if [ $(id -u) -ne 0 ]; then
     if ( command -v sudo >/dev/null 2>&1 ) then
         SUDO="sudo"
-        echo "SUDO SET"
     else
         echo "WARNING: sudo is not available. This command may need to be re-run with root access to complete successfully." >&2
     fi
-else
-    echo "User is root, don't need sudo"
 fi
 
 
