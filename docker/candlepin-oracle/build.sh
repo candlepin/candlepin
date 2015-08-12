@@ -12,7 +12,7 @@ Usage: $SCRIPT_NAME [options] [image name]
 OPTIONS:
   -p          Push images to a repository or registry
   -d <repo>   Specify the destination repo to receive the images; implies -p;
-              defaults to "candlepin-base docker.usersys.redhat.com/candlepin"
+              defaults to "docker-registry.usersys.redhat.com/candlepin"
   -c          Use cached layers when building containers; defaults to false
   -v          Enable verbose/debug output
 HELP
@@ -32,7 +32,7 @@ done
 shift $(($OPTIND - 1))
 
 if [ "$PUSH_DEST" == "" ]; then
-    PUSH_DEST="docker.usersys.redhat.com/candlepin"
+    PUSH_DEST="docker-registry.usersys.redhat.com/candlepin"
 fi
 
 # Setup build arguments
