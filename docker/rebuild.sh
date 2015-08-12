@@ -2,13 +2,7 @@
 #
 # Rebuilds all docker containers from base on down, and pushes each to the internal registry.
 
-# If you encounter:
-#
-# FATA[0000] Error: v1 ping attempt failed with error: Get https://docker.usersys.redhat.com/v1/_ping: dial tcp 10.13.137.33:443: connection refused. If this private registry supports only HTTP or HTTPS with an unknown CA certificate, please add `--insecure-registry docker.usersys.redhat.com` to the daemon's arguments. In the case of HTTPS, if you have access to the registry's CA certificate, no need for the flag; simply place the CA certificate at /etc/docker/certs.d/docker.usersys.redhat.com/ca.crt
-#
-# On Fedora 21:
-# Add: INSECURE_REGISTRY='--insecure-registry docker.usersys.redhat.com'
-# To: /etc/sysconfig/docker
+
 
 SCRIPT_NAME=$( basename "$0" )
 SCRIPT_HOME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
