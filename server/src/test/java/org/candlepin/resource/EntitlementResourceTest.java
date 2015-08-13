@@ -229,17 +229,18 @@ public class EntitlementResourceTest {
 
         Entitlement e = TestUtil.createEntitlement();
         e.setId("getEntitlementList");
-        List <Entitlement> entitlements = new ArrayList<Entitlement>();
+        List<Entitlement> entitlements = new ArrayList<Entitlement>();
         entitlements.add(e);
         Page<List<Entitlement>> page = new Page<List<Entitlement>>();
         page.setPageData(entitlements);
 
-        when(entitlementCurator.listAll(isA(EntitlementFilterBuilder.class), isA(PageRequest.class))).thenReturn(page);
+        when(entitlementCurator.listAll(isA(EntitlementFilterBuilder.class), isA(PageRequest.class)))
+                .thenReturn(page);
 
         List<Entitlement> result = entResource.listAllForConsumer(null, null, null, req);
 
         assertEquals(1, result.size());
-        assertEquals("getEntitlementList",result.get(0).getId());
+        assertEquals("getEntitlementList", result.get(0).getId());
     }
 
     @Test
@@ -254,17 +255,19 @@ public class EntitlementResourceTest {
 
         Entitlement e = TestUtil.createEntitlement(owner, consumer, pool, null);
         e.setId("getAllEntitlementsForConsumer");
-        List <Entitlement> entitlements = new ArrayList<Entitlement>();
+        List<Entitlement> entitlements = new ArrayList<Entitlement>();
         entitlements.add(e);
         Page<List<Entitlement>> page = new Page<List<Entitlement>>();
         page.setPageData(entitlements);
 
         when(consumerCurator.findByUuid(eq(consumer.getUuid()))).thenReturn(consumer);
-        when(entitlementCurator.listByConsumer(isA(Consumer.class), anyString(), isA(EntitlementFilterBuilder.class), isA(PageRequest.class))).thenReturn(page);
+        when(
+                entitlementCurator.listByConsumer(isA(Consumer.class), anyString(),
+                        isA(EntitlementFilterBuilder.class), isA(PageRequest.class))).thenReturn(page);
 
         List<Entitlement> result = entResource.listAllForConsumer(consumer.getUuid(), null, null, req);
 
         assertEquals(1, result.size());
-        assertEquals("getAllEntitlementsForConsumer",result.get(0).getId());
+        assertEquals("getAllEntitlementsForConsumer", result.get(0).getId());
     }
 }

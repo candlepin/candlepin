@@ -471,7 +471,8 @@ public class OwnerResource {
         Owner owner = findOwner(ownerKey);
 
         EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
-        Page<List<Entitlement>> entitlementsPage = entitlementCurator.listByOwner(owner, productId, filters, pageRequest);
+        Page<List<Entitlement>> entitlementsPage = entitlementCurator.listByOwner(owner, productId, filters,
+                pageRequest);
 
         // Store the page for the LinkHeaderPostInterceptor
         ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);

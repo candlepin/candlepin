@@ -1619,7 +1619,8 @@ public class ConsumerResource {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
         EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
-        Page<List<Entitlement>> entitlementsPage = entitlementCurator.listByConsumer(consumer, productId, filters, pageRequest);
+        Page<List<Entitlement>> entitlementsPage = entitlementCurator.listByConsumer(consumer, productId,
+                filters, pageRequest);
 
         // Store the page for the LinkHeaderPostInterceptor
         ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);

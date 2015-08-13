@@ -18,14 +18,13 @@ import static org.junit.Assert.*;
 
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
-import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;

@@ -14,19 +14,13 @@
  */
 package org.candlepin.model;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.commons.lang.StringUtils;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
-import org.candlepin.resteasy.parameter.KeyValueParameter;
+
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
+
 import org.hibernate.Criteria;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaSpecification;
@@ -36,8 +30,13 @@ import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * EntitlementCurator
@@ -79,7 +78,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         criteria.createAlias("pool", "p");
 
         // Add the required aliases for the filter builder only if required.
-        if (filterBuilder!=null && filterBuilder.hasMatchFilters()) {
+        if (filterBuilder != null && filterBuilder.hasMatchFilters()) {
             criteria.createAlias("p.product", "product");
             criteria.createAlias("p.providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN);
             criteria.createAlias("provProd.productContent", "ppcw", CriteriaSpecification.LEFT_JOIN);
@@ -125,16 +124,16 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return listFilteredPages(null, null, null, filters, pageRequest);
     }
 
-    private Page<List<Entitlement>> listFilteredPages(AbstractHibernateObject object, String objectType, String productId,
-            EntitlementFilterBuilder filters, PageRequest pageRequest) {
+    private Page<List<Entitlement>> listFilteredPages(AbstractHibernateObject object, String objectType,
+            String productId, EntitlementFilterBuilder filters, PageRequest pageRequest) {
         Page<List<Entitlement>> entitlementsPage;
         Owner owner = null;
-        if(object!=null) {
-            owner = (object instanceof Owner)?(Owner) object:((Consumer) object).getOwner();
+        if (object != null) {
+            owner = (object instanceof Owner) ? (Owner) object : ((Consumer) object).getOwner();
         }
 
         // No need to add filters when matching by product.
-        if (object!=null && productId != null) {
+        if (object != null && productId != null) {
             Product p = productCurator.lookupById(owner, productId);
             if (p == null) {
                 throw new BadRequestException(i18n.tr(
@@ -145,7 +144,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         else {
             // Build up any provided entitlement filters from query params.
             Criteria criteria = createCriteriaFromFilters(filters);
-            if(object!=null) {
+            if (object != null) {
                 criteria.add(Restrictions.eq(objectType, object));
             }
             entitlementsPage = listByCriteria(criteria, pageRequest);

@@ -1220,7 +1220,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Entitlement e = TestUtil.createEntitlement(owner, consumer, pool, null);
         e.setId("getAllEntitlementsForOwner");
-        List <Entitlement> entitlements = new ArrayList<Entitlement>();
+        List<Entitlement> entitlements = new ArrayList<Entitlement>();
         entitlements.add(e);
         Page<List<Entitlement>> page = new Page<List<Entitlement>>();
         page.setPageData(entitlements);
@@ -1233,12 +1233,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
                 null, null, null, null, null, null);
 
         when(oc.lookupByKey(owner.getKey())).thenReturn(owner);
-        when(ec.listByOwner(isA(Owner.class), anyString(), isA(EntitlementFilterBuilder.class), isA(PageRequest.class))).thenReturn(page);
+        when(
+                ec.listByOwner(isA(Owner.class), anyString(), isA(EntitlementFilterBuilder.class),
+                        isA(PageRequest.class))).thenReturn(page);
 
         List<Entitlement> result = ownerres.ownerEntitlements(owner.getKey(), null, null, null, req);
 
         assertEquals(1, result.size());
-        assertEquals("getAllEntitlementsForOwner",result.get(0).getId());
+        assertEquals("getAllEntitlementsForOwner", result.get(0).getId());
     }
 
     @Test(expected = NotFoundException.class)
