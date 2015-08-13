@@ -1235,7 +1235,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(oc.lookupByKey(owner.getKey())).thenReturn(owner);
         when(ec.listByOwner(isA(Owner.class), anyString(), isA(EntitlementFilterBuilder.class), isA(PageRequest.class))).thenReturn(page);
 
-        List<Entitlement> result = ownerres.ownerEntitlements(owner.getKey(), null, false, null, null, req);
+        List<Entitlement> result = ownerres.ownerEntitlements(owner.getKey(), null, null, null, req);
 
         assertEquals(1, result.size());
         assertEquals("getAllEntitlementsForOwner",result.get(0).getId());
@@ -1253,6 +1253,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
                 null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null);
 
-        ownerres.ownerEntitlements("Taylor Swift", null, false, null, null, req);
+        ownerres.ownerEntitlements("Taylor Swift", null, null, null, req);
     }
 }
