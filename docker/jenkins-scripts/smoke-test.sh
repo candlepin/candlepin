@@ -53,11 +53,14 @@ def run_command(command, silent=True, ignore_error=False):
 
 parser = OptionParser()
 parser.add_option("-t", "--time",
-              action="store", dest="wait_time", default="600",
-              help="Amount of time to wait for a response from Candlepin; defaults to 600")
+  action="store", dest="wait_time", default="600",
+  help="Amount of time to wait for a response from Candlepin; defaults to 600")
 parser.add_option("-l", "--log-lines",
-              action="store", dest="log_lines", default="all",
-              help="The number of log lines to print on failure or if a response isn't received; defaults to \"all\"")
+  action="store", dest="log_lines", default="all",
+  help="The number of log lines to print on failure or if a response isn't received; defaults to \"all\"")
+parser.add_option("-r", "--rpm",
+  action="store_true", dest="rpm_url", default=False,
+  help="Whether or not the repo URL should be treated as a link to an RPM")
 
 (options, args) = parser.parse_args()
 
@@ -74,6 +77,7 @@ image_name = args[0]
 cp_repo_url = args[1]
 max_wait_time = int(options.wait_time) if re.match("\\A0*[123456789]\\d*\\Z", options.wait_time) else 600
 max_log_lines = options.log_lines if re.match("\\A(?:0*[123456789]\\d*)|(?:all)\\Z", options.wait_time) else "all"
+env_var_name = "RPM_URL" if options.rpm_url else "YUM_REPO"
 
 server_container_id = None
 db_container_id = None
@@ -106,8 +110,8 @@ try:
             time.sleep(10)
 
             # Launch the candlepin container:
-            output = run_command("docker run -P -d -e \"YUM_REPO=%s\" --link %s:db %s"
-                % (cp_repo_url, db_container_name, image_name))
+            output = run_command("docker run -P -d -e \"%s=%s\" --link %s:db %s"
+                % (env_var_name, cp_repo_url, db_container_name, image_name))
             server_container_id = output[-1]
             print "Candlepin container: %s" % server_container_id
             time.sleep(3)
