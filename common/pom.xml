@@ -23,16 +23,16 @@
     <org.slf4j-jcl-over-slf4j.version>1.7.5</org.slf4j-jcl-over-slf4j.version>
     <org.slf4j-log4j-over-slf4j.version>1.7.5</org.slf4j-log4j-over-slf4j.version>
     <org.slf4j-slf4j-api.version>1.7.5</org.slf4j-slf4j-api.version>
-    <com.google.inject.extensions-guice-assistedinject.version>3.0</com.google.inject.extensions-guice-assistedinject.version>
-    <com.google.inject.extensions-guice-multibindings.version>3.0</com.google.inject.extensions-guice-multibindings.version>
-    <com.google.inject.extensions-guice-servlet.version>3.0</com.google.inject.extensions-guice-servlet.version>
-    <com.google.inject.extensions-guice-throwingproviders.version>3.0</com.google.inject.extensions-guice-throwingproviders.version>
-    <com.google.inject.extensions-guice-persist.version>3.0</com.google.inject.extensions-guice-persist.version>
-    <com.google.inject-guice.version>3.0</com.google.inject-guice.version>
+    <com.google.inject.extensions-guice-assistedinject.version>4.0</com.google.inject.extensions-guice-assistedinject.version>
+    <com.google.inject.extensions-guice-multibindings.version>4.0</com.google.inject.extensions-guice-multibindings.version>
+    <com.google.inject.extensions-guice-servlet.version>4.0</com.google.inject.extensions-guice-servlet.version>
+    <com.google.inject.extensions-guice-throwingproviders.version>4.0</com.google.inject.extensions-guice-throwingproviders.version>
+    <com.google.inject.extensions-guice-persist.version>4.0</com.google.inject.extensions-guice-persist.version>
+    <com.google.inject-guice.version>4.0</com.google.inject-guice.version>
     <aopalliance-aopalliance.version>1.0</aopalliance-aopalliance.version>
     <javax.inject-javax.inject.version>1</javax.inject-javax.inject.version>
     <com.googlecode.gettext-commons-gettext-commons.version>0.9.8</com.googlecode.gettext-commons-gettext-commons.version>
-    <com.google.guava-guava.version>13.0</com.google.guava-guava.version>
+    <com.google.guava-guava.version>16.0.1</com.google.guava-guava.version>
     <javax.servlet-servlet-api.version>2.5</javax.servlet-servlet-api.version>
     <org.jboss.resteasy-jaxrs-api.version>2.3.7.Final</org.jboss.resteasy-jaxrs-api.version>
     <org.jboss.resteasy-resteasy-jaxrs.version>2.3.7.Final</org.jboss.resteasy-resteasy-jaxrs.version>

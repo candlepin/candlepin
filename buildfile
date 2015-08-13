@@ -90,8 +90,8 @@ HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0'
              'org.hibernate:hibernate-tools:jar:3.2.4.GA',
              'org.hibernate:hibernate-validator:jar:4.3.1.Final',
              'antlr:antlr:jar:2.7.7',
-             'asm:asm:jar:3.0',
-             'cglib:cglib:jar:2.2',
+             'org.ow2.asm:asm:jar:5.0.3',
+             'cglib:cglib:jar:3.1',
              'javassist:javassist:jar:3.12.0.GA',
              'org.freemarker:freemarker:jar:2.3.15',
              'c3p0:c3p0:jar:0.9.1.2',
@@ -126,12 +126,12 @@ SERVLET = 'javax.servlet:servlet-api:jar:2.5'
 GUICE =  [group('guice-assistedinject', 'guice-multibindings',
                 'guice-servlet', 'guice-throwingproviders', 'guice-persist',
                 :under=>'com.google.inject.extensions',
-                :version=>'3.0'),
-           'com.google.inject:guice:jar:3.0',
+                :version=>'4.0'),
+           'com.google.inject:guice:jar:4.0',
            'aopalliance:aopalliance:jar:1.0',
            'javax.inject:javax.inject:jar:1']
 
-COLLECTIONS = 'com.google.guava:guava:jar:13.0'
+COLLECTIONS = 'com.google.guava:guava:jar:16.0.1'
 
 OAUTH= [group('oauth',
               'oauth-provider',
