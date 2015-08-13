@@ -82,19 +82,19 @@ development environment.
 
   * Create a fresh candlepin server and postgresql database, leave a shell open:
     ```
-    docker run -i -P -t --rm docker.usersys.redhat.com/candlepin/candlepin-postgresql cp-test -s -d
+    docker run -i -P -t --rm docker-registry.usersys.redhat.com/candlepin/candlepin-postgresql cp-test -s -d
     ```
 
     Use docker ps to see the port mappings if you wanted to actually hit the candlepin API.
 
   * Run the unit tests:
     ```
-    docker run -i -P -t --rm docker.usersys.redhat.com/candlepin/candlepin-base cp-test -u
+    docker run -i -P -t --rm docker-registry.usersys.redhat.com/candlepin/candlepin-base cp-test -u
     ```
 
   * Run the spec test suite against postgresql (or oracle or mysql):
     ```
-    docker run -i -P -t --rm docker.usersys.redhat.com/candlepin/candlepin-postgresql cp-test -r
+    docker run -i -P -t --rm docker-registry.usersys.redhat.com/candlepin/candlepin-postgresql cp-test -r
     ```
 
   * Specify -v /home/dgoodwin/src/candlepin/:/candlepin-dev/ to use your

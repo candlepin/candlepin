@@ -1,17 +1,18 @@
 #! /bin/bash
 
-set -e
-
 setup_oracle() {
+    set -e
 
-    mkdir -p /var/lock/subsys
-    yum install -y bc net-tools
+    mkdir -p /run/lock/subsys
     /usr/sbin/groupadd -r dba
     /usr/sbin/useradd -r -M -g dba -d /u01/app/oracle -s /bin/bash -u 499 oracle
 
-    yum localinstall -y --nogpgcheck /root/oracle/*.rpm
-    #yum install -y http://yum.spacewalkproject.org/1.9/RHEL/6/x86_64/spacewalk-repo-1.9-1.el6.noarch.rpm
-    #yum install -y oracle-xe-selinux oracle-instantclient-selinux oracle-instantclient-sqlplus-selinux
+    # wget http://public-yum.oracle.com/public-yum-ol7.repo -O /etc/yum.repos.d/public-yum-ol7.repo
+    # wget http://public-yum.oracle.com/RPM-GPG-KEY-oracle-ol7 -O /etc/pki/rpm-gpg/RPM-GPG-KEY-oracle
+    # yum install -y oracle-rdbms-server-11gR2-preinstall
+
+    yum install -y bc net-tools
+    yum install -y --nogpgcheck /root/oracle/*.rpm
 
     cat >> /root/.candlepinrc << CANDLEPINRC
 USE_ORACLE="1"
@@ -34,9 +35,8 @@ ORACLE_SUPERVISOR
     echo 'export ORACLE_SID=XE' >> /etc/profile.d/oracle_profile.sh
     echo 'export LD_LIBRARY_PATH=/usr/lib/oracle/11.2/client64/lib:$LD_LIBRARY_PATH' >> /etc/profile.d/oracle_profile.sh
 
-    cd /
-    /etc/init.d/oracle-xe configure responseFile=/root/xe.rsp
-    rm -rf /root/oracle
+    touch /etc/init.d/functions
 }
+
 
 setup_oracle

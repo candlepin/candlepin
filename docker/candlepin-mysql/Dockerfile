@@ -5,4 +5,4 @@ ADD setup-mysql.sh /root/
 
 RUN /bin/bash /root/setup-mysql.sh
 
-CMD ["/usr/bin/cp-test", "-r -o"]
+CMD ["/usr/bin/cp-test", "-t", "-u", "-r"]

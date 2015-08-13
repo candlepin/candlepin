@@ -12,7 +12,7 @@ Usage: $SCRIPT_NAME [options] [image name]
 OPTIONS:
   -p          Push images to a repository or registry
   -d <repo>   Specify the destination repo to receive the images; implies -p;
-              defaults to "candlepin-base docker.usersys.redhat.com/candlepin"
+              defaults to "docker-registry.usersys.redhat.com/candlepin"
   -c          Use cached layers when building containers; defaults to false
   -v          Enable verbose/debug output
 HELP
@@ -32,7 +32,7 @@ done
 shift $(($OPTIND - 1))
 
 if [ "$PUSH_DEST" == "" ]; then
-    PUSH_DEST="docker.usersys.redhat.com/candlepin"
+    PUSH_DEST="docker-registry.usersys.redhat.com/candlepin"
 fi
 
 # Setup build arguments
@@ -61,14 +61,20 @@ if [ "$?" != "0" ]; then
 fi
 
 if [ "$PUSH" == "1" ]; then
-    CP_VERSION=`docker run -ti candlepin/$IMAGE_NAME:latest rpm -q --queryformat '%{VERSION}' candlepin`
-    if [ "$CP_VERSION" != "" ]; then
-        echo "Unable to determine Candlepin version for tagging image $IMAGE_NAME" >&2
-        exit 1
+    docker tag -f candlepin/$IMAGE_NAME:latest $PUSH_DEST/$IMAGE_NAME:latest
+
+    CP_VERSION="$(docker run -ti --rm candlepin/$IMAGE_NAME:latest rpm -q --queryformat '%{VERSION}' candlepin)"
+    if (! echo $CP_VERSION | grep -E -q --regex="^[0-9]+\.[0-9]+.*") then
+        # We probably checked it out from git
+        CP_VERSION="$(docker run -ti --rm candlepin/$IMAGE_NAME:latest cd /candlepin && git describe | cut -d- -f 2)"
     fi
 
-    docker tag -f candlepin/$IMAGE_NAME:latest $PUSH_DEST/$IMAGE_NAME:latest
-    docker tag -f candlepin/$IMAGE_NAME:latest $PUSH_DEST/$IMAGE_NAME:$CP_VERSION
+    if (echo $CP_VERSION | grep -E -q --regex="^[0-9]+\.[0-9]+.*") then
+        docker tag -f candlepin/$IMAGE_NAME:latest $PUSH_DEST/$IMAGE_NAME:$CP_VERSION
+    else
+        echo "WARNING: Unable to determine Candlepin version for tagging image $IMAGE_NAME" >&2
+    fi
 
-    docker push $PUSH_DEST/$IMAGE_NAME:$CP_VERSION
+    docker push $PUSH_DEST/$IMAGE_NAME
 fi
+

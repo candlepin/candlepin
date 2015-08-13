@@ -188,7 +188,8 @@ define "candlepin" do
 
   compile.options.target = '1.6'
   compile.options.source = '1.6'
-  compile.options.lint = 'all'
+  # Enable to turn on compiler linting
+  # compile.options.lint = 'all'
 
   # path_to() (and it's alias _()) simply provides the absolute path to
   # a directory relative to the project.

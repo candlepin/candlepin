@@ -5,10 +5,14 @@
 
 set -e
 
-export JAVA_HOME=/usr/lib/jvm/java-1.7.0/
-export HOME=/root
+export JAVA_VERSION=1.8.0
+export JAVA_HOME=/usr/lib/jvm/java-$JAVA_VERSION
+
+# Install & configure dev environment
+yum install -y epel-release
 
 PACKAGES=(
+    hostname
     rsyslog
     wget
     vim-enhanced
@@ -19,7 +23,7 @@ PACKAGES=(
     ruby-devel
     gcc
     tomcat
-    java-1.7.0-openjdk-devel
+    java-$JAVA_VERSION-openjdk-devel
     liquibase
     libxml2-python
     openssl
@@ -27,7 +31,7 @@ PACKAGES=(
     tmux
 )
 
-yum -y install ${PACKAGES[@]}
+yum install -y ${PACKAGES[@]}
 
 # Setup for autoconf:
 mkdir /etc/candlepin
@@ -37,6 +41,9 @@ cat > /root/.bashrc <<BASHRC
 if [ -f /etc/bashrc ]; then
 	. /etc/bashrc
 fi
+
+export HOME=/root
+export JAVA_HOME=/usr/lib/jvm/java-$JAVA_VERSION
 BASHRC
 
 # Create an initial candlepin checkout at /candlepin in image to help decrease

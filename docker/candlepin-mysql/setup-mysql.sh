@@ -3,7 +3,7 @@
 set -e
 
 setup_mysql() {
-    yum install -y mysql-server mysql-connector-java
+    yum install -y mariadb-server mysql-connector-java
 
     export CP_MYSQL_CONFIG="/etc/supervisor/conf.d/mysqld.conf"
     echo "[program:mysqld]" > $CP_MYSQL_CONFIG
