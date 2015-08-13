@@ -67,6 +67,7 @@ usage() {
         -t  populate Candlepin database with test data (implies -d)
         -r  run rspec test suite (implies -d)
         -u  run unit test suite
+        -l  run the linter against the code
         -s  run a bash shell when done
         -c  git reference to checkout
         -p  subproject to build (defaults to "server")
@@ -74,22 +75,23 @@ usage() {
 HELP
 }
 
-while getopts ":rusdtvc:p:" opt; do
+while getopts ":dtrulsc:p:v" opt; do
     case $opt in
-        r  )
-            RSPEC="1"
-            DEPLOY="1"
-            ;;
-        u  ) UNITTEST="1";;
-        s  ) LAUNCHSHELL="1";;
         d  ) DEPLOY="1";;
         t  )
             DEPLOY="1"
             TESTDATA="1"
             ;;
-        v  ) VERBOSE="1";;
+        r  )
+            RSPEC="1"
+            DEPLOY="1"
+            ;;
+        u  ) UNITTEST="1";;
+        l  ) LINTER="1";;
+        s  ) LAUNCHSHELL="1";;
         c  ) CHECKOUT="${OPTARG}";;
         p  ) PROJECT="${OPTARG}";;
+        v  ) VERBOSE="1";;
         ?  ) usage; exit;;
     esac
 done
@@ -125,6 +127,11 @@ bundle install
 
 # TODO: keep track of return code?
 cd $CP_HOME/$PROJECT
+
+if [ "$LINTER" == "1" ]; then
+    echo "Running linter..."
+    buildr checkstyle
+fi
 
 if [ "$UNITTEST" == "1" ]; then
     echo "Running unit tests."
