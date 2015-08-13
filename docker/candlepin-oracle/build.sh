@@ -80,7 +80,7 @@ cleanup_docker() {
 echo "Running post-build setup tasks..."
 trap cleanup_docker EXIT SIGHUP SIGINT SIGTERM
 rm -f oracle.cid
-docker run --privileged --cidfile=oracle.cid -Pti candlepin/$IMAGE_NAME:latest /bin/bash -xev /root/setup-oracle-runtime.sh
+docker run --privileged --cidfile=oracle.cid -Pi candlepin/$IMAGE_NAME:latest /bin/bash -xev /root/setup-oracle-runtime.sh
 
 if [ "$?" != "0" ]; then
     echo "ERROR: Unable to run container post-build setup tasks" >&2
