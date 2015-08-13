@@ -463,7 +463,6 @@ public class OwnerResource {
     public List<Entitlement> ownerEntitlements(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("product") String productId,
-        @QueryParam("regen") @DefaultValue("true") Boolean regen,
         @QueryParam("matches") String matches,
         @QueryParam("attribute") @CandlepinParam(type = KeyValueParameter.class)
         List<KeyValueParameter> attrFilters,
@@ -477,15 +476,7 @@ public class OwnerResource {
         // Store the page for the LinkHeaderPostInterceptor
         ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);
 
-        List<Entitlement> returnedEntitlements = entitlementsPage.getPageData();
-        if (regen) {
-            poolManager.regenerateDirtyEntitlements(returnedEntitlements);
-        }
-        else {
-            log.debug("Skipping certificate regeneration.");
-        }
-
-        return returnedEntitlements;
+        return entitlementsPage.getPageData();
     }
 
     /**
