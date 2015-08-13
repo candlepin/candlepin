@@ -66,6 +66,7 @@ usage() {
         -d  deploy a live candlepin
         -t  populate Candlepin database with test data (implies -d)
         -r  run rspec test suite (implies -d)
+        -f  run rspec tests in parallel (implies -r)
         -u  run unit test suite
         -l  run the linter against the code
         -s  run a bash shell when done
@@ -75,7 +76,7 @@ usage() {
 HELP
 }
 
-while getopts ":dtrulsc:p:v" opt; do
+while getopts ":dtrfulsc:p:v" opt; do
     case $opt in
         d  ) DEPLOY="1";;
         t  )
@@ -83,6 +84,11 @@ while getopts ":dtrulsc:p:v" opt; do
             TESTDATA="1"
             ;;
         r  )
+            RSPEC="1"
+            DEPLOY="1"
+            ;;
+        f  )
+            RSPEC_PARALLEL="1"
             RSPEC="1"
             DEPLOY="1"
             ;;
@@ -157,7 +163,12 @@ fi
 
 if [ "$RSPEC" == "1" ]; then
     echo "Running rspec tests."
-    buildr rspec
+
+    if [ "$RSPEC_PARALLEL" == "1" ]; then
+        buildr rspec:parallel
+    else
+        buildr rspec
+    fi
 
     # If the caller mounted a volume at /artifacts, copy server logs out:
     if [ -d "/artifacts" ]; then
