@@ -164,7 +164,7 @@ try:
                             print "ERROR: Unable to query Candlpin status: %s" % e
                             break
 
-                    remaining = int(max_wait_time - (time.time() - start_time))
+                    remaining = int(round(max_wait_time - (time.time() - start_time)))
 
                     if remaining > 0:
                         print "No response; will continue re-trying for another %s seconds..." % remaining
