@@ -33,6 +33,13 @@ describe 'Entitlement Resource' do
     ents.should have(1).things
   end
 
+  it 'should not re-calculate attributes when fetching entitlements' do
+    @system.consume_product(@virt_prod.id)
+    ents = @cp.list_ents_via_entitlements_resource(:matches => "virtualization")
+    ents.should have(1).things
+    ents[0].pool.calculatedAttributes.should be_nil
+  end
+
   it 'can filter all entitlements by product attribute' do
     @system.consume_product(@monitoring_prod.id)
     @system.consume_product(@virt_prod.id)
