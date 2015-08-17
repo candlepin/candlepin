@@ -115,7 +115,7 @@ public class HypervisorUpdateJobTest {
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
         job.execute(ctx);
         verify(consumerResource).performConsumerUpdates(any(Consumer.class), eq(hypervisor),
-                any(VirtConsumerMap.class), any(VirtConsumerMap.class), eq(false));
+                any(VirtConsumerMap.class), eq(false));
     }
 
     @Test

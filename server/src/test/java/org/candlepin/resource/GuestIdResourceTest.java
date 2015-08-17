@@ -23,6 +23,8 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -31,8 +33,6 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.VirtConsumerMap;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
 import org.candlepin.util.ServiceLevelValidator;
 
 import org.junit.Before;
@@ -134,13 +134,13 @@ public class GuestIdResourceTest {
         List<GuestId> guestIds = new LinkedList<GuestId>();
         guestIds.add(new GuestId("1"));
         when(consumerResource.performConsumerUpdates(any(Consumer.class),
-            eq(consumer), any(VirtConsumerMap.class), any(VirtConsumerMap.class))).
+            eq(consumer), any(VirtConsumerMap.class))).
             thenReturn(true);
 
         guestIdResource.updateGuests(consumer.getUuid(), guestIds);
         Mockito.verify(consumerResource, Mockito.times(1))
             .performConsumerUpdates(any(Consumer.class), eq(consumer),
-                    any(VirtConsumerMap.class), any(VirtConsumerMap.class));
+                    any(VirtConsumerMap.class));
         // consumerResource returned true, so the consumer should be updated
         Mockito.verify(consumerCurator, Mockito.times(1)).update(eq(consumer));
     }
@@ -152,13 +152,13 @@ public class GuestIdResourceTest {
 
         // consumerResource tells us nothing changed
         when(consumerResource.performConsumerUpdates(any(Consumer.class),
-            eq(consumer), any(VirtConsumerMap.class), any(VirtConsumerMap.class))).
+            eq(consumer), any(VirtConsumerMap.class))).
             thenReturn(false);
 
         guestIdResource.updateGuests(consumer.getUuid(), guestIds);
         Mockito.verify(consumerResource, Mockito.times(1))
             .performConsumerUpdates(any(Consumer.class), eq(consumer),
-                    any(VirtConsumerMap.class), any(VirtConsumerMap.class));
+                    any(VirtConsumerMap.class));
         Mockito.verify(consumerCurator, Mockito.never()).update(eq(consumer));
     }
 
@@ -200,7 +200,7 @@ public class GuestIdResourceTest {
             guest.getGuestId(), false, null);
         Mockito.verify(guestIdCurator, Mockito.times(1)).delete(eq(guest));
         Mockito.verify(consumerResource, Mockito.never())
-            .revokeGuestEntitlementsNotMatchingHost(eq(consumer), any(Consumer.class));
+            .checkForMigration(eq(consumer), any(Consumer.class));
     }
 
     @Test
@@ -219,8 +219,10 @@ public class GuestIdResourceTest {
             guest.getGuestId(), guest);
 
         Mockito.verify(guestIdCurator, Mockito.times(1)).merge(eq(guest));
-        Mockito.verify(consumerResource, Mockito.times(1))
-            .revokeGuestEntitlementsNotMatchingHost(any(Consumer.class),
+
+        // We now check for migration when the system checks in, not during guest ID updates.
+        Mockito.verify(consumerResource, Mockito.times(0))
+            .checkForMigration(any(Consumer.class),
                 any(Consumer.class));
     }
 
@@ -237,7 +239,7 @@ public class GuestIdResourceTest {
             guest.getGuestId(), true, null);
         Mockito.verify(guestIdCurator, Mockito.times(1)).delete(eq(guest));
         Mockito.verify(consumerResource, Mockito.never())
-            .revokeGuestEntitlementsNotMatchingHost(eq(consumer), eq(guestConsumer));
+            .checkForMigration(eq(consumer), eq(guestConsumer));
         Mockito.verify(consumerResource, Mockito.times(1))
             .deleteConsumer(eq(guestConsumer.getUuid()), any(Principal.class));
     }
@@ -256,7 +258,7 @@ public class GuestIdResourceTest {
             guest.getGuestId(), true, null);
         Mockito.verify(guestIdCurator, Mockito.times(1)).delete(eq(guest));
         Mockito.verify(consumerResource, Mockito.never())
-            .revokeGuestEntitlementsNotMatchingHost(eq(consumer), any(Consumer.class));
+            .checkForMigration(eq(consumer), any(Consumer.class));
     }
 
     private Page<List<GuestId>> buildPaginatedGuestIdList(List<GuestId> guests) {
@@ -278,7 +280,7 @@ public class GuestIdResourceTest {
                   null, null, null, null, null, null, null, null, null, null);
         }
 
-        public void revokeGuestEntitlementsNotMatchingHost(Consumer host, Consumer guest) {
+        public void checkForMigration(Consumer host, Consumer guest) {
         }
     }
 }

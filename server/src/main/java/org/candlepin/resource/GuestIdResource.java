@@ -151,11 +151,8 @@ public class GuestIdResource {
         VirtConsumerMap guestConsumerMap = consumerCurator.getGuestConsumersMap(
                 toUpdate.getOwner(), allGuestIds);
 
-        VirtConsumerMap guestsHostConsumerMap = consumerCurator.getGuestsHostMap(
-                toUpdate.getOwner(), allGuestIds);
-
         if (consumerResource.performConsumerUpdates(consumer, toUpdate,
-                guestConsumerMap, guestsHostConsumerMap)) {
+                guestConsumerMap)) {
             consumerCurator.update(toUpdate);
         }
     }
@@ -201,12 +198,15 @@ public class GuestIdResource {
         }
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+
+        // A little weird here as this API is a single guest ID coming in, we're treating
+        // it as the last checkin time for all guest IDs on this host, but should be safe.
+        consumer.addGuestIdCheckIn();
         updated.setConsumer(consumer);
         GuestId toUpdate =
             guestIdCurator.findByGuestIdAndOrg(guestId, consumer.getOwner());
         // If this guest has a consumer, we want to remove host-specific entitlements
         if (toUpdate != null) {
-            revokeBadHostRestrictedEnts(toUpdate, consumer);
             updated.setId(toUpdate.getId());
         }
         guestIdCurator.merge(updated);
@@ -246,19 +246,6 @@ public class GuestIdResource {
                 "Guest with uuid {0} could not be found.", guestUuid));
         }
         return guest;
-    }
-
-    private void revokeBadHostRestrictedEnts(GuestId toUpdate, Consumer newHost) {
-        // If there is a registered consumer on this guest
-        // we should revoke host specific entitlements
-        Consumer guestConsumer = consumerCurator.findByVirtUuid(toUpdate.getGuestId(),
-            toUpdate.getConsumer().getOwner().getId());
-        if (guestConsumer != null && !guestConsumer.equals(newHost)) {
-            // new Consumer has no uuid because we want to
-            // remove all host limited subscriptions
-            consumerResource.revokeGuestEntitlementsNotMatchingHost(newHost,
-                guestConsumer);
-        }
     }
 
     private void unregisterConsumer(GuestId guest, Principal principal) {
