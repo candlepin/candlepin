@@ -280,7 +280,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void twoHostsRegisteredPickFirst() {
+    public void twoHostsRegisteredPickFirst() throws Exception {
         Consumer host1 = new Consumer("hostConsumer", "testUser", owner, ct);
         consumerCurator.create(host1);
 
@@ -295,6 +295,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         host2.addGuestId(host2Guest);
         host2.addGuestIdCheckIn();
         consumerCurator.update(host2);
+
+        Thread.sleep(1000);
 
         GuestId host1Guest = new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8");
         host1.addGuestId(host1Guest);

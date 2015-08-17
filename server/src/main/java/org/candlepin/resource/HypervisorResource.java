@@ -131,10 +131,6 @@ public class HypervisorResource {
         VirtConsumerMap guestConsumersMap = consumerCurator.getGuestConsumersMap(
                 owner, allGuestIds);
 
-        // Maps virt guest ID to registered consumer for hypervisor, if one exists:
-        VirtConsumerMap guestHypervisorConsumers = consumerCurator.
-                getGuestsHostMap(owner, allGuestIds);
-
         HypervisorCheckInResult result = new HypervisorCheckInResult();
         for (Entry<String, List<GuestId>> hostEntry : hostGuestMap.entrySet()) {
             String hypervisorId = hostEntry.getKey();
@@ -165,7 +161,7 @@ public class HypervisorResource {
                 }
 
                 boolean guestIdsUpdated = addGuestIds(consumer, hostEntry.getValue(),
-                        guestConsumersMap, guestHypervisorConsumers);
+                        guestConsumersMap);
 
                 // Populate the result with the processed consumer.
                 if (hostConsumerCreated) {
@@ -203,13 +199,12 @@ public class HypervisorResource {
      * return whether or not there was any change
      */
     private boolean addGuestIds(Consumer consumer, List<GuestId> guestIds,
-            VirtConsumerMap guestConsumerMap,
-            VirtConsumerMap guestHypervisorConsumers) {
+            VirtConsumerMap guestConsumerMap) {
         Consumer withIds = new Consumer();
         withIds.setGuestIds(guestIds);
         boolean guestIdsUpdated =
             consumerResource.performConsumerUpdates(withIds, consumer,
-                    guestConsumerMap, guestHypervisorConsumers);
+                    guestConsumerMap);
         if (guestIdsUpdated) {
             consumerCurator.update(consumer);
         }

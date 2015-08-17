@@ -697,6 +697,7 @@ class Candlepin
     path << "per_page=#{params[:per_page]}&" if params[:per_page]
     path << "order=#{params[:order]}&" if params[:order]
     path << "sort_by=#{params[:sort_by]}&" if params[:sort_by]
+    path << "regen=false&" if params[:regen]
 
     attr_filters = params[:attr_filters] || []
     attr_filters.each do | attr_name, attr_value |

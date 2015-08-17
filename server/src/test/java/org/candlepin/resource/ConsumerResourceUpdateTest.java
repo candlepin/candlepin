@@ -517,8 +517,6 @@ public class ConsumerResourceUpdateTest {
 
         this.resource.updateConsumer(existingMigratedTo.getUuid(),
             createConsumerWithGuests("Guest 1"));
-
-        verify(poolManager).revokeEntitlement(eq(entitlement));
     }
 
     @Test
