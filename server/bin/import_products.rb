@@ -243,9 +243,10 @@ def create_eng_product(cp, thread_pool, owner, product)
   cert_file = File.new(CERT_DIR + '/' + product_ret['id'] + '.pem', 'w+')
   cert_file.puts(product_cert['cert'])
 
-  product_content.each do |content|
-    cp.add_content_to_product(owner['name'], product_ret['id'], content[0], content[1])
+  if not product_content.empty?
+    cp.add_all_content_to_product(owner['name'], product_ret['id'], product_content)
   end
+
 end
 
 def create_mkt_product(cp, owner, product)
