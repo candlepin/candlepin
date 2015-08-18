@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <property name="trigger.table_name" value="qrtz_fired_triggers" dbms="postgresql,hsqldb"/>
+    <property name="trigger.table_name" value="QRTZ_FIRED_TRIGGERS" dbms="mysql"/>
+    <property name="trigger.table_name" value="qrtz_fired_triggers" dbms="oracle"/>
+
+    <property name="schedtime.type" value="BIGINT" dbms="postgresql,hsqldb"/>
+    <property name="schedtime.type" value="BIGINT(13)" dbms="mysql"/>
+    <property name="schedtime.type" value="NUMBER(13)" dbms="oracle"/>
+
+    <changeSet id="20150818110722-1" author="dgoodwin">
+        <comment>upgrade to quartz 2.2</comment>
+        <addColumn tableName="${trigger.table_name}">
+            <column name="sched_time" type="${schedtime.type}"/>
+        </addColumn>
+
+    </changeSet>
+
+    <changeSet id="20150818110722-2" author="dgoodwin" dbms="postgresql,mysql">
+        <comment>Set pre-existing fired triggers schedule time so we can make it non-null. Not much we can do here other than mimic the fired time. (http://stackoverflow.com/questions/28211747/upgrade-to-quartz-2-2-jdbc-jobstore-new-column-sched-time)</comment>
+        <sql>
+            UPDATE ${trigger.table_name} SET sched_time = fired_time
+        </sql>
+    </changeSet>
+
+    <changeSet id="20150818110722-3" author="dgoodwin" dbms="postgresql,mysql">
+        <comment>Make column not nullable.</comment>
+        <addNotNullConstraint
+            tableName="${trigger.table_name}"
+            columnName="sched_time"
+            columnDataType="${schedtime.type}"
+        />
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

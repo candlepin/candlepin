@@ -14,9 +14,9 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
-import static org.quartz.JobBuilder.*;
+import static org.quartz.JobBuilder.newJob;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
@@ -29,6 +29,7 @@ import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
+import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 
 import com.google.inject.Provider;
 
@@ -71,7 +72,7 @@ public class PinsetterAsyncInterceptorTest {
         Principal principal = new UserPrincipal("testing", permissions, false);
         when(this.principalProvider.get()).thenReturn(principal);
 
-        JobDetail detail = newJob().build();
+        JobDetail detail = newJob(RefreshPoolsJob.class).build();
         when(response.getEntity()).thenReturn(detail);
 
         this.interceptor.postProcess(response);
@@ -92,7 +93,7 @@ public class PinsetterAsyncInterceptorTest {
         JobDataMap map = new JobDataMap();
         map.put("Temp", "something");
 
-        JobDetail detail = newJob().usingJobData(map).build();
+        JobDetail detail = newJob(RefreshPoolsJob.class).usingJobData(map).build();
         when(response.getEntity()).thenReturn(detail);
 
         this.interceptor.postProcess(response);
@@ -103,7 +104,7 @@ public class PinsetterAsyncInterceptorTest {
 
     @Test
     public void checkStatusCode() {
-        when(response.getEntity()).thenReturn(newJob().build());
+        when(response.getEntity()).thenReturn(newJob(RefreshPoolsJob.class).build());
         this.interceptor.postProcess(response);
 
         // Should we use the resteasy static variable for this?
@@ -126,7 +127,7 @@ public class PinsetterAsyncInterceptorTest {
 
     @Test
     public void jobScheduled() throws PinsetterException {
-        JobDetail detail = newJob().build();
+        JobDetail detail = newJob(RefreshPoolsJob.class).build();
         when(response.getEntity()).thenReturn(detail);
 
         this.interceptor.postProcess(response);
@@ -136,7 +137,7 @@ public class PinsetterAsyncInterceptorTest {
 
     @Test
     public void jobStatusSet() throws PinsetterException {
-        JobDetail detail = newJob().build();
+        JobDetail detail = newJob(RefreshPoolsJob.class).build();
         JobStatus status = new JobStatus();
 
         when(response.getEntity()).thenReturn(detail);
@@ -149,7 +150,7 @@ public class PinsetterAsyncInterceptorTest {
 
     @Test(expected = ServiceUnavailableException.class)
     public void schedulingError() throws PinsetterException {
-        JobDetail detail = newJob().build();
+        JobDetail detail = newJob(RefreshPoolsJob.class).build();
         when(response.getEntity()).thenReturn(detail);
         when(this.pinsetterKernel.scheduleSingleJob(detail))
                 .thenThrow(new PinsetterException("Error scheduling job!"));
@@ -160,9 +161,9 @@ public class PinsetterAsyncInterceptorTest {
     @Test
     public void scheduleMultipleJobs() throws PinsetterException {
         JobDetail[] details = new JobDetail[3];
-        details[0] = newJob().build();
-        details[1] = newJob().build();
-        details[2] = newJob().build();
+        details[0] = newJob(RefreshPoolsJob.class).build();
+        details[1] = newJob(RefreshPoolsJob.class).build();
+        details[2] = newJob(RefreshPoolsJob.class).build();
 
         when(response.getEntity()).thenReturn(details);
 

@@ -74,7 +74,7 @@
     <net.oauth.core-oauth.version>20100527</net.oauth.core-oauth.version>
     <net.oauth.core-oauth-provider.version>20100527</net.oauth.core-oauth-provider.version>
     <javax.servlet-servlet-api.version>2.5</javax.servlet-servlet-api.version>
-    <org.quartz-scheduler-quartz.version>2.1.5</org.quartz-scheduler-quartz.version>
+    <org.quartz-scheduler-quartz.version>2.2.1</org.quartz-scheduler-quartz.version>
     <org.jboss.resteasy-jaxrs-api.version>2.3.7.Final</org.jboss.resteasy-jaxrs-api.version>
     <org.jboss.resteasy-resteasy-jaxrs.version>2.3.7.Final</org.jboss.resteasy-resteasy-jaxrs.version>
     <org.jboss.resteasy-resteasy-jaxb-provider.version>2.3.7.Final</org.jboss.resteasy-resteasy-jaxb-provider.version>

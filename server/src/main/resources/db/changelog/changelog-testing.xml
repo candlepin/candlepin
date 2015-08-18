@@ -2027,7 +2027,7 @@
     </changeSet>
     <changeSet author="awood" id="1413225753032-290">
         <comment>
-             Add the default quartz lock columns. 
+             Add the default quartz lock columns.
         </comment>
         <insert tableName="QRTZ_LOCKS">
             <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>
@@ -2264,4 +2264,5 @@
     <include file="db/changelog/20150311151612-force-all-content-metadataexpire-to-0.xml"/>
     <include file="db/changelog/20150401140006-add-pool-type-to-db.xml"/>
     <include file="db/changelog/20150424150412-add-owner-id-to-jobstatus.xml"/>
+    <include file="db/changelog/20150818110722-upgrade-to-quartz-2-dot-2.xml"/>
 </databaseChangeLog>

@@ -138,7 +138,7 @@ OAUTH= [group('oauth',
               :under => 'net.oauth.core',
               :version => '20100527')]
 
-QUARTZ = 'org.quartz-scheduler:quartz:jar:2.1.5'
+QUARTZ = 'org.quartz-scheduler:quartz:jar:2.2.1'
 
 HORNETQ = [group('hornetq-server',
                  'hornetq-core-client',
