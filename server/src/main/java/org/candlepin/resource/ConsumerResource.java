@@ -1625,19 +1625,14 @@ public class ConsumerResource {
         // Store the page for the LinkHeaderPostInterceptor
         ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);
 
-        List<Entitlement> returnedEntitlements = entitlementsPage.getPageData();
-        for (Entitlement ent : returnedEntitlements) {
-            addCalculatedAttributes(ent);
-        }
-
         if (regen) {
-            poolManager.regenerateDirtyEntitlements(returnedEntitlements);
+            poolManager.regenerateDirtyEntitlements(entitlementsPage.getPageData());
         }
         else {
             log.debug("Skipping certificate regeneration.");
         }
 
-        return returnedEntitlements;
+        return entitlementsPage.getPageData();
     }
 
     /**
