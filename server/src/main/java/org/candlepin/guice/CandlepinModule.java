@@ -243,18 +243,7 @@ public class CandlepinModule extends AbstractModule {
 
         configureInterceptors();
         bind(JsonProvider.class);
-
-        if (config.getBoolean(ConfigProperties.HORNETQ_ENABLED)) {
-            bind(EventSink.class).annotatedWith(Names.named("RequestSink"))
-            .to(EventSinkImpl.class).in(RequestScoped.class);
-        bind(EventSink.class).annotatedWith(Names.named("PinsetterSink"))
-            .to(EventSinkImpl.class).in(PinsetterJobScoped.class);
-            bind(EventSink.class).toProvider(EventSinkProvider.class);
-        }
-        else {
-            bind(EventSink.class).to(NoopEventSinkImpl.class);
-        }
-
+        configureEventSink();
         configurePinsetter();
 
         configureExporter();
@@ -360,5 +349,18 @@ public class CandlepinModule extends AbstractModule {
         // for lazy loading:
         bind(AMQPBusPublisher.class).toProvider(AMQPBusPubProvider.class)
                 .in(Singleton.class);
+    }
+
+    private void configureEventSink() {
+        if (config.getBoolean(ConfigProperties.HORNETQ_ENABLED)) {
+            bind(EventSink.class).annotatedWith(Names.named("RequestSink")).to(EventSinkImpl.class)
+                    .in(RequestScoped.class);
+            bind(EventSink.class).annotatedWith(Names.named("PinsetterSink")).to(EventSinkImpl.class)
+                    .in(PinsetterJobScoped.class);
+            bind(EventSink.class).toProvider(EventSinkProvider.class);
+        }
+        else {
+            bind(EventSink.class).to(NoopEventSinkImpl.class);
+        }
     }
 }
