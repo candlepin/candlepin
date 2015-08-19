@@ -1,4 +1,4 @@
-// Version: 5.16
+// Version: 5.17
 
 /*
  * Default Candlepin rule set.
@@ -49,6 +49,7 @@ var RAM_FACT = "memory.memtotal";
 var CORES_FACT = "cpu.core(s)_per_socket";
 var ARCH_FACT = "uname.machine";
 var IS_VIRT_GUEST_FACT = "virt.is_guest";
+var STORAGE_BAND_USAGE = "band.storage.usage";
 var PROD_ARCHITECTURE_SEPARATOR = ",";
 
 // Product attribute names
@@ -65,6 +66,7 @@ var UNMAPPED_GUESTS_ONLY = "unmapped_guests_only";
 var GUEST_LIMIT_ATTRIBUTE = "guest_limit";
 var VCPU_ATTRIBUTE = "vcpu";
 var MULTI_ENTITLEMENT_ATTRIBUTE = "multi-entitlement";
+var STORAGE_BAND_ATTRIBUTE = "storage_band";
 
 // caller types
 var BEST_POOLS_CALLER = "best_pools";
@@ -90,6 +92,7 @@ ATTRIBUTES_TO_CONSUMER_FACTS[CORES_ATTRIBUTE] = CORES_FACT;
 ATTRIBUTES_TO_CONSUMER_FACTS[ARCH_ATTRIBUTE] = ARCH_FACT;
 ATTRIBUTES_TO_CONSUMER_FACTS[RAM_ATTRIBUTE] = RAM_FACT;
 ATTRIBUTES_TO_CONSUMER_FACTS[VCPU_ATTRIBUTE] = CORES_FACT;
+ATTRIBUTES_TO_CONSUMER_FACTS[STORAGE_BAND_ATTRIBUTE] = STORAGE_BAND_USAGE;
 
 /**
  *  These product attributes are considered when determining
@@ -101,14 +104,20 @@ var PHYSICAL_ATTRIBUTES = [
     CORES_ATTRIBUTE,
     RAM_ATTRIBUTE,
     ARCH_ATTRIBUTE,
-    GUEST_LIMIT_ATTRIBUTE
+    GUEST_LIMIT_ATTRIBUTE,
+    STORAGE_BAND_ATTRIBUTE
 ];
 
+/**
+ * Attributes considered when determining coverage of a virtual
+ * guest.
+ */
 var VIRT_ATTRIBUTES = [
     VCPU_ATTRIBUTE,
     RAM_ATTRIBUTE,
     ARCH_ATTRIBUTE,
-    GUEST_LIMIT_ATTRIBUTE
+    GUEST_LIMIT_ATTRIBUTE,
+    STORAGE_BAND_ATTRIBUTE
 ];
 
 /**
@@ -1059,6 +1068,7 @@ function createComplianceTracker(consumer, id) {
                 guest_limit: function (currentStackValue, poolValue, pool, quantity) {
                     return -1; //Value doesn't matter, just need it to be enforced
                 }
+                
             };
 
             var strategy = strategies.default;
@@ -1290,7 +1300,8 @@ var Entitlement = {
             "instance_multiplier:1:instance_multiplier," +
             "vcpu:1:vcpu," +
             "physical_only:1:physical_only," +
-            "unmapped_guests_only:1:unmapped_guests_only";
+            "unmapped_guests_only:1:unmapped_guests_only," +
+            "storage_band:1:storage_band";
     },
 
     ValidationResult: function () {
@@ -1620,6 +1631,37 @@ var Entitlement = {
 
     pre_ram: function() {
         return this.build_func("do_pre_ram")();
+    },
+
+    do_pre_storage_band: function(context, result) {
+        var caller = context.caller;
+        var consumer = context.consumer;
+
+        if (!consumer.type.manifest) {
+            var consumerBandUsage = FactValueCalculator.getFact(STORAGE_BAND_ATTRIBUTE, consumer);
+            log.debug("Consumer is using " + consumerBandUsage + "TB of storage.");
+
+            var productBandStorage = parseInt(context.pool.getProductAttribute(STORAGE_BAND_ATTRIBUTE));
+            log.debug("Product has " + productBandStorage + "TB of storage.");
+            if (consumerBandUsage > productBandStorage && !context.pool.getProductAttribute("stacking_id")) {
+                result.addWarning("rulewarning.unsupported.storageband");
+            }
+        }
+        else {
+            if (!Utils.isCapable(consumer, STORAGE_BAND_ATTRIBUTE)) {
+                if (BEST_POOLS_CALLER == caller ||
+                    BIND_CALLER == caller) {
+                    result.addError("rulefailed.storageband.unsupported.by.consumer");
+                }
+                else {
+                    result.addWarning("rulewarning.storageband.unsupported.by.consumer");
+                }
+            }
+        }
+    },
+
+    pre_storage_band: function() {
+        return this.build_func("do_pre_storage_band")();
     },
 
     do_pre_instance_multiplier: function(context, result) {
