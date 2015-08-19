@@ -146,8 +146,8 @@ HORNETQ = [group('hornetq-server',
                  'hornetq-journal',
                  # 'hornetq-resources', #Native libs for libaio
                  :under=>'org.hornetq',
-                 :version=>'2.3.5.Final'),
-            'org.jboss.netty:netty:jar:3.2.1.Final']
+                 :version=>'2.4.7.Final'),
+            'io.netty:netty-all:jar:4.0.13.Final']
 
 SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
 

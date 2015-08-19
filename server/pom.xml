@@ -52,11 +52,11 @@
     <org.hibernate.javax.persistence-hibernate-jpa-2.0-api.version>1.0.1.Final</org.hibernate.javax.persistence-hibernate-jpa-2.0-api.version>
     <javax.validation-validation-api.version>1.0.0.GA</javax.validation-validation-api.version>
     <javax.transaction-jta.version>1.1</javax.transaction-jta.version>
-    <org.hornetq-hornetq-server.version>2.3.5.Final</org.hornetq-hornetq-server.version>
-    <org.hornetq-hornetq-core-client.version>2.3.5.Final</org.hornetq-hornetq-core-client.version>
-    <org.hornetq-hornetq-commons.version>2.3.5.Final</org.hornetq-hornetq-commons.version>
-    <org.hornetq-hornetq-journal.version>2.3.5.Final</org.hornetq-hornetq-journal.version>
-    <org.jboss.netty-netty.version>3.2.1.Final</org.jboss.netty-netty.version>
+    <org.hornetq-hornetq-server.version>2.4.7.Final</org.hornetq-hornetq-server.version>
+    <org.hornetq-hornetq-core-client.version>2.4.7.Final</org.hornetq-hornetq-core-client.version>
+    <org.hornetq-hornetq-commons.version>2.4.7.Final</org.hornetq-hornetq-commons.version>
+    <org.hornetq-hornetq-journal.version>2.4.7.Final</org.hornetq-hornetq-journal.version>
+    <io.netty-netty-all.version>4.0.13.Final</io.netty-netty-all.version>
     <com.fasterxml.jackson.core-jackson-annotations.version>2.3.0</com.fasterxml.jackson.core-jackson-annotations.version>
     <com.fasterxml.jackson.core-jackson-core.version>2.3.0</com.fasterxml.jackson.core-jackson-core.version>
     <com.fasterxml.jackson.core-jackson-databind.version>2.3.0</com.fasterxml.jackson.core-jackson-databind.version>
@@ -545,9 +545,9 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.jboss.netty</groupId>
-      <artifactId>netty</artifactId>
-      <version>${org.jboss.netty-netty.version}</version>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-all</artifactId>
+      <version>${io.netty-netty-all.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
