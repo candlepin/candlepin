@@ -14,8 +14,7 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
-import org.jboss.resteasy.spi.UnsupportedMediaTypeException;
-
+import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -26,12 +25,12 @@ import javax.ws.rs.ext.Provider;
  * set. This allows Candlepin to control the flow of the exceptions.
  */
 @Provider
-public class UnsupportedMediaTypeExceptionMapper extends
+public class NotSupportedExceptionMapper extends
     CandlepinExceptionMapper implements
-    ExceptionMapper<UnsupportedMediaTypeException> {
+    ExceptionMapper<NotSupportedException> {
 
     @Override
-    public Response toResponse(UnsupportedMediaTypeException exception) {
+    public Response toResponse(NotSupportedException exception) {
         return getDefaultBuilder(exception,
             Response.Status.UNSUPPORTED_MEDIA_TYPE,
             determineBestMediaType()).build();

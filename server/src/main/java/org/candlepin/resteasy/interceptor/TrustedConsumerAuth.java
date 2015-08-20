@@ -27,7 +27,6 @@ import org.xnap.commons.i18n.I18n;
 import java.util.List;
 
 import javax.inject.Provider;
-
 /**
  * This auth form allows for a consumer id to
  * be passed in a clear http header. This should
@@ -44,13 +43,12 @@ class TrustedConsumerAuth extends ConsumerAuth {
         super(consumerCurator, deletedConsumerCurator, i18nProvider);
     }
 
-    public Principal getPrincipal(HttpRequest request) {
-
+    public Principal getPrincipal(HttpRequest httpRequest) {
         ConsumerPrincipal principal = null;
 
-        List<String> header = request.getHttpHeaders().getRequestHeader(
-            CONSUMER_HEADER);
+        List<String> header = httpRequest.getHttpHeaders().getRequestHeader(CONSUMER_HEADER);
         String consumerUUID = null;
+
         if (null != header && header.size() > 0) {
             consumerUUID = header.get(0);
         }

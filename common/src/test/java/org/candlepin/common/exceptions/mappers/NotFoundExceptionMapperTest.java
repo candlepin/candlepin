@@ -14,11 +14,11 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import org.jboss.resteasy.spi.NotFoundException;
 import org.junit.Test;
 
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 
 /**
@@ -36,7 +36,7 @@ public class NotFoundExceptionMapperTest extends TestExceptionMapperBase {
     }
 
     @Override
-    public Class getMapperClass() {
+    public Class<?> getMapperClass() {
         return NotFoundExceptionMapper.class;
     }
 }

@@ -15,50 +15,56 @@
 package org.candlepin.common.resteasy.interceptor;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.guice.CommonI18nProvider;
 import org.candlepin.common.paging.PageRequest;
 
-import org.jboss.resteasy.core.ResourceMethod;
 import org.jboss.resteasy.mock.MockHttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Locale;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.container.ContainerRequestContext;
 
 /**
- * PageRequestInterceptorTest
+ * PageRequestFilterTest
  */
-public class PageRequestInterceptorTest {
+public class PageRequestFilterTest {
 
-    @Inject
-    private HttpServletRequest mockReq = mock(HttpServletRequest.class);
+    @Inject @Mock
+    private HttpServletRequest mockServletReq;
 
     private javax.inject.Provider<I18n> i18nProvider;
-    private PageRequestInterceptor interceptor;
-    private ResourceMethod rmethod;
+    private PageRequestFilter interceptor;
+
+    private MockHttpRequest mockReq;
+    @Mock private ContainerRequestContext mockRequestContext;
 
     @Before
     public void setUp() throws Exception {
-        when(mockReq.getLocale()).thenReturn(Locale.US);
-        this.i18nProvider = new CommonI18nProvider(this.mockReq);
-        interceptor = new PageRequestInterceptor(this.i18nProvider);
-        rmethod = mock(ResourceMethod.class);
+        MockitoAnnotations.initMocks(this);
+
+        when(mockServletReq.getLocale()).thenReturn(Locale.US);
+        this.i18nProvider = new CommonI18nProvider(this.mockServletReq);
+        interceptor = new PageRequestFilter(this.i18nProvider);
     }
 
     @Test
     public void testNoAnything() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET",
+        mockReq = MockHttpRequest.create("GET",
             "http://localhost/candlepin/status");
+        when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
-        interceptor.preProcess(req, rmethod);
+        interceptor.filter(mockRequestContext);
 
         PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
         assertNull(p);
@@ -66,10 +72,11 @@ public class PageRequestInterceptorTest {
 
     @Test
     public void testBothLimitAndPage() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET",
+        mockReq = MockHttpRequest.create("GET",
             "http://localhost/candlepin/status?per_page=10&page=4");
+        when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
-        interceptor.preProcess(req, rmethod);
+        interceptor.filter(mockRequestContext);
 
         PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
         assertEquals(Integer.valueOf(10), p.getPerPage());
@@ -80,10 +87,11 @@ public class PageRequestInterceptorTest {
 
     @Test
     public void testNoLimitButPage() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET",
+        mockReq = MockHttpRequest.create("GET",
             "http://localhost/candlepin/status?page=5");
+        when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
-        interceptor.preProcess(req, rmethod);
+        interceptor.filter(mockRequestContext);
 
         PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
         assertEquals(PageRequest.DEFAULT_PER_PAGE, p.getPerPage());
@@ -94,10 +102,11 @@ public class PageRequestInterceptorTest {
 
     @Test
     public void testLimitButNoPage() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET",
+        mockReq = MockHttpRequest.create("GET",
             "http://localhost/candlepin/status?per_page=10");
+        when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
-        interceptor.preProcess(req, rmethod);
+        interceptor.filter(mockRequestContext);
 
         PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
         assertEquals(Integer.valueOf(10), p.getPerPage());
@@ -108,26 +117,29 @@ public class PageRequestInterceptorTest {
 
     @Test(expected = BadRequestException.class)
     public void testBadIntegerValue() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET",
+        mockReq = MockHttpRequest.create("GET",
             "http://localhost/candlepin/status?page=foo&per_page=456");
+        when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
-        interceptor.preProcess(req, rmethod);
+        interceptor.filter(mockRequestContext);
     }
 
     @Test(expected = BadRequestException.class)
     public void testDoesNotAllowPageZero() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET",
+        mockReq = MockHttpRequest.create("GET",
             "http://localhost/candlepin/status?page=0&per_page=456");
+        when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
-        interceptor.preProcess(req, rmethod);
+        interceptor.filter(mockRequestContext);
     }
 
     @Test
     public void testNoPagingIfJustOrderAndSortBy() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET",
+        mockReq = MockHttpRequest.create("GET",
             "http://localhost/candlepin/status?order=asc&sort_by=id");
+        when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
-        interceptor.preProcess(req, rmethod);
+        interceptor.filter(mockRequestContext);
 
         PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
         assertFalse(p.isPaging());
@@ -137,10 +149,11 @@ public class PageRequestInterceptorTest {
 
     @Test
     public void testUsesDefaultOrderIfNoOrderProvided() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET",
+        mockReq = MockHttpRequest.create("GET",
             "http://localhost/candlepin/status?sort_by=id");
+        when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
-        interceptor.preProcess(req, rmethod);
+        interceptor.filter(mockRequestContext);
 
         PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
         assertFalse(p.isPaging());
@@ -150,10 +163,11 @@ public class PageRequestInterceptorTest {
 
     @Test
     public void testDescendingOrder() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET",
+        mockReq = MockHttpRequest.create("GET",
             "http://localhost/candlepin/status?order=descending&sort_by=id");
+        when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
-        interceptor.preProcess(req, rmethod);
+        interceptor.filter(mockRequestContext);
 
         PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
         assertFalse(p.isPaging());

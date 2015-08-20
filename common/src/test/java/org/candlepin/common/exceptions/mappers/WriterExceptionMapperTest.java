@@ -48,7 +48,7 @@ public class WriterExceptionMapperTest extends TestExceptionMapperBase {
     }
 
     @Override
-    public Class getMapperClass() {
+    public Class<?> getMapperClass() {
         return WriterExceptionMapper.class;
     }
 }

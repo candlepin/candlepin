@@ -50,7 +50,7 @@ public class JAXBMarshalExceptionMapperTest extends TestExceptionMapperBase {
     }
 
     @Override
-    public Class getMapperClass() {
+    public Class<?> getMapperClass() {
         return JAXBMarshalExceptionMapper.class;
     }
 }

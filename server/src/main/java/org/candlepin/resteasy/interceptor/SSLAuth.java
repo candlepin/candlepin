@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.inject.Provider;
+import javax.security.auth.x500.X500Principal;
 
 /**
  * Pulls the consumer id off off a certificate and creates a principal for that.
@@ -48,10 +49,8 @@ class SSLAuth extends ConsumerAuth {
         super(consumerCurator, deletedConsumerCurator, i18nProvider);
     }
 
-    public Principal getPrincipal(HttpRequest request) {
-
-        X509Certificate[] certs = (X509Certificate[]) request
-            .getAttribute(CERTIFICATES_ATTR);
+    public Principal getPrincipal(HttpRequest httpRequest) {
+        X509Certificate[] certs = (X509Certificate[]) httpRequest.getAttribute(CERTIFICATES_ATTR);
 
         if (certs == null || certs.length < 1) {
             if (log.isDebugEnabled()) {
@@ -71,7 +70,8 @@ class SSLAuth extends ConsumerAuth {
 
     // Pulls the consumer uuid off of the x509 cert.
     private String parseUuid(X509Certificate cert) {
-        String dn = cert.getSubjectDN().getName();
+        X500Principal x500 = cert.getSubjectX500Principal();
+        String dn = x500.getName();
         Map<String, String> dnAttributes = new HashMap<String, String>();
 
         for (String attribute : dn.split(",")) {

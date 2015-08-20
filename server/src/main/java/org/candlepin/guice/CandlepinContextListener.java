@@ -26,10 +26,10 @@ import org.candlepin.common.logging.LoggingConfigurator;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
+import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.util.Util;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
@@ -40,6 +40,7 @@ import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.SessionFactoryImpl;
+import org.jboss.resteasy.plugins.guice.GuiceResteasyBootstrapServletContextListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18nManager;
@@ -64,14 +65,13 @@ import javax.servlet.ServletContextEvent;
  * This context listener overrides some of the module initialization code to
  * allow for module specification beyond simply listing class names.
  */
-public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
+public class CandlepinContextListener extends GuiceResteasyBootstrapServletContextListener {
     public static final String CONFIGURATION_NAME = Configuration.class.getName();
 
     private HornetqContextListener hornetqListener;
     private PinsetterContextListener pinsetterListener;
     private LoggerContextListener loggerListener;
 
-    private Injector injector;
     // a bit of application-initialization code. Not sure if this is the
     // best spot for it.
     static {
@@ -89,6 +89,9 @@ public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
     // https://github.com/google/guice/issues/603
     // Currently only needed for access to the Configuration.
     private ServletContext servletContext;
+
+    private AMQPBusPublisher busPublisher;
+    private AMQPBusPubProvider busProvider;
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
@@ -112,17 +115,27 @@ public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
 
         // set things up BEFORE calling the super class' initialize method.
         super.contextInitialized(sce);
+        log.info("Candlepin context initialized.");
+    }
 
+    @Override
+    public void withInjector(Injector injector) {
         // Must call super.contextInitialized() before accessing injector
         insertValidationEventListeners(injector);
+        ResourceLocatorMap map = injector.getInstance(ResourceLocatorMap.class);
+        map.init();
+
         if (config.getBoolean(HORNETQ_ENABLED)) {
             hornetqListener = injector.getInstance(HornetqContextListener.class);
             hornetqListener.contextInitialized(injector);
         }
+
         pinsetterListener = injector.getInstance(PinsetterContextListener.class);
         pinsetterListener.contextInitialized();
 
-        log.info("Candlepin context initialized.");
+        loggerListener = injector.getInstance(LoggerContextListener.class);
+        busPublisher = injector.getInstance(AMQPBusPublisher.class);
+        busProvider = injector.getInstance(AMQPBusPubProvider.class);
     }
 
     @Override
@@ -132,22 +145,13 @@ public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
             hornetqListener.contextDestroyed();
         }
         pinsetterListener.contextDestroyed();
-        loggerListener = injector.getInstance(LoggerContextListener.class);
         loggerListener.contextDestroyed();
 
         // if amqp is enabled, close all connections.
-        Configuration config = injector.getInstance(Configuration.class);
         if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
-            Util.closeSafely(injector.getInstance(AMQPBusPublisher.class),
-                "AMQPBusPublisher");
-            Util.closeSafely(injector.getInstance(AMQPBusPubProvider.class),
-                "AMQPBusPubProvider");
+            Util.closeSafely(busPublisher, "AMQPBusPublisher");
+            Util.closeSafely(busProvider, "AMQPBusPubProvider");
         }
-    }
-
-    @Override
-    protected Injector getInjector(Stage stage, List<Module> modules) {
-        return Guice.createInjector(stage, modules);
     }
 
     protected Configuration readConfiguration(ServletContext context)
@@ -179,12 +183,6 @@ public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
 
     @Override
     protected Stage getStage(ServletContext context) {
-        // RESTEasy 3.0 has a getState with a context that we can override.
-        // Right now we don't use context for our need but when we do switch
-        // we'll be able to add an @Override to this method.
-
-        // see https://github.com/google/guice/wiki/Bootstrap for information
-        // on Stage.
         return Stage.PRODUCTION;
     }
 
@@ -234,11 +232,5 @@ public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
         registry.getEventListenerGroup(EventType.PRE_INSERT).appendListener(listenerProvider.get());
         registry.getEventListenerGroup(EventType.PRE_UPDATE).appendListener(listenerProvider.get());
         registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
-    }
-
-    @Override
-    protected void processInjector(ServletContext context, Injector inj) {
-        injector = inj;
-        super.processInjector(context, injector);
     }
 }

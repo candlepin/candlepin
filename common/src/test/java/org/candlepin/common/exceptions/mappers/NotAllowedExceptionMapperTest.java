@@ -14,30 +14,31 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import org.jboss.resteasy.spi.UnauthorizedException;
 import org.junit.Test;
 
+import javax.ws.rs.NotAllowedException;
 import javax.ws.rs.core.Response;
 
 /**
- * UnauthorizedExceptionMapperTest
+ * MethodNotAllowedExceptionMapperTest
  */
-public class UnauthorizedExceptionMapperTest extends TestExceptionMapperBase {
+public class NotAllowedExceptionMapperTest extends
+    TestExceptionMapperBase {
 
     @Test
-    public void handleException() {
-        UnauthorizedException nae = new UnauthorizedException("unacceptable");
-        UnauthorizedExceptionMapper naem =
-            injector.getInstance(UnauthorizedExceptionMapper.class);
-        Response r = naem.toResponse(nae);
-        assertEquals(401, r.getStatus());
-        verifyMessage(r, rtmsg("unacceptable"));
+    public void handleMethodNotAllowed() {
+        NotAllowedException mnae = new NotAllowedException("Not Allowed");
+        NotAllowedExceptionMapper mnaem =
+            injector.getInstance(NotAllowedExceptionMapper.class);
+        Response r = mnaem.toResponse(mnae);
+        assertEquals(405, r.getStatus());
+        verifyMessage(r, rtmsg(".+ Not Allowed.*"));
     }
 
     @Override
-    public Class getMapperClass() {
-        return UnauthorizedExceptionMapper.class;
+    public Class<?> getMapperClass() {
+        return NotAllowedExceptionMapper.class;
     }
 }

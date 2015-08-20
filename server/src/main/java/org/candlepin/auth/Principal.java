@@ -27,8 +27,7 @@ import java.util.List;
 /**
  * An entity interacting with Candlepin
  */
-public abstract class Principal implements Serializable {
-
+public abstract class Principal implements Serializable, java.security.Principal {
     private static final long serialVersionUID = 907789978604269132L;
 
     private static Logger log = LoggerFactory.getLogger(Principal.class);
@@ -48,7 +47,7 @@ public abstract class Principal implements Serializable {
 
     public boolean canAccess(Object target, SubResource subResource, Access access) {
         log.debug("{} principal checking for {} access to target: {} sub-resource: {}",
-            new Object [] {this.getClass().getName(), access, target, subResource});
+            this.getClass().getName(), access, target, subResource);
 
         if (hasFullAccess()) {
             return true;
@@ -65,15 +64,24 @@ public abstract class Principal implements Serializable {
         }
 
         // none of the permissions grants access, so this target is not allowed
-        log.warn("Refused principal: '" + getPrincipalName() + "' access to: " +
-            target.getClass().getName());
+        String targetType = (target == null) ? "null" : target.getClass().getName();
+        log.warn("Refused principal: '{}' access to: {}", getName(), targetType);
         return false;
     }
 
-    public abstract String getPrincipalName();
+    public abstract String getName();
+
+    /**
+     * @deprecated use getName() instead
+     * @return Principal name
+     */
+    @Deprecated
+    public String getPrincipalName() {
+        return getName();
+    }
 
     public PrincipalData getData() {
-        return new PrincipalData(this.getType(), this.getPrincipalName());
+        return new PrincipalData(this.getType(), this.getName());
     }
 
     /**

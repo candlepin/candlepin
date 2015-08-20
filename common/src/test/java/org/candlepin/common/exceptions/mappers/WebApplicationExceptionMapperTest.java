@@ -14,13 +14,14 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
 import org.junit.Test;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 /**
  * WebApplicationExceptionMapper
@@ -31,16 +32,18 @@ public class WebApplicationExceptionMapperTest extends TestExceptionMapperBase {
     public void handleExceptionWithResponse() {
         Response mockr = mock(Response.class);
         when(mockr.getStatus()).thenReturn(500);
+        when(mockr.getStatusInfo()).thenReturn(Status.INTERNAL_SERVER_ERROR);
+
         WebApplicationException nfe = new WebApplicationException(mockr);
         WebApplicationExceptionMapper nfem =
             injector.getInstance(WebApplicationExceptionMapper.class);
         Response r = nfem.toResponse(nfe);
         assertEquals(500, r.getStatus());
-        verifyMessage(r, rtmsg(null));
+        verifyMessage(r, rtmsg(""));
     }
 
     @Override
-    public Class getMapperClass() {
+    public Class<?> getMapperClass() {
         return WebApplicationExceptionMapper.class;
     }
 }

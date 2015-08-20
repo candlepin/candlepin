@@ -26,7 +26,7 @@ import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UserPrincipal;
-import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.auth.Verify;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
@@ -269,7 +269,7 @@ public class ConsumerResource {
         Page<List<Consumer>> page = consumerCurator.searchOwnerConsumers(
             owner, userName, types, uuids, hypervisorIds, attrFilters, pageRequest);
 
-        // Store the page for the LinkHeaderPostInterceptor
+        // Store the page for the LinkHeaderResponseFilter
         ResteasyProviderFactory.pushContext(Page.class, page);
         return page.getPageData();
     }

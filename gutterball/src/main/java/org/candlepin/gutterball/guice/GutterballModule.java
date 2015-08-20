@@ -23,21 +23,22 @@ import org.candlepin.common.exceptions.mappers.FailureExceptionMapper;
 import org.candlepin.common.exceptions.mappers.InternalServerErrorExceptionMapper;
 import org.candlepin.common.exceptions.mappers.JAXBMarshalExceptionMapper;
 import org.candlepin.common.exceptions.mappers.JAXBUnmarshalExceptionMapper;
-import org.candlepin.common.exceptions.mappers.MethodNotAllowedExceptionMapper;
 import org.candlepin.common.exceptions.mappers.NoLogWebApplicationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.NotAcceptableExceptionMapper;
+import org.candlepin.common.exceptions.mappers.NotAllowedExceptionMapper;
+import org.candlepin.common.exceptions.mappers.NotAuthorizedExceptionMapper;
 import org.candlepin.common.exceptions.mappers.NotFoundExceptionMapper;
+import org.candlepin.common.exceptions.mappers.NotSupportedExceptionMapper;
 import org.candlepin.common.exceptions.mappers.ReaderExceptionMapper;
 import org.candlepin.common.exceptions.mappers.RollbackExceptionMapper;
 import org.candlepin.common.exceptions.mappers.RuntimeExceptionMapper;
-import org.candlepin.common.exceptions.mappers.UnauthorizedExceptionMapper;
-import org.candlepin.common.exceptions.mappers.UnsupportedMediaTypeExceptionMapper;
 import org.candlepin.common.exceptions.mappers.ValidationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WriterExceptionMapper;
-import org.candlepin.common.resteasy.interceptor.DynamicFilterInterceptor;
-import org.candlepin.common.resteasy.interceptor.LinkHeaderPostInterceptor;
-import org.candlepin.common.resteasy.interceptor.PageRequestInterceptor;
+import org.candlepin.common.resteasy.auth.NoOpFilter;
+import org.candlepin.common.resteasy.interceptor.DynamicJsonFilter;
+import org.candlepin.common.resteasy.interceptor.LinkHeaderResponseFilter;
+import org.candlepin.common.resteasy.interceptor.PageRequestFilter;
 import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.gutterball.config.ConfigProperties;
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
@@ -49,13 +50,14 @@ import org.candlepin.gutterball.jackson.GutterballObjectMapper;
 import org.candlepin.gutterball.receiver.EventReceiver;
 import org.candlepin.gutterball.report.ConsumerStatusReport;
 import org.candlepin.gutterball.report.ConsumerTrendReport;
-import org.candlepin.gutterball.report.StatusTrendReport;
 import org.candlepin.gutterball.report.Report;
 import org.candlepin.gutterball.report.ReportFactory;
+import org.candlepin.gutterball.report.StatusTrendReport;
 import org.candlepin.gutterball.resource.ReportsResource;
 import org.candlepin.gutterball.resource.StatusResource;
 import org.candlepin.gutterball.resteasy.JsonProvider;
-import org.candlepin.gutterball.resteasy.interceptor.OAuthInterceptor;
+import org.candlepin.gutterball.resteasy.interceptor.OAuthFilter;
+import org.candlepin.gutterball.resteasy.interceptor.SecurityHoleFeature;
 import org.candlepin.gutterball.util.EventHandlerLoader;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -79,6 +81,7 @@ import javax.inject.Provider;
 import javax.validation.MessageInterpolator;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
+import javax.ws.rs.container.ContainerRequestFilter;
 
 
 /**
@@ -126,12 +129,12 @@ public class GutterballModule extends AbstractModule {
         bind(StatusResource.class);
         bind(ReportsResource.class);
 
-        bind(UnsupportedMediaTypeExceptionMapper.class);
-        bind(UnauthorizedExceptionMapper.class);
+        bind(NotSupportedExceptionMapper.class);
+        bind(NotAuthorizedExceptionMapper.class);
         bind(NotFoundExceptionMapper.class);
         bind(NotAcceptableExceptionMapper.class);
         bind(NoLogWebApplicationExceptionMapper.class);
-        bind(MethodNotAllowedExceptionMapper.class);
+        bind(NotAllowedExceptionMapper.class);
         bind(InternalServerErrorExceptionMapper.class);
         bind(DefaultOptionsMethodExceptionMapper.class);
         bind(BadRequestExceptionMapper.class);
@@ -147,9 +150,9 @@ public class GutterballModule extends AbstractModule {
         bind(JAXBMarshalExceptionMapper.class);
 
         // Output filter interceptors
-        bind(DynamicFilterInterceptor.class);
-        bind(PageRequestInterceptor.class);
-        bind(LinkHeaderPostInterceptor.class);
+        bind(DynamicJsonFilter.class);
+        bind(PageRequestFilter.class);
+        bind(LinkHeaderResponseFilter.class);
 
         bindConstant().annotatedWith(Names.named("PREFIX_APIURL_KEY"))
             .to(ConfigProperties.PREFIX_APIURL);
@@ -171,9 +174,13 @@ public class GutterballModule extends AbstractModule {
     }
 
     protected void configureOAuth() {
-        if (this.config.getBoolean(ConfigProperties.OAUTH_AUTHENTICATION, false)) {
-            this.bind(OAuthInterceptor.class);
+        bind(SecurityHoleFeature.class);
+
+        Class<? extends ContainerRequestFilter> authFilter = NoOpFilter.class;
+        if (config.getBoolean(ConfigProperties.OAUTH_AUTHENTICATION, false)) {
+            authFilter = OAuthFilter.class;
         }
+        bind(ContainerRequestFilter.class).to(authFilter);
     }
 
     protected void configureEventHandlers() {

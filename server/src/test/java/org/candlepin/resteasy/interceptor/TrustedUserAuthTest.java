@@ -14,6 +14,7 @@
  */
 package org.candlepin.resteasy.interceptor;
 
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -24,26 +25,30 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
 
-import com.google.inject.Injector;
-
-import org.jboss.resteasy.specimpl.HttpHeadersImpl;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.util.List;
 import java.util.Locale;
+
+import javax.inject.Provider;
+import javax.ws.rs.core.HttpHeaders;
 
 public class TrustedUserAuthTest {
 
     @Mock private HttpRequest request;
-    private HttpHeadersImpl headers;
+    private MultivaluedMapImpl<String, String> headerMap;
+    @Mock private HttpHeaders mockHeaders;
     @Mock private UserServiceAdapter userService;
-    @Mock private Injector injector;
+    @Mock private Provider<I18n> mockI18n;
     private TrustedUserAuth auth;
 
     private static final String USERNAME = "myusername";
@@ -51,12 +56,19 @@ public class TrustedUserAuthTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        headers = new HttpHeadersImpl();
-        headers.setRequestHeaders(new MultivaluedMapImpl<String, String>());
-        when(request.getHttpHeaders()).thenReturn(headers);
+        headerMap = new MultivaluedMapImpl<String, String>();
+        when(mockHeaders.getRequestHeaders()).thenReturn(headerMap);
+        when(mockHeaders.getRequestHeader(anyString())).then(new Answer<List<String>>() {
+            public List<String> answer(InvocationOnMock invocation) {
+                Object[] args = invocation.getArguments();
+                return headerMap.get(args[0]);
+            }
+        });
+
+        when(request.getHttpHeaders()).thenReturn(mockHeaders);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        when(injector.getInstance(I18n.class)).thenReturn(i18n);
-        this.auth = new TrustedUserAuth(userService, injector);
+        when(mockI18n.get()).thenReturn(i18n);
+        this.auth = new TrustedUserAuth(userService, mockI18n);
     }
 
     @Test
@@ -67,9 +79,9 @@ public class TrustedUserAuthTest {
 
     @Test
     public void normalTrustedAuth() throws Exception {
-        headers.getRequestHeaders().add(TrustedUserAuth.USER_HEADER, USERNAME);
+        headerMap.add(TrustedUserAuth.USER_HEADER, USERNAME);
         Principal p = auth.getPrincipal(request);
-        assertTrue(p instanceof TrustedUserPrincipal);
+        assertThat(p, is(TrustedUserPrincipal.class));
         verify(userService, never()).validateUser(any(String.class), any(String.class));
         verify(userService, never()).findByLogin(any(String.class));
         assertTrue(p.hasFullAccess());
@@ -77,16 +89,16 @@ public class TrustedUserAuthTest {
 
     @Test
     public void trustedAuthWithPermissionsLookup() throws Exception {
-        headers.getRequestHeaders().add(TrustedUserAuth.USER_HEADER, USERNAME);
+        headerMap.add(TrustedUserAuth.USER_HEADER, USERNAME);
 
         // Adding this header should cause the user to be loaded from the adapter:
-        headers.getRequestHeaders().add(TrustedUserAuth.LOOKUP_PERMISSIONS_HEADER, "true");
+        headerMap.add(TrustedUserAuth.LOOKUP_PERMISSIONS_HEADER, "true");
 
         User u = new User(USERNAME, "pass");
         when(userService.findByLogin(eq(USERNAME))).thenReturn(u);
 
         Principal p = auth.getPrincipal(request);
-        assertTrue(p instanceof UserPrincipal);
+        assertThat(p, is(UserPrincipal.class));
 
         // This shouldn't attempt to verify a password:
         verify(userService, never()).validateUser(any(String.class), any(String.class));

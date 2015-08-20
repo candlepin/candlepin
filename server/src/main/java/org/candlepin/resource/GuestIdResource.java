@@ -19,7 +19,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
-import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -96,7 +96,7 @@ public class GuestIdResource {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
         Page<List<GuestId>> page = guestIdCurator.listByConsumer(consumer, pageRequest);
 
-        // Store the page for the LinkHeaderPostInterceptor
+        // Store the page for the LinkHeaderResponseFilter
         ResteasyProviderFactory.pushContext(Page.class, page);
         List<GuestId> result = page.getPageData();
         return result;

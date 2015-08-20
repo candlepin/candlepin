@@ -16,22 +16,18 @@ package org.candlepin.common.resteasy.interceptor;
 
 import org.candlepin.common.jackson.DynamicFilterData;
 
-import org.jboss.resteasy.annotations.interception.ServerInterceptor;
-import org.jboss.resteasy.core.ResourceMethod;
-import org.jboss.resteasy.core.ServerResponse;
-import org.jboss.resteasy.spi.Failure;
-import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
 
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.ext.Provider;
 
 /**
- * DynamicFilterInterceptor
+ * DynamicJsonFilter
  *
  * A class to intercept api calls, and filter the json response based
  * on "include" and "exclude" parameter arrays.
@@ -42,14 +38,12 @@ import javax.ws.rs.ext.Provider;
  * This supports subtypes, ex: ?exclude=owner.href
  */
 @Provider
-@ServerInterceptor
-public class DynamicFilterInterceptor implements PreProcessInterceptor {
+@PreMatching
+public class DynamicJsonFilter implements ContainerRequestFilter {
 
     @Override
-    public ServerResponse preProcess(HttpRequest request, ResourceMethod method)
-        throws Failure, WebApplicationException {
-
-        Map<String, List<String>> queryParams = request.getUri().getQueryParameters();
+    public void filter(ContainerRequestContext requestContext) {
+        Map<String, List<String>> queryParams = requestContext.getUriInfo().getQueryParameters();
         boolean containsExcludes = queryParams.containsKey("exclude");
         boolean containsIncludes = queryParams.containsKey("include");
 
@@ -80,7 +74,5 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor {
         if (containsIncludes || containsExcludes) {
             ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
         }
-
-        return null;
     }
 }

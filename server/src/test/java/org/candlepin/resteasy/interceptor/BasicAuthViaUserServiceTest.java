@@ -15,13 +15,14 @@
 package org.candlepin.resteasy.interceptor;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
-import org.candlepin.common.exceptions.UnauthorizedException;
+import org.candlepin.common.exceptions.NotAuthorizedException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
@@ -29,38 +30,52 @@ import org.candlepin.service.UserServiceAdapter;
 import com.google.inject.Injector;
 
 import org.apache.commons.codec.binary.Base64;
-import org.jboss.resteasy.specimpl.HttpHeadersImpl;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+
+import javax.inject.Provider;
+import javax.ws.rs.core.HttpHeaders;
 
 public class BasicAuthViaUserServiceTest {
 
     @Mock private HttpRequest request;
-    private HttpHeadersImpl headers;
+    private MultivaluedMapImpl<String, String> headerMap;
+    @Mock private HttpHeaders mockHeaders;
     @Mock private UserServiceAdapter userService;
     @Mock private Injector injector;
+    @Mock private Provider<I18n> mockI18n;
     private BasicAuth auth;
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        headers = new HttpHeadersImpl();
-        headers.setRequestHeaders(new MultivaluedMapImpl<String, String>());
-        when(request.getHttpHeaders()).thenReturn(headers);
+        headerMap = new MultivaluedMapImpl<String, String>();
+        when(mockHeaders.getRequestHeaders()).thenReturn(headerMap);
+        when(request.getHttpHeaders()).thenReturn(mockHeaders);
+        when(mockHeaders.getRequestHeader(anyString())).then(new Answer<List<String>>() {
+            public List<String> answer(InvocationOnMock invocation) {
+                Object[] args = invocation.getArguments();
+                return headerMap.get(args[0]);
+            }
+        });
+
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        when(injector.getInstance(I18n.class)).thenReturn(i18n);
-        this.auth = new BasicAuth(userService, injector);
+        when(mockI18n.get()).thenReturn(i18n);
+        this.auth = new BasicAuth(userService, mockI18n);
     }
 
     /**
@@ -80,7 +95,7 @@ public class BasicAuthViaUserServiceTest {
      */
     @Test
     public void notBasicAuth() throws Exception {
-        headers.getRequestHeaders().add("Authorization", "DIGEST username=billy");
+        headerMap.add("Authorization", "DIGEST username=billy");
         assertNull(this.auth.getPrincipal(request));
     }
 
@@ -89,7 +104,7 @@ public class BasicAuthViaUserServiceTest {
      *
      * @throws Exception
      */
-    @Test(expected = UnauthorizedException.class)
+    @Test(expected = NotAuthorizedException.class)
     public void invalidUserPassword() throws Exception {
         setUserAndPassword("billy", "madison");
         when(userService.validateUser("billy", "madison")).thenReturn(false);
@@ -126,7 +141,6 @@ public class BasicAuthViaUserServiceTest {
         setUserAndPassword("user", "1:2");
         when(userService.validateUser("user", "1:2")).thenReturn(true);
 
-
         Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
         permissions.add(new OwnerPermission(owner, Access.ALL));
 
@@ -157,12 +171,12 @@ public class BasicAuthViaUserServiceTest {
     // TODO:  Add in owner creation/retrieval tests?
 
     private void setUserAndPassword(String username, String password) {
-        headers.getRequestHeaders().add("Authorization",
+        headerMap.add("Authorization",
             "BASIC " + encodeUserAndPassword(username, password));
     }
 
     private void setUserNoPassword(String username) {
-        headers.getRequestHeaders().add("Authorization",
+        headerMap.add("Authorization",
             "BASIC " + encodeUserNoPassword(username));
     }
 

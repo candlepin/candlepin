@@ -21,49 +21,35 @@ import org.candlepin.common.paging.Paginate;
 
 import com.google.inject.Inject;
 
-import org.jboss.resteasy.annotations.interception.ServerInterceptor;
-import org.jboss.resteasy.core.ResourceMethod;
-import org.jboss.resteasy.core.ServerResponse;
-import org.jboss.resteasy.spi.Failure;
-import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.jboss.resteasy.spi.interception.AcceptedByMethod;
-import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
 import org.xnap.commons.i18n.I18n;
 
-import java.lang.reflect.Method;
-
-import javax.ws.rs.WebApplicationException;
+import javax.annotation.Priority;
+import javax.ws.rs.Priorities;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.Provider;
 
 /**
  * DataPresentationInterceptor
  */
+@Paginate
 @Provider
-@ServerInterceptor
-public class PageRequestInterceptor implements PreProcessInterceptor,
-    AcceptedByMethod {
-
+@Priority(Priorities.USER)
+public class PageRequestFilter implements ContainerRequestFilter {
     private javax.inject.Provider<I18n> i18nProvider;
 
     @Inject
-    public PageRequestInterceptor(javax.inject.Provider<I18n> i18nProvider) {
-        super();
+    public PageRequestFilter(javax.inject.Provider<I18n> i18nProvider) {
         this.i18nProvider = i18nProvider;
     }
 
     @Override
-    public boolean accept(Class declaring, Method method) {
-        return method.isAnnotationPresent(Paginate.class);
-    }
-
-    @Override
-    public ServerResponse preProcess(HttpRequest request, ResourceMethod method)
-        throws Failure, WebApplicationException {
+    public void filter(ContainerRequestContext requestContext) {
         PageRequest p = null;
 
-        MultivaluedMap<String, String> params = request.getUri().getQueryParameters();
+        MultivaluedMap<String, String> params = requestContext.getUriInfo().getQueryParameters();
 
         String page = params.getFirst(PageRequest.PAGE_PARAM);
         String perPage = params.getFirst(PageRequest.PER_PAGE_PARAM);
@@ -106,8 +92,6 @@ public class PageRequestInterceptor implements PreProcessInterceptor,
         }
 
         ResteasyProviderFactory.pushContext(PageRequest.class, p);
-
-        return null;
     }
 
     private Order readOrder(String order) {

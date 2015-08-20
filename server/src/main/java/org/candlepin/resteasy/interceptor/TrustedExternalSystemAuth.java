@@ -32,7 +32,7 @@ import org.jboss.resteasy.spi.HttpRequest;
 public class TrustedExternalSystemAuth implements AuthProvider {
 
     @Override
-    public Principal getPrincipal(HttpRequest request) {
+    public Principal getPrincipal(HttpRequest httpRequest) {
         // TODO Auto-generated method stub
         return new ExternalSystemPrincipal();
     }

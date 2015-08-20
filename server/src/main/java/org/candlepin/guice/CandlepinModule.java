@@ -28,22 +28,22 @@ import org.candlepin.common.exceptions.mappers.FailureExceptionMapper;
 import org.candlepin.common.exceptions.mappers.InternalServerErrorExceptionMapper;
 import org.candlepin.common.exceptions.mappers.JAXBMarshalExceptionMapper;
 import org.candlepin.common.exceptions.mappers.JAXBUnmarshalExceptionMapper;
-import org.candlepin.common.exceptions.mappers.MethodNotAllowedExceptionMapper;
 import org.candlepin.common.exceptions.mappers.NoLogWebApplicationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.NotAcceptableExceptionMapper;
+import org.candlepin.common.exceptions.mappers.NotAllowedExceptionMapper;
+import org.candlepin.common.exceptions.mappers.NotAuthorizedExceptionMapper;
 import org.candlepin.common.exceptions.mappers.NotFoundExceptionMapper;
+import org.candlepin.common.exceptions.mappers.NotSupportedExceptionMapper;
 import org.candlepin.common.exceptions.mappers.ReaderExceptionMapper;
 import org.candlepin.common.exceptions.mappers.RollbackExceptionMapper;
 import org.candlepin.common.exceptions.mappers.RuntimeExceptionMapper;
-import org.candlepin.common.exceptions.mappers.UnauthorizedExceptionMapper;
-import org.candlepin.common.exceptions.mappers.UnsupportedMediaTypeExceptionMapper;
 import org.candlepin.common.exceptions.mappers.ValidationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WriterExceptionMapper;
 import org.candlepin.common.guice.JPAInitializer;
-import org.candlepin.common.resteasy.interceptor.DynamicFilterInterceptor;
-import org.candlepin.common.resteasy.interceptor.LinkHeaderPostInterceptor;
-import org.candlepin.common.resteasy.interceptor.PageRequestInterceptor;
+import org.candlepin.common.resteasy.interceptor.DynamicJsonFilter;
+import org.candlepin.common.resteasy.interceptor.LinkHeaderResponseFilter;
+import org.candlepin.common.resteasy.interceptor.PageRequestFilter;
 import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
@@ -105,9 +105,15 @@ import org.candlepin.resource.StatusResource;
 import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.resource.UserResource;
 import org.candlepin.resteasy.JsonProvider;
-import org.candlepin.resteasy.interceptor.AuthInterceptor;
+import org.candlepin.resteasy.ResourceLocatorMap;
+import org.candlepin.resteasy.interceptor.AuthenticationFilter;
+import org.candlepin.resteasy.interceptor.AuthorizationFeature;
 import org.candlepin.resteasy.interceptor.PinsetterAsyncInterceptor;
-import org.candlepin.resteasy.interceptor.VersionPostInterceptor;
+import org.candlepin.resteasy.interceptor.SecurityHoleAuthorizationFilter;
+import org.candlepin.resteasy.interceptor.StoreFactory;
+import org.candlepin.resteasy.interceptor.SuperAdminAuthorizationFilter;
+import org.candlepin.resteasy.interceptor.VerifyAuthorizationFilter;
+import org.candlepin.resteasy.interceptor.VersionResponseFilter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.candlepin.sync.ConsumerExporter;
@@ -206,12 +212,12 @@ public class CandlepinModule extends AbstractModule {
         bind(StatusResource.class);
         bind(EnvironmentResource.class);
         bind(StatisticResource.class);
-        bind(UnsupportedMediaTypeExceptionMapper.class);
-        bind(UnauthorizedExceptionMapper.class);
+        bind(NotSupportedExceptionMapper.class);
+        bind(NotAuthorizedExceptionMapper.class);
         bind(NotFoundExceptionMapper.class);
         bind(NotAcceptableExceptionMapper.class);
         bind(NoLogWebApplicationExceptionMapper.class);
-        bind(MethodNotAllowedExceptionMapper.class);
+        bind(NotAllowedExceptionMapper.class);
         bind(InternalServerErrorExceptionMapper.class);
         bind(DefaultOptionsMethodExceptionMapper.class);
         bind(BadRequestExceptionMapper.class);
@@ -236,6 +242,7 @@ public class CandlepinModule extends AbstractModule {
         bind(GuestIdResource.class);
 
         configureInterceptors();
+        configureAuth();
         bind(JsonProvider.class);
         configureEventSink();
 
@@ -283,13 +290,22 @@ public class CandlepinModule extends AbstractModule {
         bind(JPAInitializer.class).asEagerSingleton();
     }
 
+    private void configureAuth() {
+        bind(AuthorizationFeature.class);
+        bind(StoreFactory.class).asEagerSingleton();
+        bind(VerifyAuthorizationFilter.class);
+        bind(SuperAdminAuthorizationFilter.class);
+        bind(SecurityHoleAuthorizationFilter.class);
+        bind(AuthenticationFilter.class);
+        bind(ResourceLocatorMap.class).asEagerSingleton();
+    }
+
     private void configureInterceptors() {
-        bind(AuthInterceptor.class);
-        bind(PageRequestInterceptor.class);
+        bind(PageRequestFilter.class);
         bind(PinsetterAsyncInterceptor.class);
-        bind(VersionPostInterceptor.class);
-        bind(LinkHeaderPostInterceptor.class);
-        bind(DynamicFilterInterceptor.class);
+        bind(VersionResponseFilter.class);
+        bind(LinkHeaderResponseFilter.class);
+        bind(DynamicJsonFilter.class);
 
         bindConstant().annotatedWith(Names.named("PREFIX_APIURL_KEY"))
             .to(ConfigProperties.PREFIX_APIURL);

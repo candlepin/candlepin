@@ -16,26 +16,25 @@ package org.candlepin.resteasy.interceptor;
 
 import org.candlepin.common.util.VersionUtil;
 
-import org.jboss.resteasy.annotations.interception.Precedence;
-import org.jboss.resteasy.annotations.interception.ServerInterceptor;
-import org.jboss.resteasy.core.ServerResponse;
-import org.jboss.resteasy.spi.interception.PostProcessInterceptor;
-
 import java.util.Map;
 
+import javax.annotation.Priority;
+import javax.ws.rs.Priorities;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.ext.Provider;
 
 /**
- * VersionPostInterceptor
+ * VersionResponseFilter
  */
 @Provider
-@ServerInterceptor
-@Precedence("HEADER_DECORATOR")
-public class VersionPostInterceptor implements PostProcessInterceptor {
+@Priority(Priorities.HEADER_DECORATOR)
+public class VersionResponseFilter implements ContainerResponseFilter {
     @Override
-    public void postProcess(ServerResponse response) {
+    public void filter(ContainerRequestContext reqContext, ContainerResponseContext respContext) {
         Map<String, String> map = VersionUtil.getVersionMap();
-        response.getMetadata().add(VersionUtil.VERSION_HEADER,
+        respContext.getHeaders().add(VersionUtil.VERSION_HEADER,
             map.get("version") + "-" + map.get("release"));
     }
 }

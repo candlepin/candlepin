@@ -19,11 +19,11 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.IseException;
-import org.candlepin.common.exceptions.UnauthorizedException;
+import org.candlepin.common.exceptions.NotAuthorizedException;
+import org.candlepin.common.resteasy.auth.AuthUtil;
 import org.candlepin.common.resteasy.auth.RestEasyOAuthMessage;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 import org.jboss.resteasy.spi.HttpRequest;
 import org.slf4j.Logger;
@@ -44,6 +44,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Provider;
 import javax.ws.rs.core.Response;
 
 /**
@@ -61,19 +62,18 @@ public class OAuth implements AuthProvider {
     private TrustedUserAuth userAuth;
     private TrustedConsumerAuth consumerAuth;
     private TrustedExternalSystemAuth systemAuth;
-    protected I18n i18n;
-    protected Injector injector;
     private Map<String, OAuthAccessor> accessors = new HashMap<String, OAuthAccessor>();
+
+    protected Provider<I18n> i18nProvider;
 
     @Inject
     OAuth(TrustedConsumerAuth consumerAuth, TrustedUserAuth userAuth,
-        TrustedExternalSystemAuth systemAuth, Injector injector, Configuration config) {
+        TrustedExternalSystemAuth systemAuth, Provider<I18n> i18nProvider, Configuration config) {
         this.config = config;
-        this.injector = injector;
         this.userAuth = userAuth;
         this.consumerAuth = consumerAuth;
         this.systemAuth = systemAuth;
-        i18n = this.injector.getInstance(I18n.class);
+        this.i18nProvider = i18nProvider;
         this.setupAccessors();
         this.setupSigners();
     }
@@ -83,12 +83,12 @@ public class OAuth implements AuthProvider {
      *
      * @return the principal if it can be created, null otherwise
      */
-    public Principal getPrincipal(HttpRequest request) {
+    public Principal getPrincipal(HttpRequest httpRequest) {
         Principal principal = null;
-
+        I18n i18n = i18nProvider.get();
         try {
-            if (AuthUtil.getHeader(request, "Authorization").contains("oauth")) {
-                OAuthMessage requestMessage = new RestEasyOAuthMessage(request);
+            if (AuthUtil.getHeader(httpRequest, "Authorization").contains("oauth")) {
+                OAuthMessage requestMessage = new RestEasyOAuthMessage(httpRequest);
                 OAuthAccessor accessor = this.getAccessor(requestMessage);
 
                 // TODO: This is known to be memory intensive.
@@ -97,16 +97,16 @@ public class OAuth implements AuthProvider {
                 // If we got here, it is a valid oauth message.
                 // Figure out which kind of principal we should create, based on header
                 log.debug("Using OAuth");
-                if (!AuthUtil.getHeader(request, TrustedUserAuth.USER_HEADER).equals("")) {
-                    principal = userAuth.getPrincipal(request);
+                if (!AuthUtil.getHeader(httpRequest, TrustedUserAuth.USER_HEADER).equals("")) {
+                    principal = userAuth.getPrincipal(httpRequest);
                 }
-                else if (!AuthUtil.getHeader(request,
+                else if (!AuthUtil.getHeader(httpRequest,
                     TrustedConsumerAuth.CONSUMER_HEADER).equals("")) {
-                    principal = consumerAuth.getPrincipal(request);
+                    principal = consumerAuth.getPrincipal(httpRequest);
                 }
                 else {
                     // The external system is acting on behalf of itself
-                    principal = systemAuth.getPrincipal(request);
+                    principal = systemAuth.getPrincipal(httpRequest);
                 }
             }
         }
@@ -116,7 +116,7 @@ public class OAuth implements AuthProvider {
             // XXX: for some reason invalid signature (like bad password) has a
             // status code of 200. make it 401 unauthorized instead.
             if (e.getProblem().equals("signature_invalid")) {
-                throw new UnauthorizedException(
+                throw new NotAuthorizedException(
                     i18n.tr("Invalid oauth unit or secret"));
             }
             Response.Status returnCode = Response.Status.fromStatusCode(e
@@ -149,10 +149,11 @@ public class OAuth implements AuthProvider {
      * @return the OAuth accessor for the given message.
      */
     protected OAuthAccessor getAccessor(OAuthMessage msg) {
+        I18n i18n = i18nProvider.get();
         try {
             OAuthAccessor accessor = accessors.get(msg.getConsumerKey());
             if (accessor == null) {
-                throw new UnauthorizedException(
+                throw new NotAuthorizedException(
                     i18n.tr("Invalid oauth unit or secret"));
             }
             return accessor;

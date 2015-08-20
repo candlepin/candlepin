@@ -25,7 +25,7 @@ public class NoAuthPrincipal extends Principal {
     }
 
     @Override
-    public String getPrincipalName() {
+    public String getName() {
         return "Anonymous";
     }
 

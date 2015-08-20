@@ -15,7 +15,6 @@
 package org.candlepin.gutterball.servlet;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
@@ -24,19 +23,15 @@ import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.gutterball.config.ConfigProperties;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
 
-import org.jboss.resteasy.spi.Registry;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jukito.JukitoRunner;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -45,7 +40,6 @@ import javax.servlet.ServletContextEvent;
 
 /**
  * GutterballContextListenerTest
- * @version $Rev$
  */
 @RunWith(JukitoRunner.class)
 public class GutterballContextListenerTest {
@@ -86,14 +80,6 @@ public class GutterballContextListenerTest {
     }
 
     @Test
-    public void processInjector(ServletContext ctx, Injector inj) {
-        listener.processInjector(ctx, inj);
-        verify(ctx).getAttribute(eq(Registry.class.getName()));
-        verify(ctx).getAttribute(eq(ResteasyProviderFactory.class.getName()));
-        // TODO: fix text
-    }
-
-    @Test
     public void getStage(ServletContext ctx) {
         assertEquals(Stage.PRODUCTION, listener.getStage(ctx));
         verifyZeroInteractions(ctx);
@@ -111,15 +97,6 @@ public class GutterballContextListenerTest {
     public void initialized(ServletContextEvent sce, ServletContext ctx) {
         when(sce.getServletContext()).thenReturn(ctx);
         listener.contextInitialized(sce);
-    }
-
-    @Test
-    public void getInjector() {
-        List<Module> modules = new ArrayList<Module>();
-        modules.add(new ContextListenerTestModule());
-        Injector inj = listener.getInjector(Stage.DEVELOPMENT, modules);
-        assertNotNull(inj);
-        assertNotNull(inj.getInstance(Dummy.class));
     }
 
     public class ContextListenerTestModule extends AbstractModule {

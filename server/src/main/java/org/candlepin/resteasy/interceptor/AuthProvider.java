@@ -23,6 +23,6 @@ import org.jboss.resteasy.spi.HttpRequest;
  */
 public interface AuthProvider {
 
-    Principal getPrincipal(HttpRequest request);
+    Principal getPrincipal(HttpRequest httpRequest);
 
 }

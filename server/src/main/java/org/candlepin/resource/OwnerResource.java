@@ -24,7 +24,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
-import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.auth.Verify;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.CandlepinException;
@@ -172,8 +172,6 @@ public class OwnerResource {
     private ProductCurator prodCurator;
     private Configuration config;
     private ContentCurator contentCurator;
-
-
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator,
@@ -713,7 +711,7 @@ public class OwnerResource {
         Page<List<Consumer>> page = consumerCurator.searchOwnerConsumers(
             owner, userName, types, uuids, hypervisorIds, attrFilters, pageRequest);
 
-        // Store the page for the LinkHeaderPostInterceptor
+        // Store the page for the LinkHeaderResponseFilter
         ResteasyProviderFactory.pushContext(Page.class, page);
         return page.getPageData();
     }
@@ -800,7 +798,7 @@ public class OwnerResource {
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);
         calculatedAttributesUtil.setQuantityAttributes(poolList, c, activeOnDate);
 
-        // Store the page for the LinkHeaderPostInterceptor
+        // Store the page for the LinkHeaderResponseFilter
         ResteasyProviderFactory.pushContext(Page.class, page);
         return poolList;
     }
@@ -1157,6 +1155,7 @@ public class OwnerResource {
      * @httpcode 200
      */
     @PUT
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("/subscriptions")
     public void updateSubscription(Subscription subscription) {
         if (this.poolManager.getMasterPoolBySubscriptionId(subscription.getId()) == null) {

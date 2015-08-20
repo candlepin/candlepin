@@ -15,45 +15,55 @@
 package org.candlepin.common.resteasy.interceptor;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.common.jackson.DynamicFilterData;
 
-import org.jboss.resteasy.core.ResourceMethod;
 import org.jboss.resteasy.mock.MockHttpRequest;
-import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.net.URI;
 import java.util.Arrays;
+
+import javax.ws.rs.container.ContainerRequestContext;
 
 
 /**
- * DynamicFilterInterceptorTest
+ * DynamicJsonFilterTest
  */
 @RunWith(MockitoJUnitRunner.class)
-public class DynamicFilterInterceptorTest {
+public class DynamicJsonFilterTest {
 
-    @Mock private HttpRequest request;
+    @Mock private MockHttpRequest mockReq;
+    @Mock private ContainerRequestContext mockRequestContext;
 
-    private DynamicFilterInterceptor interceptor;
-    private ResourceMethod rmethod;
+    private DynamicJsonFilter interceptor;
 
     @Before
     public void init() {
-        this.interceptor = new DynamicFilterInterceptor();
-        rmethod = mock(ResourceMethod.class);
+        this.interceptor = new DynamicJsonFilter();
         ResteasyProviderFactory.popContextData(DynamicFilterData.class);
+    }
+
+    @After
+    public void tearDown() {
+        ResteasyProviderFactory.clearContextData();
     }
 
     @Test
     public void testNoFilters() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET", "http://localhost/candlepin/status");
-        this.interceptor.preProcess(req, rmethod);
+        mockReq = MockHttpRequest.create("GET",
+                new URI("/candlepin/status"),
+                new URI("http://localhost"));
+        when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
+
+        interceptor.filter(mockRequestContext);
 
         DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
         assertNull(filterData);
@@ -61,11 +71,12 @@ public class DynamicFilterInterceptorTest {
 
     @Test
     public void testSimpleBlacklist() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create(
-            "GET",
-            "http://localhost/candlepin/status?exclude=a2"
-        );
-        this.interceptor.preProcess(req, rmethod);
+        mockReq = MockHttpRequest.create("GET",
+            new URI("/candlepin/status?exclude=a2"),
+            new URI("http://localhost"));
+        when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
+
+        interceptor.filter(mockRequestContext);
 
         DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
         assertNotNull(filterData);
@@ -93,11 +104,12 @@ public class DynamicFilterInterceptorTest {
 
     @Test
     public void testSimpleMultiBlacklist() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create(
-            "GET",
-            "http://localhost/candlepin/status?exclude=a2&exclude=a3"
-        );
-        this.interceptor.preProcess(req, rmethod);
+        mockReq = MockHttpRequest.create("GET",
+            new URI("/candlepin/status?exclude=a2&exclude=a3"),
+            new URI("http://localhost"));
+        when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
+
+        interceptor.filter(mockRequestContext);
 
         DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
         assertNotNull(filterData);
@@ -125,11 +137,12 @@ public class DynamicFilterInterceptorTest {
 
     @Test
     public void testNestedAttributeBlacklist() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create(
-            "GET",
-            "http://localhost/candlepin/status?exclude=a2&exclude=a3.c1"
-        );
-        interceptor.preProcess(req, rmethod);
+        mockReq = MockHttpRequest.create("GET",
+            new URI("/candlepin/status?exclude=a2&exclude=a3.c1"),
+            new URI("http://localhost"));
+        when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
+
+        interceptor.filter(mockRequestContext);
 
         DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
         assertNotNull(filterData);
@@ -157,11 +170,12 @@ public class DynamicFilterInterceptorTest {
 
     @Test
     public void testSimpleWhitelist() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create(
-            "GET",
-            "http://localhost/candlepin/status?include=a2"
-        );
-        this.interceptor.preProcess(req, rmethod);
+        mockReq = MockHttpRequest.create("GET",
+            new URI("/candlepin/status?include=a2"),
+            new URI("http://localhost"));
+        when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
+
+        interceptor.filter(mockRequestContext);
 
         DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
         assertNotNull(filterData);
@@ -189,11 +203,12 @@ public class DynamicFilterInterceptorTest {
 
     @Test
     public void testSimpleMultiWhitelist() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create(
-            "GET",
-            "http://localhost/candlepin/status?include=a1&include=a3"
-        );
-        this.interceptor.preProcess(req, rmethod);
+        mockReq = MockHttpRequest.create("GET",
+            new URI("/candlepin/status?include=a1&include=a3"),
+            new URI("http://localhost"));
+        when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
+
+        interceptor.filter(mockRequestContext);
 
         DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
         assertNotNull(filterData);
@@ -221,11 +236,12 @@ public class DynamicFilterInterceptorTest {
 
     @Test
     public void testNestedAttributeWhitelist() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create(
-            "GET",
-            "http://localhost/candlepin/status?include=a2&include=a3.c1"
-        );
-        interceptor.preProcess(req, rmethod);
+        mockReq = MockHttpRequest.create("GET",
+            new URI("/candlepin/status?include=a2&include=a3.c1"),
+            new URI("http://localhost"));
+        when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
+
+        interceptor.filter(mockRequestContext);
 
         DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
         assertNotNull(filterData);
@@ -253,11 +269,12 @@ public class DynamicFilterInterceptorTest {
 
     @Test
     public void testIncludesWithExcludes() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create(
-            "GET",
-            "http://localhost/candlepin/status?include=a.b1&exclude=a.b1.c2&exclude=a.b2&include=a.b2.d2"
-        );
-        this.interceptor.preProcess(req, rmethod);
+        mockReq = MockHttpRequest.create("GET",
+            new URI("/candlepin/status?include=a.b1&exclude=a.b1.c2&exclude=a.b2&include=a.b2.d2"),
+            new URI("http://localhost"));
+        when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
+
+        interceptor.filter(mockRequestContext);
 
         DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
         assertNotNull(filterData);
@@ -287,12 +304,12 @@ public class DynamicFilterInterceptorTest {
 
     @Test
     public void testIncludesWithExcludesUsingWhitelist() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create(
-            "GET",
-            "http://localhost/candlepin/status?" +
-            "include=a.b1&exclude=a.b1.c2&include=a.b2.d2&filtermode=whitelist"
-        );
-        this.interceptor.preProcess(req, rmethod);
+        mockReq = MockHttpRequest.create("GET",
+            new URI("/candlepin/status?include=a.b1&exclude=a.b1.c2&include=a.b2.d2&filtermode=whitelist"),
+            new URI("http://localhost"));
+        when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
+
+        interceptor.filter(mockRequestContext);
 
         DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
         assertNotNull(filterData);

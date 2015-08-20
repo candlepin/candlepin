@@ -57,6 +57,8 @@ import org.candlepin.resource.OwnerResource;
 import org.candlepin.resource.PoolResource;
 import org.candlepin.resource.ProductResource;
 import org.candlepin.resource.SubscriptionResource;
+import org.candlepin.resteasy.ResourceLocatorMap;
+import org.candlepin.resteasy.interceptor.StoreFactory;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
@@ -71,7 +73,7 @@ import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.service.impl.stub.StubEntitlementCertServiceAdapter;
-import org.candlepin.test.AuthMethodInterceptorFactory;
+import org.candlepin.test.VerifyAuthorizationFilterFactory;
 import org.candlepin.test.DateSourceForTesting;
 import org.candlepin.test.EnforcerForTesting;
 import org.candlepin.test.PKIReaderForTesting;
@@ -95,6 +97,8 @@ import org.hibernate.Session;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
 import org.hibernate.validator.HibernateValidatorConfiguration;
+import org.jukito.TestScope;
+import org.jukito.TestSingleton;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.quartz.JobListener;
@@ -226,6 +230,8 @@ public class TestingModules {
 
         @Override
         public void configure() {
+            bindScope(TestSingleton.class, TestScope.SINGLETON);
+
             // This is not necessary in the normal module because the config is bound in the
             // context listener
             bind(Configuration.class).toInstance(config);
@@ -271,9 +277,12 @@ public class TestingModules {
             bind(Principal.class).toProvider(TestPrincipalProvider.class);
             bind(EventSink.class).to(NoopEventSinkImpl.class);
 
-            AuthMethodInterceptorFactory amf = new AuthMethodInterceptorFactory();
+            bind(ResourceLocatorMap.class);
+            bind(StoreFactory.class);
+            VerifyAuthorizationFilterFactory amf = new VerifyAuthorizationFilterFactory();
             requestInjection(amf);
             authMethodInterceptor = new TestingInterceptor(amf);
+            bind(TestingInterceptor.class).toInstance(authMethodInterceptor);
 
             bindInterceptor(Matchers.inPackage(Package.getPackage("org.candlepin.resource")),
                 new HttpMethodMatcher(), authMethodInterceptor);
@@ -290,11 +299,6 @@ public class TestingModules {
             bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
                 .to(ExpiryDateFunction.class).in(Singleton.class);
 
-        }
-
-        @Provides
-        public TestingInterceptor securityInterceptor() {
-            return authMethodInterceptor;
         }
     }
 }

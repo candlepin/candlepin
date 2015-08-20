@@ -21,7 +21,7 @@ package org.candlepin.auth;
 public class ExternalSystemPrincipal extends SystemPrincipal {
 
     @Override
-    public String getPrincipalName() {
+    public String getName() {
         return "External System";
     }
 

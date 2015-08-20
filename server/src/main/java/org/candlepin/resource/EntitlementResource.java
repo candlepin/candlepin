@@ -16,7 +16,7 @@ package org.candlepin.resource;
 
 import static org.quartz.JobBuilder.newJob;
 
-import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
@@ -168,7 +168,7 @@ public class EntitlementResource {
             p = entitlementCurator.listAll(filters, pageRequest);
         }
 
-        // Store the page for the LinkHeaderPostInterceptor
+        // Store the page for the LinkHeaderResponseFilter
         ResteasyProviderFactory.pushContext(Page.class, p);
         return p.getPageData();
     }

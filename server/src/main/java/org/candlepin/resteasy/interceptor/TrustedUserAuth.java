@@ -16,14 +16,17 @@ package org.candlepin.resteasy.interceptor;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.TrustedUserPrincipal;
+import org.candlepin.common.resteasy.auth.AuthUtil;
 import org.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 import org.jboss.resteasy.spi.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
+
+import javax.inject.Provider;
 
 /**
  * This auth form allows for a consumer id to be passed in a clear http header.
@@ -37,13 +40,12 @@ class TrustedUserAuth extends UserAuth {
     private static Logger log = LoggerFactory.getLogger(TrustedUserAuth.class);
 
     @Inject
-    TrustedUserAuth(UserServiceAdapter userServiceAdaper, Injector injector) {
-        super(userServiceAdaper, injector);
+    TrustedUserAuth(UserServiceAdapter userServiceAdaper, Provider<I18n> i18n) {
+        super(userServiceAdaper, i18n);
     }
 
-    public Principal getPrincipal(HttpRequest request) {
-
-        String username = AuthUtil.getHeader(request, USER_HEADER);
+    public Principal getPrincipal(HttpRequest httpRequest) {
+        String username = AuthUtil.getHeader(httpRequest, USER_HEADER);
         if (username == null || username.isEmpty()) {
             // Nothing we can do here:
             log.debug("No username header provided, returning null principal.");
@@ -51,7 +53,7 @@ class TrustedUserAuth extends UserAuth {
         }
 
         // Check if we should ask the user service for this user and their permissions:
-        String lookupPermsHeader = AuthUtil.getHeader(request,  LOOKUP_PERMISSIONS_HEADER);
+        String lookupPermsHeader = AuthUtil.getHeader(httpRequest,  LOOKUP_PERMISSIONS_HEADER);
         if (lookupPermsHeader != null && lookupPermsHeader.equals("true")) {
             log.debug("Looking up user permissions from user service.");
             return createPrincipal(username);

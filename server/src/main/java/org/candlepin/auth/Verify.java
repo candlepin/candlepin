@@ -12,11 +12,9 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.auth.interceptor;
+package org.candlepin.auth;
 
-import org.candlepin.auth.Access;
-import org.candlepin.auth.SubResource;
-
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -28,13 +26,10 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
+@Documented
 public @interface Verify {
-
-    Class value();
-
+    Class<?> value();
     Access require() default Access.NONE;
-
     boolean nullable() default false;
-
     SubResource subResource() default SubResource.NONE;
 }

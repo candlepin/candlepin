@@ -22,24 +22,20 @@ import org.candlepin.common.paging.Paginate;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import org.jboss.resteasy.annotations.interception.Precedence;
-import org.jboss.resteasy.annotations.interception.ServerInterceptor;
-import org.jboss.resteasy.core.ServerResponse;
-import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.jboss.resteasy.spi.LinkHeader;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.jboss.resteasy.spi.interception.AcceptedByMethod;
-import org.jboss.resteasy.spi.interception.PostProcessInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
-import java.net.URLDecoder;
 import java.util.List;
 import java.util.Map.Entry;
 
-import javax.servlet.http.HttpServletRequest;
+import javax.annotation.Priority;
+import javax.servlet.ServletContext;
+import javax.ws.rs.Priorities;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.Provider;
@@ -47,32 +43,26 @@ import javax.ws.rs.ext.Provider;
 /**
  * LinkHeaderPostProcessor
  */
+@Paginate
 @Provider
-@ServerInterceptor
-@Precedence("HEADER_DECORATOR")
-public class LinkHeaderPostInterceptor implements PostProcessInterceptor, AcceptedByMethod {
-    private static Logger log = LoggerFactory.getLogger(LinkHeaderPostInterceptor.class);
+@Priority(Priorities.HEADER_DECORATOR)
+public class LinkHeaderResponseFilter implements ContainerResponseFilter {
+    private static Logger log = LoggerFactory.getLogger(LinkHeaderResponseFilter.class);
     public static final String LINK_HEADER = "Link";
 
-    private Configuration config;
     private String apiUrlPrefixKey;
+    private Configuration config;
+    private String contextPath;
 
     @Inject
-    public LinkHeaderPostInterceptor(Configuration config,
-        @Named("PREFIX_APIURL_KEY") String apiUrlPrefixKey) {
-
+    public LinkHeaderResponseFilter(Configuration config,
+            @Named("PREFIX_APIURL_KEY") String apiUrlPrefixKey) {
         this.config = config;
         this.apiUrlPrefixKey = apiUrlPrefixKey;
     }
 
-    @Override
-    public boolean accept(Class declaring, Method method) {
-        return method.isAnnotationPresent(Paginate.class);
-    }
-
-    @Override
     @SuppressWarnings("rawtypes")
-    public void postProcess(ServerResponse response) {
+    public void filter(ContainerRequestContext reqContext, ContainerResponseContext respContext) {
         Page page = ResteasyProviderFactory.getContextData(Page.class);
 
         if (page == null) {
@@ -85,22 +75,14 @@ public class LinkHeaderPostInterceptor implements PostProcessInterceptor, Accept
             return;
         }
 
-        HttpServletRequest request = ResteasyProviderFactory.getContextData(
-            HttpServletRequest.class);
-        UriBuilder builder = buildBaseUrl(request);
+        UriBuilder builder = buildBaseUrl(reqContext);
         // If builder is null, we couldn't read the request URI, so stop.
         if (builder == null) {
             return;
         }
 
         MultivaluedMap<String, String> params = null;
-        try {
-            params = extractParameters(request.getQueryString());
-        }
-        catch (UnsupportedEncodingException e) {
-            log.warn("Could not find UTF-8 encoding", e);
-            return;
-        }
+        params = reqContext.getUriInfo().getQueryParameters();
 
         builder = addUnchangingQueryParams(builder, params);
         //TODO add missing parameters like the default limit if no limit is given.
@@ -119,7 +101,7 @@ public class LinkHeaderPostInterceptor implements PostProcessInterceptor, Accept
 
         header.addLink(null, "first", buildPageLink(builder, 1), null);
         header.addLink(null, "last", buildPageLink(builder, getLastPage(page)), null);
-        response.getMetadata().add(LINK_HEADER, header.toString());
+        respContext.getHeaders().add(LINK_HEADER, header.toString());
     }
 
     protected String buildPageLink(UriBuilder b, int value) {
@@ -129,7 +111,7 @@ public class LinkHeaderPostInterceptor implements PostProcessInterceptor, Accept
         return builder.build().toString();
     }
 
-    protected Integer getLastPage(Page page) {
+    protected Integer getLastPage(Page<?> page) {
         PageRequest pageRequest = page.getPageRequest();
 
         // The last page is ceiling(maxRecords/recordsPerPage)
@@ -142,90 +124,52 @@ public class LinkHeaderPostInterceptor implements PostProcessInterceptor, Accept
         return lastPage;
     }
 
-    protected Integer getPrevPage(Page page) {
+    protected Integer getPrevPage(Page<?> page) {
         Integer prev = page.getPageRequest().getPage() - 1;
         // if the calculated page is out of bounds, return null
         return (prev < 1 || prev >= getLastPage(page)) ? null : prev;
     }
 
-    protected Integer getNextPage(Page page) {
+    protected Integer getNextPage(Page<?> page) {
         Integer next = page.getPageRequest().getPage() + 1;
         return (next > getLastPage(page)) ? null : next;
     }
 
-    protected UriBuilder buildBaseUrl(HttpServletRequest request) {
-        StringBuffer url;
+    protected UriBuilder buildBaseUrl(ContainerRequestContext reqContext) {
         if (config.containsKey(this.apiUrlPrefixKey) && !"".equals(config.getString(this.apiUrlPrefixKey))) {
-            url = new StringBuffer(config.getString(this.apiUrlPrefixKey));
+            ServletContext servletContext = ResteasyProviderFactory.getContextData(ServletContext.class);
+            contextPath = servletContext.getContextPath();
+
+            StringBuffer url = new StringBuffer(config.getString(this.apiUrlPrefixKey));
             // The default value of PREFIX_APIURL doesn't specify a scheme.
             if (url.indexOf("://") == -1) {
                 url = new StringBuffer("https://").append(url);
             }
 
-            // Now add on the resource they requested
-            // We can't just use request.getServletPath().  Something RESTEasy is doing?
+            String requestUri = reqContext.getUriInfo().getRequestUri().toString();
 
-            // Context path should equal something like /candlepin
-            String context = request.getContextPath();
-
-            // Request URI should equal something like /candlepin/resource
-            String requestUri = request.getRequestURI();
-
-            int offset = requestUri.lastIndexOf(context);
+            int offset = requestUri.lastIndexOf(contextPath);
             if (offset >= 0) {
                 // Strip off the context
-                url.append(requestUri.substring(offset + context.length()));
+                url.append(requestUri.substring(offset + contextPath.length()));
             }
             else {
-                // Something has gone really wrong if the context isn't in the
-                // request URI.
-                log.warn("Could not determine resource path.");
+                log.warn("Could not find servlet context in {}", requestUri);
+                return null;
+            }
+
+            try {
+                UriBuilder builder = UriBuilder.fromUri(url.toString());
+                return builder;
+            }
+            catch (IllegalArgumentException e) {
+                log.warn("Couldn't build URI for link header using {}", url, e);
                 return null;
             }
         }
         else {
-            url = request.getRequestURL();
+            return reqContext.getUriInfo().getRequestUriBuilder();
         }
-
-        try {
-            UriBuilder builder = UriBuilder.fromUri(url.toString());
-            return builder;
-        }
-        catch (IllegalArgumentException e) {
-            log.warn("Could not build URI from " + url, e);
-            return null;
-        }
-    }
-
-    /**
-     * Based on RESTEasy's UriInfoImpl.extractParameters()
-     * @param queryString
-     * @return
-     * @throws UnsupportedEncodingException
-     */
-    protected MultivaluedMap<String, String> extractParameters(String queryString)
-        throws UnsupportedEncodingException {
-        if (queryString == null || "".equals(queryString)) {
-            return null;
-        }
-
-        MultivaluedMap<String, String> map = new MultivaluedMapImpl<String, String>();
-        String[] params = queryString.split("&");
-
-        for (String param : params) {
-            if (param.indexOf('=') >= 0) {
-                String[] nv = param.split("=");
-                // Have to decode because UriBuilder re-encodes.
-                String name = URLDecoder.decode(nv[0], "UTF-8");
-                String val = (nv.length > 1) ? nv[1] : "";
-                map.add(name, URLDecoder.decode(val, "UTF-8"));
-            }
-            else {
-                map.add(param, "");
-            }
-        }
-
-        return map;
     }
 
     protected UriBuilder addUnchangingQueryParams(UriBuilder builder,

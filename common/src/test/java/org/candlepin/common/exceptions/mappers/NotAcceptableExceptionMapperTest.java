@@ -14,11 +14,11 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import org.jboss.resteasy.spi.NotAcceptableException;
 import org.junit.Test;
 
+import javax.ws.rs.NotAcceptableException;
 import javax.ws.rs.core.Response;
 
 /**
@@ -37,7 +37,7 @@ public class NotAcceptableExceptionMapperTest extends TestExceptionMapperBase {
     }
 
     @Override
-    public Class getMapperClass() {
+    public Class<?> getMapperClass() {
         return NotAcceptableExceptionMapper.class;
     }
 }

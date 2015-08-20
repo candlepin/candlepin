@@ -14,31 +14,24 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
-import static org.junit.Assert.*;
-
-import org.jboss.resteasy.spi.MethodNotAllowedException;
-import org.junit.Test;
-
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
 
 /**
- * MethodNotAllowedExceptionMapperTest
+ * NotAuthorizedExceptionMapper maps the RESTEasy UnauthorizedException into
+ * JSON and allows the proper header to be set. This allows Candlepin to
+ * control the flow of the exceptions.
  */
-public class MethodNotAllowedExceptionMapperTest extends
-    TestExceptionMapperBase {
-
-    @Test
-    public void handleMethodNotAllowed() {
-        MethodNotAllowedException mnae = new MethodNotAllowedException("not allowed");
-        MethodNotAllowedExceptionMapper mnaem =
-            injector.getInstance(MethodNotAllowedExceptionMapper.class);
-        Response r = mnaem.toResponse(mnae);
-        assertEquals(405, r.getStatus());
-        verifyMessage(r, rtmsg("not allowed"));
-    }
+@Provider
+public class NotAuthorizedExceptionMapper extends CandlepinExceptionMapper
+    implements ExceptionMapper<NotAuthorizedException> {
 
     @Override
-    public Class getMapperClass() {
-        return MethodNotAllowedExceptionMapper.class;
+    public Response toResponse(NotAuthorizedException exception) {
+        return getDefaultBuilder(exception, Response.Status.UNAUTHORIZED,
+            determineBestMediaType()).build();
     }
+
 }

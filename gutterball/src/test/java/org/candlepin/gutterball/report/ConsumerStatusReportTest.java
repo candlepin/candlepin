@@ -18,7 +18,6 @@ package org.candlepin.gutterball.report;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
-import static junitparams.JUnitParamsRunner.*;
 
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
@@ -44,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
 import junitparams.JUnitParamsRunner;
@@ -53,37 +53,6 @@ import junitparams.Parameters;
 
 @RunWith(JUnitParamsRunner.class)
 public class ConsumerStatusReportTest {
-    /**
-     * Kludge implementation so we don't have to endlessly mock this class.
-     *
-     * If/when we get the Java EE 7 classes, this can be removed and we can simply import
-     * javax.ws.rs.core.MultivaluedHashMap.
-     */
-    private class MultivaluedHashMap<K, V> extends HashMap<K, List<V>> implements MultivaluedMap<K, V> {
-        public void add(K key, V value) {
-            List<V> values = this.get(key);
-
-            if (values == null) {
-                values = new LinkedList<V>();
-                this.put(key, values);
-            }
-
-            values.add(value);
-        }
-
-        public V getFirst(K key) {
-            List<V> values = this.get(key);
-            return values != null && !values.isEmpty() ? values.get(0) : null;
-        }
-
-        public void putSingle(K key, V value) {
-            this.remove(key);
-            this.add(key, value);
-        }
-    }
-
-
-
     private HttpServletRequest mockReq = mock(HttpServletRequest.class);
 
     private ComplianceSnapshotCurator complianceSnapshotCurator;

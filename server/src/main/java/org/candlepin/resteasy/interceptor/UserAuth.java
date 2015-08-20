@@ -20,9 +20,10 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
 
-import com.google.inject.Injector;
-
 import org.xnap.commons.i18n.I18n;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 /**
  * UserAuth
@@ -30,13 +31,12 @@ import org.xnap.commons.i18n.I18n;
 public abstract class UserAuth implements AuthProvider {
 
     protected UserServiceAdapter userServiceAdapter;
-    protected Injector injector;
-    protected I18n i18n;
+    protected Provider<I18n> i18n;
 
-    public UserAuth(UserServiceAdapter userServiceAdapter, Injector injector) {
+    @Inject
+    public UserAuth(UserServiceAdapter userServiceAdapter, Provider<I18n> i18n) {
         this.userServiceAdapter = userServiceAdapter;
-        this.injector = injector;
-        this.i18n = this.injector.getInstance(I18n.class);
+        this.i18n = i18n;
     }
 
     /**

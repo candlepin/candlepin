@@ -15,7 +15,7 @@
 package org.candlepin.resteasy.interceptor;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.ConsumerPrincipal;
@@ -33,14 +33,14 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
 
-import java.security.Principal;
 import java.security.cert.X509Certificate;
 
 import javax.inject.Provider;
+import javax.security.auth.x500.X500Principal;
 
 public class SSLAuthTest {
 
-    @Mock private HttpRequest request;
+    @Mock private HttpRequest httpRequest;
     @Mock private ConsumerCurator consumerCurator;
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
     @Mock private Provider<I18n> i18nProvider;
@@ -60,7 +60,7 @@ public class SSLAuthTest {
      */
     @Test
     public void noCert() throws Exception {
-        assertNull(this.auth.getPrincipal(request));
+        assertNull(this.auth.getPrincipal(httpRequest));
     }
 
     /**
@@ -79,7 +79,7 @@ public class SSLAuthTest {
 
         mockCert(dn);
         when(this.consumerCurator.getConsumer("453-44423-235")).thenReturn(consumer);
-        assertEquals(expected, this.auth.getPrincipal(request));
+        assertEquals(expected, this.auth.getPrincipal(httpRequest));
     }
 
     /**
@@ -92,7 +92,7 @@ public class SSLAuthTest {
         mockCert("OU=something");
         when(this.consumerCurator.findByUuid(anyString())).thenReturn(
                 new Consumer("machine_name", "test user", null, null));
-        assertNull(this.auth.getPrincipal(request));
+        assertNull(this.auth.getPrincipal(httpRequest));
     }
 
     /**
@@ -104,17 +104,16 @@ public class SSLAuthTest {
     public void noValidConsumerEntity() throws Exception {
         mockCert("CN=235-8");
         when(this.consumerCurator.findByUuid("235-8")).thenReturn(null);
-        assertNull(this.auth.getPrincipal(request));
+        assertNull(this.auth.getPrincipal(httpRequest));
     }
 
 
     private void mockCert(String dn) {
         X509Certificate idCert =  mock(X509Certificate.class);
-        Principal principal = mock(Principal.class);
+        X500Principal principal = new X500Principal(dn);
 
-        when(principal.getName()).thenReturn(dn);
-        when(idCert.getSubjectDN()).thenReturn(principal);
-        when(this.request.getAttribute("javax.servlet.request.X509Certificate"))
+        when(idCert.getSubjectX500Principal()).thenReturn(principal);
+        when(this.httpRequest.getAttribute("javax.servlet.request.X509Certificate"))
                 .thenReturn(new X509Certificate[]{idCert});
     }
 

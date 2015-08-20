@@ -35,11 +35,15 @@ RESTEASY = [group('jaxrs-api',
                   # XXX: this version requires us to use
                   # ContentTypeHackFilter.java when updating,
                   # please check if its still needed, and remove if not.
-                  :version => '2.3.7.Final'),
-            'org.scannotation:scannotation:jar:1.0.2',
-            'org.apache.httpcomponents:httpclient:jar:4.1.2',
+                  #
+                  # Note that we can go no higher.  Later versions require
+                  # servlet spec 3.0 which Tomcat 6 does not support
+                  :version => '3.0.6.Final'),
+            'org.scannotation:scannotation:jar:1.0.3',
+            'org.apache.httpcomponents:httpclient:jar:4.2.1',
             'org.apache.james:apache-mime4j:jar:0.6',
-            'javax.mail:mail:jar:1.4']
+            'javax.mail:mail:jar:1.4.4',
+            'javax.ws.rs:javax.ws.rs-api:jar:2.0.1']
 
 JACKSON_NS = "com.fasterxml.jackson"
 JACKSON_VERSION = "2.3.0"
@@ -68,14 +72,14 @@ JUKITO = Buildr.transitive(['org.jukito:jukito:jar:1.4'])
 
 LOGBACK = [group('logback-core', 'logback-classic',
                  :under => 'ch.qos.logback',
-                 :version => '1.0.13')]
+                 :version => '1.1.3')]
 
 # Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
 # JCL for example.
 SLF4J_BRIDGES = [group('jcl-over-slf4j', 'log4j-over-slf4j',
                        :under => 'org.slf4j',
-                       :version => '1.7.5')]
-SLF4J = 'org.slf4j:slf4j-api:jar:1.7.5'
+                       :version => '1.7.12')]
+SLF4J = 'org.slf4j:slf4j-api:jar:1.7.12'
 
 LOGGING = [LOGBACK, SLF4J_BRIDGES, SLF4J]
 
@@ -446,6 +450,7 @@ define "candlepin" do
     # the other dependencies transfer from compile.classpath automagically
     test.with([
       CORE_TESTING,
+      JUKITO,
       HSQLDB,
       LIQUIBASE_SLF4J,
     ])

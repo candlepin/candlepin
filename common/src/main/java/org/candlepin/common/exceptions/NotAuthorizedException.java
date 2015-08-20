@@ -23,12 +23,12 @@ import javax.ws.rs.core.Response.Status;
 /**
  * Represents an Unauthorized (HTTP 401) error.
  */
-public class UnauthorizedException extends CandlepinException {
-    public UnauthorizedException(String message) {
+public class NotAuthorizedException extends CandlepinException {
+    public NotAuthorizedException(String message) {
         super(Status.UNAUTHORIZED, message);
     }
 
-    public UnauthorizedException(String message, boolean logException) {
+    public NotAuthorizedException(String message, boolean logException) {
         super(Status.UNAUTHORIZED, message, logException);
     }
 

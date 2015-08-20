@@ -14,29 +14,21 @@
  */
 package org.candlepin.gutterball.resteasy.interceptor;
 
-import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.IseException;
-import org.candlepin.common.exceptions.UnauthorizedException;
+import org.candlepin.common.exceptions.NotAuthorizedException;
+import org.candlepin.common.resteasy.auth.AuthUtil;
 import org.candlepin.common.resteasy.auth.RestEasyOAuthMessage;
 import org.candlepin.gutterball.config.ConfigProperties;
+
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
-import org.jboss.resteasy.annotations.interception.SecurityPrecedence;
-import org.jboss.resteasy.annotations.interception.ServerInterceptor;
-import org.jboss.resteasy.core.ResourceMethod;
-import org.jboss.resteasy.core.ServerResponse;
-import org.jboss.resteasy.spi.Failure;
 import org.jboss.resteasy.spi.HttpRequest;
-import org.jboss.resteasy.spi.interception.AcceptedByMethod;
-import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
-
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.xnap.commons.i18n.I18n;
 
 import net.oauth.OAuthAccessor;
@@ -49,53 +41,40 @@ import net.oauth.SimpleOAuthValidator;
 import net.oauth.signature.CustomSigner;
 import net.oauth.signature.OAuthSignatureMethod;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.Provider;
-
 import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
-import java.util.List;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
+import javax.annotation.Priority;
+import javax.ws.rs.Priorities;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.core.Response;
 
 /**
- * The OAuthInterceptor provides basic authentication using the OAuth protocol by injecting itself
- * into the call chain for registered resource methods.
+ * The OAuthFilter provides authentication using the OAuth protocol.
  * <p/>
  * Any method annotated with the SecurityHole annotation will not be protected by this class, and
  * OAuth as a whole may be disabled by setting the <tt>gutterball.auth.oauth.enable</tt>
  * configuration to false.
  */
-@Provider
-@ServerInterceptor
-@SecurityPrecedence
-public class OAuthInterceptor implements PreProcessInterceptor, AcceptedByMethod {
+@Priority(Priorities.AUTHENTICATION)
+public class OAuthFilter implements ContainerRequestFilter {
     protected static final OAuthValidator VALIDATOR = new SimpleOAuthValidator();
     protected static final String SIGNATURE_TYPE = "HMAC-SHA1";
 
-    private static Logger log = LoggerFactory.getLogger(OAuthInterceptor.class);
+    private static Logger log = LoggerFactory.getLogger(OAuthFilter.class);
 
-    private Injector injector;
     private Configuration config;
     private javax.inject.Provider<I18n> i18nProvider;
 
     private Map<String, OAuthAccessor> accessors;
 
-
     @Inject
-    public OAuthInterceptor(Injector injector, Configuration config,
-        javax.inject.Provider<I18n> i18nProvider) {
-        super();
-
-        this.injector = injector;
+    public OAuthFilter(Configuration config, javax.inject.Provider<I18n> i18nProvider) {
         this.config = config;
         this.i18nProvider = i18nProvider;
 
@@ -106,60 +85,20 @@ public class OAuthInterceptor implements PreProcessInterceptor, AcceptedByMethod
     }
 
     /**
-     * Checks if this interceptor should be injected into the call chain for the specified method.
-     *
-     * @param declarer
-     *  A Class instance representing the class in which the method is defined.
-     *
-     * @param method
-     *  The method
-     *
-     * @return
-     *  true if this interceptor is to be injected into to method's call chain; false otherwise.
-     */
-    @Override
-    public boolean accept(Class declarer, Method method) {
-        if (declarer == null || method == null) {
-            return false;
-        }
-
-        // Check if the method defines the security hole annotation
-        boolean result = (this.getSecurityHole(method) == null);
-
-        if (!result) {
-            log.debug("OAuth disabled for method \"" + method.getName() + '"');
-        }
-
-        return result;
-    }
-
-    /**
      * Preprocesses a resource method invocation, verifying that the client is able to access the
      * requested resource/action.
      *
-     * @param request
-     *  A HttpRequest instance containing details for the request.
-     *
-     * @param method
-     *  A ResourceMethod instance representing the method to be invoked if the request is accepted.
-     *
-     * @throws Failure
-     *  if Resteasy encounters an internal error.
-     *
-     * @throws WebApplicationException
-     *  if an unexpected error occurs while preprocessing the method invocation.
-     *
-     * @return
-     *  a ServerResponse instance containing the response to send to the client when the request is
-     *  to be denied; null if the request is to be accepted.
+     * @param requestContext
+     *  The ContainerRequestContext
      */
     @Override
-    public ServerResponse preProcess(HttpRequest request, ResourceMethod method) throws Failure,
-        WebApplicationException {
+    public void filter(ContainerRequestContext requestContext) {
         I18n i18n = this.i18nProvider.get();
 
-        if (!this.getHeader(request, "Authorization").contains("oauth")) {
-            throw new UnauthorizedException(i18n.tr("No credentials provided"));
+        HttpRequest request = ResteasyProviderFactory.getContextData(HttpRequest.class);
+
+        if (!AuthUtil.getHeader(request, "Authorization").contains("oauth")) {
+            throw new NotAuthorizedException(i18n.tr("No credentials provided"));
         }
 
         try {
@@ -167,7 +106,7 @@ public class OAuthInterceptor implements PreProcessInterceptor, AcceptedByMethod
             OAuthAccessor accessor = this.getAccessor(requestMessage);
 
             if (accessor == null) {
-                throw new UnauthorizedException(i18n.tr("Invalid OAuth unit or secret"));
+                throw new NotAuthorizedException(i18n.tr("Invalid OAuth unit or secret"));
             }
 
             // TODO: This is known to be memory intensive.
@@ -180,7 +119,7 @@ public class OAuthInterceptor implements PreProcessInterceptor, AcceptedByMethod
             // XXX: for some reason invalid signature (like bad password) has a
             // status code of 200. make it 401 unauthorized instead.
             if (e.getProblem().equals("signature_invalid")) {
-                throw new UnauthorizedException(i18n.tr("Invalid OAuth unit or secret"));
+                throw new NotAuthorizedException(i18n.tr("Invalid OAuth unit or secret"));
             }
 
             Response.Status returnCode = Response.Status.fromStatusCode(e.getHttpStatusCode());
@@ -200,35 +139,6 @@ public class OAuthInterceptor implements PreProcessInterceptor, AcceptedByMethod
         catch (IOException e) {
             throw new IseException(e.getMessage(), e);
         }
-
-        return null;
-    }
-
-    /**
-     * Retrieve a header, or the empty string if it is not there.
-     *
-     * @return the header or a blank string (no nulls)
-     */
-    protected String getHeader(HttpRequest request, String name) {
-        String headerValue = "";
-
-        if (request != null && name != null) {
-            List<String> header = null;
-            HttpHeaders headers = request.getHttpHeaders();
-
-            for (String key : headers.getRequestHeaders().keySet()) {
-                if (key.equalsIgnoreCase(name)) {
-                    header = headers.getRequestHeader(key);
-                    break;
-                }
-            }
-
-            if (header != null && header.size() > 0) {
-                headerValue = header.get(0);
-            }
-        }
-
-        return headerValue;
     }
 
     /**
@@ -261,30 +171,6 @@ public class OAuthInterceptor implements PreProcessInterceptor, AcceptedByMethod
         catch (IOException e) {
             throw new IseException(i18n.tr("Error getting OAuth unit key", e));
         }
-    }
-
-    /**
-     * Retrieves a SecurityHole instance for the specified method. If the method is not a security
-     * hole (that is, it requires authentication), this method returns null. If the method has
-     * multiple security hole definitions, this method returns the first one found.
-     *
-     * @param method
-     *  The method for which to retrieve a SecurityHole instance.
-     *
-     * @return
-     *  a SecurityHole instance for the specified method; or null if the method requires
-     *  authentication.
-     */
-    protected SecurityHole getSecurityHole(Method method) {
-        if (method != null) {
-            for (Annotation annotation : method.getAnnotations()) {
-                if (annotation instanceof SecurityHole) {
-                    return (SecurityHole) annotation;
-                }
-            }
-        }
-
-        return null;
     }
 
     /**

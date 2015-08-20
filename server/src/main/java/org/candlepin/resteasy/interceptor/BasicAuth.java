@@ -16,18 +16,20 @@ package org.candlepin.resteasy.interceptor;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.CandlepinException;
+import org.candlepin.common.exceptions.NotAuthorizedException;
 import org.candlepin.common.exceptions.ServiceUnavailableException;
-import org.candlepin.common.exceptions.UnauthorizedException;
+import org.candlepin.common.resteasy.auth.AuthUtil;
 import org.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 import org.apache.commons.codec.binary.Base64;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+
+import javax.inject.Provider;
 
 /**
  * BasicAuth
@@ -37,15 +39,14 @@ class BasicAuth extends UserAuth {
     private static Logger log = LoggerFactory.getLogger(BasicAuth.class);
 
     @Inject
-    BasicAuth(UserServiceAdapter userServiceAdapter, Injector injector) {
-        super(userServiceAdapter, injector);
+    BasicAuth(UserServiceAdapter userServiceAdapter, Provider<I18n> i18n) {
+        super(userServiceAdapter, i18n);
     }
 
     @Override
-    public Principal getPrincipal(HttpRequest request) {
-        I18n i18n = injector.getInstance(I18n.class);
+    public Principal getPrincipal(HttpRequest httpRequest) {
         try {
-            String auth = AuthUtil.getHeader(request, "Authorization");
+            String auth = AuthUtil.getHeader(httpRequest, "Authorization");
 
             if (auth != null && auth.toUpperCase().startsWith("BASIC ")) {
                 String userpassEncoded = auth.substring(6);
@@ -57,19 +58,18 @@ class BasicAuth extends UserAuth {
                     password = userpass[1];
                 }
 
-                log.debug("check for: " + username + " - password of length #" +
-                    (password == null ? 0 : password.length()) + " = <omitted>");
+                if (log.isDebugEnabled()) {
+                    Integer length = (password == null) ? 0 : password.length();
+                    log.debug("check for: {} - password of length {}", username, length);
+                }
 
                 if (userServiceAdapter.validateUser(username, password)) {
                     Principal principal = createPrincipal(username);
-                    if (log.isDebugEnabled()) {
-                        log.debug("principal created for user '" + username);
-                    }
-
+                    log.debug("principal created for user '{}'", username);
                     return principal;
                 }
                 else {
-                    throw new UnauthorizedException(i18n.tr("Invalid Credentials"));
+                    throw new NotAuthorizedException(i18n.get().tr("Invalid Credentials"));
                 }
             }
         }
@@ -83,8 +83,7 @@ class BasicAuth extends UserAuth {
             if (log.isDebugEnabled()) {
                 log.debug("Error getting principal " + e);
             }
-            throw new ServiceUnavailableException(i18n
-                .tr("Error contacting user service"));
+            throw new ServiceUnavailableException(i18n.get().tr("Error contacting user service"));
         }
         return null;
     }
