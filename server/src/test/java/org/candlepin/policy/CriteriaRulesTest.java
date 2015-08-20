@@ -120,7 +120,6 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
 
         Consumer host = createConsumer(owner);
         host.addGuestId(new GuestId("GUESTUUID", host));
-        host.addGuestIdCheckIn();
         consumerCurator.update(host);
 
         Product targetProduct = TestUtil.createProduct();
@@ -166,7 +165,6 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
 
         Consumer host = createConsumer(owner);
         host.addGuestId(new GuestId("GUESTUUID", host));
-        host.addGuestIdCheckIn();
         consumerCurator.update(host);
 
         Product targetProduct = TestUtil.createProduct();
@@ -193,7 +191,6 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
 
         Consumer host = createConsumer(owner);
         host.addGuestId(new GuestId("GUESTUUID", host));
-        host.addGuestIdCheckIn();
         consumerCurator.update(host);
 
         Product targetProduct = TestUtil.createProduct();
