@@ -373,8 +373,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     @Transactional
     public void updateLastCheckin(Consumer consumer, Date checkinDate) {
-        consumer.addCheckIn(checkinDate);
-        save(consumer);
+        currentSession().createQuery("update Consumer c " +
+                "set c.lastCheckin = :date, " +
+                "c.updated = :date " +
+                "where c.id = :consumerid")
+                .setTimestamp("date", checkinDate)
+                .setParameter("consumerid", consumer.getId())
+                .executeUpdate();
     }
 
     private boolean factsChanged(Map<String, String> updatedFacts,
@@ -464,9 +469,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         Criteria crit = currentSession()
             .createCriteria(GuestId.class)
             .createAlias("consumer", "gconsumer")
-            .createAlias("gconsumer.guestIdsCheckIns", "checkins")
             .add(Restrictions.eq("gconsumer.owner", owner))
-            .addOrder(Order.desc("checkins.updated"))
+            .addOrder(Order.desc("updated"))
             .setMaxResults(1)
             .setProjection(Projections.property("consumer"));
         return (Consumer) crit.add(guestIdCrit).uniqueResult();

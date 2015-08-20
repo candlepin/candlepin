@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="oracle"/>
+    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql"/>
+    <property name="timestamp.type" value="DATETIME" dbms="mysql"/>
+
+    <changeSet id="20150820140403-1" author="dgoodwin">
+        <comment>revert to lastcheckin column</comment>
+        <addColumn tableName="cp_consumer">
+            <column name="lastcheckin" type="${timestamp.type}"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20150820140403-2" author="dgoodwin">
+        <comment>Update lastcheckin column with max value per consumer from the table.</comment>
+        <sql>UPDATE cp_consumer c SET lastcheckin = (SELECT MAX(ch.checkintime) FROM cp_consumer_checkin ch WHERE ch.consumer_id = c.id)</sql>
+    </changeSet>
+
+    <changeSet id="20150820140403-3" author="dgoodwin">
+        <comment>Cleanup leftover references to the jobs to purge the last checkin tables.</comment>
+        <sql>DELETE FROM cp_job WHERE jobclass = 'org.candlepin.pinsetter.tasks.CleanupCheckInsJob'</sql>
+        <sql>DELETE FROM cp_job WHERE jobclass = 'org.candlepin.pinsetter.tasks.CleanupGuestIdsCheckInsJob'</sql>
+    </changeSet>
+
+    <changeSet id="20150820140403-4" author="dgoodwin">
+        <comment>Drop the last checkin tables.</comment>
+        <dropTable tableName="cp_consumer_checkin"/>
+        <dropTable tableName="cp_guest_ids_checkin"/>
+    </changeSet>
+
+    <changeSet id="20150820140403-5" author="dgoodwin">
+        <comment>Delete quartz references to the dropped jobs so Candlepin can start up..</comment>
+        <sql>DELETE FROM QRTZ_CRON_TRIGGERS WHERE trigger_name LIKE 'CleanupCheckInsJob%'</sql>
+        <sql>DELETE FROM QRTZ_CRON_TRIGGERS WHERE trigger_name LIKE 'CleanupGuestIdsCheckInsJob%'</sql>
+        <sql>DELETE FROM QRTZ_TRIGGERS WHERE trigger_name LIKE 'CleanupCheckInsJob%'</sql>
+        <sql>DELETE FROM QRTZ_TRIGGERS WHERE trigger_name LIKE 'CleanupGuestIdsCheckInsJob%'</sql>
+        <sql>DELETE FROM QRTZ_JOB_DETAILS WHERE job_class_name = 'org.candlepin.pinsetter.tasks.CleanupCheckInsJob'</sql>
+        <sql>DELETE FROM QRTZ_JOB_DETAILS WHERE job_class_name = 'org.candlepin.pinsetter.tasks.CleanupGuestIdsCheckInsJob'</sql>
+    </changeSet>
+
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

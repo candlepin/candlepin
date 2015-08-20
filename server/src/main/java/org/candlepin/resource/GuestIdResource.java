@@ -198,10 +198,6 @@ public class GuestIdResource {
         }
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-
-        // A little weird here as this API is a single guest ID coming in, we're treating
-        // it as the last checkin time for all guest IDs on this host, but should be safe.
-        consumer.addGuestIdCheckIn();
         updated.setConsumer(consumer);
         GuestId toUpdate =
             guestIdCurator.findByGuestIdAndOrg(guestId, consumer.getOwner());

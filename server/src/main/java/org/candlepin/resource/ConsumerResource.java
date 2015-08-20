@@ -466,7 +466,6 @@ public class ConsumerResource {
             for (GuestId g : consumer.getGuestIds()) {
                 g.setConsumer(consumer);
             }
-            consumer.addGuestIdCheckIn();
         }
 
         HypervisorId hvsrId = consumer.getHypervisorId();
@@ -489,7 +488,7 @@ public class ConsumerResource {
             if (lastCheckIn != null) {
                 log.info("Creating with specific last checkin time: {}",
                         consumer.getLastCheckin());
-                consumer.addCheckIn(lastCheckIn);
+                consumer.setLastCheckin(lastCheckIn);
             }
             if (identityCertCreation) {
                 IdentityCertificate idCert = generateIdCert(consumer, false);
@@ -938,7 +937,7 @@ public class ConsumerResource {
         if (updated.getLastCheckin() != null) {
             log.info("Updating to specific last checkin time: {}",
                     updated.getLastCheckin());
-            toUpdate.addCheckIn(updated.getLastCheckin());
+            toUpdate.setLastCheckin(updated.getLastCheckin());
             changesMade = true;
         }
 
@@ -1063,10 +1062,6 @@ public class ConsumerResource {
         log.info("Updating {} guest IDs.", incoming.getGuestIds().size());
         List<GuestId> removedGuests = getRemovedGuestIds(existing, incoming);
         List<GuestId> addedGuests = getAddedGuestIds(existing, incoming);
-
-        // Always record a guest ID checkin if the update contained guest IDs. This is
-        // used in queries to see which host most recently reported a guest.
-        existing.addGuestIdCheckIn();
 
         List<GuestId> existingGuests = existing.getGuestIds();
 
