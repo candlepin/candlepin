@@ -107,6 +107,7 @@ public class CandlepinContextListenerTest {
 
     @Test
     public void contextInitialized() {
+        when(config.getBoolean(eq(ConfigProperties.HORNETQ_ENABLED))).thenReturn(true);
         prepareForInitialization();
         listener.contextInitialized(evt);
         verify(hqlistener).contextInitialized(any(Injector.class));
@@ -117,7 +118,16 @@ public class CandlepinContextListenerTest {
     }
 
     @Test
+    public void hornetQDisabled() {
+        when(config.getBoolean(eq(ConfigProperties.HORNETQ_ENABLED))).thenReturn(false);
+        prepareForInitialization();
+        listener.contextInitialized(evt);
+        verifyNoMoreInteractions(hqlistener);
+    }
+
+    @Test
     public void contextDestroyed() {
+        when(config.getBoolean(eq(ConfigProperties.HORNETQ_ENABLED))).thenReturn(true);
         prepareForInitialization();
 
         // we actually have to call contextInitialized before we

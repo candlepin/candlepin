@@ -12,10 +12,8 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.test;
+package org.candlepin.audit;
 
-import org.candlepin.audit.Event;
-import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
@@ -24,27 +22,32 @@ import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Set;
 
+import javax.inject.Inject;
+
 /**
- * EventSinkForTesting, a no-op class as we don't need hornetq at all.
+ * NoopEventSinkImpl
+ * - Used if configuration candlepin.audit.hornetq.enable = false
  */
-public class EventSinkForTesting implements EventSink {
+public class NoopEventSinkImpl implements EventSink {
 
-    @Override
-    public void emitConsumerCreated(Consumer newConsumer) {
-    }
+    private static Logger log = LoggerFactory.getLogger(NoopEventSinkImpl.class);
 
-    @Override
-    public void emitOwnerCreated(Owner newOwner) {
-    }
-
-    @Override
-    public void emitOwnerMigrated(Owner newOwner) {
+    /*
+     * needed cause guice needs public scope, default scope is package scope
+     */
+    @Inject
+    public NoopEventSinkImpl() {
+        log.debug("NoopEventSinkImpl initialized!");
     }
 
     @Override
     public void queueEvent(Event event) {
+        log.debug("event enqueued, but performing noop:" + event);
     }
 
     @Override
@@ -52,31 +55,54 @@ public class EventSinkForTesting implements EventSink {
     }
 
     @Override
+    public void emitConsumerCreated(Consumer newConsumer) {
+        log.debug("emitConsumerCreated:" + newConsumer);
+    }
+
+    @Override
+    public void emitOwnerCreated(Owner newOwner) {
+        log.debug("emitOwnerCreated:" + newOwner);
+    }
+
+    @Override
+    public void emitOwnerMigrated(Owner owner) {
+        log.debug("emitOwnerMigrated:" + owner);
+    }
+
+    @Override
     public void emitPoolCreated(Pool newPool) {
+        log.debug("emitPoolCreated:" + newPool);
     }
 
     @Override
     public void emitExportCreated(Consumer consumer) {
+        log.debug("emitExportCreated:" + consumer);
     }
 
     @Override
     public void emitImportCreated(Owner owner) {
+        log.debug("emitImportCreated:" + owner);
     }
 
     @Override
     public void emitActivationKeyCreated(ActivationKey key) {
+        log.debug("emitActivationKeyCreated:" + key);
     }
 
     @Override
     public void emitRulesModified(Rules oldRules, Rules newRules) {
+        log.debug("emitRulesModified: oldRules:" + oldRules + " newRules:" + oldRules);
     }
 
     @Override
     public void emitRulesDeleted(Rules rules) {
+        log.debug("emitRulesDeleted:" + rules);
     }
 
     @Override
     public void emitCompliance(Consumer consumer,
             Set<Entitlement> entitlements, ComplianceStatus compliance) {
+        log.debug("emitCompliance: entitlements:" + entitlements + " ComplianceStatus:" + compliance);
     }
+
 }

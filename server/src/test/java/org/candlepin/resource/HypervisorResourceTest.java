@@ -16,7 +16,7 @@ package org.candlepin.resource;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -168,8 +168,6 @@ public class HypervisorResourceTest {
                 thenReturn(new VirtConsumerMap());
         when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
-        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(Set.class))).
-            thenReturn(new VirtConsumerMap());
 
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
         when(principal.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE))).
@@ -223,9 +221,6 @@ public class HypervisorResourceTest {
                 thenReturn(mockHypervisorConsumerMap(hypervisorId, existing));
         when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
                 thenReturn(new VirtConsumerMap());
-        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(Set.class))).
-            thenReturn(new VirtConsumerMap());
-
 
         HypervisorCheckInResult result = hypervisorResource.hypervisorUpdate(hostGuestMap,
             principal, owner.getKey(), true);
@@ -251,8 +246,6 @@ public class HypervisorResourceTest {
                 any(Set.class))).
                 thenReturn(new VirtConsumerMap());
         when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
-            thenReturn(new VirtConsumerMap());
-        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
 
         when(consumerTypeCurator.lookupByLabel(
@@ -292,8 +285,6 @@ public class HypervisorResourceTest {
                 any(Set.class))).
                 thenReturn(new VirtConsumerMap());
         when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
-            thenReturn(new VirtConsumerMap());
-        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
 
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);

@@ -14,7 +14,7 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.quartz.JobBuilder.*;
+import static org.quartz.JobBuilder.newJob;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.model.Consumer;
@@ -136,11 +136,6 @@ public class HypervisorUpdateJob extends UniqueByOwnerJob {
             VirtConsumerMap guestConsumersMap = consumerCurator.getGuestConsumersMap(
                     owner, guests);
 
-            // Maps virt guest ID to registered consumer for hypervisor, if one exists:
-            VirtConsumerMap guestHypervisorConsumers = consumerCurator.
-                    getGuestsHostMap(owner, guests);
-
-
             for (String hypervisorId : hosts) {
                 Consumer knownHost = hypervisorConsumersMap.get(hypervisorId);
                 Consumer incoming = incomingHosts.get(hypervisorId);
@@ -153,14 +148,14 @@ public class HypervisorUpdateJob extends UniqueByOwnerJob {
                         log.info("Registering new host consumer for hypervisor ID: {}", hypervisorId);
                         Consumer newHost = createConsumerForHypervisorId(hypervisorId, owner, principal);
                         consumerResource.performConsumerUpdates(incoming, newHost, guestConsumersMap,
-                                guestHypervisorConsumers, false);
+                                false);
                         consumerResource.create(newHost, principal, null, owner.getKey(), null, false);
                         hypervisorConsumersMap.add(hypervisorId, newHost);
                         result.created(newHost);
                     }
                 }
                 else if (consumerResource.performConsumerUpdates(incoming, knownHost,
-                        guestConsumersMap, guestHypervisorConsumers, false)) {
+                        guestConsumersMap, false)) {
                     consumerCurator.update(knownHost);
                     result.updated(knownHost);
                 }

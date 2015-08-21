@@ -192,6 +192,7 @@ describe 'GuestId Resource' do
 
     consumer_client.get_guestids().length.should == 0
     new_consumer_client.get_guestids().length.should == 1
+
     # The guests host limited entitlement should be gone
     guest_client.list_entitlements().length.should == 0
   end

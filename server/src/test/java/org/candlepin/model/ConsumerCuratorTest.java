@@ -281,7 +281,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void twoHostsRegisteredPickFirst() {
+    public void twoHostsRegisteredPickFirst() throws Exception {
         Consumer host1 = new Consumer("hostConsumer", "testUser", owner, ct);
         consumerCurator.create(host1);
 
@@ -296,6 +296,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         host2.addGuestId(host2Guest);
         host2.addGuestIdCheckIn();
         consumerCurator.update(host2);
+
+        Thread.sleep(1000);
 
         GuestId host1Guest = new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8");
         host1.addGuestId(host1Guest);
@@ -315,31 +317,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         List<Consumer> guests = consumerCurator.getGuests(consumer);
         assertTrue(guests.size() == 0);
-    }
-
-    @Test
-    public void getGuestsHostMapChoosestLatestReporter() {
-        Consumer host1 = new Consumer("hostConsumer", "testUser", owner, ct);
-        consumerCurator.create(host1);
-
-        Consumer host2 = new Consumer("hostConsumer2", "testUser2", owner, ct);
-        consumerCurator.create(host2);
-
-        String virtUuid1 = "daf0fe10-956b-7b4e-b7dc-b383ce681ba8"; // on both hosts
-        String virtUuid2 = "faf0fe10-956b-7b4e-b7dc-b383ce681cc9"; // only on host 1
-        String virtUuid3 = "daf0fe10-956b-7b4e-b7dc-b383ce681ff8"; // only on host2
-        addGuestIdsTo(host2, virtUuid1, virtUuid3);
-        addGuestIdsTo(host1, virtUuid1, virtUuid2);
-
-        Set<String> guestIds = new HashSet<String>();
-        guestIds.add(virtUuid1);
-        guestIds.add(virtUuid2);
-        guestIds.add(virtUuid3);
-
-        VirtConsumerMap results = consumerCurator.getGuestsHostMap(owner, guestIds);
-        assertEquals(host1.getUuid(), results.get(virtUuid1.toUpperCase()).getUuid());
-        assertEquals(host1.getUuid(), results.get(virtUuid2.toUpperCase()).getUuid());
-        assertEquals(host2.getUuid(), results.get(virtUuid3.toUpperCase()).getUuid());
     }
 
     private void addGuestIdsTo(Consumer host, String... virtUuids) {

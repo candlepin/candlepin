@@ -18,6 +18,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.guice.JPAInitializer;
@@ -75,7 +76,6 @@ import org.candlepin.service.impl.stub.StubEntitlementCertServiceAdapter;
 import org.candlepin.test.AuthMethodInterceptorFactory;
 import org.candlepin.test.DateSourceForTesting;
 import org.candlepin.test.EnforcerForTesting;
-import org.candlepin.test.EventSinkForTesting;
 import org.candlepin.test.PKIReaderForTesting;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.ExpiryDateFunction;
@@ -271,7 +271,7 @@ public class TestingModules {
 
             bind(PrincipalProvider.class).to(TestPrincipalProvider.class);
             bind(Principal.class).toProvider(TestPrincipalProvider.class);
-            bind(EventSink.class).to(EventSinkForTesting.class);
+            bind(EventSink.class).to(NoopEventSinkImpl.class);
 
             AuthMethodInterceptorFactory amf = new AuthMethodInterceptorFactory();
             requestInjection(amf);

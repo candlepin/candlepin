@@ -45,7 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -471,53 +470,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .setMaxResults(1)
             .setProjection(Projections.property("consumer"));
         return (Consumer) crit.add(guestIdCrit).uniqueResult();
-    }
-
-    /**
-     * Get the host consumer for the given virt guest IDs, if one exists.
-     *
-     * As multiple hosts could have reported the same guest ID, we find the newest
-     * and assume this is the authoritative host for the guest.
-     *
-     * This search needs to be case insensitive as some hypervisors report uppercase
-     * guest UUIDs, when the guest itself will report lowercase.
-     *
-     * @param guestIds
-     * @return host consumers who most recently reported the given guestIds (if any)
-     */
-    @Transactional
-    public VirtConsumerMap getGuestsHostMap(Owner owner, Set<String> guestIds) {
-        List<Consumer> hypervisors = new ArrayList<Consumer>();
-        int fromIndex = 0;
-        int toIndex = fromIndex + MAX_IN_QUERY_LENGTH;
-
-        Object[] ids = Util.getPossibleUuids(guestIds.toArray(new String [guestIds.size()])).toArray();
-
-        while (fromIndex < ids.length) {
-            if (toIndex >= ids.length) {
-                toIndex = ids.length;
-            }
-            Criteria crit = currentSession()
-                .createCriteria(GuestId.class)
-                .createAlias("consumer", "gconsumer")
-                .createAlias("gconsumer.guestIdsCheckIns", "checkins")
-                .add(Restrictions.eq("gconsumer.owner", owner))
-                .addOrder(Order.desc("checkins.updated"))
-                .setProjection(Projections.property("consumer"));
-
-            // Note: may contain duplicates but is sorted so they appear later:
-            crit.add(new InExpressionIgnoringCase("guestId", Arrays.copyOfRange(ids, fromIndex, toIndex)));
-            hypervisors.addAll(crit.list());
-            fromIndex = toIndex;
-            toIndex += MAX_IN_QUERY_LENGTH;
-        }
-        VirtConsumerMap result = new VirtConsumerMap();
-        for (Consumer hypervisor : hypervisors) {
-            for (GuestId gid : hypervisor.getGuestIds()) {
-                result.add(gid.getGuestId(), hypervisor);
-            }
-        }
-        return result;
     }
 
     /**
