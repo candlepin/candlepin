@@ -55,6 +55,7 @@ public class ConfigProperties {
     public static final String CA_CERT_UPSTREAM = "candlepin.upstream_ca_cert";
     public static final String CA_KEY_PASSWORD = "candlepin.ca_key_password";
 
+    public static final String HORNETQ_ENABLED = "candlepin.audit.hornetq.enable";
     public static final String HORNETQ_BASE_DIR = "candlepin.audit.hornetq.base_dir";
     public static final String HORNETQ_LARGE_MSG_SIZE = "candlepin.audit.hornetq.large_msg_size";
     public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
@@ -184,6 +185,7 @@ public class ConfigProperties {
 
                 this.put(ACTIVATION_DEBUG_PREFIX, "");
 
+                this.put(HORNETQ_ENABLED, "true");
                 this.put(HORNETQ_BASE_DIR, "/var/lib/candlepin/hornetq");
                 this.put(HORNETQ_LARGE_MSG_SIZE, Integer.toString(100 * 1024));
                 this.put(AUDIT_LISTENERS,

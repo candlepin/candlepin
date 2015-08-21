@@ -17,6 +17,7 @@ package org.candlepin.guice;
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
+import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationPrefixes;
@@ -242,13 +243,7 @@ public class CandlepinModule extends AbstractModule {
 
         configureInterceptors();
         bind(JsonProvider.class);
-
-        bind(EventSink.class).annotatedWith(Names.named("RequestSink"))
-            .to(EventSinkImpl.class).in(RequestScoped.class);
-        bind(EventSink.class).annotatedWith(Names.named("PinsetterSink"))
-            .to(EventSinkImpl.class).in(PinsetterJobScoped.class);
-        bind(EventSink.class).toProvider(EventSinkProvider.class);
-
+        configureEventSink();
         configurePinsetter();
 
         configureExporter();
@@ -354,5 +349,18 @@ public class CandlepinModule extends AbstractModule {
         // for lazy loading:
         bind(AMQPBusPublisher.class).toProvider(AMQPBusPubProvider.class)
                 .in(Singleton.class);
+    }
+
+    private void configureEventSink() {
+        if (config.getBoolean(ConfigProperties.HORNETQ_ENABLED)) {
+            bind(EventSink.class).annotatedWith(Names.named("RequestSink")).to(EventSinkImpl.class)
+                    .in(RequestScoped.class);
+            bind(EventSink.class).annotatedWith(Names.named("PinsetterSink")).to(EventSinkImpl.class)
+                    .in(PinsetterJobScoped.class);
+            bind(EventSink.class).toProvider(EventSinkProvider.class);
+        }
+        else {
+            bind(EventSink.class).to(NoopEventSinkImpl.class);
+        }
     }
 }

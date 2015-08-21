@@ -115,8 +115,10 @@ public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
 
         // Must call super.contextInitialized() before accessing injector
         insertValidationEventListeners(injector);
-        hornetqListener = injector.getInstance(HornetqContextListener.class);
-        hornetqListener.contextInitialized(injector);
+        if (config.getBoolean(HORNETQ_ENABLED)) {
+            hornetqListener = injector.getInstance(HornetqContextListener.class);
+            hornetqListener.contextInitialized(injector);
+        }
         pinsetterListener = injector.getInstance(PinsetterContextListener.class);
         pinsetterListener.contextInitialized();
 
@@ -126,7 +128,9 @@ public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
     @Override
     public void contextDestroyed(ServletContextEvent event) {
         super.contextDestroyed(event);
-        hornetqListener.contextDestroyed();
+        if (config.getBoolean(HORNETQ_ENABLED)) {
+            hornetqListener.contextDestroyed();
+        }
         pinsetterListener.contextDestroyed();
         loggerListener = injector.getInstance(LoggerContextListener.class);
         loggerListener.contextDestroyed();
