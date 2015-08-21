@@ -37,6 +37,7 @@ import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
+import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.util.Util;
@@ -152,14 +153,7 @@ public class EntitlementResource {
         List<KeyValueParameter> attrFilters,
         @Context PageRequest pageRequest) {
 
-        EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
-        for (KeyValueParameter filterParam : attrFilters) {
-            filters.addAttributeFilter(filterParam.key(), filterParam.value());
-        }
-        if (!StringUtils.isEmpty(matches)) {
-            filters.addMatchesFilter(matches);
-        }
-
+        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
         Page<List<Entitlement>> p;
         if (consumerUuid != null) {
 
@@ -168,7 +162,7 @@ public class EntitlementResource {
                 throw new BadRequestException(
                     i18n.tr("Unit with ID ''{0}'' could not be found.", consumerUuid));
             }
-            p = entitlementCurator.listByConsumer(consumer, filters, pageRequest);
+            p = entitlementCurator.listByConsumer(consumer, null, filters, pageRequest);
         }
         else {
             p = entitlementCurator.listAll(filters, pageRequest);

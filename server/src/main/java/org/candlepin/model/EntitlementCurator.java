@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 
@@ -72,21 +73,22 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return toReturn;
     }
 
-    public Page<List<Entitlement>> listByConsumer(Consumer consumer,
-        EntitlementFilterBuilder filterBuilder, PageRequest pageRequest) {
-        Criteria query = createSecureCriteria().createAlias("pool", "p");
-        if (filterBuilder.hasMatchFilters()) {
-            query.createAlias("p.product", "product");
-            query.createAlias("p.providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN);
-            query.createAlias("provProd.productContent", "ppcw", CriteriaSpecification.LEFT_JOIN);
-            query.createAlias("ppcw.content", "ppContent", CriteriaSpecification.LEFT_JOIN);
-            query.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+    private Criteria createCriteriaFromFilters(EntitlementFilterBuilder filterBuilder) {
+        Criteria criteria = createSecureCriteria();
+        criteria.createAlias("pool", "p");
+
+        // Add the required aliases for the filter builder only if required.
+        if (filterBuilder != null && filterBuilder.hasMatchFilters()) {
+            criteria.createAlias("p.product", "product");
+            criteria.createAlias("p.providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN);
+            criteria.createAlias("provProd.productContent", "ppcw", CriteriaSpecification.LEFT_JOIN);
+            criteria.createAlias("ppcw.content", "ppContent", CriteriaSpecification.LEFT_JOIN);
+            criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
         }
-        query.add(Restrictions.eq("consumer", consumer));
         // Never show a consumer expired entitlements
-        query.add(Restrictions.ge("p.endDate", new Date()));
-        filterBuilder.applyTo(query);
-        return listByCriteria(query, pageRequest);
+        criteria.add(Restrictions.ge("p.endDate", new Date()));
+        filterBuilder.applyTo(criteria);
+        return criteria;
     }
 
     /**
@@ -102,23 +104,60 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
     @SuppressWarnings("unchecked")
     public List<Entitlement> listByConsumer(Consumer consumer, EntitlementFilterBuilder filters) {
-        Criteria c = createSecureCriteria();
-        c.createAlias("pool", "p");
+        Criteria criteria = createCriteriaFromFilters(filters);
+        criteria.add(Restrictions.eq("consumer", consumer));
+        criteria.addOrder(Order.asc("p.id"));
+        return criteria.list();
+    }
 
-        // Add the required aliases for the filter builder only if required.
-        if (filters.hasMatchFilters()) {
-            c.createAlias("p.product", "product");
-            c.createAlias("p.providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN);
-            c.createAlias("provProd.productContent", "ppcw", CriteriaSpecification.LEFT_JOIN);
-            c.createAlias("ppcw.content", "ppContent", CriteriaSpecification.LEFT_JOIN);
-            c.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+    public Page<List<Entitlement>> listByConsumer(Consumer consumer, String productId,
+            EntitlementFilterBuilder filters, PageRequest pageRequest) {
+        return listFilteredPages(consumer, "consumer", productId, filters, pageRequest);
+    }
+
+    public Page<List<Entitlement>> listByOwner(Owner owner, String productId,
+            EntitlementFilterBuilder filters, PageRequest pageRequest) {
+        return listFilteredPages(owner, "owner", productId, filters, pageRequest);
+    }
+
+    public Page<List<Entitlement>> listAll(EntitlementFilterBuilder filters, PageRequest pageRequest) {
+        return listFilteredPages(null, null, null, filters, pageRequest);
+    }
+
+    private Page<List<Entitlement>> listFilteredPages(AbstractHibernateObject object, String objectType,
+            String productId, EntitlementFilterBuilder filters, PageRequest pageRequest) {
+        Page<List<Entitlement>> entitlementsPage;
+        Owner owner = null;
+        if (object != null) {
+            owner = (object instanceof Owner) ? (Owner) object : ((Consumer) object).getOwner();
         }
-        c.add(Restrictions.eq("consumer", consumer));
-        // Never show a consumer expired entitlements
-        c.add(Restrictions.ge("p.endDate", new Date()));
-        filters.applyTo(c);
-        c.addOrder(Order.asc("p.id"));
-        return c.list();
+
+        // No need to add filters when matching by product.
+        if (object != null && productId != null) {
+            Product p = productCurator.lookupById(owner, productId);
+            if (p == null) {
+                throw new BadRequestException(i18n.tr(
+                    "Product with ID ''{0}'' could not be found.", productId));
+            }
+            entitlementsPage = listByProduct(object, objectType, productId, pageRequest);
+        }
+        else {
+            // Build up any provided entitlement filters from query params.
+            Criteria criteria = createCriteriaFromFilters(filters);
+            if (object != null) {
+                criteria.add(Restrictions.eq(objectType, object));
+            }
+            entitlementsPage = listByCriteria(criteria, pageRequest);
+        }
+
+        return entitlementsPage;
+    }
+
+    public List<Entitlement> listByOwner(Owner owner) {
+        Criteria query = currentSession().createCriteria(Entitlement.class)
+            .add(Restrictions.eq("owner", owner));
+
+        return listByCriteria(query);
     }
 
     public List<Entitlement> listByEnvironment(Environment environment) {
@@ -150,13 +189,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 .add(Restrictions.ge("endDate", activeOn));
         List<Entitlement> entitlements = criteria.list();
         return entitlements;
-    }
-
-    public List<Entitlement> listByOwner(Owner owner) {
-        Criteria query = currentSession().createCriteria(Entitlement.class)
-            .add(Restrictions.eq("owner", owner));
-
-        return listByCriteria(query);
     }
 
     /**
@@ -308,11 +340,17 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return pidEnts;
     }
 
-    @Transactional
     public Page<List<Entitlement>> listByConsumerAndProduct(Consumer consumer,
+            String productId, PageRequest pageRequest) {
+        return listByProduct(consumer, "consumer", productId, pageRequest);
+    }
+
+    @Transactional
+    private Page<List<Entitlement>> listByProduct(AbstractHibernateObject object, String objectType,
         String productId, PageRequest pageRequest) {
+
         Criteria query = createSecureCriteria()
-            .add(Restrictions.eq("consumer", consumer))
+            .add(Restrictions.eq(objectType, object))
             .createAlias("pool", "p")
             .createAlias("p.product", "prod")
             .createAlias("p.providedProducts", "pp",
@@ -431,19 +469,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .addOrder(Order.asc("created")) // eldest entitlement
             .setMaxResults(1);
         return (Entitlement) activeNowQuery.uniqueResult();
-    }
-
-    public Page<List<Entitlement>> listAll(EntitlementFilterBuilder filters, PageRequest pageRequest) {
-        Criteria criteria = createSecureCriteria();
-        criteria.createAlias("pool", "p");
-        if (filters.hasMatchFilters()) {
-            criteria.createAlias("p.product", "product");
-            criteria.createAlias("p.providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN);
-            criteria.createAlias("provProd.productContent", "ppcw", CriteriaSpecification.LEFT_JOIN);
-            criteria.createAlias("ppcw.content", "ppContent", CriteriaSpecification.LEFT_JOIN);
-        }
-        filters.applyTo(criteria);
-        return listByCriteria(criteria, pageRequest);
     }
 
 }

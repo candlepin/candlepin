@@ -31,6 +31,7 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
@@ -40,6 +41,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.EventCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
@@ -1204,5 +1206,55 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(1, poolCurator.listByOwner(owner).size());
         assertNotNull(pool.getId());
 
+    }
+
+    @Test
+    public void getAllEntitlementsForOwner() {
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+
+        Owner owner = TestUtil.createOwner();
+        Consumer consumer = TestUtil.createConsumer(owner);
+        Pool pool = TestUtil.createPool(owner, TestUtil.createProduct(owner));
+
+        Entitlement e = TestUtil.createEntitlement(owner, consumer, pool, null);
+        e.setId("getAllEntitlementsForOwner");
+        List<Entitlement> entitlements = new ArrayList<Entitlement>();
+        entitlements.add(e);
+        Page<List<Entitlement>> page = new Page<List<Entitlement>>();
+        page.setPageData(entitlements);
+
+        OwnerCurator oc = mock(OwnerCurator.class);
+        EntitlementCurator ec = mock(EntitlementCurator.class);
+        OwnerResource ownerres = new OwnerResource(oc, null,
+                null, null, i18n, null, null, null, null, null, null, null,
+                null, null, null, null, null, ec, null, null, null,
+                null, null, null, null, null, null);
+
+        when(oc.lookupByKey(owner.getKey())).thenReturn(owner);
+        when(
+                ec.listByOwner(isA(Owner.class), anyString(), isA(EntitlementFilterBuilder.class),
+                        isA(PageRequest.class))).thenReturn(page);
+
+        List<Entitlement> result = ownerres.ownerEntitlements(owner.getKey(), null, null, null, req);
+
+        assertEquals(1, result.size());
+        assertEquals("getAllEntitlementsForOwner", result.get(0).getId());
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void getEntitlementsForNonExistantOwner() {
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+
+        OwnerCurator oc = mock(OwnerCurator.class);
+        OwnerResource ownerres = new OwnerResource(oc, null,
+                null, null, i18n, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null);
+
+        ownerres.ownerEntitlements("Taylor Swift", null, null, null, req);
     }
 }

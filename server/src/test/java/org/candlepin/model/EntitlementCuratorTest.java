@@ -249,14 +249,18 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertEquals(2, ents.size());
     }
 
-    @Test
-    public void testListByConsumerAndProduct() {
+    private PageRequest createPageRequest() {
         PageRequest req = new PageRequest();
         req.setPage(1);
         req.setPerPage(10);
         req.setOrder(PageRequest.Order.ASCENDING);
         req.setSortBy("id");
+        return req;
+    }
 
+    @Test
+    public void testListByConsumerAndProduct() {
+        PageRequest req = createPageRequest();
         Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
 
@@ -332,9 +336,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testListByConsumerAndProductFiltered() {
-        PageRequest req = new PageRequest();
-        req.setPage(1);
-        req.setPerPage(10);
+        PageRequest req = createPageRequest();
 
         Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
@@ -372,10 +374,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void listByConsumerExpired() {
-        List<Entitlement> ents = entitlementCurator.listByConsumer(consumer,
-            new EntitlementFilterBuilder());
-        // Should be 2 entitlements already
-        assertEquals(2, ents.size());
+        List<Entitlement> ents = entitlementCurator.listByConsumer(consumer);
+        assertEquals("Setup should add 2 entitlements:", 2, ents.size());
 
         Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
@@ -390,8 +390,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             entitlementCurator.create(ent);
         }
 
-        // Do not show the expired entitlements, size should be the same as before
-        assertEquals(2, ents.size());
+        ents = entitlementCurator.listByConsumer(consumer);
+        assertEquals("adding expired entitlements should not change results:", 2, ents.size());
     }
 
     @Test
@@ -399,9 +399,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
         filters.addAttributeFilter("variant", "Starter Pack");
 
-        // Should be 2 entitlements already
         List<Entitlement> ents = entitlementCurator.listByConsumer(consumer, filters);
-        assertEquals(1, ents.size());
+        assertEquals("should match only one out of two entitlements:", 1, ents.size());
 
         Product p = ents.get(0).getPool().getProduct();
         assertTrue("Did not find ent by product attribute 'variant'", p.hasAttribute("variant"));
@@ -413,9 +412,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
         filters.addMatchesFilter(testProduct.getName());
 
-        // Should be 2 entitlements already
         List<Entitlement> ents = entitlementCurator.listByConsumer(consumer, filters);
-        assertEquals(1, ents.size());
+        assertEquals("should match only one out of two entitlements:", 1, ents.size());
         assertEquals(ents.get(0).getPool().getName(), testProduct.getName());
     }
 
@@ -424,11 +422,49 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
         filters.addAttributeFilter("pool_attr_1", "attr1");
 
-        // Should be 2 entitlements already
         List<Entitlement> ents = entitlementCurator.listByConsumer(consumer, filters);
-        assertEquals(1, ents.size());
+        assertEquals("should match only one out of two entitlements:", 1, ents.size());
 
         Pool p = ents.get(0).getPool();
+        assertTrue("Did not find ent by pool attribute 'pool_attr_1'", p.hasAttribute("pool_attr_1"));
+        assertEquals(p.getAttributeValue("pool_attr_1"), "attr1");
+    }
+
+    @Test
+    public void listAllByOwner() {
+        PageRequest req = createPageRequest();
+
+        EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
+        Page<List<Entitlement>> entitlementPages = entitlementCurator.listByOwner(owner, null, filters, req);
+        List<Entitlement> entitlements = entitlementPages.getPageData();
+        assertEquals("should return all the entitlements:", 2, entitlements.size());
+    }
+
+    @Test
+    public void listByOwnerWithPagingNoFiltering() {
+        PageRequest req = createPageRequest();
+        req.setPerPage(1);
+        EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
+        Page<List<Entitlement>> entitlementPages = entitlementCurator.listByOwner(owner, null, filters, req);
+        List<Entitlement> entitlements = entitlementPages.getPageData();
+        assertEquals("should return only single entitlement per page:", 1, entitlements.size());
+    }
+
+    /*
+     * should be enough to test a single filtering criterion.
+     * other tests are covered in consumer tests
+     */
+    @Test
+    public void listByOwnerWithPagingAndFiltering() {
+        PageRequest req = createPageRequest();
+
+        EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
+        filters.addAttributeFilter("pool_attr_1", "attr1");
+        Page<List<Entitlement>> entitlementPages = entitlementCurator.listByOwner(owner, null, filters, req);
+        List<Entitlement> entitlements = entitlementPages.getPageData();
+        assertEquals("should match only one out of two entitlements:", 1, entitlements.size());
+
+        Pool p = entitlements.get(0).getPool();
         assertTrue("Did not find ent by pool attribute 'pool_attr_1'", p.hasAttribute("pool_attr_1"));
         assertEquals(p.getAttributeValue("pool_attr_1"), "attr1");
     }

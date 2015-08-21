@@ -47,6 +47,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.EventCurator;
@@ -78,6 +79,7 @@ import org.candlepin.pinsetter.tasks.HealEntireOrgJob;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.pinsetter.tasks.UndoImportsJob;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
+import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
@@ -457,16 +459,25 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/entitlements")
+    @Paginate
     public List<Entitlement> ownerEntitlements(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        @QueryParam("product") String productId,
+        @QueryParam("matches") String matches,
+        @QueryParam("attribute") @CandlepinParam(type = KeyValueParameter.class)
+        List<KeyValueParameter> attrFilters,
+        @Context PageRequest pageRequest) {
+
         Owner owner = findOwner(ownerKey);
 
-        List<Entitlement> toReturn = new LinkedList<Entitlement>();
-        for (Pool pool : owner.getPools()) {
-            toReturn.addAll(poolManager.findEntitlements(pool));
-        }
+        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
+        Page<List<Entitlement>> entitlementsPage = entitlementCurator.listByOwner(owner, productId, filters,
+                pageRequest);
 
-        return toReturn;
+        // Store the page for the LinkHeaderPostInterceptor
+        ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);
+
+        return entitlementsPage.getPageData();
     }
 
     /**

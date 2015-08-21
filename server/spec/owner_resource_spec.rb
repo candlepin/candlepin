@@ -106,15 +106,14 @@ describe 'Owner Resource' do
     pools.length.should == 0
   end
 
-  it "does not let read only users refresh pools" do
+  it "lets only superadmin users refresh pools" do
     owner = create_owner random_string('test_owner')
     ro_owner_client = user_client(owner, random_string('testuser'), true)
-    rw_owner_client = user_client(owner, random_string('testuser'), true)
+    rw_owner_client = user_client(owner, random_string('testuser'), false)
+    super_admin_client = user_client(owner, random_string('testuser'), false, true)
     product = create_product(nil, nil, :owner => owner['key'])
     @cp.create_subscription(owner['key'], product.id, 10)
 
-
-    #these should both fail, only superadmin can refresh pools
     lambda do
       ro_owner_client.refresh_pools(owner['key'])
     end.should raise_exception(RestClient::Forbidden)
@@ -122,6 +121,8 @@ describe 'Owner Resource' do
     lambda do
       rw_owner_client.refresh_pools(owner['key'])
     end.should raise_exception(RestClient::Forbidden)
+
+    super_admin_client.refresh_pools(owner['key'])
 
   end
 
@@ -639,3 +640,52 @@ describe 'Owner Resource Owner Info Tests' do
 
 end
 
+describe 'Owner Resource Entitlement List Tests' do
+
+  include CandlepinMethods
+
+  before(:each) do
+    @owner = create_owner random_string 'test_owner'
+    @monitoring_prod = create_product(nil, 'monitoring',
+      :attributes => { 'variant' => "Satellite Starter Pack" })
+    @virt_prod= create_product(nil, 'virtualization')
+
+    #entitle owner for the virt and monitoring products.
+    @cp.create_subscription(@owner['key'], @monitoring_prod.id, 6)
+    @cp.create_subscription(@owner['key'], @virt_prod.id, 6)
+
+    @cp.refresh_pools(@owner['key'])
+
+    #create consumer
+    user = user_client(@owner, random_string('billy'))
+    @system = consumer_client(user, 'system6')
+    @system.consume_product(@monitoring_prod.id)
+    @system.consume_product(@virt_prod.id)
+  end
+
+  it 'can fetch all entitlements of an owner' do
+    ents = @cp.list_ents_via_owners_resource(:owner_key => @owner['key'])
+    ents.should have(2).things
+  end
+
+  it 'can filter all entitlements by using matches param' do
+    ents = @cp.list_ents_via_owners_resource(:owner_key => @owner['key'],:matches => "virtualization")
+    ents.should have(1).things
+  end
+
+  it 'can filter consumer entitlements by product attribute' do
+    ents = @cp.list_ents_via_owners_resource(:owner_key => @owner['key'],
+      :attr_filters => { "variant" => "Satellite Starter Pack" })
+    ents.should have(1).things
+
+    found_attr = false
+    ents[0].pool.productAttributes.each do |attr|
+      if attr["name"] == 'variant' && attr["value"] == "Satellite Starter Pack"
+        found_attr = true
+        break
+      end
+    end
+    found_attr.should == true
+  end
+
+end
