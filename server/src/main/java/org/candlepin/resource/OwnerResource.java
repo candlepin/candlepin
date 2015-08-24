@@ -36,7 +36,6 @@ import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.paging.Paginate;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.guice.NonTransactional;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -1264,7 +1263,6 @@ public class OwnerResource {
     @POST
     @Path("{owner_key}/imports")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @NonTransactional // a rare case where we commit data despite an error (recording error details
     public void importManifest(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("force") String[] overrideConflicts, MultipartInput input) {

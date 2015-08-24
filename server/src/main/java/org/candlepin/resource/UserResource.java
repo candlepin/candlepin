@@ -122,7 +122,6 @@ public class UserResource {
         List<Role> roles = new LinkedList<Role>();
         Set<User> s = new HashSet<User>();
         s.add(myUser);
-
         for (Role r : myUser.getRoles()) {
             // Copy onto a detached role object so we can omit users list, which could
             // technically leak information here.
