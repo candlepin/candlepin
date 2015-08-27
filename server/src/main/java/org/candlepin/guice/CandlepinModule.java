@@ -124,12 +124,10 @@ import org.candlepin.util.X509ExtensionUtil;
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.persist.jpa.JpaPersistModule;
-import com.google.inject.servlet.RequestScoped;
 
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
@@ -240,6 +238,7 @@ public class CandlepinModule extends AbstractModule {
         configureInterceptors();
         bind(JsonProvider.class);
         configureEventSink();
+
         configurePinsetter();
 
         configureExporter();
@@ -297,11 +296,7 @@ public class CandlepinModule extends AbstractModule {
     }
 
     private void configurePinsetter() {
-        SimpleScope pinsetterJobScope = new SimpleScope();
-        bindScope(PinsetterJobScoped.class, pinsetterJobScope);
-        bind(SimpleScope.class).annotatedWith(Names.named("PinsetterJobScope")).toInstance(pinsetterJobScope);
-
-        bind(JobFactory.class).to(GuiceJobFactory.class).in(Scopes.SINGLETON);
+        bind(JobFactory.class).to(GuiceJobFactory.class);
         bind(JobListener.class).to(PinsetterJobListener.class);
         bind(PinsetterKernel.class);
         bind(CertificateRevocationListTask.class);
@@ -328,11 +323,7 @@ public class CandlepinModule extends AbstractModule {
 
     private void configureEventSink() {
         if (config.getBoolean(ConfigProperties.HORNETQ_ENABLED)) {
-            bind(EventSink.class).annotatedWith(Names.named("RequestSink")).to(EventSinkImpl.class)
-                    .in(RequestScoped.class);
-            bind(EventSink.class).annotatedWith(Names.named("PinsetterSink")).to(EventSinkImpl.class)
-                    .in(PinsetterJobScoped.class);
-            bind(EventSink.class).toProvider(EventSinkProvider.class);
+            bind(EventSink.class).to(EventSinkImpl.class);
         }
         else {
             bind(EventSink.class).to(NoopEventSinkImpl.class);

@@ -26,7 +26,6 @@ import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.hash.ComplianceStatusHasher;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,18 +45,18 @@ public class ComplianceRules {
     private RulesObjectMapper mapper;
     private static Logger log = LoggerFactory.getLogger(ComplianceRules.class);
     private StatusReasonMessageGenerator generator;
-    private Provider<EventSink> eventSinkProvider;
+    private EventSink eventSink;
     // Use the curator to update consumer entitlement status every time we run compliance (with null date)
     private ConsumerCurator consumerCurator;
 
     @Inject
     public ComplianceRules(JsRunner jsRules, EntitlementCurator entCurator,
-        StatusReasonMessageGenerator generator, Provider<EventSink> eventSinkProvider,
+        StatusReasonMessageGenerator generator, EventSink eventSink,
         ConsumerCurator consumerCurator) {
         this.entCurator = entCurator;
         this.jsRules = jsRules;
         this.generator = generator;
-        this.eventSinkProvider = eventSinkProvider;
+        this.eventSink = eventSink;
         this.consumerCurator = consumerCurator;
 
         mapper = RulesObjectMapper.instance();
@@ -145,7 +144,7 @@ public class ComplianceRules {
                 if (complianceChanged) {
                     log.debug("Compliance has changed, sending Compliance event.");
                     c.setComplianceStatusHash(newHash);
-                    eventSinkProvider.get().emitCompliance(c, c.getEntitlements(), result);
+                    eventSink.emitCompliance(c, c.getEntitlements(), result);
                 }
 
                 boolean entStatusChanged = !result.getStatus().equals(c.getEntitlementStatus());

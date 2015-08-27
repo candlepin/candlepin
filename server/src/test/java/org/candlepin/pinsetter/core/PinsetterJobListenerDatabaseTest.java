@@ -21,9 +21,7 @@ import static org.quartz.JobKey.jobKey;
 import org.candlepin.TestingModules;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.guice.PinsetterJobScoped;
 import org.candlepin.guice.PrincipalProvider;
-import org.candlepin.guice.SimpleScope;
 import org.candlepin.guice.TestPrincipalProvider;
 import org.candlepin.junit.CandlepinLiquibaseResource;
 import org.candlepin.model.JobCurator;
@@ -32,7 +30,6 @@ import org.candlepin.pinsetter.core.model.JobStatus;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.name.Names;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
@@ -115,11 +112,6 @@ public class PinsetterJobListenerDatabaseTest {
             bind(JobListener.class).to(PinsetterJobListener.class);
             bind(PrincipalProvider.class).to(TestPrincipalProvider.class);
             bind(Principal.class).toProvider(TestPrincipalProvider.class);
-
-            SimpleScope pinsetterJobScope = new SimpleScope();
-            bindScope(PinsetterJobScoped.class, pinsetterJobScope);
-            bind(SimpleScope.class).annotatedWith(Names.named("PinsetterJobScope"))
-                .toInstance(pinsetterJobScope);
         }
     }
 }

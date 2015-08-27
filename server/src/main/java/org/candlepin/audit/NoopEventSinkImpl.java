@@ -25,6 +25,7 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -57,6 +58,9 @@ public class NoopEventSinkImpl implements EventSink {
     @Override
     public void emitConsumerCreated(Consumer newConsumer) {
         log.debug("emitConsumerCreated:" + newConsumer);
+    }
+
+    public void rollback() {
     }
 
     @Override
@@ -105,4 +109,13 @@ public class NoopEventSinkImpl implements EventSink {
         log.debug("emitCompliance: entitlements:" + entitlements + " ComplianceStatus:" + compliance);
     }
 
+    @Override
+    public void initialize() throws Exception {
+
+    }
+
+    @Override
+    public List<QueueStatus> getQueueInfo() {
+        return null;
+    }
 }

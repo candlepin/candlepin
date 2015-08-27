@@ -18,7 +18,6 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.common.filter.TeeHttpServletResponse;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
@@ -47,11 +46,11 @@ public class EventFilter implements Filter {
 
     private static Logger log = LoggerFactory.getLogger(EventFilter.class);
 
-    private final Provider<EventSink> eventSinkProvider;
+    private final EventSink eventSink;
 
     @Inject
-    public EventFilter(Provider<EventSink> eventSinkProvider) {
-        this.eventSinkProvider = eventSinkProvider;
+    public EventFilter(EventSink eventSink) {
+        this.eventSink = eventSink;
     }
 
     @Override
@@ -63,9 +62,10 @@ public class EventFilter implements Filter {
         chain.doFilter(request, resp);
         Status status = Status.fromStatusCode(resp.getStatus());
         if (status.getFamily() == Status.Family.SUCCESSFUL) {
-            eventSinkProvider.get().sendEvents();
+            eventSink.sendEvents();
         }
         else {
+            eventSink.rollback();
             log.debug("Request failed, skipping event sending, status={}", status);
         }
     }
