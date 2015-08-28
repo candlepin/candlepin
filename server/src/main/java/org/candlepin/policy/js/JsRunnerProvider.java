@@ -91,12 +91,16 @@ public class JsRunnerProvider implements Provider<JsRunner> {
      * @param rulesCurator
      */
     public void compileRules() {
+        compileRules(false);
+    }
+
+    public void compileRules(boolean forceRefresh) {
         scriptLock.writeLock().lock();
         try {
             // Check to see if we need to recompile. we do this inside the write lock
             // just to avoid race conditions where we might double compile
             Date newUpdated = rulesCurator.getUpdated();
-            if (newUpdated.equals(this.updated)) {
+            if (!forceRefresh && newUpdated.equals(this.updated)) {
                 return;
             }
 
