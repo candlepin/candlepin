@@ -55,7 +55,7 @@ describe 'User Resource' do
   end
 
   it "should be able to get user roles" do
-    alice = random_string 'alice'
+    alice = random_string 'user'
     alice_cp = user_client(@test_owner, alice)
     roles = alice_cp.get_user_roles(alice)
     roles.size.should == 1 #users have access to their own roles by default
@@ -74,7 +74,7 @@ describe 'User Resource' do
     roles = alice_cp.get_user_roles(alice)
     roles.size.should == 2
     #bob should not see alice's user on his role obj
-    bob = random_string 'bob'
+    bob = random_string 'user'
     bob_cp = user_client(@test_owner, bob)
 
     @cp.add_role_user(new_role['id'], bob)
