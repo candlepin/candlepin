@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.51.4
+Version: 0.9.51.5
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -213,6 +213,13 @@ fi
 
 #raw
 %changelog
+* Fri Aug 28 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.51.5-1
+- Revert consumer/hypervisor last check-in tables. (dgoodwin@redhat.com)
+- Upgrade Quartz to latest 2.2.1 (from 2013). (dgoodwin@redhat.com)
+- Push migration detection from virt-who checkin to system checkin.
+  (dgoodwin@redhat.com)
+- Revert "Wrap all REST API requests in a transaction." (dgoodwin@redhat.com)
+- Upgrade to MEAD build system. (awood@redhat.com)
 * Tue Aug 04 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.51.4-1
 - Add logging for thread name and HornetQ debugging. (dgoodwin@redhat.com)
 - Log execution time for checking subscription term acceptance.
