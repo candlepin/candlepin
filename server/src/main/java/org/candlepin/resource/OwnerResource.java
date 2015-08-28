@@ -30,8 +30,10 @@ import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
+import org.candlepin.common.paging.Paginate;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.guice.NonTransactional;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -64,9 +66,6 @@ import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
-import org.candlepin.common.paging.Paginate;
 import org.candlepin.pinsetter.tasks.HealEntireOrgJob;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
@@ -1049,7 +1048,6 @@ public class OwnerResource {
     @POST
     @Path("{owner_key}/imports")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @NonTransactional // a rare case where we commit data despite an error
     public void importManifest(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("force") String[] overrideConflicts, MultipartInput input) {
