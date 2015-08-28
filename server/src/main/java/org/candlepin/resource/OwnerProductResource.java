@@ -33,6 +33,7 @@ import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
 import org.candlepin.resource.util.ResourceDateParser;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import org.quartz.JobDetail;
 import org.slf4j.Logger;
@@ -188,6 +189,7 @@ public class OwnerProductResource {
     @Path("/{product_id}/certificate")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
+    @Transactional
     public ProductCertificate getProductCertificate(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId) {
@@ -207,6 +209,7 @@ public class OwnerProductResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
     public Product createProduct(
         @PathParam("owner_key") String ownerKey,
         Product product) {
@@ -228,6 +231,7 @@ public class OwnerProductResource {
     @PUT
     @Path("/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
     public Product updateProduct(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
@@ -330,6 +334,7 @@ public class OwnerProductResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/batch_content")
+    @Transactional
     public Product addBatchContent(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
@@ -360,6 +365,7 @@ public class OwnerProductResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/content/{content_id}")
+    @Transactional
     public Product addContent(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
@@ -388,6 +394,7 @@ public class OwnerProductResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/content/{content_id}")
+    @Transactional
     public void removeContent(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
@@ -409,6 +416,7 @@ public class OwnerProductResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}")
+    @Transactional
     public void deleteProduct(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId) {
@@ -484,6 +492,7 @@ public class OwnerProductResource {
     @PUT
     @Path("/{product_id}/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
     public JobDetail refreshPoolsForProduct(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
