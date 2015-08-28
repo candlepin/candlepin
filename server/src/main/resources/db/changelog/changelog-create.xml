@@ -1181,4 +1181,5 @@
     <include file="db/changelog/20150615155037-add-consumer-annotations.xml"/>
     <include file="db/changelog/20150616090156-per-org-products-column-def-fix.xml"/>
     <include file="db/changelog/20150729082417-content-unique-owner-label.xml"/>
+    <include file="db/changelog/20150818110722-upgrade-to-quartz-2-dot-2.xml"/>
 </databaseChangeLog>
