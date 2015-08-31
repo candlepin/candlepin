@@ -30,8 +30,13 @@ Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 URL: http://www.candlepinproject.org
 License: GPLv2
-Source0: %{name}-%{version}-project.tar.gz
+Source0: %{name}-%{version}-complete.tar.gz
 Source1: %{name}-%{version}.war
+
+Obsoletes: candlepin-tomcat
+Obsoletes: candlepin-tomcat6
+Obsoletes: candlepin-devel
+Obsoletes: candlepin-certgen-lib
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildArch: noarch
@@ -208,6 +213,13 @@ fi
 
 #raw
 %changelog
+* Fri Aug 28 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.51.5-1
+- Revert consumer/hypervisor last check-in tables. (dgoodwin@redhat.com)
+- Upgrade Quartz to latest 2.2.1 (from 2013). (dgoodwin@redhat.com)
+- Push migration detection from virt-who checkin to system checkin.
+  (dgoodwin@redhat.com)
+- Revert "Wrap all REST API requests in a transaction." (dgoodwin@redhat.com)
+- Upgrade to MEAD build system. (awood@redhat.com)
 * Tue Aug 04 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.51.4-1
 - Add logging for thread name and HornetQ debugging. (dgoodwin@redhat.com)
 - Log execution time for checking subscription term acceptance.

@@ -169,11 +169,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @OneToOne(cascade = CascadeType.ALL)
     private KeyPair keyPair;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
-    private Set<CheckIn> checkIns;
-
-    @Formula("(select max(c.checkInTime) from cp_consumer_checkin c " +
-            "where c.consumer_id = id)")
     private Date lastCheckin;
 
     @OneToMany(mappedBy = "consumer",
@@ -186,9 +181,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @OneToMany(mappedBy = "consumer",
         orphanRemoval = true, cascade = { CascadeType.ALL })
     private List<GuestId> guestIds;
-
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
-    private Set<GuestIdsCheckIn> guestIdsCheckIns;
 
     @OneToMany(mappedBy = "consumer",
         orphanRemoval = true, cascade = { CascadeType.ALL })
@@ -229,7 +221,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         // generate a UUID at this point.
         this.ensureUUID();
         this.entitlements = new HashSet<Entitlement>();
-        this.checkIns = new HashSet<CheckIn>();
     }
 
     /**
@@ -464,25 +455,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.entitlements.remove(entitlement);
     }
 
-    /**
-     * @return All CheckIns that have not been reaped.
-     */
-    @XmlTransient
-    public Set<CheckIn> getCheckIns() {
-        return checkIns;
-    }
-
-    public void setCheckIns(Set<CheckIn> checkIns) {
-        this.checkIns = checkIns;
-    }
-
-    public void addCheckIn(Date checkInDate) {
-        if (this.checkIns == null) {
-            this.checkIns = new HashSet<CheckIn>();
-        }
-        this.checkIns.add(new CheckIn(this, checkInDate));
-    }
-
     /*
      * Only for internal use as a pojo for resource update.
      */
@@ -694,27 +666,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @XmlTransient
     public Consumer getConsumer() {
         return this;
-    }
-
-    /**
-     *
-     * @return Set of all guest ID checkins that have not yet been reaped.
-     * Technically only the most recent one matters, and is used in queries to see who
-     * has most recently reported a guest ID. (which could have been migrated or copied)
-     */
-    public Set<GuestIdsCheckIn> getGuestIdCheckIns() {
-        return guestIdsCheckIns;
-    }
-
-    public void setGuestIdCheckIns(Set<GuestIdsCheckIn> guestIdCheckIns) {
-        this.guestIdsCheckIns = guestIdCheckIns;
-    }
-
-    public void addGuestIdCheckIn() {
-        if (this.guestIdsCheckIns == null) {
-            this.guestIdsCheckIns = new HashSet<GuestIdsCheckIn>();
-        }
-        this.guestIdsCheckIns.add(new GuestIdsCheckIn(this));
     }
 
     /**

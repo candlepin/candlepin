@@ -517,8 +517,6 @@ public class ConsumerResourceUpdateTest {
 
         this.resource.updateConsumer(existingMigratedTo.getUuid(),
             createConsumerWithGuests("Guest 1"));
-
-        verify(poolManager).revokeEntitlement(eq(entitlement));
     }
 
     @Test
@@ -840,17 +838,15 @@ public class ConsumerResourceUpdateTest {
     public void consumerLastCheckin() {
         Consumer c = getFakeConsumer();
         Date now = new Date();
-        c.addCheckIn(now);
+        c.setLastCheckin(now);
         ConsumerType ct = new ConsumerType();
         ct.setManifest(true);
         c.setType(ct);
-        assertEquals(1, c.getCheckIns().size());
 
         Consumer updated = new Consumer();
         Date then = new Date(now.getTime() + 10000L);
         updated.setLastCheckin(then);
         resource.updateConsumer(c.getUuid(), updated);
-        assertEquals(2, c.getCheckIns().size());
     }
 
     private Consumer createConsumerWithGuests(String ... guestIds) {

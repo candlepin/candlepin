@@ -3,7 +3,6 @@
 ### Repositories
 repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin/"
 repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
-repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
 repositories.remote << "http://oauth.googlecode.com/svn/code/maven/"
 repositories.remote << "http://central.maven.org/maven2/"
 
@@ -91,8 +90,8 @@ HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0'
              'org.hibernate:hibernate-tools:jar:3.2.4.GA',
              'org.hibernate:hibernate-validator:jar:4.3.1.Final',
              'antlr:antlr:jar:2.7.7',
-             'asm:asm:jar:3.0',
-             'cglib:cglib:jar:2.2',
+             'org.ow2.asm:asm:jar:5.0.3',
+             'cglib:cglib:jar:3.1',
              'javassist:javassist:jar:3.12.0.GA',
              'org.freemarker:freemarker:jar:2.3.15',
              'c3p0:c3p0:jar:0.9.1.2',
@@ -118,7 +117,7 @@ COMMONS = ['commons-codec:commons-codec:jar:1.4',
 LIQUIBASE = 'org.liquibase:liquibase-core:jar:3.1.0'
 LIQUIBASE_SLF4J = 'com.mattbertolini:liquibase-slf4j:jar:1.2.1'
 
-GETTEXT_COMMONS = 'org.xnap.commons:gettext-commons:jar:0.9.6'
+GETTEXT_COMMONS = 'com.googlecode.gettext-commons:gettext-commons:jar:0.9.8'
 
 BOUNCYCASTLE = 'org.bouncycastle:bcprov-jdk16:jar:1.46'
 
@@ -127,19 +126,19 @@ SERVLET = 'javax.servlet:servlet-api:jar:2.5'
 GUICE =  [group('guice-assistedinject', 'guice-multibindings',
                 'guice-servlet', 'guice-throwingproviders', 'guice-persist',
                 :under=>'com.google.inject.extensions',
-                :version=>'3.0'),
-           'com.google.inject:guice:jar:3.0',
+                :version=>'4.0'),
+           'com.google.inject:guice:jar:4.0',
            'aopalliance:aopalliance:jar:1.0',
            'javax.inject:javax.inject:jar:1']
 
-COLLECTIONS = 'com.google.guava:guava:jar:13.0'
+COLLECTIONS = 'com.google.guava:guava:jar:16.0.1'
 
 OAUTH= [group('oauth',
               'oauth-provider',
               :under => 'net.oauth.core',
               :version => '20100527')]
 
-QUARTZ = 'org.quartz-scheduler:quartz:jar:2.1.5'
+QUARTZ = 'org.quartz-scheduler:quartz:jar:2.2.1'
 
 HORNETQ = [group('hornetq-server',
                  'hornetq-core-client',
@@ -184,11 +183,12 @@ end
 desc "The Candlepin Project"
 define "candlepin" do
   project.group = "org.candlepin"
-  project.version = "1.0"
+  project.version = pom_version(path_to('pom.xml'))
   manifest["Copyright"] = "Red Hat, Inc. #{Date.today.strftime('%Y')}"
 
   compile.options.target = '1.6'
   compile.options.source = '1.6'
+  compile.options.lint = 'all'
 
   # path_to() (and it's alias _()) simply provides the absolute path to
   # a directory relative to the project.
@@ -239,8 +239,13 @@ define "candlepin" do
     ])
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
-    common_jar = package(:jar).tap do |jar|
+    package(:jar).tap do |jar|
       jar.include(:from => msgfmt.destination)
+    end
+
+    pom.plugin_procs << Proc.new do |xml, proj|
+      xml.groupId("com.googlecode.gettext-commons")
+      xml.artifactId("gettext-maven-plugin")
     end
   end
 
@@ -335,12 +340,25 @@ define "candlepin" do
     ])
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
-    gutterball_war = package(:war, :id=>"gutterball").tap do |war|
+    package(:war, :id=>"gutterball").tap do |war|
       war.libs -= artifacts(PROVIDED)
       war.classes << resources.target
       war.classes << msgfmt.destination if msgfmt.enabled?
     end
-    pom.provided_dependencies = PROVIDED
+
+    # We need to add this dependency so that the Maven assembly plugin will
+    # include the source of the common project in the final assembly.
+    common = project('common')
+    pom.dependency_procs << Proc.new do |xml, project|
+      xml.groupId(common.group)
+      xml.artifactId(common.id)
+      xml.version(common.version)
+      xml.classifier("complete")
+      xml.type("tar.gz")
+      xml.scope("provided")
+    end
+    pom.provided_dependencies.concat(PROVIDED)
+    pom.additional_properties['release'] = release_number
   end
 
   desc "The Candlepin Server"
@@ -425,9 +443,21 @@ define "candlepin" do
     candlepin_path = "org/candlepin"
     compiled_cp_path = "#{compile.target}/#{candlepin_path}"
 
-    pom.provided_dependencies = PROVIDED
+    # We need to add this dependency so that the Maven assembly plugin will
+    # include the source of the common project in the final assembly.
+    common = project('common')
+    pom.dependency_procs << Proc.new do |xml, project|
+      xml.groupId(common.group)
+      xml.artifactId(common.id)
+      xml.version(common.version)
+      xml.classifier("complete")
+      xml.type("tar.gz")
+      xml.scope("provided")
+    end
+    pom.additional_properties['release'] = release_number
+    pom.provided_dependencies.concat(PROVIDED)
 
-    api_jar = package(:jar, :id=>'candlepin-api').tap do |jar|
+    package(:jar, :id=>'candlepin-api').tap do |jar|
       jar.clean
       pkgs = %w{auth config jackson model pki resteasy service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
       p = jar.path(candlepin_path)
@@ -441,7 +471,7 @@ define "candlepin" do
       p.include(pkgs)
     end
 
-    war_file = package(:war, :id=>"candlepin").tap do |war|
+    package(:war, :id=>"candlepin").tap do |war|
       war.libs += artifacts(HSQLDB)
       war.libs -= artifacts(PROVIDED)
       war.classes.clear

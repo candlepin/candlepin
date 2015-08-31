@@ -1,0 +1,17 @@
+[org.candlepin-candlepin-parent]
+scmurl=${mead_scm}#${git_ref}
+maven_options=-N ${maven_options}
+
+[org.candlepin-candlepin-common]
+scmurl=${mead_scm}?common#${git_ref}
+buildrequires=org.candlepin-candlepin-parent
+packages=gettext
+
+[org.candlepin-candlepin]
+scmurl=${mead_scm}?server#${git_ref}
+buildrequires=org.candlepin-candlepin-common
+
+[candlepin-wrapper]
+type=wrapper
+scmurl=${mead_scm}?server#${git_ref}
+buildrequires=org.candlepin-candlepin

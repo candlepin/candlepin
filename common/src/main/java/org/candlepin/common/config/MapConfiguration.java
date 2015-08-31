@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 public class MapConfiguration extends AbstractConfiguration {
     private static Logger log = LoggerFactory.getLogger(MapConfiguration.class);
 
-    private ConcurrentHashMap<String, String> configMap;
+    private Map<String, String> configMap;
 
     public MapConfiguration() {
         configMap = new ConcurrentHashMap<String, String>();

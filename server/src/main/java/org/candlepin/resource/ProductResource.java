@@ -32,6 +32,7 @@ import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import org.quartz.JobDetail;
 import org.slf4j.Logger;
@@ -181,6 +182,7 @@ public class ProductResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
     public Product createProduct(Product product) {
         return prodAdapter.createProduct(product);
     }
@@ -195,6 +197,7 @@ public class ProductResource {
     @PUT
     @Path("/{product_uuid}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
     public Product updateProduct(
         @PathParam("product_uuid") @Verify(Product.class) String productId,
         Product product) {
@@ -267,6 +270,7 @@ public class ProductResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}/batch_content")
+    @Transactional
     public Product addBatchContent(@PathParam("product_uuid") String pid,
                               Map<String, Boolean> contentMap) {
         Product product = prodAdapter.getProductById(pid);
@@ -290,6 +294,7 @@ public class ProductResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}/content/{content_id}")
+    @Transactional
     public Product addContent(@PathParam("product_uuid") String pid,
                               @PathParam("content_id") String contentId,
                               @QueryParam("enabled") Boolean enabled) {
@@ -309,6 +314,7 @@ public class ProductResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}/content/{content_id}")
+    @Transactional
     public void removeContent(@PathParam("product_uuid") String pid,
                               @PathParam("content_id") String contentId) {
         prodAdapter.removeContent(pid, contentId);
@@ -324,6 +330,7 @@ public class ProductResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}")
+    @Transactional
     public void deleteProduct(@PathParam("product_uuid") String pid) {
         Product product = prodAdapter.getProductById(pid);
         if (product == null) {
@@ -411,6 +418,7 @@ public class ProductResource {
     @PUT
     @Path("/{product_uuid}/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
     public JobDetail refreshPoolsForProduct(
         @PathParam("product_uuid") String pid,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
