@@ -393,11 +393,7 @@
     <dependency>
       <groupId>org.ow2.asm</groupId>
       <artifactId>asm</artifactId>
-<<<<<<< HEAD
-      <version>${asm-asm.version}</version>
-=======
       <version>${org.ow2.asm-asm.version}</version>
->>>>>>> scratch
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
@@ -933,8 +929,6 @@
           <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
-<<<<<<< HEAD
-=======
     </dependency>
     <dependency>
       <groupId>org.candlepin</groupId>
@@ -943,7 +937,6 @@
       <classifier>complete</classifier>
       <type>tar.gz</type>
       <scope>provided</scope>
->>>>>>> scratch
     </dependency>
   </dependencies>
   <build>
