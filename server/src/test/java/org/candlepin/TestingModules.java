@@ -21,8 +21,8 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.guice.JPAInitializer;
 import org.candlepin.common.guice.HttpMethodMatcher;
+import org.candlepin.common.guice.JPAInitializer;
 import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
@@ -30,10 +30,8 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.guice.CandlepinSingletonScope;
 import org.candlepin.guice.CandlepinSingletonScoped;
 import org.candlepin.guice.I18nProvider;
-import org.candlepin.guice.PinsetterJobScoped;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.guice.ScriptEngineProvider;
-import org.candlepin.guice.SimpleScope;
 import org.candlepin.guice.TestPrincipalProvider;
 import org.candlepin.guice.ValidationListenerProvider;
 import org.candlepin.model.Rules;
@@ -292,10 +290,6 @@ public class TestingModules {
             bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
                 .to(ExpiryDateFunction.class).in(Singleton.class);
 
-            SimpleScope pinsetterJobScope = new SimpleScope();
-            bindScope(PinsetterJobScoped.class, pinsetterJobScope);
-            bind(SimpleScope.class).annotatedWith(Names.named("PinsetterJobScope"))
-                .toInstance(pinsetterJobScope);
         }
 
         @Provides

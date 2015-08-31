@@ -70,7 +70,7 @@ public class EventSinkImplTest {
         this.factory = new EventFactory(mockPrincipalProvider);
         this.principal = TestUtil.createOwnerPrincipal();
         when(mockPrincipalProvider.get()).thenReturn(this.principal);
-        when(mockSessionFactory.createSession()).thenReturn(mockClientSession);
+        when(mockSessionFactory.createTransactedSession()).thenReturn(mockClientSession);
         when(mockClientSession.createProducer(anyString())).thenReturn(mockClientProducer);
         when(mockClientSession.createMessage(anyBoolean())).thenReturn(mockClientMessage);
         when(mockClientMessage.getBodyBuffer()).thenReturn(
@@ -87,17 +87,15 @@ public class EventSinkImplTest {
      */
     private EventSinkImpl createEventSink(
             final ClientSessionFactory sessionFactory) throws Exception {
-        HornetqEventDispatcher dispatcher =
-                new HornetqEventDispatcher(mapper,
-                        new CandlepinCommonTestConfig()) {
+        EventSinkImpl sink = new EventSinkImpl(factory, mapper, new CandlepinCommonTestConfig()) {
 
-                    @Override
-                    protected ClientSessionFactory createClientSessionFactory() {
-                        return sessionFactory;
-                    }
-                };
-        dispatcher.initialize();
-        return new EventSinkImpl(factory, dispatcher);
+            @Override
+            protected ClientSessionFactory createClientSessionFactory() {
+                return sessionFactory;
+            }
+        };
+        sink.initialize();
+        return sink;
     }
 
     /**Set up the {@link ClientSessionFactory} to throw an exception when

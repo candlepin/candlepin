@@ -19,7 +19,6 @@ import static org.quartz.impl.matchers.NameMatcher.jobNameEquals;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.guice.PinsetterJobScoped;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.RetryJobException;
@@ -39,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import javax.inject.Provider;
 import javax.persistence.EntityExistsException;
 import javax.persistence.PersistenceException;
 
@@ -49,13 +47,12 @@ import javax.persistence.PersistenceException;
  * Quartz Job type gives us more freedom to define behavior.
  * Every candlepin job must extend KingpinJob
  */
-@PinsetterJobScoped
 public abstract class KingpinJob implements Job {
 
     private static Logger log = LoggerFactory.getLogger(KingpinJob.class);
     @Inject protected UnitOfWork unitOfWork;
     @Inject protected Configuration config;
-    @Inject private Provider<EventSink> eventSinkProvider;
+    @Inject private EventSink eventSink;
 
     protected static String prefix = "job";
 
@@ -85,8 +82,8 @@ public abstract class KingpinJob implements Job {
         boolean startedUow = startUnitOfWork();
         try {
             toExecute(context);
-            if (eventSinkProvider != null) {
-                eventSinkProvider.get().sendEvents();
+            if (eventSink != null) {
+                eventSink.sendEvents();
             }
         }
         /*
@@ -105,9 +102,15 @@ public abstract class KingpinJob implements Job {
          */
         catch (PersistenceException e) {
             refireCheck(context, e);
+            if (eventSink != null) {
+                eventSink.rollback();
+            }
         }
         catch (RetryJobException e) {
             refireCheck(context, e);
+            if (eventSink != null) {
+                eventSink.rollback();
+            }
         }
         finally {
             if (startedUow) {

@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.audit.HornetqEventDispatcher;
+import org.candlepin.audit.EventSink;
 import org.candlepin.audit.QueueStatus;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SystemPrincipal;
@@ -51,17 +51,15 @@ public class AdminResource {
 
     private UserServiceAdapter userService;
     private UserCurator userCurator;
-
-    private HornetqEventDispatcher dispatcher;
+    private EventSink sink;
     private Configuration config;
 
     @Inject
     public AdminResource(UserServiceAdapter userService, UserCurator userCurator,
-            HornetqEventDispatcher dispatcher, Configuration config) {
+            EventSink dispatcher, Configuration config) {
         this.userService = userService;
         this.userCurator = userCurator;
-
-        this.dispatcher = dispatcher;
+        this.sink = dispatcher;
         this.config = config;
     }
 
@@ -117,7 +115,7 @@ public class AdminResource {
     @Produces({MediaType.APPLICATION_JSON})
     @Path("queues")
     public List<QueueStatus> getQueueStats() {
-        return dispatcher.getQueueInfo();
+        return sink.getQueueInfo();
     }
 
     @GET

@@ -124,14 +124,14 @@ public class HornetqContextListener {
             }
         }
 
-        // Initialize the Event Dispatcher AFTER the internal server has been
+        // Initialize the Event sink AFTER the internal server has been
         // created and started.
-        HornetqEventDispatcher eventDispatcher = injector.getInstance(HornetqEventDispatcher.class);
+        EventSink sink = injector.getInstance(EventSink.class);
         try {
-            eventDispatcher.initialize();
+            sink.initialize();
         }
         catch (Exception e) {
-            log.error("Failed to initialize hornetq event dispatcher:", e);
+            log.error("Failed to initialize EventSink:", e);
             throw new RuntimeException(e);
         }
     }
