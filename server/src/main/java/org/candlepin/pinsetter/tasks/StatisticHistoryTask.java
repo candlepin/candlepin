@@ -48,8 +48,6 @@ public class StatisticHistoryTask extends KingpinJob {
 
     @Override
     public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
-        log.info("Executing Statistic History Job.");
-
         try {
             statCurator.executeStatisticRun();
         }

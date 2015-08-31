@@ -83,4 +83,9 @@ public class CancelJobJob extends KingpinJob {
             log.error("Unable to cancel jobs", e);
         }
     }
+
+    @Override
+    protected boolean logExecutionTime() {
+        return false;
+    }
 }

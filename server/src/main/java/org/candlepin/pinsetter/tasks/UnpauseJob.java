@@ -79,4 +79,9 @@ public class UnpauseJob extends KingpinJob {
             }
         }
     }
+
+    @Override
+    protected boolean logExecutionTime() {
+        return false;
+    }
 }
