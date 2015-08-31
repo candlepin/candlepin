@@ -598,6 +598,14 @@ class Candlepin
     post("/owners/#{owner_key}/products/#{product_id}/batch_content", data)
   end
 
+  def add_all_content_to_product(owner_key, product_id, content)
+    data = {}
+    content.each do |id, enabled|
+      data[id] = enabled
+    end
+    post("/owners/#{owner_key}/products/#{product_id}/batch_content", data)
+  end
+
   def remove_content_from_product(owner_key, product_id, content_id)
     delete("/owners/#{owner_key}/products/#{product_id}/content/#{content_id}")
   end

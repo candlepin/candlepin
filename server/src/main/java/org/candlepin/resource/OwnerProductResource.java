@@ -343,6 +343,8 @@ public class OwnerProductResource {
         Product product = this.getProduct(ownerKey, productId);
         List<ProductContent> productContent = new LinkedList<ProductContent>();
 
+        this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
+
         for (Entry<String, Boolean> entry : contentMap.entrySet()) {
             Content content = this.getContent(product.getOwner(), entry.getKey());
             productContent.add(new ProductContent(product, content, entry.getValue()));
@@ -350,8 +352,10 @@ public class OwnerProductResource {
 
         product.getProductContent().addAll(productContent);
 
-        // TODO: Why are we doing this instead of just returning the product we already have?
-        return productCurator.find((product.getUuid()));
+        this.productCurator.merge(product);
+        this.productCurator.flush();
+
+        return product;
     }
 
     /**
