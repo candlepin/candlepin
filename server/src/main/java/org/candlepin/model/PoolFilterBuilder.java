@@ -26,6 +26,7 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
+import org.hibernate.sql.JoinType;
 
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -42,6 +43,7 @@ public class PoolFilterBuilder extends FilterBuilder {
 
     private String alias = "";
     private List<String> matchFilters = new ArrayList<String>();
+    private String productIdFilter;
 
     public PoolFilterBuilder() {
         super();
@@ -53,10 +55,18 @@ public class PoolFilterBuilder extends FilterBuilder {
 
     @Override
     public void applyTo(Criteria parentCriteria) {
+        if (productIdFilter != null && !productIdFilter.isEmpty()) {
+            applyProductIdFilter(parentCriteria);
+        }
+
         for (String matches : matchFilters) {
             applyMatchFilter(matches);
         }
         super.applyTo(parentCriteria);
+    }
+
+    public void setProductIdFilter(String productId) {
+        this.productIdFilter = productId;
     }
 
     /**
@@ -78,17 +88,41 @@ public class PoolFilterBuilder extends FilterBuilder {
         return !matchFilters.isEmpty();
     }
 
+    private void applyProductIdFilter(Criteria parent) {
+        String originalPoolAlias = this.alias.isEmpty() ? "this." : alias;
+        DetachedCriteria prodCrit = DetachedCriteria.forClass(Pool.class, "Pool2")
+            .createAlias("product", "product")
+            .createAlias("providedProducts", "provided", JoinType.LEFT_OUTER_JOIN)
+            .add(Property.forName(originalPoolAlias + "id").eqProperty("Pool2.id"))
+            .add(Restrictions.disjunction()
+                .add(Restrictions.eq("product.id", this.productIdFilter))
+                .add(Restrictions.eq("provided.id", productIdFilter)))
+            .setProjection(Projections.property("Pool2.id"));
+
+        parent.add(Subqueries.exists(prodCrit));
+    }
+
     private void applyMatchFilter(String matches) {
+        String originalPoolAlias = this.alias.isEmpty() ? "this." : alias;
+
         Disjunction textOr = Restrictions.disjunction();
         textOr.add(new FilterLikeExpression("product.name", matches, true));
         textOr.add(new FilterLikeExpression("product.id", matches, true));
         textOr.add(new FilterLikeExpression(alias + "contractNumber", matches, true));
         textOr.add(new FilterLikeExpression(alias + "orderNumber", matches, true));
 
-        textOr.add(new FilterLikeExpression("provProd.id", matches, true));
-        textOr.add(new FilterLikeExpression("provProd.name", matches, true));
-        textOr.add(new FilterLikeExpression("ppContent.name", matches, true));
-        textOr.add(new FilterLikeExpression("ppContent.label", matches, true));
+        DetachedCriteria ppCriteria = DetachedCriteria.forClass(Pool.class, "Pool2")
+                .createAlias("providedProducts", "provided", JoinType.INNER_JOIN)
+                .createAlias("provided.productContent", "ppcw", JoinType.LEFT_OUTER_JOIN)
+                .createAlias("ppcw.content", "ppContent", JoinType.LEFT_OUTER_JOIN)
+                .add(Property.forName(originalPoolAlias + "id").eqProperty("Pool2.id"))
+                .add(Restrictions.disjunction()
+                   .add(new FilterLikeExpression("provided.id", matches, true))
+                   .add(new FilterLikeExpression("provided.name", matches, true))
+                   .add(new FilterLikeExpression("ppContent.name", matches, true))
+                   .add(new FilterLikeExpression("ppContent.label", matches, true)))
+                .setProjection(Projections.property("Pool2.id"));
+        textOr.add(Subqueries.exists(ppCriteria));
 
         textOr.add(Subqueries.exists(
             this.createProductAttributeCriteria(

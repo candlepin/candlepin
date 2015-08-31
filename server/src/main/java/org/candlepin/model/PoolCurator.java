@@ -30,7 +30,6 @@ import org.hibernate.Filter;
 import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
-import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
@@ -213,9 +212,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         Criteria crit = createSecureCriteria()
             .createAlias("product", "product")
-            .createAlias("providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN)
-            .createAlias("provProd.productContent", "ppcw", CriteriaSpecification.LEFT_JOIN)
-            .createAlias("ppcw.content", "ppContent", CriteriaSpecification.LEFT_JOIN)
             .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 
         if (activeOnly) {
@@ -245,11 +241,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             crit.add(Restrictions.ge("endDate", activeOn));
         }
 
+        filters = filters == null ? new PoolFilterBuilder() : filters;
         if (productId != null) {
-            crit.add(Restrictions.or(
-                Restrictions.eq("product.id", productId),
-                Restrictions.eq("provProd.id", productId)
-            ));
+            filters.setProductIdFilter(productId);
         }
 
         // Append any specified filters
