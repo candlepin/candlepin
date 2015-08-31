@@ -256,6 +256,12 @@ def create_mkt_product(cp, owner, product)
     return
   end
 
+  small_quantity = SMALL_SUB_QUANTITY
+  large_quantity = LARGE_SUB_QUANTITY
+  if product.has_key?('quantity')
+    small_quantity = large_quantity = product['quantity']
+  end
+
   provided_products = product['provided_products'] || []
   derived_product_id = product['derived_product_id']
   derived_provided_products = product['derived_provided_products'] || []
@@ -284,7 +290,7 @@ def create_mkt_product(cp, owner, product)
   subscription = cp.create_subscription(
     owner['name'],
     product_ret['id'],
-    SMALL_SUB_QUANTITY,
+    small_quantity,
     provided_products,
     contract_number,
     '12331131231',
@@ -302,7 +308,7 @@ def create_mkt_product(cp, owner, product)
   subscription = cp.create_subscription(
     owner['name'],
     product_ret['id'],
-    LARGE_SUB_QUANTITY,
+    large_quantity,
     provided_products,
     contract_number,
     '12331131231',

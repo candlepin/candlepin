@@ -1951,6 +1951,33 @@
             "provided_products": [
                 "900"
             ]
+        },
+        {
+            "name": "Band Limited Product",
+            "id": "908",
+            "version": "1.0",
+            "arch": "x86_64",
+            "attributes": {
+            },
+            "content": [
+            ]
+        },
+        {
+            "name": "Storage Limited (256 TB)",
+            "id": "storage-limited-256",
+            "type": "MKT",
+            "multiplier": 256,
+            "quantity": "1",
+            "attributes": {
+                "multi-entitlement": "yes",
+                "stacking_id": "STORAGELIMITED",
+                "storage_band": 1,
+                "support_level" : "Premium",
+                "support_type" : "Level 3"
+            },
+            "provided_products": [
+                "908"
+            ]
         }
     ]
 }
