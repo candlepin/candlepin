@@ -11,7 +11,7 @@
   </parent>
   <groupId>org.candlepin</groupId>
   <artifactId>candlepin</artifactId>
-  <version>0.9.51.4</version>
+  <version>0.9.51.5</version>
   <packaging>war</packaging>
   <properties>
     <org.apache.qpid-qpid-common.version>0.30</org.apache.qpid-qpid-common.version>
