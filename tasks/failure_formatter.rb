@@ -14,7 +14,10 @@ module ModifiedRSpec
         # is going to be under the spec directory in the project directory.
         project_dir = File.dirname(File.dirname(RSpec.configuration.files_to_run.first))
         failure_file = File.join(project_dir, 'target', 'rspec.failures')
-        FileUtils.mkdir(File.join(project_dir, 'target'))
+
+        unless File.exist?(File.dirname(failure_file))
+          FileUtils.mkdir(File.dirname(failure_file))
+        end
 
         # We are going to append so that parallel tests can all
         # use the same file.  We must be diligent in deleting the
