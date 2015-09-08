@@ -537,8 +537,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         results = poolManager.listAvailableEntitlementPools(nonCdkSystem, null,
                 owner, null, null, true, true, new PoolFilterBuilder(), new PageRequest());
-            assertEquals(1, results.getPageData().size());
-            Pool found2 = results.getPageData().get(0);
-            assertEquals(pool2.getId(), found2.getId());
+        assertEquals(1, results.getPageData().size());
+        Pool found2 = results.getPageData().get(0);
+        assertEquals(pool2.getId(), found2.getId());
     }
 }

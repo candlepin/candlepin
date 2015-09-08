@@ -548,6 +548,35 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
 
+    @Test
+    public void testCanFilterOutDevPoolsByAttribute() throws Exception {
+        Principal principal = setupPrincipal(owner, Access.ALL);
+
+        Product p = TestUtil.createProduct(owner);
+        productCurator.create(p);
+        Pool pool1 = TestUtil.createPool(owner, p);
+        pool1.setAttribute("dev_pool", "true");
+        poolCurator.create(pool1);
+
+        Product p2 = TestUtil.createProduct(owner);
+        productCurator.create(p2);
+        Pool pool2 = TestUtil.createPool(owner, p2);
+        poolCurator.create(pool2);
+
+        List<KeyValueParameter> params = new ArrayList<KeyValueParameter>();
+        List<Pool> pools = ownerResource.listPools(owner.getKey(), null,
+            null, null, true, null, null, params, principal, null);
+        assertEquals(2, pools.size());
+
+        params = new ArrayList<KeyValueParameter>();
+        params.add(createKeyValueParam("dev_pool", "!true"));
+        pools = ownerResource.listPools(owner.getKey(), null,
+            null, null, true, null, null, params, principal, null);
+        assertEquals(1, pools.size());
+        assertEquals(pool2, pools.get(0));
+    }
+
+
     @Test(expected = NotFoundException.class)
     public void ownerAdminCannotAccessAnotherOwnersPools() {
         Owner evilOwner = new Owner("evilowner");
