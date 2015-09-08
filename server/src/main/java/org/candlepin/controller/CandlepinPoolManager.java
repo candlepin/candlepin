@@ -1666,6 +1666,12 @@ public class CandlepinPoolManager implements PoolManager {
         PageRequest pageRequest) {
         // Only postfilter if we have to
         boolean postFilter = consumer != null || key != null;
+        if (consumer.isCdk()) {
+            filters.addAttributeFilter("dev_pool", "true");
+        }
+        else {
+            filters.addAttributeFilter("dev_pool", "!true");
+        }
         Page<List<Pool>> page = this.poolCurator.listAvailableEntitlementPools(consumer,
             owner, productId, activeOn, activeOnly, filters, pageRequest, postFilter);
 

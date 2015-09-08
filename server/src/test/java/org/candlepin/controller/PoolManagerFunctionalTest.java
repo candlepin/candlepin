@@ -14,11 +14,11 @@
  */
 package org.candlepin.controller;
 
-import static org.apache.commons.collections.CollectionUtils.containsAny;
-import static org.apache.commons.collections.TransformerUtils.invokerTransformer;
+import static org.apache.commons.collections.CollectionUtils.*;
+import static org.apache.commons.collections.TransformerUtils.*;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.reset;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventSink;
@@ -26,6 +26,7 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -503,5 +504,41 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
                 bind(EventSink.class).toInstance(eventSink);
             }
         };
+    }
+
+    @Test
+    public void testListConditionDevPools() {
+        Owner owner = createOwner();
+        Product p = new Product("test-product", "Test Product", owner);
+        productCurator.create(p);
+        ConsumerInstalledProduct cip = new ConsumerInstalledProduct(p);
+        Set<ConsumerInstalledProduct> cips = new HashSet<ConsumerInstalledProduct>();
+        cips.add(cip);
+
+        Pool pool1 = createPool(owner, p, 10L,
+                TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        pool1.addAttribute(new PoolAttribute("dev_pool", "true"));
+        poolCurator.create(pool1);
+        Pool pool2 = createPool(owner, p, 10L,
+                TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        poolCurator.create(pool2);
+
+        Consumer cdkSystem = new Consumer("cdk", "user", owner, systemType);
+        cdkSystem.setFact("dev_sku", p.getId());
+        cdkSystem.setInstalledProducts(cips);
+        Consumer nonCdkSystem = new Consumer("system", "user", owner, systemType);
+        nonCdkSystem.setInstalledProducts(cips);
+
+        Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(cdkSystem, null,
+                owner, null, null, true, true, new PoolFilterBuilder(), new PageRequest());
+        assertEquals(1, results.getPageData().size());
+        Pool found1 = results.getPageData().get(0);
+        assertEquals(pool1.getId(), found1.getId());
+
+        results = poolManager.listAvailableEntitlementPools(nonCdkSystem, null,
+                owner, null, null, true, true, new PoolFilterBuilder(), new PageRequest());
+            assertEquals(1, results.getPageData().size());
+            Pool found2 = results.getPageData().get(0);
+            assertEquals(pool2.getId(), found2.getId());
     }
 }

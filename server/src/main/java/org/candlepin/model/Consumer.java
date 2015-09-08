@@ -21,6 +21,7 @@ import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
@@ -713,5 +714,9 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public void setAnnotations(String annotations) {
         this.annotations = annotations;
+    }
+
+    public boolean isCdk() {
+        return !StringUtils.isEmpty(getFact("dev_sku"));
     }
 }
