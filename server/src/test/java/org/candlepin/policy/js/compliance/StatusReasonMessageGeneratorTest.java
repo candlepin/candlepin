@@ -23,6 +23,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.ProductPoolAttribute;
+import org.candlepin.model.ProvidedProduct;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Before;
@@ -33,6 +34,7 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
@@ -196,7 +198,7 @@ public class StatusReasonMessageGeneratorTest {
     }
 
     private Entitlement mockEntitlement(Consumer consumer, String productId, String name) {
-        Pool p = new Pool(owner, productId, name, null,
+        Pool p = new Pool(owner, productId, name, new HashSet<ProvidedProduct>(),
             new Long(1000), TestUtil.createDate(2000, 1, 1),
             TestUtil.createDate(2050, 1, 1), "1000", "1000", "1000");
         Entitlement e = new Entitlement(p, consumer, 1);

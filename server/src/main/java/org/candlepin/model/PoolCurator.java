@@ -248,6 +248,35 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return listByCriteria(crit, pageRequest, postFilter);
     }
 
+    /**
+     * Determine if owner has at least one active pool
+     *
+     * @param o Owner whose subscriptions should be inspected.
+     * @param date The date to test the active state.
+     *        Set to null for current.
+     * @return boolean is active on test date.
+     */
+    @SuppressWarnings("unchecked")
+    @Transactional
+    public boolean hasActiveEntitlementPools(Owner o, Date date) {
+
+        if (o == null) {
+            return false;
+        }
+        if (date == null) {
+            date = new Date();
+        }
+        Criteria crit = createSecureCriteria();
+        crit.add(Restrictions.eq("activeSubscription", Boolean.TRUE));
+        crit.add(Restrictions.eq("owner", o));
+        crit.add(Restrictions.le("startDate", date));
+        crit.add(Restrictions.ge("endDate", date));
+        crit.setProjection(Projections.rowCount());
+
+        long count = (Long) crit.uniqueResult();
+        return count > 0;
+    }
+
     @Transactional
     public List<Pool> listPoolsRestrictedToUser(String username) {
         return listByCriteria(
@@ -673,5 +702,17 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         // Return!
         return result;
+    }
+
+    public Pool findDevPool(Consumer consumer, String sku) {
+        PoolFilterBuilder filters = new PoolFilterBuilder();
+        filters.addAttributeFilter(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
+        filters.addAttributeFilter(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
+
+        Criteria criteria =  currentSession().createCriteria(Pool.class)
+                .add(Restrictions.eq("productId", sku));
+        filters.applyTo(criteria);
+        criteria.setMaxResults(1).uniqueResult();
+        return (Pool) criteria.uniqueResult();
     }
 }

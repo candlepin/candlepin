@@ -1756,6 +1756,20 @@
             "provided_products": [
                 "900"
             ]
+        },
+        {
+            "name": "Dev Product",
+            "id": "dev-sku-product",
+            "type": "MKT",
+            "skip_subs": "true",
+            "attributes": {
+                "multi-entitlement": "yes",
+                "support_level" : "Premium",
+                "support_type" : "Level 3",
+                "expires_after" : "75"
+            },
+            "provided_products": [
+            ]
         }
     ]
 }

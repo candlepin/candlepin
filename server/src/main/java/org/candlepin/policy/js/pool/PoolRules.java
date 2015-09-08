@@ -253,6 +253,9 @@ public class PoolRules {
                 // Should be filtered out before calling, but just in case we skip it:
                 continue;
             }
+            if (p.isDevelopmentPool()) {
+                continue;
+            }
 
             if (p.getSourceStack() != null) {
                 Consumer c = p.getSourceStack().getSourceConsumer();

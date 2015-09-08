@@ -718,6 +718,17 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         return pool;
     }
 
+    private Pool setupDevConsumerRestrictedPool(Consumer consumer) {
+        Product product = new Product(productId, "product");
+        Pool pool = TestUtil.createPool(owner, product);
+        pool.addAttribute(new PoolAttribute("dev_pool", "true"));
+        pool.setId("fakeid" + TestUtil.randomInt());
+        when(this.prodAdapter.getProductById(product.getId()))
+            .thenReturn(product);
+        pool.addAttribute(new PoolAttribute("requires_consumer", consumer.getUuid()));
+        return pool;
+    }
+
     private Pool setupUnmappedGuestPool() {
         Pool pool = setupVirtOnlyPool();
         pool.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
@@ -807,4 +818,27 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertEquals(1, filtered.size());
         assertTrue(filtered.contains(pool));
     }
+
+    @Test
+    public void devPoolConsumerMatches() {
+        Pool pool = setupDevConsumerRestrictedPool(consumer);
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    @Test
+    public void devPoolConsumerDoesNotMatch() {
+        // Another comsumer we'll make a dev pool for:
+        Consumer otherConsumer = new Consumer("test consumer", "test user", owner,
+            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        Pool pool = setupDevConsumerRestrictedPool(otherConsumer);
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
+        assertFalse(result.hasWarnings());
+        assertEquals(1, result.getErrors().size());
+        assertEquals("consumer.does.not.match.pool.consumer.requirement",
+            result.getErrors().get(0).getResourceKey());
+    }
+
 }

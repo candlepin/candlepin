@@ -82,6 +82,17 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
 
     /**
+     * Attribute used to determine whether or not the pool was created for a development
+     * entitlement.
+     */
+    public static final String DEVELOPMENT_POOL_ATTRIBUTE = "dev_pool";
+
+    /**
+     * Attribute used to determine which specific consumer the pool was created for.
+     */
+    public static final String REQUIRES_CONSUMER_ATTRIBUTE = "requires_consumer";
+
+    /**
      * PoolType
      *
      * Pools can be of several major types which can radically alter how they behave.
@@ -100,13 +111,33 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * has a virt_limit attribute but no host_limited attribute.
      *
      * UNMAPPED_GUEST - TODO
+     *
+     * DEVELOPMENT = TODO
      */
     public enum PoolType {
         NORMAL,
         ENTITLEMENT_DERIVED,
         STACK_DERIVED,
         BONUS,
-        UNMAPPED_GUEST
+        UNMAPPED_GUEST,
+        DEVELOPMENT;
+
+        /**
+         * Checks if this type represents a derived pool type
+         *
+         * @return
+         *  True if this PoolType instance represents a derived pool type; false otherwise
+         */
+        public boolean isDerivedType() {
+            switch (this) {
+                case ENTITLEMENT_DERIVED:
+                case STACK_DERIVED:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
     }
 
     @Id
@@ -283,7 +314,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.contractNumber = contractNumber;
         this.accountNumber = accountNumber;
         this.orderNumber = orderNumber;
-        this.providedProducts = providedProducts;
+        this.setProvidedProducts(providedProducts);
     }
 
     /** {@inheritDoc} */
@@ -627,6 +658,11 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public void setProvidedProducts(Set<ProvidedProduct> providedProducts) {
+        // ensure the provided products are referencing the correct pool
+        for (ProvidedProduct pp : providedProducts) {
+            pp.setPool(this);
+        }
+
         this.providedProducts = providedProducts;
     }
 
@@ -954,7 +990,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
                 return PoolType.BONUS;
             }
         }
-
+        else if (hasAttribute(DEVELOPMENT_POOL_ATTRIBUTE)) {
+            return PoolType.DEVELOPMENT;
+        }
         return PoolType.NORMAL;
     }
 
@@ -964,6 +1002,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     public String getStackId() {
         return getProductAttributeValue("stacking_id");
+    }
+
+    public boolean isDevelopmentPool() {
+        return "true".equalsIgnoreCase(this.getAttributeValue(DEVELOPMENT_POOL_ATTRIBUTE));
     }
 
     public Set<Branding> getBranding() {

@@ -1,4 +1,4 @@
-// Version: 5.15
+// Version: 5.15.1
 
 /*
  * Default Candlepin rule set.
@@ -58,6 +58,7 @@ var ARCH_ATTRIBUTE = "arch";
 var RAM_ATTRIBUTE = "ram";
 var INSTANCE_ATTRIBUTE = "instance_multiplier";
 var REQUIRES_HOST_ATTRIBUTE = "requires_host";
+var REQUIRES_CONSUMER_ATTRIBUTE = "requires_consumer";
 var VIRT_ONLY = "virt_only";
 var PHYSICAL_ONLY = "physical_only";
 var POOL_DERIVED = "pool_derived";
@@ -1183,7 +1184,6 @@ function comparePools(pool1, pool2) {
         }
         // If neither condition is true, no preference...
     }
-
     // If two pools are still considered equal, select the pool that expires first
     if (pool2.endDate > pool1.endDate) {
         return true;
@@ -1290,7 +1290,8 @@ var Entitlement = {
             "instance_multiplier:1:instance_multiplier," +
             "vcpu:1:vcpu," +
             "physical_only:1:physical_only," +
-            "unmapped_guests_only:1:unmapped_guests_only";
+            "unmapped_guests_only:1:unmapped_guests_only," +
+            "requires_consumer:1:requires_consumer";
     },
 
     ValidationResult: function () {
@@ -1468,6 +1469,24 @@ var Entitlement = {
     pre_requires_host: function() {
         return this.build_func("do_pre_requires_host")();
     },
+
+    do_pre_requires_consumer: function(context, result) {
+        // requires_consumer pools not available to manifest
+        if (context.consumer.type.manifest && context.getAttribute(context.pool, REQUIRES_CONSUMER_ATTRIBUTE)) {
+            result.addError("pool.not.available.to.manifest.consumers");
+            return JSON.stringify(result);
+        }
+
+        if (context.consumer.uuid != context.getAttribute(context.pool,
+                                                          REQUIRES_CONSUMER_ATTRIBUTE)) {
+            result.addError("consumer.does.not.match.pool.consumer.requirement");
+        }
+    },
+
+    pre_requires_consumer: function() {
+        return this.build_func("do_pre_requires_consumer")();
+    },
+
 
     do_pre_requires_consumer_type: function(context, result) {
         // Distributors can access everything

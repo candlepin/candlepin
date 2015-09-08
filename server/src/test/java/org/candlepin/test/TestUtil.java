@@ -94,6 +94,7 @@ public class TestUtil {
     public static Consumer createConsumer(Owner owner) {
         Consumer consumer = new Consumer("testconsumer" + randomInt(), "User",
             owner, createConsumerType());
+        consumer.setCreated(new Date());
         consumer.setFact("foo", "bar");
         consumer.setFact("foo1", "bar1");
 
