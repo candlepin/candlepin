@@ -1668,10 +1668,10 @@ public class CandlepinPoolManager implements PoolManager {
         boolean postFilter = consumer != null || key != null;
         if (consumer != null) {
             if (consumer.isCdk()) {
-                filters.addAttributeFilter("dev_pool", "true");
+                filters.addAttributeFilter(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
             }
             else {
-                filters.addAttributeFilter("dev_pool", "!true");
+                filters.addAttributeFilter(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "!true");
             }
         }
 

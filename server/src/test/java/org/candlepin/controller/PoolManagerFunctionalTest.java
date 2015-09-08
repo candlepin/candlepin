@@ -514,7 +514,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         Pool pool1 = createPool(owner, p, 10L,
                 TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
-        pool1.addAttribute(new PoolAttribute("dev_pool", "true"));
+        pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
         poolCurator.create(pool1);
         Pool pool2 = createPool(owner, p, 10L,
                 TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
@@ -552,7 +552,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         Pool pool1 = createPool(owner, p, 10L,
                 TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
-        pool1.addAttribute(new PoolAttribute("dev_pool", "true"));
+        pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
         poolCurator.create(pool1);
         Pool pool2 = createPool(owner, p, 10L,
                 TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));

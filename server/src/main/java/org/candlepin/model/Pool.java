@@ -94,6 +94,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     public static final String INSTANCE_ATTRIBUTE = "instance_multiplier";
 
     /**
+     * Attribute used to determine whether or not the pool was created for a development
+     * entitlement.
+     */
+    public static final String DEVELOPMENT_POOL_ATTRIBUTE = "dev_pool";
+
+    /**
      * PoolType
      *
      * Pools can be of several major types which can radically alter how they behave.
@@ -112,13 +118,16 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * has a virt_limit attribute but no host_limited attribute.
      *
      * UNMAPPED_GUEST - TODO
+     *
+     * DEVELOPMENT = TODO
      */
     public enum PoolType {
         NORMAL,
         ENTITLEMENT_DERIVED,
         STACK_DERIVED,
         BONUS,
-        UNMAPPED_GUEST;
+        UNMAPPED_GUEST,
+        DEVELOPMENT;
 
         /**
          * Checks if this type represents a derived pool type
@@ -1070,7 +1079,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
                 return PoolType.BONUS;
             }
         }
-
+        else if (hasAttribute(DEVELOPMENT_POOL_ATTRIBUTE)) {
+            return PoolType.DEVELOPMENT;
+        }
         return PoolType.NORMAL;
     }
 
@@ -1110,6 +1121,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     public boolean isUnmappedGuestPool() {
         return "true".equalsIgnoreCase(this.getAttributeValue(UNMAPPED_GUESTS_ATTRIBUTE));
+    }
+
+    public boolean isDevelopmentPool() {
+        return "true".equalsIgnoreCase(this.getAttributeValue(DEVELOPMENT_POOL_ATTRIBUTE));
     }
 
     public Set<Branding> getBranding() {
