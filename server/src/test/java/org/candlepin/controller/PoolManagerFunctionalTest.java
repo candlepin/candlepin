@@ -511,9 +511,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Owner owner = createOwner();
         Product p = new Product("test-product", "Test Product", owner);
         productCurator.create(p);
-        ConsumerInstalledProduct cip = new ConsumerInstalledProduct(p);
-        Set<ConsumerInstalledProduct> cips = new HashSet<ConsumerInstalledProduct>();
-        cips.add(cip);
 
         Pool pool1 = createPool(owner, p, 10L,
                 TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
@@ -525,20 +522,49 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         Consumer cdkSystem = new Consumer("cdk", "user", owner, systemType);
         cdkSystem.setFact("dev_sku", p.getId());
-        cdkSystem.setInstalledProducts(cips);
+        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
         Consumer nonCdkSystem = new Consumer("system", "user", owner, systemType);
-        nonCdkSystem.setInstalledProducts(cips);
+        nonCdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
 
         Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(cdkSystem, null,
                 owner, null, null, true, true, new PoolFilterBuilder(), new PageRequest());
         assertEquals(1, results.getPageData().size());
         Pool found1 = results.getPageData().get(0);
-        assertEquals(pool1.getId(), found1.getId());
+        assertEquals(pool1, found1);
 
         results = poolManager.listAvailableEntitlementPools(nonCdkSystem, null,
                 owner, null, null, true, true, new PoolFilterBuilder(), new PageRequest());
         assertEquals(1, results.getPageData().size());
         Pool found2 = results.getPageData().get(0);
-        assertEquals(pool2.getId(), found2.getId());
+        assertEquals(pool2, found2);
+    }
+
+    @Test
+    public void testPoolRemovalAtUnbind() throws EntitlementRefusedException {
+        Owner owner = createOwner();
+        Product p = new Product("test-product", "Test Product", owner);
+        productCurator.create(p);
+
+        Consumer cdkSystem = new Consumer("cdk", "user", owner, systemType);
+        cdkSystem.setFact("dev_sku", p.getId());
+        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        consumerCurator.create(cdkSystem);
+
+        Pool pool1 = createPool(owner, p, 10L,
+                TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        pool1.addAttribute(new PoolAttribute("dev_pool", "true"));
+        poolCurator.create(pool1);
+        Pool pool2 = createPool(owner, p, 10L,
+                TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        poolCurator.create(pool2);
+
+        AutobindData ad = new AutobindData(cdkSystem);
+        List<Entitlement> results = poolManager.entitleByProducts(ad);
+        assertEquals(1, results.size());
+        assertEquals(results.get(0).getPool(), pool1);
+
+        poolManager.revokeEntitlement(results.get(0));
+        assertNull(poolCurator.find(pool1.getId()));
+        assertNotNull(poolCurator.find(pool2.getId()));
     }
 }
