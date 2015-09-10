@@ -528,9 +528,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(cdkSystem, null,
                 owner, null, null, true, true, new PoolFilterBuilder(), new PageRequest());
-        assertEquals(1, results.getPageData().size());
-        Pool found1 = results.getPageData().get(0);
-        assertEquals(pool1, found1);
+        assertEquals(2, results.getPageData().size());
 
         results = poolManager.listAvailableEntitlementPools(nonCdkSystem, null,
                 owner, null, null, true, true, new PoolFilterBuilder(), new PageRequest());
@@ -553,6 +551,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Pool pool1 = createPool(owner, p, 10L,
                 TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
+        pool1.addAttribute(new PoolAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, cdkSystem.getUuid()));
         poolCurator.create(pool1);
         Pool pool2 = createPool(owner, p, 10L,
                 TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));

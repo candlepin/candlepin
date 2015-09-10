@@ -100,6 +100,11 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     public static final String DEVELOPMENT_POOL_ATTRIBUTE = "dev_pool";
 
     /**
+     * Attribute used to determine which specific consumer the pool was created for.
+     */
+    public static final String REQUIRES_CONSUMER_ATTRIBUTE = "requires_consumer";
+
+    /**
      * PoolType
      *
      * Pools can be of several major types which can radically alter how they behave.

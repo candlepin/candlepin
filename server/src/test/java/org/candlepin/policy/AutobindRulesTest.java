@@ -700,6 +700,21 @@ public class AutobindRulesTest {
         return pools;
     }
 
+    private List<Pool> createDevPools(Consumer consumer) {
+        Product product = new Product(productId, "A test product", owner);
+        Pool pool1 = TestUtil.createPool(owner, product, 10);
+        pool1.setId("DEAD-BEEF-DEV-" + TestUtil.randomInt());
+        pool1.setAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
+        pool1.setAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
+        Pool pool2 = TestUtil.createPool(owner, product, 10);
+        pool2.setId("DEAD-BEEF-DEV-" + TestUtil.randomInt());
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+        return pools;
+    }
+
     @Test
     public void hostRestrictedAutobindForVirt8Vcpu() {
         List<Pool> pools = createHostRestrictedVirtLimitPool();
@@ -1097,5 +1112,19 @@ public class AutobindRulesTest {
         assertEquals(1, bestPools.size());
         PoolQuantity q = bestPools.get(0);
         assertEquals(new Integer(2), q.getQuantity());
+    }
+
+    @Test
+    public void autobindDevPoolOverNormal() {
+        consumer.setFact("dev_sku", productId);
+        List<Pool> pools = createDevPools(consumer);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+                new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+                false);
+
+        // Should always pick the dev_pool for a CDK consumer
+        assertEquals(1, bestPools.size());
+        assertEquals(pools.get(0), bestPools.get(0).getPool());
     }
 }
