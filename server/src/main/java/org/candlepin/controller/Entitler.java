@@ -215,32 +215,7 @@ public class Entitler {
             }
             String sku = consumer.getFact("dev_sku");
             if (!alreadyHasCdkPool(consumer, sku)) {
-                // all good. create a pool for the CDK consumer
-                Product prod = null;
-                Set<Product> providedProducts = new HashSet<Product>();
-                Date now = new Date();
-                for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
-                    Product found = productCurator.lookupById(consumer.getOwner(), ip.getProductId());
-                    if (found == null) {
-                        // TODO: we need to lookup the product here w/out an owner. no path exists.
-                        throw new ForbiddenException(
-                                "This CDK consumer cannot access an installed product");
-                    }
-                    // if the product matches the dev_sku attribute, then it is the main product in the pool
-                    if (ip.getProductId().equals(sku)) {
-                        prod = found;
-                    }
-                    else {
-                        providedProducts.add(found);
-                    }
-                }
-
-                Date then = new Date(now.getTime() + getPoolInterval(prod));
-                // TODO: Is the quantity of 1 correct? What if the sku has cores, etc.?
-                Pool p = new Pool(consumer.getOwner(), prod, providedProducts, 1L, now, then, "", "", "");
-                p.setAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
-                p.setAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
-                poolManager.createPool(p);
+                poolManager.createPool(assembleDevPool(consumer, sku));
             }
         }
 
@@ -281,6 +256,35 @@ public class Entitler {
             }
         }
         return false;
+    }
+
+    protected Pool assembleDevPool(Consumer consumer, String sku) {
+        // all good. create a pool for the CDK consumer
+        Product prod = null;
+        Set<Product> providedProducts = new HashSet<Product>();
+        Date now = new Date();
+        for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
+            Product found = productCurator.lookupById(consumer.getOwner(), ip.getProductId());
+            if (found == null) {
+                // TODO: we need to lookup the product here w/out an owner. no path exists.
+                throw new ForbiddenException(
+                        "This CDK consumer cannot access an installed product");
+            }
+            // if the product matches the dev_sku attribute, then it is the main product in the pool
+            if (ip.getProductId().equals(sku)) {
+                prod = found;
+            }
+            else {
+                providedProducts.add(found);
+            }
+        }
+
+        Date then = new Date(now.getTime() + getPoolInterval(prod));
+        // TODO: Is the quantity of 1 correct? What if the sku has cores, etc.?
+        Pool p = new Pool(consumer.getOwner(), prod, providedProducts, 1L, now, then, "", "", "");
+        p.setAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
+        p.setAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
+        return p;
     }
 
     /**

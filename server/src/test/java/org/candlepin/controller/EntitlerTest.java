@@ -503,4 +503,28 @@ public class EntitlerTest {
         entitler.bindByProducts(ad);
     }
 
+    @Test
+    public void testCreatedDevPoolAttributes() {
+        Owner owner = new Owner("o");
+        Product p1 = new Product("cdk-product", "CDK Product", owner);
+        p1.setAttribute("expired_after", "47");
+        Product p2 = new Product("provided-product1", "Provided Product 1", owner);
+        Product p3 = new Product("provided-product2", "Provided Product 2", owner);
+        Consumer cdkSystem = TestUtil.createConsumer(owner);
+        cdkSystem.setFact("dev_sku", p1.getId());
+        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p1));
+        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
+        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
+        when(productCurator.lookupById(eq(owner), eq(p1.getId()))).thenReturn(p1);
+        when(productCurator.lookupById(eq(owner), eq(p2.getId()))).thenReturn(p2);
+        when(productCurator.lookupById(eq(owner), eq(p3.getId()))).thenReturn(p3);
+
+        Pool created = entitler.assembleDevPool(cdkSystem, cdkSystem.getFact("dev_sku"));
+        long intervalMillis = created.getEndDate().getTime() - created.getStartDate().getTime();
+        assertEquals(intervalMillis, 1000 * 60 * 60 * 24 * Long.parseLong("47"));
+        assertEquals("true", created.getAttributeValue(Pool.DEVELOPMENT_POOL_ATTRIBUTE));
+        assertEquals(cdkSystem.getUuid(), created.getAttributeValue(Pool.REQUIRES_CONSUMER_ATTRIBUTE));
+        assertEquals(p1.getId(), created.getProductId());
+        assertEquals(2, created.getProvidedProducts().size());
+    }
 }
