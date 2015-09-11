@@ -233,6 +233,7 @@ public class SubscriptionResource {
      * @return A Response object (with status code 202)
      */
     @POST
+    @Produces(MediaType.WILDCARD)
     public Response activateSubscription(
         @QueryParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("email") String email,

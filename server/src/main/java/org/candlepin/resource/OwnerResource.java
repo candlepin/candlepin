@@ -1261,6 +1261,7 @@ public class OwnerResource {
      */
     @POST
     @Path("{owner_key}/imports")
+    @Produces(MediaType.WILDCARD)
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public void importManifest(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,

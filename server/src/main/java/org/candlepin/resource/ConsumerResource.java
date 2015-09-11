@@ -285,6 +285,7 @@ public class ConsumerResource {
      * @httpcode 204 If the consumer exists and can be accessed
      */
     @HEAD
+    @Produces(MediaType.WILDCARD)
     @Path("{consumer_uuid}/exists")
     public void consumerExists(
         @PathParam("consumer_uuid") String uuid) {
@@ -1688,6 +1689,7 @@ public class ConsumerResource {
      * @httpcode 200
      */
     @DELETE
+    @Produces(MediaType.WILDCARD)
     @Path("/{consumer_uuid}/entitlements/{dbid}")
     public void unbind(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
@@ -1717,6 +1719,7 @@ public class ConsumerResource {
      * @httpcode 200
      */
     @DELETE
+    @Produces(MediaType.WILDCARD)
     @Path("/{consumer_uuid}/certificates/{serial}")
     public void unbindBySerial(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
@@ -1783,6 +1786,7 @@ public class ConsumerResource {
      * @httpcode 200
      */
     @PUT
+    @Produces(MediaType.WILDCARD)
     @Path("/{consumer_uuid}/certificates")
     public void regenerateEntitlementCertificates(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,

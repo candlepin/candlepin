@@ -312,6 +312,7 @@ public class EntitlementResource {
      * @httpcode 200
      */
     @DELETE
+    @Produces(MediaType.WILDCARD)
     @Path("/{dbid}")
     public void unbind(@PathParam("dbid") String dbid) {
         Entitlement toDelete = entitlementCurator.find(dbid);
@@ -330,6 +331,7 @@ public class EntitlementResource {
      * @httpcode 202
      */
     @PUT
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("product/{product_id}")
     public JobDetail regenerateEntitlementCertificatesForProduct(
             @PathParam("product_id") String productId,

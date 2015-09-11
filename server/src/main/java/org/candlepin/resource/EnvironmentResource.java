@@ -121,6 +121,7 @@ public class EnvironmentResource {
      * @httpcode 200
      */
     @DELETE
+    @Produces(MediaType.WILDCARD)
     @Path("/{env_id}")
     public void deleteEnv(@PathParam("env_id") @Verify(Environment.class) String envId) {
         Environment e = envCurator.find(envId);

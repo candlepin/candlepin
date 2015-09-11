@@ -241,6 +241,7 @@ public class RoleResource {
      */
     @DELETE
     @Path("/{role_id}")
+    @Produces(MediaType.WILDCARD)
     public void deleteRole(@PathParam("role_id") String roleId) {
         this.userService.deleteRole(roleId);
     }
