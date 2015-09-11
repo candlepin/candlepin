@@ -14,9 +14,15 @@
  */
 package org.candlepin.resteasy.interceptor;
 
+import org.candlepin.auth.AuthProvider;
+import org.candlepin.auth.BasicAuth;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.NoAuthPrincipal;
+import org.candlepin.auth.OAuth;
 import org.candlepin.auth.Principal;
+import org.candlepin.auth.SSLAuth;
+import org.candlepin.auth.TrustedConsumerAuth;
+import org.candlepin.auth.TrustedUserAuth;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.NotAuthorizedException;

@@ -18,6 +18,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.auth.SSLAuth;
 import org.candlepin.auth.Verify;
 import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.common.exceptions.ForbiddenException;

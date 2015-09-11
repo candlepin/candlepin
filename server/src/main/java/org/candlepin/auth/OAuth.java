@@ -12,9 +12,8 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor;
+package org.candlepin.auth;
 
-import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.CandlepinException;

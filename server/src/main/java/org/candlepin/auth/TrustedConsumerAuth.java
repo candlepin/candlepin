@@ -12,10 +12,8 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor;
+package org.candlepin.auth;
 
-import org.candlepin.auth.ConsumerPrincipal;
-import org.candlepin.auth.Principal;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 
@@ -32,7 +30,7 @@ import javax.inject.Provider;
  * be passed in a clear http header. This should
  * be used only if the environment is known to be secure
  */
-class TrustedConsumerAuth extends ConsumerAuth {
+public class TrustedConsumerAuth extends ConsumerAuth {
 
     public static final String CONSUMER_HEADER = "cp-consumer";
 

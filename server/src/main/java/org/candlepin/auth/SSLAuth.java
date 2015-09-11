@@ -12,9 +12,8 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor;
+package org.candlepin.auth;
 
-import org.candlepin.auth.Principal;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 
@@ -36,7 +35,7 @@ import javax.security.auth.x500.X500Principal;
  * Pulls the consumer id off off a certificate and creates a principal for that.
  * Remember, certs are easy.
  */
-class SSLAuth extends ConsumerAuth {
+public class SSLAuth extends ConsumerAuth {
     private static final String CERTIFICATES_ATTR = "javax.servlet.request.X509Certificate";
     private static final String UUID_DN_ATTRIBUTE = "CN";
 

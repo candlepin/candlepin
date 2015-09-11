@@ -12,17 +12,26 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor;
-
-import org.candlepin.auth.Principal;
+package org.candlepin.auth;
 
 import org.jboss.resteasy.spi.HttpRequest;
 
 /**
- * Interface for all Auth Providers
+ * TrustedExternalSystemAuth
+ *
+ * This auth form allows and external system to authenticate via
+ * the shared secret, and act as itself.
+ *
+ * This is different from the User or Consumer auth versions, in that the
+ * External System will not be acting on behalf of another
+ * (and has different permission levels).
  */
-public interface AuthProvider {
+public class TrustedExternalSystemAuth implements AuthProvider {
 
-    Principal getPrincipal(HttpRequest httpRequest);
+    @Override
+    public Principal getPrincipal(HttpRequest httpRequest) {
+        // TODO Auto-generated method stub
+        return new ExternalSystemPrincipal();
+    }
 
 }

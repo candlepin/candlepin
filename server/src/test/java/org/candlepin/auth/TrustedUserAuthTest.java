@@ -12,16 +12,13 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor;
+package org.candlepin.auth;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.auth.Principal;
-import org.candlepin.auth.TrustedUserPrincipal;
-import org.candlepin.auth.UserPrincipal;
 import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
 

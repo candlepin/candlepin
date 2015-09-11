@@ -12,10 +12,8 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor;
+package org.candlepin.auth;
 
-import org.candlepin.auth.Principal;
-import org.candlepin.auth.TrustedUserPrincipal;
 import org.candlepin.common.resteasy.auth.AuthUtil;
 import org.candlepin.service.UserServiceAdapter;
 
@@ -32,7 +30,7 @@ import javax.inject.Provider;
  * This auth form allows for a consumer id to be passed in a clear http header.
  * This should be used only if the environment is known to be secure
  */
-class TrustedUserAuth extends UserAuth {
+public class TrustedUserAuth extends UserAuth {
 
     public static final String USER_HEADER = "cp-user";
     public static final String LOOKUP_PERMISSIONS_HEADER = "cp-lookup-permissions";

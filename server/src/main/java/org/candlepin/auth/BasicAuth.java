@@ -12,9 +12,8 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor;
+package org.candlepin.auth;
 
-import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.NotAuthorizedException;
 import org.candlepin.common.exceptions.ServiceUnavailableException;
@@ -34,7 +33,7 @@ import javax.inject.Provider;
 /**
  * BasicAuth
  */
-class BasicAuth extends UserAuth {
+public class BasicAuth extends UserAuth {
 
     private static Logger log = LoggerFactory.getLogger(BasicAuth.class);
 
