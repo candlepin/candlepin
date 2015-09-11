@@ -538,7 +538,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testPoolRemovalAtUnbind() throws EntitlementRefusedException {
+    public void testDevPoolRemovalAtUnbind() throws EntitlementRefusedException {
         Owner owner = createOwner();
         Product p = new Product("test-product", "Test Product", owner);
         productCurator.create(p);

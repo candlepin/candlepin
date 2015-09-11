@@ -17,18 +17,25 @@ package org.candlepin.controller;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
+import org.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
 
@@ -39,8 +46,10 @@ import org.xnap.commons.i18n.I18n;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * entitler
@@ -55,11 +64,18 @@ public class Entitler {
     private ConsumerCurator consumerCurator;
     private EntitlementRulesTranslator messageTranslator;
     private EntitlementCurator entitlementCurator;
+    private Configuration config;
+    private PoolCurator poolCurator;
+    private ProductCurator productCurator;
+    private ProductServiceAdapter productAdapter;
+    private long maxCdkLifeDays = 90;
 
     @Inject
     public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n, EventFactory evtFactory,
         EventSink sink, EntitlementRulesTranslator messageTranslator,
-        EntitlementCurator entitlementCurator) {
+        EntitlementCurator entitlementCurator, Configuration config,
+        PoolCurator poolCurator, ProductCurator productCurator,
+        ProductServiceAdapter productAdapter) {
 
         this.poolManager = pm;
         this.i18n = i18n;
@@ -68,6 +84,10 @@ public class Entitler {
         this.consumerCurator = cc;
         this.messageTranslator = messageTranslator;
         this.entitlementCurator = entitlementCurator;
+        this.config = config;
+        this.poolCurator = poolCurator;
+        this.productCurator = productCurator;
+        this.productAdapter = productAdapter;
     }
 
     public List<Entitlement> bindByPool(String poolId, String consumeruuid,
@@ -186,6 +206,43 @@ public class Entitler {
                 data.setConsumer(consumer);
             }
         }
+        if (consumer.isCdk()) {
+            if (config.getBoolean(ConfigProperties.STANDALONE) ||
+                    poolCurator.listByOwner(consumer.getOwner(), new Date()).size() == 0) {
+                throw new ForbiddenException(
+                        "CDK consumers may only be used on hosted servers" +
+                        " and on owners that have active subscriptions.");
+            }
+            String sku = consumer.getFact("dev_sku");
+            if (!alreadyHasCdkPool(consumer, sku)) {
+                // all good. create a pool for the CDK consumer
+                Product prod = null;
+                Set<Product> providedProducts = new HashSet<Product>();
+                Date now = new Date();
+                for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
+                    Product found = productCurator.lookupById(consumer.getOwner(), ip.getProductId());
+                    if (found == null) {
+                        // TODO: we need to lookup the product here w/out an owner. no path exists.
+                        throw new ForbiddenException(
+                                "This CDK consumer cannot access an installed product");
+                    }
+                    // if the product matches the dev_sku attribute, then it is the main product in the pool
+                    if (ip.getProductId().equals(sku)) {
+                        prod = found;
+                    }
+                    else {
+                        providedProducts.add(found);
+                    }
+                }
+
+                Date then = new Date(now.getTime() + getPoolInterval(prod));
+                // TODO: Is the quantity of 1 correct? What if the sku has cores, etc.?
+                Pool p = new Pool(consumer.getOwner(), prod, providedProducts, 1L, now, then, "", "", "");
+                p.setAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
+                p.setAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
+                poolManager.createPool(p);
+            }
+        }
 
         // Attempt to create entitlements:
         try {
@@ -203,6 +260,27 @@ public class Entitler {
             throw new ForbiddenException(messageTranslator.productErrorToMessage(productId,
                     e.getResult().getErrors().get(0)));
         }
+    }
+
+    private long getPoolInterval(Product prod) {
+        long interval = maxCdkLifeDays;
+        String prodThenString = prod.getAttributeValue("expired_after");
+        if (prodThenString != null && Long.parseLong(prodThenString) < maxCdkLifeDays) {
+            interval = Long.parseLong(prodThenString);
+        }
+        return 1000 * 60 * 60 * 24 * interval;
+    }
+
+    private boolean alreadyHasCdkPool(Consumer consumer, String sku) {
+        List<Pool> pools = poolCurator.listByConsumer(consumer);
+        for (Pool p : pools) {
+            if (p.hasAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE) &&
+                p.hasAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE) &&
+                p.getAttributeValue(Pool.REQUIRES_CONSUMER_ATTRIBUTE).equals(consumer.getUuid())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
