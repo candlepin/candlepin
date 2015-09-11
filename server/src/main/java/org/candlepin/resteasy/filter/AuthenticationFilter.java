@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor;
+package org.candlepin.resteasy.filter;
 
 import org.candlepin.auth.AuthProvider;
 import org.candlepin.auth.BasicAuth;

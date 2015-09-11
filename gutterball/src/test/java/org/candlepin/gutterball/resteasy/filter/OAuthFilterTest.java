@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.gutterball.resteasy.interceptor;
+package org.candlepin.gutterball.resteasy.filter;
 
 import static org.mockito.Mockito.*;
 
@@ -55,7 +55,7 @@ import javax.ws.rs.WebApplicationException;
 /**
  * OAuthInterceptorTest
  */
-public class OAuthInterceptorTest {
+public class OAuthFilterTest {
     private static Logger log = LoggerFactory.getLogger(OAuthFilter.class);
 
     private Injector injector;

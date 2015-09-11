@@ -12,30 +12,29 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor;
+package org.candlepin.resteasy.filter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.candlepin.common.util.VersionUtil;
+
+import java.util.Map;
 
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.ext.Provider;
 
 /**
- * SecurityHoleAuthorizationFilter is a no-op JAX-RS 2.0 Filter that is applied
- * to methods that have the SecurityHole annotation applied to them.  The
- * AuthorizationFeature class is what determines whether to register this filter to
- * a method.
+ * VersionResponseFilter
  */
-@Priority(Priorities.AUTHORIZATION)
-public class SecurityHoleAuthorizationFilter
-    extends AbstractAuthorizationFilter {
-
-    private static final Logger log = LoggerFactory.getLogger(SecurityHoleAuthorizationFilter.class);
-
+@Provider
+@Priority(Priorities.HEADER_DECORATOR)
+public class VersionResponseFilter implements ContainerResponseFilter {
     @Override
-    void runFilter(ContainerRequestContext requestContext) {
-        log.debug("NO authorization check for {}", requestContext.getUriInfo().getPath());
-        // Do nothing
+    public void filter(ContainerRequestContext reqContext, ContainerResponseContext respContext) {
+        Map<String, String> map = VersionUtil.getVersionMap();
+        respContext.getHeaders().add(VersionUtil.VERSION_HEADER,
+            map.get("version") + "-" + map.get("release"));
     }
 }

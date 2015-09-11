@@ -58,7 +58,7 @@ import org.candlepin.resource.PoolResource;
 import org.candlepin.resource.ProductResource;
 import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.resteasy.ResourceLocatorMap;
-import org.candlepin.resteasy.interceptor.StoreFactory;
+import org.candlepin.resteasy.filter.StoreFactory;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;

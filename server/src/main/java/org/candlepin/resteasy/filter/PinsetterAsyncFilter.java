@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor;
+package org.candlepin.resteasy.filter;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.ServiceUnavailableException;
@@ -42,12 +42,12 @@ import javax.ws.rs.ext.Provider;
  */
 @Provider
 @ServerInterceptor
-public class PinsetterAsyncInterceptor implements PostProcessInterceptor {
+public class PinsetterAsyncFilter implements PostProcessInterceptor {
     private PinsetterKernel pinsetterKernel;
     private com.google.inject.Provider<Principal> principalProvider;
 
     @Inject
-    public PinsetterAsyncInterceptor(PinsetterKernel pinsetterKernel,
+    public PinsetterAsyncFilter(PinsetterKernel pinsetterKernel,
         com.google.inject.Provider<Principal> principalProvider) {
         this.pinsetterKernel = pinsetterKernel;
         this.principalProvider = principalProvider;

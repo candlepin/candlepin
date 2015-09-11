@@ -20,8 +20,8 @@ import org.candlepin.auth.Verify;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.model.Owner;
 import org.candlepin.resteasy.ResourceLocatorMap;
-import org.candlepin.resteasy.interceptor.StoreFactory;
-import org.candlepin.resteasy.interceptor.VerifyAuthorizationFilter;
+import org.candlepin.resteasy.filter.StoreFactory;
+import org.candlepin.resteasy.filter.VerifyAuthorizationFilter;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;

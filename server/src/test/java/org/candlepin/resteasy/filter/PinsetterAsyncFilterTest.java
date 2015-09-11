@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor;
+package org.candlepin.resteasy.filter;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
@@ -50,17 +50,17 @@ import java.util.List;
  *
  */
 @RunWith(MockitoJUnitRunner.class)
-public class PinsetterAsyncInterceptorTest {
+public class PinsetterAsyncFilterTest {
 
     @Mock private ServerResponse response;
     @Mock private Provider<Principal> principalProvider;
     @Mock private PinsetterKernel pinsetterKernel;
 
-    private PinsetterAsyncInterceptor interceptor;
+    private PinsetterAsyncFilter interceptor;
 
     @Before
     public void init() {
-        this.interceptor = new PinsetterAsyncInterceptor(this.pinsetterKernel,
+        this.interceptor = new PinsetterAsyncFilter(this.pinsetterKernel,
             this.principalProvider);
     }
 

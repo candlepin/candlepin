@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.common.resteasy.interceptor;
+package org.candlepin.common.resteasy.filter;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
