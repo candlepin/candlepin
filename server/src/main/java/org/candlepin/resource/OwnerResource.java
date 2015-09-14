@@ -1475,22 +1475,23 @@ public class OwnerResource {
         Owner o = findOwner(ownerKey);
 
         if (o == null) {
-            throw new NotFoundException(i18n.tr(
-                "owner with key: {0} was not found.", ownerKey));
-        }
-
-        Consumer ueberConsumer = consumerCurator.findByName(o, Consumer.UEBER_CERT_CONSUMER);
-
-        // ueber cert has already been generated - re-generate it now
-        if (ueberConsumer != null) {
-            List<Entitlement> ueberEntitlement
-                = entitlementCurator.listByConsumer(ueberConsumer);
-            // Immediately revoke and regenerate ueber certificates:
-            poolManager.regenerateCertificatesOf(ueberEntitlement.get(0), true, false);
-            return entitlementCertCurator.listForConsumer(ueberConsumer).get(0);
+            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", ownerKey));
         }
 
         try {
+            Consumer ueberConsumer = consumerCurator.findByName(o, Consumer.UEBER_CERT_CONSUMER);
+
+            // ueber cert has already been generated - re-generate it now
+            if (ueberConsumer != null) {
+                List<Entitlement> ueberEntitlements = entitlementCurator.listByConsumer(ueberConsumer);
+
+                if (ueberEntitlements.size() > 0) {
+                    // Immediately revoke and regenerate ueber certificates:
+                    poolManager.regenerateCertificatesOf(ueberEntitlements.get(0), true, false);
+                    return entitlementCertCurator.listForConsumer(ueberConsumer).get(0);
+                }
+            }
+
             return ueberCertGenerator.generate(o, principal);
         }
         catch (Exception e) {

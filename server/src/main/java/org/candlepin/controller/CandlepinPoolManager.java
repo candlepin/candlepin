@@ -183,12 +183,17 @@ public class CandlepinPoolManager implements PoolManager {
             refreshPoolsForSubscription(sub, lazy, changedProducts);
         }
 
+        Pool ueberPool = this.findUeberPool(owner);
+        String ueberPoolId = ueberPool != null ? ueberPool.getId() : null;
+
         // We deleted some, need to take that into account so we
         // remove everything that isn't actually active
         subIds.removeAll(deletedSubs);
         // delete pools whose subscription disappeared:
         for (Pool pool : poolCurator.getPoolsFromBadSubs(owner, subIds)) {
-            if (pool.getSourceSubscription() != null && !pool.getType().isDerivedType()) {
+            if (pool.getSourceSubscription() != null && !pool.getType().isDerivedType() &&
+                (ueberPoolId == null || !ueberPoolId.equals(pool.getId()))) {
+
                 deletePool(pool);
             }
         }
@@ -1107,8 +1112,9 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     @Transactional
-    public Entitlement ueberCertEntitlement(Consumer consumer, Pool pool,
-        Integer quantity) throws EntitlementRefusedException {
+    public Entitlement ueberCertEntitlement(Consumer consumer, Pool pool, Integer quantity)
+        throws EntitlementRefusedException {
+
         return addOrUpdateEntitlement(consumer, pool, null, 1, true, CallerType.UNKNOWN);
     }
 
