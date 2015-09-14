@@ -145,7 +145,7 @@ public class OwnerContentResource {
 
         if (content == null) {
             throw new NotFoundException(
-                i18n.tr("Content with id \"{0}\" could not be found.", contentId)
+                i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
             );
         }
 
