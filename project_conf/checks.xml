@@ -126,7 +126,9 @@
       <property name="option" value="text"/>
     </module>
     <!-- defaults to end of line -->
-    <module name="LeftCurly" />
+    <module name="LeftCurly">
+      <property name="tokens" value="ANNOTATION_DEF, CLASS_DEF, CTOR_DEF, ENUM_DEF, ENUM_CONSTANT_DEF, INTERFACE_DEF, LITERAL_CATCH, LITERAL_DO, LITERAL_ELSE, LITERAL_FINALLY, LITERAL_FOR, LITERAL_SWITCH, LITERAL_SYNCHRONIZED, LITERAL_TRY, LITERAL_WHILE, METHOD_DEF, STATIC_INIT" />
+    </module>
     <module name="NeedBraces"/>
     <module name="RightCurly">
       <property name="option" value="alone"/>
@@ -274,7 +276,9 @@
     <module name="UpperEll"/>
     <!-- <module name="FinalParameters"/> -->
     <!-- <module name="DescendantToken"/> -->
-    <module name="Indentation"/>
+    <module name="Indentation">
+      <property name="lineWrappingIndentation" value="0" />
+    </module>
     <!-- <module name="TrailingComment"/> -->
     <!-- <module name="Regexp"/> -->
 
