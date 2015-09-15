@@ -39,6 +39,8 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EventCurator;
 import org.candlepin.model.ExporterMetadata;
@@ -57,9 +59,11 @@ import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
+import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.CandlepinParameterUnmarshaller;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
@@ -90,9 +94,11 @@ import java.lang.annotation.Annotation;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -1133,5 +1139,124 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             new CandlepinParameterUnmarshaller();
         unmarshaller.setAnnotations(annotations);
         return (KeyValueParameter) unmarshaller.fromString(key + ":" + val);
+    }
+
+    @Test
+    public void testCreateUeberCertificateFromScratch() {
+        Principal principal = setupPrincipal(owner, Access.ALL);
+        Consumer consumer = TestUtil.createConsumer(owner);
+        EntitlementCertificate entCert = mock(EntitlementCertificate.class);
+
+
+        OwnerCurator oc = mock(OwnerCurator.class);
+        ConsumerCurator cc = mock(ConsumerCurator.class);
+        EntitlementCurator ec = mock(EntitlementCurator.class);
+        CandlepinPoolManager cpm = mock(CandlepinPoolManager.class);
+        EntitlementCertificateCurator ecc = mock(EntitlementCertificateCurator.class);
+        UeberCertificateGenerator ucg = mock(UeberCertificateGenerator.class);
+
+        OwnerResource resource = new OwnerResource(
+            oc, null, null, cc, null, i18n, null, null, null, null, null, cpm, null, null, null,
+            null, null, null, ecc, ec, ucg, null, null, null, null, null
+        );
+
+        try {
+            when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
+            when(cc.findByName(eq(owner), eq(Consumer.UEBER_CERT_CONSUMER))).thenReturn(null);
+            when(ucg.generate(eq(owner), eq(principal))).thenReturn(entCert);
+        }
+        catch (EntitlementRefusedException ere) {
+            // ...
+        }
+
+        EntitlementCertificate result = resource.createUeberCertificate(principal, "admin");
+
+        assertEquals(entCert, result);
+    }
+
+    @Test
+    public void testCreateUeberCertificateRegenerate() {
+        Principal principal = setupPrincipal(owner, Access.ALL);
+        Consumer consumer = TestUtil.createConsumer(owner);
+        Entitlement ent = mock(Entitlement.class);
+        List<Entitlement> entList = Arrays.asList(ent);
+        EntitlementCertificate entCert = mock(EntitlementCertificate.class);
+        List<EntitlementCertificate> ecList = Arrays.asList(entCert);
+
+        OwnerCurator oc = mock(OwnerCurator.class);
+        ConsumerCurator cc = mock(ConsumerCurator.class);
+        EntitlementCurator ec = mock(EntitlementCurator.class);
+        CandlepinPoolManager cpm = mock(CandlepinPoolManager.class);
+        EntitlementCertificateCurator ecc = mock(EntitlementCertificateCurator.class);
+        UeberCertificateGenerator ucg = mock(UeberCertificateGenerator.class);
+
+        OwnerResource resource = new OwnerResource(
+            oc, null, null, cc, null, i18n, null, null, null, null, null, cpm, null, null, null,
+            null, null, null, ecc, ec, ucg, null, null, null, null, null
+        );
+
+        when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
+        when(cc.findByName(eq(owner), eq(Consumer.UEBER_CERT_CONSUMER))).thenReturn(consumer);
+        when(ec.listByConsumer(eq(consumer))).thenReturn(entList);
+        when(ecc.listForConsumer(eq(consumer))).thenReturn(ecList);
+
+        EntitlementCertificate result = resource.createUeberCertificate(principal, "admin");
+
+        assertEquals(entCert, result);
+    }
+
+    @Test
+    public void testCreateUeberCertificateRegenerateWithNoEntitlement() {
+        Principal principal = setupPrincipal(owner, Access.ALL);
+        Consumer consumer = TestUtil.createConsumer(owner);
+        Entitlement ent = mock(Entitlement.class);
+        List<Entitlement> entList = new LinkedList<Entitlement>();
+        EntitlementCertificate entCert = mock(EntitlementCertificate.class);
+        List<EntitlementCertificate> ecList = Arrays.asList(entCert);
+
+        OwnerCurator oc = mock(OwnerCurator.class);
+        ConsumerCurator cc = mock(ConsumerCurator.class);
+        EntitlementCurator ec = mock(EntitlementCurator.class);
+        CandlepinPoolManager cpm = mock(CandlepinPoolManager.class);
+        EntitlementCertificateCurator ecc = mock(EntitlementCertificateCurator.class);
+        UeberCertificateGenerator ucg = mock(UeberCertificateGenerator.class);
+
+        OwnerResource resource = new OwnerResource(
+            oc, null, null, cc, null, i18n, null, null, null, null, null, cpm, null, null, null,
+            null, null, null, ecc, ec, ucg, null, null, null, null, null
+        );
+
+        try {
+            when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
+            when(cc.findByName(eq(owner), eq(Consumer.UEBER_CERT_CONSUMER))).thenReturn(consumer);
+            when(ec.listByConsumer(eq(consumer))).thenReturn(entList);
+            when(ucg.generate(eq(owner), eq(principal))).thenReturn(entCert);
+        }
+        catch (EntitlementRefusedException ere) {
+            // ...
+        }
+
+        EntitlementCertificate result = resource.createUeberCertificate(principal, "admin");
+
+        assertEquals(entCert, result);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testCreateUeberCertificateInvalidOwner() {
+        Principal principal = setupPrincipal(owner, Access.ALL);
+
+        OwnerCurator oc = mock(OwnerCurator.class);
+        ConsumerCurator cc = mock(ConsumerCurator.class);
+        EntitlementCurator ec = mock(EntitlementCurator.class);
+        CandlepinPoolManager cpm = mock(CandlepinPoolManager.class);
+        EntitlementCertificateCurator ecc = mock(EntitlementCertificateCurator.class);
+        UeberCertificateGenerator ucg = mock(UeberCertificateGenerator.class);
+
+        OwnerResource resource = new OwnerResource(
+            oc, null, null, cc, null, i18n, null, null, null, null, null, cpm, null, null, null,
+            null, null, null, ecc, ec, ucg, null, null, null, null, null
+        );
+
+        EntitlementCertificate result = resource.createUeberCertificate(principal, "admin");
     }
 }
