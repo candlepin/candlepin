@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.49.6
+Version: 0.9.49.8
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,14 @@ fi
 
 
 %changelog
+* Tue Sep 15 2015 Chris Rog <crog@redhat.com> 0.9.49.8-1
+- 1259248: Fixed issue with refresh pools removing ueber certs
+  (crog@redhat.com)
+
+* Tue Sep 15 2015 Chris Rog <crog@redhat.com>
+- 1259248: Fixed issue with refresh pools removing ueber certs
+  (crog@redhat.com)
+
 * Thu Jul 30 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.49.6-1
 - 1247242: CPM will attempt to retry entitlements under certain conditions
   (crog@redhat.com)
