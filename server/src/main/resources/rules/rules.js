@@ -333,10 +333,6 @@ function get_pool_priority(pool, consumer) {
     if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) !== null) {
         priority += 150;
     }
-    // or consumer_specific
-    if (pool.getAttribute(REQUIRES_CONSUMER_ATTRIBUTE) !== null) {
-        priority += 150;
-    }
     /*
      * Special case to match socket counts exactly if possible.  We don't want to waste a pair
      * of two socket subscriptions when we have a 4 socket sub.
@@ -1197,13 +1193,6 @@ function comparePools(pool1, pool2) {
             return false;
         }
         // If neither condition is true, no preference...
-        // also consider requires consumer with the same idea
-        if (pool1.getAttribute(REQUIRES_CONSUMER_ATTRIBUTE) !== null && pool2.getAttribute(REQUIRES_CONSUMER_ATTRIBUTE) === null) {
-            return true;
-        }
-        if (pool2.getAttribute(REQUIRES_CONSUMER_ATTRIBUTE) !== null && pool1.getAttribute(REQUIRES_CONSUMER_ATTRIBUTE) === null) {
-            return false;
-        }
     }
     // If two pools are still considered equal, select the pool that expires first
     if (pool2.endDate > pool1.endDate) {
@@ -2045,10 +2034,6 @@ var Autobind = {
                         }
                         // better still if host_specific
                         if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) != null) {
-                            priority += 150;
-                        }
-                        // or consumer_specific
-                        if (pool.getAttribute(REQUIRES_CONSUMER_ATTRIBUTE) != null) {
                             priority += 150;
                         }
                     }

@@ -774,9 +774,16 @@ public class CandlepinPoolManager implements PoolManager {
             try {
                 List<Entitlement> entitlements = new LinkedList<Entitlement>();
 
-                List<PoolQuantity> bestPools = getBestPools(consumer, productIds,
-                    entitleDate, owner, null, fromPools);
-
+                List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
+                if (consumer != null && consumer.isCdk()) {
+                    String poolId = fromPools.iterator().next();
+                    PoolQuantity pq = new PoolQuantity(poolCurator.find(poolId), 1);
+                    bestPools.add(pq);
+                }
+                else {
+                    bestPools = getBestPools(consumer, productIds,
+                        entitleDate, owner, null, fromPools);
+                }
                 if (bestPools == null) {
                     List<String> fullList = new ArrayList<String>();
                     fullList.addAll(Arrays.asList(productIds));

@@ -431,6 +431,7 @@ public class EntitlerTest {
         Pool activePool = TestUtil.createPool(owner, p);
         List<Pool> activeList = new ArrayList<Pool>();
         activeList.add(activePool);
+        Pool devPool = mock(Pool.class);
 
         Consumer cdkSystem = TestUtil.createConsumer(owner);
         cdkSystem.setFact("dev_sku", p.getId());
@@ -439,6 +440,8 @@ public class EntitlerTest {
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.listByOwner(eq(owner), any(Date.class))).thenReturn(activeList);
         when(productCurator.lookupById(eq(owner), eq(p.getId()))).thenReturn(p);
+        when(pm.createPool(any(Pool.class))).thenReturn(devPool);
+        when(devPool.getId()).thenReturn("test_pool_id");
 
         AutobindData ad = new AutobindData(cdkSystem);
         entitler.bindByProducts(ad);

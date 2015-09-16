@@ -63,6 +63,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -556,8 +557,11 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Pool pool2 = createPool(owner, p, 10L,
                 TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool2);
+        List<String> possPools = new ArrayList<String>();
+        possPools.add(pool1.getId());
 
         AutobindData ad = new AutobindData(cdkSystem);
+        ad.setPossiblePools(possPools);
         List<Entitlement> results = poolManager.entitleByProducts(ad);
         assertEquals(1, results.size());
         assertEquals(results.get(0).getPool(), pool1);

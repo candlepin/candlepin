@@ -214,9 +214,13 @@ public class Entitler {
                         " and on owners that have active subscriptions.");
             }
             String sku = consumer.getFact("dev_sku");
-            if (!alreadyHasCdkPool(consumer, sku)) {
-                poolManager.createPool(assembleDevPool(consumer, sku));
+            Pool devPool = getCdkPool(consumer, sku);
+            if (devPool == null) {
+                devPool = poolManager.createPool(assembleDevPool(consumer, sku));
             }
+            List<String> pools = new ArrayList<String>();
+            pools.add(devPool.getId());
+            data.setPossiblePools(pools);
         }
 
         // Attempt to create entitlements:
@@ -246,16 +250,16 @@ public class Entitler {
         return 1000 * 60 * 60 * 24 * interval;
     }
 
-    private boolean alreadyHasCdkPool(Consumer consumer, String sku) {
+    private Pool getCdkPool(Consumer consumer, String sku) {
         List<Pool> pools = poolCurator.listByConsumer(consumer);
         for (Pool p : pools) {
             if (p.hasAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE) &&
                 p.hasAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE) &&
                 p.getAttributeValue(Pool.REQUIRES_CONSUMER_ATTRIBUTE).equals(consumer.getUuid())) {
-                return true;
+                return p;
             }
         }
-        return false;
+        return null;
     }
 
     protected Pool assembleDevPool(Consumer consumer, String sku) {
