@@ -15,11 +15,15 @@
 
 package org.candlepin.service.impl;
 
+import org.candlepin.common.exceptions.ServiceUnavailableException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.xnap.commons.i18n.I18n;
+
+import com.google.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,6 +40,7 @@ public class ImportSubscriptionServiceAdapter implements
 
     private List<Subscription> subscriptions;
     private Map<String, Subscription> subsBySubId = new HashMap<String, Subscription>();
+    @Inject private I18n i18n;
 
     public ImportSubscriptionServiceAdapter() {
         this(new LinkedList<Subscription>());
@@ -71,6 +76,8 @@ public class ImportSubscriptionServiceAdapter implements
     @Override
     public void activateSubscription(Consumer consumer, String email,
             String emailLocale) {
+        throw new ServiceUnavailableException(
+                i18n.tr("Standalone candlepin does not support redeeming a subscription."));
     }
 
     @Override
