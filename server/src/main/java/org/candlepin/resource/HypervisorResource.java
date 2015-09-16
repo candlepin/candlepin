@@ -158,8 +158,7 @@ public class HypervisorResource {
                     log.info("Registering new host consumer for hypervisor ID: {}",
                             hypervisorId);
                     // Create new consumer
-                    consumer = createConsumerForHypervisorId(
-                        hypervisorId, owner, principal);
+                    consumer = createConsumerForHypervisorId(hypervisorId, owner, principal);
                     hostConsumerCreated = true;
                 }
                 else {
@@ -269,18 +268,7 @@ public class HypervisorResource {
      */
     private Consumer createConsumerForHypervisorId(String incHypervisorId,
             Owner owner, Principal principal) {
-        return createConsumerForHypervisorId(null, incHypervisorId, owner,  principal);
-    }
-
-
-    /*
-     * Create a new hypervisor type consumer to represent the incoming hypervisorId
-     */
-    private Consumer createConsumerForHypervisorId(Consumer consumer, String incHypervisorId,
-            Owner owner, Principal principal) {
-        if (consumer == null) {
-            consumer = new Consumer();
-        }
+        Consumer consumer = new Consumer();
         consumer.setName(incHypervisorId);
         consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
         consumer.setFact("uname.machine", "x86_64");
