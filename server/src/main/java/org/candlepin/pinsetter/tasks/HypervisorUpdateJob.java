@@ -23,6 +23,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.HypervisorId;
+import org.candlepin.model.JobCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.VirtConsumerMap;
@@ -38,6 +39,9 @@ import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.Trigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,9 +61,10 @@ import java.util.zip.InflaterInputStream;
 
 /**
  * Asynchronous job for refreshing the entitlement pools for specific
- * {@link Owner}.
+ * {@link Owner}. A job will wait for a running job of the same Owner to
+ * finish before beginning execution
  */
-public class HypervisorUpdateJob extends UniqueByOwnerJob {
+public class HypervisorUpdateJob extends KingpinJob {
 
     private static Logger log = LoggerFactory.getLogger(HypervisorUpdateJob.class);
     private OwnerCurator ownerCurator;
@@ -77,6 +82,27 @@ public class HypervisorUpdateJob extends UniqueByOwnerJob {
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.consumerResource = consumerResource;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static JobStatus scheduleJob(JobCurator jobCurator,
+        Scheduler scheduler, JobDetail detail,
+        Trigger trigger) throws SchedulerException {
+        JobStatus result = jobCurator.getByClassAndOwner(
+            detail.getJobDataMap().getString(JobStatus.TARGET_ID),
+            HypervisorUpdateJob.class);
+        if (result == null) {
+            return KingpinJob.scheduleJob(jobCurator, scheduler, detail, trigger);
+        }
+        log.debug("Scheduling job without a trigger: " + detail.getKey().getName());
+        JobStatus status = KingpinJob.scheduleJob(jobCurator, scheduler, detail, null);
+        return status;
+    }
+
+    public static boolean isSchedulable(JobCurator jobCurator, JobStatus status) {
+        long running = jobCurator.findNumRunningByOwnerAndClass(
+            status.getTargetId(), HypervisorUpdateJob.class);
+        return running == 0;  // We can start the job if there are 0 like it running
     }
 
     /**
