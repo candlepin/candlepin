@@ -22,10 +22,12 @@ import org.candlepin.auth.Principal;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.HypervisorId;
+import org.candlepin.model.JobCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.pinsetter.core.model.JobStatus;
+import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.candlepin.resource.ConsumerResource;
 
 import org.junit.Before;
@@ -33,6 +35,9 @@ import org.junit.Test;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.ListenerManager;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
 
 import java.util.Set;
 
@@ -141,5 +146,44 @@ public class HypervisorUpdateJobTest {
                                         anyString(),
                                         anyString(),
                                         eq(false));
+    }
+
+    /*
+     * Schedule the job to be executed later even if a similar job exists.
+     */
+    @Test
+    public void dontSkipIfExistsTest() throws JobExecutionException, SchedulerException {
+
+        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal);
+        JobStatus preExistingJobStatus = new JobStatus();
+        preExistingJobStatus.setState(JobState.WAITING);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
+        JobStatus newlyScheduledJobStatus = new JobStatus();
+
+        JobCurator jobCurator = mock(JobCurator.class);
+        Scheduler scheduler = mock(Scheduler.class);
+        ListenerManager lm = mock(ListenerManager.class);
+
+        when(jobCurator.getByClassAndOwner(anyString(), any(Class.class))).thenReturn(
+                preExistingJobStatus);
+        when(scheduler.getListenerManager()).thenReturn(lm);
+        when(jobCurator.create(any(JobStatus.class))).thenReturn(newlyScheduledJobStatus);
+
+        JobStatus resultStatus = job.scheduleJob(jobCurator, scheduler, detail, null);
+        assertEquals(newlyScheduledJobStatus, resultStatus);
+    }
+
+    /*
+     * Make sure only one test is running at a time.
+     */
+    @Test
+    public void monogamousJobTest() throws JobExecutionException, SchedulerException {
+
+        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal);
+        JobStatus newJob = new JobStatus(detail);
+        JobCurator jobCurator = mock(JobCurator.class);
+        when(jobCurator.findNumRunningByOwnerAndClass(owner.getKey(), HypervisorUpdateJob.class))
+                .thenReturn(1L);
+        assertFalse(HypervisorUpdateJob.isSchedulable(jobCurator, newJob));
     }
 }
