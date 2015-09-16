@@ -80,7 +80,7 @@ def create_pools(cp, owner_key, count, attributes, quantity)
   time = Benchmark.realtime do
     (1..(count)).each do |i|
       mkt_prod_id = random_string('mkt-prod')
-      mkt_prod = cp.create_product(mkt_prod_id, mkt_prod_id, {
+      mkt_prod = cp.create_product(owner_key, mkt_prod_id, mkt_prod_id, {
         :attributes => attributes,
       })
       sub1 = cp.create_subscription(owner_key, mkt_prod['id'], quantity,
