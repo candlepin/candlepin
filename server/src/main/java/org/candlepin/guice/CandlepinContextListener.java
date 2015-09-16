@@ -93,6 +93,8 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     private AMQPBusPublisher busPublisher;
     private AMQPBusPubProvider busProvider;
 
+    private Injector injector;
+
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         log.info("Candlepin initializing context.");
@@ -134,8 +136,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         pinsetterListener.contextInitialized();
 
         loggerListener = injector.getInstance(LoggerContextListener.class);
-        busPublisher = injector.getInstance(AMQPBusPublisher.class);
-        busProvider = injector.getInstance(AMQPBusPubProvider.class);
+        this.injector = injector;
     }
 
     @Override
@@ -149,8 +150,10 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
         // if amqp is enabled, close all connections.
         if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
-            Util.closeSafely(busPublisher, "AMQPBusPublisher");
-            Util.closeSafely(busProvider, "AMQPBusPubProvider");
+            Util.closeSafely(injector.getInstance(AMQPBusPublisher.class),
+                "AMQPBusPublisher");
+            Util.closeSafely(injector.getInstance(AMQPBusPubProvider.class),
+                "AMQPBusPubProvider");
         }
     }
 
