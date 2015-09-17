@@ -35,7 +35,6 @@ import org.xnap.commons.i18n.I18n;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -44,8 +43,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 /**
  * SubscriptionResource
@@ -228,14 +228,15 @@ public class SubscriptionResource {
      *
      * @httpcode 400
      * @httpcode 503
-     * @httpcode 200
+     * @httpcode 202
+     *
+     * @return A Response object (with status code 202)
      */
     @POST
-    public void activateSubscription(
+    public Response activateSubscription(
         @QueryParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("email") String email,
-        @QueryParam("email_locale") String emailLocale,
-        @Context HttpServletResponse response) {
+        @QueryParam("email_locale") String emailLocale) {
 
         if (email == null) {
             throw new BadRequestException(i18n.tr("email is required for notification"));
@@ -255,9 +256,8 @@ public class SubscriptionResource {
 
         // setting response status to 202 because subscription does not
         // exist yet, but is currently being processed
-        response.setStatus(HttpServletResponse.SC_ACCEPTED);
+        return Response.status(Status.ACCEPTED).build();
     }
-
     /**
      * Removes a Subscription
      *

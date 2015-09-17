@@ -14,8 +14,14 @@
  */
 package org.candlepin.resource;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Response;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -23,7 +29,6 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.service.SubscriptionServiceAdapter;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,10 +36,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
-
-import java.util.Locale;
-
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * SubscriptionResourceTest
@@ -69,7 +70,7 @@ public class SubscriptionResourceTest  {
 
     @Test(expected = BadRequestException.class)
     public void activateNoEmail() {
-        subResource.activateSubscription("random", null, "en_us", null);
+        subResource.activateSubscription("random", null, "en_us");
     }
 
     @Test(expected = NotFoundException.class)
@@ -80,13 +81,13 @@ public class SubscriptionResourceTest  {
     @Test(expected = BadRequestException.class)
     public void activateNoEmailLocale() {
         subResource.activateSubscription("random", "random@somthing.com",
-                null, null);
+                null);
     }
 
     @Test(expected = BadRequestException.class)
     public void activateBadConsumer() {
         subResource.activateSubscription("test_consumer", "email@whatever.net",
-                "en_us", null);
+                "en_us");
     }
 
     @Test
@@ -95,7 +96,7 @@ public class SubscriptionResourceTest  {
         when(consumerCurator.findByUuid("ae843603bdc73")).thenReturn(consumer);
 
         subResource.activateSubscription("ae843603bdc73", "alf@alfnet.com",
-                "en", this.response);
+                "en");
 
         verify(subService).activateSubscription(consumer, "alf@alfnet.com", "en");
     }
@@ -105,10 +106,10 @@ public class SubscriptionResourceTest  {
         Consumer consumer = new Consumer("test_consumer", "alf", null, null);
         when(consumerCurator.findByUuid("ae843603bdc73")).thenReturn(consumer);
 
-        subResource.activateSubscription("ae843603bdc73", "alf@alfnet.com",
-                "en", this.response);
+        Response result = subResource.activateSubscription("ae843603bdc73", "alf@alfnet.com",
+                "en");
 
-        verify(response).setStatus(202);
+        assertEquals(result.getStatus(), 202);
     }
 
 }
