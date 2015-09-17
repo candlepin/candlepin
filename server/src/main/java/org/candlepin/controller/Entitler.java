@@ -209,9 +209,9 @@ public class Entitler {
         if (consumer.isCdk()) {
             if (config.getBoolean(ConfigProperties.STANDALONE) ||
                     poolCurator.listByOwner(consumer.getOwner(), new Date()).size() == 0) {
-                throw new ForbiddenException(
-                        "CDK consumers may only be used on hosted servers" +
-                        " and on owners that have active subscriptions.");
+                throw new ForbiddenException(i18n.tr(
+                        "CDK units may only be used on hosted servers" +
+                        " and with orgs that have active subscriptions."));
             }
             String sku = consumer.getFact("dev_sku");
             Pool devPool = getCdkPool(consumer, sku);
@@ -272,8 +272,8 @@ public class Entitler {
             if (found == null) {
                 found = productAdapter.getProductById(ip.getProductId());
                 if (found == null) {
-                    throw new ForbiddenException(
-                            "This CDK consumer cannot access an installed product");
+                    throw new ForbiddenException(i18n.tr(
+                            "This CDK unit cannot access an installed product"));
                 }
                 else {
                     found.setOwner(consumer.getOwner());
