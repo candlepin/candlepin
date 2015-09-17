@@ -439,7 +439,7 @@ public class EntitlerTest {
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.listByOwner(eq(owner), any(Date.class))).thenReturn(activeList);
-        when(productCurator.lookupById(eq(owner), eq(p.getId()))).thenReturn(p);
+        when(productAdapter.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
         when(pm.createPool(any(Pool.class))).thenReturn(devPool);
         when(devPool.getId()).thenReturn("test_pool_id");
 
@@ -462,7 +462,7 @@ public class EntitlerTest {
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(true);
         when(poolCurator.listByOwner(eq(owner), any(Date.class))).thenReturn(activeList);
-        when(productCurator.lookupById(eq(owner), eq(p.getId()))).thenReturn(p);
+        when(productAdapter.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
 
         AutobindData ad = new AutobindData(cdkSystem);
         entitler.bindByProducts(ad);
@@ -480,7 +480,7 @@ public class EntitlerTest {
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.listByOwner(eq(owner), any(Date.class))).thenReturn(activeList);
-        when(productCurator.lookupById(eq(owner), eq(p.getId()))).thenReturn(p);
+        when(productAdapter.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
 
         AutobindData ad = new AutobindData(cdkSystem);
         entitler.bindByProducts(ad);
@@ -500,7 +500,7 @@ public class EntitlerTest {
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.listByOwner(eq(owner), any(Date.class))).thenReturn(activeList);
-        when(productCurator.lookupById(eq(owner), eq(p.getId()))).thenReturn(null);
+        when(productAdapter.getProductById(eq(owner), eq(p.getId()))).thenReturn(null);
 
         AutobindData ad = new AutobindData(cdkSystem);
         entitler.bindByProducts(ad);
@@ -518,9 +518,40 @@ public class EntitlerTest {
         cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p1));
         cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
         cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
-        when(productCurator.lookupById(eq(owner), eq(p1.getId()))).thenReturn(p1);
-        when(productCurator.lookupById(eq(owner), eq(p2.getId()))).thenReturn(p2);
-        when(productCurator.lookupById(eq(owner), eq(p3.getId()))).thenReturn(p3);
+        when(productAdapter.getProductById(eq(owner), eq(p1.getId()))).thenReturn(p1);
+        when(productAdapter.getProductById(eq(owner), eq(p2.getId()))).thenReturn(p2);
+        when(productAdapter.getProductById(eq(owner), eq(p3.getId()))).thenReturn(p3);
+
+        Pool created = entitler.assembleDevPool(cdkSystem, cdkSystem.getFact("dev_sku"));
+        long intervalMillis = created.getEndDate().getTime() - created.getStartDate().getTime();
+        assertEquals(intervalMillis, 1000 * 60 * 60 * 24 * Long.parseLong("47"));
+        assertEquals("true", created.getAttributeValue(Pool.DEVELOPMENT_POOL_ATTRIBUTE));
+        assertEquals(cdkSystem.getUuid(), created.getAttributeValue(Pool.REQUIRES_CONSUMER_ATTRIBUTE));
+        assertEquals(p1.getId(), created.getProductId());
+        assertEquals(2, created.getProvidedProducts().size());
+    }
+
+    @Test
+    public void testCreatedNoOwnerForProduct() {
+        Owner owner = new Owner("o");
+        Product p1 = new Product("cdk-product", "CDK Product", null);
+        p1.setAttribute("expired_after", "47");
+        Product p2 = new Product("provided-product1", "Provided Product 1", null);
+        Product p3 = new Product("provided-product2", "Provided Product 2", null);
+        Consumer cdkSystem = TestUtil.createConsumer(owner);
+        cdkSystem.setFact("dev_sku", p1.getId());
+        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p1));
+        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
+        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
+        when(productAdapter.getProductById(eq(owner), eq(p1.getId()))).thenReturn(null);
+        when(productAdapter.getProductById(eq(owner), eq(p2.getId()))).thenReturn(null);
+        when(productAdapter.getProductById(eq(owner), eq(p3.getId()))).thenReturn(null);
+        when(productAdapter.getProductById(eq(p1.getId()))).thenReturn(p1);
+        when(productAdapter.getProductById(eq(p2.getId()))).thenReturn(p2);
+        when(productAdapter.getProductById(eq(p3.getId()))).thenReturn(p3);
+        when(productCurator.create(eq(p1))).thenReturn(p1);
+        when(productCurator.create(eq(p2))).thenReturn(p2);
+        when(productCurator.create(eq(p3))).thenReturn(p3);
 
         Pool created = entitler.assembleDevPool(cdkSystem, cdkSystem.getFact("dev_sku"));
         long intervalMillis = created.getEndDate().getTime() - created.getStartDate().getTime();

@@ -39,6 +39,13 @@ public interface ProductServiceAdapter {
     Product getProductById(Owner owner, String id);
 
     /**
+     * Query a specific product by its string ID.
+     * @param id product id
+     * @return specific product
+     */
+    Product getProductById(String id);
+
+    /**
      * Query a list of products matching the given string IDs.
      * @param owner the owner/org in which to search for products
      * @param ids list of product ids

@@ -67,6 +67,12 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     }
 
     @Override
+    public Product getProductById(String id) {
+        // this is a no-op unless we are running in the portal
+        return null;
+    }
+
+    @Override
     public List<Product> getProducts() {
         return prodCurator.listAll();
     }

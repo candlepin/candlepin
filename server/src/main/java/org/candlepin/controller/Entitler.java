@@ -268,11 +268,17 @@ public class Entitler {
         Set<Product> providedProducts = new HashSet<Product>();
         Date now = new Date();
         for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
-            Product found = productCurator.lookupById(consumer.getOwner(), ip.getProductId());
+            Product found = productAdapter.getProductById(consumer.getOwner(), ip.getProductId());
             if (found == null) {
-                // TODO: we need to lookup the product here w/out an owner. no path exists.
-                throw new ForbiddenException(
-                        "This CDK consumer cannot access an installed product");
+                found = productAdapter.getProductById(ip.getProductId());
+                if (found == null) {
+                    throw new ForbiddenException(
+                            "This CDK consumer cannot access an installed product");
+                }
+                else {
+                    found.setOwner(consumer.getOwner());
+                    found = productCurator.create(found);
+                }
             }
             // if the product matches the dev_sku attribute, then it is the main product in the pool
             if (ip.getProductId().equals(sku)) {
