@@ -221,6 +221,10 @@ describe 'Hypervisor Resource', :type => :virt do
     async_update_guest_ids_test(@consumer)
   end
 
+  it 'should persist reporter id on host guest mappings update - async' do
+    async_update_guest_ids_test(@consumer, 'Lois Lane')
+  end
+
   it 'should update host guest ids as user' do
     update_guest_ids_test(@user)
   end
@@ -508,26 +512,26 @@ describe 'Hypervisor Resource', :type => :virt do
     update_guest_ids_test_check(results, updated_guest_ids)
   end
 
-  def async_update_guest_ids_test(client)
+  def async_update_guest_ids_test(client, reporter_id=nil)
     # Update the guest ids
     new_guest_id = 'Guest3'
     updated_guest_ids = [@uuid2, new_guest_id]
-    job_detail = async_update_hypervisor(@owner, @consumer, @expected_host_name, @expected_host_hyp_id, updated_guest_ids)
+    job_detail = async_update_hypervisor(@owner, @consumer, @expected_host_name, @expected_host_hyp_id, updated_guest_ids, true, reporter_id)
     result_data = job_detail['resultData']
-    update_guest_ids_test_check(result_data, updated_guest_ids)
+    update_guest_ids_test_check(result_data, updated_guest_ids, reporter_id)
   end
 
-  def update_guest_ids_test_check(result, updated_guest_ids)
+  def update_guest_ids_test_check(result, updated_guest_ids, reporter_id=nil)
     # Host consumer already existed, no creation occurred.
     result.created.size.should == 0
     # Ensure that we are returning the updated consumer correctly.
     check_hypervisor_consumer(result.updated[0], @expected_host_name, updated_guest_ids)
     # Check that all updates were persisted correctly.
     consumer = @cp.get_consumer(@host_uuid)
-    check_hypervisor_consumer(consumer, @expected_host_name, updated_guest_ids)
+    check_hypervisor_consumer(consumer, @expected_host_name, updated_guest_ids, reporter_id)
   end
 
-  def check_hypervisor_consumer(consumer, expected_host_name, expected_guest_ids)
+  def check_hypervisor_consumer(consumer, expected_host_name, expected_guest_ids, reporter_id=nil)
     consumer['name'].should == expected_host_name
 
     guest_ids = consumer['guestIds']
@@ -540,11 +544,14 @@ describe 'Hypervisor Resource', :type => :virt do
     (0..sorted_ids.size - 1).each do |i|
         sorted_ids[i]['guestId'].should == sorted_expected[i]
     end
+    unless reporter_id.nil?
+      reporter_id.should == consumer.hypervisorId.reporterId
+    end
   end
 
-  def async_update_hypervisor(owner, consumer, host_name, host_hyp_id, guests, create=true)
+  def async_update_hypervisor(owner, consumer, host_name, host_hyp_id, guests, create=true, reporter_id=nil)
     host_mapping = get_async_host_guest_mapping(host_name, host_hyp_id, guests)
-    job_detail = JSON.parse(consumer.hypervisor_update(owner['key'], host_mapping, create))
+    job_detail = JSON.parse(consumer.hypervisor_update(owner['key'], host_mapping, create, reporter_id))
     wait_for_job(job_detail['id'], 5)
     job_detail = @cp.get_job(job_detail['id'], true)
     job_detail['state'].should == 'FINISHED'

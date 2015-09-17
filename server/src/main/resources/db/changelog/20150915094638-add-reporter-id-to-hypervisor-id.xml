@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20150915094638-1" author="vrjain">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists columnName="reporter_id" tableName="cp_consumer_hypervisor"/>
+            </not>
+        </preConditions>
+        <comment>add reporter id to hypervisor id</comment>
+        <addColumn tableName="cp_consumer_hypervisor">
+            <column name="reporter_id" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->
