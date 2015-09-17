@@ -220,7 +220,8 @@ public class HypervisorResource {
         @PathParam("owner") @Verify(value = Owner.class,
             require = Access.READ_ONLY,
             subResource = SubResource.HYPERVISOR) String ownerKey,
-        @QueryParam("create_missing") @DefaultValue("true") boolean createMissing) {
+        @QueryParam("create_missing") @DefaultValue("true") boolean createMissing,
+        @QueryParam("reporter_id") String reporterId) {
 
         if (hypervisorJson == null || hypervisorJson.isEmpty()) {
             log.debug("Host/Guest mapping provided during hypervisor update was null.");
@@ -231,7 +232,7 @@ public class HypervisorResource {
         log.info("Hypervisor update by principal: " + principal);
         Owner owner = this.getOwner(ownerKey);
 
-        return HypervisorUpdateJob.forOwner(owner, hypervisorJson, createMissing, principal);
+        return HypervisorUpdateJob.forOwner(owner, hypervisorJson, createMissing, principal, reporterId);
     }
 
     /*

@@ -72,6 +72,7 @@ public class HypervisorUpdateJob extends KingpinJob {
     private ConsumerResource consumerResource;
 
     public static final String CREATE = "create";
+    public static final String REPORTER_ID = "reporter_id";
     public static final String DATA = "data";
     public static final String PRINCIPAL = "principal";
     protected static String prefix = "hypervisor_update_";
@@ -122,6 +123,7 @@ public class HypervisorUpdateJob extends KingpinJob {
             String ownerKey = map.getString(JobStatus.TARGET_ID);
             Boolean create = map.getBoolean(CREATE);
             Principal principal = (Principal) map.get(PRINCIPAL);
+            String jobReporterId = map.getString(REPORTER_ID);
 
             HypervisorUpdateResult result = new HypervisorUpdateResult();
 
@@ -165,6 +167,7 @@ public class HypervisorUpdateJob extends KingpinJob {
             for (String hypervisorId : hosts) {
                 Consumer knownHost = hypervisorConsumersMap.get(hypervisorId);
                 Consumer incoming = incomingHosts.get(hypervisorId);
+                Consumer reportedOnConsumer = null;
                 if (knownHost == null) {
                     if (!create) {
                         result.failed(hypervisorId, "Unable to find hypervisor with id " +
@@ -178,15 +181,40 @@ public class HypervisorUpdateJob extends KingpinJob {
                         consumerResource.create(newHost, principal, null, owner.getKey(), null, false);
                         hypervisorConsumersMap.add(hypervisorId, newHost);
                         result.created(newHost);
+                        reportedOnConsumer = newHost;
                     }
                 }
-                else if (consumerResource.performConsumerUpdates(incoming, knownHost,
-                        guestConsumersMap, false)) {
-                    consumerCurator.update(knownHost);
-                    result.updated(knownHost);
-                }
                 else {
-                    result.unchanged(knownHost);
+                    reportedOnConsumer = knownHost;
+                    if (jobReporterId != null && knownHost.getHypervisorId() != null &&
+                            hypervisorId.equalsIgnoreCase(knownHost.getHypervisorId().getHypervisorId()) &&
+                            knownHost.getHypervisorId().getReporterId() != null &&
+                            !jobReporterId.equalsIgnoreCase(
+                                    knownHost.getHypervisorId().getReporterId())) {
+                        log.warn("Reporter changed for Hypervisor {} of Owner {} from {} to {}",
+                                hypervisorId, ownerKey, knownHost.getHypervisorId().getReporterId(),
+                                jobReporterId);
+                    }
+                    if (consumerResource.performConsumerUpdates(incoming, knownHost, guestConsumersMap,
+                            false)) {
+                        consumerCurator.update(knownHost);
+                        result.updated(knownHost);
+                    }
+                    else {
+                        result.unchanged(knownHost);
+                    }
+                }
+                // update reporter id if it changed
+                if (jobReporterId != null && reportedOnConsumer != null &&
+                        reportedOnConsumer.getHypervisorId() != null &&
+                        (reportedOnConsumer.getHypervisorId().getReporterId() == null || !jobReporterId
+                                .contentEquals(reportedOnConsumer.getHypervisorId().getReporterId()))) {
+                    reportedOnConsumer.getHypervisorId().setReporterId(jobReporterId);
+                }
+                else if (jobReporterId == null) {
+                    log.debug("hypervisor checkin reported asynchronously" +
+                              " without reporter id for hypervisor:{} of owner:{}",
+                            hypervisorId, ownerKey);
                 }
             }
             context.setResult(result);
@@ -204,7 +232,8 @@ public class HypervisorUpdateJob extends KingpinJob {
      * @param owner the owner to refresh
      * @return a {@link JobDetail} that describes the job run
      */
-    public static JobDetail forOwner(Owner owner, String data, Boolean create, Principal principal) {
+    public static JobDetail forOwner(Owner owner, String data, Boolean create, Principal principal,
+            String reporterId) {
         JobDataMap map = new JobDataMap();
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, owner.getKey());
@@ -212,6 +241,9 @@ public class HypervisorUpdateJob extends KingpinJob {
         map.put(CREATE, create);
         map.put(DATA, compress(data));
         map.put(PRINCIPAL, principal);
+        if (reporterId != null) {
+            map.put(REPORTER_ID, reporterId);
+        }
 
         // Not sure if this is the best way to go:
         // Give each job a UUID to ensure that it is unique

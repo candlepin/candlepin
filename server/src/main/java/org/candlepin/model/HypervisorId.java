@@ -70,6 +70,10 @@ public class HypervisorId extends AbstractHibernateObject {
     @NotNull
     private String hypervisorId;
 
+    @Column(name = "reporter_id")
+    @Size(max = 255)
+    private String reporterId;
+
     @OneToOne(fetch = FetchType.LAZY)
     @ForeignKey(name = "fk_hypervisor_consumer")
     @JoinColumn(nullable = false, unique = true)
@@ -126,6 +130,20 @@ public class HypervisorId extends AbstractHibernateObject {
             hypervisorId = hypervisorId.toLowerCase();
         }
         this.hypervisorId = hypervisorId;
+    }
+
+    /**
+     * @return the reporterId
+     */
+    public String getReporterId() {
+        return reporterId;
+    }
+
+    /**
+     * @param reporterId the reporterId to set
+     */
+    public void setReporterId(String reporterId) {
+        this.reporterId = reporterId;
     }
 
     /**

@@ -32,6 +32,7 @@ import org.candlepin.resource.ConsumerResource;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -76,7 +77,7 @@ public class HypervisorUpdateJobTest {
 
     @Test
     public void createJobDetail() {
-        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal);
+        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         assertNotNull(detail);
         assertEquals("joe", detail.getJobDataMap().get(JobStatus.TARGET_ID));
         assertEquals("joe user", ((Principal) detail.getJobDataMap().get("principal")).getUsername());
@@ -87,7 +88,7 @@ public class HypervisorUpdateJobTest {
     public void hypervisorUpdateExecCreate() throws JobExecutionException {
         when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
 
-        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal);
+        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class)))
@@ -104,6 +105,29 @@ public class HypervisorUpdateJobTest {
     }
 
     @Test
+    public void reporterIdOnCreateTest() throws JobExecutionException {
+        when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
+
+        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal,
+                "createReporterId");
+        JobExecutionContext ctx = mock(JobExecutionContext.class);
+        when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
+        when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class))).thenReturn(
+                new VirtConsumerMap());
+
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
+        job.execute(ctx);
+        ArgumentCaptor<Consumer> argument = ArgumentCaptor.forClass(Consumer.class);
+        verify(consumerResource).create(argument.capture(),
+                                        eq(principal),
+                                        anyString(),
+                                        eq("joe"),
+                                        anyString(),
+                                        eq(false));
+        assertEquals("createReporterId", argument.getValue().getHypervisorId().getReporterId());
+    }
+
+    @Test
     public void hypervisorUpdateExecUpdate() throws JobExecutionException {
         when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
         Consumer hypervisor = new Consumer();
@@ -113,7 +137,7 @@ public class HypervisorUpdateJobTest {
         vcm.add(hypervisorId, hypervisor);
         when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class))).thenReturn(vcm);
 
-        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal);
+        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
@@ -121,6 +145,26 @@ public class HypervisorUpdateJobTest {
         job.execute(ctx);
         verify(consumerResource).performConsumerUpdates(any(Consumer.class), eq(hypervisor),
                 any(VirtConsumerMap.class), eq(false));
+    }
+
+    @Test
+    public void reporterIdOnUpdateTest() throws JobExecutionException {
+        when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
+        Consumer hypervisor = new Consumer();
+        String hypervisorId = "uuid_999";
+        hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
+        VirtConsumerMap vcm = new VirtConsumerMap();
+        vcm.add(hypervisorId, hypervisor);
+        when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class))).thenReturn(vcm);
+
+        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal,
+                "updateReporterId");
+        JobExecutionContext ctx = mock(JobExecutionContext.class);
+        when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
+
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
+        job.execute(ctx);
+        assertEquals("updateReporterId", hypervisor.getHypervisorId().getReporterId());
     }
 
     @Test
@@ -134,7 +178,7 @@ public class HypervisorUpdateJobTest {
                 "\"guestIds\" : [{\"guestId\" : \"guestId_1_999\"}]" +
                 "}]}";
 
-        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal);
+        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
@@ -154,7 +198,7 @@ public class HypervisorUpdateJobTest {
     @Test
     public void dontSkipIfExistsTest() throws JobExecutionException, SchedulerException {
 
-        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal);
+        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobStatus preExistingJobStatus = new JobStatus();
         preExistingJobStatus.setState(JobState.WAITING);
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
@@ -179,7 +223,7 @@ public class HypervisorUpdateJobTest {
     @Test
     public void monogamousJobTest() throws JobExecutionException, SchedulerException {
 
-        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal);
+        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobStatus newJob = new JobStatus(detail);
         JobCurator jobCurator = mock(JobCurator.class);
         when(jobCurator.findNumRunningByOwnerAndClass(owner.getKey(), HypervisorUpdateJob.class))

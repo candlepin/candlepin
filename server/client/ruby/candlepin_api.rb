@@ -112,10 +112,13 @@ class Candlepin
     return consumers
   end
 
-  def hypervisor_update(owner, json_data, create_missing=nil)
-    path = get_path("hypervisors") + "/#{owner}"
+  def hypervisor_update(owner, json_data, create_missing=nil, reporter_id=nil)
+    path = get_path("hypervisors") + "/#{owner}?"
     unless create_missing.nil?
-      path << "?create_missing=#{create_missing}"
+      path << "create_missing=#{create_missing}&"
+    end
+    unless reporter_id.nil?
+      path << "reporter_id=#{reporter_id}&"
     end
     job_detail = post_text(path, json_data, 'json')
     return job_detail
