@@ -530,6 +530,38 @@ describe 'Owner Resource Pool Filter Tests' do
     pools[0].productId.should == @product2.id
   end
 
+  it 'list pools with matches against provided products' do
+    owner = create_owner(random_string('owner'))
+
+    owner_client = user_client(owner, random_string('testuser'))
+
+    consumer = owner_client.register('somesystem')
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    product = create_product(
+      random_string("test_id"),
+      random_string("test_name"),
+      {:owner => owner['key']}
+    )
+
+    target_prod_name = random_string("product1")
+    provided_product = create_product(random_string("prod1"), target_prod_name, {:owner => owner['key']})
+    provided_product2 = create_product(random_string("prod2"), random_string("product2"), {:owner => owner['key']})
+    provided_product3 = create_product(random_string("prod3"), random_string("product3"), {:owner => owner['key']})
+
+    @cp.create_subscription(owner['key'], product.id, 10, [provided_product.id, provided_product2.id, provided_product3.id])
+
+    @cp.refresh_pools(owner['key'])
+
+    pools = @cp.list_owner_pools(owner['key'], { :consumer => consumer.uuid, :matches => target_prod_name })
+    pools.should have(1).things
+
+    test_pool = pools[0]
+    test_pool.owner['key'].should == owner['key']
+    test_pool.productId.should == product.id
+    test_pool.providedProducts.size.should == 3
+  end
+
 end
 
 describe 'Owner Resource Consumer Fact Filter Tests' do

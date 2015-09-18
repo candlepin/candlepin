@@ -431,6 +431,7 @@ class Candlepin
     path << "per_page=#{params[:per_page]}&" if params[:per_page]
     path << "order=#{params[:order]}&" if params[:order]
     path << "sort_by=#{params[:sort_by]}&" if params[:sort_by]
+    path << "matches=#{params[:matches]}&" if params[:matches]
 
     # Attribute filters are specified in the following format:
     #    {attributeName}:{attributeValue}
