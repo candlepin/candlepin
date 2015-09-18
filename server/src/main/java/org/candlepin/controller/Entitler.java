@@ -39,6 +39,7 @@ import org.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -69,6 +70,7 @@ public class Entitler {
     private ProductCurator productCurator;
     private ProductServiceAdapter productAdapter;
     private long maxCdkLifeDays = 90;
+    public static final String DEFAULT_CDK_SLA = "Self-Service";
 
     @Inject
     public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n, EventFactory evtFactory,
@@ -281,7 +283,12 @@ public class Entitler {
                 }
             }
             // if the product matches the dev_sku attribute, then it is the main product in the pool
+            // if there is no SLA, apply the default
             if (ip.getProductId().equals(sku)) {
+                if (StringUtils.isEmpty(found.getAttributeValue("support_level"))) {
+                    found.setAttribute("support_level", this.DEFAULT_CDK_SLA);
+                    found = productCurator.createOrUpdate(found);
+                }
                 prod = found;
             }
             else {

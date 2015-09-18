@@ -428,6 +428,7 @@ public class EntitlerTest {
     public void testDevPoolCreationAtBind() throws EntitlementRefusedException {
         Owner owner = new Owner("o");
         Product p = new Product("test-product", "Test Product", owner);
+        p.setAttribute("support_level", "Premium");
         Pool activePool = TestUtil.createPool(owner, p);
         List<Pool> activeList = new ArrayList<Pool>();
         activeList.add(activePool);
@@ -501,6 +502,7 @@ public class EntitlerTest {
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.listByOwner(eq(owner), any(Date.class))).thenReturn(activeList);
         when(productAdapter.getProductById(eq(owner), eq(p.getId()))).thenReturn(null);
+        when(productAdapter.getProductById(eq(p.getId()))).thenReturn(null);
 
         AutobindData ad = new AutobindData(cdkSystem);
         entitler.bindByProducts(ad);
@@ -510,6 +512,7 @@ public class EntitlerTest {
     public void testCreatedDevPoolAttributes() {
         Owner owner = new Owner("o");
         Product p1 = new Product("cdk-product", "CDK Product", owner);
+        p1.setAttribute("support_level", "Premium");
         p1.setAttribute("expired_after", "47");
         Product p2 = new Product("provided-product1", "Provided Product 1", owner);
         Product p3 = new Product("provided-product2", "Provided Product 2", owner);
@@ -532,7 +535,7 @@ public class EntitlerTest {
     }
 
     @Test
-    public void testCreatedNoOwnerForProduct() {
+    public void testCreatedNoOwnerForProducts() {
         Owner owner = new Owner("o");
         Product p1 = new Product("cdk-product", "CDK Product", null);
         p1.setAttribute("expired_after", "47");
@@ -552,6 +555,7 @@ public class EntitlerTest {
         when(productCurator.create(eq(p1))).thenReturn(p1);
         when(productCurator.create(eq(p2))).thenReturn(p2);
         when(productCurator.create(eq(p3))).thenReturn(p3);
+        when(productCurator.createOrUpdate(eq(p1))).thenReturn(p1);
 
         Pool created = entitler.assembleDevPool(cdkSystem, cdkSystem.getFact("dev_sku"));
         long intervalMillis = created.getEndDate().getTime() - created.getStartDate().getTime();
@@ -560,5 +564,23 @@ public class EntitlerTest {
         assertEquals(cdkSystem.getUuid(), created.getAttributeValue(Pool.REQUIRES_CONSUMER_ATTRIBUTE));
         assertEquals(p1.getId(), created.getProductId());
         assertEquals(2, created.getProvidedProducts().size());
+        assertEquals(Entitler.DEFAULT_CDK_SLA, created.getProduct().getAttributeValue("support_level"));
+    }
+
+    @Test
+    public void testCreatedCdkSkuWithSla() {
+        Owner owner = new Owner("o");
+        Product p1 = new Product("cdk-product", "CDK Product", null);
+        p1.setAttribute("support_level", "Premium");
+        Consumer cdkSystem = TestUtil.createConsumer(owner);
+        cdkSystem.setFact("dev_sku", p1.getId());
+        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p1));
+        when(productAdapter.getProductById(eq(owner), eq(p1.getId()))).thenReturn(null);
+        when(productAdapter.getProductById(eq(p1.getId()))).thenReturn(p1);
+        when(productCurator.create(eq(p1))).thenReturn(p1);
+        when(productCurator.createOrUpdate(eq(p1))).thenReturn(p1);
+
+        Pool created = entitler.assembleDevPool(cdkSystem, cdkSystem.getFact("dev_sku"));
+        assertEquals("Premium", created.getProduct().getAttributeValue("support_level"));
     }
 }
