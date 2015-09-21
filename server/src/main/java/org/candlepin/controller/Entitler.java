@@ -270,18 +270,7 @@ public class Entitler {
         Set<Product> providedProducts = new HashSet<Product>();
         Date now = new Date();
         for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
-            Product found = productAdapter.getProductById(consumer.getOwner(), ip.getProductId());
-            if (found == null) {
-                found = productAdapter.getProductById(ip.getProductId());
-                if (found == null) {
-                    throw new ForbiddenException(i18n.tr(
-                            "This CDK unit cannot access an installed product"));
-                }
-                else {
-                    found.setOwner(consumer.getOwner());
-                    found = productCurator.create(found);
-                }
-            }
+            Product found = getCdkInstalledProduct(consumer, ip.getProductId());
             // if the product matches the dev_sku attribute, then it is the main product in the pool
             // if there is no SLA, apply the default
             if (ip.getProductId().equals(sku)) {
@@ -302,6 +291,18 @@ public class Entitler {
         p.setAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
         p.setAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
         return p;
+    }
+
+    protected Product getCdkInstalledProduct(Consumer consumer, String productId)
+        throws ForbiddenException {
+        Product found = productAdapter.getProductById(productId);
+        if (found == null) {
+            throw new ForbiddenException(i18n.tr(
+                    "This CDK unit cannot access an installed product"));
+        }
+        found.setOwner(consumer.getOwner());
+        found = productCurator.createOrUpdate(found);
+        return found;
     }
 
     /**
