@@ -565,6 +565,92 @@ define "candlepin" do
      end
     end
   end
+
+  desc "Candlepin Subscription Service"
+  define "subservice" do
+    spec_file = "subservice.spec.tmpl"
+    project.version = spec_version(spec_file)
+    release_number = spec_release(spec_file)
+
+    checkstyle.config_directory = checkstyle_config_directory
+    checkstyle.eclipse_xml = checkstyle_eclipse_xml
+    rpmlint.rpmlint_conf = rpmlint_conf
+
+    gettext.keys_destination = project("common").gettext.keys_destination
+
+    eclipse.natures :java
+
+    unless use_pmd.nil?
+      pmd.enabled = true
+    end
+
+    msgfmt.resource = "#{project.group}.subservice.i18n.Messages"
+
+    compile_classpath = [
+      COLLECTIONS,
+      COMMONS,
+      DB,
+      GETTEXT_COMMONS,
+      GUICE,
+      HIBERNATE,
+      JACKSON,
+      LIQUIBASE,
+      LOGGING,
+      PROVIDED,
+      RESTEASY,
+      SUN_JAXB,
+    ]
+
+    compile.with(compile_classpath)
+    compile.with(LOGDRIVER, LOG4J_BRIDGE) if use_logdriver
+    compile.with(project('common'))
+
+    resource_substitutions = {
+      'version' => project.version,
+      'release' => release_number,
+    }
+    resources.filter.using(resource_substitutions)
+    test.resources.filter.using(resource_substitutions)
+
+    test.setup do |task|
+      filter(path_to(:src, :main, :resources)).into(path_to(:target, :classes)).run
+    end
+
+    test.with([
+      CORE_TESTING,
+      JUKITO,
+      HSQLDB,
+      LIQUIBASE,
+      LIQUIBASE_SLF4J,
+      project('common'),
+    ])
+    test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
+
+    package(:war, :id=>"subservice").tap do |war|
+      war.libs -= artifacts(PROVIDED)
+      war.classes << resources.target
+      war.classes << msgfmt.destination if msgfmt.enabled?
+    end
+
+    # We need to add this dependency so that the Maven assembly plugin will
+    # include the source of the common project in the final assembly.
+    common = project('common')
+    pom.dependency_procs << Proc.new do |xml, project|
+      xml.groupId(common.group)
+      xml.artifactId(common.id)
+      xml.version(common.version)
+      xml.classifier("complete")
+      xml.type("tar.gz")
+      xml.scope("provided")
+    end
+    pom.provided_dependencies.concat(PROVIDED)
+    pom.additional_properties['release'] = release_number
+
+    pom.plugin_procs << Proc.new do |xml, proj|
+      xml.groupId("org.owasp")
+      xml.artifactId("dependency-check-maven")
+    end
+  end
 end
 
 desc 'Make sure eventhing is working as it should'

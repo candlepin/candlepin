@@ -1,0 +1,2 @@
+<!-- The subscription service needs symlink support to read its jars -->
+<Context path="/subservice" allowLinking="true" />
