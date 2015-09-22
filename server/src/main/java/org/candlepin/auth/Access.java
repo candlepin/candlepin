@@ -26,7 +26,7 @@ public enum Access {
     ALL(5);
 
     private int level;
-    private Access(int level) {
+    Access(int level) {
         this.level = level;
     }
 

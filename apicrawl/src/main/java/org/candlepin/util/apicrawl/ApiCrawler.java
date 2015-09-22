@@ -239,6 +239,8 @@ public class ApiCrawler {
 
     /**
      * Hash map with a default value for any given key
+     * @param <K> key class
+     * @param <V> value class
      */
     public static final class DefaultHashMap<K, V> extends HashMap<K, V> {
         protected V defaultValue;

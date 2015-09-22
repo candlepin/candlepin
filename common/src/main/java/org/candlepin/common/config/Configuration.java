@@ -31,7 +31,7 @@ public interface Configuration {
     /**
      * Enumeration that defines whether or not to trim whitespace from a String.
      */
-    public static enum TrimMode {
+    enum TrimMode {
         TRIM,
         NO_TRIM;
     }

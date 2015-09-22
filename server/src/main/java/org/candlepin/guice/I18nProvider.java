@@ -41,7 +41,7 @@ public class I18nProvider extends CommonI18nProvider implements Provider<I18n> {
     private static Logger log = LoggerFactory.getLogger(I18nProvider.class);
 
     private static Map<Locale, I18n>
-    cache = new ConcurrentHashMap<Locale, I18n>();
+        cache = new ConcurrentHashMap<Locale, I18n>();
 
     @Inject
     public I18nProvider(Injector injector) {

@@ -31,7 +31,7 @@ public interface Enforcer {
      * Enum representing context with which the rules are being called.
      * Currently being used by preEntitlement - 2013-05-06
      */
-    public enum CallerType {
+    enum CallerType {
         BIND("bind"),
         UNKNOWN("unknown"),
         LIST_POOLS("list_pools"),

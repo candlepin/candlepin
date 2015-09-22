@@ -11,6 +11,7 @@ module AntTaskCheckstyle
           projects = [local_project] + local_project.projects
           fail_on_error = local_project.checkstyle.fail_on_error?
           projects.each do |p|
+            FileUtils.mkdir_p(p.path_to(:target))
             results[p] = p.task("checkstyle:#{format}").invoke if p.checkstyle.enabled?
           end
           results.each do |project, did_fail|
@@ -25,8 +26,7 @@ module AntTaskCheckstyle
     attr_reader :project
 
     def dependencies
-      # TODO - This is a pretty old version
-      Buildr.transitive('com.puppycrawl.tools:checkstyle:jar:5.7')
+      Buildr.transitive('com.puppycrawl.tools:checkstyle:jar:6.9')
     end
 
     def execute(*args)
@@ -60,7 +60,10 @@ module AntTaskCheckstyle
       # See http://checkstyle.sourceforge.net/anttask.html
       failed = false
       Buildr.ant('checkstyle') do |ant|
-        ant.taskdef(:classpath => cp, :resource => "checkstyletask.properties")
+        ant.taskdef(
+          :classpath => cp,
+          :resource => "com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties"
+        )
         profiles.each do |profile|
           next unless profile.enabled == "true"
 
