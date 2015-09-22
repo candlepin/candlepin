@@ -519,7 +519,6 @@ public class EntitlerTest {
         Product p3 = new Product("provided-product2", "Provided Product 2", owner);
         Consumer cdkSystem = TestUtil.createConsumer(owner);
         cdkSystem.setFact("dev_sku", p1.getId());
-        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p1));
         cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
         cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
         when(productAdapter.getProductById(eq(p1.getId()))).thenReturn(p1);
@@ -547,7 +546,6 @@ public class EntitlerTest {
         Product p3 = new Product("provided-product2", "Provided Product 2", null);
         Consumer cdkSystem = TestUtil.createConsumer(owner);
         cdkSystem.setFact("dev_sku", p1.getId());
-        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p1));
         cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
         cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
         when(productAdapter.getProductById(eq(p1.getId()))).thenReturn(p1);

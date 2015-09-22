@@ -179,7 +179,9 @@ public class Entitler {
     public List<Entitlement> bindByProducts(AutobindData data, boolean force) {
         Consumer consumer = data.getConsumer();
         // If the consumer is a guest, and has a host, try to heal the host first
-        if (consumer.hasFact("virt.uuid")) {
+        // CDK consumers should not need to worry about the host or unmapped guest
+        // entitlements based on the planned design of the subscriptions
+        if (consumer.hasFact("virt.uuid") && !consumer.isCdk()) {
             String guestUuid = consumer.getFact("virt.uuid");
             // Remove any expired unmapped guest entitlements
             revokeUnmappedGuestEntitlements(consumer);
@@ -267,27 +269,21 @@ public class Entitler {
 
     protected Pool assembleDevPool(Consumer consumer, String sku) {
         // all good. create a pool for the CDK consumer
-        Product prod = null;
         Set<Product> providedProducts = new HashSet<Product>();
         Date now = new Date();
-        for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
-            Product found = getCdkInstalledProduct(consumer, ip.getProductId());
-            // if the product matches the dev_sku attribute, then it is the main product in the pool
+
+        Product prod = getCdkInstalledProduct(consumer, sku);
+        if (StringUtils.isEmpty(prod.getAttributeValue("support_level"))) {
             // if there is no SLA, apply the default
-            if (ip.getProductId().equals(sku)) {
-                if (StringUtils.isEmpty(found.getAttributeValue("support_level"))) {
-                    found.setAttribute("support_level", this.DEFAULT_CDK_SLA);
-                    found = productCurator.createOrUpdate(found);
-                }
-                prod = found;
-            }
-            else {
-                providedProducts.add(found);
-            }
+            prod.setAttribute("support_level", this.DEFAULT_CDK_SLA);
+            prod = productCurator.createOrUpdate(prod);
+        }
+
+        for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
+            providedProducts.add(getCdkInstalledProduct(consumer, ip.getProductId()));
         }
 
         Date then = new Date(now.getTime() + getPoolInterval(prod));
-        // TODO: Is the quantity of 1 correct? What if the sku has cores, etc.?
         Pool p = new Pool(consumer.getOwner(), prod, providedProducts, 1L, now, then, "", "", "");
         p.setAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
         p.setAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
