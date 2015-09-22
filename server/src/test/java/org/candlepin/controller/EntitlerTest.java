@@ -28,6 +28,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
@@ -579,5 +580,31 @@ public class EntitlerTest {
 
         Pool created = entitler.assembleDevPool(cdkSystem, cdkSystem.getFact("dev_sku"));
         assertEquals("Premium", created.getProduct().getAttributeValue("support_level"));
+    }
+
+    @Test
+    public void testEnsureOwnerOnCdkProduct() {
+        Owner owner = new Owner("o");
+        Product p1 = new Product("cdk-product-1", "CDK Product 1", null);
+        Content c1 = new Content();
+        p1.addContent(c1);
+        Product p2 = new Product("cdk-product-2", "CDK Product 2", null);
+        Content c2 = new Content();
+        p2.addContent(c2);
+        Consumer cdkSystem = TestUtil.createConsumer(owner);
+        cdkSystem.setFact("dev_sku", p1.getId());
+        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p1));
+        when(productAdapter.getProductById(eq(p1.getId()))).thenReturn(p1);
+        when(productCurator.createOrUpdate(eq(p1))).thenReturn(p1);
+        when(productAdapter.getProductById(eq(p2.getId()))).thenReturn(p2);
+        when(productCurator.createOrUpdate(eq(p2))).thenReturn(p2);
+
+        Product cdk1 = entitler.getCdkInstalledProduct(cdkSystem, p1.getId());
+        Product cdk2 = entitler.getCdkInstalledProduct(cdkSystem, p2.getId());
+
+        assertEquals(owner, cdk1.getOwner());
+        assertEquals(owner, cdk2.getOwner());
+        assertEquals(owner, cdk1.getProductContent().get(0).getContent().getOwner());
+        assertEquals(owner, cdk2.getProductContent().get(0).getContent().getOwner());
     }
 }

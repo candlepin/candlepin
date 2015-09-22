@@ -31,6 +31,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
@@ -301,6 +302,9 @@ public class Entitler {
                     "This CDK unit cannot access an installed product"));
         }
         found.setOwner(consumer.getOwner());
+        for (ProductContent pc : found.getProductContent()) {
+            pc.getContent().setOwner(consumer.getOwner());
+        }
         found = productCurator.createOrUpdate(found);
         return found;
     }
