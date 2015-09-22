@@ -618,7 +618,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         ownerResource.listConsumers(owner.getKey(), null, null,
-            new ArrayList<String>(), null, null, null);
+            new ArrayList<String>(), null, null, null, null, null, null);
     }
 
     @Test
@@ -638,7 +638,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         consumerTypeCurator.create(new ConsumerType("type"));
 
         List<Consumer> results = ownerResource.listConsumers(
-            owner.getKey(), "username", types, uuids, null, null, new PageRequest());
+            owner.getKey(), "username", types, uuids, null, null, null, null,
+            null, new PageRequest());
 
         assertEquals(0, results.size());
     }
@@ -664,7 +665,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         assertEquals(1,
             ownerResource.listConsumers(owner.getKey(), null, null,
-                uuids, null, null, null).size());
+                uuids, null, null, null, null, null, null).size());
     }
 
     /**
@@ -680,7 +681,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Set<String> types = new HashSet<String>();
         types.add("unknown");
         ownerResource.listConsumers(owner.getKey(), null, types,
-            new ArrayList<String>(), null, null, null);
+            new ArrayList<String>(), null, null, null, null, null, null);
     }
 
     @Test
@@ -701,7 +702,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         List<Consumer> results = ownerResource.listConsumers(owner.getKey(), null,
-            null, uuids, null, null, null);
+            null, uuids, null, null, null, null, null, null);
         assertEquals(2, results.size());
     }
 

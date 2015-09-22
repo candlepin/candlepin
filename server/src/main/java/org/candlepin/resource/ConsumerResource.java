@@ -113,6 +113,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -266,7 +267,10 @@ public class ConsumerResource {
         }
 
         Page<List<Consumer>> page = consumerCurator.searchOwnerConsumers(
-            owner, userName, types, uuids, hypervisorIds, attrFilters, pageRequest);
+            owner, userName, types, uuids, hypervisorIds, attrFilters,
+            Collections.<String>emptyList(), Collections.<String>emptyList(),
+            Collections.<String>emptyList(),
+            pageRequest);
 
         // Store the page for the LinkHeaderPostInterceptor
         ResteasyProviderFactory.pushContext(Page.class, page);

@@ -21,6 +21,7 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -30,10 +31,12 @@ import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.Subqueries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +62,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private DeletedConsumerCurator deletedConsumerCurator;
     @Inject private Configuration config;
+    @Inject private ProductServiceAdapter productService;
 
     private static final int MAX_FACT_STR_LENGTH = 255;
     private static final int NAME_LENGTH = 250;
@@ -650,7 +654,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     public Page<List<Consumer>> searchOwnerConsumers(Owner owner, String userName,
             Collection<ConsumerType> types, List<String> uuids, List<String> hypervisorIds,
-            List<KeyValueParameter> factFilters, PageRequest pageRequest) {
+            List<KeyValueParameter> factFilters, List<String> skus,
+            List<String> subscriptionIds, List<String> contracts, PageRequest pageRequest) {
         Criteria crit = super.createSecureCriteria();
         if (owner != null) {
             crit.add(Restrictions.eq("owner", owner));
@@ -681,7 +686,85 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             }
             factFilter.applyTo(crit);
         }
-        return this.listByCriteria(crit, pageRequest);
+
+        boolean hasSkus = (skus != null && !skus.isEmpty());
+        boolean hasSubscriptionIds = (subscriptionIds != null && !subscriptionIds.isEmpty());
+        boolean hasContractNumbers = (contracts != null && !contracts.isEmpty());
+
+        if (hasSkus || hasSubscriptionIds || hasContractNumbers) {
+            if (hasSkus) {
+                List<Product> products = productService.getProductsByIds(skus);
+                Map<String, Product> productMap =
+                    new HashMap<String, Product>();
+                for (Product p : products) {
+                    productMap.put(p.getId(), p);
+                }
+
+                for (String sku : skus) {
+
+                    DetachedCriteria subCrit = DetachedCriteria.forClass(Consumer.class, "subquery_consumer");
+
+                    if (owner != null) {
+                        subCrit.add(Restrictions.eq("owner", owner));
+                    }
+
+                    Product p = productMap.get(sku);
+                    boolean isMkt = true;
+                    if (!p.getAttributeValue("type").equals("MKT")) {
+                        isMkt = false;
+                    }
+
+                    // This is pretty ugly but it's not until Candlepin 2.x that we have a direct
+                    // association to the Product object.
+                    subCrit.createCriteria("entitlements").createCriteria("pool")
+                        .add(Restrictions.eq("productId", sku))
+                        .add(Restrictions.sqlRestriction(String.valueOf(isMkt) + "='true'"));
+
+                    subCrit.add(Restrictions.eqProperty("this.id", "subquery_consumer.id"));
+
+                    crit.add(Subqueries.exists(
+                        subCrit.setProjection(Projections.property("subquery_consumer.name")))
+                    );
+                }
+            }
+            if (hasSubscriptionIds) {
+                for (String subId : subscriptionIds) {
+                    DetachedCriteria subCrit = DetachedCriteria.forClass(Consumer.class, "subquery_consumer");
+
+                    if (owner != null) {
+                        subCrit.add(Restrictions.eq("owner", owner));
+                    }
+
+                    subCrit.createCriteria("entitlements").createCriteria("pool")
+                        .createCriteria("sourceSubscription").add(Restrictions.eq("subscriptionId", subId));
+                    subCrit.add(Restrictions.eqProperty("this.id", "subquery_consumer.id"));
+
+                    crit.add(Subqueries.exists(
+                        subCrit.setProjection(Projections.property("subquery_consumer.name")))
+                    );
+                }
+            }
+            if (hasContractNumbers) {
+                for (String contract : contracts) {
+                    DetachedCriteria subCrit = DetachedCriteria.forClass(Consumer.class, "subquery_consumer");
+
+                    if (owner != null) {
+                        subCrit.add(Restrictions.eq("owner", owner));
+                    }
+
+                    subCrit.createCriteria("entitlements").createCriteria("pool").add(
+                        Restrictions.eq("contractNumber", contract)
+                    );
+                    subCrit.add(Restrictions.eqProperty("this.id", "subquery_consumer.id"));
+
+                    crit.add(Subqueries.exists(
+                        subCrit.setProjection(Projections.property("subquery_consumer.name")))
+                    );
+                }
+            }
+        }
+
+        return listByCriteria(crit, pageRequest);
     }
 
     /**
