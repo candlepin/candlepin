@@ -1,0 +1,76 @@
+%global _binary_filedigest_algorithm 1
+%global _source_filedigest_algorithm 1
+%global _binary_payload w9.gzdio
+%global _source_payload w9.gzdio
+
+## If you follow the Java packaging guidelines, you
+## only need to run brp-java-repack-jars on packages that include
+## arch-independent JAR files under /usr/share and that also include
+## GCJ-compiled .jar.so files.
+%global __jar_repack %{nil}
+
+%if 0%{?fedora} >= 19 || 0%{?rhel} >= 7
+%global tomcat tomcat
+%else
+%global tomcat tomcat6
+%endif
+
+Name: subservice
+Version: 2.0.3
+Release: 1%{?dist}
+#if $epoch
+Epoch: $epoch
+#end if
+Summary: Candlepin Subscription Service
+
+License: GPLv2
+URL: http://www.candlepinproject.org
+Source0: %{name}-%{version}-complete.tar.gz
+Source1: %{name}-%{version}.war
+
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
+BuildArch: noarch
+
+Requires: %{tomcat}
+Requires: java >= 0:1.6.0
+
+%description
+The Candlepin Subscription Service is a subscription backend for Candlepin
+
+%prep
+%setup -q %{SOURCE0}
+
+%build
+## MEAD takes care of building the source
+
+%install
+rm -rf %{buildroot}
+
+## Conf files
+%{__install} -m 640 conf/%{name}.conf %{buildroot}/%{_sysconfdir}/%{name}/%{name}.conf
+
+## Logging
+%{__install} -d -m 755 %{buildroot}/%{_localstatedir}/log/%{name}
+%{__install} -d 755 %{buildroot}%{_sysconfdir}/logrotate.d/
+%{__install} -m 644 conf/logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
+
+## War file
+%{__install} -d -m 755 %{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}
+%{__unzip} %{SOURCE1} -d %{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}
+
+%clean
+rm -rf %{buildroot}
+
+%files
+%defattr(-, root, root)
+%doc LICENSE
+%config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}
+%config(noreplace) %attr(640, tomcat, tomcat) %{_sysconfdir}/%{name}/%{name}.conf
+%attr(775, tomcat, root) %{_localstatedir}/log/%{name}
+
+%defattr(644, tomcat, tomcat, 755)
+%{_sharedstatedir}/%{tomcat}/webapps/%{name}/*
+
+#raw
+%changelog
+#end raw
