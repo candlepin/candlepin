@@ -703,6 +703,9 @@ public class OwnerResource {
             @QueryParam("hypervisor_id") List<String> hypervisorIds,
             @QueryParam("fact") @CandlepinParam(type = KeyValueParameter.class)
                 List<KeyValueParameter> attrFilters,
+            @QueryParam("sku") List<String> skus,
+            @QueryParam("subscription_id") List<String> subscriptionIds,
+            @QueryParam("contract") List<String> contracts,
             @Context PageRequest pageRequest) {
         Owner owner = findOwner(ownerKey);
         List<ConsumerType> types = null;
@@ -711,7 +714,8 @@ public class OwnerResource {
         }
 
         Page<List<Consumer>> page = consumerCurator.searchOwnerConsumers(
-            owner, userName, types, uuids, hypervisorIds, attrFilters, pageRequest);
+            owner, userName, types, uuids, hypervisorIds, attrFilters, skus,
+            subscriptionIds, contracts, pageRequest);
 
         // Store the page for the LinkHeaderPostInterceptor
         ResteasyProviderFactory.pushContext(Page.class, page);

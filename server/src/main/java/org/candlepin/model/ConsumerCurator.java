@@ -629,7 +629,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     public Page<List<Consumer>> searchOwnerConsumers(Owner owner, String userName,
             Collection<ConsumerType> types, List<String> uuids, List<String> hypervisorIds,
-            List<KeyValueParameter> factFilters, PageRequest pageRequest) {
+            List<KeyValueParameter> factFilters, List<String> skus,
+            List<String> subscriptionIds, List<String> contracts, PageRequest pageRequest) {
         Criteria crit = super.createSecureCriteria();
         if (owner != null) {
             crit.add(Restrictions.eq("owner", owner));
@@ -660,7 +661,34 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             }
             factFilter.applyTo(crit);
         }
-        return this.listByCriteria(crit, pageRequest);
+
+        boolean hasSkus = (skus != null && !skus.isEmpty());
+        boolean hasSubscriptionIds = (subscriptionIds != null && !subscriptionIds.isEmpty());
+        boolean hasContractNumbers = (contracts != null && !contracts.isEmpty());
+
+        if (hasSkus || hasSubscriptionIds || hasContractNumbers) {
+            Criteria ents = crit.createCriteria("entitlements", "ents").createAlias("pool", "pool");
+            if (hasSkus) {
+                ents.createCriteria("pool.product")
+                    .add(Restrictions.in("id", skus))
+                    .createCriteria("attributes").add(
+                        Restrictions.and(
+                            Restrictions.eq("name", "type"),
+                            Restrictions.eq("value", "MKT")
+                        )
+                    );
+            }
+            if (hasSubscriptionIds) {
+                ents.createCriteria("pool.sourceSubscription")
+                    .add(Restrictions.in("subscriptionId", subscriptionIds));
+
+            }
+            if (hasContractNumbers) {
+                ents.add(Restrictions.in("pool.contractNumber", contracts));
+            }
+        }
+
+        return listByCriteria(crit, pageRequest);
     }
 
     /**
