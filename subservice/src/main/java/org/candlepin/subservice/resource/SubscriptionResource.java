@@ -14,6 +14,8 @@
  */
 package org.candlepin.subservice.resource;
 
+import org.candlepin.model.dto.Subscription;
+
 import java.util.Set;
 
 import javax.ws.rs.Consumes;
@@ -39,8 +41,7 @@ public class SubscriptionResource {
     // Things we need:
     // Backing curator
     // Translation service (I18n)
-    // Config?
-    // A subscription object. The DTO could probably become a common object?
+    // Authentication
 
     /**
      * Creates a new subscription from the subscription JSON provided. Any UUID provided in the JSON
@@ -108,7 +109,7 @@ public class SubscriptionResource {
     @Path("{subscription_uuid}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Subscription updateOwner(@PathParam("subscription_uuid") String subscriptionUuid,
+    public Subscription updateSubscription(@PathParam("subscription_uuid") String subscriptionUuid,
         Subscription subscription) {
         // TODO
         return null;
@@ -128,6 +129,7 @@ public class SubscriptionResource {
     @Produces(MediaType.APPLICATION_JSON)
     public boolean deleteSubscription(@PathParam("subscription_uuid") String subscriptionUuid) {
         // TODO
+        return false;
     }
 
 }
