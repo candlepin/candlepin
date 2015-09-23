@@ -105,6 +105,11 @@ class JSONClient < HTTPClient
     request(:put, uri, jsonify(argument_to_hash(args, :body, :query, :header)), &block)
   end
 
+  def delete(uri, *args, &block)
+    @header_filter.replace = true
+    request(:delete,  uri, jsonify(argument_to_hash(args, :body, :query, :header)), &block)
+  end
+
 private
 
   def jsonify(hash)
@@ -400,17 +405,17 @@ module Candlepin
           opts[:installed_products] = [opts[:installed_products]]
         end
 
-        consumer_json = select_from(opts, :name, :facts, :uuid) do |h|
-          if opts[:hypervisor_id]
-            h[:hypervisorId] = {
-              :hypervisorId => opts[:hypervisor_id],
-            }
-          end
+        consumer_json = opts.slice(:name, :facts, :uuid)
 
-          unless opts[:capabilities].empty?
-            h[:capabilities] = opts[:capabilities].map do |c|
-              Hash[:name, c]
-            end
+        if opts[:hypervisor_id]
+          consumer_json[:hypervisorId] = {
+            :hypervisorId => opts[:hypervisor_id],
+          }
+        end
+
+        unless opts[:capabilities].empty?
+          consumer_json[:capabilities] = opts[:capabilities].map do |c|
+            Hash[:name, c]
           end
         end
 
@@ -463,6 +468,10 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :uuid)
+
+        if !opts[:product].nil? && !opts[:pool].nil?
+          raise ArgumentError.new("Bind by pool or by product but not by both")
+        end
 
         query_args = opts.slice(
           :product,
@@ -594,6 +603,22 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
 
         get("/consumers/#{opts[:uuid]}/certificates/serials")
+      end
+
+      def get_consumer_certificates(opts = {})
+        defaults = {
+          :uuid => uuid,
+          :serials => [],
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        unless opts[:serials].kind_of?(Array)
+          opts[:serials] = [opts[:serials]]
+        end
+
+        get("/consumers/#{opts[:uuid]}/certificates", :query => {
+          :serials => opts[:serials].join(",")
+        })
       end
 
       def update_all_guest_ids(opts = {})
@@ -1080,7 +1105,7 @@ module Candlepin
         post("/owners/#{opts[:key]}/uebercert")
       end
 
-      def refresh_pools(opts = {})
+      def refresh_pools_async(opts = {})
         defaults = {
           :key => nil,
           :auto_create_owner => false,
@@ -1089,8 +1114,15 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :key)
 
-        put("/owners/#{opts[:key]}/subscriptions",
+        put_async("/owners/#{opts[:key]}/subscriptions",
             :query => opts.slice(:auto_create_owner, :lazy_regen))
+      end
+
+      # Same as refresh_pools_async but just block before returning
+      def refresh_pools(opts = {})
+        connection = refresh_pools_async(opts)
+        connection.join
+        connection.pop
       end
 
       def create_subscription(opts = {})
@@ -1182,6 +1214,10 @@ module Candlepin
     end
 
     module PoolResource
+      def get_all_pools
+        get("/pools")
+      end
+
       def get_pool(opts = {})
         defaults = {
           :pool_id => nil,
@@ -1217,7 +1253,18 @@ module Candlepin
     end
 
     module OwnerContentResource
-      def delete_content(opts = {})
+      def get_owner_content(opts = {})
+        defaults = {
+          :content_id => nil,
+          :key => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts)
+
+        get("/owners/#{opts[:key]}/content/#{opts[:content_id]}")
+      end
+
+      def delete_owner_content(opts = {})
         defaults = {
           :content_id => nil,
           :key => nil,
@@ -1228,7 +1275,7 @@ module Candlepin
         delete("/owners/#{opts[:key]}/content/#{opts[:content_id]}")
       end
 
-      def create_content(opts = {})
+      def create_owner_content(opts = {})
         defaults = {
           :content_id => nil,
           :name => nil,
@@ -1253,6 +1300,78 @@ module Candlepin
         post("/owners/#{opts[:key]}/content", content)
       end
 
+      def create_batch_owner_content(opts = {})
+        defaults = {
+          :key => nil,
+          :content => [],
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :key)
+
+        content_defaults = {
+          :content_id => nil,
+          :name => nil,
+          :label => nil,
+          :type => "yum",
+          :vendor => "Red Hat",
+          :content_url => "",
+          :gpg_url => "",
+          :modified_product_ids => [],
+          :arches => nil,
+          :required_tags => nil,
+          :metadata_expire => nil,
+        }
+        content_objects = opts[:content]
+        body = []
+        content_objects.each do |content|
+          content = verify_and_merge(content, content_defaults)
+          content[:id] = content[:content_id]
+          content.delete(:content_id)
+          body << camelize_hash(content)
+        end
+
+        post("/owners/#{opts[:key]}/content/batch", body)
+      end
+
+      def update_owner_content(opts = {})
+        defaults = {
+          :content_id => nil,
+          :name => nil,
+          :label => nil,
+          :type => nil,
+          :vendor => nil,
+          :content_url => nil,
+          :gpg_url => nil,
+          :modified_product_ids => nil,
+          :arches => nil,
+          :required_tags => nil,
+          :metadata_expire => nil,
+          :key => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :key)
+
+        content = opts.dup
+        content = camelize_hash(content)
+
+        # For some reason the update method on owner
+        # content requires a full content object and sending
+        # a partial object results in errors from
+        # Hibernate about null IDs and such.  We can
+        # make life easier for users by doing the merging
+        # here
+        old_content = get_owner_content(
+          :content_id => opts[:content_id],
+          :key => opts[:key],
+        ).content
+        # The content id cannot change so don't let it win in
+        # the merge
+        content.delete(:content_id)
+        content.compact!
+        content.reverse_merge!(old_content)
+
+        put("/owners/#{opts[:key]}/content/#{opts[:content_id]}", content)
+      end
     end
 
     module ContentResource
@@ -1260,7 +1379,8 @@ module Candlepin
         get("/content")
       end
 
-      def get_content(opts = {})
+      # The name get_content is already in use by HTTPClient
+      def get_content_by_id(opts = {})
         get_by_id("/content", :content_id, opts)
       end
     end
@@ -1399,6 +1519,78 @@ module Candlepin
         validate_keys(opts)
 
         delete("/owners/#{opts[:key]}/products/#{opts[:product_id]}/content/#{opts[:content_id]}")
+      end
+    end
+
+    module ContentOverrideResource
+      def create_content_overrides(opts = {})
+        defaults = {
+          :uuid => uuid,
+          :overrides => [],
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid)
+
+        unless opts[:overrides].kind_of?(Array)
+          opts[:overrides] = [opts[:overrides]]
+        end
+
+        override_defaults = {
+          :content_label => nil,
+          :name => nil,
+          :value => nil,
+        }
+        body = []
+        override_objects = opts[:overrides]
+        override_objects.each do |override|
+          override = verify_and_merge(override, override_defaults)
+          override[:id] = override[:override_id]
+          override.delete(:override_id)
+          body << camelize_hash(override)
+        end
+
+        put("/consumers/#{opts[:uuid]}/content_overrides", body)
+      end
+
+      def get_content_overrides(opts = {})
+        defaults = {
+          :uuid => uuid,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid)
+
+        get("/consumers/#{opts[:uuid]}/content_overrides")
+      end
+
+      def delete_content_overrides(opts = {})
+        defaults = {
+          :uuid => uuid,
+          :overrides => [],
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid)
+
+        unless opts[:overrides].kind_of?(Array)
+          opts[:overrides] = [opts[:overrides]]
+        end
+
+        override_defaults = {
+          :content_label => nil,
+          :name => nil,
+          :value => nil,
+        }
+        body = []
+        override_objects = opts[:overrides]
+        override_objects.each do |override|
+          override = verify_and_merge(override, override_defaults)
+          override[:id] = override[:override_id]
+          override.delete(:override_id)
+          body << camelize_hash(override)
+        end
+
+        # It's unusual for a DELETE to have a body, but it is
+        # allowed
+        delete("/consumers/#{opts[:uuid]}/content_overrides", body)
       end
     end
 

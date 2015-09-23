@@ -85,7 +85,7 @@ module Candlepin
       end
 
       let(:content) do
-        user_client.create_content(
+        user_client.create_owner_content(
           :content_id => "hello",
           :name => "Hello",
           :label => "hello",
@@ -138,7 +138,7 @@ module Candlepin
           :name => rand_string,
         )
 
-        res = x509_client.get_consumer()
+        res = x509_client.get_consumer
         expect(res.content[:uuid].length).to eq(36)
       end
 
@@ -186,6 +186,90 @@ module Candlepin
         entitlement = res.content.first
         expect(entitlement[:certificates]).to_not be_empty
         expect(entitlement[:certificates].first.key?(:key)).to be_true
+      end
+
+      it 'does not allow binding by both pool and product' do
+        expect do
+          user_client.bind(:product => 'foo', :pool => 'bar', :uuid => 'quux')
+        end.to raise_error(ArgumentError)
+      end
+
+      it 'adds content overrides' do
+        consumer = user_client.register(
+          :owner => owner[:key],
+          :username => owner_user[:username],
+          :name => rand_string,
+        ).content
+
+        overrides = []
+        5.times do |i|
+          overrides << {
+            :content_label => "Label #{i}",
+            :name => "override_#{i}",
+            :value => i,
+          }
+        end
+
+        res = user_client.create_content_overrides(
+          :uuid => consumer[:uuid],
+          :overrides => overrides,
+        )
+        expect(res).to be_2xx
+      end
+
+      it 'get content overrides' do
+        consumer = user_client.register(
+          :owner => owner[:key],
+          :username => owner_user[:username],
+          :name => rand_string,
+        ).content
+
+        res = user_client.create_content_overrides(
+          :uuid => consumer[:uuid],
+          :overrides => {
+            :content_label => "x",
+            :name => "y",
+            :value => "z",
+          },
+        )
+        expect(res).to be_2xx
+
+        overrides = user_client.get_content_overrides(
+          :uuid => consumer[:uuid]
+        ).content
+        expect(overrides.length).to eq(1)
+        expect(overrides.first).to have_key(:contentLabel)
+      end
+
+      it 'deletes content overrides' do
+        consumer = user_client.register(
+          :owner => owner[:key],
+          :username => owner_user[:username],
+          :name => rand_string,
+        ).content
+
+        single_override = {
+            :content_label => "x",
+            :name => "y",
+            :value => "z",
+        }
+        res = user_client.create_content_overrides(
+          :uuid => consumer[:uuid],
+          :overrides => single_override,
+        )
+        expect(res).to be_2xx
+
+        overrides = user_client.get_content_overrides(
+          :uuid => consumer[:uuid]
+        ).content
+        expect(overrides.length).to eq(1)
+        expect(overrides.first).to have_key(:contentLabel)
+
+        res = user_client.delete_content_overrides(
+          :uuid => consumer[:uuid],
+          :overrides => single_override,
+        )
+        expect(res).to be_2xx
       end
 
       it 'gets deleted consumers' do
@@ -684,7 +768,7 @@ module Candlepin
       end
 
       it 'creates owner content' do
-        res = user_client.create_content(
+        res = user_client.create_owner_content(
           :content_id => "hello",
           :name => "Hello",
           :label => "hello",
@@ -692,9 +776,69 @@ module Candlepin
         )
 
         expect(res).to be_2xx
+
+        content = user_client.get_owner_content(
+          :content_id => "hello",
+          :key => owner[:key],
+        ).content
+
+        expect(content[:label]).to eq("hello")
+      end
+
+      it 'batch creates owner content' do
+        content = []
+
+        5.times do |i|
+          content << {
+            :content_id => "content_#{i}",
+            :name => "Content #{i}",
+            :label => "content_#{i}",
+            :content_url => "http://www.example.com",
+          }
+        end
+
+        res = user_client.create_batch_owner_content(
+          :key => owner[:key],
+          :content => content,
+        )
+
+        expect(res).to be_2xx
+
+        content = user_client.get_owner_content(
+          :content_id => "content_4",
+          :key => owner[:key],
+        ).content
+
+        expect(content[:label]).to eq("content_4")
       end
 
       it 'updates owner content' do
+        user_client.create_owner_content(
+          :content_id => "hello",
+          :name => "Hello",
+          :label => "hello",
+          :key => owner[:key],
+          :content_url => "http://www.example.com",
+        )
+
+        res = user_client.update_owner_content(
+          :content_id => "hello",
+          :key => owner[:key],
+          :label => "goodbye",
+        )
+
+        expect(res).to be_2xx
+
+        content = user_client.get_owner_content(
+          :content_id => "hello",
+          :key => owner[:key],
+        ).content
+
+        expect(content[:label]).to eq("goodbye")
+        expect(content[:contentUrl]).to eq("http://www.example.com")
+      end
+
+      it 'updates product content' do
         product = user_client.create_product(
           :product_id => rand_string,
           :name => rand_string,
@@ -712,7 +856,7 @@ module Candlepin
         expect(res).to be_2xx
       end
 
-      it 'deletes owner content' do
+      it 'deletes product content' do
         product = user_client.create_product(
           :product_id => rand_string,
           :name => rand_string,
@@ -773,6 +917,70 @@ module Candlepin
 
         results = user_client.get_owners_with_product(:product_ids => [id1]).content
         expect(results.first[:key]).to eq(owner[:key])
+      end
+
+      it 'refreshes pools synchronously' do
+        id1 = rand_string
+        user_client.create_product(
+          :product_id => id1,
+          :name => rand_string,
+          :multiplier => 2,
+          :attributes => { :arch => 'x86_64' },
+          :key => owner[:key],
+        )
+
+        user_client.create_subscription(
+          :key => owner[:key],
+          :product_id => id1,
+        )
+
+        pools = user_client.get_owner_pools(:key => owner[:key]).content
+        expect(pools.first[:product][:multiplier]).to eq(2)
+
+        user_client.update_product(
+          :product_id => id1,
+          :multiplier => 4,
+          :key => owner[:key],
+        )
+
+        result = user_client.refresh_pools(:key => owner[:key])
+        expect(result).to be_2xx
+
+        pools = user_client.get_owner_pools(:key => owner[:key]).content
+        expect(pools.first[:product][:multiplier]).to eq(4)
+      end
+
+      it 'refreshes pools asynchronously' do
+        id1 = rand_string
+        user_client.create_product(
+          :product_id => id1,
+          :name => rand_string,
+          :multiplier => 2,
+          :attributes => { :arch => 'x86_64' },
+          :key => owner[:key],
+        )
+
+        user_client.create_subscription(
+          :key => owner[:key],
+          :product_id => id1,
+        )
+
+        pools = user_client.get_owner_pools(:key => owner[:key]).content
+        expect(pools.first[:product][:multiplier]).to eq(2)
+
+        user_client.update_product(
+          :product_id => id1,
+          :multiplier => 4,
+          :key => owner[:key],
+        )
+
+        result = user_client.refresh_pools_async(:key => owner[:key])
+        expect(result).to be_kind_of(HTTPClient::Connection)
+        result.join
+        expect(result.pop).to be_2xx
+
+        pools = user_client.get_owner_pools(:key => owner[:key]).content
+        expect(pools.first[:product][:multiplier]).to eq(4)
       end
 
       it 'creates a distributor version' do
