@@ -611,6 +611,7 @@ define "candlepin" do
     compile.with(compile_classpath)
     compile.with(LOGDRIVER, LOG4J_BRIDGE) if use_logdriver
     compile.with(project('common'))
+    compile.with(project('server').package(:type => :jar, :id => 'candlepin-model'))
 
     resource_substitutions = {
       'version' => project.version,
