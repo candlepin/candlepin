@@ -487,6 +487,13 @@ define "candlepin" do
       p.include(pkgs)
     end
 
+    package(:jar, :id=>"candlepin-model").tap do |jar|
+      jar.clean
+      pkgs = %w{model}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
+      p = jar.path(candlepin_path)
+      p.include(pkgs)
+    end
+
     package(:war, :id=>"candlepin").tap do |war|
       war.libs += artifacts(HSQLDB)
       war.libs -= artifacts(PROVIDED)
