@@ -38,7 +38,7 @@ public class InternalServerErrorExceptionMapperTest extends
     }
 
     @Override
-    public Class getMapperClass() {
+    public Class<?> getMapperClass() {
         return InternalServerErrorExceptionMapper.class;
     }
 }

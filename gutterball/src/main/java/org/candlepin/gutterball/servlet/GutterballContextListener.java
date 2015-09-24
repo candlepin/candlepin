@@ -25,11 +25,11 @@ import org.candlepin.gutterball.guice.GutterballServletModule;
 import org.candlepin.gutterball.receiver.EventReceiver;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
 
+import org.jboss.resteasy.plugins.guice.GuiceResteasyBootstrapServletContextListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18nManager;
@@ -48,15 +48,13 @@ import javax.servlet.ServletContextEvent;
  * registers all the RESTEasy resources.
  */
 public class GutterballContextListener extends
-    GutterballGuiceResteasyBootstrap {
+    GuiceResteasyBootstrapServletContextListener {
 
     public static final String CONFIGURATION_NAME = Configuration.class.getName();
 
     private static Logger log = LoggerFactory.getLogger(GutterballContextListener.class);
 
     private Configuration config;
-
-    private Injector injector;
 
     // getServletContext() from the GuiceServletContextListener is deprecated.
     // See
@@ -66,6 +64,8 @@ public class GutterballContextListener extends
     // https://github.com/google/guice/issues/603
     // Currently only needed for access to the Configuration.
     private ServletContext servletContext;
+
+    private EventReceiver eventReceiver;
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
@@ -89,11 +89,6 @@ public class GutterballContextListener extends
         // set things up BEFORE calling the super class' initialize method.
         super.contextInitialized(sce);
         log.info("Gutterball context initialized.");
-    }
-
-    @Override
-    protected Injector getInjector(Stage stage, List<Module> modules) {
-        return Guice.createInjector(stage, modules);
     }
 
     protected Configuration readConfiguration(ServletContext context)
@@ -132,25 +127,13 @@ public class GutterballContextListener extends
 
     @Override
     protected Stage getStage(ServletContext context) {
-        // RESTEasy 3.0 has a getState with a context that we can override.
-        // Right now we don't use context for our need but when we do switch
-        // we'll be able to add an @Override to this method.
-
         // see https://github.com/google/guice/wiki/Bootstrap for information
         // on Stage.
         return Stage.PRODUCTION;
     }
 
-    /**
-     * Returns a list of Guice modules to initialize.
-     * @return a list of Guice modules to initialize.
-     */
     @Override
     protected List<Module> getModules(ServletContext context) {
-        // RESTEasy 3.0 has a getState with a context that we can override.
-        // Right now we don't use context for our need but when we do switch
-        // we'll be able to add an @Override to this method.
-
         if (config == null) {
             log.error("Config is null");
         }
@@ -170,9 +153,8 @@ public class GutterballContextListener extends
     }
 
     @Override
-    protected void processInjector(ServletContext context, Injector inj) {
-        injector = inj;
-        super.processInjector(context, injector);
+    public void withInjector(Injector injector) {
+        this.eventReceiver = injector.getInstance(EventReceiver.class);
     }
 
     @Override
@@ -180,9 +162,6 @@ public class GutterballContextListener extends
         log.info("Destroying gutterball context");
         super.contextDestroyed(event);
 
-        EventReceiver reciever = injector.getInstance(EventReceiver.class);
-        reciever.finish();
+        eventReceiver.finish();
     }
-
-
 }

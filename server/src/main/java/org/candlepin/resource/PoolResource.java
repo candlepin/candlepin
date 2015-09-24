@@ -17,7 +17,7 @@ package org.candlepin.resource;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
-import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.auth.Verify;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
@@ -181,7 +181,7 @@ public class PoolResource {
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);
         calculatedAttributesUtil.setQuantityAttributes(poolList, c, activeOnDate);
 
-        // Store the page for the LinkHeaderPostInterceptor
+        // Store the page for the LinkHeaderResponseFilter
         ResteasyProviderFactory.pushContext(Page.class, page);
         return poolList;
     }

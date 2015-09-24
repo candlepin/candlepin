@@ -185,15 +185,6 @@ public class CandlepinContextListenerTest {
         assertEquals(Stage.PRODUCTION, listener.getStage(ctx));
     }
 
-    @Test
-    public void testInjector() {
-        Injector injector = listener.getInjector(Stage.PRODUCTION, listener.getModules(null));
-        assertNotNull(injector);
-        PinsetterContextListener pcl = injector.getInstance(PinsetterContextListener.class);
-        assertNotNull(pcl);
-        assertEquals(pinlistener, pcl);
-    }
-
     private void prepareForInitialization() {
         evt = mock(ServletContextEvent.class);
         ctx = mock(ServletContext.class);
@@ -204,10 +195,11 @@ public class CandlepinContextListenerTest {
             Registry.class.getName()))).thenReturn(registry);
         when(ctx.getAttribute(eq(
             ResteasyProviderFactory.class.getName()))).thenReturn(rpfactory);
+        when(ctx.getAttribute(eq(
+            CandlepinContextListener.CONFIGURATION_NAME))).thenReturn(config);
     }
 
     public class ContextListenerTestModule extends AbstractModule {
-
         @SuppressWarnings("synthetic-access")
         @Override
         protected void configure() {

@@ -18,7 +18,7 @@ package org.candlepin.resource;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
-import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.ConflictException;
 import org.candlepin.common.exceptions.GoneException;
 import org.candlepin.common.exceptions.NotFoundException;

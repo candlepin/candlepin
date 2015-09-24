@@ -27,7 +27,7 @@ import java.util.Map;
 /**
  * DynamicFilterData
  *
- * Class to hold filtering data to be passed from DynamicFilterInterceptor
+ * Class to hold filtering data to be passed from DynamicJsonFilter
  * to DynamicPropertyFilter
  */
 public class DynamicFilterData {

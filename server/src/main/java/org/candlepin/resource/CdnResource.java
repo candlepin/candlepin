@@ -93,6 +93,7 @@ public class CdnResource {
      * @httpcode 200
      */
     @DELETE
+    @Produces(MediaType.WILDCARD)
     @Path("/{label}")
     public void delete(@PathParam("label") String label,
         @Context Principal principal) {

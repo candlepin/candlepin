@@ -47,6 +47,7 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.Util;
@@ -103,6 +104,7 @@ public class DatabaseTestFixture {
     @Inject protected CertificateSerialCurator certSerialCurator;
     @Inject protected ContentCurator contentCurator;
     @Inject protected SubscriptionServiceAdapter subAdapter;
+    @Inject protected ResourceLocatorMap locatorMap;
 
     private static Injector parentInjector;
     private Injector injector;
@@ -124,6 +126,9 @@ public class DatabaseTestFixture {
         Module testingModule = new TestingModules.StandardTest(config);
         injector = parentInjector.createChildInjector(
             Modules.override(testingModule).with(getGuiceOverrideModule()));
+
+        locatorMap = injector.getInstance(ResourceLocatorMap.class);
+        locatorMap.init();
         securityInterceptor = injector.getInstance(TestingInterceptor.class);
 
         cpSingletonScope = injector.getInstance(CandlepinSingletonScope.class);

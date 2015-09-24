@@ -62,22 +62,23 @@
     <com.fasterxml.jackson.module-jackson-module-jaxb-annotations.version>2.3.0</com.fasterxml.jackson.module-jackson-module-jaxb-annotations.version>
     <com.fasterxml.jackson.datatype-jackson-datatype-hibernate4.version>2.3.0</com.fasterxml.jackson.datatype-jackson-datatype-hibernate4.version>
     <org.liquibase-liquibase-core.version>3.1.0</org.liquibase-liquibase-core.version>
-    <ch.qos.logback-logback-core.version>1.0.13</ch.qos.logback-logback-core.version>
-    <ch.qos.logback-logback-classic.version>1.0.13</ch.qos.logback-logback-classic.version>
-    <org.slf4j-jcl-over-slf4j.version>1.7.5</org.slf4j-jcl-over-slf4j.version>
-    <org.slf4j-log4j-over-slf4j.version>1.7.5</org.slf4j-log4j-over-slf4j.version>
-    <org.slf4j-slf4j-api.version>1.7.5</org.slf4j-slf4j-api.version>
+    <ch.qos.logback-logback-core.version>1.1.3</ch.qos.logback-logback-core.version>
+    <ch.qos.logback-logback-classic.version>1.1.3</ch.qos.logback-logback-classic.version>
+    <org.slf4j-jcl-over-slf4j.version>1.7.12</org.slf4j-jcl-over-slf4j.version>
+    <org.slf4j-log4j-over-slf4j.version>1.7.12</org.slf4j-log4j-over-slf4j.version>
+    <org.slf4j-slf4j-api.version>1.7.12</org.slf4j-slf4j-api.version>
     <javax.servlet-servlet-api.version>2.5</javax.servlet-servlet-api.version>
-    <org.jboss.resteasy-jaxrs-api.version>2.3.7.Final</org.jboss.resteasy-jaxrs-api.version>
-    <org.jboss.resteasy-resteasy-jaxrs.version>2.3.7.Final</org.jboss.resteasy-resteasy-jaxrs.version>
-    <org.jboss.resteasy-resteasy-jaxb-provider.version>2.3.7.Final</org.jboss.resteasy-resteasy-jaxb-provider.version>
-    <org.jboss.resteasy-resteasy-guice.version>2.3.7.Final</org.jboss.resteasy-resteasy-guice.version>
-    <org.jboss.resteasy-resteasy-atom-provider.version>2.3.7.Final</org.jboss.resteasy-resteasy-atom-provider.version>
-    <org.jboss.resteasy-resteasy-multipart-provider.version>2.3.7.Final</org.jboss.resteasy-resteasy-multipart-provider.version>
-    <org.scannotation-scannotation.version>1.0.2</org.scannotation-scannotation.version>
-    <org.apache.httpcomponents-httpclient.version>4.1.2</org.apache.httpcomponents-httpclient.version>
+    <org.jboss.resteasy-jaxrs-api.version>3.0.6.Final</org.jboss.resteasy-jaxrs-api.version>
+    <org.jboss.resteasy-resteasy-jaxrs.version>3.0.6.Final</org.jboss.resteasy-resteasy-jaxrs.version>
+    <org.jboss.resteasy-resteasy-jaxb-provider.version>3.0.6.Final</org.jboss.resteasy-resteasy-jaxb-provider.version>
+    <org.jboss.resteasy-resteasy-guice.version>3.0.6.Final</org.jboss.resteasy-resteasy-guice.version>
+    <org.jboss.resteasy-resteasy-atom-provider.version>3.0.6.Final</org.jboss.resteasy-resteasy-atom-provider.version>
+    <org.jboss.resteasy-resteasy-multipart-provider.version>3.0.6.Final</org.jboss.resteasy-resteasy-multipart-provider.version>
+    <org.scannotation-scannotation.version>1.0.3</org.scannotation-scannotation.version>
+    <org.apache.httpcomponents-httpclient.version>4.2.1</org.apache.httpcomponents-httpclient.version>
     <org.apache.james-apache-mime4j.version>0.6</org.apache.james-apache-mime4j.version>
-    <javax.mail-mail.version>1.4</javax.mail-mail.version>
+    <javax.mail-mail.version>1.4.4</javax.mail-mail.version>
+    <javax.ws.rs-javax.ws.rs-api.version>2.0.1</javax.ws.rs-javax.ws.rs-api.version>
     <org.mozilla-rhino.version>1.7R3</org.mozilla-rhino.version>
     <com.sun.xml.bind-jaxb-impl.version>2.1.12</com.sun.xml.bind-jaxb-impl.version>
     <net.oauth.core-oauth.version>20100527</net.oauth.core-oauth.version>
@@ -772,6 +773,17 @@
       <groupId>javax.mail</groupId>
       <artifactId>mail</artifactId>
       <version>${javax.mail-mail.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>javax.ws.rs</groupId>
+      <artifactId>javax.ws.rs-api</artifactId>
+      <version>${javax.ws.rs-javax.ws.rs-api.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>

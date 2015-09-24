@@ -84,6 +84,11 @@ public class CandlepinExceptionMapper {
     }
 
     protected ResponseBuilder getDefaultBuilder(Throwable exception,
+        Status status) {
+        return getDefaultBuilder(exception, status, determineBestMediaType());
+    }
+
+    protected ResponseBuilder getDefaultBuilder(Throwable exception,
         Status status, MediaType responseMediaType) {
 
         Throwable cause = exception;

@@ -26,6 +26,8 @@ import org.xnap.commons.i18n.I18n;
 
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 /**
  * Rules API entry path
@@ -55,6 +57,7 @@ public class StatisticResource {
      * @httpcode 200
      */
     @PUT
+    @Produces(MediaType.WILDCARD)
     public void execute() {
 
         try {

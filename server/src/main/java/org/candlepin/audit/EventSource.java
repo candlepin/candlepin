@@ -35,14 +35,16 @@ public class EventSource {
     private static  Logger log = LoggerFactory.getLogger(EventSource.class);
     static final String QUEUE_ADDRESS = "event";
     private ClientSession session;
+    private ClientSessionFactory factory;
     private ObjectMapper mapper;
+
 
     @Inject
     public EventSource(ObjectMapper mapper) {
         this.mapper = mapper;
 
         try {
-            ClientSessionFactory factory =  createSessionFactory();
+            factory =  createSessionFactory();
             // Specify a message ack batch size of 0 to have hornetq immediately ack
             // any message successfully received with the server. Not doing so can lead
             // to duplicate messages if the server goes down before the batch ack size is
@@ -65,10 +67,11 @@ public class EventSource {
                 InVMConnectorFactory.class.getName())).createSessionFactory();
     }
 
-    void shutDown() {
+    protected void shutDown() {
         try {
             session.stop();
             session.close();
+            factory.close();
         }
         catch (HornetQException e) {
             log.warn("Exception while trying to shutdown hornetq", e);

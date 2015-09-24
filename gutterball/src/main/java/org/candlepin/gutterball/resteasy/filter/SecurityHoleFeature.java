@@ -1,0 +1,62 @@
+/**
+ * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ *
+ * This software is licensed to you under the GNU General Public License,
+ * version 2 (GPLv2). There is NO WARRANTY for this software, express or
+ * implied, including the implied warranties of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+ * along with this software; if not, see
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+ *
+ * Red Hat trademarks are not licensed under GPLv2. No permission is
+ * granted to use or replicate Red Hat trademarks that are incorporated
+ * in this software or its documentation.
+ */
+package org.candlepin.gutterball.resteasy.filter;
+
+import org.candlepin.common.auth.SecurityHole;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Method;
+
+import javax.inject.Inject;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.DynamicFeature;
+import javax.ws.rs.container.ResourceInfo;
+import javax.ws.rs.core.FeatureContext;
+import javax.ws.rs.ext.Provider;
+
+
+/**
+ * DynamicFeature implementation that determines when to apply the
+ * security interceptor.  This Feature is run as part of the JAX-RS
+ * bootstrap process not on every request.
+ *
+ * Guice will throw a ProvisionException if nothing is bound to the
+ * AuthorizationFilter annotation.
+ */
+@Provider
+public class SecurityHoleFeature implements DynamicFeature {
+    private static final Logger log = LoggerFactory.getLogger(SecurityHoleFeature.class);
+
+    private ContainerRequestFilter interceptor;
+
+    @Inject
+    public SecurityHoleFeature(ContainerRequestFilter interceptor) {
+        this.interceptor = interceptor;
+    }
+
+    @Override
+    public void configure(ResourceInfo resourceInfo, FeatureContext context) {
+        Method method = resourceInfo.getResourceMethod();
+        if (method.isAnnotationPresent(SecurityHole.class)) {
+            log.debug("Not registering authorization filter on {}.{}",
+                method.getDeclaringClass().getName(), method.getName());
+        }
+        else {
+            context.register(interceptor);
+        }
+    }
+}

@@ -15,7 +15,8 @@
 package org.candlepin.common.exceptions.mappers;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.candlepin.common.test.RegexMatcher.*;
 
 import org.candlepin.common.exceptions.ExceptionMessage;
 import org.candlepin.common.guice.CommonI18nProvider;
@@ -50,23 +51,22 @@ public abstract class TestExceptionMapperBase {
     }
 
     protected String rtmsg(String msg) {
-        return "Runtime Error " + msg;
+        return "^Runtime Error " + msg;
     }
 
     protected void verifyMessage(Response r, String expectedmsg) {
         ExceptionMessage em = (ExceptionMessage) r.getEntity();
 
         assertNotNull(em);
-        assertTrue(expectedmsg,
-            em.getDisplayMessage().startsWith(expectedmsg));
+        assertThat(em.getDisplayMessage(), matchesRegex(expectedmsg));
     }
 
-    public abstract Class getMapperClass();
+    public abstract Class<?> getMapperClass();
 
     public static class MapperTestModule extends JukitoModule {
-        private Class mapper;
+        private Class<?> mapper;
 
-        public MapperTestModule(Class clazz) {
+        public MapperTestModule(Class<?> clazz) {
             mapper = clazz;
         }
 

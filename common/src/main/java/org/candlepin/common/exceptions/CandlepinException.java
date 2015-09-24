@@ -50,7 +50,6 @@ public class CandlepinException extends RuntimeException {
         this.logException = logException;
     }
 
-
     public CandlepinException(Status returnCode, String message, Throwable e) {
         this(returnCode, message, true, e);
     }

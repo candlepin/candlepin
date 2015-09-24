@@ -29,7 +29,6 @@ import java.util.Arrays;
  *
  */
 public class ConsumerPrincipal extends Principal {
-
     private Consumer consumer;
 
     public ConsumerPrincipal(Consumer consumer) {
@@ -86,7 +85,7 @@ public class ConsumerPrincipal extends Principal {
     }
 
     @Override
-    public String getPrincipalName() {
+    public String getName() {
         return consumer.getUuid();
     }
 

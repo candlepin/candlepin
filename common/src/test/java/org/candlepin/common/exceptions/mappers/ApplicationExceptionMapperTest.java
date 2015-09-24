@@ -50,7 +50,7 @@ public class ApplicationExceptionMapperTest extends TestExceptionMapperBase {
     }
 
     @Override
-    public Class getMapperClass() {
+    public Class<?> getMapperClass() {
         return ApplicationExceptionMapper.class;
     }
 }

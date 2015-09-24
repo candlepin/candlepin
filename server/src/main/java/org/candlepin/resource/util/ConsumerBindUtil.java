@@ -99,7 +99,9 @@ public class ConsumerBindUtil {
 
     private boolean handleActivationKeyPools(Consumer consumer,
         ActivationKey key) {
-        if (key.getPools().size() == 0) { return true; }
+        if (key.getPools().size() == 0) {
+            return true;
+        }
         boolean onePassed = false;
         List<ActivationKeyPool> toBind = new LinkedList<ActivationKeyPool>();
         for (ActivationKeyPool akp : key.getPools()) {

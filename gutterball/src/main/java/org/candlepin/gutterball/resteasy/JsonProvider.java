@@ -50,8 +50,7 @@ public class JsonProvider extends JacksonJsonProvider {
     public static void register(boolean indentJson) {
         ResteasyProviderFactory rpf = ResteasyProviderFactory.getInstance();
         JsonProvider jsonprovider = new JsonProvider(indentJson);
-        rpf.addMessageBodyReader(jsonprovider);
-        rpf.addMessageBodyWriter(jsonprovider);
+        rpf.registerProviderInstance(jsonprovider);
         RegisterBuiltin.register(rpf);
     }
 

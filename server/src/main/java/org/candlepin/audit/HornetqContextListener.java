@@ -30,9 +30,8 @@ import org.hornetq.core.config.Configuration;
 import org.hornetq.core.config.impl.ConfigurationImpl;
 import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory;
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
-import org.hornetq.core.server.HornetQServer;
 import org.hornetq.core.server.JournalType;
-import org.hornetq.core.server.impl.HornetQServerImpl;
+import org.hornetq.core.server.embedded.EmbeddedHornetQ;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +47,7 @@ public class HornetqContextListener {
 
     private static  Logger log = LoggerFactory.getLogger(HornetqContextListener.class);
 
-    private HornetQServer hornetqServer;
+    private EmbeddedHornetQ hornetqServer;
     private EventSource eventSource;
 
     public void contextDestroyed() {
@@ -97,7 +96,8 @@ public class HornetqContextListener {
             config.setJournalDirectory(new File(baseDir, "journal").toString());
             config.setLargeMessagesDirectory(new File(baseDir, "largemsgs").toString());
 
-            hornetqServer = new HornetQServerImpl(config);
+            hornetqServer = new EmbeddedHornetQ();
+            hornetqServer.setConfiguration(config);
         }
         try {
             hornetqServer.start();
@@ -160,7 +160,7 @@ public class HornetqContextListener {
     private void cleanupOldQueues() {
         log.debug("Cleaning old message queues");
         try {
-            String [] queues = hornetqServer.getHornetQServerControl().getQueueNames();
+            String [] queues = hornetqServer.getHornetQServer().getHornetQServerControl().getQueueNames();
 
             ServerLocator locator = HornetQClient.createServerLocatorWithoutHA(
                 new TransportConfiguration(InVMConnectorFactory.class.getName()));

@@ -64,7 +64,7 @@ public class TrustedUserPrincipal extends Principal {
     }
 
     @Override
-    public String getPrincipalName() {
+    public String getName() {
         return username;
     }
 

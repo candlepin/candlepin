@@ -111,6 +111,7 @@ public class DistributorVersionResource {
      * @httpcode 200
      */
     @DELETE
+    @Produces(MediaType.WILDCARD)
     @Path("/{id}")
     public void delete(@PathParam("id") String id,
         @Context Principal principal) {

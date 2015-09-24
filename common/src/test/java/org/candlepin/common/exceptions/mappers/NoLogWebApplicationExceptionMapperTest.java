@@ -34,11 +34,11 @@ public class NoLogWebApplicationExceptionMapperTest extends
             injector.getInstance(NoLogWebApplicationExceptionMapper.class);
         Response r = iseem.toResponse(isee);
         assertEquals(400, r.getStatus());
-        verifyMessage(r, rtmsg(null));
+        verifyMessage(r, rtmsg(""));
     }
 
     @Override
-    public Class getMapperClass() {
+    public Class<?> getMapperClass() {
         return NoLogWebApplicationExceptionMapper.class;
     }
 }

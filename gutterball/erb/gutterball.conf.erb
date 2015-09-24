@@ -24,6 +24,9 @@ jpa.config.hibernate.connection.password=<%= password || profile.password %>
 jpa.config.hibernate.dialect=<%= dialect || profile.dialect %>
 jpa.config.hibernate.show_sql=<%= show_hibernate || false %>
 
+gutterball.auth.oauth.enable=<%= oauth || true %>
+gutterball.auth.oauth.consumer.rspec.secret=rspec-oauth-secret
+
 <%- custom_logging.each do |key, value| -%>
 <%= "#" if key[0] == "#" %>log4j.logger.<%= key[/^#?(.*)/, 1] %>=<%= value %>
 <%- end if custom_logging -%>
