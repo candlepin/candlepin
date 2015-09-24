@@ -1,0 +1,399 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2012 Red Hat, Inc.
+#
+# This software is licensed to you under the GNU General Public License,
+# version 2 (GPLv2). There is NO WARRANTY for this software, express or
+# implied, including the implied warranties of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+# along with this software; if not, see
+# http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+#
+# Red Hat trademarks are not licensed under GPLv2. No permission is
+# granted to use or replicate Red Hat trademarks that are incorporated
+# in this software or its documentation.
+#
+
+""" A CLI utility for managing database schema of Candlepin subprojects.. """
+
+import sys
+import os
+from optparse import OptionParser, OptionGroup
+from subprocess import Popen, PIPE, STDOUT
+
+
+
+# input - in case something needs to be written on the stdin of the process after start
+def run_command(command, stdin_input=None):
+    #Merge stdout and stderr
+    process = Popen(command, stdout=PIPE, stdin=PIPE,stderr=STDOUT)
+    if stdin_input:
+        process.stdin.write(stdin_input)
+    output = process.communicate()[0];
+    status = process.returncode
+    if  status > 0:  
+        print("Command that has been run: " + " ".join(command))
+        print("WARNING, command exited with error: %s" % output);
+    return (status,output)
+
+            
+
+#Thin wrapper around liquidbase
+class LiquibaseWrapper():
+    # Classpath must contain both JDBC driver and changelog for Liquibase to function
+    def __init__(self, username, password,classpath, driver_class, jdbc_url,community):
+        if not (username and classpath and driver_class and jdbc_url):
+            raise Exception("Liquibase wrapper needs username, classpath, driver_class, jdbc_url")
+        
+        self.username=username;
+        self.password=password;
+        self.community=community;
+        self.driver_class=driver_class;
+        self.jdbc_url=jdbc_url;
+        self.classpath = classpath;
+        
+    def migrate(self, changelog_path):
+        liquibase_options = ["--driver=%s" % self.driver_class,
+                            "--classpath=%s" % self.classpath,
+                            "--changeLogFile=%s" % changelog_path, 
+                            "--url=%s" % self.jdbc_url, 
+                            "--username=%s" % self.username];
+
+        if self.password:
+            liquibase_options += ["--password=%s"% self.password]
+
+        print("Running Liquibase with parameters: %s" % liquibase_options)
+        
+        
+        _,output = run_command(["liquibase"]+liquibase_options+ ["migrate","-Dcommunity=%s"% ("True" if self.community else "False")])
+        
+        print(output)
+ 
+#Simple manipulations with Postgres database
+class PostgresInstance():    
+    def __init__(self, username,password, host, port):
+        self.username=username
+        self.password=password
+        self.host = host
+        self.port = port
+        self.jdbc_jar = "/usr/share/java/postgresql-jdbc.jar"
+        
+    def get_driver_class(self):
+        return  "org.postgresql.Driver";
+    
+    def get_jdbc_classpath(self):
+        return "/usr/share/java/postgresql-jdbc.jar";
+    
+    def get_jdbc_url(self, dbname):
+        # Adjust the jdbc URL for correct deployment:
+        self.jdbc_url = "jdbc:postgresql:"
+        if self.host is not None:
+            self.jdbc_url = "%s//%s" % (self.jdbc_url, self.host)
+            # Requires host:
+            if self.port is not None:
+                self.jdbc_url = "%s:%s" % (self.jdbc_url, self.port)
+            # Append / for the database name:
+            self.jdbc_url = "%s/" % (self.jdbc_url)
+        self.jdbc_url = "%s%s" % (self.jdbc_url, dbname)
+        
+        return self.jdbc_url
+        
+        
+
+    def create(self, dbname):
+        print("Creating %s database" % dbname)
+        command = ["createdb","-U",self.username]
+        if self.host:
+            command+=["-h", self.host]
+            if self.port:
+                command += ["-p",self.port]
+        
+        command += [dbname]
+        
+        if self.password:
+            os.environ["PGPASSWORD"] = self.password
+            
+        (status, output) = run_command(command);
+        if status > 0 and "already exists" not in output:
+            raise Exception("Error creating Postgres database with error: " + output)
+      
+    def drop(self,dbname):
+        print("Dropping %s database" % dbname)
+        if self.password:
+            os.environ["PGPASSWORD"] = self.password 
+        run_command(["psql", "--username=%s"%self.username, "-c", "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '%s' AND pid <> pg_backend_pid();" % dbname])
+        run_command(["dropdb","-U",self.username, dbname])
+
+
+#Simple manipulations with Postgres database
+class MysqlInstance():    
+    def __init__(self, username,password):
+        self.username=username
+        
+        if not password: 
+            self.password=""
+        else:
+            self.password=password
+        
+        self.jdbc_jar = "/usr/share/java/postgresql-jdbc.jar"
+      
+    def get_driver_class(self):
+        return  "com.mysql.jdbc.Driver";
+    
+    def get_jdbc_classpath(self):
+        return "/usr/share/java/mysql-connector-java.jar";
+    
+    def get_jdbc_url(self, dbname):
+        return "jdbc:mysql:///%s"%dbname;
+
+    def create(self, dbname):
+        run_command(["mysqladmin", "--user=%s"%self.username, "--password=%s" %self.password, "create", dbname])
+
+    def drop(self,dbname):
+        run_command(["mysqladmin", "--user=%s"%self.username, "--password=%s" %self.password, "--force", "drop", dbname])
+
+
+# Similar to PostgresInstance. Main difference here is that 
+# you must use special user+password to create database
+class OracleInstance():
+    def __init__(self, oracle_user, oracle_password):
+        self.jdbc_prefix = "jdbc:oracle:thin:@//%s" 
+        self.oracle_user = oracle_user
+        self.oracle_password = oracle_password
+    
+    def get_driver_class(self):
+        return "oracle.jdbc.OracleDriver";
+    
+    def runSql(self, dbname, sql):
+        connect_string = "%s/%s@//%s as sysdba" % (self.oracle_user, self.oracle_password, dbname)
+        print(connect_string)
+        
+        _, out = run_command(["sqlplus", "-S",connect_string], sql)        
+        
+        # SQL*Plus doesn't write to stderr apparently
+        if "ERROR" in out:
+            sys.stderr.write("\n########## ERROR ############\n")
+            sys.stderr.write("Error communicating with Oracle: %s\n" % out)
+            raise Exception("Error running command")
+        return out
+    
+    #Warning this code should be more complicated maybe to locate more jdbc jars
+    def get_jdbc_classpath(self):
+        return "/usr/lib/oracle/11.2/client64/lib/ojdbc6.jar";
+    
+    def get_jdbc_url(self, dbname):
+        return "jdbc:oracle:thin:@//%s" % dbname
+        
+    def create(self, dbname):
+        out = self.runSql("select 'user exists' from all_users where username='%s';" % dbname.upper())
+        if 'user exists' in out:
+            print("%s user already exists.  Skipping..." % dbname)
+            return
+
+        print("Creating %s database" % dbname)
+        out = self.runSql('create user %s identified by %s default tablespace users;' %
+            (dbname, self.oracle_password))
+        print(out)
+        
+        out = self.runSql('grant dba to %s;' % dbname)
+        print(out)
+
+    def drop(self, dbname):
+        print("Dropping %s database" % dbname)
+        out = self.runSql('drop user %s cascade;' % dbname)
+        print(out)
+
+# Helper method for Candlepin and Gutterball objects
+def classpath_for_war(warName):
+        cp_items=[];
+         
+        if os.path.exists('/usr/sbin/tomcat') and not os.path.exists('/usr/sbin/tomcat6'):
+            TOMCAT = 'tomcat'
+        else:
+            TOMCAT = 'tomcat6'
+        JBOSS_CLASSPATH = "/var/lib/jbossas/server/production/deploy/%s.war/WEB-INF/classes/"  % warName    
+        TOMCAT_CLASSPATH = "/var/lib/" + TOMCAT + "/webapps/%s/WEB-INF/classes/"  % warName
+        if os.path.exists(TOMCAT_CLASSPATH):
+            cp_items+=[TOMCAT_CLASSPATH]
+        if os.path.exists(JBOSS_CLASSPATH):
+            cp_items+=[JBOSS_CLASSPATH]
+       
+        classpath = ":".join(cp_items)
+        
+        if not classpath:
+            print("WARNING: Classpath empty on this machine! Couldn't find neither Tomcat at /var/lib/tomcat* nor JBOSS on /var/lib/jbossas/server")
+            
+        return classpath;
+    
+# Data specific to Candlepin project
+class Candlepin():
+    def classpath(self):
+        return classpath_for_war("candlepin")
+    def create_changelog_location(self):
+        return "db/changelog/changelog-create.xml"
+    def update_changelog_location(self):
+        return "db/changelog/changelog-update.xml"
+    def default_db_name(self):
+        return "candlepin"
+    def default_user(self):
+        return self.default_db_name();  
+            
+class Gutterball():
+    def classpath(self):
+        return classpath_for_war("gutterball")
+    def create_changelog_location(self):
+        return "db/changelog/changelog.xml";
+    def update_changelog_location(self):
+        return self.create_changelog_location();
+    def default_db_name(self):
+        return "gutterball"
+    def default_user(self):
+        return self.default_db_name();      
+    
+def build_cp(*args):
+    
+    non_empty_args = []
+    for arg in args: 
+        if arg != None and arg != "":
+            non_empty_args+=[arg];
+            
+    if len(non_empty_args)==0:
+        return None
+    return ":".join(non_empty_args)
+             
+               
+def main(cmd_args):
+    parser = OptionParser()
+    
+    action_list = ["create","create-schema-only", "update", "drop-create"]
+    parser.add_option("--action", 
+                      dest="action",
+                      choices=action_list,
+                      help="Action to take on the database. Available actions: %s" % ", ".join(action_list))
+  
+    parser.add_option("-u",
+            dest="dbuser",
+            help="database user to use to create schema and load data. Defaults to name of the product specified by --product")
+    
+    parser.add_option("-d", 
+            dest="dbname",
+            help="database name to use")
+    
+    parser.add_option("-p", 
+            dest="dbpassword",
+            help="password to use for the dbuser")
+    
+    parser.add_option("--classpath", 
+            dest="classpath",
+            help="additional classpath for Liquibase. This is useful for testing purposes or as a workaround")
+    
+    group = OptionGroup(parser, "Postgres specific options")
+
+    group.add_option("--pg-dbhost",
+            dest="postgres_dbhost",
+            help="The database host to use (optional)")
+    
+    group.add_option("--pg-dbport",
+            dest="postgres_dbport",
+            help="The database port to use (optional)")
+    
+    parser.add_option_group(group)
+  
+    
+    parser.add_option("--community",
+            action="store_true", default=False,
+            dest="community",
+            help="true if used in a community fashion")
+    
+    parser.add_option("--database-type",
+            type="choice",
+            default="Postgres",
+            choices=["Postgres", "Oracle", "Mysql"],
+            dest="database_type",
+            help="Type of the database to run against. Valid values are: Postgres, Mysql, Oracle. Defaults to Postgres")
+    
+    parser.add_option("--product",
+            dest="product",
+            type="choice",
+            choices=["candlepin","gutterball"],
+            help="Product. Valid values are: candlepin, gutterball.")
+        
+    groupOracle = OptionGroup(parser, "Oracle specific options")
+
+    groupOracle.add_option("--oracle-user",
+            dest="oracle_user", default="sys",
+            help="Oracle DBA user. This user is used to create database. Defaults to 'sys'")
+    
+    groupOracle.add_option("--oracle-password",
+            dest="oracle_password",
+            help="Oracle DBA password. ")
+    
+    parser.add_option_group(groupOracle);
+    
+    (options, args) = parser.parse_args(cmd_args)
+    
+    if not options.product:
+        raise Exception("You must specify product using --product switch")
+    
+    if not options.action:
+        raise Exception("You must specify action using --action switch")
+    
+    if options.product == "candlepin":
+        product = Candlepin();
+                    
+    if options.product == "gutterball":
+        product = Gutterball();
+    
+    
+    #If user or dbname is not explicitly set, use the default name for a product e.g. candlepin for Candlepin product
+    if options.dbuser is None:
+        options.dbuser = product.default_user()
+        
+    if options.dbname is None:
+        options.dbname = product.default_db_name()
+                
+    if options.database_type=="Oracle":
+        if (not options.oracle_password):
+            raise Exception("When using Oracle database, you must specify --oracle-password, possibly --oracle-user (but this defaults to sys)")
+        dbinstance = OracleInstance(options.oracle_user, 
+                                    options.oracle_password)
+        
+    if options.database_type=="Postgres":
+        dbinstance = PostgresInstance(options.dbuser, 
+                                      options.dbpassword,
+                                      options.postgres_dbhost, 
+                                      options.postgres_dbport)
+        
+    if options.database_type=="Mysql":
+        dbinstance = MysqlInstance(options.dbuser, 
+                                      options.dbpassword)
+  
+    complete_cp = build_cp(options.classpath, product.classpath(), dbinstance.get_jdbc_classpath())
+    
+    if not complete_cp:
+        raise Exception("Empty classpath on this machine. At least supply classpath using --classpath")
+    
+    liquibase = LiquibaseWrapper(options.dbuser, 
+                                 options.dbpassword, 
+                                 complete_cp, 
+                                 dbinstance.get_driver_class(), 
+                                 dbinstance.get_jdbc_url(options.dbname),
+                                 options.community);
+    if options.action=="create":
+        dbinstance.create(options.dbname)
+        liquibase.migrate(product.create_changelog_location());
+        
+    if options.action=="create-schema-only":
+        liquibase.migrate(product.create_changelog_location());
+        
+    if options.action=="update": 
+        liquibase.migrate(product.update_changelog_location());
+    
+    if options.action=="drop-create":
+        dbinstance.drop(options.dbname)
+        dbinstance.create(options.dbname)
+        liquibase.migrate(product.create_changelog_location());
+    
+        
+if __name__ == "__main__":
+    main(sys.argv[1:])

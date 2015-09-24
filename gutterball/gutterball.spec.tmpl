@@ -60,6 +60,13 @@ rm -rf %{buildroot}
 %{__install} -d -m 755 %{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}
 %{__unzip} %{SOURCE1} -d %{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}
 
+## Directory for gutterball scripts
+%{__install} -d -m 755 %{buildroot}/%{_datadir}/%{name}/
+
+## DbTool
+%{__install} -m 755 org.candlepin/candlepin-common*/dbtool/dbtool %{buildroot}/%{_datadir}/%{name}/dbtool
+
+
 %clean
 rm -rf %{buildroot}
 
@@ -70,6 +77,7 @@ rm -rf %{buildroot}
 %config(noreplace) %attr(640, tomcat, tomcat) %{_sysconfdir}/%{name}/%{name}.conf
 %dir %attr(750, tomcat, tomcat) %{_sysconfdir}/%{name}/certs/amqp
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
+%{_datadir}/%{name}
 
 %defattr(644, tomcat, tomcat, 755)
 %{_sharedstatedir}/%{tomcat}/webapps/%{name}/*
