@@ -72,8 +72,8 @@ public class Entitler {
     private PoolCurator poolCurator;
     private ProductCurator productCurator;
     private ProductServiceAdapter productAdapter;
-    private long maxCdkLifeDays = 90;
-    public static final String DEFAULT_CDK_SLA = "Self-Service";
+    private long maxDevLifeDays = 90;
+    public static final String DEFAULT_DEV_SLA = "Self-Service";
 
     @Inject
     public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n, EventFactory evtFactory,
@@ -181,9 +181,9 @@ public class Entitler {
     public List<Entitlement> bindByProducts(AutobindData data, boolean force) {
         Consumer consumer = data.getConsumer();
         // If the consumer is a guest, and has a host, try to heal the host first
-        // CDK consumers should not need to worry about the host or unmapped guest
+        // Dev consumers should not need to worry about the host or unmapped guest
         // entitlements based on the planned design of the subscriptions
-        if (consumer.hasFact("virt.uuid") && !consumer.isCdk()) {
+        if (consumer.hasFact("virt.uuid") && !consumer.isDev()) {
             String guestUuid = consumer.getFact("virt.uuid");
             // Remove any expired unmapped guest entitlements
             revokeUnmappedGuestEntitlements(consumer);
@@ -213,15 +213,15 @@ public class Entitler {
                 data.setConsumer(consumer);
             }
         }
-        if (consumer.isCdk()) {
+        if (consumer.isDev()) {
             if (config.getBoolean(ConfigProperties.STANDALONE) ||
                     !poolCurator.hasActiveEntitlementPools(consumer.getOwner(), null)) {
                 throw new ForbiddenException(i18n.tr(
-                        "CDK units may only be used on hosted servers" +
+                        "Development units may only be used on hosted servers" +
                         " and with orgs that have active subscriptions."));
             }
             String sku = consumer.getFact("dev_sku");
-            Pool devPool = getCdkPool(consumer, sku);
+            Pool devPool = getDevPool(consumer, sku);
             if (devPool == null) {
                 devPool = poolManager.createPool(assembleDevPool(consumer, sku));
             }
@@ -249,15 +249,15 @@ public class Entitler {
     }
 
     private long getPoolInterval(Product prod) {
-        long interval = maxCdkLifeDays;
+        long interval = maxDevLifeDays;
         String prodThenString = prod.getAttributeValue("expired_after");
-        if (prodThenString != null && Long.parseLong(prodThenString) < maxCdkLifeDays) {
+        if (prodThenString != null && Long.parseLong(prodThenString) < maxDevLifeDays) {
             interval = Long.parseLong(prodThenString);
         }
         return 1000 * 60 * 60 * 24 * interval;
     }
 
-    private Pool getCdkPool(Consumer consumer, String sku) {
+    private Pool getDevPool(Consumer consumer, String sku) {
         PoolFilterBuilder poolFilters = new PoolFilterBuilder();
         poolFilters.addAttributeFilter(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
         Page<List<Pool>> poolsPage = poolManager.listAvailableEntitlementPools(consumer, null,
@@ -273,19 +273,19 @@ public class Entitler {
     }
 
     protected Pool assembleDevPool(Consumer consumer, String sku) {
-        // all good. create a pool for the CDK consumer
+        // all good. create a pool for the dev consumer
         Set<Product> providedProducts = new HashSet<Product>();
         Date now = new Date();
 
-        Product prod = retrieveCdkNamedProduct(consumer, sku);
+        Product prod = retrieveNamedDevProduct(consumer, sku);
         if (StringUtils.isEmpty(prod.getAttributeValue("support_level"))) {
             // if there is no SLA, apply the default
-            prod.setAttribute("support_level", this.DEFAULT_CDK_SLA);
+            prod.setAttribute("support_level", this.DEFAULT_DEV_SLA);
             prod = productCurator.createOrUpdate(prod);
         }
 
         for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
-            providedProducts.add(retrieveCdkNamedProduct(consumer, ip.getProductId()));
+            providedProducts.add(retrieveNamedDevProduct(consumer, ip.getProductId()));
         }
 
         Date then = new Date(now.getTime() + getPoolInterval(prod));
@@ -295,12 +295,12 @@ public class Entitler {
         return p;
     }
 
-    protected Product retrieveCdkNamedProduct(Consumer consumer, String productId)
+    protected Product retrieveNamedDevProduct(Consumer consumer, String productId)
         throws ForbiddenException {
         Product found = productAdapter.getProductById(productId);
         if (found == null) {
             throw new ForbiddenException(i18n.tr(
-                    "This CDK unit cannot access a named product"));
+                    "This Development unit cannot access named product ''{0}''", productId));
         }
         found.setOwner(consumer.getOwner());
         for (ProductContent pc : found.getProductContent()) {

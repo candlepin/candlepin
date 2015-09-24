@@ -435,9 +435,9 @@ public class EntitlerTest {
         activeList.add(activePool);
         Pool devPool = mock(Pool.class);
 
-        Consumer cdkSystem = TestUtil.createConsumer(owner);
-        cdkSystem.setFact("dev_sku", p.getId());
-        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        Consumer devSystem = TestUtil.createConsumer(owner);
+        devSystem.setFact("dev_sku", p.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
@@ -446,7 +446,7 @@ public class EntitlerTest {
         when(pm.createPool(any(Pool.class))).thenReturn(devPool);
         when(devPool.getId()).thenReturn("test_pool_id");
 
-        AutobindData ad = new AutobindData(cdkSystem);
+        AutobindData ad = new AutobindData(devSystem);
         entitler.bindByProducts(ad);
         verify(pm).createPool(any(Pool.class));
     }
@@ -459,15 +459,15 @@ public class EntitlerTest {
         List<Pool> activeList = new ArrayList<Pool>();
         activeList.add(activePool);
 
-        Consumer cdkSystem = TestUtil.createConsumer(owner);
-        cdkSystem.setFact("dev_sku", p.getId());
-        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        Consumer devSystem = TestUtil.createConsumer(owner);
+        devSystem.setFact("dev_sku", p.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(true);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
         when(productAdapter.getProductById(eq(p.getId()))).thenReturn(p);
 
-        AutobindData ad = new AutobindData(cdkSystem);
+        AutobindData ad = new AutobindData(devSystem);
         entitler.bindByProducts(ad);
     }
 
@@ -477,15 +477,15 @@ public class EntitlerTest {
         Product p = new Product("test-product", "Test Product", owner);
         List<Pool> activeList = new ArrayList<Pool>();
 
-        Consumer cdkSystem = TestUtil.createConsumer(owner);
-        cdkSystem.setFact("dev_sku", p.getId());
-        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        Consumer devSystem = TestUtil.createConsumer(owner);
+        devSystem.setFact("dev_sku", p.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(false);
         when(productAdapter.getProductById(eq(p.getId()))).thenReturn(p);
 
-        AutobindData ad = new AutobindData(cdkSystem);
+        AutobindData ad = new AutobindData(devSystem);
         entitler.bindByProducts(ad);
     }
 
@@ -497,30 +497,30 @@ public class EntitlerTest {
         List<Pool> activeList = new ArrayList<Pool>();
         activeList.add(activePool);
 
-        Consumer cdkSystem = TestUtil.createConsumer(owner);
-        cdkSystem.setFact("dev_sku", p.getId());
-        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        Consumer devSystem = TestUtil.createConsumer(owner);
+        devSystem.setFact("dev_sku", p.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
         when(productAdapter.getProductById(eq(p.getId()))).thenReturn(null);
 
-        AutobindData ad = new AutobindData(cdkSystem);
+        AutobindData ad = new AutobindData(devSystem);
         entitler.bindByProducts(ad);
     }
 
     @Test
     public void testCreatedDevPoolAttributes() {
         Owner owner = new Owner("o");
-        Product p1 = new Product("cdk-product", "CDK Product", owner);
+        Product p1 = new Product("dev-product", "Dev Product", owner);
         p1.setAttribute("support_level", "Premium");
         p1.setAttribute("expired_after", "47");
         Product p2 = new Product("provided-product1", "Provided Product 1", owner);
         Product p3 = new Product("provided-product2", "Provided Product 2", owner);
-        Consumer cdkSystem = TestUtil.createConsumer(owner);
-        cdkSystem.setFact("dev_sku", p1.getId());
-        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
-        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
+        Consumer devSystem = TestUtil.createConsumer(owner);
+        devSystem.setFact("dev_sku", p1.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
         when(productAdapter.getProductById(eq(p1.getId()))).thenReturn(p1);
         when(productAdapter.getProductById(eq(p2.getId()))).thenReturn(p2);
         when(productAdapter.getProductById(eq(p3.getId()))).thenReturn(p3);
@@ -528,11 +528,11 @@ public class EntitlerTest {
         when(productCurator.createOrUpdate(eq(p2))).thenReturn(p2);
         when(productCurator.createOrUpdate(eq(p3))).thenReturn(p3);
 
-        Pool created = entitler.assembleDevPool(cdkSystem, cdkSystem.getFact("dev_sku"));
+        Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
         long intervalMillis = created.getEndDate().getTime() - created.getStartDate().getTime();
         assertEquals(intervalMillis, 1000 * 60 * 60 * 24 * Long.parseLong("47"));
         assertEquals("true", created.getAttributeValue(Pool.DEVELOPMENT_POOL_ATTRIBUTE));
-        assertEquals(cdkSystem.getUuid(), created.getAttributeValue(Pool.REQUIRES_CONSUMER_ATTRIBUTE));
+        assertEquals(devSystem.getUuid(), created.getAttributeValue(Pool.REQUIRES_CONSUMER_ATTRIBUTE));
         assertEquals(p1.getId(), created.getProductId());
         assertEquals(2, created.getProvidedProducts().size());
     }
@@ -540,14 +540,14 @@ public class EntitlerTest {
     @Test
     public void testCreatedNoOwnerForProducts() {
         Owner owner = new Owner("o");
-        Product p1 = new Product("cdk-product", "CDK Product", null);
+        Product p1 = new Product("dev-product", "Dev Product", null);
         p1.setAttribute("expired_after", "47");
         Product p2 = new Product("provided-product1", "Provided Product 1", null);
         Product p3 = new Product("provided-product2", "Provided Product 2", null);
-        Consumer cdkSystem = TestUtil.createConsumer(owner);
-        cdkSystem.setFact("dev_sku", p1.getId());
-        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
-        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
+        Consumer devSystem = TestUtil.createConsumer(owner);
+        devSystem.setFact("dev_sku", p1.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
         when(productAdapter.getProductById(eq(p1.getId()))).thenReturn(p1);
         when(productAdapter.getProductById(eq(p2.getId()))).thenReturn(p2);
         when(productAdapter.getProductById(eq(p3.getId()))).thenReturn(p3);
@@ -555,54 +555,54 @@ public class EntitlerTest {
         when(productCurator.createOrUpdate(eq(p2))).thenReturn(p2);
         when(productCurator.createOrUpdate(eq(p3))).thenReturn(p3);
 
-        Pool created = entitler.assembleDevPool(cdkSystem, cdkSystem.getFact("dev_sku"));
+        Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
         long intervalMillis = created.getEndDate().getTime() - created.getStartDate().getTime();
         assertEquals(intervalMillis, 1000 * 60 * 60 * 24 * Long.parseLong("47"));
         assertEquals("true", created.getAttributeValue(Pool.DEVELOPMENT_POOL_ATTRIBUTE));
-        assertEquals(cdkSystem.getUuid(), created.getAttributeValue(Pool.REQUIRES_CONSUMER_ATTRIBUTE));
+        assertEquals(devSystem.getUuid(), created.getAttributeValue(Pool.REQUIRES_CONSUMER_ATTRIBUTE));
         assertEquals(p1.getId(), created.getProductId());
         assertEquals(2, created.getProvidedProducts().size());
-        assertEquals(Entitler.DEFAULT_CDK_SLA, created.getProduct().getAttributeValue("support_level"));
+        assertEquals(Entitler.DEFAULT_DEV_SLA, created.getProduct().getAttributeValue("support_level"));
     }
 
     @Test
-    public void testCreatedCdkSkuWithSla() {
+    public void testCreatedDevSkuWithSla() {
         Owner owner = new Owner("o");
-        Product p1 = new Product("cdk-product", "CDK Product", null);
+        Product p1 = new Product("dev-product", "Dev Product", null);
         p1.setAttribute("support_level", "Premium");
-        Consumer cdkSystem = TestUtil.createConsumer(owner);
-        cdkSystem.setFact("dev_sku", p1.getId());
-        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p1));
+        Consumer devSystem = TestUtil.createConsumer(owner);
+        devSystem.setFact("dev_sku", p1.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p1));
         when(productAdapter.getProductById(eq(p1.getId()))).thenReturn(p1);
         when(productCurator.createOrUpdate(eq(p1))).thenReturn(p1);
 
-        Pool created = entitler.assembleDevPool(cdkSystem, cdkSystem.getFact("dev_sku"));
+        Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
         assertEquals("Premium", created.getProduct().getAttributeValue("support_level"));
     }
 
     @Test
-    public void testEnsureOwnerOnCdkProduct() {
+    public void testEnsureOwnerOnDevProduct() {
         Owner owner = new Owner("o");
-        Product p1 = new Product("cdk-product-1", "CDK Product 1", null);
+        Product p1 = new Product("dev-product-1", "Dev Product 1", null);
         Content c1 = new Content();
         p1.addContent(c1);
-        Product p2 = new Product("cdk-product-2", "CDK Product 2", null);
+        Product p2 = new Product("dev-product-2", "Dev Product 2", null);
         Content c2 = new Content();
         p2.addContent(c2);
-        Consumer cdkSystem = TestUtil.createConsumer(owner);
-        cdkSystem.setFact("dev_sku", p1.getId());
-        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p1));
+        Consumer devSystem = TestUtil.createConsumer(owner);
+        devSystem.setFact("dev_sku", p1.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p1));
         when(productAdapter.getProductById(eq(p1.getId()))).thenReturn(p1);
         when(productCurator.createOrUpdate(eq(p1))).thenReturn(p1);
         when(productAdapter.getProductById(eq(p2.getId()))).thenReturn(p2);
         when(productCurator.createOrUpdate(eq(p2))).thenReturn(p2);
 
-        Product cdk1 = entitler.retrieveCdkNamedProduct(cdkSystem, p1.getId());
-        Product cdk2 = entitler.retrieveCdkNamedProduct(cdkSystem, p2.getId());
+        Product dev1 = entitler.retrieveNamedDevProduct(devSystem, p1.getId());
+        Product dev2 = entitler.retrieveNamedDevProduct(devSystem, p2.getId());
 
-        assertEquals(owner, cdk1.getOwner());
-        assertEquals(owner, cdk2.getOwner());
-        assertEquals(owner, cdk1.getProductContent().get(0).getContent().getOwner());
-        assertEquals(owner, cdk2.getProductContent().get(0).getContent().getOwner());
+        assertEquals(owner, dev1.getOwner());
+        assertEquals(owner, dev2.getOwner());
+        assertEquals(owner, dev1.getProductContent().get(0).getContent().getOwner());
+        assertEquals(owner, dev2.getProductContent().get(0).getContent().getOwner());
     }
 }

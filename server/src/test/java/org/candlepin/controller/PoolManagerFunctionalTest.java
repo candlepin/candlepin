@@ -521,17 +521,17 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
                 TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool2);
 
-        Consumer cdkSystem = new Consumer("cdk", "user", owner, systemType);
-        cdkSystem.setFact("dev_sku", p.getId());
-        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
-        Consumer nonCdkSystem = new Consumer("system", "user", owner, systemType);
-        nonCdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        Consumer devSystem = new Consumer("dev", "user", owner, systemType);
+        devSystem.setFact("dev_sku", p.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        Consumer nonDevSystem = new Consumer("system", "user", owner, systemType);
+        nonDevSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
 
-        Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(cdkSystem, null,
+        Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(devSystem, null,
                 owner, null, null, true, true, new PoolFilterBuilder(), new PageRequest());
         assertEquals(2, results.getPageData().size());
 
-        results = poolManager.listAvailableEntitlementPools(nonCdkSystem, null,
+        results = poolManager.listAvailableEntitlementPools(nonDevSystem, null,
                 owner, null, null, true, true, new PoolFilterBuilder(), new PageRequest());
         assertEquals(1, results.getPageData().size());
         Pool found2 = results.getPageData().get(0);
@@ -544,15 +544,15 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Product p = new Product("test-product", "Test Product", owner);
         productCurator.create(p);
 
-        Consumer cdkSystem = new Consumer("cdk", "user", owner, systemType);
-        cdkSystem.setFact("dev_sku", p.getId());
-        cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
-        consumerCurator.create(cdkSystem);
+        Consumer devSystem = new Consumer("dev", "user", owner, systemType);
+        devSystem.setFact("dev_sku", p.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        consumerCurator.create(devSystem);
 
         Pool pool1 = createPool(owner, p, 10L,
                 TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
-        pool1.addAttribute(new PoolAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, cdkSystem.getUuid()));
+        pool1.addAttribute(new PoolAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, devSystem.getUuid()));
         poolCurator.create(pool1);
         Pool pool2 = createPool(owner, p, 10L,
                 TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
@@ -560,7 +560,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         List<String> possPools = new ArrayList<String>();
         possPools.add(pool1.getId());
 
-        AutobindData ad = new AutobindData(cdkSystem);
+        AutobindData ad = new AutobindData(devSystem);
         ad.setPossiblePools(possPools);
         List<Entitlement> results = poolManager.entitleByProducts(ad);
         assertEquals(1, results.size());

@@ -775,7 +775,7 @@ public class CandlepinPoolManager implements PoolManager {
                 List<Entitlement> entitlements = new LinkedList<Entitlement>();
 
                 List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
-                if (consumer != null && consumer.isCdk()) {
+                if (consumer != null && consumer.isDev()) {
                     String poolId = fromPools.iterator().next();
                     PoolQuantity pq = new PoolQuantity(poolCurator.find(poolId), 1);
                     bestPools.add(pq);
@@ -1673,7 +1673,7 @@ public class CandlepinPoolManager implements PoolManager {
         PageRequest pageRequest) {
         // Only postfilter if we have to
         boolean postFilter = consumer != null || key != null;
-        if (consumer != null && !consumer.isCdk()) {
+        if (consumer != null && !consumer.isDev()) {
             filters.addAttributeFilter(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "!true");
         }
 

@@ -1980,7 +1980,7 @@
             ]
         },
         {
-            "name": "CDK Provided Product A",
+            "name": "Dev Provided Product A",
             "id": "2701",
             "version": "1.0",
             "arch": "x86_64",
@@ -1990,7 +1990,7 @@
             ]
         },
         {
-            "name": "CDK Provided Product B",
+            "name": "Dev Provided Product B",
             "id": "2702",
             "version": "1.0",
             "arch": "x86_64",
@@ -2000,8 +2000,8 @@
             ]
         },
         {
-            "name": "CDK Product",
-            "id": "cdk-mkt-product",
+            "name": "Dev Product",
+            "id": "dev-mkt-product",
             "type": "MKT",
             "attributes": {
                 "multi-entitlement": "yes",

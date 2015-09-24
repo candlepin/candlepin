@@ -716,7 +716,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.annotations = annotations;
     }
 
-    public boolean isCdk() {
+    public boolean isDev() {
         return !StringUtils.isEmpty(getFact("dev_sku"));
     }
 }
