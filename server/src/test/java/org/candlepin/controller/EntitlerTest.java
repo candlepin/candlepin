@@ -440,7 +440,7 @@ public class EntitlerTest {
         cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
-        when(poolCurator.listByOwner(eq(owner), any(Date.class))).thenReturn(activeList);
+        when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
         when(productAdapter.getProductById(eq(p.getId()))).thenReturn(p);
         when(productCurator.createOrUpdate(eq(p))).thenReturn(p);
         when(pm.createPool(any(Pool.class))).thenReturn(devPool);
@@ -464,7 +464,7 @@ public class EntitlerTest {
         cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(true);
-        when(poolCurator.listByOwner(eq(owner), any(Date.class))).thenReturn(activeList);
+        when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
         when(productAdapter.getProductById(eq(p.getId()))).thenReturn(p);
 
         AutobindData ad = new AutobindData(cdkSystem);
@@ -482,7 +482,7 @@ public class EntitlerTest {
         cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
-        when(poolCurator.listByOwner(eq(owner), any(Date.class))).thenReturn(activeList);
+        when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(false);
         when(productAdapter.getProductById(eq(p.getId()))).thenReturn(p);
 
         AutobindData ad = new AutobindData(cdkSystem);
@@ -502,7 +502,7 @@ public class EntitlerTest {
         cdkSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
-        when(poolCurator.listByOwner(eq(owner), any(Date.class))).thenReturn(activeList);
+        when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
         when(productAdapter.getProductById(eq(p.getId()))).thenReturn(null);
 
         AutobindData ad = new AutobindData(cdkSystem);
@@ -597,8 +597,8 @@ public class EntitlerTest {
         when(productAdapter.getProductById(eq(p2.getId()))).thenReturn(p2);
         when(productCurator.createOrUpdate(eq(p2))).thenReturn(p2);
 
-        Product cdk1 = entitler.getCdkInstalledProduct(cdkSystem, p1.getId());
-        Product cdk2 = entitler.getCdkInstalledProduct(cdkSystem, p2.getId());
+        Product cdk1 = entitler.retrieveCdkNamedProduct(cdkSystem, p1.getId());
+        Product cdk2 = entitler.retrieveCdkNamedProduct(cdkSystem, p2.getId());
 
         assertEquals(owner, cdk1.getOwner());
         assertEquals(owner, cdk2.getOwner());

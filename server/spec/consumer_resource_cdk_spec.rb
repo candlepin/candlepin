@@ -21,7 +21,6 @@ describe 'Consumer CDK Resource' do
                                   "Provided Product 2")
     @consumer = consumer_client(@user, @consumername, :system, 'cdk_user', facts= {:dev_sku => "cdk_product"})
     installed = [
-        {'productId' => @cdk_product.id, 'productName' => @cdk_product.name},
         {'productId' => @p_product1.id, 'productName' => @p_product1.name},
         {'productId' => @p_product2.id, 'productName' => @p_product2.name}]
     @consumer.update_consumer({:installedProducts => installed})

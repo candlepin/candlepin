@@ -20,6 +20,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.common.paging.Page;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -29,6 +30,7 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
@@ -213,7 +215,7 @@ public class Entitler {
         }
         if (consumer.isCdk()) {
             if (config.getBoolean(ConfigProperties.STANDALONE) ||
-                    poolCurator.listByOwner(consumer.getOwner(), new Date()).size() == 0) {
+                    !poolCurator.hasActiveEntitlementPools(consumer.getOwner(), null)) {
                 throw new ForbiddenException(i18n.tr(
                         "CDK units may only be used on hosted servers" +
                         " and with orgs that have active subscriptions."));
@@ -256,15 +258,18 @@ public class Entitler {
     }
 
     private Pool getCdkPool(Consumer consumer, String sku) {
-        List<Pool> pools = poolCurator.listByConsumer(consumer);
-        for (Pool p : pools) {
-            if (p.hasAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE) &&
-                p.hasAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE) &&
-                p.getAttributeValue(Pool.REQUIRES_CONSUMER_ATTRIBUTE).equals(consumer.getUuid())) {
-                return p;
-            }
+        PoolFilterBuilder poolFilters = new PoolFilterBuilder();
+        poolFilters.addAttributeFilter(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
+        Page<List<Pool>> poolsPage = poolManager.listAvailableEntitlementPools(consumer, null,
+                consumer.getOwner(), null, null, true, true, poolFilters, null);
+        if (poolsPage != null &&
+            poolsPage.getPageData() != null &&
+            poolsPage.getPageData().size() == 1) {
+            return poolsPage.getPageData().get(0);
         }
-        return null;
+        else {
+            return null;
+        }
     }
 
     protected Pool assembleDevPool(Consumer consumer, String sku) {
@@ -272,7 +277,7 @@ public class Entitler {
         Set<Product> providedProducts = new HashSet<Product>();
         Date now = new Date();
 
-        Product prod = getCdkInstalledProduct(consumer, sku);
+        Product prod = retrieveCdkNamedProduct(consumer, sku);
         if (StringUtils.isEmpty(prod.getAttributeValue("support_level"))) {
             // if there is no SLA, apply the default
             prod.setAttribute("support_level", this.DEFAULT_CDK_SLA);
@@ -280,7 +285,7 @@ public class Entitler {
         }
 
         for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
-            providedProducts.add(getCdkInstalledProduct(consumer, ip.getProductId()));
+            providedProducts.add(retrieveCdkNamedProduct(consumer, ip.getProductId()));
         }
 
         Date then = new Date(now.getTime() + getPoolInterval(prod));
@@ -290,12 +295,12 @@ public class Entitler {
         return p;
     }
 
-    protected Product getCdkInstalledProduct(Consumer consumer, String productId)
+    protected Product retrieveCdkNamedProduct(Consumer consumer, String productId)
         throws ForbiddenException {
         Product found = productAdapter.getProductById(productId);
         if (found == null) {
             throw new ForbiddenException(i18n.tr(
-                    "This CDK unit cannot access an installed product"));
+                    "This CDK unit cannot access a named product"));
         }
         found.setOwner(consumer.getOwner());
         for (ProductContent pc : found.getProductContent()) {
