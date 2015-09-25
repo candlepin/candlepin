@@ -279,7 +279,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         crit.add(Restrictions.ge("endDate", date));
         crit.setProjection(Projections.rowCount());
 
-        long count = (Long) crit.list().get(0);
+        long count = (Long) crit.uniqueResult();
         return count > 0;
     }
 

@@ -260,6 +260,7 @@ public class Entitler {
     private Pool getDevPool(Consumer consumer, String sku) {
         PoolFilterBuilder poolFilters = new PoolFilterBuilder();
         poolFilters.addAttributeFilter(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
+        poolFilters.addAttributeFilter(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
         Page<List<Pool>> poolsPage = poolManager.listAvailableEntitlementPools(consumer, null,
                 consumer.getOwner(), null, null, true, true, poolFilters, null);
         if (poolsPage != null &&
