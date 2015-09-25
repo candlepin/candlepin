@@ -194,7 +194,7 @@ public class ApiCrawler {
      * but you can have more than one per method.
      */
     private void processVerifiedParams(Method m, RestApiCall apiCall) {
-        String verifyAnnotationClazz = "org.candlepin.auth.interceptor.Verify";
+        String verifyAnnotationClazz = "org.candlepin.auth.Verify";
 
         try {
             // Raise a ClassNotFoundException if we can't find the annotation class.
