@@ -50,9 +50,11 @@ import org.xnap.commons.i18n.I18n;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -73,7 +75,7 @@ public class Entitler {
     private ProductCurator productCurator;
     private ProductServiceAdapter productAdapter;
     private long maxDevLifeDays = 90;
-    public static final String DEFAULT_DEV_SLA = "Self-Service";
+    final String DEFAULT_DEV_SLA = "Self-Service";
 
     @Inject
     public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n, EventFactory evtFactory,
@@ -274,41 +276,74 @@ public class Entitler {
     }
 
     protected Pool assembleDevPool(Consumer consumer, String sku) {
-        // all good. create a pool for the dev consumer
         Set<Product> providedProducts = new HashSet<Product>();
         Date now = new Date();
+        List<String> devProductIds = new ArrayList<String>();
+        Product skuProd = null;
 
-        Product prod = retrieveNamedDevProduct(consumer, sku);
-        if (StringUtils.isEmpty(prod.getAttributeValue("support_level"))) {
-            // if there is no SLA, apply the default
-            prod.setAttribute("support_level", this.DEFAULT_DEV_SLA);
-            prod = productCurator.createOrUpdate(prod);
-        }
-
+        devProductIds.add(sku);
         for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
-            providedProducts.add(retrieveNamedDevProduct(consumer, ip.getProductId()));
+            devProductIds.add(ip.getProductId());
+        }
+        List<Product> prods = productAdapter.getProductsByIds(consumer.getOwner(), devProductIds);
+        if (prods.size() != devProductIds.size()) {
+            // determine exception message
+            produceMissingDevProductException(devProductIds, prods);
+        }
+        for (Product prod : prods) {
+            prod.setOwner(consumer.getOwner());
+            for (ProductContent pc : prod.getProductContent()) {
+                pc.getContent().setOwner(consumer.getOwner());
+            }
+            if (sku.equals(prod.getId())) {
+                if (StringUtils.isEmpty(prod.getAttributeValue("support_level"))) {
+                    // if there is no SLA, apply the default
+                    prod.setAttribute("support_level", this.DEFAULT_DEV_SLA);
+                }
+                skuProd = prod;
+            }
+            else {
+                providedProducts.add(prod);
+            }
+            productCurator.createOrUpdate(prod);
         }
 
-        Date then = new Date(now.getTime() + getPoolInterval(prod));
-        Pool p = new Pool(consumer.getOwner(), prod, providedProducts, 1L, now, then, "", "", "");
+        Date then = new Date(now.getTime() + getPoolInterval(skuProd));
+        Pool p = new Pool(consumer.getOwner(), skuProd, providedProducts, 1L, now, then, "", "", "");
         p.setAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
         p.setAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
         return p;
     }
 
-    protected Product retrieveNamedDevProduct(Consumer consumer, String productId)
-        throws ForbiddenException {
-        Product found = productAdapter.getProductById(productId);
-        if (found == null) {
-            throw new ForbiddenException(i18n.tr(
-                    "This Development unit cannot access named product ''{0}''", productId));
+    /**
+     *
+     * @param prodIds List of Ids we expect in the product list. The first is the sku.
+     * @param products
+     * @return
+     * @throws ForbiddenException
+     */
+    protected void produceMissingDevProductException(List<String> prodIds, List<Product> products)
+            throws ForbiddenException {
+        StringBuffer message = new StringBuffer();
+        Map<String, Product> prodMap = new HashMap<String, Product>();
+        for (Product prod : products) {
+            prodMap.put(prod.getId(), prod);
         }
-        found.setOwner(consumer.getOwner());
-        for (ProductContent pc : found.getProductContent()) {
-            pc.getContent().setOwner(consumer.getOwner());
+        for (int i = 0; i < prodIds.size(); i++) {
+            if (prodMap.get(prodIds.get(i)) == null) {
+                if (i == 0) {
+                    message.append(i18n.tr("The sku product ''{0}'' for this development " +
+                            "unit does not exist in the repository. ",
+                            prodIds.get(i)));
+                }
+                else {
+                    message.append(i18n.tr("The installed product ''{0}'' for this development " +
+                            "unit does not exist in the repository. ",
+                            prodIds.get(i)));
+                }
+            }
         }
-        found = productCurator.createOrUpdate(found);
-        return found;
+        throw new ForbiddenException(message.toString());
     }
 
     /**

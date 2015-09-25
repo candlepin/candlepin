@@ -428,8 +428,10 @@ public class EntitlerTest {
     @Test
     public void testDevPoolCreationAtBind() throws EntitlementRefusedException {
         Owner owner = new Owner("o");
+        List<Product> devProds = new ArrayList<Product>();
         Product p = new Product("test-product", "Test Product", owner);
         p.setAttribute("support_level", "Premium");
+        devProds.add(p);
         Pool activePool = TestUtil.createPool(owner, p);
         List<Pool> activeList = new ArrayList<Pool>();
         activeList.add(activePool);
@@ -437,11 +439,10 @@ public class EntitlerTest {
 
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
-        when(productAdapter.getProductById(eq(p.getId()))).thenReturn(p);
+        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
         when(productCurator.createOrUpdate(eq(p))).thenReturn(p);
         when(pm.createPool(any(Pool.class))).thenReturn(devPool);
         when(devPool.getId()).thenReturn("test_pool_id");
@@ -454,7 +455,9 @@ public class EntitlerTest {
     @Test(expected = ForbiddenException.class)
     public void testDevPoolCreationAtBindFailStandalone() throws EntitlementRefusedException {
         Owner owner = new Owner("o");
+        List<Product> devProds = new ArrayList<Product>();
         Product p = new Product("test-product", "Test Product", owner);
+        devProds.add(p);
         Pool activePool = TestUtil.createPool(owner, p);
         List<Pool> activeList = new ArrayList<Pool>();
         activeList.add(activePool);
@@ -465,7 +468,7 @@ public class EntitlerTest {
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(true);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
-        when(productAdapter.getProductById(eq(p.getId()))).thenReturn(p);
+        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
 
         AutobindData ad = new AutobindData(devSystem);
         entitler.bindByProducts(ad);
@@ -474,7 +477,9 @@ public class EntitlerTest {
     @Test(expected = ForbiddenException.class)
     public void testDevPoolCreationAtBindFailNotActive() throws EntitlementRefusedException {
         Owner owner = new Owner("o");
+        List<Product> devProds = new ArrayList<Product>();
         Product p = new Product("test-product", "Test Product", owner);
+        devProds.add(p);
         List<Pool> activeList = new ArrayList<Pool>();
 
         Consumer devSystem = TestUtil.createConsumer(owner);
@@ -483,47 +488,85 @@ public class EntitlerTest {
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(false);
-        when(productAdapter.getProductById(eq(p.getId()))).thenReturn(p);
+        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
 
         AutobindData ad = new AutobindData(devSystem);
         entitler.bindByProducts(ad);
     }
 
-    @Test(expected = ForbiddenException.class)
-    public void testDevPoolCreationAtBindFailNoProduct() throws EntitlementRefusedException {
+    @Test
+    public void testDevPoolCreationAtBindFailNoSkuProduct() throws EntitlementRefusedException {
         Owner owner = new Owner("o");
+        List<Product> devProds = new ArrayList<Product>();
         Product p = new Product("test-product", "Test Product", owner);
+        Product ip = new Product("test-product-installed", "Installed Test Product", owner);
+        devProds.add(ip);
         Pool activePool = TestUtil.createPool(owner, p);
         List<Pool> activeList = new ArrayList<Pool>();
         activeList.add(activePool);
 
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(ip));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
-        when(productAdapter.getProductById(eq(p.getId()))).thenReturn(null);
-
+        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
         AutobindData ad = new AutobindData(devSystem);
-        entitler.bindByProducts(ad);
+        try {
+            entitler.bindByProducts(ad);
+        }
+        catch (ForbiddenException fe) {
+            assertEquals(i18n.tr("The sku product ''{0}'' for this development " +
+                    "unit does not exist in the repository. ", p.getId()), fe.getMessage());
+        }
+    }
+
+    @Test
+    public void testDevPoolCreationAtBindFailNoInstalledProduct() throws EntitlementRefusedException {
+        Owner owner = new Owner("o");
+        List<Product> devProds = new ArrayList<Product>();
+        Product p = new Product("test-product", "Test Product", owner);
+        Product ip = new Product("test-product-installed", "Installed Test Product", owner);
+        devProds.add(p);
+        Pool activePool = TestUtil.createPool(owner, p);
+        List<Pool> activeList = new ArrayList<Pool>();
+        activeList.add(activePool);
+
+        Consumer devSystem = TestUtil.createConsumer(owner);
+        devSystem.setFact("dev_sku", p.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(ip));
+
+        when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
+        when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
+        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
+        AutobindData ad = new AutobindData(devSystem);
+        try {
+            entitler.bindByProducts(ad);
+        }
+        catch (ForbiddenException fe) {
+            assertEquals(i18n.tr("The installed product ''{0}'' for this development " +
+                    "unit does not exist in the repository. ", ip.getId()), fe.getMessage());
+        }
     }
 
     @Test
     public void testCreatedDevPoolAttributes() {
         Owner owner = new Owner("o");
+        List<Product> devProds = new ArrayList<Product>();
         Product p1 = new Product("dev-product", "Dev Product", owner);
         p1.setAttribute("support_level", "Premium");
         p1.setAttribute("expired_after", "47");
         Product p2 = new Product("provided-product1", "Provided Product 1", owner);
         Product p3 = new Product("provided-product2", "Provided Product 2", owner);
+        devProds.add(p1);
+        devProds.add(p2);
+        devProds.add(p3);
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p1.getId());
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
-        when(productAdapter.getProductById(eq(p1.getId()))).thenReturn(p1);
-        when(productAdapter.getProductById(eq(p2.getId()))).thenReturn(p2);
-        when(productAdapter.getProductById(eq(p3.getId()))).thenReturn(p3);
+        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
         when(productCurator.createOrUpdate(eq(p1))).thenReturn(p1);
         when(productCurator.createOrUpdate(eq(p2))).thenReturn(p2);
         when(productCurator.createOrUpdate(eq(p3))).thenReturn(p3);
@@ -535,74 +578,49 @@ public class EntitlerTest {
         assertEquals(devSystem.getUuid(), created.getAttributeValue(Pool.REQUIRES_CONSUMER_ATTRIBUTE));
         assertEquals(p1.getId(), created.getProductId());
         assertEquals(2, created.getProvidedProducts().size());
-    }
-
-    @Test
-    public void testCreatedNoOwnerForProducts() {
-        Owner owner = new Owner("o");
-        Product p1 = new Product("dev-product", "Dev Product", null);
-        p1.setAttribute("expired_after", "47");
-        Product p2 = new Product("provided-product1", "Provided Product 1", null);
-        Product p3 = new Product("provided-product2", "Provided Product 2", null);
-        Consumer devSystem = TestUtil.createConsumer(owner);
-        devSystem.setFact("dev_sku", p1.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
-        when(productAdapter.getProductById(eq(p1.getId()))).thenReturn(p1);
-        when(productAdapter.getProductById(eq(p2.getId()))).thenReturn(p2);
-        when(productAdapter.getProductById(eq(p3.getId()))).thenReturn(p3);
-        when(productCurator.createOrUpdate(eq(p1))).thenReturn(p1);
-        when(productCurator.createOrUpdate(eq(p2))).thenReturn(p2);
-        when(productCurator.createOrUpdate(eq(p3))).thenReturn(p3);
-
-        Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
-        long intervalMillis = created.getEndDate().getTime() - created.getStartDate().getTime();
-        assertEquals(intervalMillis, 1000 * 60 * 60 * 24 * Long.parseLong("47"));
-        assertEquals("true", created.getAttributeValue(Pool.DEVELOPMENT_POOL_ATTRIBUTE));
-        assertEquals(devSystem.getUuid(), created.getAttributeValue(Pool.REQUIRES_CONSUMER_ATTRIBUTE));
-        assertEquals(p1.getId(), created.getProductId());
-        assertEquals(2, created.getProvidedProducts().size());
-        assertEquals(Entitler.DEFAULT_DEV_SLA, created.getProduct().getAttributeValue("support_level"));
-    }
-
-    @Test
-    public void testCreatedDevSkuWithSla() {
-        Owner owner = new Owner("o");
-        Product p1 = new Product("dev-product", "Dev Product", null);
-        p1.setAttribute("support_level", "Premium");
-        Consumer devSystem = TestUtil.createConsumer(owner);
-        devSystem.setFact("dev_sku", p1.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p1));
-        when(productAdapter.getProductById(eq(p1.getId()))).thenReturn(p1);
-        when(productCurator.createOrUpdate(eq(p1))).thenReturn(p1);
-
-        Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
         assertEquals("Premium", created.getProduct().getAttributeValue("support_level"));
+    }
+
+    @Test
+    public void testCreatedDevSkuWithNoSla() {
+        Owner owner = new Owner("o");
+        List<Product> devProds = new ArrayList<Product>();
+        Product p1 = new Product("dev-product", "Dev Product", null);
+        devProds.add(p1);
+        Consumer devSystem = TestUtil.createConsumer(owner);
+        devSystem.setFact("dev_sku", p1.getId());
+        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
+        when(productCurator.createOrUpdate(eq(p1))).thenReturn(p1);
+
+        Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
+        assertEquals(entitler.DEFAULT_DEV_SLA, created.getProduct().getAttributeValue("support_level"));
     }
 
     @Test
     public void testEnsureOwnerOnDevProduct() {
         Owner owner = new Owner("o");
+        List<Product> devProds = new ArrayList<Product>();
         Product p1 = new Product("dev-product-1", "Dev Product 1", null);
         Content c1 = new Content();
         p1.addContent(c1);
+        devProds.add(p1);
         Product p2 = new Product("dev-product-2", "Dev Product 2", null);
         Content c2 = new Content();
         p2.addContent(c2);
+        devProds.add(p2);
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p1.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p1));
-        when(productAdapter.getProductById(eq(p1.getId()))).thenReturn(p1);
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
+
+        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
         when(productCurator.createOrUpdate(eq(p1))).thenReturn(p1);
-        when(productAdapter.getProductById(eq(p2.getId()))).thenReturn(p2);
         when(productCurator.createOrUpdate(eq(p2))).thenReturn(p2);
 
-        Product dev1 = entitler.retrieveNamedDevProduct(devSystem, p1.getId());
-        Product dev2 = entitler.retrieveNamedDevProduct(devSystem, p2.getId());
+        Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
 
-        assertEquals(owner, dev1.getOwner());
-        assertEquals(owner, dev2.getOwner());
-        assertEquals(owner, dev1.getProductContent().get(0).getContent().getOwner());
-        assertEquals(owner, dev2.getProductContent().get(0).getContent().getOwner());
+        assertEquals(owner, created.getProduct().getOwner());
+        for (Product p : created.getProvidedProducts()) {
+            assertEquals(owner, p.getOwner());
+        }
     }
 }
