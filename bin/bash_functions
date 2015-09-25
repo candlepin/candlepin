@@ -30,7 +30,7 @@ project_directory() {
     if [ -n "$1" ]; then
         qbuildr "project_root:$1"
     else
-        qbuilder project_root
+        qbuildr project_root
     fi
 }
 

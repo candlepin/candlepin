@@ -11,7 +11,7 @@ require 'thread'
 SMALL_SUB_QUANTITY = 5
 LARGE_SUB_QUANTITY = 10
 
-filenames=["test_products.json"]
+filenames=["../../bin/test_products.json"]
 if not ARGV.empty?
   filenames.clear
   ARGV.each do |filename|
