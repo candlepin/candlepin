@@ -138,16 +138,6 @@ usage() {
 HELP
 }
 
-notify() {
-    if [ -z "$QUIET" ]; then
-        if type notify-send &> /dev/null; then
-            notify-send -i info -t 2000 "Deployment complete!"
-        fi
-        echo
-        success_msg "Deployment complete!"
-    fi
-}
-
 initialize_cp() {
     info_msg "Initializing Candlepin..."
     wget --no-check-certificate -qO- https://localhost:8443/candlepin/admin/init
