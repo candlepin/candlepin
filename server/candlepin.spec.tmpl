@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.6
+Version: 2.0.7
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -213,6 +213,63 @@ fi
 
 #raw
 %changelog
+* Mon Sep 28 2015 Christopher Snyder <csnyder@redhat.com>
+- Do not try to get AMQP stuff by default. (awood@redhat.com)
+- Upgrade to RestEasy 3. (awood@redhat.com)
+- Upgrade to HornetQ 2.4.7. (awood@redhat.com)
+- Updated cpc to work with changes to Ruby's public_instance_methods method
+  (crog@redhat.com)
+- Update to Checkstyle 6.9 (awood@redhat.com)
+- Persist reporter id for Hypervisor checkins (vrjain@redhat.com)
+- 1256926: Fixed Pool match filter query (mstead@redhat.com)
+- Don't lose reports when multiple virt-whos exist for the same owner
+  (vrjain@redhat.com)
+- 1263474: Standalone candlepin now returns the expected error message and code
+  (csnyder@redhat.com)
+- activateSubscription now returns 202 on success (csnyder@redhat.com)
+- Updated error message casing in OwnerContentResource (crog@redhat.com)
+- 1259248: Fixed issue with refresh pools removing ueber certs
+  (crog@redhat.com)
+- Use HornetQ transactions instead of custom guice scopes.
+  (dgoodwin@redhat.com)
+- Log execution time of all jobs by default. (dgoodwin@redhat.com)
+- Revert consumer/hypervisor last check-in tables. (dgoodwin@redhat.com)
+- Add missing transactional annotations. (dgoodwin@redhat.com)
+- Revert "Wrap all REST API requests in a transaction." (dgoodwin@redhat.com)
+- Storage band implementation (mstead@redhat.com)
+- Upgrade Quartz to latest 2.2.1 (from 2013). (dgoodwin@redhat.com)
+- Forced refresh on the add/delete rules operations (wpoteat@redhat.com)
+- Push migration detection from virt-who checkin to system checkin.
+  (dgoodwin@redhat.com)
+- Configure HornetQ enabling (vrjain@redhat.com)
+- Do not regenerate entitlements from Owner Resource's list entitlements API
+  (vrjain@redhat.com)
+- Ensured fetching entitlements from entitilement resource does not re-
+  calculate attributes (vrjain@redhat.com)
+- Don't calculate attributes when fetching entitlements from consumer resource
+  (vrjain@redhat.com)
+- Updated /owners/{key}/entitlements to paginate, search by product, matches,
+  attribute filters & regen entitlements (vrjain@redhat.com)
+- Updated candlepin scenarios to allow creating super admins
+  (vrjain@redhat.com)
+- Several updates & fixes to the Docker images and build scripts
+  (crog@redhat.com)
+- Reverted log level to INFO from DEBUG (crog@redhat.com)
+- Reduce database chatter in GET /status. (dgoodwin@redhat.com)
+- Log execution time for checking subscription term acceptance.
+  (dgoodwin@redhat.com)
+- Add logging for thread name and HornetQ debugging. (dgoodwin@redhat.com)
+- 1247242: CPM will attempt to retry entitlements under certain conditions
+  (crog@redhat.com)
+- 1246636: Content labels need unique key per owner (wpoteat@redhat.com)
+- 1243146: Suggested quantity should be calculated for pool listings
+  (wpoteat@redhat.com)
+- Removed SQL statement and switched to a property check (crog@redhat.com)
+- Removed environment-specific details from dummy precondition
+  (crog@redhat.com)
+- Activation key auto bind across pools (wpoteat@redhat.com)
+- Updated preconditions to be compatible with Liquibase 2.x (crog@redhat.com)
+
 * Mon Jul 20 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 2.0.6-1
 - Fix EL7 docker rpm container test. (dgoodwin@redhat.com)
 - Fix InsufficientPermission error when checking HypervisorCheckIn Job
