@@ -1125,6 +1125,22 @@ module Candlepin
         connection.pop
       end
 
+      def create_activation_key(opts = {})
+        defaults = {
+          :key => nil,
+          :service_level => nil,
+          :name => nil,
+          :description => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :key, :name)
+
+        body = camelize_hash(
+          opts.deep_dup.compact.except(:key)
+        )
+        post("/owners/#{opts[:key]}/activation_keys", body)
+      end
+
       def create_subscription(opts = {})
         defaults = {
           :key => nil,

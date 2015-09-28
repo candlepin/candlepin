@@ -217,6 +217,20 @@ module Candlepin
         expect(res).to be_2xx
       end
 
+      it 'creates activation keys' do
+        res = user_client.create_activation_key(
+          :key => owner[:key],
+          :name => rand_string,
+          :description => rand_string,
+        )
+        expect(res).to be_2xx
+
+        activation_key = res.content
+
+        res = user_client.get_activation_key(:id => activation_key[:id])
+        expect(res).to be_2xx
+      end
+
       it 'get content overrides' do
         consumer = user_client.register(
           :owner => owner[:key],
