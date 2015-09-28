@@ -10,7 +10,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin-common
-Version: 2.0.1
+Version: 2.0.2
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -52,6 +52,20 @@ rm -rf %{buildroot}
 
 #raw
 %changelog
+* Mon Sep 28 2015 Christopher Snyder <csnyder@redhat.com>
+- Upgrade to RestEasy 3. (awood@redhat.com)
+- Update to Checkstyle 6.9 (awood@redhat.com)
+- 1194776: Gutterball equivalent of cpdb to handle upgrade etc.
+  (fnguyen@redhat.com)
+- Update to Zanata translations (wpoteat@redhat.com)
+- Fix cross-compile issue with ConcurrentHashMap. (awood@redhat.com)
+- Build task to check for usage of libraries with vulnerabilities.
+  (awood@redhat.com)
+- Rename source tarballs to reflect new assemblies. (awood@redhat.com)
+- Fix Maven assemblies. (awood@redhat.com)
+- Retain backward compatability with clients listing pools.
+  (dgoodwin@redhat.com)
+
 * Tue Jun 09 2015 Alex Wood <awood@redhat.com> 2.0.1-1
 - Added the filtermode query parameter (crog@redhat.com)
 - Added enhancements to JSON attribute filtering (crog@redhat.com)
