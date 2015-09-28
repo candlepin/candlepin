@@ -24,7 +24,7 @@ usage() {
 
     OPTIONS:
       -q  quiet; no notifications and minimal output
-      -t  hot deloy; do not stop and start Tomcat
+      -t  hot deploy; do not stop and start Tomcat
       -g  regenerate database
       -m  deploy to MySQL
       -o  deploy to Oracle
