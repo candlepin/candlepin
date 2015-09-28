@@ -30,7 +30,7 @@ project_directory() {
     if [ -n "$1" ]; then
         qbuildr "project_root:$1"
     else
-        qbuilder project_root
+        qbuildr project_root
     fi
 }
 
@@ -180,3 +180,111 @@ init_oracle_jdbc() {
     JDBC_JAR="/usr/lib/oracle/11.2/client64/lib/ojdbc6.jar"
     JDBC_URL="jdbc:oracle:thin:@//localhost:1521/XE "
 }
+
+which_tomcat() {
+    # use tomcat 6, unless it doesnt exist and tomcat does
+    local tc=tomcat6
+    if [[ -f /usr/sbin/tomcat && ! -f /usr/sbin/tomcat6 ]]; then
+        tc=tomcat
+    fi
+    echo $tc
+}
+
+build_project() {
+    local logdriver="$1"
+    if [ -n "$logdriver" ]; then
+      info_msg "Building with logdriver."
+    fi
+    buildr -s clean package test=no $logdriver
+}
+
+deploy_project() {
+    local app="$1"
+    local project_dir="$2"
+    local tc="$3"
+    local version="$(grep Version: $project_dir/${app}.spec.tmpl | cut --delim=' ' -f2)"
+
+    # delete the exploded directory otherwise app won't reload
+    if [ -d /var/lib/${tc}/webapps/${app}/ ]; then
+        sudo rm -rf /var/lib/${tc}/webapps/${app}/
+    fi
+
+    sudo install -o tomcat -g tomcat -m 644 $project_dir/target/$app-$version.war /var/lib/${tc}/webapps/${app}.war
+}
+
+generate_db_for_project() {
+    local app="$1"
+    local project_dir="$2"
+    local gendb="$3"
+    local oracle="$4"
+    local mysql="$5"
+    local password="$6"
+    local message
+    local changelog="changelog.xml"
+
+    if [ -n "$oracle" ]; then
+        init_oracle_jdbc ${app}
+        [ -z "$password" ] && DBPASSWORD=${app}
+    elif [ -n "$mysql" ]; then
+        init_mysql_jdbc ${app}
+    else
+        init_postgresql_jdbc ${app}
+    fi
+
+    if [ -n "$gendb" ]; then
+        message="Generating New Database"
+        if [ -n "$oracle" ]; then
+            recreate_oracle ${app}
+        elif [ -n "$mysql" ]; then
+            recreate_mysql ${app}
+        else
+            recreate_postgresql ${app}
+        fi
+    else
+        message="Updating Database"
+    fi
+
+    info_msg "$message"
+    local lqcommand="liquibase --driver=${JDBC_DRIVER} --classpath=$project_dir/src/main/resources/:target/classes/:${JDBC_JAR} --changeLogFile=db/changelog/$changelog --url=${JDBC_URL} --username=${app}"
+    if [ -n "$password" ] ; then
+        lqcommand="$lqcommand --password=$password "
+    fi
+    lqcommand="$lqcommand update"
+    (cd $project_dir && $lqcommand)
+    evalrc $? "Liquibase command failed"
+}
+
+start_container() {
+    local app="$1"
+    local hotdeploy="$2"
+    local tc="$3"
+    if [ -n "$hotdeploy" ]; then
+        return
+    fi
+
+    sudo install -o tomcat -g tomcat -d -m 755 /var/log/${app}
+
+    sudo service ${tc} start
+}
+
+stop_container() {
+    local hotdeploy="$1"
+    local tc="$2"
+
+    if [ -n "$hotdeploy" ]; then
+        return
+    fi
+
+    sudo service ${tc} stop
+}
+
+notify() {
+    local quiet="$1"
+    if [ -z $quiet ]; then
+        if type notify-send &> /dev/null; then
+            notify-send -i info -t 2000 "Deployment complete!"
+        fi
+        success_msg "Deployment complete!"
+    fi
+}
+

@@ -86,7 +86,7 @@ update_keystore() {
 
 upload_products() {
   if [ "$TESTDATA" = "1" ]; then
-      $SELF_DIR/import_products.rb $SELF_DIR/test_data.json
+      $SELF_DIR/import_products.rb $CANDLEPIN_BIN_DIR/test_data.json
   fi
 }
 
@@ -138,16 +138,6 @@ usage() {
 HELP
 }
 
-notify() {
-    if [ -z "$QUIET" ]; then
-        if type notify-send &> /dev/null; then
-            notify-send -i info -t 2000 "Deployment complete!"
-        fi
-        echo
-        success_msg "Deployment complete!"
-    fi
-}
-
 initialize_cp() {
     info_msg "Initializing Candlepin..."
     wget --no-check-certificate -qO- https://localhost:8443/candlepin/admin/init
@@ -164,7 +154,7 @@ init() {
     source "$(buildr -s checkout_root)/bin/bash_functions"
 
     PROJECT_DIR="$(project_directory server)"
-
+    CANDLEPIN_BIN_DIR="$(project_directory)/bin"
     # Get the directory this script is in. See http://mywiki.wooledge.org/BashFAQ/028
     SELF_DIR="${BASH_SOURCE%/*}"
 }
