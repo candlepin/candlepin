@@ -16,7 +16,7 @@
 %endif
 
 Name: gutterball
-Version: 2.0.3
+Version: 2.0.4
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -84,6 +84,14 @@ rm -rf %{buildroot}
 
 #raw
 %changelog
+* Mon Sep 28 2015 Christopher Snyder <csnyder@redhat.com>
+- Upgrade to RestEasy 3. (awood@redhat.com)
+- 1194776: Gutterball equivalent of cpdb to handle upgrade etc.
+  (fnguyen@redhat.com)
+- Update required Qpid packages. (awood@redhat.com)
+- Added preconditions to custom change tasks (crog@redhat.com)
+- Improve README. (awood@redhat.com)
+
 * Thu Jun 11 2015 Alex Wood <awood@redhat.com> 2.0.3-1
 - Disable dependency-check plugin for Brew builds.
 
