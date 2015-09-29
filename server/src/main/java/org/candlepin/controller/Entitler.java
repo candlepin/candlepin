@@ -286,10 +286,7 @@ public class Entitler {
             devProductIds.add(ip.getProductId());
         }
         List<Product> prods = productAdapter.getProductsByIds(consumer.getOwner(), devProductIds);
-        if (prods.size() != devProductIds.size()) {
-            // determine exception message
-            produceMissingDevProductException(devProductIds, prods);
-        }
+        verifyDevProducts(devProductIds, prods);
         for (Product prod : prods) {
             prod.setOwner(consumer.getOwner());
             for (ProductContent pc : prod.getProductContent()) {
@@ -322,9 +319,11 @@ public class Entitler {
      * @return
      * @throws ForbiddenException
      */
-    protected void produceMissingDevProductException(List<String> prodIds, List<Product> products)
+    protected void verifyDevProducts(List<String> prodIds, List<Product> products)
             throws ForbiddenException {
-        StringBuffer message = new StringBuffer();
+        if (prodIds.size() == products.size()) {
+            return;
+        }
         Map<String, Product> prodMap = new HashMap<String, Product>();
         List<String> missingInstalled = new ArrayList<String>();
         for (Product prod : products) {
@@ -333,18 +332,16 @@ public class Entitler {
         for (int i = 0; i < prodIds.size(); i++) {
             if (prodMap.get(prodIds.get(i)) == null) {
                 if (i == 0) {
-                    message.append(i18n.tr("SKU product not available to this development unit: ''{0}''",
-                            prodIds.get(i)));
-                    throw new ForbiddenException(message.toString());
+                    throw new ForbiddenException(i18n.tr("SKU product not available to this " +
+                            "development unit: ''{0}''", prodIds.get(i)));
                 }
                 else {
                     missingInstalled.add(prodIds.get(i));
                 }
             }
         }
-        message.append(i18n.tr("Installed product(s) not available to this development unit: {0}",
-                missingInstalled.toString()));
-        throw new ForbiddenException(message.toString());
+        throw new ForbiddenException(i18n.tr("Installed product(s) not available to this " +
+                "development unit: {0}", missingInstalled.toString()));
     }
 
     /**
