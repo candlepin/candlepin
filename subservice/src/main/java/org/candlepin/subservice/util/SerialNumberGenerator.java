@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.util;
+package org.candlepin.subservice.util;
 
 import org.candlepin.common.util.Util;
 
@@ -21,6 +21,12 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.IdentifierGenerator;
 
 import java.io.Serializable;
+
+// TODO:
+// Perhaps we should just import the one from CP directly? Requires another artifact or refactoring
+// a bit on that side to avoid duplication. Can't move this up to common since we don't want to
+// force a reliance on Hibernate at that level (probably).
+
 
 /**
  * SerialNumberGenerator
