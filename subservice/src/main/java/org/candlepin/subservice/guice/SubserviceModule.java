@@ -16,6 +16,7 @@ package org.candlepin.subservice.guice;
 
 import org.candlepin.subservice.resource.StatusResource;
 import org.candlepin.subservice.resource.SubscriptionResource;
+import org.candlepin.subservice.resteasy.JsonProvider;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.google.inject.AbstractModule;
@@ -32,6 +33,7 @@ public class SubserviceModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(JacksonJaxbJsonProvider.class);
+        bind(JsonProvider.class);
 
         // RestEasy API resources
         bind(SubscriptionResource.class);
