@@ -517,8 +517,8 @@ public class EntitlerTest {
             entitler.bindByProducts(ad);
         }
         catch (ForbiddenException fe) {
-            assertEquals(i18n.tr("The sku product ''{0}'' for this development " +
-                    "unit does not exist in the repository. ", p.getId()), fe.getMessage());
+            assertEquals(i18n.tr("SKU product not available to this development unit: ''{0}''",
+                    p.getId()), fe.getMessage());
         }
     }
 
@@ -527,7 +527,8 @@ public class EntitlerTest {
         Owner owner = new Owner("o");
         List<Product> devProds = new ArrayList<Product>();
         Product p = new Product("test-product", "Test Product", owner);
-        Product ip = new Product("test-product-installed", "Installed Test Product", owner);
+        Product ip1 = new Product("test-product-installed-1", "Installed Test Product 1", owner);
+        Product ip2 = new Product("test-product-installed-2", "Installed Test Product 2", owner);
         devProds.add(p);
         Pool activePool = TestUtil.createPool(owner, p);
         List<Pool> activeList = new ArrayList<Pool>();
@@ -535,7 +536,8 @@ public class EntitlerTest {
 
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct(ip));
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(ip1));
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(ip2));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
@@ -545,8 +547,8 @@ public class EntitlerTest {
             entitler.bindByProducts(ad);
         }
         catch (ForbiddenException fe) {
-            assertEquals(i18n.tr("The installed product ''{0}'' for this development " +
-                    "unit does not exist in the repository. ", ip.getId()), fe.getMessage());
+            assertEquals(i18n.tr("Installed product(s) not available to this development unit: [{0}]",
+                    (ip1.getId() + ", " + ip2.getId())), fe.getMessage());
         }
     }
 

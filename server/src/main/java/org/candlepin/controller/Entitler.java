@@ -326,23 +326,24 @@ public class Entitler {
             throws ForbiddenException {
         StringBuffer message = new StringBuffer();
         Map<String, Product> prodMap = new HashMap<String, Product>();
+        List<String> missingInstalled = new ArrayList<String>();
         for (Product prod : products) {
             prodMap.put(prod.getId(), prod);
         }
         for (int i = 0; i < prodIds.size(); i++) {
             if (prodMap.get(prodIds.get(i)) == null) {
                 if (i == 0) {
-                    message.append(i18n.tr("The sku product ''{0}'' for this development " +
-                            "unit does not exist in the repository. ",
+                    message.append(i18n.tr("SKU product not available to this development unit: ''{0}''",
                             prodIds.get(i)));
+                    throw new ForbiddenException(message.toString());
                 }
                 else {
-                    message.append(i18n.tr("The installed product ''{0}'' for this development " +
-                            "unit does not exist in the repository. ",
-                            prodIds.get(i)));
+                    missingInstalled.add(prodIds.get(i));
                 }
             }
         }
+        message.append(i18n.tr("Installed product(s) not available to this development unit: {0}",
+                missingInstalled.toString()));
         throw new ForbiddenException(message.toString());
     }
 
