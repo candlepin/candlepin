@@ -75,7 +75,7 @@
     <javax.mail-mail.version>1.4</javax.mail-mail.version>
     <com.sun.xml.bind-jaxb-impl.version>2.1.12</com.sun.xml.bind-jaxb-impl.version>
     <org.candlepin-candlepin-common.version>2.0.1</org.candlepin-candlepin-common.version>
-    <org.candlepin-candlepin-api.version>2.0.6</org.candlepin-candlepin-api.version>
+    <org.candlepin-candlepin-model.version>2.0.6</org.candlepin-candlepin-model.version>
   </properties>
   <dependencies>
     <dependency>
@@ -741,8 +741,8 @@
     </dependency>
     <dependency>
       <groupId>org.candlepin</groupId>
-      <artifactId>candlepin-api</artifactId>
-      <version>${org.candlepin-candlepin-api.version}</version>
+      <artifactId>candlepin-model</artifactId>
+      <version>${org.candlepin-candlepin-model.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
