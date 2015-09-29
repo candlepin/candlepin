@@ -28,14 +28,14 @@ import javax.ws.rs.core.MediaType;
  * Resource to check if subservice is alive,
  * can be replaced later to respond with a status similar to candlepin if needed.
  */
-@Path("alive")
+@Path("status")
 public class StatusResource {
     private static Logger log = LoggerFactory.getLogger(SubserviceContextListener.class);
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
-    public Boolean getStatus() {
+    public String getStatus() {
         log.debug("getStatus");
-        return true;
+        return "{\"alive\":\"true\"}";
     }
 }
