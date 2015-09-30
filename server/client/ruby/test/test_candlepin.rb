@@ -7,6 +7,7 @@ require 'rspec/autorun'
 require '../candlepin'
 
 RSpec.configure do |config|
+  config.color = true
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
@@ -58,6 +59,12 @@ module Candlepin
           :key => key,
           :display_name => key,
         ).content
+      end
+
+      let(:owner_client) do
+        client = BasicAuthClient.new
+        client.key = owner[:key]
+        client
       end
 
       let(:owner_user) do
@@ -157,8 +164,7 @@ module Candlepin
 
       it 'updates an owner' do
         old_name = owner[:displayName]
-        res = user_client.update_owner(
-          :key => owner[:key],
+        res = owner_client.update_owner(
           :display_name => rand_string
         )
         expect(res).to be_2xx
@@ -166,8 +172,7 @@ module Candlepin
       end
 
       it 'gets owner service levels' do
-        res = user_client.get_owner_service_levels(
-          :key => owner[:key],
+        res = owner_client.get_owner_service_levels(
           :exempt => true,
         )
 
@@ -175,8 +180,7 @@ module Candlepin
       end
 
       it 'sets owner log level' do
-        res = user_client.set_owner_log_level(
-          :key => owner[:key],
+        res = owner_client.set_owner_log_level(
           :level => 'debug',
         )
         expect(res).to be_2xx
@@ -230,34 +234,31 @@ module Candlepin
 
       it 'refreshes pools asynchronously' do
         id1 = rand_string
-        user_client.create_product(
+        owner_client.create_product(
           :product_id => id1,
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
-          :key => owner[:key],
         )
 
-        user_client.create_subscription(
-          :key => owner[:key],
+        owner_client.create_subscription(
           :product_id => id1,
         )
 
-        pools = user_client.get_owner_pools(:key => owner[:key]).content
+        pools = owner_client.get_owner_pools.content
         expect(pools.first[:product][:multiplier]).to eq(2)
 
-        user_client.update_product(
+        owner_client.update_product(
           :product_id => id1,
           :multiplier => 4,
-          :key => owner[:key],
         )
 
-        result = user_client.refresh_pools_async(:key => owner[:key])
+        result = owner_client.refresh_pools_async
         expect(result).to be_kind_of(HTTPClient::Connection)
         result.join
         expect(result.pop).to be_2xx
 
-        pools = user_client.get_owner_pools(:key => owner[:key]).content
+        pools = owner_client.get_owner_pools.content
         expect(pools.first[:product][:multiplier]).to eq(4)
       end
 
@@ -295,9 +296,7 @@ module Candlepin
       end
 
       it 'deletes owners' do
-        res = user_client.delete_owner(
-          :key => owner[:key]
-        )
+        res = owner_client.delete_owner
         expect(res).to be_2xx
 
         res = user_client.get_owner(
@@ -307,24 +306,18 @@ module Candlepin
       end
 
       it 'gets owners' do
-        res = user_client.get_owner(
-          :key => owner[:key],
-        )
+        res = owner_client.get_owner
         expect(res).to be_2xx
         expect(res.content[:id]).to eq(owner[:id])
       end
 
       it 'gets owner info' do
-        res = user_client.get_owner_info(
-          :key => owner[:key],
-        )
+        res = owner_client.get_owner_info
         expect(res).to be_2xx
       end
 
       it "gets owner jobs" do
-        res = user_client.get_owner_jobs(
-          :owner => owner[:key],
-        )
+        res = owner_client.get_owner_jobs
         expect(res).to be_2xx
       end
 
@@ -425,18 +418,16 @@ module Candlepin
       include_context("functional context")
 
       it 'creates owner content' do
-        res = user_client.create_owner_content(
+        res = owner_client.create_owner_content(
           :content_id => "hello",
           :name => "Hello",
           :label => "hello",
-          :key => owner[:key],
         )
 
         expect(res).to be_2xx
 
-        content = user_client.get_owner_content(
+        content = owner_client.get_owner_content(
           :content_id => "hello",
-          :key => owner[:key],
         ).content
 
         expect(content[:label]).to eq("hello")
@@ -978,6 +969,19 @@ module Candlepin
         res = user_client.update_consumer(
           :autoheal => false,
         )
+        expect(res).to be_2xx
+      end
+
+      it 'allows a client to set a sticky owner key' do
+        res = user_client.register(
+          :owner => owner[:key],
+          :username => owner_user[:username],
+          :name => rand_string,
+        )
+        consumer = res.content
+        user_client.key = consumer[:owner][:key]
+
+        res = user_client.get_owner_info
         expect(res).to be_2xx
       end
 

@@ -250,6 +250,11 @@ module Candlepin
       return @uuid || nil
     end
 
+    attr_writer :key
+    def key
+      return @key || nil
+    end
+
     def page_options
       return {
         :page => nil,
@@ -320,7 +325,7 @@ module Candlepin
 
       def get_owner_jobs(opts = {})
         defaults = {
-          :owner => nil,
+          :owner => key,
         }
         opts = verify_and_merge(opts, defaults)
 
@@ -392,7 +397,7 @@ module Candlepin
           :uuid => uuid,
           :facts => {},
           :username => nil,
-          :owner => nil,
+          :owner => key,
           :activation_keys => [],
           :installed_products => [],
           :environment => nil,
@@ -734,7 +739,7 @@ module Candlepin
     module HypervisorResource
       def post_hypervisor_check_in(opts = {})
         defaults = {
-           :owner => nil,
+           :owner => key,
            :host_guest_mapping => {},
            :create_missing => nil,
          }
@@ -810,7 +815,7 @@ module Candlepin
           :username => nil,
           :password => nil,
           :super_admin => false,
-          :key => nil,
+          :key => key,
         }
         opts = verify_and_merge(opts, defaults)
 
@@ -891,19 +896,19 @@ module Candlepin
         post("/roles", opts)
       end
 
-      def all_owner_permission(key)
+      def all_owner_permission(owner_key)
         perm = {}
         perm[:access] = 'ALL'
         perm[:type] = 'OWNER'
-        perm[:owner] = { :key => key }
+        perm[:owner] = { :key => owner_key }
         perm
       end
 
-      def ro_owner_permission(key)
+      def ro_owner_permission(owner_key)
         perm = {}
         perm[:access] = 'READ_ONLY'
         perm[:type] = 'OWNER'
-        perm[:owner] = { :key => key }
+        perm[:owner] = { :key => owner_key }
         perm
       end
 
@@ -955,7 +960,7 @@ module Candlepin
         defaults = {
           :role_id => nil,
           :type => nil,
-          :owner => nil,
+          :owner => key,
           :access => 'READ_ONLY',
         }
         opts = verify_and_merge(opts, defaults)
@@ -977,12 +982,17 @@ module Candlepin
 
     module OwnerResource
       def get_owner(opts = {})
-        get_by_id("/owners", :key, opts)
+        defaults = {
+          :key => key,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/owners/#{opts[:key]}")
       end
 
       def get_owner_hypervisors(opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
           :hypervisor_ids => [],
         }
         opts = verify_and_merge(opts, defaults)
@@ -992,7 +1002,7 @@ module Candlepin
 
       def get_owner_subresource(subresource, opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
         }
         opts = verify_and_merge(opts, defaults)
 
@@ -1021,7 +1031,7 @@ module Candlepin
 
       def get_owner_service_levels(opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
           :exempt => false,
         }
         opts = verify_and_merge(opts, defaults)
@@ -1031,7 +1041,7 @@ module Candlepin
 
       def get_owner_environment(opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
           :name => nil,
         }
         opts = verify_and_merge(opts, defaults)
@@ -1045,7 +1055,7 @@ module Candlepin
 
       def get_owner_pools(opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
           :consumer => nil,
           :product => nil,
           :listall => nil,
@@ -1066,7 +1076,7 @@ module Candlepin
 
       def autoheal_owner(opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
         }
         opts = verify_and_merge(opts, defaults)
 
@@ -1075,7 +1085,7 @@ module Candlepin
 
       def create_owner(opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
           :display_name => nil,
           :parent_owner => nil,
         }
@@ -1086,7 +1096,7 @@ module Candlepin
 
       def create_owner_environment(opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
           :id => nil,
           :name => nil,
           :description => nil,
@@ -1098,7 +1108,7 @@ module Candlepin
 
       def create_ueber_cert(opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
         }
         opts = verify_and_merge(opts, defaults)
 
@@ -1107,7 +1117,7 @@ module Candlepin
 
       def refresh_pools_async(opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
           :auto_create_owner => false,
           :lazy_regen => false,
         }
@@ -1127,7 +1137,7 @@ module Candlepin
 
       def create_activation_key(opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
           :service_level => nil,
           :name => nil,
           :description => nil,
@@ -1143,7 +1153,7 @@ module Candlepin
 
       def create_subscription(opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
           :start_date => Date.today,
           :end_date => Date.today + 365,
           :quantity => 1,
@@ -1185,7 +1195,7 @@ module Candlepin
 
       def update_owner(opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
           :display_name => nil,
           :parent_owner => nil,
           :default_service_level => nil,
@@ -1202,7 +1212,7 @@ module Candlepin
 
       def set_owner_log_level(opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
           :level => nil,
         }
         opts = verify_and_merge(opts, defaults)
@@ -1212,7 +1222,7 @@ module Candlepin
 
       def delete_owner_log_level(opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
         }
         opts = verify_and_merge(opts, defaults)
 
@@ -1221,7 +1231,7 @@ module Candlepin
 
       def delete_owner(opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
           :revoke => false,
         }
         opts = verify_and_merge(opts, defaults)
@@ -1272,7 +1282,7 @@ module Candlepin
       def get_owner_content(opts = {})
         defaults = {
           :content_id => nil,
-          :key => nil,
+          :key => key,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts)
@@ -1283,7 +1293,7 @@ module Candlepin
       def delete_owner_content(opts = {})
         defaults = {
           :content_id => nil,
-          :key => nil,
+          :key => key,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts)
@@ -1304,7 +1314,7 @@ module Candlepin
           :arches => nil,
           :required_tags => nil,
           :metadata_expire => nil,
-          :key => nil,
+          :key => key,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :key)
@@ -1318,7 +1328,7 @@ module Candlepin
 
       def create_batch_owner_content(opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
           :content => [],
         }
         opts = verify_and_merge(opts, defaults)
@@ -1362,7 +1372,7 @@ module Candlepin
           :arches => nil,
           :required_tags => nil,
           :metadata_expire => nil,
-          :key => nil,
+          :key => key,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :key)
@@ -1414,7 +1424,7 @@ module Candlepin
     module OwnerProductResource
       def get_owner_product(opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
           :product_id => nil,
         }
         opts = verify_and_merge(opts, defaults)
@@ -1424,7 +1434,7 @@ module Candlepin
 
       def get_all_owner_products(opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts)
@@ -1441,7 +1451,7 @@ module Candlepin
           :dependent_product_ids => [],
           :product_content => [],
           :relies_on => [],
-          :key => nil,
+          :key => key,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :key)
@@ -1475,7 +1485,7 @@ module Candlepin
           :attributes => [],
           :dependent_product_ids => [],
           :relies_on => [],
-          :key => nil,
+          :key => key,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :key)
@@ -1491,7 +1501,7 @@ module Candlepin
 
       def delete_product(opts = {})
         defaults = {
-          :key => nil,
+          :key => key,
           :product_id => nil,
         }
         opts = verify_and_merge(opts, defaults)
@@ -1503,7 +1513,7 @@ module Candlepin
       def get_product_cert(opts = {})
         defaults = {
           :product_id => nil,
-          :key => nil,
+          :key => key,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts)
@@ -1516,7 +1526,7 @@ module Candlepin
           :product_id => nil,
           :content_id => nil,
           :enabled => true,
-          :key => nil,
+          :key => key,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts)
@@ -1529,7 +1539,7 @@ module Candlepin
         defaults = {
           :product_id => nil,
           :content_id => nil,
-          :key => nil,
+          :key => key,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts)
@@ -1922,6 +1932,7 @@ module Candlepin
         }.merge(opts)
         client = X509Client.new(opts)
         client.uuid = consumer_json[:uuid]
+        client.key = consumer_json[:owner][:key]
         client
       end
 
