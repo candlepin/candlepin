@@ -37,23 +37,43 @@ class Subservice
   end
 
   def get_all_subscriptions
-    return get("/subscription")
+    return get("/subscriptions")
   end
 
   def get_subscription(uuid)
-    return get("/subscription/#{uuid}")
+    return get("/subscriptions/#{uuid}")
   end
 
   def create_subscription(subscription)
-    return post("/subscription",subscription)
+    return post("/subscriptions",subscription)
   end
 
   def update_subscription(uuid,subscription)
-    return put("/subscription/#{uuid}",subscription)
+    return put("/subscriptions/#{uuid}",subscription)
   end
 
   def delete_subscription(uuid)
-    return delete("/subscription/#{uuid}")
+    return delete("/subscriptions/#{uuid}")
+  end
+
+  def get_all_products
+    return get("/products")
+  end
+
+  def get_product(uuid)
+    return get("/products/#{uuid}")
+  end
+
+  def create_product(product)
+    return post("/products",product)
+  end
+
+  def update_product(uuid,product)
+    return put("/products/#{uuid}",product)
+  end
+
+  def delete_product(uuid)
+    return delete("/products/#{uuid}")
   end
 
   def get(uri, accept_header = :json)

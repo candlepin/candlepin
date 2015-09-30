@@ -16,6 +16,9 @@ package org.candlepin.subservice.resource;
 
 import org.candlepin.model.dto.Subscription;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -35,8 +38,9 @@ import javax.ws.rs.core.MediaType;
  * The SubscriptionResource class handles the subscription-oriented API calls for the subscription
  * service.
  */
-@Path("/subscription")
+@Path("/subscriptions")
 public class SubscriptionResource {
+    private static Logger log = LoggerFactory.getLogger(SubscriptionResource.class);
 
     // Things we need:
     // Backing curator
