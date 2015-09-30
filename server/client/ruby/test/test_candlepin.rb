@@ -47,7 +47,7 @@ module Candlepin
       return (prefix.empty?) ? rand : "#{prefix}-#{rand}"
     end
 
-    context "in a functional context", :functional => true do
+    shared_context "functional context" do
       # The let! prevents lazy loading
       let!(:user_client) { BasicAuthClient.new }
       let!(:no_auth_client) { NoAuthClient.new }
@@ -101,27 +101,553 @@ module Candlepin
           :key => owner[:key],
         ).content
       end
+    end
 
-      it 'gets a status as JSON' do
-        res = no_auth_client.get('/status')
-        expect(res.content.key?(:version)).to be_true
+    context "in an Owner context", :functional => true do
+      include_context("functional context")
+
+      it 'creates activation keys' do
+        res = user_client.create_activation_key(
+          :key => owner[:key],
+          :name => rand_string,
+          :description => rand_string,
+        )
+        expect(res).to be_2xx
+
+        activation_key = res.content
+
+        res = user_client.get_activation_key(:id => activation_key[:id])
+        expect(res).to be_2xx
       end
 
-      it 'gets all owners with basic auth' do
-        user_client.create_owner(
+      it 'creates owners' do
+        res = user_client.create_owner(
           :key => rand_string,
           :display_name => rand_string,
         )
-        res = user_client.get_all_owners
-        expect(res.content.empty?).to be_false
-        expect(res.content.first.key?(:id)).to be_true
+        expect(res).to be_2xx
+        expect(res.content).to have_key(:id)
       end
 
-      it 'fails with bad password' do
-        res = no_auth_client.get('/owners')
-        expect(res).to be_unauthorized
+      it 'creates owner environments' do
+        res = user_client.create_owner_environment(
+          :key => owner[:key],
+          :id => rand_string,
+          :description => rand_string,
+          :name => rand_string
+        )
+        expect(res).to be_2xx
+        expect(res.content).to have_key(:name)
       end
 
+      it 'gets owner environments' do
+        env = user_client.create_owner_environment(
+          :key => owner[:key],
+          :id => rand_string,
+          :description => rand_string,
+          :name => rand_string
+        ).content
+
+        res = user_client.get_owner_environment(
+          :key => owner[:key],
+          :name => env[:name]
+        )
+        expect(res).to be_2xx
+      end
+
+      it 'updates an owner' do
+        old_name = owner[:displayName]
+        res = user_client.update_owner(
+          :key => owner[:key],
+          :display_name => rand_string
+        )
+        expect(res).to be_2xx
+        expect(res.content[:displayName]).to_not eq(old_name)
+      end
+
+      it 'gets owner service levels' do
+        res = user_client.get_owner_service_levels(
+          :key => owner[:key],
+          :exempt => true,
+        )
+
+        expect(res).to be_2xx
+      end
+
+      it 'sets owner log level' do
+        res = user_client.set_owner_log_level(
+          :key => owner[:key],
+          :level => 'debug',
+        )
+        expect(res).to be_2xx
+        expect(res.content[:logLevel]).to eq('DEBUG')
+      end
+
+      it 'deletes owner log level' do
+        res = user_client.set_owner_log_level(
+          :key => owner[:key],
+          :level => 'debug',
+        )
+        expect(res).to be_2xx
+        expect(res.content[:logLevel]).to eq('DEBUG')
+
+        res = user_client.delete_owner_log_level(
+          :key => owner[:key],
+        )
+        expect(res).to be_2xx
+      end
+
+      it 'refreshes pools synchronously' do
+        id1 = rand_string
+        user_client.create_product(
+          :product_id => id1,
+          :name => rand_string,
+          :multiplier => 2,
+          :attributes => { :arch => 'x86_64' },
+          :key => owner[:key],
+        )
+
+        user_client.create_subscription(
+          :key => owner[:key],
+          :product_id => id1,
+        )
+
+        pools = user_client.get_owner_pools(:key => owner[:key]).content
+        expect(pools.first[:product][:multiplier]).to eq(2)
+
+        user_client.update_product(
+          :product_id => id1,
+          :multiplier => 4,
+          :key => owner[:key],
+        )
+
+        result = user_client.refresh_pools(:key => owner[:key])
+        expect(result).to be_2xx
+
+        pools = user_client.get_owner_pools(:key => owner[:key]).content
+        expect(pools.first[:product][:multiplier]).to eq(4)
+      end
+
+      it 'refreshes pools asynchronously' do
+        id1 = rand_string
+        user_client.create_product(
+          :product_id => id1,
+          :name => rand_string,
+          :multiplier => 2,
+          :attributes => { :arch => 'x86_64' },
+          :key => owner[:key],
+        )
+
+        user_client.create_subscription(
+          :key => owner[:key],
+          :product_id => id1,
+        )
+
+        pools = user_client.get_owner_pools(:key => owner[:key]).content
+        expect(pools.first[:product][:multiplier]).to eq(2)
+
+        user_client.update_product(
+          :product_id => id1,
+          :multiplier => 4,
+          :key => owner[:key],
+        )
+
+        result = user_client.refresh_pools_async(:key => owner[:key])
+        expect(result).to be_kind_of(HTTPClient::Connection)
+        result.join
+        expect(result.pop).to be_2xx
+
+        pools = user_client.get_owner_pools(:key => owner[:key]).content
+        expect(pools.first[:product][:multiplier]).to eq(4)
+      end
+
+      it 'gets owner hypervisors' do
+        host1 = user_client.register(
+          :owner => owner[:key],
+          :username => 'admin',
+          :name => rand_string,
+        ).content
+
+        host2 = user_client.register(
+          :owner => owner[:key],
+          :username => 'admin',
+          :name => rand_string,
+        ).content
+
+        user_client.register(
+          :owner => owner[:key],
+          :username => 'admin',
+          :name => rand_string,
+          :hypervisor_id => host1[:uuid],
+        ).content
+
+        res = user_client.get_owner_hypervisors(
+          :key => owner[:key],
+        )
+        expect(res).to be_2xx
+
+        res = user_client.get_owner_hypervisors(
+          :key => owner[:key],
+          :hypervisor_ids => [host1[:uuid], host2[:uuid]],
+        )
+        expect(res).to be_2xx
+        expect(res.content.length).to eq(1)
+      end
+
+      it 'deletes owners' do
+        res = user_client.delete_owner(
+          :key => owner[:key]
+        )
+        expect(res).to be_2xx
+
+        res = user_client.get_owner(
+          :key => owner[:key]
+        )
+        expect(res).to be_missing
+      end
+
+      it 'gets owners' do
+        res = user_client.get_owner(
+          :key => owner[:key],
+        )
+        expect(res).to be_2xx
+        expect(res.content[:id]).to eq(owner[:id])
+      end
+
+      it 'gets owner info' do
+        res = user_client.get_owner_info(
+          :key => owner[:key],
+        )
+        expect(res).to be_2xx
+      end
+
+      it "gets owner jobs" do
+        res = user_client.get_owner_jobs(
+          :owner => owner[:key],
+        )
+        expect(res).to be_2xx
+      end
+
+      it 'creates child owners' do
+        parent = owner
+        child = user_client.create_owner(
+          :key => rand_string,
+          :display_name => rand_string,
+          :parent_owner => parent,
+        ).content
+
+        expect(child[:parentOwner][:id]).to eq(parent[:id])
+        expect(parent[:parentOwner]).to be_nil
+      end
+
+      it 'gets owners with pools of a product' do
+        id1 = rand_string
+        user_client.create_product(
+          :product_id => id1,
+          :name => rand_string,
+          :multiplier => 2,
+          :attributes => { :arch => 'x86_64' },
+          :key => owner[:key],
+        )
+
+        user_client.create_subscription(
+          :key => owner[:key],
+          :product_id => id1,
+        )
+
+        results = user_client.get_owners_with_product(:product_ids => [id1]).content
+        expect(results.first[:key]).to eq(owner[:key])
+      end
+    end
+
+    context "in an Owner Product context", :functional => true do
+      include_context("functional context")
+
+      it 'creates an owner product' do
+        res = user_client.create_product(
+          :product_id => rand_string,
+          :name => rand_string,
+          :multiplier => 2,
+          :attributes => { :arch => 'x86_64' },
+          :key => owner[:key],
+        )
+        expect(res).to be_2xx
+        expect(res.content[:multiplier]).to eq(2)
+      end
+
+      it 'deletes an owner product' do
+        product = user_client.create_product(
+          :product_id => rand_string,
+          :name => rand_string,
+          :multiplier => 2,
+          :attributes => { :arch => 'x86_64' },
+          :key => owner[:key],
+        ).content
+
+        res = user_client.delete_product(
+          :product_id => product[:id],
+          :key => owner[:key],
+        )
+        expect(res).to be_2xx
+
+        res = user_client.get_owner_product(
+          :product_id => product[:id],
+          :key => owner[:key],
+        )
+        expect(res).to be_missing
+      end
+
+      it 'updates an owner product' do
+        product = user_client.create_product(
+          :product_id => rand_string,
+          :name => rand_string,
+          :multiplier => 2,
+          :attributes => { :arch => 'x86_64' },
+          :key => owner[:key],
+        ).content
+
+        res = user_client.update_product(
+          :product_id => product[:id],
+          :multiplier => 8,
+          :key => owner[:key],
+        )
+        expect(res).to be_2xx
+
+        res = user_client.get_owner_product(
+          :product_id => product[:id],
+          :key => owner[:key],
+        )
+        expect(res.content[:multiplier]).to eq(8)
+      end
+    end
+
+    context "in an Owner Content context", :functional => true do
+      include_context("functional context")
+
+      it 'creates owner content' do
+        res = user_client.create_owner_content(
+          :content_id => "hello",
+          :name => "Hello",
+          :label => "hello",
+          :key => owner[:key],
+        )
+
+        expect(res).to be_2xx
+
+        content = user_client.get_owner_content(
+          :content_id => "hello",
+          :key => owner[:key],
+        ).content
+
+        expect(content[:label]).to eq("hello")
+      end
+
+      it 'batch creates owner content' do
+        content = []
+        5.times do |i|
+          content << {
+            :content_id => "content_#{i}",
+            :name => "Content #{i}",
+            :label => "content_#{i}",
+            :content_url => "http://www.example.com",
+          }
+        end
+
+        res = user_client.create_batch_owner_content(
+          :key => owner[:key],
+          :content => content,
+        )
+
+        expect(res).to be_2xx
+
+        content = user_client.get_owner_content(
+          :content_id => "content_4",
+          :key => owner[:key],
+        ).content
+
+        expect(content[:label]).to eq("content_4")
+      end
+
+      it 'updates owner content' do
+        user_client.create_owner_content(
+          :content_id => "hello",
+          :name => "Hello",
+          :label => "hello",
+          :key => owner[:key],
+          :content_url => "http://www.example.com",
+        )
+
+        res = user_client.update_owner_content(
+          :content_id => "hello",
+          :key => owner[:key],
+          :label => "goodbye",
+        )
+
+        expect(res).to be_2xx
+
+        content = user_client.get_owner_content(
+          :content_id => "hello",
+          :key => owner[:key],
+        ).content
+
+        expect(content[:label]).to eq("goodbye")
+        expect(content[:contentUrl]).to eq("http://www.example.com")
+      end
+    end
+
+    context "in a Product Content context", :functional => true do
+      include_context("functional context")
+
+      it 'updates product content' do
+        product = user_client.create_product(
+          :product_id => rand_string,
+          :name => rand_string,
+          :multiplier => 2,
+          :attributes => { :arch => 'x86_64' },
+          :key => owner[:key],
+        ).content
+
+        res = user_client.update_product_content(
+          :product_id => product[:id],
+          :content_id => content[:id],
+          :key => owner[:key],
+        )
+
+        expect(res).to be_2xx
+      end
+
+      it 'deletes product content' do
+        product = user_client.create_product(
+          :product_id => rand_string,
+          :name => rand_string,
+          :multiplier => 2,
+          :attributes => { :arch => 'x86_64' },
+          :key => owner[:key],
+        ).content
+        expect(product[:productContent]).to be_empty
+
+        res = user_client.update_product_content(
+          :product_id => product[:id],
+          :content_id => content[:id],
+          :key => owner[:key],
+        )
+        expect(res).to be_2xx
+
+        product = user_client.get_product(
+          :product_id => product[:id],
+        ).content
+        expect(product[:productContent]).to_not be_empty
+
+        res = user_client.delete_product_content(
+          :product_id => product[:id],
+          :content_id => content[:id],
+          :key => owner[:key],
+        )
+        expect(res).to be_2xx
+
+        product = user_client.get_product(
+          :product_id => product[:id],
+        ).content
+        expect(product[:productContent]).to be_empty
+      end
+    end
+
+    context "in an Role context", :functional => true do
+      include_context("functional context")
+
+      it 'creates roles' do
+        res = user_client.create_role(
+          :name => rand_string(:prefix => 'role'),
+        )
+        expect(res).to be_2xx
+
+        expect(res.content[:id]).to_not be_nil
+      end
+
+      it 'gets roles' do
+        res = user_client.get_role(
+          :role_id => role[:id],
+        )
+        expect(res.content[:id]).to eq(role[:id])
+      end
+
+      it 'updates roles' do
+        res = user_client.update_role(
+          :role_id => role[:id],
+          :name => rand_string,
+        )
+        expect(res.content[:name]).to_not eq(role[:name])
+      end
+
+      it 'deletes roles' do
+        expect(role[:id]).to_not be_nil
+
+        res = user_client.delete_role(
+          :role_id => role[:id],
+        )
+        expect(res).to be_2xx
+      end
+
+      it 'creates role users' do
+        user = user_client.create_user(
+          :username => rand_string(:prefix => 'user'),
+          :password => rand_string,
+        ).content
+
+        res = user_client.add_role_user(
+          :role_id => role[:id],
+          :username => user[:username],
+        )
+        expect(res.content[:users].first[:id]).to eq(user[:id])
+      end
+
+      it 'deletes role users' do
+        user = user_client.create_user(
+          :username => rand_string(:prefix => 'user'),
+          :password => rand_string,
+        ).content
+
+        res = user_client.add_role_user(
+          :role_id => role[:id],
+          :username => user[:username],
+        )
+        expect(res.content[:users].first[:id]).to eq(user[:id])
+
+        res = user_client.delete_role_user(
+          :role_id => role[:id],
+          :username => user[:username],
+        )
+        expect(res.content[:users]).to be_empty
+      end
+
+      it 'adds role permissions' do
+        res = user_client.add_role_permission(
+          :role_id => role[:id],
+          :owner => owner[:key],
+          :type => 'OWNER',
+          :access => 'ALL',
+        )
+        expect(res).to be_2xx
+      end
+
+      it 'deletes role permissions' do
+        perm = user_client.add_role_permission(
+          :role_id => role[:id],
+          :owner => owner[:key],
+          :type => 'OWNER',
+          :access => 'ALL',
+        ).content
+
+        res = user_client.delete_role_permission(
+          :role_id => role[:id],
+          :permission_id => perm[:permissions].first[:id],
+        )
+        expect(res).to be_2xx
+      end
+    end
+
+    context "in a Register context", :functional => true do
+      include_context("functional context")
       it 'registers a consumer' do
         res = user_client.register(
           :owner => owner[:key],
@@ -141,6 +667,10 @@ module Candlepin
         res = x509_client.get_consumer
         expect(res.content[:uuid].length).to eq(36)
       end
+    end
+
+    context "in a Bind context", :functional => true do
+      include_context("functional context")
 
       it 'binds to a pool ID' do
         user_client.create_subscription(
@@ -193,169 +723,10 @@ module Candlepin
           user_client.bind(:product => 'foo', :pool => 'bar', :uuid => 'quux')
         end.to raise_error(ArgumentError)
       end
+    end
 
-      it 'adds content overrides' do
-        consumer = user_client.register(
-          :owner => owner[:key],
-          :username => owner_user[:username],
-          :name => rand_string,
-        ).content
-
-        overrides = []
-        5.times do |i|
-          overrides << {
-            :content_label => "Label #{i}",
-            :name => "override_#{i}",
-            :value => i,
-          }
-        end
-
-        res = user_client.create_content_overrides(
-          :uuid => consumer[:uuid],
-          :overrides => overrides,
-        )
-        expect(res).to be_2xx
-      end
-
-      it 'creates activation keys' do
-        res = user_client.create_activation_key(
-          :key => owner[:key],
-          :name => rand_string,
-          :description => rand_string,
-        )
-        expect(res).to be_2xx
-
-        activation_key = res.content
-
-        res = user_client.get_activation_key(:id => activation_key[:id])
-        expect(res).to be_2xx
-      end
-
-      it 'get content overrides' do
-        consumer = user_client.register(
-          :owner => owner[:key],
-          :username => owner_user[:username],
-          :name => rand_string,
-        ).content
-
-        res = user_client.create_content_overrides(
-          :uuid => consumer[:uuid],
-          :overrides => {
-            :content_label => "x",
-            :name => "y",
-            :value => "z",
-          },
-        )
-        expect(res).to be_2xx
-
-        overrides = user_client.get_content_overrides(
-          :uuid => consumer[:uuid]
-        ).content
-        expect(overrides.length).to eq(1)
-        expect(overrides.first).to have_key(:contentLabel)
-      end
-
-      it 'deletes content overrides' do
-        consumer = user_client.register(
-          :owner => owner[:key],
-          :username => owner_user[:username],
-          :name => rand_string,
-        ).content
-
-        single_override = {
-            :content_label => "x",
-            :name => "y",
-            :value => "z",
-        }
-        res = user_client.create_content_overrides(
-          :uuid => consumer[:uuid],
-          :overrides => single_override,
-        )
-        expect(res).to be_2xx
-
-        overrides = user_client.get_content_overrides(
-          :uuid => consumer[:uuid]
-        ).content
-        expect(overrides.length).to eq(1)
-        expect(overrides.first).to have_key(:contentLabel)
-
-        res = user_client.delete_content_overrides(
-          :uuid => consumer[:uuid],
-          :overrides => single_override,
-        )
-        expect(res).to be_2xx
-      end
-
-      it 'gets deleted consumers' do
-        res = user_client.get_deleted_consumers
-        expect(res).to be_2xx
-      end
-
-      it 'updates a consumer' do
-        res = user_client.register(
-          :owner => owner[:key],
-          :username => owner_user[:username],
-          :name => rand_string,
-        )
-        consumer = res.content
-
-        res = user_client.update_consumer(
-          :autoheal => false,
-          :uuid => consumer[:uuid],
-          :capabilities => [:cores],
-        )
-        expect(res).to be_2xx
-      end
-
-      it 'allows a client to set a sticky uuid' do
-        res = user_client.register(
-          :owner => owner[:key],
-          :username => owner_user[:username],
-          :name => rand_string,
-        )
-        consumer = res.content
-        user_client.uuid = consumer[:uuid]
-
-        res = user_client.update_consumer(
-          :autoheal => false,
-        )
-        expect(res).to be_2xx
-      end
-
-      it 'updates a consumer guest id list' do
-        res = user_client.register(
-          :owner => owner[:key],
-          :username => owner_user[:username],
-          :name => rand_string,
-        )
-        consumer = res.content
-        user_client.uuid = consumer[:uuid]
-
-        res = user_client.update_all_guest_ids(
-          :guest_ids => ['123', '456'],
-        )
-        expect(res).to be_2xx
-      end
-
-      it 'deletes a guest id' do
-        res = user_client.register(
-          :owner => owner[:key],
-          :username => owner_user[:username],
-          :name => rand_string,
-        )
-        consumer = res.content
-        user_client.uuid = consumer[:uuid]
-
-        user_client.update_consumer(
-          :guest_ids => ['x', 'y', 'z'],
-        )
-        expect(res).to be_2xx
-
-        res = user_client.delete_guest_id(
-          :guest_id => 'x',
-        )
-        expect(res).to be_2xx
-      end
+    context "in a User context", :functional => true do
+      include_context("functional context")
 
       it 'creates users' do
         res = user_client.create_user(
@@ -467,249 +838,180 @@ module Candlepin
         existing_users = res.content.map { |u| u[:username] }
         expect(existing_users).to_not include(owner_user[:username])
       end
+    end
 
-      it 'creates roles' do
-        res = user_client.create_role(
-          :name => rand_string(:prefix => 'role'),
-        )
-        expect(res).to be_2xx
+    context "in a Content Override context", :functional => true do
+      include_context("functional context")
 
-        expect(res.content[:id]).to_not be_nil
-      end
-
-      it 'gets roles' do
-        res = user_client.get_role(
-          :role_id => role[:id],
-        )
-        expect(res.content[:id]).to eq(role[:id])
-      end
-
-      it 'updates roles' do
-        res = user_client.update_role(
-          :role_id => role[:id],
+      it 'adds content overrides' do
+        consumer = user_client.register(
+          :owner => owner[:key],
+          :username => owner_user[:username],
           :name => rand_string,
-        )
-        expect(res.content[:name]).to_not eq(role[:name])
-      end
+        ).content
 
-      it 'deletes roles' do
-        expect(role[:id]).to_not be_nil
+        overrides = []
+        5.times do |i|
+          overrides << {
+            :content_label => "Label #{i}",
+            :name => "override_#{i}",
+            :value => i,
+          }
+        end
 
-        res = user_client.delete_role(
-          :role_id => role[:id],
+        res = user_client.create_content_overrides(
+          :uuid => consumer[:uuid],
+          :overrides => overrides,
         )
         expect(res).to be_2xx
       end
 
-      it 'creates role users' do
-        user = user_client.create_user(
-          :username => rand_string(:prefix => 'user'),
-          :password => rand_string,
-        ).content
-
-        res = user_client.add_role_user(
-          :role_id => role[:id],
-          :username => user[:username],
-        )
-        expect(res.content[:users].first[:id]).to eq(user[:id])
-      end
-
-      it 'deletes role users' do
-        user = user_client.create_user(
-          :username => rand_string(:prefix => 'user'),
-          :password => rand_string,
-        ).content
-
-        res = user_client.add_role_user(
-          :role_id => role[:id],
-          :username => user[:username],
-        )
-        expect(res.content[:users].first[:id]).to eq(user[:id])
-
-        res = user_client.delete_role_user(
-          :role_id => role[:id],
-          :username => user[:username],
-        )
-        expect(res.content[:users]).to be_empty
-      end
-
-      it 'adds role permissions' do
-        res = user_client.add_role_permission(
-          :role_id => role[:id],
+      it 'get content overrides' do
+        consumer = user_client.register(
           :owner => owner[:key],
-          :type => 'OWNER',
-          :access => 'ALL',
-        )
-        expect(res).to be_2xx
-      end
-
-      it 'deletes role permissions' do
-        perm = user_client.add_role_permission(
-          :role_id => role[:id],
-          :owner => owner[:key],
-          :type => 'OWNER',
-          :access => 'ALL',
+          :username => owner_user[:username],
+          :name => rand_string,
         ).content
 
-        res = user_client.delete_role_permission(
-          :role_id => role[:id],
-          :permission_id => perm[:permissions].first[:id],
+        res = user_client.create_content_overrides(
+          :uuid => consumer[:uuid],
+          :overrides => {
+            :content_label => "x",
+            :name => "y",
+            :value => "z",
+          },
+        )
+        expect(res).to be_2xx
+
+        overrides = user_client.get_content_overrides(
+          :uuid => consumer[:uuid]
+        ).content
+        expect(overrides.length).to eq(1)
+        expect(overrides.first).to have_key(:contentLabel)
+      end
+
+      it 'deletes content overrides' do
+        consumer = user_client.register(
+          :owner => owner[:key],
+          :username => owner_user[:username],
+          :name => rand_string,
+        ).content
+
+        single_override = {
+            :content_label => "x",
+            :name => "y",
+            :value => "z",
+        }
+        res = user_client.create_content_overrides(
+          :uuid => consumer[:uuid],
+          :overrides => single_override,
+        )
+        expect(res).to be_2xx
+
+        overrides = user_client.get_content_overrides(
+          :uuid => consumer[:uuid]
+        ).content
+        expect(overrides.length).to eq(1)
+        expect(overrides.first).to have_key(:contentLabel)
+
+        res = user_client.delete_content_overrides(
+          :uuid => consumer[:uuid],
+          :overrides => single_override,
         )
         expect(res).to be_2xx
       end
+    end
 
-      it 'creates owners' do
-        res = user_client.create_owner(
+    context "in an miscellaneous context", :functional => true do
+      include_context("functional context")
+
+      it 'gets a status as JSON' do
+        res = no_auth_client.get('/status')
+        expect(res.content.key?(:version)).to be_true
+      end
+
+      it 'gets all owners with basic auth' do
+        user_client.create_owner(
           :key => rand_string,
           :display_name => rand_string,
         )
-        expect(res).to be_2xx
-        expect(res.content).to have_key(:id)
+        res = user_client.get_all_owners
+        expect(res.content.empty?).to be_false
+        expect(res.content.first.key?(:id)).to be_true
       end
 
-      it 'gets owner hypervisors' do
-        host1 = user_client.register(
+      it 'fails with bad password' do
+        res = no_auth_client.get('/owners')
+        expect(res).to be_unauthorized
+      end
+
+      it 'gets deleted consumers' do
+        res = user_client.get_deleted_consumers
+        expect(res).to be_2xx
+      end
+
+      it 'updates a consumer' do
+        res = user_client.register(
           :owner => owner[:key],
-          :username => 'admin',
+          :username => owner_user[:username],
           :name => rand_string,
-        ).content
+        )
+        consumer = res.content
 
-        host2 = user_client.register(
+        res = user_client.update_consumer(
+          :autoheal => false,
+          :uuid => consumer[:uuid],
+          :capabilities => [:cores],
+        )
+        expect(res).to be_2xx
+      end
+
+      it 'allows a client to set a sticky uuid' do
+        res = user_client.register(
           :owner => owner[:key],
-          :username => 'admin',
+          :username => owner_user[:username],
           :name => rand_string,
-        ).content
+        )
+        consumer = res.content
+        user_client.uuid = consumer[:uuid]
 
-        user_client.register(
+        res = user_client.update_consumer(
+          :autoheal => false,
+        )
+        expect(res).to be_2xx
+      end
+
+      it 'updates a consumer guest id list' do
+        res = user_client.register(
           :owner => owner[:key],
-          :username => 'admin',
+          :username => owner_user[:username],
           :name => rand_string,
-          :hypervisor_id => host1[:uuid],
-        ).content
-
-        res = user_client.get_owner_hypervisors(
-          :key => owner[:key],
         )
-        expect(res).to be_2xx
+        consumer = res.content
+        user_client.uuid = consumer[:uuid]
 
-        res = user_client.get_owner_hypervisors(
-          :key => owner[:key],
-          :hypervisor_ids => [host1[:uuid], host2[:uuid]],
-        )
-        expect(res).to be_2xx
-        expect(res.content.length).to eq(1)
-      end
-
-      it 'creates owner environments' do
-        res = user_client.create_owner_environment(
-          :key => owner[:key],
-          :id => rand_string,
-          :description => rand_string,
-          :name => rand_string
-        )
-        expect(res).to be_2xx
-        expect(res.content).to have_key(:name)
-      end
-
-      it 'gets owner environments' do
-        env = user_client.create_owner_environment(
-          :key => owner[:key],
-          :id => rand_string,
-          :description => rand_string,
-          :name => rand_string
-        ).content
-
-        res = user_client.get_owner_environment(
-          :key => owner[:key],
-          :name => env[:name]
+        res = user_client.update_all_guest_ids(
+          :guest_ids => ['123', '456'],
         )
         expect(res).to be_2xx
       end
 
-      it 'deletes owners' do
-        res = user_client.delete_owner(
-          :key => owner[:key]
-        )
-        expect(res).to be_2xx
-
-        res = user_client.get_owner(
-          :key => owner[:key]
-        )
-        expect(res).to be_missing
-      end
-
-      it 'creates child owners' do
-        parent = owner
-        child = user_client.create_owner(
-          :key => rand_string,
-          :display_name => rand_string,
-          :parent_owner => parent,
-        ).content
-
-        expect(child[:parentOwner][:id]).to eq(parent[:id])
-        expect(parent[:parentOwner]).to be_nil
-      end
-
-      it 'updates an owner' do
-        old_name = owner[:displayName]
-        res = user_client.update_owner(
-          :key => owner[:key],
-          :display_name => rand_string
-        )
-        expect(res).to be_2xx
-        expect(res.content[:displayName]).to_not eq(old_name)
-      end
-
-      it 'gets owner service levels' do
-        res = user_client.get_owner_service_levels(
-          :key => owner[:key],
-          :exempt => true,
-        )
-
-        expect(res).to be_2xx
-      end
-
-      it 'sets owner log level' do
-        res = user_client.set_owner_log_level(
-          :key => owner[:key],
-          :level => 'debug',
-        )
-        expect(res).to be_2xx
-        expect(res.content[:logLevel]).to eq('DEBUG')
-      end
-
-      it 'deletes owner log level' do
-        res = user_client.set_owner_log_level(
-          :key => owner[:key],
-          :level => 'debug',
-        )
-        expect(res).to be_2xx
-        expect(res.content[:logLevel]).to eq('DEBUG')
-
-        res = user_client.delete_owner_log_level(
-          :key => owner[:key],
-        )
-        expect(res).to be_2xx
-      end
-
-      it 'gets owners' do
-        res = user_client.get_owner(
-          :key => owner[:key],
-        )
-        expect(res).to be_2xx
-        expect(res.content[:id]).to eq(owner[:id])
-      end
-
-      it 'gets owner info' do
-        res = user_client.get_owner_info(
-          :key => owner[:key],
-        )
-        expect(res).to be_2xx
-      end
-
-      it "gets owner jobs" do
-        res = user_client.get_owner_jobs(
+      it 'deletes a guest id' do
+        res = user_client.register(
           :owner => owner[:key],
+          :username => owner_user[:username],
+          :name => rand_string,
+        )
+        consumer = res.content
+        user_client.uuid = consumer[:uuid]
+
+        user_client.update_consumer(
+          :guest_ids => ['x', 'y', 'z'],
+        )
+        expect(res).to be_2xx
+
+        res = user_client.delete_guest_id(
+          :guest_id => 'x',
         )
         expect(res).to be_2xx
       end
@@ -724,187 +1026,6 @@ module Candlepin
         expect(res).to be_2xx
       end
 
-      it 'creates an owner product' do
-        res = user_client.create_product(
-          :product_id => rand_string,
-          :name => rand_string,
-          :multiplier => 2,
-          :attributes => { :arch => 'x86_64' },
-          :key => owner[:key],
-        )
-        expect(res).to be_2xx
-        expect(res.content[:multiplier]).to eq(2)
-      end
-
-      it 'deletes an owner product' do
-        product = user_client.create_product(
-          :product_id => rand_string,
-          :name => rand_string,
-          :multiplier => 2,
-          :attributes => { :arch => 'x86_64' },
-          :key => owner[:key],
-        ).content
-
-        res = user_client.delete_product(
-          :product_id => product[:id],
-          :key => owner[:key],
-        )
-        expect(res).to be_2xx
-
-        res = user_client.get_owner_product(
-          :product_id => product[:id],
-          :key => owner[:key],
-        )
-        expect(res).to be_missing
-      end
-
-      it 'updates an owner product' do
-        product = user_client.create_product(
-          :product_id => rand_string,
-          :name => rand_string,
-          :multiplier => 2,
-          :attributes => { :arch => 'x86_64' },
-          :key => owner[:key],
-        ).content
-
-        res = user_client.update_product(
-          :product_id => product[:id],
-          :multiplier => 8,
-          :key => owner[:key],
-        )
-        expect(res).to be_2xx
-
-        res = user_client.get_owner_product(
-          :product_id => product[:id],
-          :key => owner[:key],
-        )
-        expect(res.content[:multiplier]).to eq(8)
-      end
-
-      it 'creates owner content' do
-        res = user_client.create_owner_content(
-          :content_id => "hello",
-          :name => "Hello",
-          :label => "hello",
-          :key => owner[:key],
-        )
-
-        expect(res).to be_2xx
-
-        content = user_client.get_owner_content(
-          :content_id => "hello",
-          :key => owner[:key],
-        ).content
-
-        expect(content[:label]).to eq("hello")
-      end
-
-      it 'batch creates owner content' do
-        content = []
-
-        5.times do |i|
-          content << {
-            :content_id => "content_#{i}",
-            :name => "Content #{i}",
-            :label => "content_#{i}",
-            :content_url => "http://www.example.com",
-          }
-        end
-
-        res = user_client.create_batch_owner_content(
-          :key => owner[:key],
-          :content => content,
-        )
-
-        expect(res).to be_2xx
-
-        content = user_client.get_owner_content(
-          :content_id => "content_4",
-          :key => owner[:key],
-        ).content
-
-        expect(content[:label]).to eq("content_4")
-      end
-
-      it 'updates owner content' do
-        user_client.create_owner_content(
-          :content_id => "hello",
-          :name => "Hello",
-          :label => "hello",
-          :key => owner[:key],
-          :content_url => "http://www.example.com",
-        )
-
-        res = user_client.update_owner_content(
-          :content_id => "hello",
-          :key => owner[:key],
-          :label => "goodbye",
-        )
-
-        expect(res).to be_2xx
-
-        content = user_client.get_owner_content(
-          :content_id => "hello",
-          :key => owner[:key],
-        ).content
-
-        expect(content[:label]).to eq("goodbye")
-        expect(content[:contentUrl]).to eq("http://www.example.com")
-      end
-
-      it 'updates product content' do
-        product = user_client.create_product(
-          :product_id => rand_string,
-          :name => rand_string,
-          :multiplier => 2,
-          :attributes => { :arch => 'x86_64' },
-          :key => owner[:key],
-        ).content
-
-        res = user_client.update_product_content(
-          :product_id => product[:id],
-          :content_id => content[:id],
-          :key => owner[:key],
-        )
-
-        expect(res).to be_2xx
-      end
-
-      it 'deletes product content' do
-        product = user_client.create_product(
-          :product_id => rand_string,
-          :name => rand_string,
-          :multiplier => 2,
-          :attributes => { :arch => 'x86_64' },
-          :key => owner[:key],
-        ).content
-        expect(product[:productContent]).to be_empty
-
-        res = user_client.update_product_content(
-          :product_id => product[:id],
-          :content_id => content[:id],
-          :key => owner[:key],
-        )
-        expect(res).to be_2xx
-
-        product = user_client.get_product(
-          :product_id => product[:id],
-        ).content
-        expect(product[:productContent]).to_not be_empty
-
-        res = user_client.delete_product_content(
-          :product_id => product[:id],
-          :content_id => content[:id],
-          :key => owner[:key],
-        )
-        expect(res).to be_2xx
-
-        product = user_client.get_product(
-          :product_id => product[:id],
-        ).content
-        expect(product[:productContent]).to be_empty
-      end
-
       it 'creates subscriptions' do
         res = user_client.create_subscription(
           :key => owner[:key],
@@ -912,89 +1033,6 @@ module Candlepin
         )
         expect(res).to be_2xx
         expect(res.content[:product][:id]).to eq(product[:id])
-      end
-
-      it 'gets owners with pools of a product' do
-        id1 = rand_string
-        user_client.create_product(
-          :product_id => id1,
-          :name => rand_string,
-          :multiplier => 2,
-          :attributes => { :arch => 'x86_64' },
-          :key => owner[:key],
-        )
-
-        user_client.create_subscription(
-          :key => owner[:key],
-          :product_id => id1,
-        )
-
-        results = user_client.get_owners_with_product(:product_ids => [id1]).content
-        expect(results.first[:key]).to eq(owner[:key])
-      end
-
-      it 'refreshes pools synchronously' do
-        id1 = rand_string
-        user_client.create_product(
-          :product_id => id1,
-          :name => rand_string,
-          :multiplier => 2,
-          :attributes => { :arch => 'x86_64' },
-          :key => owner[:key],
-        )
-
-        user_client.create_subscription(
-          :key => owner[:key],
-          :product_id => id1,
-        )
-
-        pools = user_client.get_owner_pools(:key => owner[:key]).content
-        expect(pools.first[:product][:multiplier]).to eq(2)
-
-        user_client.update_product(
-          :product_id => id1,
-          :multiplier => 4,
-          :key => owner[:key],
-        )
-
-        result = user_client.refresh_pools(:key => owner[:key])
-        expect(result).to be_2xx
-
-        pools = user_client.get_owner_pools(:key => owner[:key]).content
-        expect(pools.first[:product][:multiplier]).to eq(4)
-      end
-
-      it 'refreshes pools asynchronously' do
-        id1 = rand_string
-        user_client.create_product(
-          :product_id => id1,
-          :name => rand_string,
-          :multiplier => 2,
-          :attributes => { :arch => 'x86_64' },
-          :key => owner[:key],
-        )
-
-        user_client.create_subscription(
-          :key => owner[:key],
-          :product_id => id1,
-        )
-
-        pools = user_client.get_owner_pools(:key => owner[:key]).content
-        expect(pools.first[:product][:multiplier]).to eq(2)
-
-        user_client.update_product(
-          :product_id => id1,
-          :multiplier => 4,
-          :key => owner[:key],
-        )
-
-        result = user_client.refresh_pools_async(:key => owner[:key])
-        expect(result).to be_kind_of(HTTPClient::Connection)
-        result.join
-        expect(result.pop).to be_2xx
-
-        pools = user_client.get_owner_pools(:key => owner[:key]).content
-        expect(pools.first[:product][:multiplier]).to eq(4)
       end
 
       it 'creates a distributor version' do
