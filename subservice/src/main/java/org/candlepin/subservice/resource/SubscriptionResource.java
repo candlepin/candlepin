@@ -16,6 +16,7 @@ package org.candlepin.subservice.resource;
 
 import org.candlepin.model.dto.Subscription;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.ws.rs.Consumes;
@@ -70,7 +71,9 @@ public class SubscriptionResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Set<Subscription> listSubscriptions() {
         // TODO
-        return null;
+        Set<Subscription> subs = new HashSet<Subscription>();
+        subs.add(new Subscription());
+        return subs;
     }
 
     /**
@@ -88,7 +91,7 @@ public class SubscriptionResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Subscription getSubscription(@PathParam("subscription_uuid") String subscriptionUuid) {
         // TODO
-        return null;
+        return new Subscription();
     }
 
     /**

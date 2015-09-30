@@ -23,6 +23,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.SubscriptionsCertificate;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import org.apache.commons.lang.StringUtils;
@@ -334,10 +335,12 @@ public class Subscription implements Owned, Named {
         this.branding = branding;
     }
 
+    @JsonIgnore
     public boolean isStacked() {
         return !StringUtils.isBlank(this.product.getAttributeValue("stacking_id"));
     }
 
+    @JsonIgnore
     public String getStackId() {
         // Check if we are stacked first so we return null over empty string
         // when stacking_id = ""
