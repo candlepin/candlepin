@@ -734,6 +734,28 @@ module Candlepin
       def delete_activation_key(opts = {})
         delete_by_id("/activation_keys", :id, opts)
       end
+
+      def add_pool_to_activation_key(opts = {})
+        defaults = {
+          :id => nil,
+          :pool => nil,
+          :quantity => 1,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :id, :pool)
+
+        post("/activation_keys/#{opts[:id]}/pools/#{opts[:pool]}", :query => opts.slice(:quantity))
+      end
+
+      def delete_pool_from_activation_key(opts = {})
+        defaults = {
+          :id => nil,
+          :pool => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :id, :pool)
+        delete("/activation_keys/#{opts[:id]}/pools/#{opts[:pool]}")
+      end
     end
 
     module HypervisorResource

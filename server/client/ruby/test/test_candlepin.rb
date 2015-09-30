@@ -110,12 +110,11 @@ module Candlepin
       end
     end
 
-    context "in an Owner context", :functional => true do
+    context "in an Activation Key context", :functional => true do
       include_context("functional context")
 
       it 'creates activation keys' do
-        res = user_client.create_activation_key(
-          :key => owner[:key],
+        res = owner_client.create_activation_key(
           :name => rand_string,
           :description => rand_string,
         )
@@ -126,6 +125,64 @@ module Candlepin
         res = user_client.get_activation_key(:id => activation_key[:id])
         expect(res).to be_2xx
       end
+
+      it 'adds pools to activation keys' do
+        activation_key = owner_client.create_activation_key(
+          :name => rand_string,
+          :description => rand_string,
+        ).content
+
+        owner_client.create_subscription(
+          :key => owner[:key],
+          :product_id => product[:id],
+        )
+
+        pools = owner_client.get_owner_pools.content
+
+        res = owner_client.add_pool_to_activation_key(
+          :id => activation_key[:id],
+          :pool => pools.first[:id]
+        )
+        expect(res).to be_2xx
+
+        res = owner_client.get_activation_key(:id => activation_key[:id])
+        expect(res).to be_2xx
+      end
+
+      it 'removes pools from activation keys' do
+        activation_key = owner_client.create_activation_key(
+          :name => rand_string,
+          :description => rand_string,
+        ).content
+
+        owner_client.create_subscription(
+          :key => owner[:key],
+          :product_id => product[:id],
+        )
+
+        pools = owner_client.get_owner_pools.content
+
+        res = owner_client.add_pool_to_activation_key(
+          :id => activation_key[:id],
+          :pool => pools.first[:id],
+        )
+        expect(res).to be_2xx
+        expect(res.content[:pools].length).to eq(1)
+
+        res = owner_client.delete_pool_from_activation_key(
+          :id => activation_key[:id],
+          :pool => pools.first[:id],
+        )
+
+        res = owner_client.get_activation_key(:id => activation_key[:id])
+        expect(res).to be_2xx
+        expect(res.content[:pools].length).to eq(0)
+      end
+
+    end
+
+    context "in an Owner context", :functional => true do
+      include_context("functional context")
 
       it 'creates owners' do
         res = user_client.create_owner(
