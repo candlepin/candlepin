@@ -370,25 +370,6 @@ public class UtilTest {
     }
 
     @Test
-    public void uniquelong() {
-        long[] unique = new long[10000];
-        for (int i = 0; i < unique.length; i++) {
-            unique[i] = Util.generateUniqueLong();
-        }
-
-        Set<Long> nodupes = new HashSet<Long>();
-        for (int i = 0; i < unique.length; i++) {
-            nodupes.add(unique[i]);
-        }
-
-        // if they are truly unique, the original array should
-        // not have had any duplicates. Therefore, the Set
-        // will have all of the same elements that the original
-        // array had.
-        assertEquals(unique.length, nodupes.size());
-    }
-
-    @Test
     public void base64() {
         String foo = "this will be cool";
         String basefoo = Util.toBase64(foo.getBytes());
