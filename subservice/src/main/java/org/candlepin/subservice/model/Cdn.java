@@ -115,13 +115,30 @@ public class Cdn extends AbstractHibernateObject {
         return this;
     }
 
-    public CdnCertificate getCert() {
+    public CdnCertificate getCertificate() {
         return this.cert;
     }
 
-    public Cdn setCert(CdnCertificate cert) {
+    public Cdn setCertificate(CdnCertificate cert) {
         this.cert = cert;
         return this;
+    }
+
+    public org.candlepin.model.Cdn toCandlepinModel() {
+        org.candlepin.model.Cdn output = new org.candlepin.model.Cdn();
+
+        output.setId(this.getId());
+        output.setLabel(this.getLabel());
+        output.setName(this.getName());
+        output.setUrl(this.getUrl());
+
+        CdnCertficiate cert = this.getCertificate();
+        output.setCertificate(cert != null ? cert.toCandlepinModel() : null);
+
+        output.setCreated(this.getCreated());
+        output.setUpdated(this.getUpdated());
+
+        return output;
     }
 
 }

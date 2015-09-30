@@ -35,6 +35,7 @@ public class StatusResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
     public String getStatus() {
+        // TODO: We should change this to match up with what GB and CP do in this call.
         log.debug("getStatus");
         return "{\"alive\":\"true\"}";
     }

@@ -107,4 +107,16 @@ public class Branding extends AbstractHibernateObject {
         return this;
     }
 
+    public org.candlepin.model.Branding toCandlepinModel() {
+        org.candlepin.model.Branding output = new org.candlepin.model.Branding();
+
+        output.setId(this.getId());
+        output.setProductId(this.getProductId());
+        output.setName(this.getName());
+        output.setType(this.getType());
+        output.setCreated(this.getCreated());
+        output.setUpdated(this.getUpdated());
+
+        return output;
+    }
 }

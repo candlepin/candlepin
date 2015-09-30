@@ -234,4 +234,24 @@ public class Content extends AbstractHibernateObject {
         return this;
     }
 
+    public org.candlepin.model.Content toCandlepinModel() {
+        org.candlepin.model.Content output = new org.candlepin.model.Content();
+
+        output.setId(this.getId());
+        output.setType(this.getType());
+        output.setLabel(this.getLabel());
+        output.setName(this.getName());
+        output.setVendor(this.getVendor());
+        output.setContentUrl(this.getContentUrl());
+        output.setRequiredTags(this.getRequiredTags());
+        output.setReleaseVer(this.getReleaseVer());
+        output.setGpgUrl(this.getGpgUrl());
+        output.setMetadataExpire(this.getMetadataExpire());
+        output.setModifiedProductIds(this.getModifiedProductIds());
+        output.setArches(this.getArches());
+        output.setCreated(this.getCreated());
+        output.setUpdated(this.getUpdated());
+
+        return output;
+    }
 }

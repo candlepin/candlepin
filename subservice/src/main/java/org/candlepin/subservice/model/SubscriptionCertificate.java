@@ -82,4 +82,17 @@ public class SubscriptionCertificate extends AbstractCertificate {
         return this;
     }
 
+    public org.candlepin.model.SubscriptionCertificate toCandlepinModel() {
+        org.candlepin.model.SubscriptionCertificate output = new org.candlepin.model.SubscriptionCertificate();
+
+        output.setId(this.getId());
+
+        CertificateSerial serial = this.getSerial();
+        output.setSerial(serial != null ? serial.toCandlepinModel() : null);
+
+        output.setCreated(this.getCreated());
+        output.setUpdated(this.getUpdated());
+
+        return output;
+    }
 }

@@ -58,6 +58,11 @@ public class ProductAttribute extends AbstractHibernateObject {
     @NotNull
     protected Product product;
 
+    /**
+     * Temporary object used to prevent infinite recursion during conversion to the CP model
+     */
+    private org.candlepin.model.ProductAttribute cpmodel;
+
     protected ProductAttribute() {
 
     }
@@ -103,4 +108,30 @@ public class ProductAttribute extends AbstractHibernateObject {
         return this;
     }
 
+    public synchronized org.candlepin.model.ProductAttribute toCandlepinModel() {
+        try {
+            if (this.cpmodel == null) {
+                org.candlepin.model.ProductAttribute output = new org.candlepin.model.ProductAttribute();
+                this.cpmodel = output;
+
+                output.setId(this.getId());
+                output.setName(this.getName());
+                output.setValue(this.getValue());
+
+                Product product = this.getProduct();
+                output.setProduct(product != null ? product.toCandlepinModel() : null);
+
+                output.setCreated(this.getCreated());
+                output.setUpdated(this.getUpdated());
+
+                return output;
+            }
+            else {
+                return this.cpmodel;
+            }
+        }
+        finally {
+            this.cpmodel = null;
+        }
+    }
 }
