@@ -31,6 +31,7 @@
         <module>common</module>
         <module>gutterball</module>
         <module>server</module>
+        <module>subservice</module>
     </modules>
 
     <properties>

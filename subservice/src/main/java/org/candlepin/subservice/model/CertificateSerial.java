@@ -40,7 +40,7 @@ public class CertificateSerial extends AbstractHibernateObject {
     @Id
     @GeneratedValue(generator = "serial-number")
     @GenericGenerator(name = "serial-number",
-        strategy = "org.candlepin.subservice.util.SerialNumberGenerator")
+        strategy = "org.candlepin.util.SerialNumberGenerator")
     @NotNull
     protected Long id;
 
