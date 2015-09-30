@@ -54,7 +54,7 @@ public class ProductContent {
     /**
      * Temporary object used to prevent infinite recursion during conversion to the CP model
      */
-    private org.candlepin.model.Product cpmodel;
+    private org.candlepin.model.ProductContent cpmodel;
 
     public ProductContent() {
 
@@ -135,7 +135,7 @@ public class ProductContent {
                 Content content = this.getContent();
                 output.setContent(content != null ? content.toCandlepinModel() : null);
 
-                output.setEnabled(this.getEnabled);
+                output.setEnabled(this.getEnabled());
                 output.setCreated(this.getCreated());
                 output.setUpdated(this.getUpdated());
 
@@ -148,7 +148,5 @@ public class ProductContent {
         finally {
             this.cpmodel = null;
         }
-
-        return output;
     }
 }

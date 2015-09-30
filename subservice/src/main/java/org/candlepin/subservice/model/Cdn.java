@@ -132,7 +132,7 @@ public class Cdn extends AbstractHibernateObject {
         output.setName(this.getName());
         output.setUrl(this.getUrl());
 
-        CdnCertficiate cert = this.getCertificate();
+        CdnCertificate cert = this.getCertificate();
         output.setCertificate(cert != null ? cert.toCandlepinModel() : null);
 
         output.setCreated(this.getCreated());

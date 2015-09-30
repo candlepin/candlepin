@@ -14,6 +14,8 @@
  */
 package org.candlepin.subservice.model;
 
+import org.candlepin.model.AbstractHibernateObject;
+
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
@@ -45,7 +47,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cps_products")
-public class Product {
+public class Product extends AbstractHibernateObject {
 
     // Internal RH product ID,
     @Id
@@ -169,11 +171,12 @@ public class Product {
     public synchronized org.candlepin.model.Product toCandlepinModel() {
         try {
             if (this.cpmodel == null) {
-                org.candlepin.model.Product output = new org.candlepin.model.Product();
+                org.candlepin.model.Product output = new org.candlepin.model.Product(
+                    this.getId(), this.getName(), null
+                );
+
                 this.cpmodel = output;
 
-                output.setId(this.getId());
-                output.setName(this.getName());
                 output.setMultiplier(this.getMultiplier());
 
                 Set<ProductAttribute> attributes = this.getAttributes();

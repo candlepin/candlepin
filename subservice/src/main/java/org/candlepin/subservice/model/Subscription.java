@@ -330,8 +330,8 @@ public class Subscription extends AbstractHibernateObject {
         if (providedProducts.size() > 0) {
             Set<org.candlepin.model.Product> converted = new HashSet<org.candlepin.model.Product>();
 
-            for (Product product : providedProducts) {
-                converted.add(product.toCandlepinModel());
+            for (Product p : providedProducts) {
+                converted.add(p.toCandlepinModel());
             }
 
             output.setProvidedProducts(converted);
@@ -344,8 +344,8 @@ public class Subscription extends AbstractHibernateObject {
         if (derivedProvidedProducts.size() > 0) {
             Set<org.candlepin.model.Product> converted = new HashSet<org.candlepin.model.Product>();
 
-            for (Product product : derivedProvidedProducts) {
-                converted.add(product.toCandlepinModel());
+            for (Product dp : derivedProvidedProducts) {
+                converted.add(dp.toCandlepinModel());
             }
 
             output.setDerivedProvidedProducts(converted);
@@ -373,11 +373,11 @@ public class Subscription extends AbstractHibernateObject {
         output.setEndDate(this.getEndDate());
         output.setContractNumber(this.getContractNumber());
         output.setAccountNumber(this.getAccountNumber());
-        output.setOrderNumber(this.getOrderNumber);
-        output.setModified(this.getModified);
-        output.setUpstreamPoolId(this.getUpstreamPoolId);
-        output.setUpstreamEntitlementId(this.getUpstreamEntitlementId);
-        output.setUpstreamConsumerId(this.getUpstreamConsumerId);
+        output.setOrderNumber(this.getOrderNumber());
+        output.setModified(this.getModified());
+        output.setUpstreamPoolId(this.getUpstreamPoolId());
+        output.setUpstreamEntitlementId(this.getUpstreamEntitlementId());
+        output.setUpstreamConsumerId(this.getUpstreamConsumerId());
         output.setCertificate(this.cert != null ? this.cert.toCandlepinModel() : null);
         output.setCdn(this.cdn != null ? this.cdn.toCandlepinModel() : null);
 

@@ -82,8 +82,8 @@ public class SubscriptionCertificate extends AbstractCertificate {
         return this;
     }
 
-    public org.candlepin.model.SubscriptionCertificate toCandlepinModel() {
-        org.candlepin.model.SubscriptionCertificate output = new org.candlepin.model.SubscriptionCertificate();
+    public org.candlepin.model.SubscriptionsCertificate toCandlepinModel() {
+        org.candlepin.model.SubscriptionsCertificate output = new org.candlepin.model.SubscriptionsCertificate();
 
         output.setId(this.getId());
 
