@@ -453,7 +453,7 @@ module Candlepin
       def bind(opts = {})
         # Entitle dates are not allowed in bind by product.
         default_date = Date.today
-        if opts.key?(:pool)
+        if opts.key?(:pool_id)
           default_date = nil
         end
 
@@ -469,12 +469,12 @@ module Candlepin
           :quantity => default_quantity,
           :async => false,
           :entitle_date => default_date,
-          :pool => nil,
+          :pool_id => nil,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :uuid)
 
-        if !opts[:product].nil? && !opts[:pool].nil?
+        if !opts[:product].nil? && !opts[:pool_id].nil?
           raise ArgumentError.new("Bind by pool or by product but not by both")
         end
 
@@ -483,8 +483,12 @@ module Candlepin
           :quantity,
           :async,
           :entitle_date,
-          :pool,
-        ).compact
+        )
+        # Use the option :pool_id for consistency among all the other method calls
+        # Just transparently transform it to match the API's requirements.
+        query_args[:pool] = opts[:pool_id]
+        query_args.compact!
+
         post("/consumers/#{opts[:uuid]}/entitlements", :query => query_args)
       end
 
@@ -738,23 +742,99 @@ module Candlepin
       def add_pool_to_activation_key(opts = {})
         defaults = {
           :id => nil,
-          :pool => nil,
+          :pool_id => nil,
           :quantity => 1,
         }
         opts = verify_and_merge(opts, defaults)
-        validate_keys(opts, :id, :pool)
+        validate_keys(opts, :id, :pool_id)
 
-        post("/activation_keys/#{opts[:id]}/pools/#{opts[:pool]}", :query => opts.slice(:quantity))
+        post("/activation_keys/#{opts[:id]}/pools/#{opts[:pool_id]}", :query => opts.slice(:quantity))
       end
 
       def delete_pool_from_activation_key(opts = {})
         defaults = {
           :id => nil,
-          :pool => nil,
+          :pool_id => nil,
         }
         opts = verify_and_merge(opts, defaults)
-        validate_keys(opts, :id, :pool)
-        delete("/activation_keys/#{opts[:id]}/pools/#{opts[:pool]}")
+        validate_keys(opts, :id, :pool_id)
+        delete("/activation_keys/#{opts[:id]}/pools/#{opts[:pool_id]}")
+      end
+
+      def add_product_to_activation_key(opts = {})
+        defaults = {
+          :id => nil,
+          :product_id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :id, :product_id)
+
+        post("/activation_keys/#{opts[:id]}/product/#{opts[:product_id]}")
+      end
+
+      def delete_product_from_activation_key(opts = {})
+        defaults = {
+          :id => nil,
+          :product_id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :id, :product_id)
+
+        delete("/activation_keys/#{opts[:id]}/product/#{opts[:product_id]}")
+      end
+
+      def add_overrides_to_activation_key(opts = {})
+        defaults = {
+          :id => nil,
+          :overrides => [],
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :id)
+
+        unless opts[:overrides].kind_of?(Array)
+          opts[:overrides] = [opts[:overrides]]
+        end
+
+        override_defaults = {
+          :content_label => nil,
+          :name => nil,
+          :value => nil,
+        }
+        body = []
+        override_objects = opts[:overrides]
+        override_objects.each do |override|
+          override = verify_and_merge(override, override_defaults)
+          body << camelize_hash(override)
+        end
+
+        put("/activation_keys/#{opts[:id]}/content_overrides", body)
+      end
+
+      def delete_overrides_from_activation_key(opts = {})
+        defaults = {
+          :id => nil,
+          :overrides => [],
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :id)
+
+        unless opts[:overrides].kind_of?(Array)
+          opts[:overrides] = [opts[:overrides]]
+        end
+
+        override_defaults = {
+          :content_label => nil,
+          :name => nil,
+          :value => nil,
+        }
+        body = []
+        override_objects = opts[:overrides]
+        override_objects.each do |override|
+          override = verify_and_merge(override, override_defaults)
+          body << camelize_hash(override)
+        end
+
+        delete("/activation_keys/#{opts[:id]}/content_overrides", body)
       end
     end
 
@@ -1592,8 +1672,6 @@ module Candlepin
         override_objects = opts[:overrides]
         override_objects.each do |override|
           override = verify_and_merge(override, override_defaults)
-          override[:id] = override[:override_id]
-          override.delete(:override_id)
           body << camelize_hash(override)
         end
 
@@ -1631,8 +1709,6 @@ module Candlepin
         override_objects = opts[:overrides]
         override_objects.each do |override|
           override = verify_and_merge(override, override_defaults)
-          override[:id] = override[:override_id]
-          override.delete(:override_id)
           body << camelize_hash(override)
         end
 

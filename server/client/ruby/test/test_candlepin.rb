@@ -141,7 +141,7 @@ module Candlepin
 
         res = owner_client.add_pool_to_activation_key(
           :id => activation_key[:id],
-          :pool => pools.first[:id]
+          :pool_id => pools.first[:id]
         )
         expect(res).to be_2xx
 
@@ -164,14 +164,14 @@ module Candlepin
 
         res = owner_client.add_pool_to_activation_key(
           :id => activation_key[:id],
-          :pool => pools.first[:id],
+          :pool_id => pools.first[:id],
         )
         expect(res).to be_2xx
         expect(res.content[:pools].length).to eq(1)
 
         res = owner_client.delete_pool_from_activation_key(
           :id => activation_key[:id],
-          :pool => pools.first[:id],
+          :pool_id => pools.first[:id],
         )
 
         res = owner_client.get_activation_key(:id => activation_key[:id])
@@ -179,6 +179,92 @@ module Candlepin
         expect(res.content[:pools].length).to eq(0)
       end
 
+      it 'adds content overrides to activation keys' do
+        activation_key = owner_client.create_activation_key(
+          :name => rand_string,
+          :description => rand_string,
+        ).content
+
+        res = owner_client.add_overrides_to_activation_key(
+          :id => activation_key[:id],
+          :overrides => {
+            :content_label => "x",
+            :name => "y",
+            :value => "z",
+          },
+        )
+        expect(res).to be_2xx
+
+        result_key = owner_client.get_activation_key(:id => activation_key[:id]).content
+        expect(result_key[:contentOverrides].length).to eq(1)
+      end
+
+      it 'removes content overrides from activation keys' do
+        activation_key = owner_client.create_activation_key(
+          :name => rand_string,
+          :description => rand_string,
+        ).content
+
+        override = {
+          :content_label => "x",
+          :name => "y",
+          :value => "z",
+        }
+        res = owner_client.add_overrides_to_activation_key(
+          :id => activation_key[:id],
+          :overrides => override,
+        )
+        expect(res).to be_2xx
+
+        result_key = owner_client.get_activation_key(:id => activation_key[:id]).content
+        expect(result_key[:contentOverrides].length).to eq(1)
+
+        res = owner_client.delete_overrides_from_activation_key(
+          :id => activation_key[:id],
+          :overrides => override,
+        )
+        result_key = owner_client.get_activation_key(:id => activation_key[:id]).content
+        expect(result_key[:contentOverrides].length).to eq(0)
+      end
+
+      it 'adds products to activation keys' do
+        activation_key = owner_client.create_activation_key(
+          :name => rand_string,
+          :description => rand_string,
+        ).content
+
+        res = owner_client.add_product_to_activation_key(
+          :id => activation_key[:id],
+          :product_id => product[:id],
+        )
+        expect(res).to be_2xx
+
+        res = owner_client.get_activation_key(:id => activation_key[:id])
+        expect(res).to be_2xx
+      end
+
+      it 'removes products from activation keys' do
+        activation_key = owner_client.create_activation_key(
+          :name => rand_string,
+          :description => rand_string,
+        ).content
+
+        res = owner_client.add_product_to_activation_key(
+          :id => activation_key[:id],
+          :product_id => product[:id],
+        )
+        expect(res).to be_2xx
+        expect(res.content[:products].length).to eq(1)
+
+        res = owner_client.delete_product_from_activation_key(
+          :id => activation_key[:id],
+          :product_id => product[:id],
+        )
+
+        res = owner_client.get_activation_key(:id => activation_key[:id])
+        expect(res).to be_2xx
+        expect(res.content[:products].length).to eq(0)
+      end
     end
 
     context "in an Owner context", :functional => true do
@@ -734,7 +820,7 @@ module Candlepin
           :name => rand_string,
         )
 
-        res = x509_client.bind(:pool => pools.first[:id])
+        res = x509_client.bind(:pool_id => pools.first[:id])
         expect(res).to be_2xx
 
         entitlement = res.content.first
