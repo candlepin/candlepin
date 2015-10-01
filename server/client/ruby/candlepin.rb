@@ -725,6 +725,10 @@ module Candlepin
         get("/activation_keys")
       end
 
+      def delete_activation_key(opts = {})
+        delete_by_id("/activation_keys", :id, opts)
+      end
+
       def get_activation_key_pools(opts = {})
         defaults = {
           :id => nil,
@@ -733,10 +737,6 @@ module Candlepin
         validate_keys(opts, :id)
 
         get("/activation_keys/#{opts[:id]}/pools")
-      end
-
-      def delete_activation_key(opts = {})
-        delete_by_id("/activation_keys", :id, opts)
       end
 
       def add_pool_to_activation_key(opts = {})
@@ -761,6 +761,16 @@ module Candlepin
         delete("/activation_keys/#{opts[:id]}/pools/#{opts[:pool_id]}")
       end
 
+      def get_activation_key_products(opts = {})
+        defaults = {
+          :id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :id)
+
+        get("/activation_keys/#{opts[:id]}/products")
+      end
+
       def add_product_to_activation_key(opts = {})
         defaults = {
           :id => nil,
@@ -781,6 +791,16 @@ module Candlepin
         validate_keys(opts, :id, :product_id)
 
         delete("/activation_keys/#{opts[:id]}/product/#{opts[:product_id]}")
+      end
+
+      def get_activation_key_overrides(opts = {})
+        defaults = {
+          :id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :id)
+
+        get("/activation_keys/#{opts[:id]}/content_overrides")
       end
 
       def add_overrides_to_activation_key(opts = {})
