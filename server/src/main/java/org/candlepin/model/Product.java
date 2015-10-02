@@ -389,7 +389,12 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
 
     @Override
     public String toString() {
-        return "Product [owner = " + owner.getKey() + ", id = " + id + ", name = " + name + "]";
+        String text = "Product [id = " + id + ", name = " + name;
+        if(owner!=null) {
+            text += ", owner = " + owner.getKey();
+        }
+        text += "]";
+        return text.toString();
     }
 
     @Override

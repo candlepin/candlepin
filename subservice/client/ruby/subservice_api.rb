@@ -1,6 +1,8 @@
 require 'openssl'
 require 'rest_client'
 require 'json'
+require 'date'
+
 
 class Subservice
 
@@ -44,8 +46,38 @@ class Subservice
     return get("/subscriptions/#{uuid}")
   end
 
-  def create_subscription(subscription)
-    return post("/subscriptions",subscription)
+  def create_subscription(owner_key, product_id, quantity=1,
+                          provided_products=[], contract_number='',
+                          account_number='', order_number='',
+                          start_date=nil, end_date=nil, params={})
+    start_date ||= Date.today
+    end_date ||= start_date + 365
+
+    subscription = {
+      'owner' => owner_key,
+      'startDate' => start_date,
+      'endDate'   => end_date,
+      'quantity'  =>  quantity,
+      'accountNumber' => account_number,
+      'orderNumber' => order_number,
+      'product' => { 'id' => product_id },
+      'providedProducts' => provided_products.collect { |pid| {'id' => pid} },
+      'contractNumber' => contract_number
+    }
+
+    if params[:branding]
+      subscription['branding'] = params[:branding]
+    end
+
+    if params['derived_product_id']
+      subscription['derivedProduct'] = { 'id' => params['derived_product_id'] }
+    end
+
+    if params['derived_provided_products']
+      subscription['derivedProvidedProducts'] = params['derived_provided_products'].collect { |pid| {'id' => pid} }
+    end
+
+    return post("/subscriptions/", subscription)
   end
 
   def update_subscription(uuid,subscription)

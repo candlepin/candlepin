@@ -87,14 +87,14 @@ public class Subscription implements Owned, Named {
     }
 
     public String toString() {
-        StringBuilder result = new StringBuilder("Subscription [id = " + getId());
+        String result = "Subscription [id = " + getId();
         if (getProduct() != null) {
-            result.append(", product = " + getProduct().getId());
+            result += ", product = " + getProduct().getId();
         }
         if (getOwner() != null) {
-            result.append(", owner = " + getOwner().getKey());
+            result += ", owner = " + getOwner().getKey();
         }
-        result.append("]");
+        result += "]";
         return result.toString();
     }
 
