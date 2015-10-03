@@ -102,4 +102,16 @@ public class CertificateSerial extends AbstractHibernateObject {
         return this;
     }
 
+    public org.candlepin.model.CertificateSerial toCandlepinModel() {
+        org.candlepin.model.CertificateSerial output = new org.candlepin.model.CertificateSerial();
+
+        output.setId(this.getId());
+        // UH OH: Revoked could pose a problem
+        output.setCollected(this.getCollected());
+        output.setExpiration(this.getExpiration());
+        output.setCreated(this.getCreated());
+        output.setUpdated(this.getUpdated());
+
+        return output;
+    }
 }

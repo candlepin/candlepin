@@ -14,6 +14,8 @@
  */
 package org.candlepin.subservice.model;
 
+import org.candlepin.model.AbstractHibernateObject;
+
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
@@ -45,7 +47,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cps_products")
-public class Product {
+public class Product extends AbstractHibernateObject {
 
     // Internal RH product ID,
     @Id
@@ -81,7 +83,12 @@ public class Product {
     @Column(name = "element")
     protected Set<String> dependentProductIds; // Should these be product references?
 
-    protected Product() {
+    /**
+     * Temporary object used to prevent infinite recursion during conversion to the CP model
+     */
+    private org.candlepin.model.Product cpmodel;
+
+    public Product() {
         this.attributes = new HashSet<ProductAttribute>();
         this.productContent = new LinkedList<ProductContent>();
         this.dependentProductIds = new HashSet<String>();
@@ -161,4 +168,59 @@ public class Product {
         return this;
     }
 
+    public synchronized org.candlepin.model.Product toCandlepinModel() {
+        try {
+            if (this.cpmodel == null) {
+                org.candlepin.model.Product output = new org.candlepin.model.Product(
+                    this.getId(), this.getName(), null
+                );
+
+                this.cpmodel = output;
+
+                output.setMultiplier(this.getMultiplier());
+
+                Set<ProductAttribute> attributes = this.getAttributes();
+                if (attributes != null && attributes.size() > 0) {
+                    Set<org.candlepin.model.ProductAttribute> converted =
+                        new HashSet<org.candlepin.model.ProductAttribute>();
+
+                    for (ProductAttribute attribute : attributes) {
+                        converted.add(attribute.toCandlepinModel());
+                    }
+
+                    output.setAttributes(converted);
+                }
+                else {
+                    output.setAttributes(null);
+                }
+
+                List<ProductContent> productContent = this.getProductContent();
+                if (productContent != null && productContent.size() > 0) {
+                    List<org.candlepin.model.ProductContent> converted =
+                        new LinkedList<org.candlepin.model.ProductContent>();
+
+                    for (ProductContent content : productContent) {
+                        converted.add(content.toCandlepinModel());
+                    }
+
+                    output.setProductContent(converted);
+                }
+                else {
+                    output.setProductContent(null);
+                }
+
+                output.setDependentProductIds(this.getDependentProductIds());
+                output.setCreated(this.getCreated());
+                output.setUpdated(this.getUpdated());
+
+                return output;
+            }
+            else {
+                return this.cpmodel;
+            }
+        }
+        finally {
+            this.cpmodel = null;
+        }
+    }
 }

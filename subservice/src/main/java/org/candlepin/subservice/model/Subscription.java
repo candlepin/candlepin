@@ -312,30 +312,74 @@ public class Subscription extends AbstractHibernateObject {
         return this;
     }
 
-    public org.candlepin.model.dto.Subscription toSubscriptionDTO() {
+    public org.candlepin.model.dto.Subscription toCandlepinModel() {
         org.candlepin.model.dto.Subscription output = new org.candlepin.model.dto.Subscription();
 
         output.setId(this.id);
         output.setOwner(null);
         output.setCreated(this.getCreated());
         output.setUpdated(this.getUpdated());
-        output.setProduct(this.product);
-        output.setDerivedProduct(this.derivedProduct);
-        output.setProvidedProducts(this.providedProducts);
-        output.setDerivedProvidedProducts(this.derivedProvidedProducts);
-        output.setBranding(this.branding);
-        output.setQuantity(this.quantity);
-        output.setStartDate(this.startDate);
-        output.setEndDate(this.endDate);
-        output.setContractNumber(this.contractNumber);
-        output.setAccountNumber(this.accountNumber);
-        output.setOrderNumber(this.orderNumber);
-        output.setModified(this.modified);
-        output.setUpstreamPoolId(this.upstreamPoolId);
-        output.setUpstreamEntitlementId(this.upstreamEntitlementId);
-        output.setUpstreamConsumerId(this.upstreamConsumerId);
-        output.setCertificate(this.cert);
-        output.setCdn(this.cdn);
+
+        Product product = this.getProduct();
+        output.setProduct(product != null ? product.toCandlepinModel() : null);
+
+        Product derivedProduct = this.getDerivedProduct();
+        output.setDerivedProduct(derivedProduct != null ? derivedProduct.toCandlepinModel() : null);
+
+        Set<Product> providedProducts = this.getProvidedProducts();
+        if (providedProducts.size() > 0) {
+            Set<org.candlepin.model.Product> converted = new HashSet<org.candlepin.model.Product>();
+
+            for (Product p : providedProducts) {
+                converted.add(p.toCandlepinModel());
+            }
+
+            output.setProvidedProducts(converted);
+        }
+        else {
+            output.setProvidedProducts(null);
+        }
+
+        Set<Product> derivedProvidedProducts = this.getDerivedProvidedProducts();
+        if (derivedProvidedProducts.size() > 0) {
+            Set<org.candlepin.model.Product> converted = new HashSet<org.candlepin.model.Product>();
+
+            for (Product dp : derivedProvidedProducts) {
+                converted.add(dp.toCandlepinModel());
+            }
+
+            output.setDerivedProvidedProducts(converted);
+        }
+        else {
+            output.setDerivedProvidedProducts(null);
+        }
+
+        Set<Branding> branding = this.getBranding();
+        if (branding.size() > 0) {
+            Set<org.candlepin.model.Branding> converted = new HashSet<org.candlepin.model.Branding>();
+
+            for (Branding binst : branding) {
+                converted.add(binst.toCandlepinModel());
+            }
+
+            output.setBranding(converted);
+        }
+        else {
+            output.setBranding(null);
+        }
+
+        output.setQuantity(this.getQuantity());
+        output.setStartDate(this.getStartDate());
+        output.setEndDate(this.getEndDate());
+        output.setContractNumber(this.getContractNumber());
+        output.setAccountNumber(this.getAccountNumber());
+        output.setOrderNumber(this.getOrderNumber());
+        output.setModified(this.getModified());
+        output.setUpstreamPoolId(this.getUpstreamPoolId());
+        output.setUpstreamEntitlementId(this.getUpstreamEntitlementId());
+        output.setUpstreamConsumerId(this.getUpstreamConsumerId());
+        output.setCertificate(this.cert != null ? this.cert.toCandlepinModel() : null);
+        output.setCdn(this.cdn != null ? this.cdn.toCandlepinModel() : null);
 
         return output;
     }

@@ -49,7 +49,12 @@ public class ProductContent {
     @NotNull
     protected Content content;
 
-    protected Boolean enabled;
+    protected boolean enabled;
+
+    /**
+     * Temporary object used to prevent infinite recursion during conversion to the CP model
+     */
+    private org.candlepin.model.ProductContent cpmodel;
 
     public ProductContent() {
 
@@ -78,7 +83,7 @@ public class ProductContent {
         return this;
     }
 
-    public Boolean getEnabled() {
+    public boolean getEnabled() {
         return this.enabled;
     }
 
@@ -116,5 +121,32 @@ public class ProductContent {
 
     public void setUpdated(Date updated) {
         this.updated = updated;
+    }
+
+    public synchronized org.candlepin.model.ProductContent toCandlepinModel() {
+        try {
+            if (this.cpmodel == null) {
+                org.candlepin.model.ProductContent output = new org.candlepin.model.ProductContent();
+                this.cpmodel = output;
+
+                Product product = this.getProduct();
+                output.setProduct(product != null ? product.toCandlepinModel() : null);
+
+                Content content = this.getContent();
+                output.setContent(content != null ? content.toCandlepinModel() : null);
+
+                output.setEnabled(this.getEnabled());
+                output.setCreated(this.getCreated());
+                output.setUpdated(this.getUpdated());
+
+                return output;
+            }
+            else {
+                return this.cpmodel;
+            }
+        }
+        finally {
+            this.cpmodel = null;
+        }
     }
 }
