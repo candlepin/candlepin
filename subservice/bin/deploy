@@ -7,7 +7,7 @@ source "$(buildr -s checkout_root)/bin/bash_functions"
 PROJECT_DIR="$(project_directory subservice)"
 TC="$(which_tomcat)"
 SELF_DIR="${BASH_SOURCE%/*}"
-CANDLEPIN_BIN_DIR="$(project_directory)/bin"
+CANDLEPIN_BIN_DIR="$(checkout_directory)/bin"
 
 clean_up() {
     cd "$START_DIR"

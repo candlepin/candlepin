@@ -148,7 +148,7 @@ init() {
     source "$(buildr -s checkout_root)/bin/bash_functions"
 
     PROJECT_DIR="$(project_directory server)"
-    CANDLEPIN_BIN_DIR="$(project_directory)/bin"
+    CANDLEPIN_BIN_DIR="$(checkout_directory)/bin"
     # Get the directory this script is in. See http://mywiki.wooledge.org/BashFAQ/028
     SELF_DIR="${BASH_SOURCE%/*}"
 }
