@@ -84,12 +84,6 @@ update_keystore() {
     fi
 }
 
-upload_products() {
-  if [ "$TESTDATA" = "1" ]; then
-      $SELF_DIR/import_products.rb $CANDLEPIN_BIN_DIR/test_data.json
-  fi
-}
-
 create_var_lib_candlepin() {
     $SUDO mkdir -p /var/lib/candlepin
     $SUDO chown tomcat:tomcat /var/lib/candlepin
@@ -306,5 +300,5 @@ eval $START
 sleep 10
 initialize_cp
 
-upload_products
+upload_test_data $TESTDATA $SELF_DIR $CANDLEPIN_BIN_DIR
 notify

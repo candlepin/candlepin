@@ -1,22 +1,23 @@
 #!/usr/bin/env ruby
 
 require_relative "../client/ruby/candlepin_api"
+require_relative "../../bin/thread_pools.rb"
 
 require 'rubygems'
 require 'date'
 require 'json'
 require 'pp'
-require 'thread'
 
 SMALL_SUB_QUANTITY = 5
 LARGE_SUB_QUANTITY = 10
 
-filenames=["../../bin/test_data.json"]
+filenames=[]
 if not ARGV.empty?
-  filenames.clear
   ARGV.each do |filename|
     filenames.push(filename)
   end
+else
+  raise "Please specify the test data file path(s)"
 end
 
 data = {}
@@ -30,37 +31,6 @@ filenames.each do |filename|
   data['owners'] = data.fetch('owners', []) + product_data['owners']
   data['users'] = data.fetch('users', []) + product_data['users']
   data['roles'] = data.fetch('roles', []) + product_data['roles']
-end
-
-# from http://burgestrand.se/articles/quick-and-simple-ruby-thread-pool.html
-class Pool
-  def initialize(size)
-    @size = size
-    @jobs = Queue.new
-    @pool = Array.new(@size) do |i|
-      Thread.new do
-        Thread.current[:id] = i
-        catch(:exit) do
-          loop do
-            job, args = @jobs.pop
-            job.call(*args)
-          end
-        end
-      end
-    end
-  end
-
-  def schedule(*args, &block)
-    @jobs << [block, args]
-  end
-
-  def shutdown
-    @size.times do
-      schedule { throw :exit }
-    end
-
-    @pool.map(&:join)
-  end
 end
 
 cp = Candlepin.new('admin', 'admin', nil, nil, 'localhost', 8443)

@@ -3,7 +3,6 @@ require 'rest_client'
 require 'json'
 require 'date'
 
-
 class Subservice
 
   # Initialize a connection to Subservice.

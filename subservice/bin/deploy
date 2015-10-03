@@ -6,6 +6,8 @@ APP="subservice"
 source "$(buildr -s checkout_root)/bin/bash_functions"
 PROJECT_DIR="$(project_directory subservice)"
 TC="$(which_tomcat)"
+SELF_DIR="${BASH_SOURCE%/*}"
+CANDLEPIN_BIN_DIR="$(project_directory)/bin"
 
 clean_up() {
     cd "$START_DIR"
@@ -24,7 +26,8 @@ usage() {
 
     OPTIONS:
       -q  quiet; no notifications and minimal output
-      -t  hot deploy; do not stop and start Tomcat
+      -h  hot deploy; do not stop and start Tomcat
+      -t  import test data
       -g  regenerate database
       -m  deploy to MySQL
       -o  deploy to Oracle
@@ -44,10 +47,11 @@ set -e
 
 LOGDRIVER=""
 
-while getopts ":qtlmoga" opt; do
+while getopts ":qthlmoga" opt; do
     case $opt in
         q  ) QUIET="1";;
-        t  ) HOTDEPLOY="1";;
+        h  ) HOTDEPLOY="1";;
+        t  ) TESTDATA="1";;
         l  ) LOGDRIVER="logdriver=yes";;
         m  ) USE_MYSQL="1";;
         o  ) USE_ORACLE="1";;
@@ -63,5 +67,7 @@ stop_container "$HOTDEPLOY" $TC
 generate_db_for_project $APP $PROJECT_DIR "$GENDB" "$USE_ORACLE" "$USE_MYSQL" "$DBPASSWORD"
 deploy_project $APP $PROJECT_DIR $TC
 start_container $APP "$HOTDEPLOY" $TC
+sleep 10
+upload_test_data $TESTDATA $SELF_DIR $CANDLEPIN_BIN_DIR
 notify "$QUIET"
 clean_up

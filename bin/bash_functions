@@ -254,6 +254,15 @@ generate_db_for_project() {
     evalrc $? "Liquibase command failed"
 }
 
+upload_test_data() {
+    local run_me="$1"
+    local self_dir="$2"
+    local candlepin_bin_dir="$3"
+    if [ "$run_me" = "1" ]; then
+        ${self_dir}/import_test_data.rb ${candlepin_bin_dir}/test_data.json
+    fi
+}
+
 start_container() {
     local app="$1"
     local hotdeploy="$2"
