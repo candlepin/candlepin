@@ -14,7 +14,7 @@
  */
 package org.candlepin.subservice.resource;
 
-import org.candlepin.model.dto.Product;
+import org.candlepin.model.Product;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +41,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/products")
 public class ProductResource {
     private static Logger log = LoggerFactory.getLogger(ProductResource.class);
+    Set<Product> products = new HashSet<Product>();
 
     // Things we need:
     // Backing curator
@@ -63,6 +64,7 @@ public class ProductResource {
     public Product createProduct(Product product) {
         // TODO
         log.error("createProduct:"+product);
+        products.add(product);
         return product;
     }
 
@@ -76,8 +78,6 @@ public class ProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Set<Product> listProducts() {
         // TODO
-        Set<Product> products = new HashSet<Product>();
-        products.add(new Product());
         log.error("listProducts");
         return products;
     }
@@ -98,7 +98,12 @@ public class ProductResource {
     public Product getProduct(@PathParam("product_uuid") String productUuid) {
         // TODO
         log.error("getProduct:"+productUuid);
-        return new Product();
+        for(Product product: products) {
+            if(product.getId().equals(productUuid)) {
+                return product;
+            }
+        }
+        return null;
     }
 
     /**
@@ -119,10 +124,17 @@ public class ProductResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Product updateProduct(@PathParam("product_uuid") String productUuid,
-        Product product) {
+        Product productNew) {
         // TODO
-        log.error("updateProduct: uuid:{} product:{}", productUuid, product);
-        return product;
+        log.error("updateProduct: uuid:{} product:{}", productUuid, productNew);
+        for(Product product: products) {
+            if(product.getId().equals(productUuid)) {
+                products.remove(product);
+                products.add(productNew);
+                return productNew;
+            }
+        }
+        return null;
     }
 
     /**
@@ -140,6 +152,7 @@ public class ProductResource {
     public boolean deleteProduct(@PathParam("product_uuid") String productUuid) {
         // TODO
         log.error("deleteProduct: uuid:{}", productUuid);
+        products.clear();
         return false;
     }
 

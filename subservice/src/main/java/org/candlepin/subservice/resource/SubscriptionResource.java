@@ -41,6 +41,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/subscriptions")
 public class SubscriptionResource {
     private static Logger log = LoggerFactory.getLogger(SubscriptionResource.class);
+    private static Set<Subscription> subscriptions = new HashSet<Subscription>();
 
     // Things we need:
     // Backing curator
@@ -61,8 +62,12 @@ public class SubscriptionResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Subscription createSubscription(Subscription subscription) {
-        // TODO
-        return null;
+        log.error("{} {} {} {} {} {} {} {} {} {}", subscription.getId(), subscription.getOwner(), subscription.getProduct(),
+                subscription.getQuantity(), subscription.getStartDate(), subscription.getContractNumber(),
+                subscription.getAccountNumber(), subscription.getBranding(), subscription.getDerivedProvidedProducts(),
+                subscription.getDerivedProduct());
+        subscriptions.add(subscription);
+        return subscription;
     }
 
     /**
@@ -75,9 +80,7 @@ public class SubscriptionResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Set<Subscription> listSubscriptions() {
         // TODO
-        Set<Subscription> subs = new HashSet<Subscription>();
-        subs.add(new Subscription());
-        return subs;
+        return subscriptions;
     }
 
     /**
@@ -94,8 +97,13 @@ public class SubscriptionResource {
     @Path("/{subscription_uuid}")
     @Produces(MediaType.APPLICATION_JSON)
     public Subscription getSubscription(@PathParam("subscription_uuid") String subscriptionUuid) {
+        for(Subscription subscription:subscriptions) {
+            if(subscription.getOwner().getKey().equals(subscriptionUuid)) {
+                return subscription;
+            }
+        }
         // TODO
-        return new Subscription();
+        return null;
     }
 
     /**
@@ -116,7 +124,14 @@ public class SubscriptionResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Subscription updateSubscription(@PathParam("subscription_uuid") String subscriptionUuid,
-        Subscription subscription) {
+        Subscription subscriptionNew) {
+        for(Subscription subscription:subscriptions) {
+            if(subscription.getOwner().getKey().equals(subscriptionUuid)) {
+                subscriptions.remove(subscription);
+                subscriptions.add(subscriptionNew);
+                return subscriptionNew;
+            }
+        }
         // TODO
         return null;
     }
@@ -134,7 +149,7 @@ public class SubscriptionResource {
     @Path("/{subscription_uuid}")
     @Produces(MediaType.APPLICATION_JSON)
     public boolean deleteSubscription(@PathParam("subscription_uuid") String subscriptionUuid) {
-        // TODO
+        subscriptions.clear();
         return false;
     }
 

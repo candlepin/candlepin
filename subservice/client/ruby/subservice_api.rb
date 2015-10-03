@@ -96,8 +96,26 @@ class Subservice
     return get("/products/#{uuid}")
   end
 
-  def create_product(product)
-    return post("/products",product)
+  def create_product(id, name, params={})
+
+    multiplier = params[:multiplier] || 1
+    attributes = params[:attributes] || {}
+    contents = params[:content] || {}
+    dependentProductIds = params[:dependentProductIds] || []
+    #if product don't have type attributes, create_product will fail on server
+    #side.
+    attributes['type'] = 'SVC' if attributes['type'].nil?
+
+    product = {
+      'name' => name,
+      'id' => id,
+      'multiplier' => multiplier,
+      'attributes' => attributes.collect {|k,v| {'name' => k, 'value' => v}},
+      'dependentProductIds' => dependentProductIds,
+      'productContent' => contents.collect {|k,v| {'id' => k, 'enabled' => v}}
+    }
+
+    post("/products", product)
   end
 
   def update_product(uuid,product)
@@ -106,6 +124,30 @@ class Subservice
 
   def delete_product(uuid)
     return delete("/products/#{uuid}")
+  end
+
+  def create_content(name, id, label, type, vendor, params={})
+    metadata_expire = params[:metadata_expire] || nil
+    required_tags = params[:required_tags] || nil
+    content_url = params[:content_url] || ""
+    arches = params[:arches] || ""
+    gpg_url = params[:gpg_url] || ""
+    modified_product_ids = params[:modified_products] || []
+
+    content = {
+      'name' => name,
+      'id' => id,
+      'label' => label,
+      'type' => type,
+      'vendor' => vendor,
+      'contentUrl' => content_url,
+      'arches' => arches,
+      'gpgUrl' => gpg_url,
+      'modifiedProductIds' => modified_product_ids
+    }
+    content['metadataExpire'] = metadata_expire if not metadata_expire.nil?
+    content['requiredTags'] = required_tags if not required_tags.nil?
+    return post("/content", content)
   end
 
   def get(uri, accept_header = :json)

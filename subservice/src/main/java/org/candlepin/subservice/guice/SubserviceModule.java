@@ -16,6 +16,7 @@ package org.candlepin.subservice.guice;
 
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
+import org.candlepin.subservice.resource.ContentResource;
 import org.candlepin.subservice.resource.ProductResource;
 import org.candlepin.subservice.resource.StatusResource;
 import org.candlepin.subservice.resource.SubscriptionResource;
@@ -42,6 +43,7 @@ public class SubserviceModule extends AbstractModule {
         // RestEasy API resources
         bind(SubscriptionResource.class);
         bind(ProductResource.class);
+        bind(ContentResource.class);
         bind(StatusResource.class);
     }
 
