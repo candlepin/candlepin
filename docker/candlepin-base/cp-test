@@ -125,13 +125,14 @@ fi
 # Make sure we update the ruby bundle:
 bundle install
 
-# TODO: keep track of return code?
-cd $CP_HOME/$PROJECT
-
 if [ "$LINTER" == "1" ]; then
+    cd $CP_HOME
     echo "Running linter..."
     buildr checkstyle
 fi
+
+# TODO: keep track of return code?
+cd $CP_HOME/$PROJECT
 
 if [ "$UNITTEST" == "1" ]; then
     echo "Running unit tests."

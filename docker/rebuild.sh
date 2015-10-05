@@ -2,7 +2,16 @@
 #
 # Rebuilds all docker containers from base on down, and pushes each to the internal registry.
 
-
+# If you encounter:
+#
+#   v[12] ping attempt failed with error: Get https://*.usersys.redhat.com/v[12]/: dial tcp 10.3.10.70:443: connection refused
+#
+# ... then it's likely the register needs to be accessed insecurely. To do so, add:
+#
+#   INSECURE_REGISTRY='--insecure-registry *.usersys.redhat.com'
+#
+# to /etc/sysconfig/docker (F21+), where * is the subdomain being accessed, then restart docker and
+# re-run the rebuild command
 
 SCRIPT_NAME=$( basename "$0" )
 SCRIPT_HOME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
