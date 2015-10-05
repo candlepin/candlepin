@@ -22,11 +22,15 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestDateUtil;
+import org.candlepin.util.Util;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +44,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;
     @Inject private ConsumerCurator consumerCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private EntitlementCurator entitlementCurator;
     @Inject private Configuration config;
 
     private Owner owner;
@@ -76,7 +81,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
         factFilters.add(new TestingKeyValueParameter("notAKey", "notAVal"));
         Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null);
+            owner, null, null, null, null, factFilters, null, null, null, null);
         List<Consumer> resultList = results.getPageData();
         assertEquals(0, resultList.size());
     }
@@ -100,7 +105,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
         factFilters.add(new TestingKeyValueParameter("testkey", "testval"));
         Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
-            null, null, null, null, null, factFilters, null);
+            null, null, null, null, null, factFilters, null, null, null, null);
         List<Consumer> resultList = results.getPageData();
         assertEquals(1, resultList.size());
         assertEquals(consumer, resultList.get(0));
@@ -127,7 +132,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         List<String> uuids = new LinkedList<String>();
         uuids.add(consumer.getUuid());
         Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
-            null, null, null, uuids, null, factFilters, null);
+            null, null, null, uuids, null, factFilters, null, null, null, null);
         List<Consumer> resultList = results.getPageData();
         assertEquals(1, resultList.size());
         assertEquals(consumer, resultList.get(0));
@@ -163,7 +168,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         uuids.add(consumer.getUuid());
         uuids.add(otherOwnCons.getUuid());
         Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, uuids, null, factFilters, null);
+            owner, null, null, uuids, null, factFilters, null, null, null, null);
         List<Consumer> resultList = results.getPageData();
         assertEquals(1, resultList.size());
         assertEquals(consumer, resultList.get(0));
@@ -188,7 +193,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
         factFilters.add(new TestingKeyValueParameter("testkey", "testval"));
         Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null);
+            owner, null, null, null, null, factFilters, null, null, null, null);
         List<Consumer> resultList = results.getPageData();
         assertEquals(1, resultList.size());
         assertEquals(consumer, resultList.get(0));
@@ -205,7 +210,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
         factFilters.add(new TestingKeyValueParameter("a", "\"')"));
         Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null);
+            owner, null, null, null, null, factFilters, null, null, null, null);
         List<Consumer> resultList = results.getPageData();
         assertEquals(1, resultList.size());
         assertEquals(consumer, resultList.get(0));
@@ -222,7 +227,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
         factFilters.add(new TestingKeyValueParameter("%", "'); SELECT id from cp_owners"));
         Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null);
+            owner, null, null, null, null, factFilters, null, null, null, null);
         List<Consumer> resultList = results.getPageData();
         assertEquals(1, resultList.size());
         assertEquals(consumer, resultList.get(0));
@@ -239,7 +244,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
         factFilters.add(new TestingKeyValueParameter("%", "'); SELECT * from cp_owners"));
         Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null);
+            owner, null, null, null, null, factFilters, null, null, null, null);
         List<Consumer> resultList = results.getPageData();
         assertEquals(1, resultList.size());
         assertEquals(consumer, resultList.get(0));
@@ -264,7 +269,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
         factFilters.add(new TestingKeyValueParameter("testkey", "teSTVal"));
         Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null);
+            owner, null, null, null, null, factFilters, null, null, null, null);
         List<Consumer> resultList = results.getPageData();
         assertEquals(1, resultList.size());
         assertEquals(consumer, resultList.get(0));
@@ -289,7 +294,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
         factFilters.add(new TestingKeyValueParameter("Testkey", "testval"));
         Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null);
+            owner, null, null, null, null, factFilters, null, null, null, null);
         List<Consumer> resultList = results.getPageData();
         assertEquals(0, resultList.size());
     }
@@ -313,7 +318,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
         factFilters.add(new TestingKeyValueParameter("*key*", "testval"));
         Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null);
+            owner, null, null, null, null, factFilters, null, null, null, null);
         List<Consumer> resultList = results.getPageData();
         assertEquals(2, resultList.size());
     }
@@ -337,7 +342,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
         factFilters.add(new TestingKeyValueParameter("key", "*val*"));
         Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null);
+            owner, null, null, null, null, factFilters, null, null, null, null);
         List<Consumer> resultList = results.getPageData();
         assertEquals(2, resultList.size());
     }
@@ -361,7 +366,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
         factFilters.add(new TestingKeyValueParameter("key", "test*test"));
         Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null);
+            owner, null, null, null, null, factFilters, null, null, null, null);
         List<Consumer> resultList = results.getPageData();
         assertEquals(2, resultList.size());
     }
@@ -388,7 +393,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         factFilters.add(new TestingKeyValueParameter("key1", "value1"));
         factFilters.add(new TestingKeyValueParameter("key2", "value2"));
         Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null);
+            owner, null, null, null, null, factFilters, null, null, null, null);
         List<Consumer> resultList = results.getPageData();
         assertEquals(1, resultList.size());
         assertEquals(consumer, resultList.get(0));
@@ -417,7 +422,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         factFilters.add(new TestingKeyValueParameter("key2", "value2"));
         factFilters.add(new TestingKeyValueParameter("key2", "value3"));
         Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null);
+            owner, null, null, null, null, factFilters, null, null, null, null);
         List<Consumer> resultList = results.getPageData();
         assertEquals(2, resultList.size());
     }
@@ -444,10 +449,285 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         factFilters.add(new TestingKeyValueParameter("key1", "value2"));
         factFilters.add(new TestingKeyValueParameter("key2", "value1"));
         Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null);
+            owner, null, null, null, null, factFilters, null, null, null, null);
         List<Consumer> resultList = results.getPageData();
         assertEquals(1, resultList.size());
         assertEquals(otherConsumer, resultList.get(0));
+    }
+
+    @Test
+    public void testSearchBySubscriptionId() {
+        // Create another consumer to make sure we're not just retrieving everything
+        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
+        otherConsumer = consumerCurator.create(otherConsumer);
+
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer = consumerCurator.create(consumer);
+
+        Product p = new Product("SKU1", "Product 1", owner);
+        productCurator.create(p);
+
+        Pool pool = new Pool(
+            owner,
+            p,
+            new HashSet<Product>(),
+            1L,
+            TestDateUtil.date(2010, 1, 1),
+            TestDateUtil.date(2030, 1, 1),
+            "CONTRACT_123",
+            "ACCOUNT_456",
+            "ORDER_789"
+        );
+
+        Pool pool2 = new Pool(
+            owner,
+            p,
+            new HashSet<Product>(),
+            1L,
+            TestDateUtil.date(2010, 1, 1),
+            TestDateUtil.date(2030, 1, 1),
+            "CONTRACT_123",
+            "ACCOUNT_456",
+            "ORDER_789"
+        );
+
+        String source1 = Util.generateDbUUID();
+        String source2 = Util.generateDbUUID();
+        pool.setSourceSubscription(new SourceSubscription(source1, "master"));
+        pool2.setSourceSubscription(new SourceSubscription(source2, "master2"));
+        poolCurator.create(pool);
+        poolCurator.create(pool2);
+
+        EntitlementCertificate cert = createEntitlementCertificate("entkey", "ecert");
+
+        Entitlement e = createEntitlement(owner, consumer, pool, cert);
+        entitlementCurator.create(e);
+
+        Entitlement e2 = createEntitlement(owner, otherConsumer, pool2, cert);
+        entitlementCurator.create(e2);
+
+        List<String> subscriptionIds = new ArrayList<String>();
+        subscriptionIds.add(source1);
+        Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
+            owner, null, null, null, null, null, null, subscriptionIds, null, null);
+        List<Consumer> resultList = results.getPageData();
+        assertEquals(1, resultList.size());
+        assertEquals(consumer, resultList.get(0));
+    }
+
+
+    @Test
+    public void testSearchByContractNumber() {
+        // Create another consumer to make sure we're not just retrieving everything
+        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
+        otherConsumer = consumerCurator.create(otherConsumer);
+
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer = consumerCurator.create(consumer);
+
+        Product p = new Product("SKU1", "Product 1", owner);
+        productCurator.create(p);
+
+        Pool pool = new Pool(
+            owner,
+            p,
+            new HashSet<Product>(),
+            1L,
+            TestDateUtil.date(2010, 1, 1),
+            TestDateUtil.date(2030, 1, 1),
+            "CONTRACT_123",
+            "ACCOUNT_456",
+            "ORDER_789"
+        );
+
+        Pool pool2 = new Pool(
+            owner,
+            p,
+            new HashSet<Product>(),
+            1L,
+            TestDateUtil.date(2010, 1, 1),
+            TestDateUtil.date(2030, 1, 1),
+            "CONTRACT_XXX",
+            "ACCOUNT_456",
+            "ORDER_789"
+        );
+
+        pool.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        pool2.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        poolCurator.create(pool);
+        poolCurator.create(pool2);
+
+        EntitlementCertificate cert = createEntitlementCertificate("entkey", "ecert");
+
+        Entitlement e = createEntitlement(owner, consumer, pool, cert);
+        entitlementCurator.create(e);
+
+        Entitlement e2 = createEntitlement(owner, otherConsumer, pool2, cert);
+        entitlementCurator.create(e2);
+
+        List<String> contracts = new ArrayList<String>();
+        contracts.add("CONTRACT_123");
+        Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
+            owner, null, null, null, null, null, null, null, contracts, null);
+        List<Consumer> resultList = results.getPageData();
+        assertEquals(1, resultList.size());
+        assertEquals(consumer, resultList.get(0));
+    }
+
+    @Test
+    public void testSearchBySku() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer = consumerCurator.create(consumer);
+
+        // Create another consumer to make sure we're not just retrieving everything
+        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
+        otherConsumer = consumerCurator.create(otherConsumer);
+
+        Product p = new Product("SKU1", "Product 1", owner);
+        p.addAttribute(new ProductAttribute("type", "MKT"));
+
+        Product p2 = new Product("SVC_ID", "Product 2", owner);
+        p2.addAttribute(new ProductAttribute("type", "SVC"));
+
+        productCurator.create(p);
+        productCurator.create(p2);
+
+        Pool pool = new Pool(
+            owner,
+            p,
+            new HashSet<Product>(),
+            1L,
+            TestDateUtil.date(2010, 1, 1),
+            TestDateUtil.date(2030, 1, 1),
+            "CONTRACT_123",
+            "ACCOUNT_456",
+            "ORDER_789"
+        );
+
+        Pool pool2 = new Pool(
+            owner,
+            p2,
+            new HashSet<Product>(),
+            1L,
+            TestDateUtil.date(2010, 1, 1),
+            TestDateUtil.date(2030, 1, 1),
+            "CONTRACT_XXX",
+            "ACCOUNT_456",
+            "ORDER_789"
+        );
+
+        pool.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        pool2.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        poolCurator.create(pool);
+        poolCurator.create(pool2);
+
+        EntitlementCertificate cert = createEntitlementCertificate("entkey", "ecert");
+
+        Entitlement e = createEntitlement(owner, consumer, pool, cert);
+        entitlementCurator.create(e);
+
+        Entitlement e2 = createEntitlement(owner, consumer, pool2, cert);
+        entitlementCurator.create(e2);
+
+        List<String> skus = new ArrayList<String>();
+        skus.add("SKU1");
+        Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
+            owner, null, null, null, null, null, skus, null, null, null);
+        List<Consumer> resultList = results.getPageData();
+        assertEquals(1, resultList.size());
+        assertEquals(consumer, resultList.get(0));
+
+        skus.clear();
+        // MKT_ID should not appear since it is a marketing product
+        skus.add("SVC_ID");
+        results = consumerCurator.searchOwnerConsumers(
+            owner, null, null, null, null, null, skus, null, null, null);
+        resultList = results.getPageData();
+        assertTrue(resultList.isEmpty());
+    }
+
+    @Test
+    public void testSearchByContractAndSku() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer = consumerCurator.create(consumer);
+
+        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner, ct);
+        consumer2 = consumerCurator.create(consumer2);
+
+        Consumer consumer3 = new Consumer("testConsumer3", "testUser3", owner, ct);
+        consumer3 = consumerCurator.create(consumer3);
+
+        Product p = new Product("SKU1", "Product 1", owner);
+        p.addAttribute(new ProductAttribute("type", "MKT"));
+
+        Product p2 = new Product("SKU2", "Product 2", owner);
+        p2.addAttribute(new ProductAttribute("type", "MKT"));
+
+        productCurator.create(p);
+        productCurator.create(p2);
+
+        Pool pool = new Pool(
+            owner,
+            p,
+            new HashSet<Product>(),
+            1L,
+            TestDateUtil.date(2010, 1, 1),
+            TestDateUtil.date(2030, 1, 1),
+            "CONTRACT_123",
+            "ACCOUNT_456",
+            "ORDER_789"
+        );
+
+        Pool pool2 = new Pool(
+            owner,
+            p,
+            new HashSet<Product>(),
+            1L,
+            TestDateUtil.date(2010, 1, 1),
+            TestDateUtil.date(2030, 1, 1),
+            "CONTRACT_XXX",
+            "ACCOUNT_456",
+            "ORDER_789"
+        );
+
+        // Same contract as 1 but different SKU
+        Pool pool3 = new Pool(
+            owner,
+            p2,
+            new HashSet<Product>(),
+            1L,
+            TestDateUtil.date(2010, 1, 1),
+            TestDateUtil.date(2030, 1, 1),
+            "CONTRACT_123",
+            "ACCOUNT_456",
+            "ORDER_789"
+        );
+
+        for (Pool x : new Pool[] { pool, pool2, pool3 }) {
+            x.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+            poolCurator.create(x);
+        }
+
+        EntitlementCertificate cert = createEntitlementCertificate("entkey", "ecert");
+
+        Entitlement e = createEntitlement(owner, consumer, pool, cert);
+        entitlementCurator.create(e);
+
+        Entitlement e2 = createEntitlement(owner, consumer2, pool2, cert);
+        entitlementCurator.create(e2);
+
+        Entitlement e3 = createEntitlement(owner, consumer3, pool3, cert);
+        entitlementCurator.create(e3);
+
+        List<String> skus = new ArrayList<String>();
+        skus.add("SKU1");
+        List<String> contracts = new ArrayList<String>();
+        contracts.add("CONTRACT_123");
+        Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
+            owner, null, null, null, null, null, skus, null, contracts, null);
+        List<Consumer> resultList = results.getPageData();
+        assertEquals(1, resultList.size());
+        assertEquals(consumer, resultList.get(0));
     }
 
     private class TestingKeyValueParameter extends KeyValueParameter {
