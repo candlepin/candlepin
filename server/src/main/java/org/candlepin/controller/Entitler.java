@@ -307,6 +307,7 @@ public class Entitler {
 
         Date then = new Date(now.getTime() + getPoolInterval(skuProd));
         Pool p = new Pool(consumer.getOwner(), skuProd, providedProducts, 1L, now, then, "", "", "");
+        log.info("Created development pool with SKU " + skuProd.getId());
         p.setAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
         p.setAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
         return p;
@@ -340,8 +341,10 @@ public class Entitler {
                 }
             }
         }
-        throw new ForbiddenException(i18n.tr("Installed product(s) not available to this " +
-                "development unit: {0}", missingInstalled.toString()));
+        if (missingInstalled.size() > 0) {
+            log.error(i18n.tr("Installed product(s) not available to this " +
+                    "development unit: {0}", missingInstalled.toString()));
+        }
     }
 
     /**

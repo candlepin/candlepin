@@ -523,13 +523,15 @@ public class EntitlerTest {
     }
 
     @Test
-    public void testDevPoolCreationAtBindFailNoInstalledProduct() throws EntitlementRefusedException {
+    public void testDevPoolCreationAtBindNoFailMissingInstalledProduct()
+            throws EntitlementRefusedException {
         Owner owner = new Owner("o");
         List<Product> devProds = new ArrayList<Product>();
         Product p = new Product("test-product", "Test Product", owner);
         Product ip1 = new Product("test-product-installed-1", "Installed Test Product 1", owner);
         Product ip2 = new Product("test-product-installed-2", "Installed Test Product 2", owner);
         devProds.add(p);
+        devProds.add(ip1);
         Pool activePool = TestUtil.createPool(owner, p);
         List<Pool> activeList = new ArrayList<Pool>();
         activeList.add(activePool);
@@ -542,14 +544,10 @@ public class EntitlerTest {
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
         when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
+        Pool expectedPool = entitler.assembleDevPool(devSystem, p.getId());
+        when(pm.createPool(any(Pool.class))).thenReturn(expectedPool);
         AutobindData ad = new AutobindData(devSystem);
-        try {
-            entitler.bindByProducts(ad);
-        }
-        catch (ForbiddenException fe) {
-            assertEquals(i18n.tr("Installed product(s) not available to this development unit: [{0}]",
-                    (ip1.getId() + ", " + ip2.getId())), fe.getMessage());
-        }
+        List<Entitlement> ents = entitler.bindByProducts(ad);
     }
 
     @Test
@@ -581,6 +579,7 @@ public class EntitlerTest {
         assertEquals(p1.getId(), created.getProductId());
         assertEquals(2, created.getProvidedProducts().size());
         assertEquals("Premium", created.getProduct().getAttributeValue("support_level"));
+        assertEquals(1L, created.getQuantity().longValue());
     }
 
     @Test
