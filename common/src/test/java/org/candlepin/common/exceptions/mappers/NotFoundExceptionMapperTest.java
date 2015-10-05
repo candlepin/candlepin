@@ -20,6 +20,7 @@ import org.junit.Test;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 /**
  * NotFoundExceptionMapperTest
@@ -29,7 +30,8 @@ public class NotFoundExceptionMapperTest extends TestExceptionMapperBase {
     @Test
     public void handleNotFoundException() {
         NotFoundException nfe = new NotFoundException("unacceptable");
-        NotFoundExceptionMapper nfem = injector.getInstance(NotFoundExceptionMapper.class);
+        NotFoundExceptionMapper nfem = injector
+                .getInstance(NotFoundExceptionMapper.class);
         Response r = nfem.toResponse(nfe);
         assertEquals(404, r.getStatus());
         verifyMessage(r, rtmsg("unacceptable"));
@@ -38,5 +40,21 @@ public class NotFoundExceptionMapperTest extends TestExceptionMapperBase {
     @Override
     public Class<?> getMapperClass() {
         return NotFoundExceptionMapper.class;
+    }
+
+    /**
+     * With RestEASY 3 the NotFoundException is also thrown for wrong parameters
+     * of JAX-RS resources
+     */
+    @Test
+    public void handleNotFoundQueryParameterException() {
+        NotFoundExceptionMapper nfem = injector
+                .getInstance(NotFoundExceptionMapper.class);
+        String foo = "javax.ws.rs.SomeThing(\"paramName\") value is 'strVal' for";
+        NotFoundException bre = new NotFoundException(foo);
+        Response r = nfem.toResponse(bre);
+
+        assertEquals(Status.BAD_REQUEST.getStatusCode(), r.getStatus());
+        verifyMessage(r, "strVal is not a valid value for paramName");
     }
 }

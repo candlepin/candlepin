@@ -14,14 +14,13 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.jboss.resteasy.spi.BadRequestException;
 import org.junit.Test;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
 
 /**
  * BadRequestExceptionMapperTest
@@ -47,7 +46,7 @@ public class BadRequestExceptionMapperTest extends TestExceptionMapperBase {
         Response r = rem.toResponse(bre);
 
         assertEquals(Status.BAD_REQUEST.getStatusCode(), r.getStatus());
-        assertNull(r.getEntity());
+        verifyMessage(r, "Bad Request");
     }
 
     @Override

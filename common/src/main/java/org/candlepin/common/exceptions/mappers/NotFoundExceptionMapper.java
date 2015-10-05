@@ -14,6 +14,9 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
+import org.candlepin.common.util.JaxRsExceptionResponseBuilder;
+
+import com.google.inject.Inject;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
@@ -22,18 +25,28 @@ import javax.ws.rs.ext.Provider;
 
 /**
  * NotFoundExceptionMapper maps the RESTEasy NotFoundException into JSON and
- * allows the proper header to be set. This allows Candlepin to control the
- * flow of the exceptions.
+ * allows the proper header to be set. This allows Candlepin to control the flow
+ * of the exceptions.
  */
 @Provider
-public class NotFoundExceptionMapper extends CandlepinExceptionMapper implements
-    ExceptionMapper<NotFoundException> {
+public class NotFoundExceptionMapper extends CandlepinExceptionMapper
+        implements ExceptionMapper<NotFoundException> {
+
+    /**
+     * Service that handles JAX-RS exceptions.
+     */
+    @Inject
+    private JaxRsExceptionResponseBuilder badQueryParamHandler;
 
     // notice this takes in a resteasy NFE *NOT* the candlepin one.
     @Override
-    public Response toResponse(NotFoundException exception) {
+    public final Response toResponse(final NotFoundException exception) {
+        if (badQueryParamHandler.canHandle(exception)) {
+            return badQueryParamHandler.getResponse(exception);
+        }
+
         return getDefaultBuilder(exception, Response.Status.NOT_FOUND,
-            determineBestMediaType()).build();
+                determineBestMediaType()).build();
     }
 
 }
