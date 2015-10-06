@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.51.5
+Version: 0.9.51.6
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -213,6 +213,9 @@ fi
 
 #raw
 %changelog
+* Tue Oct 06 2015 Alex Wood <awood@redhat.com> 0.9.51.6-1
+- Build with Maven/Mead. (awood@redhat.com)
+
 * Fri Aug 28 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.51.5-1
 - Revert consumer/hypervisor last check-in tables. (dgoodwin@redhat.com)
 - Upgrade Quartz to latest 2.2.1 (from 2013). (dgoodwin@redhat.com)
