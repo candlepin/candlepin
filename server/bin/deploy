@@ -1,24 +1,26 @@
 #!/bin/bash
 
+APP_DB_NAME="candlepin"
+
 gendb() {
     if [ "$USE_ORACLE" == "1" ]; then
-        init_oracle_jdbc "candlepin"
+        init_oracle_jdbc $APP_DB_NAME
         [ -z "$DBPASSWORD" ] && DBPASSWORD="candlepin"
     elif [ "$USE_MYSQL" == "1" ]; then
-        init_mysql_jdbc "candlepin"
+        init_mysql_jdbc $APP_DB_NAME
     else
-        init_postgresql_jdbc "candlepin"
+        init_postgresql_jdbc $APP_DB_NAME
     fi
 
     if [ "$GENDB" == "1" ]; then
         MESSAGE="Generating New Database"
         CHANGELOG="changelog-create.xml"
         if [ "$USE_ORACLE" == "1" ]; then
-            recreate_oracle "candlepin"
+            recreate_oracle $APP_DB_NAME $DBUSER
         elif [ "$USE_MYSQL" == "1" ]; then
-            recreate_mysql "candlepin"
+            recreate_mysql $APP_DB_NAME $DBUSER
         else
-            recreate_postgresql "candlepin"
+            recreate_postgresql $APP_DB_NAME $DBUSER
         fi
 
         # New database implies we probably don't want any events left laying around in the
@@ -124,18 +126,20 @@ autoconf() {
 
 usage() {
     cat <<HELP
-    usage: deploy [options]
+usage: deploy [options]
 
-    OPTIONS:
-        -f  force cert regeneration
-        -g  generate database
-        -h  include test resources for hosted mode
-        -t  import test data
-        -o  use Oracle
-        -l  use Logdriver
-        -m  use MySQL
-        -a  auto-deploy a generated candlepin.conf
-        -v  verbose output
+OPTIONS:
+  -f          force cert regeneration
+  -g          generate database
+  -t          import test data
+  -h          include test resources for hosted mode
+  -o          use Oracle
+  -l          use Logdriver
+  -m          use MySQL
+  -a          auto-deploy a generated candlepin.conf
+  -v          verbose output
+  -d <name>   specify a database name to use when creating or updating the
+              Candlepin database
 HELP
 }
 
@@ -179,7 +183,7 @@ init
 
 DBUSER="candlepin"
 
-while getopts ":fghtolmav" opt; do
+while getopts ":fgtholmavd:" opt; do
     case $opt in
         f  ) FORCECERT="1" ;;
         g  ) GENDB="1";;
@@ -190,6 +194,7 @@ while getopts ":fghtolmav" opt; do
         m  ) USE_MYSQL="1";;
         a  ) AUTOCONF="1";;
         v  ) VERBOSE="1";;
+        d  ) APP_DB_NAME="${OPTARG}";;
         ?  ) usage; exit;;
     esac
 done
