@@ -55,7 +55,43 @@ public class ConfigProperties {
 
     public static final String HORNETQ_ENABLED = "candlepin.audit.hornetq.enable";
     public static final String HORNETQ_BASE_DIR = "candlepin.audit.hornetq.base_dir";
+    /**
+     * This number is large message size. Any message
+     * that is bigger than this number is regarded as large.
+     * That means that HornetQ will page this message
+     * to a disk. Setting this number to something high
+     * e.g. 1 000 0000 will effectively disable the
+     * functionality. This is handy when you expect a lot of
+     * messages and you do not want to run out of disk space.
+     */
     public static final String HORNETQ_LARGE_MSG_SIZE = "candlepin.audit.hornetq.large_msg_size";
+
+    /**
+     * Setting number of server threads that will be
+     * created for Hornet. -1 means that default value
+     * will be used.
+     */
+    public static final String HORNETQ_MAX_SCHEDULED_THREADS =
+            "candlepin.audit.hornetq.max_scheduled_threads";
+    public static final String HORNETQ_MAX_THREADS = "candlepin.audit.hornetq.max_threads";
+    /**
+     * This can be either BLOCK or PAGE. When set to PAGE then
+     * Hornet will keep only up to HORNET_MAX_QUEUE_SIZE
+     * kilobytes of queue messages in memory. Anything above
+     * HORNET_MAX_QUEUE_SIZE will be paged to a hard disk.
+     * When set to BLOCK then after reaching
+     * HORNET_MAX_QUEUE_SIZE, all the producers will be blocked until
+     * the queues are freed up by consumers. Thus, BLOCK
+     * may be dangerous when consumers fail, because
+     * producers will timeout.
+     */
+    public static final String HORNETQ_ADDRESS_FULL_POLICY = "candlepin.audit.hornetq.address_full_policy";
+    public static final String HORNETQ_MAX_QUEUE_SIZE = "candlepin.audit.hornetq.max_queue_size";
+    /**
+     * This is applicable only for PAGE setting of HORNETQ_ADDRESS_FULL_POLICY.
+     */
+    public static final String HORNETQ_MAX_PAGE_SIZE = "candlepin.audit.hornetq.max_page_size";
+
     public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
     public static final String AUDIT_LOG_FILE = "candlepin.audit.log_file";
     public static final String AUDIT_LOG_VERBOSE = "candlepin.audit.log_verbose";
@@ -185,6 +221,12 @@ public class ConfigProperties {
                 this.put(HORNETQ_ENABLED, "true");
                 this.put(HORNETQ_BASE_DIR, "/var/lib/candlepin/hornetq");
                 this.put(HORNETQ_LARGE_MSG_SIZE, Integer.toString(100 * 1024));
+
+                this.put(HORNETQ_MAX_THREADS, "-1");
+                this.put(HORNETQ_MAX_SCHEDULED_THREADS, "-1");
+                this.put(HORNETQ_ADDRESS_FULL_POLICY, "PAGE");
+                this.put(HORNETQ_MAX_QUEUE_SIZE, "10");
+                this.put(HORNETQ_MAX_PAGE_SIZE, "1");
                 this.put(AUDIT_LISTENERS,
                     "org.candlepin.audit.DatabaseListener," +
                         "org.candlepin.audit.LoggingListener," +
