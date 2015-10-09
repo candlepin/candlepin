@@ -33,18 +33,26 @@ import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.hornetq.core.server.HornetQServer;
 import org.hornetq.core.server.JournalType;
 import org.hornetq.core.server.impl.HornetQServerImpl;
+import org.hornetq.core.settings.impl.AddressFullMessagePolicy;
+import org.hornetq.core.settings.impl.AddressSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.List;
+
 
 /**
  * HornetqContextListener - Invoked from our core CandlepinContextListener, thus
  * doesn't actually implement ServletContextListener.
  */
 public class HornetqContextListener {
+
+    private static final int HORNET_MAX_QUEUE_SIZE_MB = 32;
+    private static final int HORNET_MAX_PAGE_SIZE_MB = 8;
 
     private static  Logger log = LoggerFactory.getLogger(HornetqContextListener.class);
 
@@ -96,6 +104,16 @@ public class HornetqContextListener {
             config.setBindingsDirectory(new File(baseDir, "bindings").toString());
             config.setJournalDirectory(new File(baseDir, "journal").toString());
             config.setLargeMessagesDirectory(new File(baseDir, "largemsgs").toString());
+
+            Map<String, AddressSettings> settings = new HashMap<String, AddressSettings>();
+            AddressSettings pagingConfig = new AddressSettings();
+            //TODO make these sizes configurable
+            pagingConfig.setMaxSizeBytes(HORNET_MAX_QUEUE_SIZE_MB * 1024 * 1024);
+            pagingConfig.setPageSizeBytes(HORNET_MAX_PAGE_SIZE_MB * 1024 * 1024);
+            pagingConfig.setAddressFullMessagePolicy(AddressFullMessagePolicy.PAGE);
+            //Enable for all the queues
+            settings.put("#", pagingConfig);
+            config.setAddressesSettings(settings);
 
             hornetqServer = new HornetQServerImpl(config);
         }
