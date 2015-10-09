@@ -23,7 +23,10 @@ import java.text.ParseException;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -39,13 +42,43 @@ import javax.ws.rs.core.MultivaluedMap;
  */
 public abstract class Report<R extends ReportResult> {
 
+    protected static final Collection<String> REPORT_DATE_FORMATS;
+    protected static final Collection<String> REPORT_TIME_FORMATS;
+    protected static final Collection<String> REPORT_DATETIME_FORMATS;
+
     protected static final String REPORT_DATE_FORMAT = "yyyy-MM-dd";
+    protected static final String REPORT_TIME_FORMAT = "HH:mm:ss.SSSZ";
     protected static final String REPORT_DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 
     protected I18n i18n;
     protected String key;
     protected String description;
     protected List<ReportParameter> parameters;
+
+
+    /**
+     * Initialize our collection of supported formats
+     */
+    static {
+        LinkedList<String> formats;
+
+        formats = new LinkedList<String>();
+        formats.add(REPORT_DATETIME_FORMAT);
+        formats.add("yyyy-MM-dd HH:mm:ss.SSSZ");
+        formats.add("yyyy-MM-dd'T'HH:mm:ss");
+        formats.add("yyyy-MM-dd HH:mm:ss");
+        REPORT_DATETIME_FORMATS = Collections.unmodifiableList(formats);
+
+        formats = new LinkedList<String>(REPORT_DATETIME_FORMATS);
+        formats.add(REPORT_DATE_FORMAT);
+        REPORT_DATE_FORMATS = Collections.unmodifiableList(formats);
+
+        formats = new LinkedList<String>(REPORT_DATETIME_FORMATS);
+        formats.add(REPORT_TIME_FORMAT);
+        formats.add("HH:mm:ss");
+        REPORT_TIME_FORMATS = Collections.unmodifiableList(formats);
+    }
+
 
     /**
      * @param key
@@ -162,19 +195,40 @@ public abstract class Report<R extends ReportResult> {
     }
 
     protected Date parseDate(String date) {
-        return this.parseFormattedDate(date, REPORT_DATE_FORMAT, null);
-    }
-
-    protected Date parseDateTime(String date) {
-        return this.parseFormattedDate(date, REPORT_DATETIME_FORMAT, null);
+        return this.parseFormattedDate(date, REPORT_DATE_FORMATS, null);
     }
 
     protected Date parseDate(String date, TimeZone timezone) {
-        return this.parseFormattedDate(date, REPORT_DATE_FORMAT, timezone);
+        return this.parseFormattedDate(date, REPORT_DATE_FORMATS, timezone);
+    }
+
+    protected Date parseTime(String time) {
+        return this.parseFormattedDate(time, REPORT_TIME_FORMATS, null);
+    }
+
+    protected Date parseTime(String time, TimeZone timezone) {
+        return this.parseFormattedDate(time, REPORT_TIME_FORMATS, timezone);
+    }
+
+    protected Date parseDateTime(String date) {
+        return this.parseFormattedDate(date, REPORT_DATETIME_FORMATS, null);
     }
 
     protected Date parseDateTime(String date, TimeZone timezone) {
-        return this.parseFormattedDate(date, REPORT_DATETIME_FORMAT, timezone);
+        return this.parseFormattedDate(date, REPORT_DATETIME_FORMATS, timezone);
+    }
+
+    protected Date parseFormattedDate(String date, Collection<String> formats, TimeZone timezone) {
+        for (String format : formats) {
+            try {
+                return this.parseFormattedDate(date, format, timezone);
+            }
+            catch (RuntimeException e) {
+                // A runtime exception occurred while parsing the date. Move on to the next one...
+            }
+        }
+
+        throw new RuntimeException("Could not parse date/time parameter");
     }
 
     protected Date parseFormattedDate(String date, String format, TimeZone timezone) {

@@ -82,7 +82,7 @@ public class ConsumerStatusReport extends Report<ReportResult> {
 
         addParameter(
             builder.init("on_date", i18n.tr("The date to filter on. Defaults to NOW."))
-                .mustBeDate(REPORT_DATETIME_FORMAT)
+                .mustBeDate(REPORT_DATE_FORMATS)
                 .getParameter()
         );
 
@@ -142,7 +142,7 @@ public class ConsumerStatusReport extends Report<ReportResult> {
         List<String> subscriptionNameFilters = queryParams.get("subscription_name");
 
         Date targetDate = queryParams.containsKey("on_date") ?
-            parseDateTime(queryParams.getFirst("on_date")) :
+            this.parseDate(queryParams.getFirst("on_date")) :
             new Date();
 
         Map<String, String> attributeFilters = new HashMap<String, String>();

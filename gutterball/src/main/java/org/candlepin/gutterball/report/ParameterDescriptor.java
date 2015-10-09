@@ -22,10 +22,13 @@ import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.TimeZone;
 
 import javax.ws.rs.core.MultivaluedMap;
+
+
 
 /**
  * Describes all properties and validations of a {@link ReportParameter}.
@@ -40,7 +43,7 @@ public class ParameterDescriptor {
     private boolean isMandatory = false;
     private boolean isMultiValued = false;
     private boolean mustBeInt = false;
-    private String dateFormat = null;
+    private List<String> dateFormats = new ArrayList<String>(0);
     private boolean mustBeTimeZone = false;
     private List<String> mustHaveParams = new ArrayList<String>(0);
     private List<String> mustNotHaveParams = new ArrayList<String>(0);
@@ -103,14 +106,26 @@ public class ParameterDescriptor {
     }
 
     /**
-     * Validate this descriptor's parameter as a Date that follows
-     * the specified date format.
+     * Validate this descriptor's parameter as a Date that accepts the specified date format.
      *
      * @param dateFormat the date format the parameter value should follow.
      * @return a reference to this descriptor
      */
     public ParameterDescriptor mustBeDate(String dateFormat) {
-        this.dateFormat = dateFormat;
+        this.dateFormats.clear();
+        this.dateFormats.add(dateFormat);
+        return this;
+    }
+
+    /**
+     * Validate this descriptor's parameter as a Date that accepts the specified date formats.
+     *
+     * @param dateFormats the date formats the parameter value should follow.
+     * @return a reference to this descriptor
+     */
+    public ParameterDescriptor mustBeDate(Collection<String> dateFormats) {
+        this.dateFormats.clear();
+        this.dateFormats.addAll(dateFormats);
         return this;
     }
 
@@ -175,7 +190,7 @@ public class ParameterDescriptor {
             validateInteger(queryParams.get(name));
         }
 
-        if (this.dateFormat != null && !this.dateFormat.isEmpty()) {
+        if (!this.dateFormats.isEmpty()) {
             validateDate(queryParams.get(name));
         }
 
@@ -234,21 +249,35 @@ public class ParameterDescriptor {
     }
 
     private void validateDate(List<String> dateStrings) {
-        SimpleDateFormat formatter = new SimpleDateFormat(this.dateFormat);
-        formatter.setLenient(false);
-
         for (String dateString : dateStrings) {
-            try {
-                ParsePosition pos = new ParsePosition(0);
-                formatter.parse(dateString, pos);
+            boolean success = false;
 
-                if (pos.getIndex() != dateString.length()) {
-                    throw new ParseException("Could not parse date parameter", pos.getIndex());
+            for (String format : this.dateFormats) {
+                SimpleDateFormat formatter = new SimpleDateFormat(format);
+                formatter.setLenient(false);
+
+                try {
+                    ParsePosition pos = new ParsePosition(0);
+                    formatter.parse(dateString, pos);
+
+                    if (pos.getIndex() != dateString.length()) {
+                        throw new ParseException("Could not parse date parameter", pos.getIndex());
+                    }
+
+                    success = true;
+                    break;
+                }
+                catch (ParseException pe) {
+                    // Uh oh...
                 }
             }
-            catch (ParseException pe) {
-                throw new ParameterValidationException(name,
-                        i18n.tr("Invalid date string. Expected format: {0}", dateFormat));
+
+            if (!success && !this.dateFormats.isEmpty()) {
+                throw new ParameterValidationException(
+                    name, i18n.tr("Invalid date/time string: \"{0}\". Accepted formats: {1}",
+                        dateString, this.dateFormats
+                    )
+                );
             }
         }
     }

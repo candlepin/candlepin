@@ -85,8 +85,10 @@ public class ConsumerStatusReportTest {
         when(params.containsKey("on_date")).thenReturn(true);
         when(params.get("on_date")).thenReturn(Arrays.asList("13-21-2010"));
 
-        validateParams(params, "on_date", "Invalid date string. Expected format: " +
-                ConsumerStatusReport.REPORT_DATETIME_FORMAT);
+        validateParams(params, "on_date",
+            "Invalid date/time string: \"13-21-2010\". Accepted formats: " +
+            ConsumerStatusReport.REPORT_DATE_FORMATS
+        );
     }
 
     @Test

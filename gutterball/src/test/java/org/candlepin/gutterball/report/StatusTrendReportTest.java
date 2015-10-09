@@ -104,15 +104,15 @@ public class StatusTrendReportTest {
     }
 
     public Object[] invalidDateProvider() {
-        String dateFormat = ConsumerStatusReport.REPORT_DATE_FORMAT;
+        String acceptedFormats = "Accepted formats: [" + StatusTrendReport.REPORT_DATE_FORMAT + ']';
 
         return $(
-            $("not a date", "Invalid date string. Expected format: " + dateFormat),
-            $("2014-10-20asdlkasf", "Invalid date string. Expected format: " + dateFormat),
-            $("2014-1nope0-20", "Invalid date string. Expected format: " + dateFormat),
+            $("not a date", "Invalid date/time string: \"not a date\". " + acceptedFormats),
+            $("2014-10-20asdlkasf", "Invalid date/time string: \"2014-10-20asdlkasf\". " + acceptedFormats),
+            $("2014-1nope0-20", "Invalid date/time string: \"2014-1nope0-20\". " + acceptedFormats),
             $("1999-10-20", "Invalid year; years must be no earlier than 2000."),
-            $("2014-13-20", "Invalid date string. Expected format: " + dateFormat),
-            $("2014-12-45", "Invalid date string. Expected format: " + dateFormat)
+            $("2014-13-20", "Invalid date/time string: \"2014-13-20\". " + acceptedFormats),
+            $("2014-12-45", "Invalid date/time string: \"2014-12-45\". " + acceptedFormats)
         );
     }
 
