@@ -82,14 +82,14 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
 
         this.addParameter(
             builder.init("start_date", i18n.tr("The start date on which to filter"))
-                .mustBeDate(REPORT_DATE_FORMAT)
+                .mustBeDate(REPORT_DATE_FORMATS)
                 .mustSatisfy(yearValidator)
                 .getParameter()
         );
 
         this.addParameter(
             builder.init("end_date", i18n.tr("The end date on which to filter"))
-                .mustBeDate(REPORT_DATE_FORMAT)
+                .mustBeDate(REPORT_DATE_FORMATS)
                 .mustSatisfy(yearValidator)
                 .getParameter()
         );

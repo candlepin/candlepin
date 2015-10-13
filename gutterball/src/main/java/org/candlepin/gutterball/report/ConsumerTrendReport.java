@@ -77,14 +77,14 @@ public class ConsumerTrendReport extends Report<ReportResult> {
             builder.init("start_date", i18n.tr("The start date to filter on (used with {0}).", "end_date"))
                 .mustNotHave("hours")
                 .mustHave("end_date")
-                .mustBeDate(REPORT_DATETIME_FORMAT)
+                .mustBeDate(REPORT_DATETIME_FORMATS)
                 .getParameter());
 
         addParameter(
             builder.init("end_date", i18n.tr("The end date to filter on (used with {0})", "start_date"))
                 .mustNotHave("hours")
                 .mustHave("start_date")
-                .mustBeDate(REPORT_DATETIME_FORMAT)
+                .mustBeDate(REPORT_DATETIME_FORMATS)
                 .getParameter());
 
         addParameter(

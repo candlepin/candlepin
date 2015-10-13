@@ -104,7 +104,7 @@ public class StatusTrendReportTest {
     }
 
     public Object[] invalidDateProvider() {
-        String acceptedFormats = "Accepted formats: [" + StatusTrendReport.REPORT_DATE_FORMAT + ']';
+        String acceptedFormats = "Accepted formats: " + StatusTrendReport.REPORT_DATE_FORMATS;
 
         return $(
             $("not a date", "Invalid date/time string: \"not a date\". " + acceptedFormats),
