@@ -556,7 +556,7 @@ public class EntitlerTest {
         List<Product> devProds = new ArrayList<Product>();
         Product p1 = new Product("dev-product", "Dev Product", owner);
         p1.setAttribute("support_level", "Premium");
-        p1.setAttribute("expired_after", "47");
+        p1.setAttribute("expires_after", "47");
         Product p2 = new Product("provided-product1", "Provided Product 1", owner);
         Product p3 = new Product("provided-product2", "Provided Product 2", owner);
         devProds.add(p1);

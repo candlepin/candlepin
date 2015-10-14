@@ -25,7 +25,7 @@ describe 'Consumer Dev Resource' do
     pending("candlepin running in standalone mode") if not is_hosted?
     @dev_product = create_product("dev_product",
                                   "Dev Product",
-                                  {:attributes => { :expired_after => "60"}})
+                                  {:attributes => { :expires_after => "60"}})
     @p_product1 = create_product("p_product_1",
                                   "Provided Product 1")
     @p_product2 = create_product("p_product",

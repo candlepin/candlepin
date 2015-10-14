@@ -252,7 +252,7 @@ public class Entitler {
 
     private long getPoolInterval(Product prod) {
         long interval = maxDevLifeDays;
-        String prodThenString = prod.getAttributeValue("expired_after");
+        String prodThenString = prod.getAttributeValue("expires_after");
         if (prodThenString != null && Long.parseLong(prodThenString) < maxDevLifeDays) {
             interval = Long.parseLong(prodThenString);
         }
@@ -342,7 +342,7 @@ public class Entitler {
             }
         }
         if (missingInstalled.size() > 0) {
-            log.error(i18n.tr("Installed product(s) not available to this " +
+            log.warn(i18n.tr("Installed product(s) not available to this " +
                     "development unit: {0}", missingInstalled.toString()));
         }
     }

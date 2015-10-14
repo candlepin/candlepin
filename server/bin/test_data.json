@@ -2007,7 +2007,7 @@
                 "multi-entitlement": "yes",
                 "support_level" : "Premium",
                 "support_type" : "Level 3",
-                "expired_after" : "75"
+                "expires_after" : "75"
             },
             "provided_products": [
                 "2701", "2702"
