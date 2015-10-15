@@ -17,21 +17,32 @@ package org.candlepin.controller;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.common.paging.Page;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
+import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.PoolQuantity;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductContent;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
+import org.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -39,8 +50,12 @@ import org.xnap.commons.i18n.I18n;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * entitler
@@ -55,11 +70,19 @@ public class Entitler {
     private ConsumerCurator consumerCurator;
     private EntitlementRulesTranslator messageTranslator;
     private EntitlementCurator entitlementCurator;
+    private Configuration config;
+    private PoolCurator poolCurator;
+    private ProductCurator productCurator;
+    private ProductServiceAdapter productAdapter;
+    private long maxDevLifeDays = 90;
+    final String DEFAULT_DEV_SLA = "Self-Service";
 
     @Inject
     public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n, EventFactory evtFactory,
         EventSink sink, EntitlementRulesTranslator messageTranslator,
-        EntitlementCurator entitlementCurator) {
+        EntitlementCurator entitlementCurator, Configuration config,
+        PoolCurator poolCurator, ProductCurator productCurator,
+        ProductServiceAdapter productAdapter) {
 
         this.poolManager = pm;
         this.i18n = i18n;
@@ -68,6 +91,10 @@ public class Entitler {
         this.consumerCurator = cc;
         this.messageTranslator = messageTranslator;
         this.entitlementCurator = entitlementCurator;
+        this.config = config;
+        this.poolCurator = poolCurator;
+        this.productCurator = productCurator;
+        this.productAdapter = productAdapter;
     }
 
     public List<Entitlement> bindByPool(String poolId, String consumeruuid,
@@ -156,7 +183,9 @@ public class Entitler {
     public List<Entitlement> bindByProducts(AutobindData data, boolean force) {
         Consumer consumer = data.getConsumer();
         // If the consumer is a guest, and has a host, try to heal the host first
-        if (consumer.hasFact("virt.uuid")) {
+        // Dev consumers should not need to worry about the host or unmapped guest
+        // entitlements based on the planned design of the subscriptions
+        if (consumer.hasFact("virt.uuid") && !consumer.isDev()) {
             String guestUuid = consumer.getFact("virt.uuid");
             // Remove any expired unmapped guest entitlements
             revokeUnmappedGuestEntitlements(consumer);
@@ -186,6 +215,22 @@ public class Entitler {
                 data.setConsumer(consumer);
             }
         }
+        if (consumer.isDev()) {
+            if (config.getBoolean(ConfigProperties.STANDALONE) ||
+                    !poolCurator.hasActiveEntitlementPools(consumer.getOwner(), null)) {
+                throw new ForbiddenException(i18n.tr(
+                        "Development units may only be used on hosted servers" +
+                        " and with orgs that have active subscriptions."));
+            }
+            String sku = consumer.getFact("dev_sku");
+            Pool devPool = getDevPool(consumer, sku);
+            if (devPool == null) {
+                devPool = poolManager.createPool(assembleDevPool(consumer, sku));
+            }
+            List<String> pools = new ArrayList<String>();
+            pools.add(devPool.getId());
+            data.setPossiblePools(pools);
+        }
 
         // Attempt to create entitlements:
         try {
@@ -202,6 +247,103 @@ public class Entitler {
             }
             throw new ForbiddenException(messageTranslator.productErrorToMessage(productId,
                     e.getResult().getErrors().get(0)));
+        }
+    }
+
+    private long getPoolInterval(Product prod) {
+        long interval = maxDevLifeDays;
+        String prodThenString = prod.getAttributeValue("expires_after");
+        if (prodThenString != null && Long.parseLong(prodThenString) < maxDevLifeDays) {
+            interval = Long.parseLong(prodThenString);
+        }
+        return 1000 * 60 * 60 * 24 * interval;
+    }
+
+    private Pool getDevPool(Consumer consumer, String sku) {
+        PoolFilterBuilder poolFilters = new PoolFilterBuilder();
+        poolFilters.addAttributeFilter(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
+        poolFilters.addAttributeFilter(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
+        Page<List<Pool>> poolsPage = poolManager.listAvailableEntitlementPools(consumer, null,
+                consumer.getOwner(), null, null, true, true, poolFilters, null);
+        if (poolsPage != null &&
+            poolsPage.getPageData() != null &&
+            poolsPage.getPageData().size() == 1) {
+            return poolsPage.getPageData().get(0);
+        }
+        else {
+            return null;
+        }
+    }
+
+    protected Pool assembleDevPool(Consumer consumer, String sku) {
+        Set<Product> providedProducts = new HashSet<Product>();
+        Date now = new Date();
+        List<String> devProductIds = new ArrayList<String>();
+        Product skuProd = null;
+
+        devProductIds.add(sku);
+        for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
+            devProductIds.add(ip.getProductId());
+        }
+        List<Product> prods = productAdapter.getProductsByIds(consumer.getOwner(), devProductIds);
+        verifyDevProducts(devProductIds, prods);
+        for (Product prod : prods) {
+            prod.setOwner(consumer.getOwner());
+            for (ProductContent pc : prod.getProductContent()) {
+                pc.getContent().setOwner(consumer.getOwner());
+            }
+            if (sku.equals(prod.getId())) {
+                if (StringUtils.isEmpty(prod.getAttributeValue("support_level"))) {
+                    // if there is no SLA, apply the default
+                    prod.setAttribute("support_level", this.DEFAULT_DEV_SLA);
+                }
+                skuProd = prod;
+            }
+            else {
+                providedProducts.add(prod);
+            }
+            productCurator.createOrUpdate(prod);
+        }
+
+        Date then = new Date(now.getTime() + getPoolInterval(skuProd));
+        Pool p = new Pool(consumer.getOwner(), skuProd, providedProducts, 1L, now, then, "", "", "");
+        log.info("Created development pool with SKU " + skuProd.getId());
+        p.setAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
+        p.setAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
+        return p;
+    }
+
+    /**
+     *
+     * @param prodIds List of Ids we expect in the product list. The first is the sku.
+     * @param products
+     * @return
+     * @throws ForbiddenException
+     */
+    protected void verifyDevProducts(List<String> prodIds, List<Product> products)
+            throws ForbiddenException {
+        if (prodIds.size() == products.size()) {
+            return;
+        }
+        Map<String, Product> prodMap = new HashMap<String, Product>();
+        List<String> missingInstalled = new ArrayList<String>();
+        for (Product prod : products) {
+            prodMap.put(prod.getId(), prod);
+        }
+        for (int i = 0; i < prodIds.size(); i++) {
+            if (prodMap.get(prodIds.get(i)) == null) {
+                if (i == 0) {
+                    throw new ForbiddenException(i18n.tr("SKU product not available to this " +
+                            "development unit: ''{0}''", prodIds.get(i)));
+                }
+                else {
+                    missingInstalled.add(prodIds.get(i));
+                }
+            }
+        }
+        if (missingInstalled.size() > 0) {
+            log.warn(i18n.tr("Installed product(s) not available to this " +
+                    "development unit: {0}", missingInstalled.toString()));
         }
     }
 

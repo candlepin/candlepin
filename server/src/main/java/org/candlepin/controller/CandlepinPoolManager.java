@@ -774,9 +774,16 @@ public class CandlepinPoolManager implements PoolManager {
             try {
                 List<Entitlement> entitlements = new LinkedList<Entitlement>();
 
-                List<PoolQuantity> bestPools = getBestPools(consumer, productIds,
-                    entitleDate, owner, null, fromPools);
-
+                List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
+                if (consumer != null && consumer.isDev()) {
+                    String poolId = fromPools.iterator().next();
+                    PoolQuantity pq = new PoolQuantity(poolCurator.find(poolId), 1);
+                    bestPools.add(pq);
+                }
+                else {
+                    bestPools = getBestPools(consumer, productIds,
+                        entitleDate, owner, null, fromPools);
+                }
                 if (bestPools == null) {
                     List<String> fullList = new ArrayList<String>();
                     fullList.addAll(Arrays.asList(productIds));
@@ -1666,6 +1673,10 @@ public class CandlepinPoolManager implements PoolManager {
         PageRequest pageRequest) {
         // Only postfilter if we have to
         boolean postFilter = consumer != null || key != null;
+        if (consumer != null && !consumer.isDev()) {
+            filters.addAttributeFilter(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "!true");
+        }
+
         Page<List<Pool>> page = this.poolCurator.listAvailableEntitlementPools(consumer,
             owner, productId, activeOn, activeOnly, filters, pageRequest, postFilter);
 

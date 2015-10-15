@@ -14,11 +14,11 @@
  */
 package org.candlepin.controller;
 
-import static org.apache.commons.collections.CollectionUtils.containsAny;
-import static org.apache.commons.collections.TransformerUtils.invokerTransformer;
+import static org.apache.commons.collections.CollectionUtils.*;
+import static org.apache.commons.collections.TransformerUtils.*;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.reset;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventSink;
@@ -26,6 +26,7 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -62,6 +63,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -503,5 +505,69 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
                 bind(EventSink.class).toInstance(eventSink);
             }
         };
+    }
+
+    @Test
+    public void testListConditionDevPools() {
+        Owner owner = createOwner();
+        Product p = new Product("test-product", "Test Product", owner);
+        productCurator.create(p);
+
+        Pool pool1 = createPool(owner, p, 10L,
+                TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
+        poolCurator.create(pool1);
+        Pool pool2 = createPool(owner, p, 10L,
+                TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        poolCurator.create(pool2);
+
+        Consumer devSystem = new Consumer("dev", "user", owner, systemType);
+        devSystem.setFact("dev_sku", p.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        Consumer nonDevSystem = new Consumer("system", "user", owner, systemType);
+        nonDevSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+
+        Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(devSystem, null,
+                owner, null, null, true, true, new PoolFilterBuilder(), new PageRequest());
+        assertEquals(2, results.getPageData().size());
+
+        results = poolManager.listAvailableEntitlementPools(nonDevSystem, null,
+                owner, null, null, true, true, new PoolFilterBuilder(), new PageRequest());
+        assertEquals(1, results.getPageData().size());
+        Pool found2 = results.getPageData().get(0);
+        assertEquals(pool2, found2);
+    }
+
+    @Test
+    public void testDevPoolRemovalAtUnbind() throws EntitlementRefusedException {
+        Owner owner = createOwner();
+        Product p = new Product("test-product", "Test Product", owner);
+        productCurator.create(p);
+
+        Consumer devSystem = new Consumer("dev", "user", owner, systemType);
+        devSystem.setFact("dev_sku", p.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        consumerCurator.create(devSystem);
+
+        Pool pool1 = createPool(owner, p, 10L,
+                TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
+        pool1.addAttribute(new PoolAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, devSystem.getUuid()));
+        poolCurator.create(pool1);
+        Pool pool2 = createPool(owner, p, 10L,
+                TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        poolCurator.create(pool2);
+        List<String> possPools = new ArrayList<String>();
+        possPools.add(pool1.getId());
+
+        AutobindData ad = new AutobindData(devSystem);
+        ad.setPossiblePools(possPools);
+        List<Entitlement> results = poolManager.entitleByProducts(ad);
+        assertEquals(1, results.size());
+        assertEquals(results.get(0).getPool(), pool1);
+
+        poolManager.revokeEntitlement(results.get(0));
+        assertNull(poolCurator.find(pool1.getId()));
+        assertNotNull(poolCurator.find(pool2.getId()));
     }
 }

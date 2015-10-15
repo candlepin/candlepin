@@ -1978,6 +1978,40 @@
             "provided_products": [
                 "908"
             ]
+        },
+        {
+            "name": "Dev Provided Product A",
+            "id": "2701",
+            "version": "1.0",
+            "arch": "x86_64",
+            "attributes": {
+            },
+            "content": [
+            ]
+        },
+        {
+            "name": "Dev Provided Product B",
+            "id": "2702",
+            "version": "1.0",
+            "arch": "x86_64",
+            "attributes": {
+            },
+            "content": [
+            ]
+        },
+        {
+            "name": "Dev Product",
+            "id": "dev-mkt-product",
+            "type": "MKT",
+            "attributes": {
+                "multi-entitlement": "yes",
+                "support_level" : "Premium",
+                "support_type" : "Level 3",
+                "expires_after" : "75"
+            },
+            "provided_products": [
+                "2701", "2702"
+            ]
         }
     ]
 }

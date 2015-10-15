@@ -1186,4 +1186,35 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(expected, actual);
     }
 
+    @Test
+    public void testHasAvailablePools()
+        throws Exception {
+        Date activeDate = TestUtil.createDate(2000, 3, 2);
+
+        Pool pool1 = createPool(owner, product, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+        poolCurator.create(pool1);
+
+        assertTrue(poolCurator.hasActiveEntitlementPools(owner, activeDate));
+    }
+
+    @Test
+    public void testHasAvailablePoolsNoPools()
+        throws Exception {
+        Date activeDate = TestUtil.createDate(2000, 3, 2);
+        assertFalse(poolCurator.hasActiveEntitlementPools(owner, activeDate));
+    }
+
+    @Test
+    public void testHasAvailablePoolsNotCurrent()
+        throws Exception {
+        Date activeDate = TestUtil.createDate(2000, 3, 2);
+        Date startDate = TestUtil.createDate(2001, 3, 2);
+
+        Pool pool1 = createPool(owner, product, 100L,
+            startDate, TestUtil.createDate(2005, 3, 2));
+        poolCurator.create(pool1);
+
+        assertFalse(poolCurator.hasActiveEntitlementPools(owner, activeDate));
+    }
 }

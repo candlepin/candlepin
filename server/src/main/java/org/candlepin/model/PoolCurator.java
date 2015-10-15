@@ -254,6 +254,35 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return listByCriteria(crit, pageRequest, postFilter);
     }
 
+    /**
+     * Determine if owner has at least one active pool
+     *
+     * @param o Owner whose subscriptions should be inspected.
+     * @param date The date to test the active state.
+     *        Set to null for current.
+     * @return boolean is active on test date.
+     */
+    @SuppressWarnings("unchecked")
+    @Transactional
+    public boolean hasActiveEntitlementPools(Owner o, Date date) {
+
+        if (o == null) {
+            return false;
+        }
+        if (date == null) {
+            date = new Date();
+        }
+        Criteria crit = createSecureCriteria();
+        crit.add(Restrictions.eq("activeSubscription", Boolean.TRUE));
+        crit.add(Restrictions.eq("owner", o));
+        crit.add(Restrictions.le("startDate", date));
+        crit.add(Restrictions.ge("endDate", date));
+        crit.setProjection(Projections.rowCount());
+
+        long count = (Long) crit.uniqueResult();
+        return count > 0;
+    }
+
     @Transactional
     public List<Pool> listPoolsRestrictedToUser(String username) {
         return listByCriteria(

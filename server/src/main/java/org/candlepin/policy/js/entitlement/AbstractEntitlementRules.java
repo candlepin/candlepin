@@ -286,6 +286,9 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             Consumer c = entitlement.getConsumer();
             postUnbindVirtLimit(postHelper, entitlement, pool, c, attributes);
         }
+        if (pool.isDevelopmentPool()) {
+            poolCurator.delete(pool);
+        }
     }
 
     private void postUnbindVirtLimit(PoolHelper postHelper,

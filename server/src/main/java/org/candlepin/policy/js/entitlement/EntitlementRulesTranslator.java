@@ -64,6 +64,10 @@ public class EntitlementRulesTranslator {
             msg = i18n.tr("Pool ''{0}'' is restricted to guests running on host: ''{1}''.",
                 pool.getId(), host);
         }
+        else if (errorKey.equals("consumer.does.not.match.pool.consumer.requirement")) {
+            msg = i18n.tr("Pool ''{0}'' is restricted to a specific consumer.",
+                pool.getId());
+        }
         else if (errorKey.equals("pool.not.available.to.manifest.consumers")) {
             msg = i18n.tr("Pool not available to subscription management " +
                     "applications.");
