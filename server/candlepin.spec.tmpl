@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.8
+Version: 2.0.9
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -213,6 +213,9 @@ fi
 
 #raw
 %changelog
+* Thu Oct 15 2015 Alex Wood <awood@redhat.com> 2.0.9-1
+- Update pom files with new version of common. (awood@redhat.com)
+
 * Thu Oct 15 2015 Christopher Snyder <csnyder@redhat.com> 2.0.8-1
 - Correct attribute name and log level (wpoteat@redhat.com)
 - No exception when eng product not found. Only error in log.
