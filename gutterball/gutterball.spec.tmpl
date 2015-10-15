@@ -16,7 +16,7 @@
 %endif
 
 Name: gutterball
-Version: 2.0.4
+Version: 2.0.5
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -84,6 +84,9 @@ rm -rf %{buildroot}
 
 #raw
 %changelog
+* Thu Oct 15 2015 Alex Wood <awood@redhat.com> 2.0.5-1
+- Update pom files with new version of common. (awood@redhat.com)
+
 * Mon Sep 28 2015 Christopher Snyder <csnyder@redhat.com>
 - Upgrade to RestEasy 3. (awood@redhat.com)
 - 1194776: Gutterball equivalent of cpdb to handle upgrade etc.
