@@ -10,7 +10,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin-common
-Version: 2.0.2
+Version: 2.0.3
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -52,6 +52,9 @@ rm -rf %{buildroot}
 
 #raw
 %changelog
+* Thu Oct 15 2015 Christopher Snyder <csnyder@redhat.com> 2.0.3-1
+- Updates for Sprint 96 (wpoteat@redhat.com)
+
 * Mon Sep 28 2015 Christopher Snyder <csnyder@redhat.com>
 - Upgrade to RestEasy 3. (awood@redhat.com)
 - Update to Checkstyle 6.9 (awood@redhat.com)
