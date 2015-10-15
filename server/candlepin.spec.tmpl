@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.7
+Version: 2.0.8
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -213,6 +213,35 @@ fi
 
 #raw
 %changelog
+* Thu Oct 15 2015 Christopher Snyder <csnyder@redhat.com> 2.0.8-1
+- Correct attribute name and log level (wpoteat@redhat.com)
+- No exception when eng product not found. Only error in log.
+  (wpoteat@redhat.com)
+- Improve error messages for dev products (wpoteat@redhat.com)
+- Update rules.js (wpoteat@redhat.com)
+- Use existing product adapter method to batch retrieve the products
+  (wpoteat@redhat.com)
+- Update messages, methods, and variables: cdk -> dev (wpoteat@redhat.com)
+- More efficient database queries (wpoteat@redhat.com)
+- SKU product not an installed product (wpoteat@redhat.com)
+- Ensure owner gets associated to the retrieved product content
+  (wpoteat@redhat.com)
+- On each dev pool creation, retrieve the latest product information for the
+  entitlement (wpoteat@redhat.com)
+- Use default SLA when SKU does not have one assigned (wpoteat@redhat.com)
+- Language for exception messages (wpoteat@redhat.com)
+- Reintroduce lookup for product through service adapter. (wpoteat@redhat.com)
+- Bypass rules for cdk pool entitlement (wpoteat@redhat.com)
+- Create dev pool for consumer prior to auto-bind (wpoteat@redhat.com)
+- Set priority for selecting dev pools over regular (wpoteat@redhat.com)
+- Pre entitlement filter for requires_consumer not the right consumer
+  (wpoteat@redhat.com)
+- Refresh pools (wpoteat@redhat.com)
+- Remove dev pool when entitlement is revoked (wpoteat@redhat.com)
+- Filter auto-bind pool lookups on dev_pool attribute (wpoteat@redhat.com)
+- 1252145: Allow searching consumers by SKU, contract, or sub ID.
+  (awood@redhat.com)
+
 * Mon Sep 28 2015 Christopher Snyder <csnyder@redhat.com>
 - Do not try to get AMQP stuff by default. (awood@redhat.com)
 - Upgrade to RestEasy 3. (awood@redhat.com)
