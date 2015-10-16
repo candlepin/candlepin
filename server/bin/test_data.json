@@ -925,7 +925,7 @@
             "type": "MKT",
             "version": "0.1",
             "arch": "x86_64,x86,s390x,ppc64,ia64,arm",
-            "skip_subs" : "true",
+            "skip_pools" : "true",
             "attributes": {
                 "sockets": 2,
                 "vcpu": 4,

@@ -970,6 +970,22 @@ class Candlepin
       'providedProducts' => provided_products.collect { |pid| {'productId' => pid} }
     }
 
+    if params[:branding]
+      pool['branding'] = params[:branding]
+    end
+
+    if params[:contract_number]
+      pool['contractNumber'] = params[:contract_number]
+    end
+
+    if params[:account_number]
+      pool['accountNumber'] = params[:account_number]
+    end
+
+    if params[:order_number]
+      pool['orderNumber'] = params[:order_number]
+    end
+
     if params[:derived_product_id]
       pool['derivedProduct'] = { 'id' => params[:derived_product_id] }
     end
