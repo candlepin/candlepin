@@ -31,6 +31,9 @@ module ValidateTranslation
 
       desc 'fix po file validation errors'
       Project.local_task('validate_translation:fix')
+
+      SINGLE_QUOTE_SEARCH_REGEX = /([^'])'([^'])/
+      SINGLE_QUOTE_REPLACE_REGEX = "\\1''\\2"
     end
 
     after_define do |project|
@@ -50,7 +53,7 @@ module ValidateTranslation
                 elsif line.start_with?('msgstr')
                   is_msgstr = true
                 end
-                if is_msgstr && line  =~ /([^'])'([^'])/
+                if is_msgstr && line  =~ SINGLE_QUOTE_SEARCH_REGEX
                   if !filename_printed
                     puts  Buildr::Console.color("\n#{po_file}:", :red)
                     filename_printed = true
@@ -84,7 +87,7 @@ module ValidateTranslation
                   is_msgstr = true
                 end
                 if is_msgstr
-                  line = line.gsub(/([^'])'([^'])/,"\\1''\\2")
+                  line = line.gsub(SINGLE_QUOTE_SEARCH_REGEX,SINGLE_QUOTE_REPLACE_REGEX)
                 end
                 lines << line
               end
