@@ -1524,7 +1524,7 @@ msgstr "এনে কোনো ব্যৱহাৰকাৰী: {0} নাই"
 # translation auto-copied from project candlepin, version 0.5, document keys
 #: server/src/main/java/org/candlepin/resource/RulesResource.java:93
 msgid "Error decoding the rules. The text should be base 64 encoded"
-msgstr "নিয়মসমূহ ডিক্ড কৰোতে ত্ৰুটি। লিখনী ভিত্তি ৬৪ এনক্ড কৰা হ'ব লাগিব"
+msgstr "নিয়মসমূহ ডিক্ড কৰোতে ত্ৰুটি। লিখনী ভিত্তি ৬৪ এনক্ড কৰা হ''ব লাগিব"
 
 #: server/src/main/java/org/candlepin/resource/RulesResource.java:125
 msgid "couldn''t read rules file"
