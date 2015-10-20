@@ -15,9 +15,14 @@
 
 package org.candlepin.gutterball.curator;
 
+import java.util.Calendar;
+
+import javax.persistence.Query;
+
 import org.candlepin.gutterball.model.Event;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Projections;
@@ -43,5 +48,19 @@ public class EventCurator extends BaseCurator<Event> {
             .add(Restrictions.ne("messageId", "UNKNOWN"))
             .setProjection(Projections.count("id"));
         return ((Long) criteria.uniqueResult()) > 0;
+    }
+
+    @Transactional
+    public int cleanupEvents(int minutes) {
+        // Can't effectively delete items using Criteria API so we'll use HQL
+        // to get it done in one request.
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.MINUTE, -1 * minutes);
+
+        String deleteHQL = "delete from Event where timestamp <= :date and status != :event_status";
+        Query query = getEntityManager().createQuery(deleteHQL);
+        query.setParameter("date", cal.getTime());
+        query.setParameter("event_status", Event.Status.RECEIVED);
+        return query.executeUpdate();
     }
 }

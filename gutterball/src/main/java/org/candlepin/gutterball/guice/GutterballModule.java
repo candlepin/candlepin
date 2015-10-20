@@ -56,6 +56,7 @@ import org.candlepin.gutterball.resource.ReportsResource;
 import org.candlepin.gutterball.resource.StatusResource;
 import org.candlepin.gutterball.resteasy.JsonProvider;
 import org.candlepin.gutterball.resteasy.interceptor.OAuthInterceptor;
+import org.candlepin.gutterball.tasks.EventCleanupTask;
 import org.candlepin.gutterball.util.EventHandlerLoader;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -102,6 +103,7 @@ public class GutterballModule extends AbstractModule {
         bind(JsonProvider.class);
 
         configureJPA();
+        configureTasks();
 
         bind(BeanValidationEventListener.class).toProvider(ValidationListenerProvider.class);
         bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
@@ -185,6 +187,10 @@ public class GutterballModule extends AbstractModule {
                 eventBinder.addBinding(targetAnnotation.value()).to(clazz).asEagerSingleton();
             }
         }
+    }
+
+    protected void configureTasks() {
+        bind(EventCleanupTask.class).asEagerSingleton();
     }
 
     @Provides @Named("ValidationProperties")

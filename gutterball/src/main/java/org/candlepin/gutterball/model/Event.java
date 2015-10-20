@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
 
 import java.util.Date;
 
@@ -31,7 +30,8 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Lob;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -143,16 +143,14 @@ public class Event {
 
     /**
      * Old and New entity fields are stored as a JSON String so that we
-     * can capture all the data that may not have been stored by the event
-     * handlers. This allows for potentially re-processing the event at a
-     * later date to pull in the new data.
+     * can capture all the data in the event that Event handling fails.
+     * If the event is successfully processed, these fields are nullified
+     * so that we do not consume disk space.
      */
-    @Lob
-    @Type(type = "org.hibernate.type.MaterializedClobType")
+    @Column(columnDefinition = "mediumtext")
     private String oldEntity;
 
-    @Lob
-    @Type(type = "org.hibernate.type.MaterializedClobType")
+    @Column(columnDefinition = "mediumtext")
     private String newEntity;
 
     public Event() {
@@ -308,6 +306,25 @@ public class Event {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public void clearJsonFields() {
+        if (!Event.Status.RECEIVED.equals(this.status)) {
+            this.newEntity = null;
+            this.oldEntity = null;
+        }
+    }
+
+    // When an event is created or updated, only store the new/oldentity
+    // JSON if the event is in the RECEIVED state.
+    @PrePersist
+    public void onCreate() {
+        clearJsonFields();
+    }
+
+    @PreUpdate
+    public void onUpdate() {
+        clearJsonFields();
     }
 
 }
