@@ -158,5 +158,8 @@ public class GutterballLiquibaseResource extends ExternalResource {
     public void createLiquibaseSchema() {
         exec("CREATE SCHEMA LIQUIBASE");
         database.setLiquibaseSchemaName("LIQUIBASE");
+
+        // HSQLDB does not support mediumtext, so we fake it here.
+        exec("CREATE TYPE MEDIUMTEXT AS VARCHAR(100000)");
     }
 }

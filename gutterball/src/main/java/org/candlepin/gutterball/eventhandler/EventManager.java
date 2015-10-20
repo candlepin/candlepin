@@ -72,7 +72,15 @@ public class EventManager {
             }
         }
         else {
+            // This should never happen, since the message listener
+            // should short circuit any events that we do not manage.
+            // We'll log and mark the event as SKIPPED just in case.
+            log.warn("Could not find a handler for the event target: " + event.getTarget());
             event.setStatus(Event.Status.SKIPPED);
         }
+    }
+
+    public boolean manages(Event event) {
+        return targetHandlers.containsKey(event.getTarget());
     }
 }
