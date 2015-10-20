@@ -72,4 +72,11 @@ public class GutterballTestingModule extends GutterballModule {
         eventReciever = mock(EventReceiver.class);
         bind(EventReceiver.class).toInstance(eventReciever);
     }
+
+    @Override
+    protected void configureTasks() {
+        // No need to configure/run tasks during testing.
+        // Tasks should be tested in isolation.
+    }
+
 }
