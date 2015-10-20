@@ -1252,10 +1252,13 @@ class Candlepin
     get("/consumers/#{consumer_id}/guests")
   end
 
-  def get(uri, accept_header = :json)
+  def get(uri, accept_header=:json, dont_parse=false)
     puts ("GET #{uri}") if @verbose
     response = get_client(uri, Net::HTTP::Get, :get)[URI.escape(uri)].get \
       :accept => accept_header
+    if dont_parse
+      return response
+    end
     return JSON.parse(response.body)
   end
 
@@ -1375,11 +1378,14 @@ class Candlepin
     return JSON.parse(response.body) unless response.body.empty?
   end
 
-  def delete(uri, data=nil)
+  def delete(uri, data=nil, dont_parse=false)
     puts ("DELETE #{uri}") if @verbose
     client = get_client(uri, Net::HTTP::Delete, :delete)
     client.options[:payload] = data.to_json if not data.nil?
     response = client[URI.escape(uri)].delete(:content_type => :json, :accepts => :json)
+    if dont_parse
+      return response
+    end
     return JSON.parse(response.body) unless response.body.empty?
   end
 

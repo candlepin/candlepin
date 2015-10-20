@@ -1,10 +1,12 @@
 require 'candlepin_api'
+require 'hostedtest_api'
 
 require 'pp'
 require 'zip/zip'
 
 module CandlepinMethods
 
+  include HostedTest
   # Wrapper for ruby API so we can track all owners we created and clean them
   # up. Note that this entails cleanup of all objects beneath that owner, so
   # most other objects can be created using the ruby API.
@@ -104,6 +106,31 @@ module CandlepinMethods
     end
 
     @cp.create_batch_content(owner, contents)
+  end
+
+  def create_pool_and_subscription(owner, product, quantity=1,
+                          provided_products=[], contract_number='',
+                          account_number='', order_number='',
+                          start_date=nil, end_date=nil, params={})
+
+    params[:start_date] = start_date
+    params[:end_date] = end_date
+    params[:provided_products] = provided_products
+    params[:contract_number] = contract_number
+    params[:account_number] = account_number
+    params[:order_number] = order_number
+    params[:quantity] = quantity
+
+    @cp.create_pool(owner['key'], product['id'], params)
+
+    if is_hosted?
+      if is_hostedtest_alive?
+        create_hostedtest_subscription(owner, product, quantity, params)
+      else
+        raise "Could not find hostedtest rest API. Please add the following to candlepin.conf:\n" \
+          " module.config.hosted.configuration.module=org.candlepin.hostedtest.AdapterOverrideModule"
+      end
+    end
   end
 
   # Wrapper for ruby API so we can track all distributor versions we created and clean them up.
