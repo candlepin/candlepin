@@ -8,4 +8,5 @@
     <include file="db/changelog/2015-03-11-09-28-add-management-enabled-to-compliance.xml"/>
     <include file="db/changelog/2015-03-25-08-22-add-message-id-to-event.xml"/>
     <include file="db/changelog/2015-06-02-10-26-compliance-status-products.xml"/>
+    <include file="db/changelog/2015-10-20-12-31-rename-compliance-reason-key-column.xml"/>
 </databaseChangeLog>
