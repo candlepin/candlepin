@@ -120,8 +120,10 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
         when(params.containsKey("start_date")).thenReturn(true);
         when(params.get("start_date")).thenReturn(Arrays.asList("13-21-2010"));
 
-        validateParams(params, "start_date", "Invalid date string. Expected format: " +
-                ConsumerTrendReport.REPORT_DATETIME_FORMAT);
+        validateParams(params, "start_date",
+            "Invalid date/time string: \"13-21-2010\". Accepted formats: " +
+            ConsumerTrendReport.REPORT_DATETIME_FORMATS
+        );
     }
 
     @Test
@@ -135,8 +137,10 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
         when(params.containsKey("end_date")).thenReturn(true);
         when(params.get("end_date")).thenReturn(Arrays.asList("13-21-2010"));
 
-        validateParams(params, "end_date", "Invalid date string. Expected format: " +
-                ConsumerTrendReport.REPORT_DATETIME_FORMAT);
+        validateParams(params, "end_date",
+            "Invalid date/time string: \"13-21-2010\". Accepted formats: " +
+            ConsumerTrendReport.REPORT_DATETIME_FORMATS
+        );
     }
 
     @Test

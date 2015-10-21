@@ -107,7 +107,9 @@ public class ParameterDescriptorTest {
         when(params.get(desc.getName())).thenReturn(Arrays.asList("2014-04-nineteen19"));
 
         desc.mustBeDate("yyyy-MM-dd");
-        assertInvalidParameter(desc, params, "Invalid date string. Expected format: yyyy-MM-dd");
+        assertInvalidParameter(
+            desc, params, "Invalid date/time string: \"2014-04-nineteen19\". Accepted formats: [yyyy-MM-dd]"
+        );
     }
 
     @Test
@@ -128,7 +130,60 @@ public class ParameterDescriptorTest {
             "a2014-21-d04"));
 
         desc.mustBeDate("yyyy-MM-dd");
-        assertInvalidParameter(desc, params, "Invalid date string. Expected format: yyyy-MM-dd");
+        assertInvalidParameter(
+            desc, params, "Invalid date/time string: \"a2014-21-d04\". Accepted formats: [yyyy-MM-dd]"
+        );
+    }
+
+    @Test
+    public void validatesMultipleDateFormats() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey(desc.getName())).thenReturn(true);
+        when(params.get(desc.getName())).thenReturn(Arrays.asList("2014-04-f19"));
+
+        desc.mustBeDate(Arrays.asList("yyyy-MM-dd", "yyyy-MM-dd'T'HH"));
+        assertInvalidParameter(desc, params,
+            "Invalid date/time string: \"2014-04-f19\". Accepted formats: [yyyy-MM-dd, yyyy-MM-dd'T'HH]"
+        );
+    }
+
+    @Test
+    public void validatesDateFormatSingleCallPersistsMultipleValues() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey(desc.getName())).thenReturn(true);
+        when(params.get(desc.getName())).thenReturn(Arrays.asList("2014-04-f19"));
+
+        desc.mustBeDate(Arrays.asList("yyyy-MM-dd"));
+        desc.mustBeDate(Arrays.asList("yyyy-MM-dd", "yyyy-MM-dd'T'HH"));
+        assertInvalidParameter(desc, params,
+            "Invalid date/time string: \"2014-04-f19\". Accepted formats: [yyyy-MM-dd, yyyy-MM-dd'T'HH]"
+        );
+    }
+
+    @Test
+    public void validatesDateFormatSingleCallPersists() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey(desc.getName())).thenReturn(true);
+        when(params.get(desc.getName())).thenReturn(Arrays.asList("2014-04-f19"));
+
+        desc.mustBeDate(Arrays.asList("yyyy-MM-dd", "yyyy-MM-dd'T'HH"));
+        desc.mustBeDate("yyyy-MM-dd");
+
+        assertInvalidParameter(desc, params,
+            "Invalid date/time string: \"2014-04-f19\". Accepted formats: [yyyy-MM-dd]"
+        );
+    }
+
+    @Test
+    public void validatesMultipleDateFormatsWithMultipleValues() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey(desc.getName())).thenReturn(true);
+        when(params.get(desc.getName())).thenReturn(Arrays.asList("2014-04-19", "2015-10-12T12", "nope"));
+
+        desc.mustBeDate(Arrays.asList("yyyy-MM-dd", "yyyy-MM-dd'T'HH"));
+        assertInvalidParameter(desc, params,
+            "Invalid date/time string: \"nope\". Accepted formats: [yyyy-MM-dd, yyyy-MM-dd'T'HH]"
+        );
     }
 
     @Test
