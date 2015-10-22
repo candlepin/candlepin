@@ -992,4 +992,41 @@ public class PoolRulesTest {
         assertEquals(0, updates.size());
     }
 
+    @Test
+    public void noPoolsCreatedTest() {
+        Product product = TestUtil.createProduct(owner);
+        List<Pool> existingPools = new ArrayList<Pool>();
+        Pool masterPool = TestUtil.createPool(product);
+        masterPool.setSubscriptionSubKey("master");
+        existingPools.add(masterPool);
+        Pool derivedPool = TestUtil.createPool(product);
+        derivedPool.setSubscriptionSubKey("derived");
+        existingPools.add(derivedPool);
+        List<Pool> pools = this.poolRules.createAndEnrichPools(masterPool, existingPools);
+        assertEquals(0, pools.size());
+    }
+
+    @Test
+    public void derivedPoolCreateCreatedTest() {
+        Product product = TestUtil.createProduct(owner);
+        product.setAttribute("virt_limit", "4");
+        List<Pool> existingPools = new ArrayList<Pool>();
+        Pool masterPool = TestUtil.createPool(product);
+        masterPool.setSubscriptionSubKey("master");
+        existingPools.add(masterPool);
+        List<Pool> pools = this.poolRules.createAndEnrichPools(masterPool, existingPools);
+        assertEquals(1, pools.size());
+        assertEquals("derived", pools.get(0).getSubscriptionSubKey());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void cantCreateMasterPoolFromDerivedPoolTest() {
+        Product product = TestUtil.createProduct(owner);
+        List<Pool> existingPools = new ArrayList<Pool>();
+        Pool masterPool = TestUtil.createPool(product);
+        masterPool.setSubscriptionSubKey("derived");
+        existingPools.add(masterPool);
+        List<Pool> pools = this.poolRules.createAndEnrichPools(masterPool, existingPools);
+    }
+
 }
