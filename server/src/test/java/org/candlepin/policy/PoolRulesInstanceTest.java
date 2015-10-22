@@ -80,7 +80,7 @@ public class PoolRulesInstanceTest {
     @Test
     public void hostedCreateInstanceBasedPool() {
         Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, false);
-        List<Pool> pools = poolRules.enrichAndCreateAdditionalPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
         assertEquals(1, pools.size());
 
         Pool pool = pools.get(0);
@@ -92,7 +92,7 @@ public class PoolRulesInstanceTest {
     @Test
     public void standaloneCreateInstanceBasedPool() {
         Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, true);
-        List<Pool> pools = poolRules.enrichAndCreateAdditionalPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
         assertEquals(1, pools.size());
 
         Pool pool = pools.get(0);
@@ -106,7 +106,7 @@ public class PoolRulesInstanceTest {
     @Test
     public void hostedInstanceBasedUpdatePool() {
         Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, false);
-        List<Pool> pools = poolRules.enrichAndCreateAdditionalPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
         assertEquals(1, pools.size());
         Pool pool = pools.get(0);
 
@@ -129,7 +129,7 @@ public class PoolRulesInstanceTest {
     @Test
     public void hostedInstanceBasedRemoved() {
         Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, false);
-        List<Pool> pools = poolRules.enrichAndCreateAdditionalPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
         assertEquals(1, pools.size());
         Pool pool = pools.get(0);
 
@@ -154,7 +154,7 @@ public class PoolRulesInstanceTest {
     @Test
     public void standaloneInstanceBasedUpdatePool() {
         Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, true);
-        List<Pool> pools = poolRules.enrichAndCreateAdditionalPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
         assertEquals(1, pools.size());
         Pool pool = pools.get(0);
 

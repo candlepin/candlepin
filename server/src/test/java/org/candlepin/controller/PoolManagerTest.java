@@ -375,7 +375,7 @@ public class PoolManagerTest {
         Pool p = TestUtil.createPool(s.getProduct());
         p.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
         newPools.add(p);
-        when(poolRulesMock.enrichAndCreateAdditionalPools(eq(s), any(List.class))).thenReturn(newPools);
+        when(poolRulesMock.createAndEnrichPools(eq(s), any(List.class))).thenReturn(newPools);
 
         this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
@@ -465,9 +465,20 @@ public class PoolManagerTest {
         Pool p = TestUtil.createPool(s.getProduct());
         p.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
         newPools.add(p);
-        when(poolRulesMock.enrichAndCreateAdditionalPools(eq(s), any(List.class))).thenReturn(newPools);
+        when(poolRulesMock.createAndEnrichPools(eq(s), any(List.class))).thenReturn(newPools);
 
-        this.manager.createPoolsForSubscription(s);
+        this.manager.createAndEnrichPools(s);
+        verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
+    }
+
+    @Test
+    public void testCreateAndEnrichPoolForPool() {
+        List<Pool> newPools = new LinkedList<Pool>();
+        Pool p = TestUtil.createPool(TestUtil.createProduct(TestUtil.createOwner()));
+        newPools.add(p);
+        when(poolRulesMock.createAndEnrichPools(eq(p), any(List.class))).thenReturn(newPools);
+
+        this.manager.createAndEnrichPools(p);
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
     }
 
@@ -797,7 +808,7 @@ public class PoolManagerTest {
         // Make sure pools that don't match the owner were removed from the list
         // They shouldn't cause us to attempt to update existing pools when we
         // haven't created them in the first place
-        verify(poolRulesMock).enrichAndCreateAdditionalPools(eq(sub), any(List.class));
+        verify(poolRulesMock).createAndEnrichPools(eq(sub), any(List.class));
     }
 
     private void mockSubsList(List<Subscription> subs) {
@@ -870,15 +881,31 @@ public class PoolManagerTest {
         when(mockConfig.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
 
         List<Pool> existingPools = new LinkedList<Pool>();
-        List<Pool> newPools = pRules.enrichAndCreateAdditionalPools(s, existingPools);
+        List<Pool> newPools = pRules.createAndEnrichPools(s, existingPools);
 
         assertEquals(newPools.size(), 2);
-        assert (newPools.get(0).getSourceSubscription().getSubscriptionSubKey()
-            .equals("derived") || newPools.get(0).getSourceSubscription()
-            .getSubscriptionSubKey().equals("derived"));
-        assert (newPools.get(0).getSourceSubscription().getSubscriptionSubKey()
-            .equals("master") || newPools.get(0).getSourceSubscription()
-            .getSubscriptionSubKey().equals("master"));
+        assertTrue(newPools.get(0).getSourceSubscription().getSubscriptionSubKey().equals("derived") ||
+                newPools.get(1).getSourceSubscription().getSubscriptionSubKey().equals("derived"));
+        assertTrue(newPools.get(0).getSourceSubscription().getSubscriptionSubKey().startsWith("master") ||
+                newPools.get(1).getSourceSubscription().getSubscriptionSubKey().startsWith("master"));
+    }
+
+    @Test
+    public void createPoolsForExistingPoolNoneExist() {
+        Owner owner = this.getOwner();
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, productCuratorMock);
+        Product prod = TestUtil.createProduct(owner);
+        prod.setAttribute("virt_limit", "4");
+        Pool p = TestUtil.createPool(owner, prod);
+        List<Pool> existingPools = new LinkedList<Pool>();
+        List<Pool> newPools = pRules.createAndEnrichPools(p, existingPools);
+
+        assertEquals(2, newPools.size());
+
+        assertTrue(newPools.get(0).getSourceSubscription().getSubscriptionSubKey().equals("derived") ||
+                newPools.get(1).getSourceSubscription().getSubscriptionSubKey().equals("derived"));
+        assertTrue(newPools.get(0).getSourceSubscription().getSubscriptionSubKey().startsWith("master") ||
+                newPools.get(1).getSourceSubscription().getSubscriptionSubKey().startsWith("master"));
     }
 
     @Test
@@ -905,9 +932,24 @@ public class PoolManagerTest {
         Pool p = TestUtil.createPool(s.getProduct());
         p.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
         existingPools.add(p);
-        List<Pool> newPools = pRules.enrichAndCreateAdditionalPools(s, existingPools);
+        List<Pool> newPools = pRules.createAndEnrichPools(s, existingPools);
         assertEquals(newPools.size(), 1);
         assertEquals(newPools.get(0).getSourceSubscription().getSubscriptionSubKey(), "derived");
+    }
+
+    @Test
+    public void createPoolsForPoolMasterExist() {
+        Owner owner = this.getOwner();
+        Product prod = TestUtil.createProduct(owner);
+        prod.setAttribute("virt_limit", "4");
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, productCuratorMock);
+        List<Pool> existingPools = new LinkedList<Pool>();
+        Pool p = TestUtil.createPool(prod);
+        p.setSourceSubscription(new SourceSubscription(TestUtil.randomString(), "master"));
+        existingPools.add(p);
+        List<Pool> newPools = pRules.createAndEnrichPools(p, existingPools);
+        assertEquals(1, newPools.size());
+        assertEquals("derived", newPools.get(0).getSourceSubscription().getSubscriptionSubKey());
     }
 
     @Test
@@ -932,10 +974,26 @@ public class PoolManagerTest {
         Pool p = TestUtil.createPool(s.getProduct());
         p.setSourceSubscription(new SourceSubscription(s.getId(), "derived"));
         existingPools.add(p);
-        pRules.enrichAndCreateAdditionalPools(s, existingPools);
-        List<Pool> newPools = pRules.enrichAndCreateAdditionalPools(s, existingPools);
+        pRules.createAndEnrichPools(s, existingPools);
+        List<Pool> newPools = pRules.createAndEnrichPools(s, existingPools);
         assertEquals(newPools.size(), 1);
         assertEquals(newPools.get(0).getSourceSubscription().getSubscriptionSubKey(), "master");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void createPoolsForPoolBonusExist() {
+        Owner owner = this.getOwner();
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, productCuratorMock);
+        Product prod = TestUtil.createProduct(owner);
+        prod.setAttribute("virt_limit", "4");
+        List<Pool> existingPools = new LinkedList<Pool>();
+        Pool p = TestUtil.createPool(prod);
+        p.setSourceSubscription(new SourceSubscription(TestUtil.randomString(), "derived"));
+        existingPools.add(p);
+        pRules.createAndEnrichPools(p, existingPools);
+        List<Pool> newPools = pRules.createAndEnrichPools(p, existingPools);
+        assertEquals(1, newPools.size());
+        assertEquals("master", newPools.get(0).getSourceSubscription().getSubscriptionSubKey());
     }
 
     @Test

@@ -467,7 +467,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // BUG 1012386 This will regenerate master/derived for bonus scenarios
         //  if only one of the pair still exists.
-        createPoolsForSubscription(sub, subscriptionPools);
+        createAndEnrichPools(sub, subscriptionPools);
 
         // don't update floating here, we'll do that later
         // so we don't update anything twice
@@ -662,26 +662,28 @@ public class CandlepinPoolManager implements PoolManager {
      * @return the newly created Pools
      */
     @Override
-    public List<Pool> createPoolsForSubscription(Subscription sub) {
-        return createPoolsForSubscription(sub, new LinkedList<Pool>());
+    public List<Pool> createAndEnrichPools(Subscription sub) {
+        return createAndEnrichPools(sub, new LinkedList<Pool>());
     }
 
-    public List<Pool> createPoolsForSubscription(Subscription sub, List<Pool> existingPools) {
-        List<Pool> pools = poolRules.enrichAndCreateAdditionalPools(sub, existingPools);
-        log.debug("Creating {} pools: ", pools.size());
+    public List<Pool> createAndEnrichPools(Subscription sub, List<Pool> existingPools) {
+        List<Pool> pools = poolRules.createAndEnrichPools(sub, existingPools);
+        log.debug("Creating {} pools for subscription: ", pools.size());
         for (Pool pool : pools) {
             createPool(pool);
         }
+
         return pools;
     }
 
     @Override
-    public Pool createPools(Pool pool) {
-        List<Pool> pools = poolRules.enrichAndCreateAdditionalPools(pool, new ArrayList<Pool>());
+    public Pool createAndEnrichPools(Pool pool) {
+        List<Pool> pools = poolRules.createAndEnrichPools(pool, new ArrayList<Pool>());
         log.debug("Creating {} pools: ", pools.size());
         for (Pool p : pools) {
             createPool(p);
         }
+
         return pool;
     }
 

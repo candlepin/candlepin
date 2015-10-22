@@ -84,14 +84,13 @@ public class PoolRules {
         return result;
     }
 
-    public List<Pool> enrichAndCreateAdditionalPools(Subscription sub) {
-        Pool pool = convertToPool(sub);
-        return enrichAndCreateAdditionalPools(pool, new LinkedList<Pool>());
+    public List<Pool> createAndEnrichPools(Subscription sub) {
+        return createAndEnrichPools(sub, new LinkedList<Pool>());
     }
 
-    public List<Pool> enrichAndCreateAdditionalPools(Subscription sub, List<Pool> existingPools) {
+    public List<Pool> createAndEnrichPools(Subscription sub, List<Pool> existingPools) {
         Pool pool = convertToPool(sub);
-        return enrichAndCreateAdditionalPools(pool, existingPools);
+        return createAndEnrichPools(pool, existingPools);
     }
 
     /**
@@ -107,12 +106,25 @@ public class PoolRules {
      * @param existingPools
      * @return a list of pools created for the given pool
      */
-    public List<Pool> enrichAndCreateAdditionalPools(Pool pool, List<Pool> existingPools) {
+    public List<Pool> createAndEnrichPools(Pool pool, List<Pool> existingPools) {
         List<Pool> pools = new LinkedList<Pool>();
         pool.setQuantity(calculateQuantity(pool.getQuantity(), pool.getProduct(), pool.getUpstreamPoolId()));
-        setVirtOnlyPoolAtrribute(pool);
+
+        ProductAttribute virtAtt = pool.getProduct().getAttribute("virt_only");
+        // The following will make virt_only a pool attribute. That makes the
+        // pool explicitly virt_only to subscription manager and any other
+        // downstream consumer.
+        if (virtAtt != null && virtAtt.getValue() != null && !virtAtt.getValue().equals("")) {
+            pool.addAttribute(new PoolAttribute("virt_only", virtAtt.getValue()));
+        }
+
         log.info("Checking if pools need to be created for: {}", pool);
         if (!hasMasterPool(existingPools)) {
+            if (pool.getSourceSubscription().getSubscriptionSubKey().contentEquals("derived")) {
+                // while we can create bonus pool from master pool, the reverse
+                // is not possible without the subscription itself
+                throw new IllegalStateException("Cannot create master pool from bonus pool");
+            }
             pools.add(pool);
             log.info("Creating new master pool: {}", pool);
         }
@@ -153,19 +165,6 @@ public class PoolRules {
         pool.setCdn(sub.getCdn());
         pool.setCertificate(sub.getCertificate());
         return pool;
-    }
-
-    /*
-     * The following will make virt_only a pool attribute. That makes the pool
-     * explicitly virt_only to subscription manager and any other downstream
-     * consumer.
-     */
-    private void setVirtOnlyPoolAtrribute(Pool pool) {
-        ProductAttribute virtAtt = pool.getProduct().getAttribute("virt_only");
-
-        if (virtAtt != null && virtAtt.getValue() != null && !virtAtt.getValue().equals("")) {
-            pool.addAttribute(new PoolAttribute("virt_only", virtAtt.getValue()));
-        }
     }
 
     /*

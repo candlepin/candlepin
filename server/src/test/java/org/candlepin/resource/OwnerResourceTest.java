@@ -880,7 +880,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         sub.setId(Util.generateDbUUID());
         subscriptions.add(sub);
 
-        List<Pool> pools = poolManager.createPoolsForSubscription(sub);
+        List<Pool> pools = poolManager.createAndEnrichPools(sub);
         assertTrue(pools.size() > 0);
         Pool pool = pools.get(0);
 

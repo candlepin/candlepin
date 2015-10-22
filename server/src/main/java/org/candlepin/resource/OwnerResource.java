@@ -1120,7 +1120,7 @@ public class OwnerResource {
             subscription.setId(Util.generateDbUUID());
         }
 
-        poolManager.createPoolsForSubscription(subscription);
+        poolManager.createAndEnrichPools(subscription);
         return subscription;
     }
 
@@ -1149,7 +1149,7 @@ public class OwnerResource {
         pool.setOwner(owner);
 
         pool = resolvePool(pool);
-        return poolManager.createPools(pool);
+        return poolManager.createAndEnrichPools(pool);
     }
 
     /**

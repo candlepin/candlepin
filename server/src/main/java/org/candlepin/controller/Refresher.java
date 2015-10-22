@@ -130,7 +130,7 @@ public class Refresher {
     private void refreshPoolsForSubscription(Subscription subscription, List<Pool> pools) {
         poolManager.removeAndDeletePoolsOnOtherOwners(pools, subscription);
 
-        poolManager.createPoolsForSubscription(subscription, pools);
+        poolManager.createAndEnrichPools(subscription, pools);
         // Regenerate certificates here, that way if it fails, the whole thing rolls back.
         // We don't want to refresh without marking ents dirty, they will never get regenerated
         poolManager.regenerateCertificatesByEntIds(

@@ -114,6 +114,10 @@ public class TestUtil {
         return Math.abs(RANDOM.nextInt());
     }
 
+    public static String randomString() {
+        return String.valueOf(randomInt());
+    }
+
     public static Content createContent(String id) {
         return createContent(TestUtil.createOwner(), id);
     }

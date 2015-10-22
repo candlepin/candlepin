@@ -74,7 +74,7 @@ public class UeberCertificateGenerator {
 
         Product ueberProduct = createUeberProduct(o);
         Subscription ueberSubscription = createUeberSubscription(o, ueberProduct);
-        poolManager.createPoolsForSubscription(ueberSubscription);
+        poolManager.createAndEnrichPools(ueberSubscription);
         Consumer consumer = createUeberConsumer(principal, o);
 
         Pool ueberPool = poolCurator.findUeberPool(o);
