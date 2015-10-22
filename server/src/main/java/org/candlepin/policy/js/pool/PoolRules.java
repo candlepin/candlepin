@@ -120,7 +120,8 @@ public class PoolRules {
 
         log.info("Checking if pools need to be created for: {}", pool);
         if (!hasMasterPool(existingPools)) {
-            if (pool.getSourceSubscription().getSubscriptionSubKey().contentEquals("derived")) {
+            if (pool.getSourceSubscription() != null &&
+                    pool.getSourceSubscription().getSubscriptionSubKey().contentEquals("derived")) {
                 // while we can create bonus pool from master pool, the reverse
                 // is not possible without the subscription itself
                 throw new IllegalStateException("Cannot create master pool from bonus pool");
