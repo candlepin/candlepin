@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.Key;
@@ -52,8 +53,9 @@ public abstract class PKIUtility {
     private static Logger log = LoggerFactory.getLogger(PKIUtility.class);
 
     // TODO : configurable?
-    private static final int RSA_KEY_SIZE = 2048;
-    protected static final String SIGNATURE_ALGO = "SHA1WITHRSA";
+    public static final int RSA_KEY_SIZE = 2048;
+    public static final String SIGNATURE_ALGO = "SHA1WITHRSA";
+
     protected PKIReader reader;
     protected SubjectKeyIdentifierWriter subjectKeyWriter;
 
@@ -109,6 +111,48 @@ public abstract class PKIUtility {
     public abstract byte[] getPemEncoded(Key key) throws IOException;
 
     public abstract byte[] getPemEncoded(X509CRL crl) throws IOException;
+
+    /**
+     * Writes the specified certificate to the given output stream in PEM encoding.
+     *
+     * @param cert
+     *  The certificate to encode
+     *
+     * @param out
+     *  The output stream to which the certificate should be written
+     *
+     * @throws IOException
+     *  If an IOException occurs while writing the certificate
+     */
+    public abstract void writePemEncoded(X509Certificate cert, OutputStream out) throws IOException;
+
+    /**
+     * Writes the specified key to the given output stream in PEM encoding.
+     *
+     * @param key
+     *  The key to encode
+     *
+     * @param out
+     *  The output stream to which the key should be written
+     *
+     * @throws IOException
+     *  If an IOException occurs while writing the key
+     */
+    public abstract void writePemEncoded(Key key, OutputStream out) throws IOException;
+
+    /**
+     * Writes the specified certificate revocation list to the given output stream in PEM encoding.
+     *
+     * @param crl
+     *  The certificate revocation list to encode
+     *
+     * @param out
+     *  The output stream to which the certificate revocation list should be written
+     *
+     * @throws IOException
+     *  If an IOException occurs while writing the certificate revocation list
+     */
+    public abstract void writePemEncoded(X509CRL crl, OutputStream out) throws IOException;
 
     public static X509Certificate createCert(byte[] certData) {
         try {

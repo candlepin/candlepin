@@ -14,26 +14,44 @@
  */
 package org.candlepin.util;
 
+import static org.candlepin.test.MatchesPattern.matchesPattern;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
 
-import org.candlepin.controller.CrlGenerator;
+import org.candlepin.TestingModules;
+import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.PKIUtility;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.FileUtils;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
+import org.apache.commons.io.IOUtils;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.hamcrest.Description;
+import org.hamcrest.TypeSafeMatcher;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.security.cert.CRLException;
-import java.security.cert.CertificateException;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.math.BigInteger;
+import java.net.URL;
+import java.security.Provider;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509CRL;
+import java.security.cert.X509CRLEntry;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.inject.Inject;
 
 /**
  * CrlFileUtilTest
@@ -41,94 +59,207 @@ import java.security.cert.X509CRL;
 @RunWith(MockitoJUnitRunner.class)
 public class CrlFileUtilTest {
 
+    private static final Provider BC = new BouncyCastleProvider();
     private CrlFileUtil cfu;
 
-    @Mock private CrlGenerator crlGenerator;
-    @Mock private PKIUtility pkiUtility;
+    @Inject private PKIReader pkiReader;
+    @Inject private PKIUtility pkiUtility;
+    @Mock private CertificateSerialCurator certSerialCurator;
+    private File temp;
+    private Set<BigInteger> initialEntry;
 
     @Before
-    public void init() {
-        this.cfu = new CrlFileUtil(pkiUtility);
+    public void init() throws Exception {
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.ServletEnvironmentModule(),
+            new TestingModules.StandardTest()
+        );
+        injector.injectMembers(this);
+
+        this.cfu = new CrlFileUtil(this.pkiReader, this.pkiUtility, this.certSerialCurator);
+        this.temp = File.createTempFile("cp_test_crl-", ".pem");
+        this.initialEntry = new HashSet<BigInteger>();
+        this.initialEntry.add(BigInteger.ONE);
     }
 
-    @Test(expected = IOException.class)
-    public void executeGivenDirectory() throws IOException,
-                   CRLException, CertificateException {
-        File crlFile = new File("/tmp");
-        cfu.readCRLFile(crlFile);
-    }
-
-    @Test
-    public void executeGivenNonExistentFile() throws Exception {
-        File crlFile = new File("/tmp/biteme.crl");
-
-        X509CRL crl = mock(X509CRL.class);
-        when(crl.getEncoded()).thenReturn(Base64.encodeBase64("encoded".getBytes()));
-        when(crlGenerator.syncCRLWithDB(any(X509CRL.class))).thenReturn(crl);
-        when(pkiUtility.getPemEncoded(any(X509CRL.class))).thenReturn(new byte [2]);
-        cfu.writeCRLFile(crlFile, crl);
-        File f = new File("/tmp/biteme.crl");
-        assertTrue(f.exists());
-        assertTrue(f.length() > 0);
-        f.delete();
+    @After
+    public void tearDown() {
+        temp.delete();
     }
 
     @Test
-    public void emptyFile() throws IOException, CRLException, CertificateException {
-        File f = null;
-        try {
-            f = File.createTempFile("test", ".crl");
-            assertEquals(0, f.length());
-            X509CRL crl = mock(X509CRL.class);
-            when(crl.getEncoded()).thenReturn(Base64.encodeBase64("encoded".getBytes()));
-            when(crlGenerator.syncCRLWithDB(any(X509CRL.class))).thenReturn(crl);
-            when(pkiUtility.getPemEncoded(any(X509CRL.class))).thenReturn(new byte [2]);
-            X509CRL updatedcrl = cfu.readCRLFile(f);
-            cfu.writeCRLFile(f, updatedcrl);
-            assertTrue(f.length() > 0);
-        }
-        finally {
-            if (f != null) {
-                f.delete();
-            }
-        }
-    }
+    public void testStripCRLFile() throws Exception {
+        URL pemUrl = CrlFileUtilTest.class.getClassLoader().getResource("crl.pem");
+        File pemFile = new File(pemUrl.getFile());
 
-    @Test(expected = CRLException.class)
-    public void handleCRLException() throws IOException,
-            CRLException, CertificateException {
-        File f = null;
-        try {
-            f = File.createTempFile("test", ".crl");
-            assertEquals(0, f.length());
-            // put some garbage in the file to cause the CRLException
-            FileUtils.writeByteArrayToFile(f, "gobbledygook".getBytes());
-            cfu.readCRLFile(f);
+        File strippedFile = cfu.stripCRLFile(pemFile);
+        BufferedReader r = new BufferedReader(new FileReader(strippedFile));
 
+        String l;
+        while ((l = r.readLine()) != null) {
+            assertThat(l, matchesPattern("^[A-Za-z0-9+/=]*$"));
         }
-        finally {
-            if (f != null) {
-                f.delete();
-            }
-        }
+        r.close();
     }
 
     @Test
-    public void updatecrlfile() throws Exception {
-        File f = null;
-        try {
-            f = File.createTempFile("test", ".crl");
-            assertEquals(0, f.length());
-            X509CRL crl = mock(X509CRL.class);
-            when(crl.getEncoded()).thenReturn(Base64.encodeBase64("encoded".getBytes()));
-            when(pkiUtility.getPemEncoded(any(X509CRL.class))).thenReturn(new byte [2]);
-            cfu.writeCRLFile(f, crl);
-            assertTrue(f.length() > 0);
-        }
-        finally {
-            if (f != null) {
-                f.delete();
+    public void testNewCRLIsUnmodified() throws Exception {
+        this.cfu.initializeCRLFile(temp, initialEntry);
+        this.cfu.updateCRLFile(temp, null, null);
+        assertThat(new HashSet<BigInteger>(), new ContainsSerials(temp));
+    }
+
+    @Test
+    public void testNewCRLContainsRevokedSerials() throws Exception {
+        Set<BigInteger> revoke = new HashSet<BigInteger>(Arrays.asList(
+            new BigInteger("9711838712"),
+            new BigInteger("1122402922"),
+            new BigInteger("1032531028")
+        ));
+
+        this.cfu.initializeCRLFile(temp, initialEntry);
+        this.cfu.updateCRLFile(temp, revoke, null);
+        assertThat(revoke, new ContainsSerials(temp));
+    }
+
+    @Test
+    public void testNewCRLContainsRevokedSerialsButNotUnrevokedSerials() throws Exception {
+        Set<BigInteger> revoke = new HashSet<BigInteger>(Arrays.asList(
+            new BigInteger("3512918537"),
+            new BigInteger("1631181032"),
+            new BigInteger("9136184178")
+        ));
+
+        Set<BigInteger> unrevoke = new HashSet<BigInteger>(Arrays.asList(
+            new BigInteger("1235821531"),
+            new BigInteger("1631181032"),
+            new BigInteger("3823318120")
+        ));
+
+        this.cfu.initializeCRLFile(temp, initialEntry);
+        this.cfu.updateCRLFile(temp, revoke, unrevoke);
+
+        revoke.removeAll(unrevoke);
+        assertThat(revoke, new ContainsSerials(temp));
+    }
+
+    @Test
+    public void testExistingCRLIsUnmodified() throws Exception {
+        Set<BigInteger> prime = new HashSet<BigInteger>(Arrays.asList(
+            new BigInteger("1321822616"),
+            new BigInteger("3216227128"),
+            new BigInteger("2231351827")
+        ));
+
+        this.cfu.initializeCRLFile(temp, initialEntry);
+        this.cfu.updateCRLFile(temp, prime, null);
+        assertThat(prime, new ContainsSerials(temp));
+
+        this.cfu.updateCRLFile(temp, null, null);
+        assertThat(prime, new ContainsSerials(temp));
+    }
+
+    @Test
+    public void testModifiedCRLContainsRevokedSerials() throws Exception {
+        Set<BigInteger> prime = new HashSet<BigInteger>(Arrays.asList(
+            new BigInteger("2358215310"),
+            new BigInteger("7231352433"),
+            new BigInteger("8233181205")
+        ));
+
+        Set<BigInteger> revoke = new HashSet<BigInteger>(Arrays.asList(
+            new BigInteger("1132072301"),
+            new BigInteger("7717218925"),
+            new BigInteger("2196151762")
+        ));
+
+        this.cfu.initializeCRLFile(temp, initialEntry);
+        this.cfu.updateCRLFile(temp, prime, null);
+        assertThat(prime, new ContainsSerials(temp));
+
+        this.cfu.updateCRLFile(temp, revoke, null);
+
+        revoke.addAll(prime);
+        assertThat(revoke, new ContainsSerials(temp));
+    }
+
+    @Test
+    public void testModifiedCRLContainsRevokedSerialsButNotUnrevokedSerials() throws Exception {
+        Set<BigInteger> prime = new HashSet<BigInteger>(Arrays.asList(
+            new BigInteger("4420205175"),
+            new BigInteger("2475450918"),
+            new BigInteger("1501013497")
+        ));
+
+        Set<BigInteger> revoke = new HashSet<BigInteger>(Arrays.asList(
+            new BigInteger("5219615176"),
+            new BigInteger("2239819513"),
+            new BigInteger("21822616321")
+        ));
+
+        Set<BigInteger> unrevoke = new HashSet<BigInteger>(Arrays.asList(
+            new BigInteger("2239819513"),
+            new BigInteger("6227128223"),
+            new BigInteger("4420205175")
+        ));
+
+        this.cfu.initializeCRLFile(temp, initialEntry);
+        this.cfu.updateCRLFile(temp, prime, null);
+        assertThat(prime, new ContainsSerials(temp));
+
+        this.cfu.updateCRLFile(temp, revoke, unrevoke);
+
+        revoke.addAll(prime);
+        revoke.removeAll(unrevoke);
+        assertThat(revoke, new ContainsSerials(temp));
+        assertFalse(new ContainsSerials(temp).matchesSafely(unrevoke));
+    }
+
+    public class ContainsSerials extends TypeSafeMatcher<Set<BigInteger>> {
+        private Set<BigInteger> serials;
+
+        public ContainsSerials(File f) {
+            BufferedInputStream in = null;
+            X509CRL x509crl = null;
+
+            try {
+                in = new BufferedInputStream(new FileInputStream(f));
+                x509crl = (X509CRL) CertificateFactory.getInstance("X.509").generateCRL(in);
+                x509crl.verify(pkiReader.getCACert().getPublicKey(), BC);
+                Set<BigInteger> s = new HashSet<BigInteger>();
+
+                for (X509CRLEntry entry : x509crl.getRevokedCertificates()) {
+                    s.add(entry.getSerialNumber());
+                }
+                this.serials = s;
             }
+            catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            finally {
+                IOUtils.closeQuietly(in);
+            }
+        }
+
+        public ContainsSerials(Set<BigInteger> serials) {
+            this.serials = serials;
+        }
+
+        @Override
+        public boolean matchesSafely(Set<BigInteger> items) {
+            return serials.containsAll(items);
+        }
+
+        @Override
+        public void describeTo(Description description) {
+            description.appendText("Found serials ")
+                .appendValue(serials);
+        }
+
+        @Override
+        public void describeMismatchSafely(Set<BigInteger> items, Description mismatchDescription) {
+            mismatchDescription.appendText("are not a superset of ").appendValue(items);
         }
     }
 }

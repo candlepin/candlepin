@@ -1257,7 +1257,10 @@ class Candlepin
   end
 
   def get_crl
-    OpenSSL::X509::CRL.new(get_text('/crl'))
+    crl = get_text('/crl')
+    puts ("Received CRL:\n#{crl}") if @verbose
+
+    OpenSSL::X509::CRL.new(crl)
   end
 
   def get_guests(consumer_id)

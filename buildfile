@@ -123,7 +123,19 @@ LIQUIBASE_SLF4J = 'com.mattbertolini:liquibase-slf4j:jar:1.2.1'
 
 GETTEXT_COMMONS = 'com.googlecode.gettext-commons:gettext-commons:jar:0.9.8'
 
-BOUNCYCASTLE = 'org.bouncycastle:bcprov-jdk16:jar:1.46'
+# Beginning with 1.47 many of the classes in the bcmail artifact move
+# to bcpkix  so any upgrade to Bouncy Castle will need to change
+# that artifact name
+BOUNCYCASTLE = group('bcmail-jdk16', 'bcprov-jdk16',
+                     :under => 'org.bouncycastle',
+                     :version => '1.46')
+
+# Classes to generate ad-hoc X509 certs and CRLs
+# Beginning with 1.47 many of the classes in this artifact move to bcpkix
+# so any upgrade to Bouncy Castle will need to change the artifact name
+BOUNCYCASTLE_TESTING = group('bcmail-jdk15on',
+                             :under => 'org.bouncycastle',
+                             :version => '1.46')
 
 SERVLET = 'javax.servlet:servlet-api:jar:2.5'
 
@@ -451,6 +463,7 @@ define "candlepin" do
       JUKITO,
       HSQLDB,
       LIQUIBASE_SLF4J,
+      BOUNCYCASTLE_TESTING,
     ])
     test.using(:java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ])
 

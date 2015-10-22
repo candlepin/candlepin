@@ -14,58 +14,109 @@
  */
 package org.candlepin.resource;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.controller.CrlGenerator;
+import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.pki.PKIUtility;
 import org.candlepin.util.CrlFileUtil;
 
+import org.junit.Before;
+import org.junit.After;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.File;
-import java.security.cert.X509CRL;
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+
+
 
 /**
  * CrlResourceTest
  */
+@RunWith(MockitoJUnitRunner.class)
 public class CrlResourceTest {
+    private CrlResource resource;
+
+    private File testFile;
+
+    @Mock private Configuration config;
+    @Mock private CrlFileUtil crlFileUtil;
+    @Mock private CertificateSerialCurator certSerialCurator;
+    @Mock private PKIUtility pkiUtility;
+
+    @Before
+    public void init() throws Exception {
+        this.testFile = File.createTempFile("test-", "crl");
+
+        when(config.getString(ConfigProperties.CRL_FILE_PATH)).thenReturn(this.testFile.getAbsolutePath());
+        this.resource = new CrlResource(
+            this.config, this.crlFileUtil, this.pkiUtility, this.certSerialCurator
+        );
+    }
+
+    @After
+    public void cleanup() {
+        if (this.testFile != null) {
+            this.testFile.delete();
+        }
+    }
+
+    @Test
+    public void testGetCurrentCrl() throws Exception {
+        Object response = this.resource.getCurrentCrl(null);
+
+        assertTrue(response != null);
+        verify(crlFileUtil).syncCRLWithDB(any(File.class));
+    }
+
+    @Test
+    public void testGetCurrentCrlWithNoFile() throws Exception {
+        this.cleanup();
+        Object response = this.resource.getCurrentCrl(null);
+
+        assertTrue(response != null);
+        verify(crlFileUtil).syncCRLWithDB(any(File.class));
+    }
 
     @Test
     @SuppressWarnings("unchecked")
-    public void unrevoke() throws Exception {
-        CrlGenerator crlgen = mock(CrlGenerator.class);
-        CrlFileUtil fileutil = mock(CrlFileUtil.class);
-        CertificateSerialCurator sercur = mock(CertificateSerialCurator.class);
-        Configuration config = new ConfigForTesting();
-        X509CRL crl = mock(X509CRL.class);
-        when(fileutil.readCRLFile(any(File.class))).thenReturn(crl);
-        when(crlgen.removeEntries(eq(crl), any(List.class))).thenReturn(crl);
+    public void testUnrevokeWithArguments() throws Exception {
+        String[] input = new String[] { "123", "456", "789" };
 
-        CrlResource res = new CrlResource(crlgen, fileutil, config, sercur);
-        String[] ids = {"10"};
-        res.unrevoke(ids);
-        verify(crlgen, atLeastOnce()).removeEntries(eq(crl), any(List.class));
-        verify(fileutil, atLeastOnce()).writeCRLFile(any(File.class), eq(crl));
+        List<CertificateSerial> serials = new LinkedList<CertificateSerial>();
+        serials.add(new CertificateSerial(123L));
+        serials.add(new CertificateSerial(456L));
+        serials.add(new CertificateSerial(789L));
+
+        when(this.certSerialCurator.listBySerialIds(eq(input))).thenReturn(serials);
+
+        this.resource.unrevoke(input);
+
+        verify(crlFileUtil).updateCRLFile(any(File.class), anyCollection(), anyCollection());
     }
 
-    private static class ConfigForTesting extends MapConfiguration {
-        public ConfigForTesting() {
-            super(new HashMap<String, String>() {
-                private static final long serialVersionUID = 1L;
-                {
-                    this.put(ConfigProperties.CRL_FILE_PATH, "/tmp/test-crl.crl");
-                }
-            });
-        }
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testUnrevokeWithNoArguments() throws Exception {
+        String[] input = new String[] { };
+
+        List<CertificateSerial> serials = new LinkedList<CertificateSerial>();
+
+        when(this.certSerialCurator.listBySerialIds(eq(input))).thenReturn(serials);
+
+        this.resource.unrevoke(input);
+
+        verifyNoMoreInteractions(crlFileUtil);
     }
+
 }
