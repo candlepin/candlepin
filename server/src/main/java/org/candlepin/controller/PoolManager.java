@@ -45,9 +45,17 @@ public interface PoolManager {
 
     /**
      * @param sub
-     * @return the newly created Pool
+     * @return the newly created Pool(s)
      */
-    List<Pool> createPoolsForSubscription(Subscription sub);
+    List<Pool> createAndEnrichPools(Subscription sub);
+
+    /**
+     * Create any pools that need to be created for the given pool.
+     *
+     * @param pool
+     * @return original pool, enriched
+     */
+    Pool createAndEnrichPools(Pool pool);
 
     /**
      * Updates the pools associated with the specified subscription, using the information stored
@@ -299,4 +307,5 @@ public interface PoolManager {
      *  a list of known master pools
      */
     List<Pool> listMasterPools();
+
 }

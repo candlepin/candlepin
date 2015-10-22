@@ -105,7 +105,7 @@ public class PoolRulesTest {
 
         List<Pool> pools = null;
         try {
-            pools = poolRules.createPools(s);
+            pools = poolRules.createAndEnrichPools(s);
         }
         catch (Exception e) {
             fail(
@@ -337,7 +337,7 @@ public class PoolRulesTest {
         when(prodCuratorMock.lookupById(product.getOwner(), product.getId()))
             .thenReturn(product);
 
-        List<Pool> pools = this.poolRules.createPools(sub);
+        List<Pool> pools = this.poolRules.createAndEnrichPools(sub);
         assertEquals(1, pools.size());
 
         Pool resultPool = pools.get(0);
@@ -362,7 +362,7 @@ public class PoolRulesTest {
         when(this.prodCuratorMock.lookupById(product.getOwner(), product.getId()))
             .thenReturn(product);
 
-        List<Pool> pools = this.poolRules.createPools(sub);
+        List<Pool> pools = this.poolRules.createAndEnrichPools(sub);
         assertEquals(1, pools.size());
 
         Pool resultPool = pools.get(0);
@@ -387,7 +387,7 @@ public class PoolRulesTest {
         when(this.prodCuratorMock.lookupById(subProduct.getOwner(), subProduct.getId()))
             .thenReturn(subProduct);
 
-        List<Pool> pools = this.poolRules.createPools(sub);
+        List<Pool> pools = this.poolRules.createAndEnrichPools(sub);
         assertEquals(1, pools.size());
 
         Pool resultPool = pools.get(0);
@@ -412,7 +412,7 @@ public class PoolRulesTest {
         when(this.prodCuratorMock.lookupById(subProduct.getOwner(), subProduct.getId()))
             .thenReturn(subProduct);
 
-        List<Pool> pools = this.poolRules.createPools(sub);
+        List<Pool> pools = this.poolRules.createAndEnrichPools(sub);
         assertEquals(1, pools.size());
 
         Pool resultPool = pools.get(0);
@@ -436,7 +436,7 @@ public class PoolRulesTest {
         when(this.prodCuratorMock.lookupById(subProduct.getOwner(), subProduct.getId()))
             .thenReturn(subProduct);
 
-        List<Pool> pools = this.poolRules.createPools(sub);
+        List<Pool> pools = this.poolRules.createAndEnrichPools(sub);
         assertEquals(1, pools.size());
 
         Pool resultPool = pools.get(0);
@@ -463,7 +463,7 @@ public class PoolRulesTest {
     public void virtLimitWithHostLimitedCreatesTaggedBonusPool() {
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         s.getProduct().setAttribute("host_limited", "true");
-        List<Pool> pools = poolRules.createPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
         assertEquals(2, pools.size());
         for (Pool p : pools) {
             if (p.getSourceSubscription().getSubscriptionSubKey().equals("derived")) {
@@ -479,7 +479,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         s.getProduct().setAttribute("host_limited", "false");
-        List<Pool> pools = poolRules.createPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
         assertEquals(2, pools.size());
     }
 
@@ -487,7 +487,7 @@ public class PoolRulesTest {
     public void hostedVirtLimitSubCreatesBonusVirtOnlyPool() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
-        List<Pool> pools = poolRules.createPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
         assertEquals(2, pools.size());
 
         Pool physicalPool = pools.get(0);
@@ -507,7 +507,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         s.getProduct().setAttribute("virt_limit", "unlimited");
-        List<Pool> pools = poolRules.createPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
         assertEquals(2, pools.size());
 
         Pool virtBonusPool = pools.get(1);
@@ -521,7 +521,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         s.getProduct().setAttribute("virt_limit", "unlimited");
-        List<Pool> pools = poolRules.createPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
         assertEquals(2, pools.size());
 
         Pool virtBonusPool = pools.get(1);
@@ -544,7 +544,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         s.getProduct().setAttribute("virt_limit", "4");
-        List<Pool> pools = poolRules.createPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
         assertEquals(2, pools.size());
 
         // Now we remove virt_limit on the incoming subscription product and see if
@@ -572,7 +572,7 @@ public class PoolRulesTest {
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         s.getProduct().setAttribute("virt_limit", "unlimited");
         s.getProduct().setMultiplier(5L);
-        List<Pool> pools = poolRules.createPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
         assertEquals(2, pools.size());
 
         Pool virtBonusPool = pools.get(1);
@@ -586,7 +586,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         s.getProduct().setAttribute("physical_only", "true");
-        List<Pool> pools = poolRules.createPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
 
         // Should be no virt_only bonus pool:
         assertEquals(2, pools.size());
@@ -627,7 +627,7 @@ public class PoolRulesTest {
         when(productAdapterMock.getProductById(owner, derivedProd.getId())).thenReturn(derivedProd);
         s.getDerivedProvidedProducts().add(derivedProvidedProd1);
         s.getDerivedProvidedProducts().add(derivedProvidedProd2);
-        List<Pool> pools = poolRules.createPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
 
         // Should be virt_only pool for unmapped guests:
         assertEquals(2, pools.size());
@@ -660,7 +660,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Subscription s = createVirtLimitSubWithDerivedProducts("virtLimitProduct",
                 "derivedProd", 10, 10);
-        List<Pool> pools = poolRules.createPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
 
         // Should be virt_only pool for unmapped guests:
         assertEquals(2, pools.size());
@@ -745,7 +745,7 @@ public class PoolRulesTest {
     public void standaloneVirtLimitSubUpdate() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
-        List<Pool> pools = poolRules.createPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
 
         // Should be unmapped virt_only pool:
         assertEquals(2, pools.size());
@@ -777,7 +777,7 @@ public class PoolRulesTest {
     public void hostedVirtOnlySubCreate() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Subscription s = createVirtOnlySub("virtOnlyProduct", 10);
-        List<Pool> pools = poolRules.createPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
         assertEquals(1, pools.size());
         assertEquals("true", pools.get(0).getProduct().getAttributeValue("virt_only"));
         assertEquals(new Long(10), pools.get(0).getQuantity());
@@ -788,7 +788,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Subscription s = createVirtOnlySub("virtOnlyProduct", 10);
         s.getProduct().setMultiplier(new Long(5));
-        List<Pool> pools = poolRules.createPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
         assertEquals(1, pools.size());
         assertEquals("true", pools.get(0).getProduct().getAttributeValue("virt_only"));
         assertEquals(new Long(50), pools.get(0).getQuantity());
@@ -798,7 +798,7 @@ public class PoolRulesTest {
     public void hostedVirtOnlySubUpdate() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Subscription s = createVirtOnlySub("virtOnlyProduct", 10);
-        List<Pool> pools = poolRules.createPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
         assertEquals(1, pools.size());
         s.setQuantity(new Long(20));
 
@@ -813,7 +813,7 @@ public class PoolRulesTest {
     public void standaloneVirtSubPoolUpdateNoChanges() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
-        List<Pool> pools = poolRules.createPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
         assertEquals(2, pools.size());
         Entitlement ent = mock(Entitlement.class);
         when(ent.getQuantity()).thenReturn(1);
@@ -837,7 +837,7 @@ public class PoolRulesTest {
     public void standaloneVirtSubPoolUpdateVirtLimitChanged() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
-        List<Pool> pools = poolRules.createPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(s);
         assertEquals(2, pools.size());
         s.setQuantity(new Long(20));
         Entitlement ent = mock(Entitlement.class);
@@ -990,6 +990,43 @@ public class PoolRulesTest {
 
         List<PoolUpdate> updates = this.poolRules.updatePools(floatingPools, changedProducts);
         assertEquals(0, updates.size());
+    }
+
+    @Test
+    public void noPoolsCreatedTest() {
+        Product product = TestUtil.createProduct(owner);
+        List<Pool> existingPools = new ArrayList<Pool>();
+        Pool masterPool = TestUtil.createPool(product);
+        masterPool.setSubscriptionSubKey("master");
+        existingPools.add(masterPool);
+        Pool derivedPool = TestUtil.createPool(product);
+        derivedPool.setSubscriptionSubKey("derived");
+        existingPools.add(derivedPool);
+        List<Pool> pools = this.poolRules.createAndEnrichPools(masterPool, existingPools);
+        assertEquals(0, pools.size());
+    }
+
+    @Test
+    public void derivedPoolCreateCreatedTest() {
+        Product product = TestUtil.createProduct(owner);
+        product.setAttribute("virt_limit", "4");
+        List<Pool> existingPools = new ArrayList<Pool>();
+        Pool masterPool = TestUtil.createPool(product);
+        masterPool.setSubscriptionSubKey("master");
+        existingPools.add(masterPool);
+        List<Pool> pools = this.poolRules.createAndEnrichPools(masterPool, existingPools);
+        assertEquals(1, pools.size());
+        assertEquals("derived", pools.get(0).getSubscriptionSubKey());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void cantCreateMasterPoolFromDerivedPoolTest() {
+        Product product = TestUtil.createProduct(owner);
+        List<Pool> existingPools = new ArrayList<Pool>();
+        Pool masterPool = TestUtil.createPool(product);
+        masterPool.setSubscriptionSubKey("derived");
+        existingPools.add(masterPool);
+        List<Pool> pools = this.poolRules.createAndEnrichPools(masterPool, existingPools);
     }
 
 }

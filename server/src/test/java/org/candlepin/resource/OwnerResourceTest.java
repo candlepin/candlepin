@@ -880,7 +880,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         sub.setId(Util.generateDbUUID());
         subscriptions.add(sub);
 
-        List<Pool> pools = poolManager.createPoolsForSubscription(sub);
+        List<Pool> pools = poolManager.createAndEnrichPools(sub);
         assertTrue(pools.size() > 0);
         Pool pool = pools.get(0);
 
@@ -1241,6 +1241,38 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(1, poolCurator.listByOwner(owner).size());
         assertNotNull(pool.getId());
 
+    }
+
+    @Test
+    public void createBonusPool() {
+        Product prod = TestUtil.createProduct(owner);
+        prod.setAttribute("virt_limit", "2");
+        productCurator.create(prod);
+        Pool pool = TestUtil.createPool(owner, prod);
+        assertEquals(0, poolCurator.listByOwner(owner).size());
+        ownerResource.createPool(owner.getKey(), pool);
+        List<Pool> pools = poolCurator.listByOwner(owner);
+        assertEquals(2, pools.size());
+        assertTrue(pools.get(0).getSubscriptionSubKey().startsWith("master") ||
+                pools.get(1).getSubscriptionSubKey().startsWith("master"));
+        assertTrue(pools.get(0).getSubscriptionSubKey().equals("derived") ||
+                pools.get(1).getSubscriptionSubKey().equals("derived"));
+    }
+
+    @Test
+    public void enrichPool() {
+        Product prod = TestUtil.createProduct(owner);
+        prod.setAttribute("virt_only", "true");
+        prod.setMultiplier(2L);
+        productCurator.create(prod);
+        Pool pool = TestUtil.createPool(owner, prod);
+        pool.setQuantity(100L);
+        assertEquals(0, poolCurator.listByOwner(owner).size());
+        ownerResource.createPool(owner.getKey(), pool);
+        List<Pool> pools = poolCurator.listByOwner(owner);
+        assertEquals(1, pools.size());
+        assertTrue(Boolean.parseBoolean(pools.get(0).getAttributeValue("virt_only")));
+        assertEquals(200L, pools.get(0).getQuantity().intValue());
     }
 
     @Test
