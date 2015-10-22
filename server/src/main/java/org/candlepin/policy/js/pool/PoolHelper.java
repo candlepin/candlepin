@@ -151,12 +151,12 @@ public class PoolHelper extends AttributeHelper {
     }
 
     /**
-     * Copies the provided products from a subscription to a derived pool.
+     * Copies the provided products from a source pool to a derived pool.
      *
      * @param source subscription
      * @param destination pool
      */
-    private void copyProvidedProducts(Subscription source, Pool destination,
+    private void copyProvidedProducts(Pool source, Pool destination,
         ProductCurator prodCurator) {
 
         Set<Product> products;
@@ -181,31 +181,27 @@ public class PoolHelper extends AttributeHelper {
         }
     }
 
-    public Pool createPool(Subscription sub, Product product, String quantity,
-        Map<String, String> attributes, ProductCurator prodCurator) {
+    public Pool clonePool(Pool sourcePool, Product product, String quantity,
+            Map<String, String> attributes, String subKey, ProductCurator prodCurator) {
 
-        Pool pool = createPool(
-            product,
-            sub.getOwner(),
-            quantity,
-            sub.getStartDate(),
-            sub.getEndDate(),
-            sub.getContractNumber(),
-            sub.getAccountNumber(),
-            sub.getOrderNumber(),
-            new HashSet<Product>()
-        );
+        Pool pool = createPool(product, sourcePool.getOwner(), quantity,
+                sourcePool.getStartDate(), sourcePool.getEndDate(),
+                sourcePool.getContractNumber(), sourcePool.getAccountNumber(),
+                sourcePool.getOrderNumber(), new HashSet<Product>());
 
-        pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
+        if (sourcePool.getSubscriptionId() != null) {
+            pool.setSourceSubscription(
+                    new SourceSubscription(sourcePool.getSubscriptionId(), subKey));
+        }
 
-        copyProvidedProducts(sub, pool, prodCurator);
+        copyProvidedProducts(sourcePool, pool, prodCurator);
 
         // Add in the new attributes
         for (Entry<String, String> entry : attributes.entrySet()) {
             pool.setAttribute(entry.getKey(), entry.getValue());
         }
 
-        for (Branding b : sub.getBranding()) {
+        for (Branding b : sourcePool.getBranding()) {
             pool.getBranding().add(new Branding(b.getProductId(), b.getType(),
                 b.getName()));
         }

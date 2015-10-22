@@ -667,13 +667,22 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     public List<Pool> createPoolsForSubscription(Subscription sub, List<Pool> existingPools) {
-        List<Pool> pools = poolRules.createPools(sub, existingPools);
-        log.debug("Creating {} pools for subscription: ", pools.size());
+        List<Pool> pools = poolRules.enrichAndCreateAdditionalPools(sub, existingPools);
+        log.debug("Creating {} pools: ", pools.size());
         for (Pool pool : pools) {
             createPool(pool);
         }
-
         return pools;
+    }
+
+    @Override
+    public Pool createPools(Pool pool) {
+        List<Pool> pools = poolRules.enrichAndCreateAdditionalPools(pool, new ArrayList<Pool>());
+        log.debug("Creating {} pools: ", pools.size());
+        for (Pool p : pools) {
+            createPool(p);
+        }
+        return pool;
     }
 
     @Override

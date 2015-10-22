@@ -1149,7 +1149,7 @@ public class OwnerResource {
         pool.setOwner(owner);
 
         pool = resolvePool(pool);
-        return poolManager.createPool(pool);
+        return poolManager.createPools(pool);
     }
 
     /**

@@ -375,7 +375,7 @@ public class PoolManagerTest {
         Pool p = TestUtil.createPool(s.getProduct());
         p.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
         newPools.add(p);
-        when(poolRulesMock.createPools(eq(s), any(List.class))).thenReturn(newPools);
+        when(poolRulesMock.enrichAndCreateAdditionalPools(eq(s), any(List.class))).thenReturn(newPools);
 
         this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
@@ -465,7 +465,7 @@ public class PoolManagerTest {
         Pool p = TestUtil.createPool(s.getProduct());
         p.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
         newPools.add(p);
-        when(poolRulesMock.createPools(eq(s), any(List.class))).thenReturn(newPools);
+        when(poolRulesMock.enrichAndCreateAdditionalPools(eq(s), any(List.class))).thenReturn(newPools);
 
         this.manager.createPoolsForSubscription(s);
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
@@ -797,7 +797,7 @@ public class PoolManagerTest {
         // Make sure pools that don't match the owner were removed from the list
         // They shouldn't cause us to attempt to update existing pools when we
         // haven't created them in the first place
-        verify(poolRulesMock).createPools(eq(sub), any(List.class));
+        verify(poolRulesMock).enrichAndCreateAdditionalPools(eq(sub), any(List.class));
     }
 
     private void mockSubsList(List<Subscription> subs) {
@@ -870,7 +870,7 @@ public class PoolManagerTest {
         when(mockConfig.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
 
         List<Pool> existingPools = new LinkedList<Pool>();
-        List<Pool> newPools = pRules.createPools(s, existingPools);
+        List<Pool> newPools = pRules.enrichAndCreateAdditionalPools(s, existingPools);
 
         assertEquals(newPools.size(), 2);
         assert (newPools.get(0).getSourceSubscription().getSubscriptionSubKey()
@@ -905,7 +905,7 @@ public class PoolManagerTest {
         Pool p = TestUtil.createPool(s.getProduct());
         p.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
         existingPools.add(p);
-        List<Pool> newPools = pRules.createPools(s, existingPools);
+        List<Pool> newPools = pRules.enrichAndCreateAdditionalPools(s, existingPools);
         assertEquals(newPools.size(), 1);
         assertEquals(newPools.get(0).getSourceSubscription().getSubscriptionSubKey(), "derived");
     }
@@ -932,8 +932,8 @@ public class PoolManagerTest {
         Pool p = TestUtil.createPool(s.getProduct());
         p.setSourceSubscription(new SourceSubscription(s.getId(), "derived"));
         existingPools.add(p);
-        pRules.createPools(s, existingPools);
-        List<Pool> newPools = pRules.createPools(s, existingPools);
+        pRules.enrichAndCreateAdditionalPools(s, existingPools);
+        List<Pool> newPools = pRules.enrichAndCreateAdditionalPools(s, existingPools);
         assertEquals(newPools.size(), 1);
         assertEquals(newPools.get(0).getSourceSubscription().getSubscriptionSubKey(), "master");
     }
