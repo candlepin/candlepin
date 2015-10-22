@@ -21,11 +21,13 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CrlGenerator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.pki.PKIUtility;
 import org.candlepin.util.CrlFileUtil;
 
 import com.google.inject.Inject;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateException;
@@ -39,6 +41,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * CrlResource
@@ -50,17 +53,20 @@ public class CrlResource {
     private CrlFileUtil crlFileUtil;
     private Configuration config;
     private CertificateSerialCurator certificateSerialCurator;
+    private PKIUtility pkiUtility;
 
 
     @Inject
     public CrlResource(CrlGenerator crlGenerator,
         CrlFileUtil crlFileUtil, Configuration config,
-        CertificateSerialCurator certificateSerialCurator) {
+        CertificateSerialCurator certificateSerialCurator,
+        PKIUtility pkiUtility) {
 
         this.crlGenerator = crlGenerator;
         this.crlFileUtil = crlFileUtil;
         this.config = config;
         this.certificateSerialCurator = certificateSerialCurator;
+        this.pkiUtility = pkiUtility;
     }
 
     /**
@@ -73,24 +79,23 @@ public class CrlResource {
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
-    public String getCurrentCrl(@Context Principal principal)
+    public Response getCurrentCrl(@Context Principal principal)
         throws CRLException, IOException {
 
         String filePath = getCrlFilePath();
         File crlFile = new File(filePath);
 
-        byte[] encoded = null;
-
         try {
+            // TODO: We could probably just invoke the task here and not duplicate code
             X509CRL crl = crlFileUtil.readCRLFile(crlFile);
             crl = crlGenerator.syncCRLWithDB(crl);
-            encoded = crlFileUtil.writeCRLFile(crlFile, crl);
+            crlFileUtil.writeCRLFile(crlFile, crl);
         }
         catch (CertificateException e) {
             throw new IseException(e.getMessage(), e);
         }
 
-        return new String(encoded);
+        return Response.ok().entity(new FileInputStream(crlFile)).build();
     }
 
     /**

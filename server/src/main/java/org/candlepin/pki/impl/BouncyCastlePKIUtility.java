@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
@@ -197,13 +198,22 @@ public class BouncyCastlePKIUtility extends PKIUtility {
         }
     }
 
-    private byte[] getPemEncoded(Object obj) throws IOException {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        OutputStreamWriter oswriter = new OutputStreamWriter(byteArrayOutputStream);
+    private void writePemEncoded(Object obj, OutputStream out) throws IOException {
+        OutputStreamWriter oswriter = new OutputStreamWriter(out);
         PEMWriter writer = new PEMWriter(oswriter);
         writer.writeObject(obj);
-        writer.close();
-        return byteArrayOutputStream.toByteArray();
+        writer.flush();
+        // We're hoping close does nothing more than a flush and super.close() here
+    }
+
+    private byte[] getPemEncoded(Object obj) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        this.writePemEncoded(obj, out);
+
+        byte[] output = out.toByteArray();
+        out.close();
+
+        return output;
     }
 
     @Override
@@ -219,6 +229,21 @@ public class BouncyCastlePKIUtility extends PKIUtility {
     @Override
     public byte[] getPemEncoded(X509CRL crl) throws IOException {
         return getPemEncoded((Object) crl);
+    }
+
+    @Override
+    public void writePemEncoded(X509Certificate cert, OutputStream out) throws IOException {
+        this.writePemEncoded((Object) cert, out);
+    }
+
+    @Override
+    public void writePemEncoded(Key key, OutputStream out) throws IOException {
+        this.writePemEncoded((Object) key, out);
+    }
+
+    @Override
+    public void writePemEncoded(X509CRL crl, OutputStream out) throws IOException {
+        this.writePemEncoded((Object) crl, out);
     }
 
     @Override
