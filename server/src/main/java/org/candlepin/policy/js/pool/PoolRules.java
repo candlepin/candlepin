@@ -143,6 +143,7 @@ public class PoolRules {
         for (Branding b : sub.getBranding()) {
             pool.getBranding().add(new Branding(b.getProductId(), b.getType(), b.getName()));
         }
+        pool.setSubscriptionId(sub.getId());
         pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
 
         // Copy over upstream details...?

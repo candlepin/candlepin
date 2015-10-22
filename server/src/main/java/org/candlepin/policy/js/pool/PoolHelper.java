@@ -189,10 +189,8 @@ public class PoolHelper extends AttributeHelper {
                 sourcePool.getContractNumber(), sourcePool.getAccountNumber(),
                 sourcePool.getOrderNumber(), new HashSet<Product>());
 
-        if (sourcePool.getSubscriptionId() != null) {
-            pool.setSourceSubscription(
+        pool.setSourceSubscription(
                     new SourceSubscription(sourcePool.getSubscriptionId(), subKey));
-        }
 
         copyProvidedProducts(sourcePool, pool, prodCurator);
 
