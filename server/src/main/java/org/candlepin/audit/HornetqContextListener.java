@@ -19,6 +19,7 @@ import org.candlepin.config.ConfigProperties;
 import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 
+import org.apache.commons.io.FileUtils;
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.SimpleString;
 import org.hornetq.api.core.TransportConfiguration;
@@ -49,10 +50,6 @@ import java.util.List;
  * doesn't actually implement ServletContextListener.
  */
 public class HornetqContextListener {
-
-    private static final int HORNET_MAX_QUEUE_SIZE_MB = 32;
-    private static final int HORNET_MAX_PAGE_SIZE_MB = 8;
-
     private static  Logger log = LoggerFactory.getLogger(HornetqContextListener.class);
 
     private EmbeddedHornetQ hornetqServer;
@@ -103,12 +100,17 @@ public class HornetqContextListener {
             config.setBindingsDirectory(new File(baseDir, "bindings").toString());
             config.setJournalDirectory(new File(baseDir, "journal").toString());
             config.setLargeMessagesDirectory(new File(baseDir, "largemsgs").toString());
+            config.setPagingDirectory(new File(baseDir, "paging").toString());
 
             Map<String, AddressSettings> settings = new HashMap<String, AddressSettings>();
             AddressSettings pagingConfig = new AddressSettings();
-            //TODO make these sizes configurable
-            pagingConfig.setMaxSizeBytes(HORNET_MAX_QUEUE_SIZE_MB * 1024 * 1024);
-            pagingConfig.setPageSizeBytes(HORNET_MAX_PAGE_SIZE_MB * 1024 * 1024);
+
+            long maxQueueSizeInMb = candlepinConfig.getInt(ConfigProperties.HORNETQ_MAX_QUEUE_SIZE);
+            long maxPageSizeInMb = candlepinConfig.getInt(ConfigProperties.HORNETQ_MAX_PAGE_SIZE);
+
+            // Paging sizes need to be converted to bytes
+            pagingConfig.setMaxSizeBytes(maxQueueSizeInMb * FileUtils.ONE_MB);
+            pagingConfig.setPageSizeBytes(maxPageSizeInMb * FileUtils.ONE_MB);
             pagingConfig.setAddressFullMessagePolicy(AddressFullMessagePolicy.PAGE);
             //Enable for all the queues
             settings.put("#", pagingConfig);
