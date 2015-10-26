@@ -37,7 +37,7 @@ describe 'Instance Based Subscriptions' do
       }
     })
 
-    @sub1 = @cp.create_subscription(@owner['key'], @instance_product.id,
+    @sub1 = create_pool_and_subscription(@owner['key'], @instance_product.id,
       10, [@eng_product['id']])
     @cp.refresh_pools(@owner['key'])
     @pools = @cp.list_pools :owner => @owner.id, \

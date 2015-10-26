@@ -80,23 +80,23 @@ describe 'One Sub Pool Per Stack' do
     @stacked_provided_product2 =  create_product()
 
 
-    @stacked_virt_sub1 = @cp.create_subscription(@owner['key'],
+    @stacked_virt_sub1 = create_pool_and_subscription(@owner['key'],
       @virt_limit_product.id, 10, [@virt_limit_provided_product.id], "123", "321", "333")
-    @stacked_virt_sub2 = @cp.create_subscription(@owner['key'],
+    @stacked_virt_sub2 = create_pool_and_subscription(@owner['key'],
       @virt_limit_product.id, 10, [], "456", '', '', nil, Date.today + 380)
-    @stacked_virt_sub3 = @cp.create_subscription(@owner['key'],
+    @stacked_virt_sub3 = create_pool_and_subscription(@owner['key'],
       @virt_limit_product2.id, 10, [], "444", '', '', nil, Date.today + 380)
-    @stacked_non_virt_sub = @cp.create_subscription(@owner['key'],
+    @stacked_non_virt_sub = create_pool_and_subscription(@owner['key'],
       @regular_stacked_product.id, 4, [@regular_stacked_provided_product.id], "789")
-    @non_stacked_sub = @cp.create_subscription(@owner['key'],
+    @non_stacked_sub = create_pool_and_subscription(@owner['key'],
       @non_stacked_product.id, 2, [], "234")
-    @datacenter_sub = @cp.create_subscription(@owner['key'], @stacked_datacenter_product.id,
+    @datacenter_sub = create_pool_and_subscription(@owner['key'], @stacked_datacenter_product.id,
       10, [], '222', '', '', nil, nil,
       {
         'derived_product_id' => @derived_product.id,
         'derived_provided_products' => [@derived_provided_product.id]
       })
-    @stacked_non_virt_sub_diff_stack_id = @cp.create_subscription(@owner['key'],
+    @stacked_non_virt_sub_diff_stack_id = create_pool_and_subscription(@owner['key'],
       @stacked_product_diff_id.id, 2, [], "888")
     @cp.refresh_pools(@owner['key'])
 

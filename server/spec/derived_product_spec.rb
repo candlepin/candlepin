@@ -73,18 +73,18 @@ describe 'Derived Products' do
       }
     })
 
-    @sub1 = @cp.create_subscription(@owner['key'], @datacenter_product.id,
+    @sub1 = create_pool_and_subscription(@owner['key'], @datacenter_product.id,
       10, [], '', '', '', nil, nil,
       {
-        'derived_product_id' => @derived_product['id'],
-        'derived_provided_products' => [@eng_product['id']]
+        :derived_product_id => @derived_product['id'],
+        :derived_provided_products => [@eng_product['id']]
       })
 
-    @sub2 = @cp.create_subscription(@owner['key'], @datacenter_product_2.id,
+    @sub2 = create_pool_and_subscription(@owner['key'], @datacenter_product_2.id,
       10, [], '', '', '', nil, nil,
       {
-        'derived_product_id' => @derived_product_2['id'],
-        'derived_provided_products' => [@eng_product_2['id'], @modified_product['id']]
+        :derived_product_id => @derived_product_2['id'],
+        :derived_provided_products => [@eng_product_2['id'], @modified_product['id']]
       })
 
     @cp.refresh_pools(@owner['key'])
@@ -113,7 +113,7 @@ describe 'Derived Products' do
         'multi-entitlement' => "yes"
       }
     })
-    @sub1 = @cp.create_subscription(@owner['key'], instance_product.id,
+    @sub1 = create_pool_and_subscription(@owner['key'], instance_product.id,
       10, [@eng_product['id']])
     @cp.refresh_pools(@owner['key'])
     @guest_client.consume_product

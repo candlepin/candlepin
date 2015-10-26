@@ -39,7 +39,7 @@ describe 'Refresh Pools' do
       name = random_string("product-#{i}")
       product = create_product(name, name, :owner => owner['key'])
 
-      @cp.create_subscription(owner['key'], product.id)
+      create_pool_and_subscription(owner['key'], product.id)
     end
 
     # @cp.refresh_pools(owner['key'])
@@ -55,7 +55,7 @@ describe 'Refresh Pools' do
       name = random_string("product-#{i}")
       product = create_product(name, name, :owner => owner['key'])
 
-      @cp.create_subscription(owner['key'], product.id)
+      create_pool_and_subscription(owner['key'], product.id)
     end
 
     @cp.refresh_pools(owner['key'])
@@ -72,25 +72,25 @@ describe 'Refresh Pools' do
     provided1 = create_product(random_string, random_string, :owner => owner['key'])
     provided2 = create_product(random_string, random_string, :owner => owner['key'])
     provided3 = create_product(random_string, random_string, :owner => owner['key'])
-    sub = @cp.create_subscription(owner['key'], product.id, 500, [provided1.id, provided2.id])
-
+    pool = create_pool_and_subscription(owner['key'], product.id, 500, [provided1.id, provided2.id])
     pools = @cp.list_pools({:owner => owner.id})
     pools.length.should == 1
     pools[0].providedProducts.length.should == 2
 
     # Remove the old provided products and add a new one:
+    sub = get_hostedtest_subscription(pool.subscriptionId)
     sub.providedProducts = [@cp.get_product(owner['key'], provided3.id)]
-    @cp.update_subscription(sub)
-    sub2 = @cp.get_subscription(sub.id)
+    update_hostedtest_subscription(sub)
+    sub2 = get_hostedtest_subscription(sub.id)
     @cp.refresh_pools(owner['key'])
     pools = @cp.list_pools({:owner => owner.id})
     pools[0].providedProducts.length.should == 1
   end
 
-  it 'deletes expired subscriptions along with pools and entitlements' do
+  it 'deletes expired subscriptions\' pools and entitlements' do
     owner = create_owner random_string
     product = create_product(random_string, random_string, :owner => owner['key'])
-    sub = @cp.create_subscription(owner['key'], product.id, 500, [])
+    pool = create_pool_and_subscription(owner['key'], product.id, 500, [])
     @cp.refresh_pools(owner['key'])
     pools = @cp.list_pools({:owner => owner.id})
     pools.length.should == 1
@@ -101,13 +101,12 @@ describe 'Refresh Pools' do
     consumer = consumer_client(user, consumer_id)
     consumer.consume_pool(pools.first.id, {:quantity => 1}).size.should == 1
 
-    # Update the subscription to be expired so that
-    # sub, pool, and entitlements are removed.
+    # Update the subscription to be expired so that pool, and entitlements are removed.
+    sub = get_hostedtest_subscription(pool.subscriptionId)
     sub.startDate = Date.today - 20
     sub.endDate = Date.today - 10
-    @cp.update_subscription(sub)
-
-    @cp.list_subscriptions(owner['key']).size.should == 0
+    update_hostedtest_subscription(sub)
+    @cp.refresh_pools(owner['key'])
     @cp.list_pools({:owner => owner.id}).size.should == 0
     @cp.get_consumer(consumer.uuid).entitlementCount.should == 0
   end
@@ -116,7 +115,7 @@ describe 'Refresh Pools' do
     owner = create_owner random_string
     product = create_product(random_string, random_string, :owner => owner['key'])
     new_product = create_product(random_string, random_string, :owner => owner['key'])
-    sub = @cp.create_subscription(owner['key'], product.id, 500,
+    pool = create_pool_and_subscription(owner['key'], product.id, 500,
       [])
     @cp.refresh_pools(owner['key'])
     pools = @cp.list_pools({:owner => owner.id})
@@ -133,8 +132,9 @@ describe 'Refresh Pools' do
     old_serial = old_cert['serial']['serial']
 
     # Change the product on subscription to trigger a regenerate:
+    sub = get_hostedtest_subscription(pool.subscriptionId)
     sub['product'] = {'id' => new_product['id']}
-    @cp.update_subscription(sub)
+    update_hostedtest_subscription(sub)
     @cp.refresh_pools(owner['key'], false, false, true)
     ent = @cp.get_entitlement(ent['id'])
     new_cert = ent['certificates'][0]
@@ -170,14 +170,14 @@ describe 'Refresh Pools' do
     })
     eng_product = create_product('300', nil, :owner => owner['key'])
 
-    sub1 = @cp.create_subscription(owner['key'], datacenter_product.id,
+    pool1 = create_pool_and_subscription(owner['key'], datacenter_product.id,
       10, [], '', '', '', nil, nil,
       {
-        'derived_product_id' => derived_product['id'],
-        'derived_provided_products' => ['300']
+        :derived_product_id => derived_product['id'],
+        :derived_provided_products => ['300']
       })
     # refresh so the owner has it
-    @cp.refresh_pools(owner['key'])
+    @cp.refresh_pools(owner['key'], true)
     # extra unmapped guest pool will be labeled with provided product
     pools = @cp.list_pools :owner => owner.id,
       :product => datacenter_product.id
@@ -186,9 +186,10 @@ describe 'Refresh Pools' do
 
     # let's remove the derivedProducts - this simulates
     # the scenario that caues the bug
+    sub1 = get_hostedtest_subscription(pool1.subscriptionId)
     sub1['derivedProduct'] = nil
     sub1['derivedProvidedProducts'] = nil
-    @cp.update_subscription(sub1)
+    update_hostedtest_subscription(sub1)
 
     # this is the refresh we are actually testing
     # it should succeed
@@ -207,8 +208,8 @@ describe 'Refresh Pools' do
     owner1 = create_owner random_string('initial-owner')
     name = random_string("product")
     product1 = create_product(name, name, :owner => owner1['key'])
-    sub = @cp.create_subscription(owner1['key'], product1.id)
-    @cp.refresh_pools(owner1["key"])
+    pool = create_pool_and_subscription(owner1['key'], product1.id)
+    @cp.refresh_pools(owner1["key"], true)
     owner1_pools = @cp.list_pools({:owner => owner1.id})
     owner1_pools.length.should == 1
 
@@ -217,10 +218,14 @@ describe 'Refresh Pools' do
     product2 = create_product(name, name, :owner => owner2['key'])
 
     # migrate the subscription to another owner.
+    sub = get_hostedtest_subscription(pool.subscriptionId)
     sub["owner"] = owner2
-    @cp.update_subscription(sub)
-    @cp.list_subscriptions(owner1["key"]).length.should == 0
-    @cp.list_subscriptions(owner2["key"]).length.should == 1
+    update_hostedtest_subscription(sub)
+    #TODO - removing sleeps gives concurrent modification errrors - investigate
+    @cp.refresh_pools(owner1["key"], true)
+    sleep 1
+    @cp.refresh_pools(owner2["key"], true)
+    sleep 1
 
     # Check that the pools are removed from the first owner
     @cp.list_pools({:owner => owner1.id}).length.should == 0
@@ -232,8 +237,8 @@ describe 'Refresh Pools' do
     owner1 = create_owner random_string('initial-owner')
     name = random_string("product")
     product1 = create_product(name, name, :owner => owner1['key'])
-    sub = @cp.create_subscription(owner1['key'], product1.id)
-    @cp.refresh_pools(owner1["key"])
+    pool = create_pool_and_subscription(owner1['key'], product1.id)
+    @cp.refresh_pools(owner1["key"], true)
     owner1_pools = @cp.list_pools({:owner => owner1.id})
     owner1_pools.length.should == 1
 
@@ -242,14 +247,13 @@ describe 'Refresh Pools' do
     product2 = create_product(name, name, :owner => owner2['key'])
 
     # migrate the subscription to another owner.
+    sub = get_hostedtest_subscription(pool.subscriptionId)
     sub["owner"] = owner2
-    @cp.update_subscription(sub)
-    @cp.list_subscriptions(owner1["key"]).length.should == 0
-    @cp.list_subscriptions(owner2["key"]).length.should == 1
+    update_hostedtest_subscription(sub)
 
     # Refresh the second owner so that the pools are updated.
-    @cp.refresh_pools(owner2["key"])
-
+    @cp.refresh_pools(owner2["key"], true)
+    sleep 1
     # Initial owner should have all pools removed.
     @cp.list_pools({:owner => owner1.id}).length.should == 0
 
@@ -270,7 +274,7 @@ describe 'Refresh Pools' do
         :owner => owner['key']
       }
     )
-    sub = @cp.create_subscription(owner['key'], product.id, 2)
+    create_pool_and_subscription(owner['key'], product.id, 2)
     @cp.refresh_pools(owner['key'], false, false, false)
 
     user = user_client(owner, random_string("user"))
@@ -291,8 +295,9 @@ describe 'Refresh Pools' do
     @cp.update_product(owner['key'], product.id, :attributes => attrs)
 
     # Reduce the subscription quantity:
+    sub = get_hostedtest_subscription(pool.subscriptionId)
     sub['quantity'] = 1
-    @cp.update_subscription(sub)
+    update_hostedtest_subscription(sub)
 
     @cp.refresh_pools(owner['key'], false, false, false)
     pools = @cp.list_pools({:owner => owner.id, :product => product.id})

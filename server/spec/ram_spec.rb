@@ -15,7 +15,7 @@ describe 'RAM Limiting' do
                  :management_enabled => true,
                  :support_level => 'standard',
                  :support_type => 'excellent',})
-    @ram_sub = @cp.create_subscription(@owner['key'], @ram_product.id, 10, [], '1888', '1234')
+    @ram_sub = create_pool_and_subscription(@owner['key'], @ram_product.id, 10, [], '1888', '1234')
 
     # Create a product limiting by RAM and sockets.
     @ram_and_socket_product = create_product(nil, random_string("Product2"), :attributes =>
@@ -26,7 +26,7 @@ describe 'RAM Limiting' do
                  :management_enabled => true,
                  :support_level => 'standard',
                  :support_type => 'excellent',})
-    @ram_socket_sub = @cp.create_subscription(@owner['key'], @ram_and_socket_product.id, 5,
+    @ram_socket_sub = create_pool_and_subscription(@owner['key'], @ram_and_socket_product.id, 5,
                                               [], '18881', '1222')
 
     # Create a stackable RAM product.
@@ -38,7 +38,7 @@ describe 'RAM Limiting' do
                  :support_type => 'excellent',
                  :'multi-entitlement' => 'yes',
                  :stacking_id => '2421'})
-    @stackable_ram_sub = @cp.create_subscription(@owner['key'], @stackable_ram_product.id, 10)
+    @stackable_ram_sub = create_pool_and_subscription(@owner['key'], @stackable_ram_product.id, 10)
 
 
     # Refresh pools so that the subscription pools will be available to the test systems.

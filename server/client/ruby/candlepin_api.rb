@@ -990,6 +990,12 @@ class Candlepin
       pool['derivedProduct'] = { 'id' => params[:derived_product_id] }
     end
 
+    if params[:source_subscription]
+      pool['sourceSubscription'] = {}
+      pool['sourceSubscription']['subscriptionId'] = params[:source_subscription]['id']
+      pool['sourceSubscription']['subscriptionSubKey'] = 'master'
+    end
+
     if params[:derived_provided_products]
       pool['derivedProvidedProducts'] = params[:derived_provided_products].collect { |pid| {'productId' => pid} }
     end

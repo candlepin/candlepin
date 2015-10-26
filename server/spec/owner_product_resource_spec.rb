@@ -12,11 +12,11 @@ describe 'Owner Product Resource' do
     @derived_product = create_product random_string('derived_product')
     @derived_prov_product = create_product random_string('derived_provided_product')
 
-    @cp.create_subscription(@owner['key'], @product.id,
+    create_pool_and_subscription(@owner['key'], @product.id,
       10, [@prov_product.id], '222', '', '', nil, nil,
       {
-        'derived_product_id' => @derived_product.id,
-        'derived_provided_products' => [@derived_prov_product.id]
+        :derived_product_id => @derived_product.id,
+        :derived_provided_products => [@derived_prov_product.id]
       })
   end
 
@@ -93,7 +93,7 @@ describe 'Owner Product Resource' do
     product = create_product(random_string("test_id"), random_string("test_name"),
         {:owner => owner['key']})
     provided_product = create_product(nil, nil, {:owner => owner['key']})
-    @cp.create_subscription(owner['key'], product.id, 10, [provided_product.id])
+    create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id])
     @cp.refresh_pools(owner['key'])
     user = user_client(owner, random_string('billy'))
     system = consumer_client(user, 'system6')
@@ -118,7 +118,7 @@ describe 'Owner Product Resource' do
 
     provided_product = create_product(nil, nil, {:owner => owner['key']})
 
-    @cp.create_subscription(owner['key'], product.id, 10, [provided_product.id])
+    create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id])
 
     pool = owner_client.list_pools(:owner => owner.id)
     pool.should have(1).things

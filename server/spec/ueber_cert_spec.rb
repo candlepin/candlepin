@@ -53,9 +53,9 @@ describe 'Uebercert' do
     @cp.add_content_to_product(owner1['key'], prod1.id, content2.id, true)
     @cp.add_content_to_product(owner1['key'], prod2.id, content3.id, true)
 
-    sub1 = @cp.create_subscription(owner1['key'], prod1.id, 10, [], '12345', '6789', 'order1')
-    sub2 = @cp.create_subscription(owner1['key'], prod2.id, 10, [], 'abcde', 'fghi', 'order2')
-    sub3 = @cp.create_subscription(owner1['key'], prod3.id, 10, [], 'qwert', 'yuio', 'order3')
+    create_pool_and_subscription(owner1['key'], prod1.id, 10, [], '12345', '6789', 'order1')
+    create_pool_and_subscription(owner1['key'], prod2.id, 10, [], 'abcde', 'fghi', 'order2')
+    create_pool_and_subscription(owner1['key'], prod3.id, 10, [], 'qwert', 'yuio', 'order3')
 
     # generate and verify cert
     ueber_cert = @cp.generate_ueber_cert(owner1['key'])

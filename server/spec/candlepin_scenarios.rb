@@ -108,29 +108,30 @@ module CandlepinMethods
     @cp.create_batch_content(owner, contents)
   end
 
-  def create_pool_and_subscription(owner, product, quantity=1,
+  def create_pool_and_subscription(owner_key, product_id, quantity=1,
                           provided_products=[], contract_number='',
                           account_number='', order_number='',
                           start_date=nil, end_date=nil, params={})
 
     params[:start_date] = start_date
     params[:end_date] = end_date
-    params[:provided_products] = provided_products
     params[:contract_number] = contract_number
     params[:account_number] = account_number
     params[:order_number] = order_number
     params[:quantity] = quantity
-
-    @cp.create_pool(owner['key'], product['id'], params)
+    params[:provided_products] = provided_products
 
     if is_hosted?
       if is_hostedtest_alive?
-        create_hostedtest_subscription(owner, product, quantity, params)
+        sub = create_hostedtest_subscription(owner_key, product_id, quantity, params)
+        params[:source_subscription] = sub
       else
         raise "Could not find hostedtest rest API. Please add the following to candlepin.conf:\n" \
           " module.config.hosted.configuration.module=org.candlepin.hostedtest.AdapterOverrideModule"
       end
     end
+    return @cp.create_pool(owner_key, product_id, params)
+
   end
 
   # Wrapper for ruby API so we can track all distributor versions we created and clean them up.
@@ -230,10 +231,10 @@ module CandlepinMethods
   # a specific subscription ID. (we often want to verify what pool was used,
   # but the pools are created indirectly after a refresh so it's hard to
   # locate a specific reference without this)
-  def find_pool(owner_id, sub_id, activeon=nil)
+  def find_pool(owner_id, pool_id, activeon=nil)
     pools = @cp.list_pools({:owner => owner_id, :activeon => activeon})
     pools.each do |pool|
-      if pool['subscriptionId'] == sub_id
+      if pool['id'] == pool_id
         return pool
       end
     end
@@ -458,14 +459,14 @@ class StandardExporter < Exporter
         :name => "Branded Eng Product"
       }
     ]
-    @cp.create_subscription(@owner['key'], @products[:product1].id, 2,
+    create_pool_and_subscription(@owner['key'], @products[:product1].id, 2,
       [@products[:eng_product]['id']], '', '12345', '6789', nil, end_date,
       {:branding => brandings})
-    @cp.create_subscription(@owner['key'], @products[:product2].id, 4, [], '', '12345', '6789', nil, end_date)
-    @cp.create_subscription(@owner['key'], @products[:virt_product].id, 10, [], '', '12345', '6789', nil, end_date)
-    @cp.create_subscription(@owner['key'], @products[:product3].id, 5, [], '', '12345', '6789', nil, end_date,
-      {'derived_product_id' => @products[:derived_product]['id'],  'derived_provided_products' => [@products[:derived_provided_prod]['id']]})
-    @cp.create_subscription(@owner['key'], @products[:product_up].id, 10, [], '', '12345', '6789', nil, end_date)
+    create_pool_and_subscription(@owner['key'], @products[:product2].id, 4, [], '', '12345', '6789', nil, end_date)
+    create_pool_and_subscription(@owner['key'], @products[:virt_product].id, 10, [], '', '12345', '6789', nil, end_date)
+    create_pool_and_subscription(@owner['key'], @products[:product3].id, 5, [], '', '12345', '6789', nil, end_date,
+      {:derived_product_id => @products[:derived_product]['id'],  :derived_provided_products => [@products[:derived_provided_prod]['id']]})
+    create_pool_and_subscription(@owner['key'], @products[:product_up].id, 10, [], '', '12345', '6789', nil, end_date)
 
     @cp.refresh_pools(@owner['key'])
 
@@ -513,8 +514,8 @@ class StandardExporter < Exporter
     @cp.add_content_to_product(@owner['key'], product2.id, arch_content.id)
 
     end_date = Date.new(2025, 5, 29)
-    @cp.create_subscription(@owner['key'], product1.id, 12, [], '', '12345', '6789', nil, end_date)
-    @cp.create_subscription(@owner['key'], product2.id, 14, [], '', '12345', '6789', nil, end_date)
+    create_pool_and_subscription(@owner['key'], product1.id, 12, [], '', '12345', '6789', nil, end_date)
+    create_pool_and_subscription(@owner['key'], product2.id, 14, [], '', '12345', '6789', nil, end_date)
 
     @cp.refresh_pools(@owner['key'])
 

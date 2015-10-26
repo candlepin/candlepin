@@ -15,7 +15,7 @@ describe 'Core Limiting' do
                  :management_enabled => true,
                  :support_level => 'standard',
                  :support_type => 'excellent',})
-    @core_sub = @cp.create_subscription(@owner['key'], @core_product.id, 10, [], '1888', '1234')
+    @core_sub = create_pool_and_subscription(@owner['key'], @core_product.id, 10, [], '1888', '1234')
 
     # Create a product limiting by core and sockets.
     @core_and_socket_product = create_product(nil, random_string("Product2"), :attributes =>
@@ -26,7 +26,7 @@ describe 'Core Limiting' do
                  :management_enabled => true,
                  :support_level => 'standard',
                  :support_type => 'excellent',})
-    @core_socket_sub = @cp.create_subscription(@owner['key'], @core_and_socket_product.id, 10,
+    @core_socket_sub = create_pool_and_subscription(@owner['key'], @core_and_socket_product.id, 10,
                                               [], '18881', '1222')
 
     # Refresh pools so that the subscription pools will be available to the test systems.

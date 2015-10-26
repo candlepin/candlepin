@@ -200,7 +200,7 @@ describe 'Environments' do
         }])
     wait_for_job(job['id'], 15)
 
-    @cp.create_subscription(@owner['key'], product['id'], 10)
+    create_pool_and_subscription(@owner['key'], product['id'], 10)
     @cp.refresh_pools(@owner['key'])
 
     pools = consumer_cp.list_pools(:owner => @owner['id'], :product => product['id'])
@@ -236,7 +236,7 @@ describe 'Environments' do
         }])
     wait_for_job(job['id'], 15)
 
-    @cp.create_subscription(@owner['key'], product['id'], 10)
+    create_pool_and_subscription(@owner['key'], product['id'], 10)
     @cp.refresh_pools(@owner['key'])
 
     pools = consumer_cp.list_pools(:owner => @owner['id'], :product => product['id'])

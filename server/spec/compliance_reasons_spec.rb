@@ -32,7 +32,7 @@ describe 'Single Entitlement Compliance Reasons' do
                  :management_enabled => true,
                  :support_level => 'standard',
                  :support_type => 'excellent',})
-    @product1_sub = @cp.create_subscription(@owner['key'], @product1.id, 100, [], '1888', '1234')
+    @product1_pool = create_pool_and_subscription(@owner['key'], @product1.id, 100, [], '1888', '1234')
 
     # Refresh pools so that the subscription pools will be available to the test systems.
     @cp.refresh_pools(@owner['key'])
@@ -71,10 +71,7 @@ describe 'Single Entitlement Compliance Reasons' do
     installed = []
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @product1_sub.id)
-    pool.should_not == nil
-
-    entitlements = system.consume_pool(pool.id, {:quantity => 1})
+    entitlements = system.consume_pool(@product1_pool.id, {:quantity => 1})
     entitlements.should_not == nil
     entitlements.size.should == 1
     entitlement = entitlements[0]
@@ -108,10 +105,7 @@ describe 'Single Entitlement Compliance Reasons' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @product1_sub.id)
-    pool.should_not == nil
-
-    entitlements = system.consume_pool(pool.id, {:quantity => 1})
+    entitlements = system.consume_pool(@product1_pool.id, {:quantity => 1})
     entitlements.should_not == nil
     entitlements.size.should == 1
     entitlement = entitlements[0]
@@ -145,10 +139,7 @@ describe 'Single Entitlement Compliance Reasons' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @product1_sub.id)
-    pool.should_not == nil
-
-    entitlements = system.consume_pool(pool.id, {:quantity => 1})
+    entitlements = system.consume_pool(@product1_pool.id, {:quantity => 1})
     entitlements.should_not == nil
     entitlements.size.should == 1
     entitlement = entitlements[0]
@@ -183,10 +174,7 @@ describe 'Single Entitlement Compliance Reasons' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @product1_sub.id)
-    pool.should_not == nil
-
-    entitlements = system.consume_pool(pool.id, {:quantity => 1})
+    entitlements = system.consume_pool(@product1_pool.id, {:quantity => 1})
     entitlements.should_not == nil
     entitlements.size.should == 1
     entitlement = entitlements[0]
@@ -222,10 +210,7 @@ describe 'Single Entitlement Compliance Reasons' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @product1_sub.id)
-    pool.should_not == nil
-
-    entitlements = system.consume_pool(pool.id, {:quantity => 1})
+    entitlements = system.consume_pool(@product1_pool.id, {:quantity => 1})
     entitlements.should_not == nil
     entitlements.size.should == 1
     entitlement = entitlements[0]
@@ -259,10 +244,7 @@ describe 'Single Entitlement Compliance Reasons' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @product1_sub.id)
-    pool.should_not == nil
-
-    entitlements = system.consume_pool(pool.id, {:quantity => 1})
+    entitlements = system.consume_pool(@product1_pool.id, {:quantity => 1})
     entitlements.should_not == nil
     entitlements.size.should == 1
     entitlement = entitlements[0]
@@ -298,10 +280,7 @@ describe 'Single Entitlement Compliance Reasons' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @product1_sub.id)
-    pool.should_not == nil
-
-    entitlements = system.consume_pool(pool.id, {:quantity => 1})
+    entitlements = system.consume_pool(@product1_pool.id, {:quantity => 1})
     entitlements.should_not == nil
     entitlements.size.should == 1
     entitlement = entitlements[0]
@@ -406,7 +385,7 @@ describe 'Stacking Compliance Reasons' do
                  :support_type => 'excellent',
                  :'multi-entitlement' => 'yes',
                  :stacking_id => @stack_id})
-    @stackable_sub_1 = @cp.create_subscription(@owner['key'], @stackable_product_1.id, 10)
+    @stackable_pool_1 = create_pool_and_subscription(@owner['key'], @stackable_product_1.id, 10)
 
     @not_covered_product = create_product(nil, random_string("Not Covered Product"), :attributes =>
                 {:version => '6.4',
@@ -415,7 +394,7 @@ describe 'Stacking Compliance Reasons' do
                  :management_enabled => true,
                  :support_level => 'standard',
                  :support_type => 'excellent',})
-    @not_covered_product_sub = @cp.create_subscription(@owner['key'], @not_covered_product.id, 100, [],
+    @not_covered_product_pool = create_pool_and_subscription(@owner['key'], @not_covered_product.id, 100, [],
                                                               '1999', '3332')
 
     # Refresh pools so that the subscription pools will be available to the test systems.
@@ -435,10 +414,7 @@ describe 'Stacking Compliance Reasons' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @stackable_sub_1.id)
-    pool.should_not == nil
-
-    entitlements = system.consume_pool(pool.id, {:quantity => 2})
+    entitlements = system.consume_pool(@stackable_pool_1.id, {:quantity => 2})
     entitlements.should_not == nil
     entitlements.size.should == 1
     entitlement = entitlements[0]
@@ -471,10 +447,7 @@ describe 'Stacking Compliance Reasons' do
     installed = []
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @stackable_sub_1.id)
-    pool.should_not == nil
-
-    entitlements = system.consume_pool(pool.id, {:quantity => 2})
+    entitlements = system.consume_pool(@stackable_pool_1.id, {:quantity => 2})
     entitlements.should_not == nil
     entitlements.size.should == 1
     entitlement = entitlements[0]
@@ -509,10 +482,7 @@ describe 'Stacking Compliance Reasons' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @stackable_sub_1.id)
-    pool.should_not == nil
-
-    entitlements = system.consume_pool(pool.id, {:quantity => 2})
+    entitlements = system.consume_pool(@stackable_pool_1.id, {:quantity => 2})
     entitlements.should_not == nil
     entitlements.size.should == 1
     entitlement = entitlements[0]
@@ -549,10 +519,7 @@ describe 'Stacking Compliance Reasons' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @stackable_sub_1.id)
-    pool.should_not == nil
-
-    entitlements = system.consume_pool(pool.id, {:quantity => 2})
+    entitlements = system.consume_pool(@stackable_pool_1.id, {:quantity => 2})
     entitlements.should_not == nil
     entitlements.size.should == 1
     entitlement = entitlements[0]
@@ -590,10 +557,7 @@ describe 'Stacking Compliance Reasons' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @stackable_sub_1.id)
-    pool.should_not == nil
-
-    entitlements = system.consume_pool(pool.id, {:quantity => 2})
+    entitlements = system.consume_pool(@stackable_pool_1.id, {:quantity => 2})
     entitlements.should_not == nil
     entitlements.size.should == 1
     entitlement = entitlements[0]
@@ -630,10 +594,7 @@ describe 'Stacking Compliance Reasons' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @stackable_sub_1.id)
-    pool.should_not == nil
-
-    entitlements = system.consume_pool(pool.id, {:quantity => 2})
+    entitlements = system.consume_pool(@stackable_pool_1.id, {:quantity => 2})
     entitlements.should_not == nil
     entitlements.size.should == 1
     entitlement = entitlements[0]
@@ -669,10 +630,7 @@ describe 'Stacking Compliance Reasons' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @stackable_sub_1.id)
-    pool.should_not == nil
-
-    entitlements = system.consume_pool(pool.id, {:quantity => 2})
+    entitlements = system.consume_pool(@stackable_pool_1.id, {:quantity => 2})
     entitlements.should_not == nil
     entitlements.size.should == 1
     entitlement = entitlements[0]
@@ -704,10 +662,7 @@ describe 'Stacking Compliance Reasons' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @stackable_sub_1.id)
-    pool.should_not == nil
-
-    entitlements = system.consume_pool(pool.id, {:quantity => 2})
+    entitlements = system.consume_pool(@stackable_pool_1.id, {:quantity => 2})
     entitlements.should_not == nil
     entitlements.size.should == 1
     entitlement = entitlements[0]

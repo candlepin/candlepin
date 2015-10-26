@@ -25,7 +25,7 @@ describe 'Owner Resource' do
         :owner => owner['key']
       }
     )
-    @cp.create_subscription(owner['key'], product1.id, 10)
+    create_pool_and_subscription(owner['key'], product1.id, 10)
 
     @cp.refresh_pools(owner['key'])
     levels = consumer_client.list_owner_service_levels(owner['key'])
@@ -59,7 +59,7 @@ describe 'Owner Resource' do
   it "lets owners list pools" do
     owner = create_owner random_string("test_owner1")
     product = create_product(nil, nil, :owner => owner['key'])
-    @cp.create_subscription(owner['key'], product.id, 10)
+    create_pool_and_subscription(owner['key'], product.id, 10)
     @cp.refresh_pools(owner['key'])
     pools = @cp.list_owner_pools(owner['key'])
     pools.length.should == 1
@@ -69,7 +69,7 @@ describe 'Owner Resource' do
     owner = create_owner random_string("test_owner1")
     product = create_product(nil, nil, :owner => owner['key'])
     (1..4).each do |i|
-      @cp.create_subscription(owner['key'], product.id, 10)
+      create_pool_and_subscription(owner['key'], product.id, 10)
     end
     @cp.refresh_pools(owner['key'])
     pools = @cp.list_owner_pools(owner['key'], {:page => 1, :per_page => 2, :sort_by => "id", :order => "asc"})
@@ -83,7 +83,7 @@ describe 'Owner Resource' do
     system = consumer_client(user, "system")
     product = create_product(nil, nil, :owner => owner['key'])
     (1..4).each do |i|
-      @cp.create_subscription(owner['key'], product.id, 10)
+      create_pool_and_subscription(owner['key'], product.id, 10)
     end
     @cp.refresh_pools(owner['key'])
     # Make sure there are 4 available pools
@@ -112,7 +112,7 @@ describe 'Owner Resource' do
     rw_owner_client = user_client(owner, random_string('testuser'), false)
     super_admin_client = user_client(owner, random_string('testuser'), false, true)
     product = create_product(nil, nil, :owner => owner['key'])
-    @cp.create_subscription(owner['key'], product.id, 10)
+    create_pool_and_subscription(owner['key'], product.id, 10)
 
     lambda do
       ro_owner_client.refresh_pools(owner['key'])
@@ -175,7 +175,7 @@ describe 'Owner Resource' do
         :owner => owner['key']
       }
     )
-    @cp.create_subscription(owner['key'], product1.id, 10)
+    create_pool_and_subscription(owner['key'], product1.id, 10)
     @cp.refresh_pools(owner['key'])
     owner = @cp.get_owner(owner['key'])
     owner['defaultServiceLevel'].should be_nil
@@ -211,8 +211,8 @@ describe 'Owner Resource' do
         :owner => owner['key']
       }
     )
-    @cp.create_subscription(owner['key'], product1.id, 10)
-    @cp.create_subscription(owner['key'], product2.id, 10)
+    create_pool_and_subscription(owner['key'], product1.id, 10)
+    create_pool_and_subscription(owner['key'], product2.id, 10)
     @cp.refresh_pools(owner['key'])
 
     # Set an initial service level:
@@ -269,7 +269,7 @@ describe 'Owner Resource' do
         :owner => owner['key']
       }
     )
-    @cp.create_subscription(owner['key'], product1.id, 10)
+    create_pool_and_subscription(owner['key'], product1.id, 10)
     product2 = create_product(
       random_string("test_id"),
       random_string("test_name"),
@@ -280,7 +280,7 @@ describe 'Owner Resource' do
         :owner => owner['key']
       }
     )
-    @cp.create_subscription(owner['key'], product2.id, 10)
+    create_pool_and_subscription(owner['key'], product2.id, 10)
     product3 = create_product(
       random_string("test_id"),
       random_string("test_name"),
@@ -291,7 +291,7 @@ describe 'Owner Resource' do
         :owner => owner['key']
       }
     )
-    @cp.create_subscription(owner['key'], product3.id, 10)
+    create_pool_and_subscription(owner['key'], product3.id, 10)
 
     @cp.refresh_pools(owner['key'])
     levels = @cp.list_owner_service_levels(owner['key'])
@@ -335,9 +335,9 @@ describe 'Owner Resource' do
       }
     )
 
-    @cp.create_subscription(owner['key'], product1.id, 10)
-    @cp.create_subscription(owner['key'], product2.id, 10)
-    @cp.create_subscription(owner['key'], product3.id, 10)
+    create_pool_and_subscription(owner['key'], product1.id, 10)
+    create_pool_and_subscription(owner['key'], product2.id, 10)
+    create_pool_and_subscription(owner['key'], product3.id, 10)
 
     @cp.refresh_pools(owner['key'])
     levels = consumer_client.list_owner_service_levels(owner['key'])
@@ -356,7 +356,7 @@ describe 'Owner Resource' do
       random_string("test_name"),
       :owner => owner['key']
     )
-    @cp.create_subscription(owner['key'], product.id, 10)
+    create_pool_and_subscription(owner['key'], product.id, 10)
     @cp.refresh_pools(owner['key'])
 
     user = user_client(owner, random_string("billy"))
@@ -404,7 +404,7 @@ describe 'Owner Resource' do
       random_string("test_name"),
       :owner => owner['key']
     )
-    @cp.create_subscription(owner['key'], product.id, 10)
+    create_pool_and_subscription(owner['key'], product.id, 10)
     @cp.refresh_pools(owner['key'])
 
     user = user_client(owner, "robot ninja")
@@ -417,7 +417,7 @@ describe 'Owner Resource' do
     c = @cp.get_consumer(system.uuid)
     c['entitlementCount'].should == 1
 
-    @cp.create_subscription(owner['key'], product.id, 10)
+    create_pool_and_subscription(owner['key'], product.id, 10)
     @cp.refresh_pools(owner['key'])
 
     job = user.autoheal_org(owner['key'])
@@ -501,8 +501,8 @@ describe 'Owner Resource Pool Filter Tests' do
       }
     )
 
-    @cp.create_subscription(@owner['key'], @product1.id, 10)
-    @cp.create_subscription(@owner['key'], @product2.id, 10)
+    create_pool_and_subscription(@owner['key'], @product1.id, 10)
+    create_pool_and_subscription(@owner['key'], @product2.id, 10)
 
     @cp.refresh_pools(@owner['key'])
     pools = @cp.list_owner_pools(@owner['key'])
@@ -549,7 +549,7 @@ describe 'Owner Resource Pool Filter Tests' do
     provided_product2 = create_product(random_string("prod2"), random_string("product2"), {:owner => owner['key']})
     provided_product3 = create_product(random_string("prod3"), random_string("product3"), {:owner => owner['key']})
 
-    @cp.create_subscription(owner['key'], product.id, 10, [provided_product.id, provided_product2.id, provided_product3.id])
+    create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id, provided_product2.id, provided_product3.id])
 
     @cp.refresh_pools(owner['key'])
 
@@ -617,7 +617,7 @@ describe 'Owner Resource Owner Info Tests' do
     # Create a product limiting by all of our attributes.
     @product = create_product(nil, random_string("Product1"), :attributes =>
                 {"version" => '6.4', "sockets" => 2, "multi-entitlement" => "true"})
-    @subscription = @cp.create_subscription(@owner['key'], @product.id, 100, [], '1888', '1234')
+    @subscription = create_pool_and_subscription(@owner['key'], @product.id, 100, [], '1888', '1234')
 
     # Refresh pools so that the subscription pools will be available to the test systems.
     @cp.refresh_pools(@owner['key'])
@@ -683,8 +683,8 @@ describe 'Owner Resource Entitlement List Tests' do
     @virt_prod= create_product(nil, 'virtualization')
 
     #entitle owner for the virt and monitoring products.
-    @cp.create_subscription(@owner['key'], @monitoring_prod.id, 6)
-    @cp.create_subscription(@owner['key'], @virt_prod.id, 6)
+    create_pool_and_subscription(@owner['key'], @monitoring_prod.id, 6)
+    create_pool_and_subscription(@owner['key'], @virt_prod.id, 6)
 
     @cp.refresh_pools(@owner['key'])
 

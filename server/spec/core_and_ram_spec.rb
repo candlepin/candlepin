@@ -17,7 +17,7 @@ describe 'Core and RAM Limiting' do
                  :management_enabled => true,
                  :support_level => 'standard',
                  :support_type => 'excellent',})
-    @core_socket_sub = @cp.create_subscription(@owner['key'], @core_and_socket_product.id, 10,
+    @core_socket_sub = create_pool_and_subscription(@owner['key'], @core_and_socket_product.id, 10,
                                               [], '18881', '1222')
 
     # Create a product limiting by core and sockets and ram for multi-entitlement.
@@ -32,7 +32,7 @@ describe 'Core and RAM Limiting' do
                  :support_type => 'excellent',
                  :'multi-entitlement' => 'yes',
                  :stacking_id => '88888888'})
-    @core_socket_sub_2 = @cp.create_subscription(@owner['key'], @core_and_socket_product_2.id, 100,
+    @core_socket_sub_2 = create_pool_and_subscription(@owner['key'], @core_and_socket_product_2.id, 100,
                                               [], '18882', '1223')
 
 
@@ -254,8 +254,8 @@ describe 'Core and RAM Limiting' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    @cp.create_subscription(owner['key'], prod1.id, 2)
-    @cp.create_subscription(owner['key'], prod2.id, 3)
+    create_pool_and_subscription(owner['key'], prod1.id, 2)
+    create_pool_and_subscription(owner['key'], prod2.id, 3)
     @cp.refresh_pools(owner['key'])
 
     entitlements=[]

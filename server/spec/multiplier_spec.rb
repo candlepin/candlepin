@@ -11,7 +11,7 @@ describe 'Multiplier Products' do
 
   it 'should have the correct quantity' do
     calendaring = create_product('8723775392', 'Calendaring - 25 Pack', :multiplier => 25)
-    @cp.create_subscription(@owner['key'], calendaring.id, 4)
+    create_pool_and_subscription(@owner['key'], calendaring.id, 4)
     @cp.refresh_pools @owner['key']
 
     pools = @user.list_pools :owner => @owner.id
@@ -22,7 +22,7 @@ describe 'Multiplier Products' do
 
   it 'should default the multiplier to 1 if it is negative' do
     product = create_product('23049', 'Some Product', :multiplier => -10)
-    @cp.create_subscription(@owner['key'], product.id, 34)
+    create_pool_and_subscription(@owner['key'], product.id, 34)
     @cp.refresh_pools @owner['key']
 
     pools = @user.list_pools :owner => @owner.id
@@ -33,7 +33,7 @@ describe 'Multiplier Products' do
 
   it 'should default the multiplier to 1 if it is zero' do
     product = create_product('9382533329', 'Some Other Product', :multiplier => 0)
-    @cp.create_subscription(@owner['key'], product.id, 18)
+    create_pool_and_subscription(@owner['key'], product.id, 18)
     @cp.refresh_pools @owner['key']
 
     pools = @user.list_pools :owner => @owner.id
@@ -44,7 +44,7 @@ describe 'Multiplier Products' do
 
   it 'should have the correct quantity after a refresh' do
     product = create_product('875875844', 'Product - 100 Pack', :multiplier => 100)
-    @cp.create_subscription(@owner['key'], product.id, 5)
+    create_pool_and_subscription(@owner['key'], product.id, 5)
 
     # This creates the initial pool
     @cp.refresh_pools @owner['key']

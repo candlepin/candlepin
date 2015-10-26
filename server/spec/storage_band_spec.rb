@@ -23,7 +23,7 @@ describe 'Band Limiting' do
                  :support_level => 'standard',
                  :support_type => 'excellent'}
          )
-    @ceph_sub = @cp.create_subscription(@owner['key'], @ceph_product.id, 2, [], '1888', '1234')
+    @ceph_pool = create_pool_and_subscription(@owner['key'], @ceph_product.id, 2, [], '1888', '1234')
     @cp.refresh_pools(@owner['key'])
 
     @user = user_client(@owner, random_string('test-user'))
@@ -31,7 +31,7 @@ describe 'Band Limiting' do
   end
 
   it 'pool should have the correct quantity based off of the product multiplier' do
-    pool = find_pool(@owner.id, @ceph_sub.id)
+    pool = find_pool(@owner.id, @ceph_pool.id)
     # sub.quantity * multiplier
     pool.quantity.should == 512
   end
@@ -43,7 +43,7 @@ describe 'Band Limiting' do
     installed_products = [{ 'productId' => @ceph_product.id, 'productName' => @ceph_product.name }]
     system.update_consumer({ :installedProducts => installed_products })
 
-    pool = find_pool(@owner.id, @ceph_sub.id)
+    pool = find_pool(@owner.id, @ceph_pool.id)
     pool.should_not be_nil
 
     system.consume_pool(pool.id, {:quantity => 256}).should_not be_nil
@@ -59,7 +59,7 @@ describe 'Band Limiting' do
     installed_products = [{ 'productId' => @ceph_product.id, 'productName' => @ceph_product.name }]
     system.update_consumer({ :installedProducts => installed_products })
 
-    pool = find_pool(@owner.id, @ceph_sub.id)
+    pool = find_pool(@owner.id, @ceph_pool.id)
     pool.should_not be_nil
 
     system.consume_pool(pool.id, {:quantity => 128}).should_not be_nil
@@ -75,7 +75,7 @@ describe 'Band Limiting' do
     installed_products = [{ 'productId' => @ceph_product.id, 'productName' => @ceph_product.name }]
     system.update_consumer({ :installedProducts => installed_products })
 
-    pool = find_pool(@owner.id, @ceph_sub.id)
+    pool = find_pool(@owner.id, @ceph_pool.id)
     pool.should_not be_nil
 
     # Partial stack
@@ -118,7 +118,7 @@ describe 'Band Limiting' do
     installed_products = [{ 'productId' => @ceph_product.id, 'productName' => @ceph_product.name }]
     system.update_consumer({ :installedProducts => installed_products })
 
-    pool = find_pool(@owner.id, @ceph_sub.id)
+    pool = find_pool(@owner.id, @ceph_pool.id)
     pool.should_not == nil
 
     entitlement = system.consume_pool(pool.id, {:quantity => 56})

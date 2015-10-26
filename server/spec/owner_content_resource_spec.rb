@@ -44,7 +44,7 @@ describe 'Owner Content Resource' do
   end
 
   it 'should force entitlements providing changed content to be regenerated' do
-    product_sub = @cp.create_subscription(@owner['key'], @product.id, 100, [], '1888', '1234')
+    product_sub = create_pool_and_subscription(@owner['key'], @product.id, 100, [], '1888', '1234')
     # @cp.refresh_pools(@owner['key'])
     consumer_client = consumer_client(@user,  random_string("consumer"))
 

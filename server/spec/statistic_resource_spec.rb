@@ -10,7 +10,7 @@ describe 'Statistic Resource' do
     owner1_client = user_client(owner1, random_string('testuser'))
 
     product = create_product(nil, nil, :owner => owner1['key'])
-    @cp.create_subscription(owner1['key'], product.id, 10)
+    create_pool_and_subscription(owner1['key'], product.id, 10)
     @cp.refresh_pools(owner1['key'])
 
     pool = owner1_client.list_pools(:owner => owner1.id).first

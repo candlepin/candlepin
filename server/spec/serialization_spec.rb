@@ -29,15 +29,11 @@ describe 'Pool serialization' do
     @owner_client = user_client(@owner, random_string('testuser'))
     product1 = create_product()
 
-    @sub = @cp.create_subscription(@owner['key'], product1.id, 2)
+    @sub = create_pool_and_subscription(@owner['key'], product1.id, 2)
     @cp.refresh_pools(@owner['key'])
 
     @pool = @cp.list_pools(:owner => @owner.id,
                            :product => product1.id)[0]
-  end
-
-  after(:each) do
-    @cp.delete_subscription(@sub['id'])
   end
 
   it 'references owner as a link' do
@@ -56,7 +52,7 @@ describe 'Entitlement Serialization' do
     @owner_client = user_client(@owner, random_string('testuser'))
     product1 = create_product()
 
-    @sub = @cp.create_subscription(@owner['key'], product1.id, 2)
+    @sub = create_pool_and_subscription(@owner['key'], product1.id, 2)
     @cp.refresh_pools(@owner['key'])
 
     @pool = @cp.list_pools(:owner => @owner.id,
@@ -66,10 +62,6 @@ describe 'Entitlement Serialization' do
         "candlepin")
     ent_id = consumer_client.consume_pool(@pool.id, {:quantity => 1})[0]['id']
     @ent = @cp.get_entitlement(ent_id)
-  end
-
-  after(:each) do
-    @cp.delete_subscription(@sub['id'])
   end
 
   it 'references pool as a link' do

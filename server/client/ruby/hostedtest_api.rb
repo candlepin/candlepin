@@ -15,23 +15,24 @@ module HostedTest
     return @@hostedtest_alive
   end
 
-  def create_hostedtest_subscription(owner, product, quantity=1,
+  def create_hostedtest_subscription(owner_key, product_id, quantity=1,
                           params={})
 
     provided_products = params[:provided_products] || []
     start_date = params[:start_date] || Date.today
     end_date = params[:end_date] || start_date + 365
 
-    product['productContent'] = product['productContent'] || []
-
     subscription = {
       'startDate' => start_date,
       'endDate'   => end_date,
       'quantity'  =>  quantity,
-      'product' => product,
-      'owner' => owner,
-      'providedProducts' => provided_products.collect { |pid| {'id' => pid} }
+      'product' =>  { 'id' => product_id },
+      'owner' =>  { 'key' => owner_key }
     }
+
+    if params[:upstream_pool_id]
+      subscription['upstreamPoolId'] = params[:upstream_pool_id]
+    end
 
     if params[:contract_number]
       subscription['contractNumber'] = params[:contract_number]
@@ -49,19 +50,22 @@ module HostedTest
       subscription['branding'] = params[:branding]
     end
 
-    if params['derived_product_id']
-      subscription['derivedProduct'] = { 'id' => params['derived_product_id'] }
+    if params[:derived_product_id]
+      subscription['derivedProduct'] = { 'id' => params[:derived_product_id] }
     end
 
-    if params['derived_provided_products']
-      subscription['derivedProvidedProducts'] = params['derived_provided_products'].collect { |pid| {'id' => pid} }
+    if params[:provided_products]
+      subscription['providedProducts'] = params[:provided_products].collect { |pid| {'id' => pid} }
     end
 
+    if params[:derived_provided_products]
+      subscription['derivedProvidedProducts'] = params[:derived_provided_products].collect { |pid| {'id' => pid} }
+    end
     return @cp.post("/hostedtest/subscriptions", subscription)
   end
 
-  def update_hostedtest_subscription(id, subscription)
-    return @cp.put("/hostedtest/subscriptions/#{id}", subscription)
+  def update_hostedtest_subscription(subscription)
+    return @cp.put("/hostedtest/subscriptions", subscription)
   end
 
   def get_all_hostedtest_subscriptions()

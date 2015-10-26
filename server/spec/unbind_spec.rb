@@ -9,7 +9,7 @@ describe 'Unbind' do
     @user = user_client(@owner, random_string('guy'))
     @monitoring = create_product(nil, random_string('monitoring'))
 
-    @cp.create_subscription(@owner['key'], @monitoring.id, 4)
+    create_pool_and_subscription(@owner['key'], @monitoring.id, 4)
     @cp.refresh_pools @owner['key']
   end
 
@@ -56,7 +56,7 @@ describe 'Unbind' do
 
   it 'should leave other entitlements in tact' do
     virt_host = create_product(nil, random_string('virt_host'))
-    @cp.create_subscription(@owner['key'], virt_host.id, 5)
+    create_pool_and_subscription(@owner['key'], virt_host.id, 5)
     @cp.refresh_pools @owner['key']
 
     consumer = consumer_client(@user, 'consumer')

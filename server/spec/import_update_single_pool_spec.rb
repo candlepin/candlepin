@@ -13,7 +13,7 @@ describe 'Import Single Pool Update', :serial => true do
       super()
       product = create_product(random_string(), random_string())
       end_date = Date.new(2025, 5, 29)
-      @cp.create_subscription(@owner['key'], product.id, 200, [], '', '12345', '6789', nil, end_date)
+      create_pool_and_subscription(@owner['key'], product.id, 200, [], '', '12345', '6789', nil, end_date)
 
       @cp.refresh_pools(@owner['key'])
       @pool = @cp.list_pools(:owner => @owner.id, :product => product.id)[0]

@@ -65,8 +65,8 @@ describe 'Entitlement Certificate V3' do
     @cp.add_content_to_product(@owner['key'], @product.id, @arch_content.id, false)
 
 
-    @subscription = @cp.create_subscription(@owner['key'], @product.id, 10, [], '12345', '6789', 'order1')
-    @subscription_30 = @cp.create_subscription(@owner['key'], @product_30.id, 10, [], '123456', '67890', 'order2')
+    @pool = create_pool_and_subscription(@owner['key'], @product.id, 10, [], '12345', '6789', 'order1')
+    @pool_30 = create_pool_and_subscription(@owner['key'], @product_30.id, 10, [], '123456', '67890', 'order2')
     @cp.refresh_pools(@owner['key'])
 
     @user = user_client(@owner, random_string('billy'))
@@ -168,7 +168,7 @@ describe 'Entitlement Certificate V3' do
 
     branding = [{:productId => product['id'],
         :type => 'Some Type', :name => 'Super Branded Name'}]
-    sub = @cp.create_subscription(@owner['key'], product.id, 10, [],
+    sub = create_pool_and_subscription(@owner['key'], product.id, 10, [],
         '12345', '6789', 'order1', Date.today - 10, Date.today + 365,
         {:branding => branding})
     @cp.refresh_pools(@owner['key'])
@@ -188,7 +188,10 @@ describe 'Entitlement Certificate V3' do
     @cp.add_content_to_product(@owner['key'], @product.id, @content_1.id, true)
     @content_2 = create_content({:content_url => '/content/beta/rhel/$releasever/$basearch/source/SRPMS',})
     @cp.add_content_to_product(@owner['key'], @product.id, @content_2.id, true)
-    @cp.refresh_pools(@owner['key'])
+    #refresh the subscription - product resolution will take care of adding the content automatically
+    sub = get_hostedtest_subscription(@pool.subscriptionId)
+    update_hostedtest_subscription(sub)
+    @cp.refresh_pools(@owner['key'], true)
     entitlement = @system.consume_product(@product.id)[0]
 
     json_body = extract_payload(entitlement.certificates[0]['cert'])
@@ -211,6 +214,9 @@ describe 'Entitlement Certificate V3' do
       content = create_content({:content_url => "/content/dist/rhel/$releasever#{i}/$basearch#{i}/debug#{i}",})
       @cp.add_content_to_product(@owner['key'], @product.id, content.id, true)
     end
+    #refresh the subscription - product resolution will take care of adding the content automatically
+    sub = get_hostedtest_subscription(@pool.subscriptionId)
+    update_hostedtest_subscription(sub)
     @cp.refresh_pools(@owner['key'])
     entitlement = @system.consume_product(@product.id)[0]
 

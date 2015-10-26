@@ -26,11 +26,11 @@ describe 'Healing' do
 
   it 'entitles non-compliant products' do
     parent_prod = create_product()
-    current_sub = @cp.create_subscription(@owner['key'], parent_prod['id'],
+    current_sub = create_pool_and_subscription(@owner['key'], parent_prod['id'],
       10, [@product1['id'], @product2['id']])
 
     # Create a future sub, the entitlement should not come from this one:
-    future_sub = @cp.create_subscription(@owner['key'], parent_prod['id'],
+    future_sub = create_pool_and_subscription(@owner['key'], parent_prod['id'],
       10, [@product1['id'], @product2['id']], '', '', Date.today + 30,
         Date.today + 60)
 
@@ -44,11 +44,11 @@ describe 'Healing' do
 
   it 'entitles non-compliant products despite a valid future entitlement' do
     parent_prod = create_product()
-    current_sub = @cp.create_subscription(@owner['key'], parent_prod['id'],
+    current_sub = create_pool_and_subscription(@owner['key'], parent_prod['id'],
       10, [@product1['id'], @product2['id']])
 
     # Create a future sub, the entitlement should not come from this one:
-    future_sub = @cp.create_subscription(@owner['key'], parent_prod['id'],
+    future_sub = create_pool_and_subscription(@owner['key'], parent_prod['id'],
       10, [@product1['id'], @product2['id']], '', '', '', Date.today + 30,
         Date.today + 60)
 
@@ -71,11 +71,11 @@ describe 'Healing' do
     parent_prod = create_product()
 
     # This one should be skipped, as we're going to specify a future date:
-    current_sub = @cp.create_subscription(@owner['key'], parent_prod['id'],
+    current_sub = create_pool_and_subscription(@owner['key'], parent_prod['id'],
       10, [@product1['id'], @product2['id']])
 
     # Create a future sub, entitlement should end up coming from here:
-    future_sub = @cp.create_subscription(@owner['key'], parent_prod['id'],
+    future_sub = create_pool_and_subscription(@owner['key'], parent_prod['id'],
       10, [@product1['id'], @product2['id']], '', '', '', Date.today + 365 * 2,
         Date.today + 365 * 4) # valid 2-4 years from now
 
@@ -95,7 +95,7 @@ describe 'Healing' do
     stack_id = 'mystack'
     parent_prod = create_product(nil, nil, :attributes => {
       :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id})
-    current_sub = @cp.create_subscription(@owner['key'], parent_prod['id'],
+    current_sub = create_pool_and_subscription(@owner['key'], parent_prod['id'],
       10, [@product1['id'], @product2['id']])
 
     @cp.refresh_pools(@owner['key'])
@@ -111,7 +111,7 @@ describe 'Healing' do
     stack_id = 'mystack'
     parent_prod = create_product(nil, nil, :attributes => {
       :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id})
-    current_sub = @cp.create_subscription(@owner['key'], parent_prod['id'],
+    current_sub = create_pool_and_subscription(@owner['key'], parent_prod['id'],
       10, [@product3['id']])
 
     @cp.refresh_pools(@owner['key'])
@@ -132,11 +132,11 @@ describe 'Healing' do
     stack_id = 'mystack'
     parent_prod = create_product(nil, nil, :attributes => {
       :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id})
-    current_sub = @cp.create_subscription(@owner['key'], parent_prod['id'],
+    current_sub = create_pool_and_subscription(@owner['key'], parent_prod['id'],
       2, [@product1['id'], @product2['id']])
     parent_prod2 = create_product(nil, nil, :attributes => {
       :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id})
-    current_sub2 = @cp.create_subscription(@owner['key'], parent_prod2['id'],
+    current_sub2 = create_pool_and_subscription(@owner['key'], parent_prod2['id'],
       2, [@product1['id'], @product2['id']])
 
     @cp.refresh_pools(@owner['key'])
@@ -151,7 +151,7 @@ describe 'Healing' do
     stack_id = 'mystack'
     parent_prod = create_product(nil, nil, :attributes => {
       :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id})
-    current_sub = @cp.create_subscription(@owner['key'], parent_prod['id'],
+    current_sub = create_pool_and_subscription(@owner['key'], parent_prod['id'],
       10, [@product1['id'], @product2['id']])
 
     @cp.refresh_pools(@owner['key'])

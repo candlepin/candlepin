@@ -22,8 +22,7 @@ describe 'Subscription Resource' do
 
   it 'should allow admins to delete subscriptions' do
       subs = @cp.create_subscription(@owner['key'], @monitoring_product.id, 5)
-      @cp.refresh_pools(@owner['key'])
-
+      @cp.list_subscriptions(@owner['key']).size.should == 1
       @cp.delete_subscription(subs.id)
       @cp.list_subscriptions(@owner['key']).size.should == 0
   end

@@ -64,7 +64,7 @@ describe 'System Admins' do
 
   def create_pool
     product = create_product
-    sub = @cp.create_subscription(@owner['key'], product.id, 10)
+    create_pool_and_subscription(@owner['key'], product.id, 10)
     @cp.refresh_pools(@owner['key'])
     pool = @user_cp.list_owner_pools(@owner['key'],
       {:product => product['id']}).first
@@ -160,7 +160,7 @@ describe 'System admins with read-only on org' do
   # TODO: duplicated with above:
   def create_pool
     product = create_product
-    sub = @cp.create_subscription(@owner['key'], product.id, 10)
+    create_pool_and_subscription(@owner['key'], product.id, 10)
     @cp.refresh_pools(@owner['key'])
     pool = @user_cp.list_owner_pools(@owner['key'],
       {:product => product['id']}).first

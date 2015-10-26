@@ -111,9 +111,10 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         return s;
     }
 
-    public Subscription updateSubscription(String id, Subscription s) {
-        deleteSubscription(id);
-        return createSubscription(s);
+    public Subscription updateSubscription(Subscription ss) {
+        deleteSubscription(ss.getId());
+        Subscription s = createSubscription(ss);
+        return s;
     }
 
     @Override

@@ -24,7 +24,7 @@ describe 'SKU Level Enable Override' do
     product = create_product(nil, nil,  {:attributes => { :content_override_enabled => @content_list }})
     providedProduct = create_product
     @cp.add_content_to_product(@owner['key'], providedProduct['id'], @content1['id'], false)
-    @cp.create_subscription(@owner['key'], product['id'], 10, [providedProduct.id])
+    create_pool_and_subscription(@owner['key'], product['id'], 10, [providedProduct.id])
     @cp.refresh_pools(@owner['key'])
 
     pools = consumer_cp.list_pools(:owner => @owner['id'], :product => product['id'])
@@ -52,7 +52,7 @@ describe 'SKU Level Enable Override' do
     product = create_product(nil, nil,  {:attributes => { :content_override_disabled => @content_list }})
     providedProduct = create_product
     @cp.add_content_to_product(@owner['key'], providedProduct['id'], @content2['id'], true)
-    @cp.create_subscription(@owner['key'], product['id'], 10, [providedProduct.id])
+    create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
     @cp.refresh_pools(@owner['key'])
 
     pools = consumer_cp.list_pools(:owner => @owner['id'], :product => product['id'])
@@ -84,7 +84,7 @@ describe 'SKU Level Enable Override' do
     product = create_product(nil, nil,  {:attributes => { :content_override_disabled => @content_list }})
     providedProduct = create_product
     @cp.add_content_to_product(@owner['key'], providedProduct['id'], @content3['id'], false)
-    @cp.create_subscription(@owner['key'], product['id'], 10, [providedProduct.id])
+    create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
     @cp.refresh_pools(@owner['key'])
 
     # Override enabled to true:
@@ -120,7 +120,7 @@ describe 'SKU Level Enable Override' do
     product = create_product(nil, nil,  {:attributes => { :content_override_enabled => @content_list }})
     providedProduct = create_product
     @cp.add_content_to_product(@owner['key'], providedProduct['id'], @content1['id'], false)
-    @cp.create_subscription(@owner['key'], product['id'], 10, [providedProduct.id])
+    create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
     @cp.refresh_pools(@owner['key'])
 
     pools = consumer_cp.list_pools(:owner => @owner['id'], :product => product['id'])
@@ -140,7 +140,7 @@ describe 'SKU Level Enable Override' do
     product = create_product(nil, nil,  {:attributes => { :content_override_disabled => @content_list }})
     providedProduct = create_product
     @cp.add_content_to_product(@owner['key'], providedProduct['id'], @content2['id'], true)
-    @cp.create_subscription(@owner['key'], product['id'], 10, [providedProduct.id])
+    create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
     @cp.refresh_pools(@owner['key'])
 
     pools = consumer_cp.list_pools(:owner => @owner['id'], :product => product['id'])
@@ -164,7 +164,7 @@ describe 'SKU Level Enable Override' do
     product = create_product(nil, nil,  {:attributes => { :content_override_disabled => @content_list }})
     providedProduct = create_product
     @cp.add_content_to_product(@owner['key'], providedProduct['id'], @content3['id'], false)
-    @cp.create_subscription(@owner['key'], product['id'], 10, [providedProduct.id])
+    create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
     @cp.refresh_pools(@owner['key'])
 
     # Override enabled to true:

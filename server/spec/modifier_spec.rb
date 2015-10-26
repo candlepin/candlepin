@@ -16,13 +16,13 @@ describe 'Modifier Entitlement' do
     # This bundled product contains all three of the provided products our modifier
     # product will modify:
     @bundled_product_1 = create_product()
-    @bundled_sub_1 = @cp.create_subscription(@owner['key'], @bundled_product_1.id, 10,
+    @bundled_pool_1 = create_pool_and_subscription(@owner['key'], @bundled_product_1.id, 10,
       [@provided_product_1.id, @provided_product_2.id, @provided_product_3.id])
 
     # This bundled product only contains two of the provided products our modifier
     # product will modify.
     @bundled_product_2 = create_product()
-    @bundled_sub_2 = @cp.create_subscription(@owner['key'], @bundled_product_2.id, 10,
+    @bundled_pool_2 = create_pool_and_subscription(@owner['key'], @bundled_product_2.id, 10,
       [@provided_product_1.id, @provided_product_2.id])
 
 
@@ -38,7 +38,7 @@ describe 'Modifier Entitlement' do
 
     # Create a bundled modifier product, just contains the modifier provided product:
     @modifier_product = create_product()
-    @modifier_sub = @cp.create_subscription(@owner['key'], @modifier_product.id, 10,
+    @modifier_pool = create_pool_and_subscription(@owner['key'], @modifier_product.id, 10,
       [@modifier_provided_product.id])
     @cp.refresh_pools(@owner['key'])
 
@@ -149,7 +149,7 @@ describe 'Modifier Entitlement' do
     modifier = @consumer_cp.consume_product(@modifier_product.id)
 
     # Now kill the subscription to the @bundled_product_1
-    @cp.delete_subscription(@bundled_sub_1.id)
+    delete_hostedtest_subscription(@bundled_pool_1.subscriptionId)
     @cp.refresh_pools(@owner['key'])
 
     # Then refetch the modifier entitlement

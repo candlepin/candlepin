@@ -139,7 +139,7 @@ describe 'Distributor Capability' do
   it 'can stop bind based on consumer capabilities' do
     @product = create_product(nil, nil, :attributes =>
                 {:cores => 8})
-    @cp.create_subscription(@owner['key'], @product.id, 10, [], '12345', '6789', 'order1')
+    create_pool_and_subscription(@owner['key'], @product.id, 10, [], '12345', '6789', 'order1')
     @cp.refresh_pools(@owner['key'])
 
     consumer = @user.register(random_string("consumer"), :candlepin, nil, {})

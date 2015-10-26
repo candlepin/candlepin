@@ -11,13 +11,15 @@ describe 'Entitlement Certificate' do
   end
 
   def change_dt_and_qty
-      sub = @cp.list_subscriptions(@owner['key'])[0]
+      pool = @cp.list_owner_pools(@owner['key'])[0]
+      sub = get_hostedtest_subscription(pool.subscriptionId)
       sub.endDate = sub.endDate.to_date + 10
       sub.startDate = sub.startDate.to_date - 10
       sub.quantity = sub.quantity + 10
 
-      @cp.update_subscription(sub)
-      @cp.refresh_pools(@owner['key'])
+      update_hostedtest_subscription(sub)
+      @cp.refresh_pools(@owner['key'], true)
+      sleep 2
       return sub
   end
 
@@ -25,7 +27,7 @@ describe 'Entitlement Certificate' do
     @owner = create_owner random_string('test_owner')
     monitoring = create_product()
 
-    @cp.create_subscription(@owner['key'], monitoring.id, 10)
+    @pool = create_pool_and_subscription(@owner['key'], monitoring.id, 10)
 
     @user = user_client(@owner, random_string('billy'))
 
@@ -63,7 +65,7 @@ describe 'Entitlement Certificate' do
 
   it 'can be manually regenerated for a product' do
     coolapp = create_product
-    @cp.create_subscription(@owner['key'], coolapp.id, 10)
+    create_pool_and_subscription(@owner['key'], coolapp.id, 10)
     @cp.refresh_pools(@owner['key'])
     @system.consume_product coolapp.id
 
@@ -82,10 +84,10 @@ describe 'Entitlement Certificate' do
   end
 
   it 'will be regenerated when changing existing subscription\'s end date' do
-    sub = @cp.list_subscriptions(@owner['key'])[0]
+    sub = get_hostedtest_subscription(@pool.subscriptionId)
     sub.endDate = sub.endDate.to_date + 2
     old_cert = @system.list_certificates()[0]
-    @cp.update_subscription(sub)
+    update_hostedtest_subscription(sub)
 
     @cp.refresh_pools(@owner['key'])
 
@@ -100,14 +102,15 @@ describe 'Entitlement Certificate' do
       # this entitlement makes the counts inconclusive
       @system.unbind_entitlement(@entitlement.id)
       prod = create_product(nil, nil, {:attributes => {"multi-entitlement" => "yes"}})
-      sub = @cp.create_subscription(@owner['key'], prod.id, 10)
+      create_pool_and_subscription(@owner['key'], prod.id, 10)
       @cp.refresh_pools(@owner['key'])
       pool = @system.list_pools({:owner => @owner['id'], :product => prod['id']})[0]
 
       @system.consume_pool(pool['id'], {:quantity => 6})
       @system.list_certificates().size.should == 1
+      sub = get_hostedtest_subscription(pool.subscriptionId)
       sub.quantity = sub.quantity.to_i - 5
-      @cp.update_subscription(sub)
+      update_hostedtest_subscription(sub)
 
       @cp.refresh_pools(@owner['key'])
 
@@ -118,7 +121,7 @@ describe 'Entitlement Certificate' do
       # this entitlement makes the counts inconclusive
       @system.unbind_entitlement(@entitlement.id)
       prod = create_product(nil, nil, {:attributes => {"multi-entitlement" => "yes"}})
-      sub = @cp.create_subscription(@owner['key'], prod.id, 10)
+      create_pool_and_subscription(@owner['key'], prod.id, 10)
       @cp.refresh_pools(@owner['key'])
       pool = @system.list_pools({:owner => @owner['id'], :product => prod['id']})[0]
 
@@ -126,9 +129,9 @@ describe 'Entitlement Certificate' do
           @system.consume_pool(pool['id'], {:quantity => 2})
       end
       @system.list_certificates().size.should == 5
-
+      sub = get_hostedtest_subscription(pool.subscriptionId)
       sub.quantity = sub.quantity.to_i - 5
-      @cp.update_subscription(sub)
+      update_hostedtest_subscription(sub)
       @cp.refresh_pools(@owner['key'])
       @system.list_certificates().size.should == 2
   end
@@ -182,12 +185,12 @@ describe 'Entitlement Certificate' do
     prod3 = create_product(prod_id, "test product", {:owner => owner3['key']})
     safe_prod3 = create_product(safe_prod_id, "safe product", {:owner => owner3['key']})
 
-    @cp.create_subscription(owner1['key'], prod1.id, 10)
-    @cp.create_subscription(owner1['key'], safe_prod1.id, 10)
-    @cp.create_subscription(owner2['key'], prod2.id, 10)
-    @cp.create_subscription(owner2['key'], safe_prod2.id, 10)
-    @cp.create_subscription(owner3['key'], prod3.id, 10)
-    @cp.create_subscription(owner3['key'], safe_prod3.id, 10)
+    create_pool_and_subscription(owner1['key'], prod1.id, 10)
+    create_pool_and_subscription(owner1['key'], safe_prod1.id, 10)
+    create_pool_and_subscription(owner2['key'], prod2.id, 10)
+    create_pool_and_subscription(owner2['key'], safe_prod2.id, 10)
+    create_pool_and_subscription(owner3['key'], prod3.id, 10)
+    create_pool_and_subscription(owner3['key'], safe_prod3.id, 10)
 
     user1 = user_client(owner1, random_string('user1'))
     user2 = user_client(owner2, random_string('user2'))

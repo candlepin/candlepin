@@ -43,10 +43,10 @@ describe 'Import', :serial => true do
           :sockets=>'8'
       }
     })
-    datacenter_sub = @cp.create_subscription(@owner['key'], stacked_datacenter_product.id,
+    datacenter_sub = create_pool_and_subscription(@owner['key'], stacked_datacenter_product.id,
       10, [], '222', '', '', nil, nil,
       {
-        'derived_product_id' => derived_product.id
+        :derived_product_id => derived_product.id
       })
     @cp.refresh_pools(@owner['key'])
     pool = @cp.list_owner_pools(@owner['key'], {:product => stacked_datacenter_product.id})[0]
