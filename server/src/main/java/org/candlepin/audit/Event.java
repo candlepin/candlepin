@@ -55,7 +55,7 @@ public class Event implements Persisted {
      * Type - Constant representing the type of this event.
      */
     public enum Type {
-        CREATED, MODIFIED, DELETED
+        CREATED, MODIFIED, DELETED, EXPIRED
     }
 
     /**

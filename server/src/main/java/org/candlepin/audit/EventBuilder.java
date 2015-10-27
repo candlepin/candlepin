@@ -87,7 +87,7 @@ public class EventBuilder {
 
     public EventBuilder setNewEntity(AbstractHibernateObject updated) {
         if (updated != null) {
-            if (event.getType() == Type.DELETED) {
+            if (event.getType() == Type.DELETED || event.getType() == Type.EXPIRED) {
                 throw new IllegalArgumentException("You cannot set the new entity for a deletion event");
             }
             setEventData(updated);

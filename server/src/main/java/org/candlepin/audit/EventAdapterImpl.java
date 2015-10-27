@@ -135,6 +135,8 @@ public class EventAdapterImpl implements EventAdapter {
             I18n.marktr("{0} modified a subscription for product {1}"));
         MESSAGES.put("ENTITLEMENTDELETED",
             I18n.marktr("{0} returned the subscription for {1}"));
+        MESSAGES.put("ENTITLEMENTEXPIRED",
+                I18n.marktr("{0} returned the subscription for {1}"));
         MESSAGES.put("POOLCREATED", I18n.marktr("{0} created a pool for product {1}"));
         MESSAGES.put("POOLMODIFIED", I18n.marktr("{0} modified a pool for product {1}"));
         MESSAGES.put("POOLDELETED", I18n.marktr("{0} deleted a pool for product {1}"));

@@ -70,6 +70,7 @@ import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -88,6 +89,7 @@ import java.util.Set;
  * PoolManager
  */
 public class CandlepinPoolManager implements PoolManager {
+    private I18n i18n;
 
     private PoolCurator poolCurator;
     private static Logger log = LoggerFactory.getLogger(CandlepinPoolManager.class);
@@ -125,7 +127,7 @@ public class CandlepinPoolManager implements PoolManager {
         PoolRules poolRules, EntitlementCurator curator1, ConsumerCurator consumerCurator,
         EntitlementCertificateCurator ecC, ComplianceRules complianceRules,
         AutobindRules autobindRules, ActivationKeyRules activationKeyRules,
-        ProductCurator prodCurator, ContentCurator contentCurator) {
+        ProductCurator prodCurator, ContentCurator contentCurator, I18n i18n) {
 
         this.poolCurator = poolCurator;
         this.sink = sink;
@@ -143,6 +145,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.activationKeyRules = activationKeyRules;
         this.prodCurator = prodCurator;
         this.contentCurator = contentCurator;
+        this.i18n = i18n;
     }
 
     /*
@@ -1414,6 +1417,13 @@ public class CandlepinPoolManager implements PoolManager {
         poolCurator.merge(pool);
         entitlementCurator.delete(entitlement);
         Event event = eventFactory.entitlementDeleted(entitlement);
+        if (!entitlement.isValid() &&
+                entitlement.getPool().isUnmappedGuestPool() &&
+                consumerCurator.getHost(consumer.getFact("virt.uuid"), consumer.getOwner()) == null) {
+            event = eventFactory.entitlementExpired(entitlement);
+            event.setMessageText(event.getMessageText() + ": " +
+                i18n.tr("Unmapped guest entitlement expired without establishing a host/guest mapping."));
+        }
 
         // The quantity is calculated at fetch time. We update it here
         // To reflect what we just removed from the db.

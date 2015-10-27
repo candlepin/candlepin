@@ -35,6 +35,7 @@ public class EventManager {
     public static final String CREATED_EVENT_TYPE = "CREATED";
     public static final String MODIFIED_EVENT_TYPE = "MODIFIED";
     public static final String DELETED_EVENT_TYPE = "DELETED";
+    public static final String EXPIRED_EVENT_TYPE = "EXPIRED";
 
     protected Map<String, EventHandler> targetHandlers;
 
@@ -61,6 +62,9 @@ public class EventManager {
             }
             else if (DELETED_EVENT_TYPE.equals(eventType)) {
                 event.setStatus(handler.handleDeleted(event));
+            }
+            else if (EXPIRED_EVENT_TYPE.equals(eventType)) {
+                event.setStatus(handler.handleExpired(event));
             }
             else {
                 log.warn("Got an event of unknown type: " + eventType);

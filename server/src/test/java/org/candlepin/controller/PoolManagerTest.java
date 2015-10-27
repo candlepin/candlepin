@@ -32,6 +32,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
@@ -74,15 +75,18 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -92,6 +96,7 @@ import java.util.Set;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class PoolManagerTest {
+    private I18n i18n;
 
     @Mock
     private PoolCurator mockPoolCurator;
@@ -150,6 +155,8 @@ public class PoolManagerTest {
 
     @Before
     public void init() throws Exception {
+        i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+
         o = new Owner("key", "displayname");
         product = TestUtil.createProduct(o);
         pool = TestUtil.createPool(o, product);
@@ -164,7 +171,7 @@ public class PoolManagerTest {
             mockPoolCurator, mockProductCurator, entCertAdapterMock, mockEventSink,
             eventFactory, mockConfig, enforcerMock, poolRulesMock, entitlementCurator,
             consumerCuratorMock, certCuratorMock, complianceRules, autobindRules,
-            activationKeyRules, productCuratorMock, contentCuratorMock)
+            activationKeyRules, productCuratorMock, contentCuratorMock, i18n)
         );
 
         when(entCertAdapterMock.generateEntitlementCert(any(Entitlement.class),
@@ -1481,5 +1488,50 @@ public class PoolManagerTest {
 
         assertEquals(1, result.size());
         assertEquals(c1m, result.toArray()[0]);
+    }
+
+    @Test
+    public void expiredEntitlementEvent() {
+        Date now = new Date();
+
+        Product p = TestUtil.createProduct(o);
+        p.setAttribute("host_limited", "true");
+        p.setAttribute("virt_limit", "unlimited");
+
+        Consumer guest = TestUtil.createConsumer(o);
+        guest.setFact("virt.is_guest", "true");
+        guest.addInstalledProduct(new ConsumerInstalledProduct(p));
+
+        Pool pool = TestUtil.createPool(o, p);
+        pool.setAttribute("unmapped_guests_only", "true");
+        pool.setAttribute("virt_only", "true");
+        pool.setAttribute("pool_derived", "true");
+        pool.setAttribute("physical_only", "false");
+        pool.setAttribute("virt_limit", "0");
+        pool.setStartDate(new Date(now.getTime() - (1000 * 60 * 60 * 24)));
+
+        Entitlement ent = TestUtil.createEntitlement(o, guest, pool, null);
+        ent.setEndDateOverride(now);
+        ent.setId("test-ent-id");
+        ent.setQuantity(1);
+        Set<Entitlement> entitlements = new HashSet<Entitlement>();
+        entitlements.add(ent);
+        pool.setEntitlements(entitlements);
+
+        Event event = new Event();
+        event.setConsumerId(guest.getUuid());
+        event.setOldEntity(ent.getId());
+        event.setOwnerId(o.getId());
+        event.setTarget(Target.ENTITLEMENT);
+        event.setType(Type.EXPIRED);
+        when(eventFactory.entitlementExpired(eq(ent))).thenReturn(event);
+        when(mockPoolCurator.lockAndLoad(eq(pool))).thenReturn(pool);
+
+        manager.removeEntitlement(ent, false);
+        String message = event.getMessageText();
+        assertFalse(message == null);
+        message = message.split(": ")[1];
+        assertEquals(message,
+                i18n.tr("Unmapped guest entitlement expired without establishing a host/guest mapping."));
     }
 }
