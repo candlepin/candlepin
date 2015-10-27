@@ -144,6 +144,10 @@ public class EventFactory {
         return getEventBuilder(Target.ENTITLEMENT, Type.DELETED).setOldEntity(e).buildEvent();
     }
 
+    public Event entitlementExpired(Entitlement e) {
+        return getEventBuilder(Target.ENTITLEMENT, Type.EXPIRED).setOldEntity(e).buildEvent();
+    }
+
     public Event entitlementChanged(Entitlement e) {
         return getEventBuilder(Target.ENTITLEMENT, Type.MODIFIED).setNewEntity(e).buildEvent();
     }
