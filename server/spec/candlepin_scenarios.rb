@@ -109,6 +109,13 @@ module CandlepinMethods
     @cp.create_batch_content(owner, contents)
   end
 
+  def ensure_hosted()
+    if is_hosted? && !is_hostedtest_alive?
+      raise "Could not find hostedtest rest API. Please add the following to candlepin.conf:\n" \
+          " module.config.hosted.configuration.module=org.candlepin.hostedtest.AdapterOverrideModule"
+    end
+  end
+
   def create_pool_and_subscription(owner_key, product_id, quantity=1,
                           provided_products=[], contract_number='',
                           account_number='', order_number='',
@@ -123,21 +130,27 @@ module CandlepinMethods
     params[:provided_products] = provided_products
     pool = nil
     if is_hosted?
-      if is_hostedtest_alive?
-        sub = create_hostedtest_subscription(owner_key, product_id, quantity, params)
-        active_on = Date.strptime(sub.startDate, "%Y-%m-%d")+1
-        @cp.refresh_pools(owner_key, true)
-        sleep 1
-        pool = find_pool(owner_key, sub['id'], activeon=active_on)
-      else
-        raise "Could not find hostedtest rest API. Please add the following to candlepin.conf:\n" \
-          " module.config.hosted.configuration.module=org.candlepin.hostedtest.AdapterOverrideModule"
-      end
+      ensure_hosted
+      sub = create_hostedtest_subscription(owner_key, product_id, quantity, params)
+      active_on = Date.strptime(sub.startDate, "%Y-%m-%d")+1
+      @cp.refresh_pools(owner_key, true)
+      sleep 1
+      pool = find_pool(owner_key, sub['id'], activeon=active_on)
     else
       params[:source_subscription] = { 'id' => random_string('source_sub_') }
       pool = @cp.create_pool(owner_key, product_id, params)
     end
     return pool
+  end
+
+  def delete_pool_and_subscription(pool)
+    if is_hosted?
+      ensure_hosted
+      delete_hostedtest_subscription(pool.subscriptionId)
+      @cp.refresh_pools(pool['owner']['key'], true)
+    else
+      @cp.delete_pool(pool.id)
+    end
   end
 
   # Wrapper for ruby API so we can track all distributor versions we created and clean them up.
