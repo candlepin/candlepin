@@ -24,11 +24,8 @@ describe 'SKU Level Enable Override' do
     product = create_product(nil, nil,  {:attributes => { :content_override_enabled => @content_list }})
     providedProduct = create_product
     @cp.add_content_to_product(@owner['key'], providedProduct['id'], @content1['id'], false)
-    create_pool_and_subscription(@owner['key'], product['id'], 10, [providedProduct.id])
-    @cp.refresh_pools(@owner['key'])
-
-    pools = consumer_cp.list_pools(:owner => @owner['id'], :product => product['id'])
-    ent = consumer_cp.consume_pool(pools[0]['id'], {:quantity => 1})[0]
+    pool = create_pool_and_subscription(@owner['key'], product['id'], 10, [providedProduct.id])
+    ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
     json_body = extract_payload(ent['certificates'][0]['cert'])
     products = json_body['products']
@@ -52,11 +49,8 @@ describe 'SKU Level Enable Override' do
     product = create_product(nil, nil,  {:attributes => { :content_override_disabled => @content_list }})
     providedProduct = create_product
     @cp.add_content_to_product(@owner['key'], providedProduct['id'], @content2['id'], true)
-    create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
-    @cp.refresh_pools(@owner['key'])
-
-    pools = consumer_cp.list_pools(:owner => @owner['id'], :product => product['id'])
-    ent = consumer_cp.consume_pool(pools[0]['id'], {:quantity => 1})[0]
+    pool = create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
+    ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
     json_body = extract_payload(ent['certificates'][0]['cert'])
     products = json_body['products']
@@ -84,8 +78,7 @@ describe 'SKU Level Enable Override' do
     product = create_product(nil, nil,  {:attributes => { :content_override_disabled => @content_list }})
     providedProduct = create_product
     @cp.add_content_to_product(@owner['key'], providedProduct['id'], @content3['id'], false)
-    create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
-    @cp.refresh_pools(@owner['key'])
+    pool = create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
 
     # Override enabled to true:
     job = @org_admin.promote_content(env['id'],
@@ -95,8 +88,7 @@ describe 'SKU Level Enable Override' do
         }])
     wait_for_job(job['id'], 15)
 
-    pools = consumer_cp.list_pools(:owner => @owner['id'], :product => product['id'])
-    ent = consumer_cp.consume_pool(pools[0]['id'], {:quantity => 1})[0]
+    ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
     json_body = extract_payload(ent['certificates'][0]['cert'])
     products = json_body['products']
@@ -120,11 +112,8 @@ describe 'SKU Level Enable Override' do
     product = create_product(nil, nil,  {:attributes => { :content_override_enabled => @content_list }})
     providedProduct = create_product
     @cp.add_content_to_product(@owner['key'], providedProduct['id'], @content1['id'], false)
-    create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
-    @cp.refresh_pools(@owner['key'])
-
-    pools = consumer_cp.list_pools(:owner => @owner['id'], :product => product['id'])
-    ent = consumer_cp.consume_pool(pools[0]['id'], {:quantity => 1})[0]
+    pool = create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
+    ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
     extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
@@ -140,11 +129,8 @@ describe 'SKU Level Enable Override' do
     product = create_product(nil, nil,  {:attributes => { :content_override_disabled => @content_list }})
     providedProduct = create_product
     @cp.add_content_to_product(@owner['key'], providedProduct['id'], @content2['id'], true)
-    create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
-    @cp.refresh_pools(@owner['key'])
-
-    pools = consumer_cp.list_pools(:owner => @owner['id'], :product => product['id'])
-    ent = consumer_cp.consume_pool(pools[0]['id'], {:quantity => 1})[0]
+    pool = create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
+    ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
     extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
@@ -164,9 +150,7 @@ describe 'SKU Level Enable Override' do
     product = create_product(nil, nil,  {:attributes => { :content_override_disabled => @content_list }})
     providedProduct = create_product
     @cp.add_content_to_product(@owner['key'], providedProduct['id'], @content3['id'], false)
-    create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
-    @cp.refresh_pools(@owner['key'])
-
+    pool = create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
     # Override enabled to true:
     job = @org_admin.promote_content(env['id'],
         [{
@@ -175,8 +159,7 @@ describe 'SKU Level Enable Override' do
         }])
     wait_for_job(job['id'], 15)
 
-    pools = consumer_cp.list_pools(:owner => @owner['id'], :product => product['id'])
-    ent = consumer_cp.consume_pool(pools[0]['id'], {:quantity => 1})[0]
+    ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
     extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]

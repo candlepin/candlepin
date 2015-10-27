@@ -94,7 +94,6 @@ describe 'Owner Product Resource' do
         {:owner => owner['key']})
     provided_product = create_product(nil, nil, {:owner => owner['key']})
     create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id])
-    @cp.refresh_pools(owner['key'])
     user = user_client(owner, random_string('billy'))
     system = consumer_client(user, 'system6')
     system.consume_product(product.id)

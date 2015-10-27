@@ -34,9 +34,6 @@ describe 'Single Entitlement Compliance Reasons' do
                  :support_type => 'excellent',})
     @product1_pool = create_pool_and_subscription(@owner['key'], @product1.id, 100, [], '1888', '1234')
 
-    # Refresh pools so that the subscription pools will be available to the test systems.
-    @cp.refresh_pools(@owner['key'])
-
     @user = user_client(@owner, random_string('test-user'))
   end
 
@@ -396,9 +393,6 @@ describe 'Stacking Compliance Reasons' do
                  :support_type => 'excellent',})
     @not_covered_product_pool = create_pool_and_subscription(@owner['key'], @not_covered_product.id, 100, [],
                                                               '1999', '3332')
-
-    # Refresh pools so that the subscription pools will be available to the test systems.
-    @cp.refresh_pools(@owner['key'])
 
     @user = user_client(@owner, random_string('test-user'))
   end

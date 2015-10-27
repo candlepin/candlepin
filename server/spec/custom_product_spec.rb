@@ -26,7 +26,6 @@ describe 'Custom Product' do
 
     create_pool_and_subscription(@owner['key'], product1.id, 2, [], '', '12345', '6789', nil, @end_date)
     create_pool_and_subscription(@owner['key'], product2.id, 4, [], '', '12345', '6789', nil, @end_date)
-    @cp.refresh_pools(@owner['key'])
 
     pool1 = @cp.list_pools(:owner => @owner.id, :product => product1.id)[0]
     pool2 = @cp.list_pools(:owner => @owner.id, :product => product2.id)[0]

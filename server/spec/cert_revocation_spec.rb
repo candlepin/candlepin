@@ -15,8 +15,6 @@ describe 'Certificate Revocation List', :serial => true do
     create_pool_and_subscription(@owner['key'], @monitoring_prod.id, 6)
     create_pool_and_subscription(@owner['key'], @virt_prod.id, 3)
 
-    @cp.refresh_pools(@owner['key'])
-
     #create consumer
     username = random_string('billy')
     @user = create_user(@owner, username, 'password')

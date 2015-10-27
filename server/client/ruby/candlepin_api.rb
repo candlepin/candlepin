@@ -427,6 +427,7 @@ class Candlepin
     path << "consumer=#{params[:consumer]}&" if params[:consumer]
     path << "product=#{params[:product]}&" if params[:product]
     path << "listall=#{params[:listall]}&" if params[:listall]
+    path << "activeon=#{params[:activeon]}&" if params[:activeon]
     path << "page=#{params[:page]}&" if params[:page]
     path << "per_page=#{params[:per_page]}&" if params[:per_page]
     path << "order=#{params[:order]}&" if params[:order]

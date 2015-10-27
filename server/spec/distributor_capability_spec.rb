@@ -140,7 +140,6 @@ describe 'Distributor Capability' do
     @product = create_product(nil, nil, :attributes =>
                 {:cores => 8})
     create_pool_and_subscription(@owner['key'], @product.id, 10, [], '12345', '6789', 'order1')
-    @cp.refresh_pools(@owner['key'])
 
     consumer = @user.register(random_string("consumer"), :candlepin, nil, {})
     entitlements = @cp.consume_product(@product.id, {:uuid => consumer.uuid})

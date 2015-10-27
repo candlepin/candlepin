@@ -26,7 +26,6 @@ describe 'Entitlement Certificate V1 Size' do
                  :support_type => 'excellent',})
     @cp.add_content_to_product(@owner['key'], @product2.id, @content_list[0].id, true)
     create_pool_and_subscription(@owner['key'], @product2.id, 10, [], '12345', '6789', 'order1')
-    @cp.refresh_pools(@owner['key'])
     @user = user_client(@owner, random_string('billy'))
     @system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '1.0'})

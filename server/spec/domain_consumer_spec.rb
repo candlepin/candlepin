@@ -14,8 +14,6 @@ describe 'Domain Consumer' do
 
     create_pool_and_subscription(@owner['key'], @monitoring.id, 4)
     create_pool_and_subscription(@owner['key'], @domain_product.id, 4)
-
-    @cp.refresh_pools @owner['key']
   end
 
   it 'should not be able to consume non domain specific products' do

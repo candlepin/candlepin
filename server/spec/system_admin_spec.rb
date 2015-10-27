@@ -64,11 +64,7 @@ describe 'System Admins' do
 
   def create_pool
     product = create_product
-    create_pool_and_subscription(@owner['key'], product.id, 10)
-    @cp.refresh_pools(@owner['key'])
-    pool = @user_cp.list_owner_pools(@owner['key'],
-      {:product => product['id']}).first
-    return pool
+    return create_pool_and_subscription(@owner['key'], product.id, 10)
   end
 
   it "can create entitlements only for their systems" do
@@ -160,11 +156,7 @@ describe 'System admins with read-only on org' do
   # TODO: duplicated with above:
   def create_pool
     product = create_product
-    create_pool_and_subscription(@owner['key'], product.id, 10)
-    @cp.refresh_pools(@owner['key'])
-    pool = @user_cp.list_owner_pools(@owner['key'],
-      {:product => product['id']}).first
-    return pool
+    return create_pool_and_subscription(@owner['key'], product.id, 10)
   end
 
   it 'can list their owners' do

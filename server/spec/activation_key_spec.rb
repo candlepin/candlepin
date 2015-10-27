@@ -17,7 +17,6 @@ describe 'Activation Keys' do
 
     create_pool_and_subscription(@owner['key'], @some_product.id, 37)
     create_pool_and_subscription(@owner['key'], @some_product_2.id, 37)
-    @cp.refresh_pools(@owner['key'])
 
     @pool = @cp.list_pools(:owner => @owner.id, :product => @some_product['id']).first
     @pool_2 = @cp.list_pools(:owner => @owner.id, :product => @some_product_2['id']).first
@@ -168,7 +167,6 @@ describe 'Activation Keys' do
                               random_string('product'),
                               {:attributes => {:support_level => 'VIP'}})
     create_pool_and_subscription(@owner['key'], product1.id, 30)
-    @cp.refresh_pools(@owner['key'])
     service_activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'), 'VIP')
     service_activation_key['serviceLevel'].should == 'VIP'
   end
@@ -182,7 +180,7 @@ describe 'Activation Keys' do
                               {:attributes => {:support_level => 'Ultra-VIP'}})
     create_pool_and_subscription(@owner['key'], product1.id, 30)
     create_pool_and_subscription(@owner['key'], product2.id, 30)
-    @cp.refresh_pools(@owner['key'])
+
     service_activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'), 'VIP')
     service_activation_key['serviceLevel'].should == 'VIP'
 

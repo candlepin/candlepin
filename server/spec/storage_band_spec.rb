@@ -24,16 +24,15 @@ describe 'Band Limiting' do
                  :support_type => 'excellent'}
          )
     @ceph_pool = create_pool_and_subscription(@owner['key'], @ceph_product.id, 2, [], '1888', '1234')
-    @cp.refresh_pools(@owner['key'])
+    @ceph_pool.should_not be_nil
 
     @user = user_client(@owner, random_string('test-user'))
 
   end
 
   it 'pool should have the correct quantity based off of the product multiplier' do
-    pool = find_pool(@owner.id, @ceph_pool.id)
     # sub.quantity * multiplier
-    pool.quantity.should == 512
+    @ceph_pool.quantity.should == 512
   end
 
   # band.storage.usage fact is in TB.
@@ -43,10 +42,7 @@ describe 'Band Limiting' do
     installed_products = [{ 'productId' => @ceph_product.id, 'productName' => @ceph_product.name }]
     system.update_consumer({ :installedProducts => installed_products })
 
-    pool = find_pool(@owner.id, @ceph_pool.id)
-    pool.should_not be_nil
-
-    system.consume_pool(pool.id, {:quantity => 256}).should_not be_nil
+    system.consume_pool(@ceph_pool.id, {:quantity => 256}).should_not be_nil
 
     status = system.get_compliance(consumer_id = system.uuid)
     status['status'].should == 'valid'
@@ -59,10 +55,7 @@ describe 'Band Limiting' do
     installed_products = [{ 'productId' => @ceph_product.id, 'productName' => @ceph_product.name }]
     system.update_consumer({ :installedProducts => installed_products })
 
-    pool = find_pool(@owner.id, @ceph_pool.id)
-    pool.should_not be_nil
-
-    system.consume_pool(pool.id, {:quantity => 128}).should_not be_nil
+    system.consume_pool(@ceph_pool.id, {:quantity => 128}).should_not be_nil
 
     status = system.get_compliance(consumer_id = system.uuid)
     status['status'].should == 'partial'
@@ -75,17 +68,14 @@ describe 'Band Limiting' do
     installed_products = [{ 'productId' => @ceph_product.id, 'productName' => @ceph_product.name }]
     system.update_consumer({ :installedProducts => installed_products })
 
-    pool = find_pool(@owner.id, @ceph_pool.id)
-    pool.should_not be_nil
-
     # Partial stack
-    system.consume_pool(pool.id, {:quantity => 128}).should_not be_nil
+    system.consume_pool(@ceph_pool.id, {:quantity => 128}).should_not be_nil
     status = system.get_compliance(consumer_id = system.uuid)
     status['status'].should == 'partial'
     status['compliant'].should == false
 
     # Complete the stack
-    system.consume_pool(pool.id, {:quantity => 128}).should_not be_nil
+    system.consume_pool(@ceph_pool.id, {:quantity => 128}).should_not be_nil
     status = system.get_compliance(consumer_id = system.uuid)
     status['status'].should == 'valid'
     status['compliant'].should == true
@@ -118,10 +108,7 @@ describe 'Band Limiting' do
     installed_products = [{ 'productId' => @ceph_product.id, 'productName' => @ceph_product.name }]
     system.update_consumer({ :installedProducts => installed_products })
 
-    pool = find_pool(@owner.id, @ceph_pool.id)
-    pool.should_not == nil
-
-    entitlement = system.consume_pool(pool.id, {:quantity => 56})
+    entitlement = system.consume_pool(@ceph_pool.id, {:quantity => 56})
     entitlement.should_not == nil
 
     entitlements = system.consume_product()

@@ -67,7 +67,6 @@ describe 'Entitlement Certificate V3' do
 
     @pool = create_pool_and_subscription(@owner['key'], @product.id, 10, [], '12345', '6789', 'order1')
     @pool_30 = create_pool_and_subscription(@owner['key'], @product_30.id, 10, [], '123456', '67890', 'order2')
-    @cp.refresh_pools(@owner['key'])
 
     @user = user_client(@owner, random_string('billy'))
 
@@ -168,10 +167,9 @@ describe 'Entitlement Certificate V3' do
 
     branding = [{:productId => product['id'],
         :type => 'Some Type', :name => 'Super Branded Name'}]
-    sub = create_pool_and_subscription(@owner['key'], product.id, 10, [],
+    create_pool_and_subscription(@owner['key'], product.id, 10, [],
         '12345', '6789', 'order1', Date.today - 10, Date.today + 365,
         {:branding => branding})
-    @cp.refresh_pools(@owner['key'])
     entitlement = @system.consume_product(product.id)[0]
     json_body = extract_payload(@system.list_certificates[0]['cert'])
 

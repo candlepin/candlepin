@@ -40,7 +40,6 @@ describe 'Modifier Entitlement' do
     @modifier_product = create_product()
     @modifier_pool = create_pool_and_subscription(@owner['key'], @modifier_product.id, 10,
       [@modifier_provided_product.id])
-    @cp.refresh_pools(@owner['key'])
 
     owner_client = user_client(@owner, random_string('testowner'))
     @consumer_cp = consumer_client(owner_client, random_string('consumer123'))

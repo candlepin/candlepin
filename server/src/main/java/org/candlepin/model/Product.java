@@ -104,10 +104,16 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
     private List<ProductContent> productContent;
 
+    /*
+     * hibernate persists empty set as null, and tries to fetch
+     * dependentProductIds upon a fetch when we lazy load. to fix this, we eager
+     * fetch.
+     */
     @ElementCollection
     @CollectionTable(name = "cpo_product_dependent_products",
                      joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
+    @LazyCollection(LazyCollectionOption.FALSE)
     private Set<String> dependentProductIds; // Should these be product references?
 
     protected Product() {

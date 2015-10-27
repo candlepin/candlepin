@@ -10,7 +10,6 @@ describe 'Entitlement Migrate' do
     @product = create_product(nil, random_string('product'),
                  :attributes => {:cores => 8})
     create_pool_and_subscription(@owner['key'], @product.id, 25)
-    @cp.refresh_pools(@owner['key'])
 
     #create consumer
     @user = user_client(@owner, random_string('user'))

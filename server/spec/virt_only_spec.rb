@@ -77,7 +77,6 @@ describe 'Virt Only Pools' do
     })
 
     create_pool_and_subscription(@owner['key'], product.id, 10)
-    @cp.refresh_pools(@owner['key'])
 
     product
   end

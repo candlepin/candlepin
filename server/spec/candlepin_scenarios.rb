@@ -7,6 +7,7 @@ require 'zip/zip'
 module CandlepinMethods
 
   include HostedTest
+
   # Wrapper for ruby API so we can track all owners we created and clean them
   # up. Note that this entails cleanup of all objects beneath that owner, so
   # most other objects can be created using the ruby API.
@@ -120,18 +121,23 @@ module CandlepinMethods
     params[:order_number] = order_number
     params[:quantity] = quantity
     params[:provided_products] = provided_products
-
+    pool = nil
     if is_hosted?
       if is_hostedtest_alive?
         sub = create_hostedtest_subscription(owner_key, product_id, quantity, params)
-        params[:source_subscription] = sub
+        active_on = Date.strptime(sub.startDate, "%Y-%m-%d")+1
+        @cp.refresh_pools(owner_key, true)
+        sleep 1
+        pool = find_pool(owner_key, sub['id'], activeon=active_on)
       else
         raise "Could not find hostedtest rest API. Please add the following to candlepin.conf:\n" \
           " module.config.hosted.configuration.module=org.candlepin.hostedtest.AdapterOverrideModule"
       end
+    else
+      params[:source_subscription] = { 'id' => random_string('source_sub_') }
+      pool = @cp.create_pool(owner_key, product_id, params)
     end
-    return @cp.create_pool(owner_key, product_id, params)
-
+    return pool
   end
 
   # Wrapper for ruby API so we can track all distributor versions we created and clean them up.
@@ -231,10 +237,10 @@ module CandlepinMethods
   # a specific subscription ID. (we often want to verify what pool was used,
   # but the pools are created indirectly after a refresh so it's hard to
   # locate a specific reference without this)
-  def find_pool(owner_id, pool_id, activeon=nil)
-    pools = @cp.list_pools({:owner => owner_id, :activeon => activeon})
+  def find_pool(owner_key, sub_id, activeon=nil)
+    pools = @cp.list_owner_pools(owner_key, {:activeon => activeon})
     pools.each do |pool|
-      if pool['id'] == pool_id
+      if pool['subscriptionId'] == sub_id
         return pool
       end
     end
@@ -425,7 +431,7 @@ class StandardExporter < Exporter
                                   {:attributes => {:virt_only => true}})
 
     @products[:product3] = create_product(random_string('sub-prod'), random_string(), {
-        :attributes => { :arch => "x86_64", :virt_limit => "unlimited"}
+        :attributes => { :arch => "x86_64"}
     })
 
     @products[:derived_product] = create_product(random_string('sub-prov-prod'), random_string(),
@@ -468,8 +474,6 @@ class StandardExporter < Exporter
       {:derived_product_id => @products[:derived_product]['id'],  :derived_provided_products => [@products[:derived_provided_prod]['id']]})
     create_pool_and_subscription(@owner['key'], @products[:product_up].id, 10, [], '', '12345', '6789', nil, end_date)
 
-    @cp.refresh_pools(@owner['key'])
-
     # Pool names is a list of names of instance variables that will be created
     pool_names = ["pool1", "pool2", "pool3", "pool4", "pool_up"]
     pool_products = [:product1, :product2, :product3, :virt_product, :product_up]
@@ -488,7 +492,6 @@ class StandardExporter < Exporter
     ent_names.zip([@pool1, @pool2, @pool4, @pool_up]).each do |ent_name, pool|
       instance_variable_set("@#{ent_name}", @candlepin_client.consume_pool(pool.id, {:quantity => 1})[0])
     end
-
     # pool3 is special
     @candlepin_client.consume_pool(@pool3.id, {:quantity => 1})
 
@@ -516,8 +519,6 @@ class StandardExporter < Exporter
     end_date = Date.new(2025, 5, 29)
     create_pool_and_subscription(@owner['key'], product1.id, 12, [], '', '12345', '6789', nil, end_date)
     create_pool_and_subscription(@owner['key'], product2.id, 14, [], '', '12345', '6789', nil, end_date)
-
-    @cp.refresh_pools(@owner['key'])
 
     pool1 = @cp.list_pools(:owner => @owner.id, :product => product1.id)[0]
     pool2 = @cp.list_pools(:owner => @owner.id, :product => product2.id)[0]

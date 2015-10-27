@@ -15,7 +15,7 @@ describe 'RAM Limiting' do
                  :management_enabled => true,
                  :support_level => 'standard',
                  :support_type => 'excellent',})
-    @ram_sub = create_pool_and_subscription(@owner['key'], @ram_product.id, 10, [], '1888', '1234')
+    @ram_pool = create_pool_and_subscription(@owner['key'], @ram_product.id, 10, [], '1888', '1234')
 
     # Create a product limiting by RAM and sockets.
     @ram_and_socket_product = create_product(nil, random_string("Product2"), :attributes =>
@@ -26,7 +26,7 @@ describe 'RAM Limiting' do
                  :management_enabled => true,
                  :support_level => 'standard',
                  :support_type => 'excellent',})
-    @ram_socket_sub = create_pool_and_subscription(@owner['key'], @ram_and_socket_product.id, 5,
+    @ram_socket_pool = create_pool_and_subscription(@owner['key'], @ram_and_socket_product.id, 5,
                                               [], '18881', '1222')
 
     # Create a stackable RAM product.
@@ -38,11 +38,7 @@ describe 'RAM Limiting' do
                  :support_type => 'excellent',
                  :'multi-entitlement' => 'yes',
                  :stacking_id => '2421'})
-    @stackable_ram_sub = create_pool_and_subscription(@owner['key'], @stackable_ram_product.id, 10)
-
-
-    # Refresh pools so that the subscription pools will be available to the test systems.
-    @cp.refresh_pools(@owner['key'])
+    @stackable_ram_pool = create_pool_and_subscription(@owner['key'], @stackable_ram_product.id, 10)
 
     @user = user_client(@owner, random_string('test-user'))
   end
@@ -84,10 +80,9 @@ describe 'RAM Limiting' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @ram_sub.id)
-    pool.should_not == nil
+    @ram_pool.should_not == nil
 
-    entitlement = system.consume_pool(pool.id, {:quantity => 1})
+    entitlement = system.consume_pool(@ram_pool.id, {:quantity => 1})
     entitlement.should_not == nil
 
     compliance_status = system.get_compliance(consumer_id=system.uuid)
@@ -112,10 +107,9 @@ describe 'RAM Limiting' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @ram_socket_sub.id)
-    pool.should_not == nil
+    @ram_socket_pool.should_not == nil
 
-    entitlement = system.consume_pool(pool.id, {:quantity => 1})
+    entitlement = system.consume_pool(@ram_socket_pool.id, {:quantity => 1})
     entitlement.should_not == nil
 
     compliance_status = system.get_compliance(consumer_id=system.uuid)
@@ -140,10 +134,9 @@ describe 'RAM Limiting' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @ram_socket_sub.id)
-    pool.should_not == nil
+    @ram_socket_pool.should_not == nil
 
-    entitlement = system.consume_pool(pool.id, {:quantity => 1})
+    entitlement = system.consume_pool(@ram_socket_pool.id, {:quantity => 1})
     entitlement.should_not == nil
 
     compliance_status = system.get_compliance(consumer_id=system.uuid)
@@ -244,10 +237,9 @@ describe 'RAM Limiting' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @stackable_ram_sub.id)
-    pool.should_not == nil
+    @stackable_ram_pool.should_not == nil
 
-    entitlement = system.consume_pool(pool.id, {:quantity => 1})
+    entitlement = system.consume_pool(@stackable_ram_pool.id, {:quantity => 1})
     entitlement.should_not == nil
 
     compliance_status = system.get_compliance(consumer_id=system.uuid)
@@ -272,10 +264,9 @@ describe 'RAM Limiting' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @stackable_ram_sub.id)
-    pool.should_not == nil
+    @stackable_ram_pool.should_not == nil
 
-    entitlement = system.consume_pool(pool.id, {:quantity => 2})
+    entitlement = system.consume_pool(@stackable_ram_pool.id, {:quantity => 2})
     entitlement.should_not == nil
 
     compliance_status = system.get_compliance(consumer_id=system.uuid)
@@ -328,10 +319,9 @@ describe 'RAM Limiting' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @stackable_ram_sub.id)
-    pool.should_not == nil
+    @stackable_ram_pool.should_not == nil
 
-    entitlement = system.consume_pool(pool.id, {:quantity => 1})
+    entitlement = system.consume_pool(@stackable_ram_pool.id, {:quantity => 1})
     entitlement.should_not == nil
 
     entitlements = system.consume_product()

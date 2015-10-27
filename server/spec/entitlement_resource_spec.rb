@@ -15,8 +15,6 @@ describe 'Entitlement Resource' do
     create_pool_and_subscription(@owner['key'], @monitoring_prod.id, 6)
     create_pool_and_subscription(@owner['key'], @virt_prod.id, 6)
 
-    @cp.refresh_pools(@owner['key'])
-
     #create consumer
     user = user_client(@owner, random_string('billy'))
     @system = consumer_client(user, 'system6')
@@ -129,9 +127,7 @@ describe 'Entitlement Resource' do
     cp_client = consumer_client(owner_client, random_string('consumer'), :system)
     prod = create_product(random_string('product'), random_string('product'),
       {:attributes => { :'multi-entitlement' => 'yes'}, :owner => @qowner['key']})
-    subs = create_pool_and_subscription(@qowner['key'], prod.id, 10)
-    @cp.refresh_pools(@qowner['key'])
-    pool = cp_client.list_pools({:owner => @qowner['id']}).first
+    pool = create_pool_and_subscription(@qowner['key'], prod.id, 10)
     entitlement = cp_client.consume_pool(pool.id, {:quantity => 3}).first
     ent_cert_ser = entitlement['certificates'].first['serial']['id']
     entitlement2 = cp_client.consume_pool(pool.id, {:quantity => 2}).first
@@ -165,9 +161,7 @@ describe 'Entitlement Resource' do
     prod = create_product(random_string('product'), random_string('product'),
       {:attributes => { :'multi-entitlement' => 'yes'},
        :owner => @qowner['key']})
-    subs = create_pool_and_subscription(@qowner['key'], prod.id, 10)
-    @cp.refresh_pools(@qowner['key'])
-    pool = cp_client.list_pools({:owner => @qowner['id']}).first
+    pool = create_pool_and_subscription(@qowner['key'], prod.id, 10)
     entitlement = cp_client.consume_pool(pool.id, {:quantity => 3}).first
     entitlement2 = cp_client.consume_pool(pool.id, {:quantity => 2}).first
     entitlement.quantity.should == 3
@@ -187,9 +181,7 @@ describe 'Entitlement Resource' do
     owner_client = user_client(@qowner, random_string('owner'))
     cp_client = consumer_client(owner_client, random_string('consumer'), :system)
     prod = create_product(random_string('product'), random_string('product'), {:owner => @qowner['key']})
-    subs = create_pool_and_subscription(@qowner['key'], prod.id, 10)
-    @cp.refresh_pools(@qowner['key'])
-    pool = cp_client.list_pools({:owner => @qowner['id']}).first
+    pool = create_pool_and_subscription(@qowner['key'], prod.id, 10)
     entitlement = cp_client.consume_pool(pool.id, {:quantity => 1}).first
     entitlement.quantity.should == 1
     pool = cp_client.list_pools({:owner => @qowner['id']}).first

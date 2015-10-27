@@ -76,12 +76,10 @@ describe 'Refresh Pools' do
     pools = @cp.list_pools({:owner => owner.id})
     pools.length.should == 1
     pools[0].providedProducts.length.should == 2
-
     # Remove the old provided products and add a new one:
     sub = get_hostedtest_subscription(pool.subscriptionId)
     sub.providedProducts = [@cp.get_product(owner['key'], provided3.id)]
     update_hostedtest_subscription(sub)
-    sub2 = get_hostedtest_subscription(sub.id)
     @cp.refresh_pools(owner['key'])
     pools = @cp.list_pools({:owner => owner.id})
     pools[0].providedProducts.length.should == 1
@@ -91,7 +89,6 @@ describe 'Refresh Pools' do
     owner = create_owner random_string
     product = create_product(random_string, random_string, :owner => owner['key'])
     pool = create_pool_and_subscription(owner['key'], product.id, 500, [])
-    @cp.refresh_pools(owner['key'])
     pools = @cp.list_pools({:owner => owner.id})
     pools.length.should == 1
 
@@ -117,7 +114,6 @@ describe 'Refresh Pools' do
     new_product = create_product(random_string, random_string, :owner => owner['key'])
     pool = create_pool_and_subscription(owner['key'], product.id, 500,
       [])
-    @cp.refresh_pools(owner['key'])
     pools = @cp.list_pools({:owner => owner.id})
     pools.length.should == 1
 
@@ -176,8 +172,6 @@ describe 'Refresh Pools' do
         :derived_product_id => derived_product['id'],
         :derived_provided_products => ['300']
       })
-    # refresh so the owner has it
-    @cp.refresh_pools(owner['key'], true)
     # extra unmapped guest pool will be labeled with provided product
     pools = @cp.list_pools :owner => owner.id,
       :product => datacenter_product.id
@@ -209,7 +203,6 @@ describe 'Refresh Pools' do
     name = random_string("product")
     product1 = create_product(name, name, :owner => owner1['key'])
     pool = create_pool_and_subscription(owner1['key'], product1.id)
-    @cp.refresh_pools(owner1["key"], true)
     owner1_pools = @cp.list_pools({:owner => owner1.id})
     owner1_pools.length.should == 1
 
@@ -238,7 +231,6 @@ describe 'Refresh Pools' do
     name = random_string("product")
     product1 = create_product(name, name, :owner => owner1['key'])
     pool = create_pool_and_subscription(owner1['key'], product1.id)
-    @cp.refresh_pools(owner1["key"], true)
     owner1_pools = @cp.list_pools({:owner => owner1.id})
     owner1_pools.length.should == 1
 
@@ -275,7 +267,6 @@ describe 'Refresh Pools' do
       }
     )
     create_pool_and_subscription(owner['key'], product.id, 2)
-    @cp.refresh_pools(owner['key'], false, false, false)
 
     user = user_client(owner, random_string("user"))
     host = consumer_client(user, 'host', :system, nil)

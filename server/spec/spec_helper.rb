@@ -66,7 +66,6 @@ RSpec.configure do |config|
     #create two subs, to do migration testing
     create_pool_and_subscription(@owner['key'], @virt_limit_product.id, 10)
     create_pool_and_subscription(@owner['key'], @virt_limit_product.id, 10)
-    @cp.refresh_pools(@owner['key'])
 
     @pools = @user.list_pools :owner => @owner.id, \
       :product => @virt_limit_product.id

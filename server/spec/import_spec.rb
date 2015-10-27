@@ -35,7 +35,7 @@ describe 'Import', :serial => true do
 
   it 'creates pools' do
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
-    pools.length.should == 6
+    pools.length.should == 5
 
     # Some of these pools must carry provided/derived provided products,
     # don't care which pool just need to be sure that they're getting
@@ -59,7 +59,7 @@ describe 'Import', :serial => true do
 
   it 'ignores multiplier for pool quantity' do
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
-    pools.length.should == 6
+    pools.length.should == 5
     # 1 product has a multiplier of 2 upstream, the others 1.
     # 1 entitlement is consumed from each pool for the export, so
     # quantity should be 1 on each.

@@ -20,6 +20,7 @@ if not ARGV.empty?
 end
 
 data = {}
+@sourceSubId = 0
 
 filenames.each do |filename|
   puts filename
@@ -287,6 +288,8 @@ def create_mkt_product_and_pools(cp, owner, product)
   params[:order_number] = 'order-8675309'
 
   params[:quantity] = small_quantity
+  @sourceSubId += 1
+  params[:source_subscription] = { 'id' => "#{@sourceSubId}" }
 
   pool = cp.create_pool(
     owner['name'],
@@ -296,6 +299,8 @@ def create_mkt_product_and_pools(cp, owner, product)
 
   params[:contract_number] += 1
   params[:quantity] = large_quantity
+  @sourceSubId += 1
+  params[:source_subscription] = { 'id' => "#{@sourceSubId}" }
 
   pool = cp.create_pool(
     owner['name'],
@@ -307,6 +312,8 @@ def create_mkt_product_and_pools(cp, owner, product)
   params[:quantity] = 15
   params[:start_date] =  params[:end_date] - 10
   params[:end_date] =  params[:start_date] + 365
+  @sourceSubId += 1
+  params[:source_subscription] = { 'id' => "#{@sourceSubId}" }
 
   pool = cp.create_pool(
     owner['name'],

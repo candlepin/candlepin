@@ -66,7 +66,6 @@ describe 'Entitlement Certificate' do
   it 'can be manually regenerated for a product' do
     coolapp = create_product
     create_pool_and_subscription(@owner['key'], coolapp.id, 10)
-    @cp.refresh_pools(@owner['key'])
     @system.consume_product coolapp.id
 
     @system.list_certificates.length.should == 2
@@ -102,9 +101,7 @@ describe 'Entitlement Certificate' do
       # this entitlement makes the counts inconclusive
       @system.unbind_entitlement(@entitlement.id)
       prod = create_product(nil, nil, {:attributes => {"multi-entitlement" => "yes"}})
-      create_pool_and_subscription(@owner['key'], prod.id, 10)
-      @cp.refresh_pools(@owner['key'])
-      pool = @system.list_pools({:owner => @owner['id'], :product => prod['id']})[0]
+      pool = create_pool_and_subscription(@owner['key'], prod.id, 10)
 
       @system.consume_pool(pool['id'], {:quantity => 6})
       @system.list_certificates().size.should == 1
@@ -121,9 +118,7 @@ describe 'Entitlement Certificate' do
       # this entitlement makes the counts inconclusive
       @system.unbind_entitlement(@entitlement.id)
       prod = create_product(nil, nil, {:attributes => {"multi-entitlement" => "yes"}})
-      create_pool_and_subscription(@owner['key'], prod.id, 10)
-      @cp.refresh_pools(@owner['key'])
-      pool = @system.list_pools({:owner => @owner['id'], :product => prod['id']})[0]
+      pool = create_pool_and_subscription(@owner['key'], prod.id, 10)
 
       for i in 0..4
           @system.consume_pool(pool['id'], {:quantity => 2})

@@ -10,7 +10,6 @@ describe 'Unbind' do
     @monitoring = create_product(nil, random_string('monitoring'))
 
     create_pool_and_subscription(@owner['key'], @monitoring.id, 4)
-    @cp.refresh_pools @owner['key']
   end
 
   it 'should remove a single entitlement' do
@@ -56,8 +55,7 @@ describe 'Unbind' do
 
   it 'should leave other entitlements in tact' do
     virt_host = create_product(nil, random_string('virt_host'))
-    create_pool_and_subscription(@owner['key'], virt_host.id, 5)
-    @cp.refresh_pools @owner['key']
+    pool = create_pool_and_subscription(@owner['key'], virt_host.id, 5)
 
     consumer = consumer_client(@user, 'consumer')
     pool = consumer.list_pools(
