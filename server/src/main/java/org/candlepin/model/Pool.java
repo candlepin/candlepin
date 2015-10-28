@@ -29,6 +29,7 @@ import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -1016,13 +1017,20 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @JsonProperty("derivedProvidedProducts")
     public Set<ProvidedProduct> getDerivedProvidedProductDtos() {
         Set<ProvidedProduct> prods = new HashSet<ProvidedProduct>();
-
-        if (this.derivedProvidedProductDtos != null) {
-            prods.addAll(this.derivedProvidedProductDtos);
-        }
+        Map<String, ProvidedProduct> prodMap = new HashMap<String, ProvidedProduct>();
 
         for (Product p : getDerivedProvidedProducts()) {
-            prods.add(new ProvidedProduct(p));
+            ProvidedProduct product = new ProvidedProduct(p);
+            prods.add(product);
+            prodMap.put(product.getProductId(), product);
+        }
+
+        if (this.derivedProvidedProductDtos != null) {
+            for (ProvidedProduct product : this.derivedProvidedProductDtos) {
+                if (!prodMap.containsKey(product.getProductId())) {
+                    prods.add(product);
+                }
+            }
         }
 
         return prods;

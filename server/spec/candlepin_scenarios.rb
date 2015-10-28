@@ -135,7 +135,7 @@ module CandlepinMethods
       active_on = Date.strptime(sub.startDate, "%Y-%m-%d")+1
       @cp.refresh_pools(owner_key, true)
       sleep 1
-      pool = find_pool(owner_key, sub['id'], activeon=active_on)
+      pool = find_pool(owner_key, sub['id'], activeon=active_on, true)
     else
       params[:source_subscription] = { 'id' => random_string('source_sub_') }
       pool = @cp.create_pool(owner_key, product_id, params)
@@ -250,10 +250,10 @@ module CandlepinMethods
   # a specific subscription ID. (we often want to verify what pool was used,
   # but the pools are created indirectly after a refresh so it's hard to
   # locate a specific reference without this)
-  def find_pool(owner_key, sub_id, activeon=nil)
+  def find_pool(owner_key, sub_id, activeon=nil, return_normal)
     pools = @cp.list_owner_pools(owner_key, {:activeon => activeon})
     pools.each do |pool|
-      if pool['subscriptionId'] == sub_id
+      if pool['subscriptionId'] == sub_id && (!return_normal || pool['type'] == 'NORMAL')
         return pool
       end
     end

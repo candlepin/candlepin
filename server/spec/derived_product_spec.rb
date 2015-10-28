@@ -50,6 +50,7 @@ describe 'Derived Products' do
         :virt_limit => "unlimited",
         :stacking_id => "stackme",
         :sockets => "2",
+        'host_limited' => "true",
         'multi-entitlement' => "yes"
       }
     })
@@ -57,6 +58,7 @@ describe 'Derived Products' do
     @datacenter_product_2 = create_product(nil, nil, {
       :attributes => {
         :virt_limit => "unlimited",
+        'host_limited' => "true"
       }
     })
 
@@ -73,7 +75,7 @@ describe 'Derived Products' do
       }
     })
 
-    create_pool_and_subscription(@owner['key'], @datacenter_product.id,
+    @main_pool = create_pool_and_subscription(@owner['key'], @datacenter_product.id,
       10, [], '', '', '', nil, nil,
       {
         :derived_product_id => @derived_product['id'],
@@ -87,12 +89,9 @@ describe 'Derived Products' do
         :derived_provided_products => [@eng_product_2['id'], @modified_product['id']]
       })
 
-    @cp.refresh_pools(@owner['key'])
     @pools = @cp.list_pools :owner => @owner.id, \
       :product => @datacenter_product.id
     @pools.size.should == 1
-    @main_pool = @pools[0]
-
 
     @distributor = @user.register(random_string('host'), :candlepin, nil,
       {}, nil, nil, [], [], nil)
@@ -115,7 +114,7 @@ describe 'Derived Products' do
     })
     create_pool_and_subscription(@owner['key'], instance_product.id,
       10, [@eng_product['id']])
-    @cp.refresh_pools(@owner['key'])
+
     @guest_client.consume_product
 
     # Now the host should have an entitlement to the virt pool, and the guest
@@ -123,6 +122,7 @@ describe 'Derived Products' do
     host_ents = @physical_client.list_entitlements
     host_ents.length.should == 1
     host_ents[0]['pool']['productId'].should == @datacenter_product['id']
+
     guest_ents = @guest_client.list_entitlements
     guest_ents.length.should == 1
     guest_ents[0]['pool']['productId'].should == @derived_product['id']

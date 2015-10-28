@@ -9,6 +9,7 @@ describe 'Import', :serial => true do
 
   before(:all) do
     @cp = Candlepin.new('admin', 'admin')
+    pending("candlepin running in hosted mode") if is_hosted?
     @owners = []
     @owner = @cp.create_owner(random_string('owner'))
     @user = user_client(@owner, random_string('user'))
