@@ -327,7 +327,7 @@ public class PoolRules {
 
                 update.setProductsChanged(
                     checkForChangedProducts(
-                        sub.getProduct(),
+                        useDerived ? sub.getDerivedProduct() : sub.getProduct(),
                         getExpectedProvidedProducts(sub, existingPool, useDerived),
                         existingPool,
                         changedProducts
