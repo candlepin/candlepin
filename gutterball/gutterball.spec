@@ -22,7 +22,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.15.0
+Version: 1.0.15.0.0
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
