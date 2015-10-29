@@ -148,7 +148,7 @@ describe 'Modifier Entitlement' do
     modifier = @consumer_cp.consume_product(@modifier_product.id)
 
     # Now kill the subscription to the @bundled_product_1
-    delete_hostedtest_subscription(@bundled_pool_1.subscriptionId)
+    delete_pool_and_subscription(@bundled_pool_1)
     @cp.refresh_pools(@owner['key'])
 
     # Then refetch the modifier entitlement

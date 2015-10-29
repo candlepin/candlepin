@@ -14,18 +14,10 @@
  */
 package org.candlepin.hostedtest;
 
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.service.UniqueIdGenerator;
 
-import org.xnap.commons.i18n.I18n;
-
-import java.util.HashSet;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -53,16 +45,12 @@ public class HostedTestSubscriptionResource {
     @Inject
     private UniqueIdGenerator idGenerator;
     @Inject
-    private ProductCurator prodCurator;
-    @Inject
-    private OwnerCurator ownerCurator;
-    @Inject
-    private I18n i18n;
+    private ResolverUtil resolverUtil;
 
     /**
      * API to check if resource is alive
      *
-     * @return always returns trus
+     * @return always returns true
      */
     @GET
     @Path("/alive")
@@ -87,7 +75,7 @@ public class HostedTestSubscriptionResource {
         if (subscription.getId() == null || subscription.getId().trim().length() == 0) {
             subscription.setId(this.idGenerator.generateId());
         }
-        return adapter.createSubscription(resolveSubscription(subscription));
+        return adapter.createSubscription(resolverUtil.resolveSubscription(subscription));
     }
 
     /**
@@ -133,7 +121,7 @@ public class HostedTestSubscriptionResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Subscription updateSubscription(Subscription subscriptionNew) {
-        return adapter.updateSubscription(resolveSubscription(subscriptionNew));
+        return adapter.updateSubscription(resolverUtil.resolveSubscription(subscriptionNew));
     }
 
     /**
@@ -158,101 +146,6 @@ public class HostedTestSubscriptionResource {
     @DELETE
     public void deleteAllSubscriptions() {
         adapter.deleteAllSubscriptions();
-    }
-
-    private Product findProduct(Owner owner, String productId) {
-        Product product = this.prodCurator.lookupById(owner, productId);
-
-        if (product == null) {
-            throw new NotFoundException("Unable to find a product with the ID " + productId +
-                    " for owner :" + owner.getKey());
-        }
-
-        return product;
-    }
-
-    private Owner resolveOwner(Owner owner) {
-        if (owner == null || (owner.getKey() == null && owner.getId() == null)) {
-            throw new BadRequestException("No owner specified, or owner lacks identifying information");
-        }
-
-        if (owner.getKey() != null) {
-            owner = this.ownerCurator.lookupByKey(owner.getKey());
-
-            if (owner == null) {
-                throw new NotFoundException(i18n.tr("Unable to find an owner with the key \"{0}\"",
-                        owner.getKey()));
-            }
-        }
-        else {
-            owner = this.ownerCurator.find(owner.getId());
-
-            if (owner == null) {
-                throw new NotFoundException(i18n.tr("Unable to find an owner with the ID \"{0}\"",
-                        owner.getId()));
-            }
-        }
-
-        return owner;
-    }
-
-    private Product resolveProduct(Owner owner, Product product) {
-        if (product == null) {
-            throw new BadRequestException(
-                    i18n.tr("No product specified, or product lacks identifying information"));
-        }
-        return resolveProduct(owner, product.getId());
-    }
-
-    private Product resolveProduct(Owner owner, String productId) {
-        if (productId == null) {
-            throw new BadRequestException(
-                    i18n.tr("No product specified, or product lacks identifying information"));
-        }
-
-        // TODO: Maybe add UUID resolution as well?
-        return this.findProduct(owner, productId);
-    }
-
-    private Subscription resolveSubscription(Subscription subscription) {
-        // Impl note:
-        // We don't check that the subscription exists here, because it's
-        // entirely possible that it
-        // doesn't (i.e. during creation). We just need to make sure it's not
-        // null.
-        if (subscription == null) {
-            throw new BadRequestException(i18n.tr("No subscription specified"));
-        }
-
-        // Ensure the owner is set and is valid
-        Owner owner = this.resolveOwner(subscription.getOwner());
-        subscription.setOwner(owner);
-
-        // Ensure the specified product(s) exists for the given owner
-        subscription.setProduct(this.resolveProduct(owner, subscription.getProduct()));
-
-        if (subscription.getDerivedProduct() != null) {
-            subscription.setDerivedProduct(this.resolveProduct(owner, subscription.getDerivedProduct()));
-        }
-
-        HashSet<Product> presolved = new HashSet<Product>();
-
-        for (Product product : subscription.getProvidedProducts()) {
-            presolved.add(this.resolveProduct(owner, product));
-        }
-
-        subscription.setProvidedProducts(presolved);
-        presolved.clear();
-
-        for (Product product : subscription.getDerivedProvidedProducts()) {
-            presolved.add(this.resolveProduct(owner, product));
-        }
-
-        subscription.setDerivedProvidedProducts(presolved);
-
-        // TODO: Do we need to resolve Branding objects?
-
-        return subscription;
     }
 
 }
