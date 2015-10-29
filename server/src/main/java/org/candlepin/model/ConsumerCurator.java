@@ -33,10 +33,12 @@ import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaQuery;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.Subqueries;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.CompositeType;
@@ -667,24 +669,62 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         boolean hasContractNumbers = (contracts != null && !contracts.isEmpty());
 
         if (hasSkus || hasSubscriptionIds || hasContractNumbers) {
-            Criteria ents = crit.createCriteria("entitlements", "ents").createAlias("pool", "pool");
             if (hasSkus) {
-                ents.createCriteria("pool.product")
-                    .add(Restrictions.in("id", skus))
-                    .createCriteria("attributes").add(
-                        Restrictions.and(
+                for (String sku : skus) {
+                    DetachedCriteria subCrit = DetachedCriteria.forClass(Consumer.class, "subquery_consumer");
+
+                    if (owner != null) {
+                        subCrit.add(Restrictions.eq("owner", owner));
+                    }
+
+                    subCrit.createCriteria("entitlements").createCriteria("pool")
+                        .createCriteria("product").add(
+                            Restrictions.eq("id", sku))
+                        .createCriteria("attributes").add(Restrictions.and(
                             Restrictions.eq("name", "type"),
-                            Restrictions.eq("value", "MKT")
-                        )
+                            Restrictions.eq("value", "MKT")));
+
+                    subCrit.add(Restrictions.eqProperty("this.id", "subquery_consumer.id"));
+
+                    crit.add(Subqueries.exists(
+                        subCrit.setProjection(Projections.property("subquery_consumer.name")))
                     );
+                }
             }
             if (hasSubscriptionIds) {
-                ents.createCriteria("pool.sourceSubscription")
-                    .add(Restrictions.in("subscriptionId", subscriptionIds));
+                for (String subId : subscriptionIds) {
+                    DetachedCriteria subCrit = DetachedCriteria.forClass(Consumer.class, "subquery_consumer");
 
+                    if (owner != null) {
+                        subCrit.add(Restrictions.eq("owner", owner));
+                    }
+
+                    subCrit.createCriteria("entitlements").createCriteria("pool")
+                        .createCriteria("sourceSubscription").add(Restrictions.eq("subscriptionId", subId));
+                    subCrit.add(Restrictions.eqProperty("this.id", "subquery_consumer.id"));
+
+                    crit.add(Subqueries.exists(
+                        subCrit.setProjection(Projections.property("subquery_consumer.name")))
+                    );
+                }
             }
             if (hasContractNumbers) {
-                ents.add(Restrictions.in("pool.contractNumber", contracts));
+                for (String contract : contracts) {
+                    DetachedCriteria subCrit = DetachedCriteria.forClass(Consumer.class, "subquery_consumer");
+
+                    if (owner != null) {
+                        subCrit.add(Restrictions.eq("owner", owner));
+                    }
+
+                    subCrit.createCriteria("entitlements").createCriteria("pool").add(
+                        Restrictions.eq("contractNumber", contract)
+                    );
+                    subCrit.add(Restrictions.eqProperty("this.id", "subquery_consumer.id"));
+
+                    crit.add(Subqueries.exists(
+                        subCrit.setProjection(Projections.property("subquery_consumer.name")))
+                    );
+                }
             }
         }
 

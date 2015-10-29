@@ -515,7 +515,6 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         assertEquals(consumer, resultList.get(0));
     }
 
-
     @Test
     public void testSearchByContractNumber() {
         // Create another consumer to make sure we're not just retrieving everything
@@ -644,6 +643,245 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
             owner, null, null, null, null, null, skus, null, null, null);
         resultList = results.getPageData();
         assertTrue(resultList.isEmpty());
+    }
+
+    @Test
+    public void testSearchBySkuIsConjunction() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer = consumerCurator.create(consumer);
+
+        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
+        otherConsumer = consumerCurator.create(otherConsumer);
+
+        Product p = new Product("SKU1", "Product 1", owner);
+        p.addAttribute(new ProductAttribute("type", "MKT"));
+
+        Product p2 = new Product("SKU2", "Product 2", owner);
+        p2.addAttribute(new ProductAttribute("type", "MKT"));
+
+        productCurator.create(p);
+        productCurator.create(p2);
+
+        Pool pool = new Pool(
+            owner,
+            p,
+            new HashSet<Product>(),
+            10L,
+            TestDateUtil.date(2010, 1, 1),
+            TestDateUtil.date(2030, 1, 1),
+            "CONTRACT_123",
+            "ACCOUNT_456",
+            "ORDER_789"
+        );
+
+        Pool pool2 = new Pool(
+            owner,
+            p2,
+            new HashSet<Product>(),
+            10L,
+            TestDateUtil.date(2010, 1, 1),
+            TestDateUtil.date(2030, 1, 1),
+            "CONTRACT_XXX",
+            "ACCOUNT_456",
+            "ORDER_789"
+        );
+
+        pool.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        pool2.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        poolCurator.create(pool);
+        poolCurator.create(pool2);
+
+        EntitlementCertificate cert = createEntitlementCertificate("entkey", "entcert");
+
+        Entitlement e = createEntitlement(owner, consumer, pool, cert);
+        entitlementCurator.create(e);
+
+        Entitlement e2 = createEntitlement(owner, consumer, pool2, cert);
+        entitlementCurator.create(e2);
+
+        Entitlement e3 = createEntitlement(owner, otherConsumer, pool2, cert);
+        entitlementCurator.create(e3);
+
+        List<String> skus = new ArrayList<String>();
+        skus.add("SKU1");
+        skus.add("SKU2");
+        Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
+            owner, null, null, null, null, null, skus, null, null, null);
+        List<Consumer> resultList = results.getPageData();
+        assertEquals(1, resultList.size());
+        assertEquals(consumer, resultList.get(0));
+
+        skus.clear();
+        skus.add("SKU2");
+        results = consumerCurator.searchOwnerConsumers(
+            owner, null, null, null, null, null, skus, null, null, null);
+        resultList = results.getPageData();
+        assertEquals(2, resultList.size());
+
+        skus.clear();
+        skus.add("SKU1");
+        results = consumerCurator.searchOwnerConsumers(
+            owner, null, null, null, null, null, skus, null, null, null);
+        resultList = results.getPageData();
+        assertEquals(1, resultList.size());
+        assertEquals(consumer, resultList.get(0));
+    }
+
+    @Test
+    public void testSearchBySkuIsWithinOneOwner() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer = consumerCurator.create(consumer);
+
+        Owner owner2 = new Owner("test-owner2", "Test Owner2");
+        owner2 = ownerCurator.create(owner2);
+        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner2, ct);
+        otherConsumer = consumerCurator.create(otherConsumer);
+
+        // Two owners, two different products, but with the same SKU
+        Product p = new Product("SKU1", "Product 1", owner);
+        p.addAttribute(new ProductAttribute("type", "MKT"));
+
+        Product p2 = new Product("SKU1", "Product 1", owner2);
+        p2.addAttribute(new ProductAttribute("type", "MKT"));
+
+        productCurator.create(p);
+        productCurator.create(p2);
+
+        Pool pool = new Pool(
+            owner,
+            p,
+            new HashSet<Product>(),
+            10L,
+            TestDateUtil.date(2010, 1, 1),
+            TestDateUtil.date(2030, 1, 1),
+            "CONTRACT_123",
+            "ACCOUNT_456",
+            "ORDER_789"
+        );
+
+        Pool pool2 = new Pool(
+            owner2,
+            p2,
+            new HashSet<Product>(),
+            10L,
+            TestDateUtil.date(2010, 1, 1),
+            TestDateUtil.date(2030, 1, 1),
+            "CONTRACT_123",
+            "ACCOUNT_456",
+            "ORDER_789"
+        );
+
+        pool.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        poolCurator.create(pool);
+
+        pool2.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        poolCurator.create(pool2);
+
+        EntitlementCertificate cert = createEntitlementCertificate("entkey", "entcert");
+
+        Entitlement e = createEntitlement(owner, consumer, pool, cert);
+        entitlementCurator.create(e);
+
+        Entitlement e2 = createEntitlement(owner2, otherConsumer, pool2, cert);
+        entitlementCurator.create(e2);
+
+        List<String> skus = new ArrayList<String>();
+        skus.add("SKU1");
+        Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
+            owner, null, null, null, null, null, skus, null, null, null);
+        List<Consumer> resultList = results.getPageData();
+        assertEquals(1, resultList.size());
+        assertEquals(consumer, resultList.get(0));
+
+        results = consumerCurator.searchOwnerConsumers(
+            owner2, null, null, null, null, null, skus, null, null, null);
+        resultList = results.getPageData();
+        assertEquals(1, resultList.size());
+        assertEquals(otherConsumer, resultList.get(0));
+
+        // Searching with no owner cuts across the whole data set
+        results = consumerCurator.searchOwnerConsumers(
+                null, null, null, null, null, null, skus, null, null, null);
+        resultList = results.getPageData();
+        assertEquals(2, resultList.size());
+    }
+
+    @Test
+    public void testSearchByContractNumberIsConjunction() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer = consumerCurator.create(consumer);
+
+        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
+        otherConsumer = consumerCurator.create(otherConsumer);
+
+        Product p = new Product("SKU1", "Product 1", owner);
+        p.addAttribute(new ProductAttribute("type", "MKT"));
+
+        productCurator.create(p);
+
+        Pool pool = new Pool(
+            owner,
+            p,
+            new HashSet<Product>(),
+            10L,
+            TestDateUtil.date(2010, 1, 1),
+            TestDateUtil.date(2030, 1, 1),
+            "CONTRACT_123",
+            "ACCOUNT_456",
+            "ORDER_789"
+        );
+
+        Pool pool2 = new Pool(
+            owner,
+            p,
+            new HashSet<Product>(),
+            10L,
+            TestDateUtil.date(2010, 1, 1),
+            TestDateUtil.date(2030, 1, 1),
+            "CONTRACT_XXX",
+            "ACCOUNT_456",
+            "ORDER_789"
+        );
+
+        pool.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        pool2.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        poolCurator.create(pool);
+        poolCurator.create(pool2);
+
+        EntitlementCertificate cert = createEntitlementCertificate("entkey", "entcert");
+
+        Entitlement e = createEntitlement(owner, consumer, pool, cert);
+        entitlementCurator.create(e);
+
+        Entitlement e2 = createEntitlement(owner, consumer, pool2, cert);
+        entitlementCurator.create(e2);
+
+        Entitlement e3 = createEntitlement(owner, otherConsumer, pool2, cert);
+        entitlementCurator.create(e3);
+
+        List<String> contracts = new ArrayList<String>();
+        contracts.add("CONTRACT_123");
+        contracts.add("CONTRACT_XXX");
+        Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
+            owner, null, null, null, null, null, null, null, contracts, null);
+        List<Consumer> resultList = results.getPageData();
+        assertEquals(1, resultList.size());
+        assertEquals(consumer, resultList.get(0));
+
+        contracts.clear();
+        contracts.add("CONTRACT_XXX");
+        results = consumerCurator.searchOwnerConsumers(
+            owner, null, null, null, null, null, null, null, contracts, null);
+        resultList = results.getPageData();
+        assertEquals(2, resultList.size());
+
+        contracts.clear();
+        contracts.add("CONTRACT_123");
+        results = consumerCurator.searchOwnerConsumers(
+            owner, null, null, null, null, null, null, null, contracts, null);
+        resultList = results.getPageData();
+        assertEquals(1, resultList.size());
+        assertEquals(consumer, resultList.get(0));
     }
 
     @Test
