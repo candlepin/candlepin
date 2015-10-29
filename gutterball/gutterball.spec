@@ -22,7 +22,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.15.0.0
+Version: 1.0.15.0.1
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -215,6 +215,11 @@ rm -rf %{buildroot}
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
+* Thu Oct 29 2015 Alex Wood <awood@redhat.com> 1.0.15.0.1-1
+- Branch off gutterball-1.15.0 tag for a hotfix. (awood@redhat.com)
+- 1269045: Addressed Gutterball DB Growth Issues (mstead@redhat.com)
+- Rename ComplianceReason key column to reasonkey (mstead@redhat.com)
+
 * Tue Apr 28 2015 Michael Stead <mstead@redhat.com> 1.0.15.0-1
 - Adjusted default QPID connection timeouts/retries (mstead@redhat.com)
 - Properly close qpid connection on shutdown (mstead@redhat.com)
