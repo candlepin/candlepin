@@ -115,14 +115,13 @@ public class CrlGenerator {
         List<CertificateSerial> serials =
             this.certificateSerialCurator.retrieveTobeCollectedSerials();
         for (CertificateSerial cs : serials) {
-            entries.add(new X509CRLEntryWrapper(cs.getSerial(),
-                   new Date()));
+            entries.add(new X509CRLEntryWrapper(cs.getSerial(), new Date()));
             cs.setCollected(true);
         }
+
         if (log.isTraceEnabled()) {
-            log.trace("Added #" + serials.size() + " new entries to the CRL");
-        }
-        if (log.isTraceEnabled()) {
+            log.trace("Added #{} new entries to the CRL", serials.size());
+
             StringBuilder builder = new StringBuilder("[ ");
             for (CertificateSerial cs : serials) {
                 builder.append(cs.getSerial()).append(", ");
@@ -130,11 +129,10 @@ public class CrlGenerator {
             builder.append(" ]");
             log.trace("Newly added serials = " + builder.toString());
         }
+
         this.certificateSerialCurator.saveOrUpdateAll(serials);
-        if (log.isDebugEnabled()) {
-            log.debug("Total number of serials retrieved from db: #" +
-                entries.size());
-        }
+
+        log.debug("Total number of serials retrieved from db: #{}", entries.size());
 
         return entries;
     }
@@ -154,15 +152,11 @@ public class CrlGenerator {
         for (X509CRLEntry entry : revokedEntries) {
             map.put(entry.getSerialNumber(), entry);
         }
-        for (CertificateSerial cs : this.certificateSerialCurator
-            .getExpiredSerials()) {
+        for (CertificateSerial cs : this.certificateSerialCurator.getExpiredSerials()) {
             X509CRLEntry entry = map.get(cs.getSerial());
             if (entry != null) {
                 revokedEntries.remove(entry);
-                if (log.isTraceEnabled()) {
-                    log.trace("Serial #" + cs.getId() +
-                        " has expired. Removing it from CRL");
-                }
+                log.trace("Serial #{} has expired. Removing it from CRL", cs.getId());
             }
         }
         return revokedEntries;
@@ -178,9 +172,7 @@ public class CrlGenerator {
     public X509CRL removeEntries(X509CRL x509crl, List<CertificateSerial> serials) {
         List<X509CRLEntryWrapper> crlEntries = null;
         BigInteger no = getCRLNumber(x509crl);
-        if (log.isDebugEnabled()) {
-            log.debug("Old CRLNumber is : " + no);
-        }
+        log.debug("Old CRLNumber is : {}", no);
 
         if (x509crl != null) {
             Set<? extends X509CRLEntry> revokedEntries = x509crl
@@ -202,10 +194,8 @@ public class CrlGenerator {
                 X509CRLEntry entry = map.get(cs.getSerial());
                 if (entry != null) {
                     map.remove(cs.getSerial());
-                    if (log.isTraceEnabled()) {
-                        log.trace("Serial #" + cs.getId() +
-                            " has been found. Removing it from CRL");
-                    }
+                    log.trace("Serial #{} has been found. Removing it from CRL", cs.getId());
+
                     // put them back in circulation
                     cs.setCollected(false);
                 }

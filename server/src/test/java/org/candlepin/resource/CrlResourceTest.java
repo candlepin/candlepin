@@ -26,6 +26,7 @@ import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CrlGenerator;
 import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.pki.PKIUtility;
 import org.candlepin.util.CrlFileUtil;
 
 import org.junit.Test;
@@ -46,12 +47,13 @@ public class CrlResourceTest {
         CrlGenerator crlgen = mock(CrlGenerator.class);
         CrlFileUtil fileutil = mock(CrlFileUtil.class);
         CertificateSerialCurator sercur = mock(CertificateSerialCurator.class);
+        PKIUtility pkiUtil = mock(PKIUtility.class);
         Configuration config = new ConfigForTesting();
         X509CRL crl = mock(X509CRL.class);
         when(fileutil.readCRLFile(any(File.class))).thenReturn(crl);
         when(crlgen.removeEntries(eq(crl), any(List.class))).thenReturn(crl);
 
-        CrlResource res = new CrlResource(crlgen, fileutil, config, sercur);
+        CrlResource res = new CrlResource(crlgen, fileutil, config, sercur, pkiUtil);
         String[] ids = {"10"};
         res.unrevoke(ids);
         verify(crlgen, atLeastOnce()).removeEntries(eq(crl), any(List.class));

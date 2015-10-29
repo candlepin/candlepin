@@ -27,10 +27,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509CRL;
@@ -66,6 +69,21 @@ public class CrlFileUtilTest {
         when(crl.getEncoded()).thenReturn(Base64.encodeBase64("encoded".getBytes()));
         when(crlGenerator.syncCRLWithDB(any(X509CRL.class))).thenReturn(crl);
         when(pkiUtility.getPemEncoded(any(X509CRL.class))).thenReturn(new byte [2]);
+
+        doAnswer(new Answer() {
+            public Object answer(InvocationOnMock invocation) {
+                try {
+                    ((OutputStream) invocation.getArguments()[1]).write("some data".getBytes());
+                }
+                catch (Exception e) {
+                    // Don't care.
+                }
+
+                return null;
+            }
+        }).when(pkiUtility).writePemEncoded(any(X509CRL.class), any(OutputStream.class));
+
+
         cfu.writeCRLFile(crlFile, crl);
         File f = new File("/tmp/biteme.crl");
         assertTrue(f.exists());
@@ -82,7 +100,20 @@ public class CrlFileUtilTest {
             X509CRL crl = mock(X509CRL.class);
             when(crl.getEncoded()).thenReturn(Base64.encodeBase64("encoded".getBytes()));
             when(crlGenerator.syncCRLWithDB(any(X509CRL.class))).thenReturn(crl);
-            when(pkiUtility.getPemEncoded(any(X509CRL.class))).thenReturn(new byte [2]);
+
+            doAnswer(new Answer() {
+                public Object answer(InvocationOnMock invocation) {
+                    try {
+                        ((OutputStream) invocation.getArguments()[1]).write("some data".getBytes());
+                    }
+                    catch (Exception e) {
+                        // Don't care.
+                    }
+
+                    return null;
+                }
+            }).when(pkiUtility).writePemEncoded(any(X509CRL.class), any(OutputStream.class));
+
             X509CRL updatedcrl = cfu.readCRLFile(f);
             cfu.writeCRLFile(f, updatedcrl);
             assertTrue(f.length() > 0);
@@ -121,7 +152,20 @@ public class CrlFileUtilTest {
             assertEquals(0, f.length());
             X509CRL crl = mock(X509CRL.class);
             when(crl.getEncoded()).thenReturn(Base64.encodeBase64("encoded".getBytes()));
-            when(pkiUtility.getPemEncoded(any(X509CRL.class))).thenReturn(new byte [2]);
+
+            doAnswer(new Answer() {
+                public Object answer(InvocationOnMock invocation) {
+                    try {
+                        ((OutputStream) invocation.getArguments()[1]).write("some data".getBytes());
+                    }
+                    catch (Exception e) {
+                        // Don't care.
+                    }
+
+                    return null;
+                }
+            }).when(pkiUtility).writePemEncoded(any(X509CRL.class), any(OutputStream.class));
+
             cfu.writeCRLFile(f, crl);
             assertTrue(f.length() > 0);
         }

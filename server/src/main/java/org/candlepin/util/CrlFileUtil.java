@@ -23,9 +23,9 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateException;
@@ -84,8 +84,7 @@ public class CrlFileUtil {
                     in.close();
                 }
                 catch (IOException e) {
-                    log.error(
-                        "exception when closing a CRL file: {}", file.getAbsolutePath());
+                    log.error("An exception occurred while closing a CRL file: {}", file.getAbsolutePath());
                     // we tried, we failed. better luck next time!
                 }
             }
@@ -93,16 +92,20 @@ public class CrlFileUtil {
         }
     }
 
-    public byte[] writeCRLFile(File file, X509CRL crl)
+    public void writeCRLFile(File file, X509CRL crl)
         throws CRLException, CertificateException, IOException {
 
-        byte[] encoded = pkiUtility.getPemEncoded(crl);
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        FileOutputStream stream = null;
         lock.writeLock().lock();
         try {
-            stream.write(encoded);
-            log.info("Completed generating CRL. Writing it to disk");
-            FileUtils.writeByteArrayToFile(file, stream.toByteArray());
+            log.info("Generating CRL and writing it to disk");
+
+            if (file.getParentFile() != null) {
+                FileUtils.forceMkdir(file.getParentFile());
+            }
+
+            stream = new FileOutputStream(file);
+            pkiUtility.writePemEncoded(crl, stream);
         }
         finally {
             if (stream != null) {
@@ -110,13 +113,10 @@ public class CrlFileUtil {
                     stream.close();
                 }
                 catch (IOException e) {
-                    log.error(
-                        "exception when closing a CRL file: {}", file.getAbsolutePath());
+                    log.error("An exception occurred while closing a CRL file: {}", file.getAbsolutePath());
                 }
             }
             lock.writeLock().unlock();
         }
-
-        return encoded;
     }
 }
