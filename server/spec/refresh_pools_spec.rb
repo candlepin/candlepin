@@ -8,8 +8,11 @@ describe 'Refresh Pools' do
   include CandlepinMethods
   include VirtHelper
 
+  before(:each) do
+    pending("candlepin running in standalone mode") if not is_hosted?
+  end
+
   it 'creates a valid job' do
-    pending("candlepin not running in standalone mode") if not is_hosted?
     owner = create_owner random_string('test_owner')
 
     status = @cp.refresh_pools(owner['key'], true)
