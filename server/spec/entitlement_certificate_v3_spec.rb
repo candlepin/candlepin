@@ -187,9 +187,7 @@ describe 'Entitlement Certificate V3' do
     @content_2 = create_content({:content_url => '/content/beta/rhel/$releasever/$basearch/source/SRPMS',})
     @cp.add_content_to_product(@owner['key'], @product.id, @content_2.id, true)
     #refresh the subscription - product resolution will take care of adding the content automatically
-    sub = get_hostedtest_subscription(@pool.subscriptionId)
-    update_hostedtest_subscription(sub)
-    @cp.refresh_pools(@owner['key'], true)
+    refresh_upstream_subscription(@pool)
     entitlement = @system.consume_product(@product.id)[0]
 
     json_body = extract_payload(entitlement.certificates[0]['cert'])
@@ -213,9 +211,7 @@ describe 'Entitlement Certificate V3' do
       @cp.add_content_to_product(@owner['key'], @product.id, content.id, true)
     end
     #refresh the subscription - product resolution will take care of adding the content automatically
-    sub = get_hostedtest_subscription(@pool.subscriptionId)
-    update_hostedtest_subscription(sub)
-    @cp.refresh_pools(@owner['key'])
+    refresh_upstream_subscription(@pool)
     entitlement = @system.consume_product(@product.id)[0]
 
     json_body = extract_payload(entitlement.certificates[0]['cert'])

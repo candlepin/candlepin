@@ -44,7 +44,7 @@ describe 'Import', :serial => true do
           :sockets=>'8'
       }
     })
-    datacenter_sub = create_pool_and_subscription(@owner['key'], stacked_datacenter_product.id,
+    datacenter_pool = create_pool_and_subscription(@owner['key'], stacked_datacenter_product.id,
       10, [], '222', '', '', nil, nil,
       {
         :derived_product_id => derived_product.id
@@ -66,7 +66,7 @@ describe 'Import', :serial => true do
 
     # remove client at 'host'
     consumer_client.unregister consumer_client.uuid
-    @cp.delete_subscription(datacenter_sub['id'])
+    delete_pool_and_subscription(datacenter_pool)
 
     # import to make org at 'distributor'
     import_user_client = user_client(@dist_owner, random_string("user"))

@@ -1004,6 +1004,10 @@ class Candlepin
     return post("/owners/#{owner_key}/pools", pool)
   end
 
+  def update_pool(owner_key, pool)
+    put("/owners/#{owner_key}/pools", pool)
+  end
+
   def list_activation_keys(owner_key=nil)
     if owner_key.nil?
       return get("/activation_keys")

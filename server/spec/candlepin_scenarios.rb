@@ -109,7 +109,7 @@ module CandlepinMethods
     @cp.create_batch_content(owner, contents)
   end
 
-  def ensure_hosted()
+  def ensure_hostedtest_resource()
     if is_hosted? && !is_hostedtest_alive?
       raise "Could not find hostedtest rest API. Please add the following to candlepin.conf:\n" \
           " module.config.hosted.configuration.module=org.candlepin.hostedtest.AdapterOverrideModule"
@@ -130,7 +130,7 @@ module CandlepinMethods
     params[:provided_products] = provided_products
     pool = nil
     if is_hosted?
-      ensure_hosted
+      ensure_hostedtest_resource
       sub = create_hostedtest_subscription(owner_key, product_id, quantity, params)
       active_on = Date.strptime(sub.startDate, "%Y-%m-%d")+1
       @cp.refresh_pools(owner_key, true)
@@ -145,11 +145,41 @@ module CandlepinMethods
 
   def delete_pool_and_subscription(pool)
     if is_hosted?
-      ensure_hosted
+      ensure_hostedtest_resource
       delete_hostedtest_subscription(pool.subscriptionId)
       @cp.refresh_pools(pool['owner']['key'], true)
     else
       @cp.delete_pool(pool.id)
+    end
+  end
+
+  def get_pool_or_subscription(pool)
+    if is_hosted?
+      ensure_hostedtest_resource
+      return get_hostedtest_subscription(pool.subscriptionId)
+    else
+      return pool
+    end
+  end
+
+  def update_pool_or_subscription(subOrPool)
+    if is_hosted?
+      ensure_hostedtest_resource
+      update_hostedtest_subscription(subOrPool)
+      active_on = Date.strptime(subOrPool.startDate, "%Y-%m-%d")+1
+      @cp.refresh_pools(subOrPool['owner']['key'], true)
+      sleep 1
+    else
+      @cp.update_pool(subOrPool['owner']['key'], subOrPool)
+    end
+  end
+
+  def refresh_upstream_subscription(pool)
+    if is_hosted?
+      ensure_hostedtest_resource
+      sub = get_hostedtest_subscription(pool.subscriptionId)
+      update_hostedtest_subscription(sub)
+      @cp.refresh_pools(pool['owner']['key'], true)
     end
   end
 

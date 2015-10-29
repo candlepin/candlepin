@@ -12,15 +12,13 @@ describe 'Entitlement Certificate' do
 
   def change_dt_and_qty
       pool = @cp.list_owner_pools(@owner['key'])[0]
-      sub = get_hostedtest_subscription(pool.subscriptionId)
-      sub.endDate = sub.endDate.to_date + 10
-      sub.startDate = sub.startDate.to_date - 10
-      sub.quantity = sub.quantity + 10
+      poolOrSub = get_pool_or_subscription(pool)
+      poolOrSub.endDate = poolOrSub.endDate.to_date + 10
+      poolOrSub.startDate = poolOrSub.startDate.to_date - 10
+      poolOrSub.quantity = poolOrSub.quantity + 10
 
-      update_hostedtest_subscription(sub)
-      @cp.refresh_pools(@owner['key'], true)
-      sleep 2
-      return sub
+      update_pool_or_subscription(poolOrSub)
+      return poolOrSub
   end
 
   before(:each) do
@@ -83,18 +81,16 @@ describe 'Entitlement Certificate' do
   end
 
   it 'will be regenerated when changing existing subscription\'s end date' do
-    sub = get_hostedtest_subscription(@pool.subscriptionId)
-    sub.endDate = sub.endDate.to_date + 2
+    subOrPool = get_pool_or_subscription(@pool)
+    subOrPool.endDate = subOrPool.endDate.to_date + 2
     old_cert = @system.list_certificates()[0]
-    update_hostedtest_subscription(sub)
-
-    @cp.refresh_pools(@owner['key'])
+    update_pool_or_subscription(subOrPool)
 
     new_cert = @system.list_certificates()[0]
     old_cert.serial.id.should_not == new_cert.serial.id
 
     ent = @system.get_entitlement(@entitlement.id)
-    sub.endDate.should == ent.endDate.to_date
+    subOrPool.endDate.should == ent.endDate.to_date
   end
 
   it 'single entitlement in excess will be deleted when existing subscription quantity is decreased' do
@@ -105,11 +101,9 @@ describe 'Entitlement Certificate' do
 
       @system.consume_pool(pool['id'], {:quantity => 6})
       @system.list_certificates().size.should == 1
-      sub = get_hostedtest_subscription(pool.subscriptionId)
-      sub.quantity = sub.quantity.to_i - 5
-      update_hostedtest_subscription(sub)
-
-      @cp.refresh_pools(@owner['key'])
+      subOrPool = get_pool_or_subscription(pool)
+      subOrPool.quantity = subOrPool.quantity.to_i - 5
+      update_pool_or_subscription(subOrPool)
 
       @system.list_certificates().size.should == 0
   end
@@ -124,10 +118,9 @@ describe 'Entitlement Certificate' do
           @system.consume_pool(pool['id'], {:quantity => 2})
       end
       @system.list_certificates().size.should == 5
-      sub = get_hostedtest_subscription(pool.subscriptionId)
-      sub.quantity = sub.quantity.to_i - 5
-      update_hostedtest_subscription(sub)
-      @cp.refresh_pools(@owner['key'])
+      subOrPool = get_pool_or_subscription(pool)
+      subOrPool.quantity = subOrPool.quantity.to_i - 5
+      update_pool_or_subscription(subOrPool)
       @system.list_certificates().size.should == 2
   end
 
@@ -139,11 +132,11 @@ describe 'Entitlement Certificate' do
   end
 
   it 'will be regenerated and dates will have the same values as that of the subscription which was changed' do
-      sub = change_dt_and_qty()
+      poolOrSub = change_dt_and_qty()
       new_cert = @system.list_certificates()[0]
       x509 = OpenSSL::X509::Certificate.new(new_cert['cert'])
-      sub['startDate'].should == x509.not_before().strftime('%Y-%m-%d').to_date
-      sub['endDate'].should == x509.not_after().strftime('%Y-%m-%d').to_date
+      poolOrSub['startDate'].should == x509.not_before().strftime('%Y-%m-%d').to_date
+      poolOrSub['endDate'].should == x509.not_after().strftime('%Y-%m-%d').to_date
   end
 
   it "won't let one consumer regenerate another's certificates" do

@@ -62,6 +62,7 @@ import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -1125,42 +1126,16 @@ public class OwnerResource {
     }
 
     /**
-     * Creates a custom pool for an Owner.
-     *
-     * Floating pools are not tied to any upstream subscription, and are most commonly
-     * used for custom content delivery in Satellite.
-     *
-     * @return a Pool object
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/pools")
-    public Pool createPool(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        Pool pool) {
-
-        log.info("Creating custom pool for owner {}: {}" + ownerKey, pool);
-
-        // Correct owner & products
-        Owner owner = findOwner(ownerKey);
-        pool.setOwner(owner);
-
-        pool = resolvePool(pool);
-        return poolManager.createAndEnrichPools(pool);
-    }
-
-    /**
      * Updates a Subscription for an Owner
      *
+     * @deprecated Please update pools directly with POST /pools.
      * @httpcode 404
      * @httpcode 200
      */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/subscriptions")
+    @Deprecated
     public void updateSubscription(Subscription subscription) {
         if (this.poolManager.getMasterPoolBySubscriptionId(subscription.getId()) == null) {
             throw new NotFoundException(i18n.tr(
@@ -1214,6 +1189,62 @@ public class OwnerResource {
         }
 
         return RefreshPoolsJob.forOwner(owner, lazyRegen);
+    }
+
+    /**
+     * Creates a custom pool for an Owner. Floating pools are not tied to any
+     * upstream subscription, and are most commonly used for custom content
+     * delivery in Satellite.
+     * Also helps in on-site deployment testing
+     *
+     * @return a Pool object
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/pools")
+    public Pool createPool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey, Pool pool) {
+
+        log.info("Creating custom pool for owner {}: {}" + ownerKey, pool);
+
+        // Correct owner & products
+        Owner owner = findOwner(ownerKey);
+        pool.setOwner(owner);
+
+        pool = resolvePool(pool);
+        return poolManager.createAndEnrichPools(pool);
+    }
+
+    /**
+     * Updates a pool for an Owner.
+     * assumes this is a normal pool, and errors out otherwise cause we cannot
+     * create master pools from bonus pools
+     * TODO: while this method replaces the now deprecated updateSubsciption, it
+     * still uses it underneath. We need to re-implement the wheel like we did
+     * in createPool
+     *
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/pools")
+    public void updatePool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+            Pool pool) {
+
+        if (pool.getType() != PoolType.NORMAL) {
+            throw new BadRequestException(i18n.tr("Cannot update bonus pools, as they are auto generated"));
+        }
+
+        // convert to subscription so we can use updateSubscription
+        Subscription subscription = new Subscription(pool.getOwner(), pool.getProduct(),
+                pool.getProvidedProducts(), pool.getQuantity(), pool.getStartDate(), pool.getEndDate(),
+                new Date());
+        subscription.setId(pool.getSubscriptionId());
+        updateSubscription(subscription);
     }
 
     /**
