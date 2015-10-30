@@ -111,11 +111,13 @@ module CandlepinMethods
 
   def ensure_hostedtest_resource()
     if is_hosted? && !is_hostedtest_alive?
-      raise "Could not find hostedtest rest API. Please add the following to candlepin.conf:\n" \
+      raise "Could not find hostedtest rest API. Please run \'deploy -ha\' or add the following to candlepin.conf:\n" \
           " module.config.hosted.configuration.module=org.candlepin.hostedtest.AdapterOverrideModule"
     end
   end
 
+  # Lets spec tests be agnostic of what mode we are testing in, standalone or hosted.
+  # Always returns the main pool that was created
   def create_pool_and_subscription(owner_key, product_id, quantity=1,
                           provided_products=[], contract_number='',
                           account_number='', order_number='',
@@ -135,7 +137,7 @@ module CandlepinMethods
       active_on = Date.strptime(sub.startDate, "%Y-%m-%d")+1
       @cp.refresh_pools(owner_key, true)
       sleep 1
-      pool = find_pool(owner_key, sub['id'], activeon=active_on, true)
+      pool = find_main_pool(owner_key, sub['id'], activeon=active_on, true)
     else
       params[:source_subscription] = { 'id' => random_string('source_sub_') }
       pool = @cp.create_pool(owner_key, product_id, params)
@@ -143,6 +145,9 @@ module CandlepinMethods
     return pool
   end
 
+  # Lets spec tests be agnostic of what mode we are testing in, standalone or hosted.
+  # if we are running in hosted mode, delete the upstream subscription and refresh pools.
+  # else, simply delete the pool
   def delete_pool_and_subscription(pool)
     if is_hosted?
       ensure_hostedtest_resource
@@ -153,6 +158,13 @@ module CandlepinMethods
     end
   end
 
+  # Lets spec tests be agnostic of what mode we are testing in, standalone or hosted.
+  # This method is used when we need to update the upstream subscription's details.
+  # first we fetch the upstrean pool ( if standalone mode ) or subscription ( if hosted mode )
+  # using get_pool_or_subscription(pool) and then use update_pool_or_subscription
+  # to update the upstream entity.
+  #
+  # input is always a pool, but the out may be either a subscription or a pool
   def get_pool_or_subscription(pool)
     if is_hosted?
       ensure_hostedtest_resource
@@ -162,6 +174,13 @@ module CandlepinMethods
     end
   end
 
+  # Lets spec tests be agnostic of what mode we are testing in, standalone or hosted.
+  # This method is used when we need to update the upstream subscription's details.
+  # first we fetch the upstrean pool ( if standalone mode ) or subscription ( if hosted mode )
+  # using get_pool_or_subscription(pool) and then use update_pool_or_subscription
+  # to update the upstream entity.
+  #
+  # input may be either a subscription or a pool, and there is no output
   def update_pool_or_subscription(subOrPool)
     if is_hosted?
       ensure_hostedtest_resource
@@ -178,6 +197,12 @@ module CandlepinMethods
     end
   end
 
+  # Lets spec tests be agnostic of what mode we are testing in, standalone or hosted.
+  # This method is used when we need to update the dependent entities of a 
+  # upstream subscription or pool. simply fetching and updating the subscription forces
+  # a re-resolve of products, owners, etc.
+  #
+  # input is alwasy a pool, and there is no output
   def refresh_upstream_subscription(pool)
     if is_hosted?
       ensure_hostedtest_resource
@@ -284,7 +309,7 @@ module CandlepinMethods
   # a specific subscription ID. (we often want to verify what pool was used,
   # but the pools are created indirectly after a refresh so it's hard to
   # locate a specific reference without this)
-  def find_pool(owner_key, sub_id, activeon=nil, return_normal)
+  def find_main_pool(owner_key, sub_id, activeon=nil, return_normal)
     pools = @cp.list_owner_pools(owner_key, {:activeon => activeon})
     pools.each do |pool|
       if pool['subscriptionId'] == sub_id && (!return_normal || pool['type'] == 'NORMAL')

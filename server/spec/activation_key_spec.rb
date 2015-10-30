@@ -200,5 +200,4 @@ describe 'Activation Keys' do
       @cp.create_activation_key(@owner['key'], "name", "a" * 256)
     }.should raise_exception(RestClient::BadRequest)
   end
-
 end
