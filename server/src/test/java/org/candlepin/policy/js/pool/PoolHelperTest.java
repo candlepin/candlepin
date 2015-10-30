@@ -21,12 +21,14 @@ import static org.mockito.Mockito.*;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.policy.js.AttributeHelper;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 
@@ -34,7 +36,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -56,7 +60,6 @@ public class PoolHelperTest {
         pm = mock(PoolManager.class);
         psa = mock(ProductServiceAdapter.class);
         ent = mock(Entitlement.class);
-
         Configuration config = mock(Configuration.class);
         when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
 
@@ -208,4 +211,37 @@ public class PoolHelperTest {
         assertTrue(providedProducts.contains(derivedProduct2));
     }
 
+    @Test
+    public void clonePoolTest() {
+        Product product = TestUtil.createProduct(owner);
+        Product product2 = TestUtil.createProduct(owner);
+        Map<String, String> attributes = new HashMap<String, String>();
+        for (int i = 0; i < 3; i++) {
+            attributes.put("a" + i, "b" + i);
+        }
+        Branding branding = new Branding("id", "type", "name");
+        Pool pool = TestUtil.createPool(owner, product);
+        pool.getBranding().add(branding);
+        PoolHelper ph = new PoolHelper(pm, ent);
+        AttributeHelper ah = new AttributeHelper();
+        String quant = "unlimited";
+        Pool clone = ph.clonePool(pool, product2, quant, attributes, "TaylorSwift", null);
+        assertEquals(owner, clone.getOwner());
+        assertEquals(new Long(-1L), clone.getQuantity());
+        assertEquals(product2, clone.getProduct());
+        assertEquals(attributes.size() + 1, clone.getAttributes().size());
+        for (int i = 0; i < 3; i++) {
+            assertEquals("b" + i, clone.getAttributeValue("a" + i));
+        }
+        assertNotEquals(pool.getSourceSubscription(), clone);
+        assertEquals(pool.getSourceSubscription().getSubscriptionId(), clone.getSubscriptionId());
+        assertEquals(pool.getSourceSubscription().getSubscriptionId(),
+                clone.getSourceSubscription().getSubscriptionId());
+        assertEquals("TaylorSwift",
+                clone.getSourceSubscription().getSubscriptionSubKey());
+
+        assertEquals(1, clone.getBranding().size());
+        Branding brandingClone = clone.getBranding().iterator().next();
+        assertEquals(branding, brandingClone);
+    }
 }
