@@ -62,3 +62,9 @@ org.quartz.dataSource.myDS.maxConnections=5
 <%- end if custom_logging -%>
 
 <%= additional_properties %>
+
+<%- if ENV['hostedtest'] -%>
+#overriding custom.yaml settings to ensure hostedtest resources are available
+candlepin.standalone=false
+module.config.hosted.configuration.module=org.candlepin.hostedtest.AdapterOverrideModule
+<%- end -%>

@@ -208,7 +208,7 @@ define "candlepin" do
     download artifact(LOGDRIVER) => 'http://awood.fedorapeople.org/ivy/candlepin/logdriver/logdriver/1.0/logdriver-1.0.jar'
   end
   download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
-
+  include_hostedtest = ENV['hostedtest']
   desc "Common Candlepin Code"
   define "common" do
     project.version = spec_version('candlepin-common.spec.tmpl')
@@ -500,6 +500,7 @@ define "candlepin" do
       war.classes << msgfmt.destination if msgfmt.enabled?
       web_inf = war.path('WEB-INF/classes')
       web_inf.path(candlepin_path).include("#{compiled_cp_path}/**")
+      web_inf.path(candlepin_path).exclude('*hostedtest*') unless include_hostedtest
     end
 
     pom.plugin_procs << Proc.new do |xml, proj|

@@ -106,7 +106,7 @@ create_var_cache_candlepin() {
 }
 
 autoconf() {
-  buildr -s -e $1 erb $2
+  buildr -s -e $1 erb $2 $3
 
   if [ "$?" -ne "0" ]; then
     err_msg "ERROR: candlepin.conf generation failed!"
@@ -178,10 +178,11 @@ init
 
 DBUSER="candlepin"
 
-while getopts ":fgtolmav" opt; do
+while getopts ":fghtolmav" opt; do
     case $opt in
         f  ) FORCECERT="1" ;;
         g  ) GENDB="1";;
+        h  ) HOSTEDTEST="hostedtest";;
         t  ) TESTDATA="1";;
         o  ) USE_ORACLE="1";;
         l  ) LOGDRIVER="logdriver";;
@@ -267,6 +268,13 @@ else
     LOGDRIVER=""
 fi
 
+if [ "$HOSTEDTEST" == "hostedtest" ]; then
+    info_msg "Including hostedtest resources"
+    HOSTEDTEST="hostedtest=yes"
+else
+    HOSTEDTEST=""
+fi
+
 if [ "$USE_ORACLE" == "1" ]; then
     info_msg "Building with Oracle JDBC jar"
     ENV_BUILDR="oracle"
@@ -278,7 +286,7 @@ else
     ENV_BUILDR="development"
 fi
 
-buildr -s -e $ENV_BUILDR clean package test=no $LOGDRIVER
+buildr -s -e $ENV_BUILDR clean package test=no $LOGDRIVER $HOSTEDTEST
 
 if [ "$?" -ne "0" ]; then
   err_msg "ERROR: Compile failed."
@@ -305,7 +313,7 @@ create_var_log_candlepin
 create_var_cache_candlepin
 
 if [ "$AUTOCONF" == "1" ]; then
-  autoconf $ENV_BUILDR $LOGDRIVER
+  autoconf $ENV_BUILDR $LOGDRIVER $HOSTEDTEST
 fi
 
 # deploy the webapp
