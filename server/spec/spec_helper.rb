@@ -25,6 +25,7 @@ module CleanupHooks
     if (@rules)
       @cp.delete_rules
     end
+    cleanup_subscriptions
   end
 end
 

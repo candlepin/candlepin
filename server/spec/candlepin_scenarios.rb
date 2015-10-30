@@ -8,6 +8,8 @@ module CandlepinMethods
 
   include HostedTest
 
+  @@hosted_mode = nil
+
   # Wrapper for ruby API so we can track all owners we created and clean them
   # up. Note that this entails cleanup of all objects beneath that owner, so
   # most other objects can be created using the ruby API.
@@ -212,6 +214,13 @@ module CandlepinMethods
     end
   end
 
+  def cleanup_subscriptions
+    if is_hosted?
+      ensure_hostedtest_resource
+      delete_all_hostedtest_subscriptions
+    end
+  end
+
   # Wrapper for ruby API so we can track all distributor versions we created and clean them up.
   def create_distributor_version(dist_name, display_name, capabilities=[])
     dist_version = @cp.create_distributor_version(dist_name, display_name, capabilities)
@@ -361,11 +370,17 @@ module CandlepinMethods
   end
 
   def is_hosted?
-    return ! @cp.get_status()['standalone']
+    if @@hosted_mode.nil?
+      @@hosted_mode = ! @cp.get_status()['standalone']
+    end
+    return @@hosted_mode
   end
 
   def is_standalone?
-    return @cp.get_status()['standalone']
+    if @@hosted_mode.nil?
+      @@hosted_mode = ! @cp.get_status()['standalone']
+    end
+    return !@@hosted_mode
   end
 
 end
