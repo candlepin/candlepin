@@ -1245,6 +1245,23 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void updatePool() {
+        Product prod = TestUtil.createProduct(owner);
+        productCurator.create(prod);
+        Pool pool = TestUtil.createPool(owner, prod);
+        ownerResource.createPool(owner.getKey(), pool);
+        List<Pool> createdPools = poolCurator.listByOwner(owner);
+        assertEquals(1, createdPools.size());
+        assertEquals(pool.getQuantity(), createdPools.get(0).getQuantity());
+
+        pool.setQuantity(10L);
+        ownerResource.createPool(owner.getKey(), pool);
+        List<Pool> updatedPools = poolCurator.listByOwner(owner);
+        assertEquals(1, createdPools.size());
+        assertEquals(10L, createdPools.get(0).getQuantity().longValue());
+    }
+
+    @Test
     public void createBonusPool() {
         Product prod = TestUtil.createProduct(owner);
         prod.setAttribute("virt_limit", "2");
@@ -1258,6 +1275,63 @@ public class OwnerResourceTest extends DatabaseTestFixture {
                 pools.get(1).getSubscriptionSubKey().startsWith("master"));
         assertTrue(pools.get(0).getSubscriptionSubKey().equals("derived") ||
                 pools.get(1).getSubscriptionSubKey().equals("derived"));
+    }
+
+    @Test
+    public void createBonusPoolForUpdate() {
+        Product prod = TestUtil.createProduct(owner);
+        prod.setAttribute("virt_limit", "3");
+        productCurator.create(prod);
+        Pool pool = TestUtil.createPool(owner, prod);
+        pool.setSubscriptionSubKey("master");
+        ownerResource.createPool(owner.getKey(), pool);
+        pool.setQuantity(100L);
+        ownerResource.updatePool(owner.getKey(), pool);
+        List<Pool> pools = poolCurator.listByOwner(owner);
+        assertEquals(2, pools.size());
+        assertTrue(pools.get(0).getSubscriptionSubKey().startsWith("master") ||
+                pools.get(1).getSubscriptionSubKey().startsWith("master"));
+        assertTrue(pools.get(0).getSubscriptionSubKey().equals("derived") ||
+                pools.get(1).getSubscriptionSubKey().equals("derived"));
+        assertEquals(100L, pools.get(0).getQuantity().longValue());
+        assertEquals(300L, pools.get(1).getQuantity().longValue());
+    }
+
+    @Test
+    public void removePoolsForExpiredUpdate() {
+        Product prod = TestUtil.createProduct(owner);
+        prod.setAttribute("virt_limit", "3");
+        productCurator.create(prod);
+        Pool pool = TestUtil.createPool(owner, prod);
+        pool.setSubscriptionSubKey("master");
+        ownerResource.createPool(owner.getKey(), pool);
+        List<Pool> pools = poolCurator.listByOwner(owner);
+        assertEquals(2, pools.size());
+        pool.setStartDate(new Date(System.currentTimeMillis() - 5 * 24 * 60 * 60 * 1000));
+        pool.setEndDate(new Date(System.currentTimeMillis() - 3 * 24 * 60 * 60 * 1000));
+        ownerResource.updatePool(owner.getKey(), pool);
+        pools = poolCurator.listByOwner(owner);
+        assertEquals(0, pools.size());
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void cantUpdateBonusPool() {
+        Product prod = TestUtil.createProduct(owner);
+        prod.setAttribute("virt_limit", "3");
+        productCurator.create(prod);
+        Pool pool = TestUtil.createPool(owner, prod);
+        pool.setSubscriptionSubKey("master");
+        ownerResource.createPool(owner.getKey(), pool);
+        List<Pool> pools = poolCurator.listByOwner(owner);
+
+        Pool bonusPool = null;
+        for (Pool p : pools) {
+            if (p.getSubscriptionSubKey().contentEquals("derived")) {
+                bonusPool = p;
+            }
+        }
+        assertNotNull(bonusPool);
+        ownerResource.updatePool(owner.getKey(), bonusPool);
     }
 
     @Test
