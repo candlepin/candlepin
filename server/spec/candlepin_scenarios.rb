@@ -166,7 +166,11 @@ module CandlepinMethods
     if is_hosted?
       ensure_hostedtest_resource
       update_hostedtest_subscription(subOrPool)
-      active_on = Date.strptime(subOrPool.startDate, "%Y-%m-%d")+1
+      active_on = case subOrPool.startDate
+        when String then Date.strptime(subOrPool.startDate, "%Y-%m-%d")+1
+        when Date then subOrPool.startDate+1
+        else raise "invalid date format"
+      end
       @cp.refresh_pools(subOrPool['owner']['key'], true)
       sleep 1
     else
