@@ -6,17 +6,20 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
+    <property name="entitydata.type" value="mediumtext" dbms="mysql"/>
+    <property name="entitydata.type" value="text" dbms="postgresql"/>
+
     <changeSet id="20151020132045-1" author="mstead">
         <comment>Change Event newentity type from clob to mediumtext to avoid using large objects.</comment>
         <modifyDataType columnName="newentity"
-            newDataType="mediumtext"
+            newDataType="${entitydata.type}"
             tableName="gb_event"/>
     </changeSet>
 
     <changeSet id="20151020132045-2" author="mstead">
         <comment>Change Event oldentity type from clob to mediumtext to avoid using large objects.</comment>
         <modifyDataType columnName="oldentity"
-            newDataType="mediumtext"
+            newDataType="${entitydata.type}"
             tableName="gb_event"/>
     </changeSet>
 
