@@ -22,7 +22,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.15.0.1
+Version: 1.0.15.0.2
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -215,6 +215,9 @@ rm -rf %{buildroot}
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
+* Fri Oct 30 2015 Alex Wood <awood@redhat.com> 1.0.15.0.2-1
+- Fixed new/old entity column type changeset (mstead@redhat.com)
+
 * Thu Oct 29 2015 Alex Wood <awood@redhat.com> 1.0.15.0.1-1
 - Branch off gutterball-1.15.0 tag for a hotfix. (awood@redhat.com)
 - 1269045: Addressed Gutterball DB Growth Issues (mstead@redhat.com)
