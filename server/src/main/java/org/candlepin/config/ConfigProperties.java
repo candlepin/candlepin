@@ -58,6 +58,25 @@ public class ConfigProperties {
     public static final String HORNETQ_LARGE_MSG_SIZE = "candlepin.audit.hornetq.large_msg_size";
     public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
     public static final String AUDIT_LOG_FILE = "candlepin.audit.log_file";
+    /**
+     * Enables audit event filtering. See documentation of EventFilter
+     */
+    public static final String AUDIT_FILTER_ENABLED = "candlepin.audit.filter.enabled";
+    /**
+     * Events mentioned in includes will not be filtered. They we be sent into our
+     * auditing system
+     */
+    public static final String AUDIT_FILTER_DO_NOT_FILTER = "candlepin.audit.filter.donotfilter";
+    /**
+     * These events will be dropped.
+     */
+    public static final String AUDIT_FILTER_DO_FILTER = "candlepin.audit.filter.dofilter";
+    /**
+     * Can be set to DO_FILTER or DO_NOT_FILTER.
+     * When set to DO_FILTER, then events not matchin INCLUDES or EXCLUDES will be filtered
+     * meaning they will not enter HORNETQ.
+     */
+    public static final String AUDIT_FILTER_DEFAULT_POLICY = "candlepin.audit.filter.policy";
     public static final String AUDIT_LOG_VERBOSE = "candlepin.audit.log_verbose";
 
     public static final String PRETTY_PRINT = "candlepin.pretty_print";
@@ -191,6 +210,25 @@ public class ConfigProperties {
                         "org.candlepin.audit.ActivationListener");
                 this.put(AUDIT_LOG_FILE, "/var/log/candlepin/audit.log");
                 this.put(AUDIT_LOG_VERBOSE, "false");
+                this.put(AUDIT_FILTER_ENABLED, "false");
+
+                /**
+                * These includes reflect events that we must not filter.
+                * These are needed by Sattelite components. See this source
+                * code of sattelite:
+                *
+                * https://gitlab.sat.lab.tlv.redhat.com/satellite6/katello/blob/
+                * SATELLITE-6.1.0/app/lib/actions/candlepin/reindex_pool_subscription_handler.rb#L43
+                */
+                this.put(AUDIT_FILTER_DO_NOT_FILTER,
+                        "CREATED-ENTITLEMENT," +
+                            "DELETED-ENTITLEMENT," +
+                            "CREATED-POOL," +
+                            "DELETED-POOL," +
+                            "CREATED-COMPLIANCE");
+
+                this.put(AUDIT_FILTER_DO_FILTER, "");
+                this.put(AUDIT_FILTER_DEFAULT_POLICY, "DO_FILTER");
 
                 this.put(PRETTY_PRINT, "false");
                 this.put(REVOKE_ENTITLEMENT_IN_FIFO_ORDER, "true");
@@ -283,5 +321,7 @@ public class ConfigProperties {
      * Identity certificate expiry threshold in days
      */
     public static final String IDENTITY_CERT_EXPIRY_THRESHOLD = "candlepin.identityCert.expiry.threshold";
+
+
 
 }

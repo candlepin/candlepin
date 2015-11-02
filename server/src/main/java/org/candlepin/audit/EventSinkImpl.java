@@ -58,6 +58,7 @@ public class EventSinkImpl implements EventSink {
     private ClientSessionFactory factory;
     private Configuration config;
     private ObjectMapper mapper;
+    private EventFilter eventFilter;
     private int largeMsgSize;
 
     /*
@@ -72,10 +73,12 @@ public class EventSinkImpl implements EventSink {
 
 
     @Inject
-    public EventSinkImpl(EventFactory eventFactory, ObjectMapper mapper, Configuration config) {
+    public EventSinkImpl(EventFilter eventFilter, EventFactory eventFactory,
+            ObjectMapper mapper, Configuration config) {
         this.eventFactory = eventFactory;
         this.mapper = mapper;
         this.config = config;
+        this.eventFilter = eventFilter;
         largeMsgSize = config.getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
     }
 
@@ -159,11 +162,22 @@ public class EventSinkImpl implements EventSink {
      * automatically after each successful REST API request, and KingpingJob. If either
      * is not successful, rollback() must be called.
      *
+     * Events are filtered, meaning that some of them might not even get into HornetQ.
+     * Details about the filtering are documented in EventFilter class
+     *
      * HornetQ transaction actually manages the queue of events to be sent.
      */
     @Override
     public void queueEvent(Event event) {
-        log.debug("Queuing event: {}", event);
+        if (eventFilter.shouldFilter(event)) {
+            if (log.isDebugEnabled()) {
+                log.debug("Filtering event {}", event);
+                return;
+            }
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("Queuing event: {}", event);
+        }
         try {
             ClientSession session = getClientSession();
             ClientMessage message = session.createMessage(true);
