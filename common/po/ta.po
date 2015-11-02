@@ -13,7 +13,7 @@ msgstr ""
 "Last-Translator: Shantha kumar <shkumar@redhat.com>\n"
 "Language-Team: Tamil <kde-i18n-doc@kde.org>\n"
 "Language: ta-IN\n"
-"X-Generator: Zanata 3.7.2\n"
+"X-Generator: Zanata 3.7.3\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:58
