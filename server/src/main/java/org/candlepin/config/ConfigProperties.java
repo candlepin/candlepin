@@ -56,6 +56,9 @@ public class ConfigProperties {
     public static final String HORNETQ_ENABLED = "candlepin.audit.hornetq.enable";
     public static final String HORNETQ_BASE_DIR = "candlepin.audit.hornetq.base_dir";
     public static final String HORNETQ_LARGE_MSG_SIZE = "candlepin.audit.hornetq.large_msg_size";
+    public static final String HORNETQ_MAX_QUEUE_SIZE = "candlepin.audit.hornetq.max_queue_size";
+    public static final String HORNETQ_MAX_PAGE_SIZE = "candlepin.audit.hornetq.max_page_size";
+
     public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
     public static final String AUDIT_LOG_FILE = "candlepin.audit.log_file";
     public static final String AUDIT_LOG_VERBOSE = "candlepin.audit.log_verbose";
@@ -185,6 +188,8 @@ public class ConfigProperties {
                 this.put(HORNETQ_ENABLED, "true");
                 this.put(HORNETQ_BASE_DIR, "/var/lib/candlepin/hornetq");
                 this.put(HORNETQ_LARGE_MSG_SIZE, Integer.toString(100 * 1024));
+                this.put(HORNETQ_MAX_QUEUE_SIZE, "10");
+                this.put(HORNETQ_MAX_PAGE_SIZE, "1");
                 this.put(AUDIT_LISTENERS,
                     "org.candlepin.audit.DatabaseListener," +
                         "org.candlepin.audit.LoggingListener," +
