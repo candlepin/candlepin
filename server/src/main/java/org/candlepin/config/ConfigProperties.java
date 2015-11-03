@@ -55,9 +55,64 @@ public class ConfigProperties {
 
     public static final String HORNETQ_ENABLED = "candlepin.audit.hornetq.enable";
     public static final String HORNETQ_BASE_DIR = "candlepin.audit.hornetq.base_dir";
+    /**
+     * This number is large message size. Any message
+     * that is bigger than this number is regarded as large.
+     * That means that HornetQ will page this message
+     * to a disk. Setting this number to something high
+     * e.g. 1 000 0000 will effectively disable the
+     * functionality. This is handy when you expect a lot of
+     * messages and you do not want to run out of disk space.
+     */
     public static final String HORNETQ_LARGE_MSG_SIZE = "candlepin.audit.hornetq.large_msg_size";
+
+    /**
+     * Setting number of server threads that will be
+     * created for Hornet. -1 means that default value
+     * will be used.
+     */
+    public static final String HORNETQ_MAX_SCHEDULED_THREADS =
+            "candlepin.audit.hornetq.max_scheduled_threads";
+    public static final String HORNETQ_MAX_THREADS = "candlepin.audit.hornetq.max_threads";
+    /**
+     * This can be either BLOCK or PAGE. When set to PAGE then
+     * Hornet will keep only up to HORNET_MAX_QUEUE_SIZE
+     * kilobytes of queue messages in memory. Anything above
+     * HORNET_MAX_QUEUE_SIZE will be paged to a hard disk.
+     * When set to BLOCK then after reaching
+     * HORNET_MAX_QUEUE_SIZE, all the producers will be blocked until
+     * the queues are freed up by consumers. Thus, BLOCK
+     * may be dangerous when consumers fail, because
+     * producers will timeout.
+     */
+    public static final String HORNETQ_ADDRESS_FULL_POLICY = "candlepin.audit.hornetq.address_full_policy";
+    public static final String HORNETQ_MAX_QUEUE_SIZE = "candlepin.audit.hornetq.max_queue_size";
+    /**
+     * This is applicable only for PAGE setting of HORNETQ_ADDRESS_FULL_POLICY.
+     */
+    public static final String HORNETQ_MAX_PAGE_SIZE = "candlepin.audit.hornetq.max_page_size";
+
     public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
     public static final String AUDIT_LOG_FILE = "candlepin.audit.log_file";
+    /**
+     * Enables audit event filtering. See documentation of EventFilter
+     */
+    public static final String AUDIT_FILTER_ENABLED = "candlepin.audit.filter.enabled";
+    /**
+     * Events mentioned in this list will not be filtered. They we be sent into our
+     * auditing system
+     */
+    public static final String AUDIT_FILTER_DO_NOT_FILTER = "candlepin.audit.filter.donotfilter";
+    /**
+     * These events will be dropped.
+     */
+    public static final String AUDIT_FILTER_DO_FILTER = "candlepin.audit.filter.dofilter";
+    /**
+     * Can be set to DO_FILTER or DO_NOT_FILTER.
+     * When set to DO_FILTER, then events that are not either in DO_FILTER nor DO_NOT_FILTER
+     * will be filtered, meaning they will not enter HORNETQ.
+     */
+    public static final String AUDIT_FILTER_DEFAULT_POLICY = "candlepin.audit.filter.policy";
     public static final String AUDIT_LOG_VERBOSE = "candlepin.audit.log_verbose";
 
     public static final String PRETTY_PRINT = "candlepin.pretty_print";
@@ -185,12 +240,36 @@ public class ConfigProperties {
                 this.put(HORNETQ_ENABLED, "true");
                 this.put(HORNETQ_BASE_DIR, "/var/lib/candlepin/hornetq");
                 this.put(HORNETQ_LARGE_MSG_SIZE, Integer.toString(100 * 1024));
+
+                this.put(HORNETQ_MAX_THREADS, "-1");
+                this.put(HORNETQ_MAX_SCHEDULED_THREADS, "-1");
+                this.put(HORNETQ_ADDRESS_FULL_POLICY, "PAGE");
+                this.put(HORNETQ_MAX_QUEUE_SIZE, "10");
+                this.put(HORNETQ_MAX_PAGE_SIZE, "1");
                 this.put(AUDIT_LISTENERS,
                     "org.candlepin.audit.DatabaseListener," +
                         "org.candlepin.audit.LoggingListener," +
                         "org.candlepin.audit.ActivationListener");
                 this.put(AUDIT_LOG_FILE, "/var/log/candlepin/audit.log");
                 this.put(AUDIT_LOG_VERBOSE, "false");
+                this.put(AUDIT_FILTER_ENABLED, "false");
+
+                /**
+                * These default DO_NOT_FILTER events are those events needed by
+                * other Satellite components. See sources:
+                *
+                * https://gitlab.sat.lab.tlv.redhat.com/satellite6/katello/blob/
+                * SATELLITE-6.1.0/app/lib/actions/candlepin/reindex_pool_subscription_handler.rb#L43
+                */
+                this.put(AUDIT_FILTER_DO_NOT_FILTER,
+                        "CREATED-ENTITLEMENT," +
+                            "DELETED-ENTITLEMENT," +
+                            "CREATED-POOL," +
+                            "DELETED-POOL," +
+                            "CREATED-COMPLIANCE");
+
+                this.put(AUDIT_FILTER_DO_FILTER, "");
+                this.put(AUDIT_FILTER_DEFAULT_POLICY, "DO_FILTER");
 
                 this.put(PRETTY_PRINT, "false");
                 this.put(REVOKE_ENTITLEMENT_IN_FIFO_ORDER, "true");
@@ -283,5 +362,7 @@ public class ConfigProperties {
      * Identity certificate expiry threshold in days
      */
     public static final String IDENTITY_CERT_EXPIRY_THRESHOLD = "candlepin.identityCert.expiry.threshold";
+
+
 
 }
