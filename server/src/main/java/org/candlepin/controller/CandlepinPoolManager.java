@@ -68,6 +68,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -904,6 +905,12 @@ public class CandlepinPoolManager implements PoolManager {
         ValidationResult failedResult = null;
         log.debug("Looking up best pools for host: {}", host);
 
+        boolean tempLevel = false;
+        if (StringUtils.isEmpty(host.getServiceLevel())) {
+            host.setServiceLevel(guest.getServiceLevel());
+            tempLevel = true;
+        }
+
         Date activePoolDate = entitleDate;
         if (entitleDate == null) {
             activePoolDate = new Date();
@@ -941,16 +948,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         /*Do not attempt to create subscriptions for products that
           already have virt_only pools available to the guest */
-        Set<String> productsToRemove = new HashSet<String>();
-        for (Pool pool : allOwnerPoolsForGuest) {
-            if (pool.getProduct().hasAttribute("virt_only") || pool.hasAttribute("virt_only")) {
-                for (String prodId : tmpSet) {
-                    if (pool.provides(prodId)) {
-                        productsToRemove.add(prodId);
-                    }
-                }
-            }
-        }
+        Set<String> productsToRemove = getProductsToRemove(allOwnerPoolsForGuest, tmpSet);
         log.debug("Guest already will have virt-only pools to cover: {}",
                 Util.collectionToString(productsToRemove));
         tmpSet.removeAll(productsToRemove);
@@ -1015,7 +1013,28 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
+        if (tempLevel) {
+            host.setServiceLevel("");
+        }
         return enforced;
+    }
+
+    /**
+     * Do not attempt to create subscriptions for products that
+     * already have virt_only pools available to the guest
+     */
+    private Set<String> getProductsToRemove(List<Pool> allOwnerPoolsForGuest, Set<String> tmpSet) {
+        Set<String> productsToRemove = new HashSet<String>();
+        for (Pool pool : allOwnerPoolsForGuest) {
+            if (pool.getProduct().hasAttribute("virt_only") || pool.hasAttribute("virt_only")) {
+                for (String prodId : tmpSet) {
+                    if (pool.provides(prodId)) {
+                        productsToRemove.add(prodId);
+                    }
+                }
+            }
+        }
+        return productsToRemove;
     }
 
     private void logPools(Collection<Pool> pools) {
