@@ -50,4 +50,13 @@ public abstract class EventHandler {
     public Status handleDeleted(Event event) {
         return Status.SKIPPED;
     }
+
+    /**
+     * Handles expiration events
+     * @param event Event to store
+     * @return Status of the event to be set in database.
+     */
+    public Status handleExpired(Event event) {
+        return Status.SKIPPED;
+    }
 }

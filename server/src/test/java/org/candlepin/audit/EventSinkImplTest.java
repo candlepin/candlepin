@@ -60,6 +60,7 @@ public class EventSinkImplTest {
     @Mock private PrincipalProvider mockPrincipalProvider;
     @Mock private ServerLocator mockLocator;
     private EventFactory factory;
+    private EventFilter eventFilter;
     private EventSinkImpl eventSinkImpl;
     private Principal principal;
     private ObjectMapper mapper;
@@ -69,6 +70,7 @@ public class EventSinkImplTest {
     public void init() throws Exception {
         this.factory = new EventFactory(mockPrincipalProvider);
         this.principal = TestUtil.createOwnerPrincipal();
+        eventFilter = new EventFilter(new CandlepinCommonTestConfig());
         when(mockPrincipalProvider.get()).thenReturn(this.principal);
         when(mockSessionFactory.createTransactedSession()).thenReturn(mockClientSession);
         when(mockClientSession.createProducer(anyString())).thenReturn(mockClientProducer);
@@ -87,7 +89,8 @@ public class EventSinkImplTest {
      */
     private EventSinkImpl createEventSink(
             final ClientSessionFactory sessionFactory) throws Exception {
-        EventSinkImpl sink = new EventSinkImpl(factory, mapper, new CandlepinCommonTestConfig()) {
+        EventSinkImpl sink = new EventSinkImpl(eventFilter,
+                factory, mapper, new CandlepinCommonTestConfig()) {
 
             @Override
             protected ClientSessionFactory createClientSessionFactory() {
