@@ -60,7 +60,8 @@ public class EventMessageListener implements MessageListener {
     @Override
     public void onMessage(Message message) {
         Event event = storeEvent(message);
-        // Event already exists, no need to process.
+        // Event already exists, or it is not one that we manage.
+        // No need to process.
         if (event == null) {
             return;
         }
@@ -90,7 +91,14 @@ public class EventMessageListener implements MessageListener {
         String messageBody = getMessageBody(message);
         Event event = null;
         try {
+            String messageId = message.getJMSMessageID();
             event = mapper.readValue(messageBody, Event.class);
+
+            // Nothing to be done since we do not manage events of this type
+            if (!eventManager.manages(event)) {
+                log.debug("Unsupported event received by gutterball. Skipping message: " + messageId);
+                return null;
+            }
 
             /*
              * Set initial event state. If event remains in this state, it indicates there
@@ -100,9 +108,8 @@ public class EventMessageListener implements MessageListener {
 
             unitOfWork.begin();
 
-            String messageId = message.getJMSMessageID();
             if (eventCurator.hasEventForMessage(messageId)) {
-                log.info("Event already created for message. Skipping message: " + messageId);
+                log.debug("Event already created for message. Skipping message: " + messageId);
                 return null;
             }
 
@@ -145,12 +152,16 @@ public class EventMessageListener implements MessageListener {
      * state that indicates there was some kind of failure in processing. This allows
      * us to identify problem events and eventually re-try processing them.
      *
+     * Successful events do not store the entity JSON along with them as it only takes
+     * up space. The JSON set on initial store is cleared if event processing succeeds.
+     *
      * @param event Event to be processed.
      */
     private void processEvent(Event event) {
         try {
             unitOfWork.begin();
             eventManager.handle(event);
+
             // Handlers alter the event status, save it:
             eventCurator.merge(event);
             unitOfWork.end();

@@ -70,7 +70,7 @@ public class ComplianceReason {
     @Index(name = "gb_reason_compstatus_fk_idx")
     private ComplianceStatus complianceStatus;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "reasonkey")
     @Size(max = 255)
     @NotNull
     private String key;
