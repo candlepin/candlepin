@@ -23,6 +23,7 @@ import org.candlepin.gutterball.config.ConfigProperties;
 import org.candlepin.gutterball.guice.GutterballModule;
 import org.candlepin.gutterball.guice.GutterballServletModule;
 import org.candlepin.gutterball.receiver.EventReceiver;
+import org.candlepin.gutterball.tasks.EventCleanupTask;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -66,6 +67,8 @@ public class GutterballContextListener extends
     private ServletContext servletContext;
 
     private EventReceiver eventReceiver;
+
+    private EventCleanupTask cleanupTask;
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
@@ -155,6 +158,7 @@ public class GutterballContextListener extends
     @Override
     public void withInjector(Injector injector) {
         this.eventReceiver = injector.getInstance(EventReceiver.class);
+        this.cleanupTask = injector.getInstance(EventCleanupTask.class);
     }
 
     @Override
@@ -163,5 +167,6 @@ public class GutterballContextListener extends
         super.contextDestroyed(event);
 
         eventReceiver.finish();
+        cleanupTask.shutdown();
     }
 }

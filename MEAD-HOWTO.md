@@ -138,14 +138,14 @@ A few special variables are made available to the Cheetah template.
 
 * `$artifacts` - A hash of the Maven generated artifacts with the file
   extensions as keys.  For example: `{'.md5': 'my_project.jar.md5', '.jar':
-  my_project.jar'}
+  my_project.jar'}`
 * `$all_artifacts` - All Maven generated artifacts in a list (including MD5
   sums, pom files, etc).
 * `$all_artifacts_with_path` - All artifacts but with the full path to the
   artifact within the project.
 * `$version` - The version of the **top level** project.
-* `$revision` - The revision of the **top_level** project.
-* `$epoch` - The epoch of the **top_level** project.
+* `$release` - The release of the **top level** project.
+* `$epoch` - The epoch of the **top level** project.
 
 Mead can also access files that are in dist-git such as patches.  However, it
 cannot access anything in the lookaside cache (which is where the source
