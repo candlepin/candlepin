@@ -1123,6 +1123,10 @@ module Candlepin
         get_owner_subresource("imports", opts)
       end
 
+      def get_owner_consumers(opts = {})
+        get_owner_subresource("consumers", opts)
+      end
+
       def get_owner_subscriptions(opts = {})
         get_owner_subresource("subscriptions", opts)
       end
