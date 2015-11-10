@@ -42,6 +42,8 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.google.inject.persist.Transactional;
+
 /**
  * entitler
  */
@@ -98,9 +100,30 @@ public class Entitler {
         return entitlementList;
     }
 
-    private Entitlement createEntitlementByPool(Consumer consumer, Pool pool,
+    /**
+     * It is imperative that this entire method be within the same transaction.
+     * Otherwise multiple entitlement jobs will deadlock.
+     *
+     * T1 and T2 are entitlement jobs
+     *
+     * 1. T1 grabs a shared lock on cp_consumer.id due to the FK in cp_entitlement
+     *    when inserting into cp_entitlement
+     * 2. T2 grabs a shared lock on cp_consumer.id due to the FK in cp_entitlement
+     *    when inserting into cp_entitlement
+     * 3. T1 attempts to grab an exclusive lock on cp_consumer.id for an
+     *    update to cp_entitlement.  T1 blocks waiting for the T2's shared lock to be released.
+     * 4. T2 attempts to grab an exclusive lock on cp_consumer.id for an
+     *    update to cp_entitlement.
+     * 5. Deadlock.  T2 is waiting for T1's shared lock to be released but
+     *    T1 is waiting for T2's shared lock to be released.
+     *
+     * See BZ #1274074
+     */
+    @Transactional
+    protected Entitlement createEntitlementByPool(Consumer consumer, Pool pool,
         Integer quantity) {
         // Attempt to create an entitlement:
+        consumer = consumerCurator.findForUpdateByUuid(consumer.getUuid());
         try {
             Entitlement e = poolManager.entitleByPool(consumer, pool, quantity);
             log.debug("Created entitlement: " + e);
