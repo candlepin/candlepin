@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.51.6
+Version: 0.9.51.7
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -213,6 +213,10 @@ fi
 
 #raw
 %changelog
+* Tue Nov 10 2015 Alex Wood <awood@redhat.com> 0.9.51.7-1
+- 1274074: Fix deadlock during highly concurrent entitlement jobs.
+  (awood@redhat.com)
+
 * Tue Oct 06 2015 Alex Wood <awood@redhat.com> 0.9.51.6-1
 - Build with Maven/Mead. (awood@redhat.com)
 
