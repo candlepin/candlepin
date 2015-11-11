@@ -27,7 +27,6 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
-import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.Criterion;
@@ -48,6 +47,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
+import javax.persistence.LockModeType;
 
 /**
  * ConsumerCurator
@@ -255,13 +256,22 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @Transactional
     public Consumer findByUuid(String uuid) {
-        return getConsumer(uuid, false);
+        return getConsumer(uuid);
     }
 
-    @Transactional
+    /**
+     * Apply a SELECT FOR UPDATE on a consumer.
+     *
+     * Note this method is not transactional.  It is meant to be used within
+     * a larger transaction.  Starting a transaction, running a select for update,
+     * and then ending the transaction is pointless.
+     *
+     * @return A consumer locked in the database
+     */
     public Consumer findForUpdateByUuid(String uuid) {
-        return getConsumer(uuid, true);
-
+        Consumer c = getConsumer(uuid);
+        getEntityManager().lock(c, LockModeType.PESSIMISTIC_WRITE);
+        return c;
     }
 
     @Transactional
@@ -281,19 +291,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     // NOTE: This is a giant hack that is for use *only* by SSLAuth in order
     // to bypass the authentication. Do not call it!
     // TODO: Come up with a better way to do this!
-    public Consumer getConsumer(String uuid, boolean lock) {
+    public Consumer getConsumer(String uuid) {
         Criteria criteria = createSecureCriteria()
             .add(Restrictions.eq("uuid", uuid));
 
-        if (lock) {
-            criteria.setLockMode(LockMode.PESSIMISTIC_WRITE);
-        }
-
         return (Consumer) criteria.uniqueResult();
-    }
-
-    public Consumer getConsumer(String uuid) {
-        return getConsumer(uuid, false);
     }
 
     @SuppressWarnings("unchecked")
