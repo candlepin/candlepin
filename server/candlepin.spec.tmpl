@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.51.8
+Version: 0.9.51.9
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -213,6 +213,10 @@ fi
 
 #raw
 %changelog
+* Wed Nov 11 2015 Alex Wood <awood@redhat.com> 0.9.51.9-1
+- Set the lock mode with the entity manager to avoid problems in Postgres.
+  (awood@redhat.com)
+
 * Tue Nov 10 2015 Alex Wood <awood@redhat.com> 0.9.51.8-1
 - Fix unit tests. (awood@redhat.com)
 
