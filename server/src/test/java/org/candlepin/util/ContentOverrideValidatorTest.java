@@ -15,14 +15,25 @@
 package org.candlepin.util;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ContentOverride;
+import org.candlepin.model.Rules;
+import org.candlepin.model.RulesCurator;
+import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.policy.js.override.OverrideRules;
 import org.candlepin.test.DatabaseTestFixture;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
 
+import java.io.InputStream;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -32,10 +43,28 @@ import javax.inject.Inject;
  * ContentOverrideValidatorTest
  */
 public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
-    @Inject private I18n i18n;
+    @Inject  private I18n i18n;
+    private RulesCurator rulesCuratorMock;
+    private Configuration config;
 
-    //@Inject private OverrideRules overrideRules;
-    @Inject private ContentOverrideValidator validator;
+    private ContentOverrideValidator validator;
+    private OverrideRules overrideRules;
+    private JsRunnerProvider provider;
+
+    @Before
+    public void setupTest() {
+        InputStream is = this.getClass().getResourceAsStream(
+            RulesCurator.DEFAULT_RULES_FILE);
+        rulesCuratorMock = mock(RulesCurator.class);
+        config = mock(Configuration.class);
+        Rules rules = new Rules(Util.readFile(is));
+        when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
+        when(rulesCuratorMock.getRules()).thenReturn(rules);
+
+        provider = new JsRunnerProvider(rulesCuratorMock);
+        overrideRules = new OverrideRules(provider.get(), config);
+        validator = new ContentOverrideValidator(i18n, overrideRules);
+    }
 
     @Test
     public void testValidateValidCollection() {
@@ -54,6 +83,7 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
 
     @Test
     public void testValidateSingleInvalid() {
+        when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         ContentOverride override = new ContentOverride("label", "baseurl", "value");
 
         try {
@@ -67,6 +97,7 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
 
     @Test
     public void testValidateCollectionBothInvalid() {
+        when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         List<ContentOverride> overrides = new LinkedList<ContentOverride>();
         overrides.add(new ContentOverride("label", "baseurl", "value"));
         overrides.add(new ContentOverride("other label", "name", "other value"));

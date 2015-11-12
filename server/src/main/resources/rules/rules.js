@@ -1,4 +1,4 @@
-// Version: 5.18
+// Version: 5.19
 
 /*
  * Default Candlepin rule set.
@@ -3130,8 +3130,12 @@ var Override = {
     },
 
     get_allow_override: function() {
-        var blacklist = ['name','label','baseurl']
         var context = Override.get_override_context();
+        var blacklist = ['name','label']
+
+        if (context.hosted) {
+            blacklist.push('baseurl')
+        }
 
         var check = context.name ? context.name.toLowerCase() : "";
         return Utils.inArray(blacklist, check);

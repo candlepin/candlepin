@@ -17,6 +17,8 @@ package org.candlepin.policy.js.override;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
@@ -41,6 +43,8 @@ public class OverrideRulesTests {
     private RulesCurator rulesCuratorMock;
     private JsRunnerProvider provider;
     private OverrideRules overrideRules;
+    @Mock
+    private Configuration config;
 
     @Before
     public void setupTest() {
@@ -51,7 +55,7 @@ public class OverrideRulesTests {
         when(rulesCuratorMock.getRules()).thenReturn(rules);
 
         provider = new JsRunnerProvider(rulesCuratorMock);
-        overrideRules = new OverrideRules(provider.get());
+        overrideRules = new OverrideRules(provider.get(), config);
     }
 
     @Test
@@ -66,9 +70,18 @@ public class OverrideRulesTests {
     }
 
     @Test
-    public void testBaseurlIsBlackListed() {
+    public void testBaseurlIsBlackListedHosted() {
+        when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         this.checkBlackList("baseurl");
     }
+
+    @Test
+    public void canOverrideBaseurlOnStandalone() {
+        when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(true);
+        assertTrue("baseurl should not be black listed.",
+            this.overrideRules.canOverrideForConsumer("baseurl"));
+    }
+
 
     @Test
     public void testLabelIsBlackListed() {

@@ -143,8 +143,8 @@ describe 'Activation Keys' do
   end
 
   it 'should verify override name is valid' do
-    # name baseurl is invalid to override
-    override = {"name" => "baseurl", "value" => "somval", "contentLabel" => "somelabel"}
+    # name label is invalid to override
+    override = {"name" => "label", "value" => "somval", "contentLabel" => "somelabel"}
     lambda {
       @cp.add_content_overrides_to_key(@activation_key['id'], [override])
     }.should raise_exception(RestClient::BadRequest)
