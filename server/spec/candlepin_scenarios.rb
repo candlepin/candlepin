@@ -136,7 +136,7 @@ module CandlepinMethods
     if is_hosted?
       ensure_hostedtest_resource
       sub = create_hostedtest_subscription(owner_key, product_id, quantity, params)
-      if skip_refresh?
+      if not skip_refresh
         active_on = Date.strptime(sub.startDate, "%Y-%m-%d")+1
         @cp.refresh_pools(owner_key, true)
         sleep 1
