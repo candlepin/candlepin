@@ -61,7 +61,6 @@ import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.SubscriptionReconciler;
 import org.candlepin.util.CertificateSizeException;
-import org.candlepin.util.ResolverUtil;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
 
@@ -113,7 +112,6 @@ public class CandlepinPoolManager implements PoolManager {
     private ActivationKeyRules activationKeyRules;
     private ProductCurator prodCurator;
     private ContentCurator contentCurator;
-    private ResolverUtil resolverUtil;
 
     /**
      * @param poolCurator
@@ -130,8 +128,7 @@ public class CandlepinPoolManager implements PoolManager {
         PoolRules poolRules, EntitlementCurator curator1, ConsumerCurator consumerCurator,
         EntitlementCertificateCurator ecC, ComplianceRules complianceRules,
         AutobindRules autobindRules, ActivationKeyRules activationKeyRules,
-        ProductCurator prodCurator, ContentCurator contentCurator,
-        ResolverUtil resolverUtil, I18n i18n) {
+        ProductCurator prodCurator, ContentCurator contentCurator, I18n i18n) {
 
         this.poolCurator = poolCurator;
         this.sink = sink;
@@ -149,7 +146,6 @@ public class CandlepinPoolManager implements PoolManager {
         this.activationKeyRules = activationKeyRules;
         this.prodCurator = prodCurator;
         this.contentCurator = contentCurator;
-        this.resolverUtil = resolverUtil;
         this.i18n = i18n;
     }
 
@@ -160,7 +156,7 @@ public class CandlepinPoolManager implements PoolManager {
     void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter, Owner owner, boolean lazy) {
         long start = System.currentTimeMillis();
         log.info("Refreshing pools for owner: {}", owner);
-        List<Subscription> subs = resolverUtil.resolveSubscriptions(subAdapter.getSubscriptions(owner));
+        List<Subscription> subs = subAdapter.getSubscriptions(owner);
 
         log.debug("Found {} existing subscriptions.", subs.size());
 
@@ -1618,7 +1614,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public Refresher getRefresher(SubscriptionServiceAdapter subAdapter, boolean lazy) {
-        return new Refresher(this, subAdapter, resolverUtil, lazy);
+        return new Refresher(this, subAdapter, lazy);
     }
 
     /**
