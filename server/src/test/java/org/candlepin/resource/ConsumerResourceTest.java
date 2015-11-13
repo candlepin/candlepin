@@ -183,7 +183,7 @@ public class ConsumerResourceTest {
             null, mockedEntitlementCertServiceAdapter, null, null,
             new CandlepinCommonTestConfig(), null, null,
             mockedEntitlementCurator, mockedConsumerCurator, null, null, null,
-                mockedActivationKeyRules, null, null, null, null);
+            mockedActivationKeyRules, null, null, null);
 
         ConsumerResource consumerResource = new ConsumerResource(
             mockedConsumerCurator, null, null, null, mockedEntitlementCurator, null,

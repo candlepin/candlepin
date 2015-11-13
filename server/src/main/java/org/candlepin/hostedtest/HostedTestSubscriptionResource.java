@@ -15,6 +15,7 @@
 package org.candlepin.hostedtest;
 
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.service.UniqueIdGenerator;
 
 import java.util.List;
@@ -43,6 +44,8 @@ public class HostedTestSubscriptionResource {
     private HostedTestSubscriptionServiceAdapter adapter;
     @Inject
     private UniqueIdGenerator idGenerator;
+    @Inject
+    private ResolverUtil resolverUtil;
 
     /**
      * API to check if resource is alive
@@ -72,7 +75,7 @@ public class HostedTestSubscriptionResource {
         if (subscription.getId() == null || subscription.getId().trim().length() == 0) {
             subscription.setId(this.idGenerator.generateId());
         }
-        return adapter.createSubscription(subscription);
+        return adapter.createSubscription(resolverUtil.resolveSubscription(subscription));
     }
 
     /**
@@ -118,7 +121,7 @@ public class HostedTestSubscriptionResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Subscription updateSubscription(Subscription subscriptionNew) {
-        return adapter.updateSubscription(subscriptionNew);
+        return adapter.updateSubscription(resolverUtil.resolveSubscription(subscriptionNew));
     }
 
     /**
