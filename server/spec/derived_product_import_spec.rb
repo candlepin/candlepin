@@ -45,7 +45,7 @@ describe 'Import', :serial => true do
       }
     })
     datacenter_pool = create_pool_and_subscription(@owner['key'], stacked_datacenter_product.id,
-      10, [], '222', '', '', nil, nil,
+      10, [], '222', '', '', nil, nil, false,
       {
         :derived_product_id => derived_product.id
       })

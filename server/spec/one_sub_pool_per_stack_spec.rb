@@ -90,7 +90,7 @@ describe 'One Sub Pool Per Stack' do
     create_pool_and_subscription(@owner['key'],
       @non_stacked_product.id, 2, [], "234")
     create_pool_and_subscription(@owner['key'], @stacked_datacenter_product.id,
-      10, [], '222', '', '', nil, nil,
+      10, [], '222', '', '', nil, nil, true,
       {
         :derived_product_id => @derived_product.id,
         :derived_provided_products => [@derived_provided_product.id]

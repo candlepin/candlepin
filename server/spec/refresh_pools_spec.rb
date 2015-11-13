@@ -115,8 +115,7 @@ describe 'Refresh Pools' do
     owner = create_owner random_string
     product = create_product(random_string, random_string, :owner => owner['key'])
     new_product = create_product(random_string, random_string, :owner => owner['key'])
-    pool = create_pool_and_subscription(owner['key'], product.id, 500,
-      [])
+    pool = create_pool_and_subscription(owner['key'], product.id, 500, [])
     pools = @cp.list_pools({:owner => owner.id})
     pools.length.should == 1
 
@@ -170,7 +169,7 @@ describe 'Refresh Pools' do
     eng_product = create_product('300', nil, :owner => owner['key'])
 
     pool1 = create_pool_and_subscription(owner['key'], datacenter_product.id,
-      10, [], '', '', '', nil, nil,
+      10, [], '', '', '', nil, nil, false,
       {
         :derived_product_id => derived_product['id'],
         :derived_provided_products => ['300']

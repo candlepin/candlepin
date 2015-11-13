@@ -119,11 +119,11 @@ module CandlepinMethods
   end
 
   # Lets spec tests be agnostic of what mode we are testing in, standalone or hosted.
-  # Always returns the main pool that was created
+  # Always returns the main pool that was created ( unless running in hosted mode and refresh is skipped )
   def create_pool_and_subscription(owner_key, product_id, quantity=1,
                           provided_products=[], contract_number='',
                           account_number='', order_number='',
-                          start_date=nil, end_date=nil, params={})
+                          start_date=nil, end_date=nil, skip_refresh=false, params={})
 
     params[:start_date] = start_date
     params[:end_date] = end_date
@@ -136,10 +136,12 @@ module CandlepinMethods
     if is_hosted?
       ensure_hostedtest_resource
       sub = create_hostedtest_subscription(owner_key, product_id, quantity, params)
-      active_on = Date.strptime(sub.startDate, "%Y-%m-%d")+1
-      @cp.refresh_pools(owner_key, true)
-      sleep 1
-      pool = find_main_pool(owner_key, sub['id'], activeon=active_on, true)
+      if skip_refresh?
+        active_on = Date.strptime(sub.startDate, "%Y-%m-%d")+1
+        @cp.refresh_pools(owner_key, true)
+        sleep 1
+        pool = find_main_pool(owner_key, sub['id'], activeon=active_on, true)
+      end
     else
       params[:source_subscription] = { 'id' => random_string('source_sub_') }
       pool = @cp.create_pool(owner_key, product_id, params)
@@ -553,11 +555,11 @@ class StandardExporter < Exporter
       }
     ]
     create_pool_and_subscription(@owner['key'], @products[:product1].id, 2,
-      [@products[:eng_product]['id']], '', '12345', '6789', nil, end_date,
+      [@products[:eng_product]['id']], '', '12345', '6789', nil, end_date, true,
       {:branding => brandings})
-    create_pool_and_subscription(@owner['key'], @products[:product2].id, 4, [], '', '12345', '6789', nil, end_date)
-    create_pool_and_subscription(@owner['key'], @products[:virt_product].id, 10, [], '', '12345', '6789', nil, end_date)
-    create_pool_and_subscription(@owner['key'], @products[:product3].id, 5, [], '', '12345', '6789', nil, end_date,
+    create_pool_and_subscription(@owner['key'], @products[:product2].id, 4, [], '', '12345', '6789', nil, end_date, true)
+    create_pool_and_subscription(@owner['key'], @products[:virt_product].id, 10, [], '', '12345', '6789', nil, end_date, true)
+    create_pool_and_subscription(@owner['key'], @products[:product3].id, 5, [], '', '12345', '6789', nil, end_date, true,
       {:derived_product_id => @products[:derived_product]['id'],  :derived_provided_products => [@products[:derived_provided_prod]['id']]})
     create_pool_and_subscription(@owner['key'], @products[:product_up].id, 10, [], '', '12345', '6789', nil, end_date)
 
@@ -604,11 +606,8 @@ class StandardExporter < Exporter
     @cp.add_content_to_product(@owner['key'], product2.id, arch_content.id)
 
     end_date = Date.new(2025, 5, 29)
-    create_pool_and_subscription(@owner['key'], product1.id, 12, [], '', '12345', '6789', nil, end_date)
-    create_pool_and_subscription(@owner['key'], product2.id, 14, [], '', '12345', '6789', nil, end_date)
-
-    pool1 = @cp.list_pools(:owner => @owner.id, :product => product1.id)[0]
-    pool2 = @cp.list_pools(:owner => @owner.id, :product => product2.id)[0]
+    pool1 = create_pool_and_subscription(@owner['key'], product1.id, 12, [], '', '12345', '6789', nil, end_date)
+    pool2 = create_pool_and_subscription(@owner['key'], product2.id, 14, [], '', '12345', '6789', nil, end_date)
 
     @candlepin_client.consume_pool(pool1.id, {:quantity => 1})
     @candlepin_client.consume_pool(pool2.id, {:quantity => 1})
