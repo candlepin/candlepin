@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -44,7 +45,7 @@ public class Refresher {
     private UnitOfWork uow;
     private static Logger log = LoggerFactory.getLogger(Refresher.class);
 
-    private Set<Owner> owners = Util.newSet();
+    private Map<String, Owner> owners = Util.newMap();
     private Set<Product> products = Util.newSet();
 
     Refresher(CandlepinPoolManager poolManager, SubscriptionServiceAdapter subAdapter,
@@ -61,7 +62,11 @@ public class Refresher {
     }
 
     public Refresher add(Owner owner) {
-        owners.add(owner);
+        if (owner == null || owner.getKey() == null) {
+            throw new IllegalArgumentException("Owner is null or lacks identifying information");
+        }
+
+        this.owners.put(owner.getKey(), owner);
         return this;
     }
 
@@ -95,22 +100,40 @@ public class Refresher {
             // given products to be refreshed.
             List<Subscription> subs = resolverUtil.resolveSubscriptions(subAdapter
                     .getSubscriptions(product));
-            log.debug("Will refresh {} subscriptions in all orgs using product: ",
+            log.debug("Will refresh {} subscriptions in all orgs using product: {}",
                     subs.size(), product.getId());
+
             if (log.isDebugEnabled()) {
                 for (Subscription s : subs) {
-                    if (!owners.contains(s.getOwner())) {
-                        log.debug("   {}", s);
+                    Owner so = s.getOwner();
+
+                    if (so == null || so.getKey() == null) {
+                        log.debug("  Received a subscription without a well-defined owner: {}", s.getId());
+                        continue;
+                    }
+
+                    if (!this.owners.containsKey(so.getKey())) {
+                        log.debug("    {}", s);
                     }
                 }
             }
+
             subscriptions.addAll(subs);
         }
 
         for (Subscription subscription : subscriptions) {
             // drop any subs for owners in our owners list. we'll get them with the full
             // refreshPools call.
-            if (owners.contains(subscription.getOwner())) {
+            Owner so = subscription.getOwner();
+
+            // This probably shouldn't ever happen, but let's make sure it doesn't anyway.
+            if (so == null || so.getKey() == null) {
+                log.error("Received a subscription without a well-defined owner: {}", subscription.getId());
+                continue;
+            }
+
+            if (this.owners.containsKey(so.getKey())) {
+                log.debug("Skipping subscription \"{}\" for owner: {}", subscription.getId(), so);
                 continue;
             }
 
@@ -123,7 +146,7 @@ public class Refresher {
             refreshPoolsForSubscription(subscription, pools);
         }
 
-        for (Owner owner : owners) {
+        for (Owner owner : this.owners.values()) {
             poolManager.refreshPoolsWithRegeneration(subAdapter, owner, lazy);
         }
     }
