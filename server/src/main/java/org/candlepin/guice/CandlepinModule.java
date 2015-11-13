@@ -104,7 +104,6 @@ import org.candlepin.resource.StatisticResource;
 import org.candlepin.resource.StatusResource;
 import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.resource.UserResource;
-import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.resteasy.filter.AuthenticationFilter;
@@ -126,6 +125,7 @@ import org.candlepin.sync.RulesExporter;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.ExpiryDateFunction;
+import org.candlepin.util.ResolverUtil;
 import org.candlepin.util.X509ExtensionUtil;
 
 import com.google.common.base.Function;

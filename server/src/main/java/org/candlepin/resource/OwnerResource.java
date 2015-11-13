@@ -79,7 +79,6 @@ import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.pinsetter.tasks.UndoImportsJob;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.EntitlementFinderUtil;
-import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
@@ -90,6 +89,7 @@ import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.Meta;
 import org.candlepin.sync.SyncDataFormatException;
 import org.candlepin.util.ContentOverrideValidator;
+import org.candlepin.util.ResolverUtil;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.Util;
 

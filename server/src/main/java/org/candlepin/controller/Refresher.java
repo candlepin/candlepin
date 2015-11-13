@@ -19,6 +19,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.util.ResolverUtil;
 import org.candlepin.util.Util;
 
 import com.google.inject.persist.Transactional;
@@ -38,6 +39,7 @@ public class Refresher {
 
     private CandlepinPoolManager poolManager;
     private SubscriptionServiceAdapter subAdapter;
+    private ResolverUtil resolverUtil;
     private boolean lazy;
     private UnitOfWork uow;
     private static Logger log = LoggerFactory.getLogger(Refresher.class);
@@ -46,9 +48,10 @@ public class Refresher {
     private Set<Product> products = Util.newSet();
 
     Refresher(CandlepinPoolManager poolManager, SubscriptionServiceAdapter subAdapter,
-        boolean lazy) {
+        ResolverUtil resolverUtil, boolean lazy) {
         this.poolManager = poolManager;
         this.subAdapter = subAdapter;
+        this.resolverUtil = resolverUtil;
         this.lazy = lazy;
     }
 
@@ -90,7 +93,8 @@ public class Refresher {
             // TODO: This adapter call is not implemented in prod, and cannot be. We plan
             // to fix this whole code path in near future by looking for pools using the
             // given products to be refreshed.
-            List<Subscription> subs = subAdapter.getSubscriptions(product);
+            List<Subscription> subs = resolverUtil.resolveSubscriptions(subAdapter
+                    .getSubscriptions(product));
             log.debug("Will refresh {} subscriptions in all orgs using product: ",
                     subs.size(), product.getId());
             if (log.isDebugEnabled()) {

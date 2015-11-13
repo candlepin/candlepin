@@ -23,6 +23,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.util.ResolverUtil;
 import org.candlepin.util.Util;
 
 import org.junit.Before;
@@ -41,6 +42,7 @@ public class RefresherTest {
 
     private CandlepinPoolManager poolManager;
     private SubscriptionServiceAdapter subAdapter;
+    private ResolverUtil resolverUtil;
 
     private Refresher refresher;
 
@@ -48,8 +50,8 @@ public class RefresherTest {
     public void setUp() {
         poolManager = mock(CandlepinPoolManager.class);
         subAdapter = mock(SubscriptionServiceAdapter.class);
-
-        refresher = new Refresher(poolManager, subAdapter, false);
+        resolverUtil = mock(ResolverUtil.class);
+        refresher = new Refresher(poolManager, subAdapter, resolverUtil, false);
     }
 
     @Test
@@ -130,6 +132,7 @@ public class RefresherTest {
         when(subAdapter.getSubscriptions(product2)).thenReturn(subscriptions);
         when(subAdapter.getSubscription("subId")).thenReturn(subscription);
         when(poolManager.lookupBySubscriptionId("subId")).thenReturn(pools);
+        when(resolverUtil.resolveSubscriptions(subscriptions)).thenReturn(subscriptions);
         refresher.add(product);
         refresher.add(product2);
         refresher.run();
