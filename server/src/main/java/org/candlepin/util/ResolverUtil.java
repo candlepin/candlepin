@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resource.util;
+package org.candlepin.util;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -28,7 +28,9 @@ import com.google.inject.Inject;
 
 import org.xnap.commons.i18n.I18n;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * Convinience util for resolving owners, products, pools & subscriptions
@@ -184,5 +186,13 @@ public class ResolverUtil {
         // TODO: Do we need to resolve Branding objects?
 
         return subscription;
+    }
+
+    public List<Subscription> resolveSubscriptions(List<Subscription> subscriptions) {
+        List<Subscription> result = new ArrayList<Subscription>();
+        for (Subscription subscription : subscriptions) {
+            result.add(resolveSubscription(subscription));
+        }
+        return result;
     }
 }
