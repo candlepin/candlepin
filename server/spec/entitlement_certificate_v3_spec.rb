@@ -168,7 +168,7 @@ describe 'Entitlement Certificate V3' do
     branding = [{:productId => product['id'],
         :type => 'Some Type', :name => 'Super Branded Name'}]
     create_pool_and_subscription(@owner['key'], product.id, 10, [],
-        '12345', '6789', 'order1', Date.today - 10, Date.today + 365,
+        '12345', '6789', 'order1', Date.today - 10, Date.today + 365, false,
         {:branding => branding})
     entitlement = @system.consume_product(product.id)[0]
     json_body = extract_payload(@system.list_certificates[0]['cert'])

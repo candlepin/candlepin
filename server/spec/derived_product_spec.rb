@@ -76,14 +76,14 @@ describe 'Derived Products' do
     })
 
     @main_pool = create_pool_and_subscription(@owner['key'], @datacenter_product.id,
-      10, [], '', '', '', nil, nil,
+      10, [], '', '', '', nil, nil, false,
       {
         :derived_product_id => @derived_product['id'],
         :derived_provided_products => [@eng_product['id']]
       })
 
     create_pool_and_subscription(@owner['key'], @datacenter_product_2.id,
-      10, [], '', '', '', nil, nil,
+      10, [], '', '', '', nil, nil, false,
       {
         :derived_product_id => @derived_product_2['id'],
         :derived_provided_products => [@eng_product_2['id'], @modified_product['id']]
