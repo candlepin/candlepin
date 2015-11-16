@@ -86,6 +86,7 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
 
     @Override
     public void sendActivationEmail(String subscriptionId) {
+        // method intentionally left blank
     }
 
     @Override
@@ -95,6 +96,7 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
 
     @Override
     public void activateSubscription(Consumer consumer, String email, String emailLocale) {
+        // method intentionally left blank
     }
 
     @Override
