@@ -7,8 +7,9 @@ describe 'Import', :serial => true do
   include CandlepinMethods
   include VirtHelper
 
-  before(:all) do
+  before(:each) do
     @cp = Candlepin.new('admin', 'admin')
+    pending("candlepin running in hosted mode") if is_hosted?
 
     @cp_export = StandardExporter.new
     @cp_export.create_candlepin_export()
@@ -25,7 +26,7 @@ describe 'Import', :serial => true do
     @exporters = [@cp_export]
   end
 
-  after(:all) do
+  after(:each) do
     @cp.delete_user(@import_username)
     @cp.delete_owner(@import_owner['key'])
     @exporters.each do |e|
@@ -35,7 +36,7 @@ describe 'Import', :serial => true do
 
   it 'creates pools' do
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
-    pools.length.should == 5
+    pools.length.should == 6
 
     # Some of these pools must carry provided/derived provided products,
     # don't care which pool just need to be sure that they're getting
@@ -59,7 +60,7 @@ describe 'Import', :serial => true do
 
   it 'ignores multiplier for pool quantity' do
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
-    pools.length.should == 5
+    pools.length.should == 6
     # 1 product has a multiplier of 2 upstream, the others 1.
     # 1 entitlement is consumed from each pool for the export, so
     # quantity should be 1 on each.

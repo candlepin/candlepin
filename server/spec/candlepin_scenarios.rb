@@ -520,7 +520,7 @@ class StandardExporter < Exporter
                                   {:attributes => {:virt_only => true}})
 
     @products[:product3] = create_product(random_string('sub-prod'), random_string(), {
-        :attributes => { :arch => "x86_64"}
+        :attributes => { :arch => "x86_64", :virt_limit => "unlimited"}
     })
 
     @products[:derived_product] = create_product(random_string('sub-prov-prod'), random_string(),
