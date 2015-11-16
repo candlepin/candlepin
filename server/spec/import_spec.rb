@@ -7,7 +7,7 @@ describe 'Import', :serial => true do
   include CandlepinMethods
   include VirtHelper
 
-  before(:each) do
+  before(:all) do
     @cp = Candlepin.new('admin', 'admin')
     pending("candlepin running in hosted mode") if is_hosted?
 
@@ -26,7 +26,7 @@ describe 'Import', :serial => true do
     @exporters = [@cp_export]
   end
 
-  after(:each) do
+  after(:all) do
     @cp.delete_user(@import_username)
     @cp.delete_owner(@import_owner['key'])
     @exporters.each do |e|
