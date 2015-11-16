@@ -104,16 +104,11 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
     private List<ProductContent> productContent;
 
-    /*
-     * hibernate persists empty set as null, and tries to fetch
-     * dependentProductIds upon a fetch when we lazy load. to fix this, we eager
-     * fetch.
-     */
     @ElementCollection
     @CollectionTable(name = "cpo_product_dependent_products",
                      joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
-    @LazyCollection(LazyCollectionOption.FALSE)
+    @LazyCollection(LazyCollectionOption.EXTRA)
     private Set<String> dependentProductIds; // Should these be product references?
 
     protected Product() {
@@ -329,6 +324,10 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     }
 
     public Set<ProductAttribute> getAttributes() {
+        if (this.attributes == null) {
+            this.attributes = new HashSet<ProductAttribute>();
+        }
+
         return attributes;
     }
 
@@ -395,7 +394,7 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
 
     @Override
     public String toString() {
-        return "Product [owner = " + owner.getKey() + ", id = " + id + ", name = " + name + "]";
+        return "Product [owner = " + (owner != null ? owner.getKey() : null) + ", id = " + id + ", name = " + name + "]";
     }
 
     @Override
@@ -461,6 +460,10 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
      * @return the productContent
      */
     public List<ProductContent> getProductContent() {
+        if (this.productContent == null) {
+            this.productContent = new LinkedList<ProductContent>();
+        }
+
         return productContent;
     }
 
@@ -504,6 +507,10 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
      * @return the dependentProductIds
      */
     public Set<String> getDependentProductIds() {
+        if (this.dependentProductIds == null) {
+            this.dependentProductIds = new HashSet<String>();
+        }
+
         return dependentProductIds;
     }
 

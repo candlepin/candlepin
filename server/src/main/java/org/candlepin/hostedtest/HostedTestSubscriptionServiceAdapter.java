@@ -20,6 +20,9 @@ import org.candlepin.model.Product;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +35,7 @@ import java.util.HashMap;
  * as the only purpose of this class is to support spec tests.
  */
 public class HostedTestSubscriptionServiceAdapter implements SubscriptionServiceAdapter {
+    private static Logger log = LoggerFactory.getLogger(HostedTestSubscriptionServiceAdapter.class);
 
     private static Map<String, Subscription> idMap = new HashMap<String, Subscription>();
     private static Map<String, List<Subscription>> ownerMap = new HashMap<String, List<Subscription>>();
@@ -109,6 +113,8 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         if (!productMap.containsKey(s.getProduct().getId())) {
             productMap.put(s.getProduct().getId(), new ArrayList<Subscription>());
         }
+
+        log.debug("STORING PRODUCT: {} (name: {})", s.getProduct(), s.getProduct().getName());
         productMap.get(s.getProduct().getId()).add(s);
         return s;
     }
