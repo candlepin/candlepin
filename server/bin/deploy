@@ -129,6 +129,7 @@ usage() {
     OPTIONS:
         -f  force cert regeneration
         -g  generate database
+        -h  include test resources for hosted mode
         -t  import test data
         -o  use Oracle
         -l  use Logdriver
