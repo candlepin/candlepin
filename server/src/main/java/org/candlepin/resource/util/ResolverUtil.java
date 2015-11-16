@@ -53,19 +53,19 @@ public class ResolverUtil {
         }
 
         if (owner.getKey() != null) {
+            String key = owner.getKey();
             owner = ownerCurator.lookupByKey(owner.getKey());
 
             if (owner == null) {
-                throw new NotFoundException(i18n.tr("Unable to find an owner with the key \"{0}\"",
-                        owner.getKey()));
+                throw new NotFoundException(i18n.tr("Unable to find an owner with the key \"{0}\"", key));
             }
         }
         else {
+            String id = owner.getId();
             owner = ownerCurator.find(owner.getId());
 
             if (owner == null) {
-                throw new NotFoundException(i18n.tr("Unable to find an owner with the ID \"{0}\"",
-                        owner.getId()));
+                throw new NotFoundException(i18n.tr("Unable to find an owner with the ID \"{0}\"", id));
             }
         }
 
