@@ -104,11 +104,16 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
     private List<ProductContent> productContent;
 
+    /*
+     * hibernate persists empty set as null, and tries to fetch
+     * dependentProductIds upon a fetch when we lazy load. to fix this, we eager
+     * fetch.
+     */
     @ElementCollection
     @CollectionTable(name = "cpo_product_dependent_products",
                      joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
-    @LazyCollection(LazyCollectionOption.EXTRA)
+    @LazyCollection(LazyCollectionOption.FALSE)
     private Set<String> dependentProductIds; // Should these be product references?
 
     protected Product() {
@@ -319,15 +324,13 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
             this.attributes = new HashSet<ProductAttribute>();
         }
 
-        attrib.setProduct(this);
-        this.attributes.add(attrib);
+        if (attrib != null) {
+            attrib.setProduct(this);
+            this.attributes.add(attrib);
+        }
     }
 
     public Set<ProductAttribute> getAttributes() {
-        if (this.attributes == null) {
-            this.attributes = new HashSet<ProductAttribute>();
-        }
-
         return attributes;
     }
 
@@ -451,8 +454,10 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
 
         this.productContent.clear();
 
-        for (ProductContent pc : productContent) {
-            this.addProductContent(pc);
+        if (productContent != null) {
+            for (ProductContent pc : productContent) {
+                this.addProductContent(pc);
+            }
         }
     }
 
@@ -460,10 +465,6 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
      * @return the productContent
      */
     public List<ProductContent> getProductContent() {
-        if (this.productContent == null) {
-            this.productContent = new LinkedList<ProductContent>();
-        }
-
         return productContent;
     }
 
@@ -472,19 +473,23 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
             this.productContent = new LinkedList<ProductContent>();
         }
 
-        content.setProduct(this);
-        this.productContent.add(content);
+        if (content != null) {
+            content.setProduct(this);
+            this.productContent.add(content);
+        }
     }
 
     public void setContent(Set<Content> content) {
-        if (content == null) {
-            return;
+        if (this.productContent == null) {
+            this.productContent = new LinkedList<ProductContent>();
         }
 
-        this.productContent = new LinkedList<ProductContent>();
+        this.productContent.clear();
 
-        for (Content newContent : content) {
-            this.productContent.add(new ProductContent(this, newContent, false));
+        if (content != null) {
+            for (Content newContent : content) {
+                this.productContent.add(new ProductContent(this, newContent, false));
+            }
         }
     }
 
@@ -507,10 +512,6 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
      * @return the dependentProductIds
      */
     public Set<String> getDependentProductIds() {
-        if (this.dependentProductIds == null) {
-            this.dependentProductIds = new HashSet<String>();
-        }
-
         return dependentProductIds;
     }
 
