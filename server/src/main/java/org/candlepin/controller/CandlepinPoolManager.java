@@ -35,6 +35,7 @@ import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
@@ -112,6 +113,7 @@ public class CandlepinPoolManager implements PoolManager {
     private ActivationKeyRules activationKeyRules;
     private ProductCurator prodCurator;
     private ContentCurator contentCurator;
+    private OwnerCurator ownerCurator;
 
     /**
      * @param poolCurator
@@ -128,7 +130,8 @@ public class CandlepinPoolManager implements PoolManager {
         PoolRules poolRules, EntitlementCurator curator1, ConsumerCurator consumerCurator,
         EntitlementCertificateCurator ecC, ComplianceRules complianceRules,
         AutobindRules autobindRules, ActivationKeyRules activationKeyRules,
-        ProductCurator prodCurator, ContentCurator contentCurator, I18n i18n) {
+        ProductCurator prodCurator, ContentCurator contentCurator, OwnerCurator ownerCurator,
+        I18n i18n) {
 
         this.poolCurator = poolCurator;
         this.sink = sink;
@@ -146,6 +149,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.activationKeyRules = activationKeyRules;
         this.prodCurator = prodCurator;
         this.contentCurator = contentCurator;
+        this.ownerCurator = ownerCurator;
         this.i18n = i18n;
     }
 
@@ -155,6 +159,7 @@ public class CandlepinPoolManager implements PoolManager {
      */
     void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter, Owner owner, boolean lazy) {
         long start = System.currentTimeMillis();
+        owner = refreshOwner(owner);
         log.info("Refreshing pools for owner: {}", owner);
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
 
@@ -167,7 +172,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // TODO:
         // Does changedContent have a use? Should refreshing products imply refreshing content?
-        Set<Content> changedContent = refreshContent(owner, subs);
+        refreshContent(owner, subs);
         Set<Product> changedProducts = refreshProducts(owner, subs);
 
         List<String> deletedSubs = new LinkedList<String>();
@@ -207,6 +212,33 @@ public class CandlepinPoolManager implements PoolManager {
         updateFloatingPools(floatingPools, lazy, changedProducts);
         log.info("Refresh pools for owner: {} completed in: {}ms", owner.getKey(),
                 System.currentTimeMillis() - start);
+    }
+
+    private Owner refreshOwner(Owner owner) {
+        if (owner == null || (owner.getKey() == null && owner.getId() == null)) {
+            throw new IllegalArgumentException(
+                    i18n.tr("No owner specified, or owner lacks identifying information"));
+        }
+
+        if (owner.getKey() != null) {
+            String ownerKey = owner.getKey();
+            owner = ownerCurator.lookupByKey(owner.getKey());
+
+            if (owner == null) {
+                throw new IllegalStateException(i18n.tr("Unable to find an owner with the key \"{0}\"",
+                        ownerKey));
+            }
+        }
+        else {
+            String id = owner.getId();
+            owner = ownerCurator.find(owner.getId());
+
+            if (owner == null) {
+                throw new IllegalStateException(i18n.tr("Unable to find an owner with the ID \"{0}\"", id));
+            }
+        }
+
+        return owner;
     }
 
     /**
@@ -414,6 +446,7 @@ public class CandlepinPoolManager implements PoolManager {
             else {
                 if (hasProductChanged(existing, incoming)) {
                     log.info("Product changed for org {}: {}", o.getKey(), incoming.getId());
+                    incoming.setOwner(o);
                     prodCurator.createOrUpdate(incoming);
                     changedProducts.add(incoming);
                 }
@@ -471,7 +504,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // BUG 1012386 This will regenerate master/derived for bonus scenarios
         //  if only one of the pair still exists.
-        createPoolsForSubscription(sub, subscriptionPools);
+        createAndEnrichPools(sub, subscriptionPools);
 
         // don't update floating here, we'll do that later
         // so we don't update anything twice
@@ -666,18 +699,29 @@ public class CandlepinPoolManager implements PoolManager {
      * @return the newly created Pools
      */
     @Override
-    public List<Pool> createPoolsForSubscription(Subscription sub) {
-        return createPoolsForSubscription(sub, new LinkedList<Pool>());
+    public List<Pool> createAndEnrichPools(Subscription sub) {
+        return createAndEnrichPools(sub, new LinkedList<Pool>());
     }
 
-    public List<Pool> createPoolsForSubscription(Subscription sub, List<Pool> existingPools) {
-        List<Pool> pools = poolRules.createPools(sub, existingPools);
+    public List<Pool> createAndEnrichPools(Subscription sub, List<Pool> existingPools) {
+        List<Pool> pools = poolRules.createAndEnrichPools(sub, existingPools);
         log.debug("Creating {} pools for subscription: ", pools.size());
         for (Pool pool : pools) {
             createPool(pool);
         }
 
         return pools;
+    }
+
+    @Override
+    public Pool createAndEnrichPools(Pool pool) {
+        List<Pool> pools = poolRules.createAndEnrichPools(pool, new ArrayList<Pool>());
+        log.debug("Creating {} pools: ", pools.size());
+        for (Pool p : pools) {
+            createPool(p);
+        }
+
+        return pool;
     }
 
     @Override

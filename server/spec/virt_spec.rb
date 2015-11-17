@@ -81,8 +81,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
         :'multi-entitlement' => 'yes',
         :stacking_id => stack_id,
       })
-    @cp.create_subscription(@owner['key'], arch_virt_product.id, 10)
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], arch_virt_product.id, 10)
     arch_virt_pools = @user.list_pools(:owner => @owner.id, :product => arch_virt_product.id)
     #unmapped guest pool not part of test
     arch_virt_pool = filter_unmapped_guest_pools(arch_virt_pools)[0]
@@ -185,8 +184,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     # create a second product in order to test bz #786730
 
     @second_product = create_product()
-    @cp.create_subscription(@owner['key'], @second_product.id, 1)
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], @second_product.id, 1)
 
     @installed_product_list = [
     {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name},
@@ -253,9 +251,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
 
   it 'should not bind products on host if virt_only are already available for guest' do
     @second_product = create_product(nil, nil, {:attributes => { :virt_only => true }})
-    @cp.create_subscription(@owner['key'],
-      @second_product.id, 10, [@virt_limit_product.id])
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], @second_product.id, 10, [@virt_limit_product.id])
 
     @installed_product_list = [
         {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name}]
@@ -306,9 +302,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
 
   it 'should not heal the host if the product is already compliant' do
     @second_product = create_product
-    @cp.create_subscription(@owner['key'],
-      @second_product.id, 10, [@virt_limit_product.id])
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], @second_product.id, 10, [@virt_limit_product.id])
 
     @installed_product_list = [
         {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name}]
@@ -341,8 +335,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
 
   it 'should not heal other host products' do
     @second_product = create_product()
-    @cp.create_subscription(@owner['key'], @second_product.id, 1)
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], @second_product.id, 1)
 
     @guest_installed_product_list = [
         {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name}]
@@ -375,9 +368,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
         :guest_limit => 1
       }
     })
-    @virt_limit_sub = @cp.create_subscription(@owner['key'],
-      @very_virt_limit_product.id, 10)
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], @very_virt_limit_product.id, 10)
     @host1_client.update_consumer({:installedProducts => [{'productId' => @very_virt_limit_product.id,
       'productName' => @very_virt_limit_product.name}]})
     @host1_client.update_consumer({:guestIds => [
@@ -396,9 +387,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
         :virt_limit => 8
       }
     })
-    @virt_limit_sub = @cp.create_subscription(@owner['key'],
-      @not_so_virt_limit_product.id, 10)
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], @not_so_virt_limit_product.id, 10)
     @host1_client.update_consumer({:installedProducts => [{'productId' => @not_so_virt_limit_product.id,
       'productName' => @not_so_virt_limit_product.name}]})
     @host1_client.update_consumer({:guestIds => [
@@ -414,8 +403,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     # Create a sub for a virt limited product:
     product = create_product(random_string('product'), random_string('product'),
                       :attributes => { :virt_limit => 3, :'multi-entitlement' => 'yes'})
-    @cp.create_subscription(@owner['key'], product.id, 10)
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], product.id, 10)
 
     pools = @user.list_pools :owner => @owner.id, \
            :product => product.id
@@ -450,8 +438,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     @instance_based = create_product(nil, random_string('instance_based'),
                                     :attributes => { 'instance_multiplier' => 2,
                                         'multi-entitlement' => 'yes' })
-    @cp.create_subscription(@owner['key'], @instance_based.id, 10)
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], @instance_based.id, 10)
 
     pool = @guest1_client.list_pools(:product => @instance_based.id,
         :consumer => @guest1_client.uuid).first

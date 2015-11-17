@@ -500,7 +500,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2020, 1, 1), new Date());
         sub.setId(Util.generateDbUUID());
 
-        Pool newPool = poolManager.createPoolsForSubscription(sub).get(0);
+        Pool newPool = poolManager.createAndEnrichPools(sub).get(0);
         List<Pool> pools = poolCurator.lookupBySubscriptionId(sub.getId());
 
         assertEquals(160L, pools.get(0).getQuantity().longValue());
@@ -915,7 +915,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2020, 1, 1), new Date());
         sub.setId(Util.generateDbUUID());
 
-        Pool sourcePool = poolManager.createPoolsForSubscription(sub).get(0);
+        Pool sourcePool = poolManager.createAndEnrichPools(sub).get(0);
         poolCurator.create(sourcePool);
         Entitlement e = new Entitlement(sourcePool, consumer, 1);
         entitlementCurator.create(e);

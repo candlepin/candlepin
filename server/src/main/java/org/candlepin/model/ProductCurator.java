@@ -188,9 +188,12 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         Product existing = this.lookupById(p.getOwner(), p.getId());
 
         if (existing == null) {
+            log.debug("Could not find product by owner/id: {}, {}", p.getOwner(), p.getId());
             create(p);
             return p;
         }
+
+        log.debug("Updating product by owner/id: {}, {}", p.getOwner(), p.getId());
 
         copy(p, existing);
         return merge(existing);

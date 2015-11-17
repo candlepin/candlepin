@@ -24,6 +24,7 @@ import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
+import org.candlepin.test.TestUtil;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -54,7 +55,7 @@ public class RefresherTest {
 
     @Test
     public void testOwnerOnlyExaminedOnce() {
-        Owner owner = mock(Owner.class);
+        Owner owner = TestUtil.createOwner();
 
         refresher.add(owner);
         refresher.add(owner);
@@ -76,7 +77,7 @@ public class RefresherTest {
 
     @Test
     public void testPoolOnlyExaminedOnceProductAndOwner() {
-        Owner owner = mock(Owner.class);
+        Owner owner = TestUtil.createOwner();
         Product product = mock(Product.class);
 
         when(product.getUuid()).thenReturn("product id");
@@ -120,6 +121,7 @@ public class RefresherTest {
         pool.setSourceSubscription(new SourceSubscription("subId", "master"));
         Subscription subscription = new Subscription();
         subscription.setId("subId");
+        subscription.setOwner(TestUtil.createOwner());
 
         List<Pool> pools = Util.newList();
         pools.add(pool);

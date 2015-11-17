@@ -15,9 +15,8 @@ describe 'Activation Keys' do
     mallory = create_owner random_string('test_owner')
     @mallory_client = user_client(mallory, random_string('testuser'))
 
-    @sub = @cp.create_subscription(@owner['key'], @some_product['id'], 37)
-    @sub = @cp.create_subscription(@owner['key'], @some_product_2['id'], 37)
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], @some_product.id, 37)
+    create_pool_and_subscription(@owner['key'], @some_product_2.id, 37)
 
     @pool = @cp.list_pools(:owner => @owner.id, :product => @some_product['id']).first
     @pool_2 = @cp.list_pools(:owner => @owner.id, :product => @some_product_2['id']).first
@@ -167,8 +166,7 @@ describe 'Activation Keys' do
     product1 = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:support_level => 'VIP'}})
-    sub = @cp.create_subscription(@owner['key'], product1['id'], 30)
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], product1.id, 30)
     service_activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'), 'VIP')
     service_activation_key['serviceLevel'].should == 'VIP'
   end
@@ -180,9 +178,9 @@ describe 'Activation Keys' do
     product2 = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:support_level => 'Ultra-VIP'}})
-    sub1 = @cp.create_subscription(@owner['key'], product1['id'], 30)
-    sub2 = @cp.create_subscription(@owner['key'], product2['id'], 30)
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], product1.id, 30)
+    create_pool_and_subscription(@owner['key'], product2.id, 30)
+
     service_activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'), 'VIP')
     service_activation_key['serviceLevel'].should == 'VIP'
 

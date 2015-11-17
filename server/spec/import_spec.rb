@@ -9,6 +9,7 @@ describe 'Import', :serial => true do
 
   before(:all) do
     @cp = Candlepin.new('admin', 'admin')
+    pending("candlepin running in hosted mode") if is_hosted?
 
     @cp_export = StandardExporter.new
     @cp_export.create_candlepin_export()
@@ -60,7 +61,6 @@ describe 'Import', :serial => true do
   it 'ignores multiplier for pool quantity' do
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
     pools.length.should == 6
-
     # 1 product has a multiplier of 2 upstream, the others 1.
     # 1 entitlement is consumed from each pool for the export, so
     # quantity should be 1 on each.

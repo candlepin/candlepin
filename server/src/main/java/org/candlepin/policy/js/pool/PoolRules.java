@@ -66,99 +66,125 @@ public class PoolRules {
         this.prodCurator = prodCurator;
     }
 
-    private long calculateQuantity(Subscription sub) {
-        long quantity = sub.getQuantity() * sub.getProduct().getMultiplier();
+    private long calculateQuantity(long quantity, Product product, String upstreamPoolId) {
+        long result = quantity * product.getMultiplier();
 
         // In hosted, we increase the quantity on the subscription. However in standalone,
         // we assume this already has happened in hosted and the accurate quantity was
         // exported:
-        if (sub.getProduct().hasAttribute("instance_multiplier") &&
-            sub.getUpstreamPoolId() == null) {
+        if (product.hasAttribute("instance_multiplier") &&
+                upstreamPoolId == null) {
 
             int instanceMultiplier = Integer.parseInt(
-                sub.getProduct().getAttributeValue("instance_multiplier"));
+                    product.getAttributeValue("instance_multiplier"));
             log.debug("Increasing pool quantity for instance multiplier: " +
                 instanceMultiplier);
-            quantity = quantity * instanceMultiplier;
+            result = result * instanceMultiplier;
         }
-        return quantity;
+        return result;
     }
 
-    public List<Pool> createPools(Subscription sub) {
-        return createPools(sub, new LinkedList<Pool>());
+    public List<Pool> createAndEnrichPools(Subscription sub) {
+        return createAndEnrichPools(sub, new LinkedList<Pool>());
+    }
+
+    public List<Pool> createAndEnrichPools(Subscription sub, List<Pool> existingPools) {
+        Pool pool = convertToPool(sub);
+        return createAndEnrichPools(pool, existingPools);
     }
 
     /**
-     * Create any pools that need to be created for the given subscription.
+     * Create any pools that need to be created for the given pool.
      *
      * In some scenarios, due to attribute changes, pools may need to be created even though
      * pools already exist for the subscription. A list of pre-existing pools for the given
      * sub are provided to help this method determine if something needs to be done or not.
      *
-     * For a genuine new subscription, the existing pools list will be empty.
+     * For a genuine new pool, the existing pools list will be empty.
      *
-     * @param sub
+     * @param pool
      * @param existingPools
-     * @return a list of pools created for the given subscription
+     * @return a list of pools created for the given pool
      */
-    public List<Pool> createPools(Subscription sub, List<Pool> existingPools) {
+    public List<Pool> createAndEnrichPools(Pool pool, List<Pool> existingPools) {
+        List<Pool> pools = new LinkedList<Pool>();
+        pool.setQuantity(calculateQuantity(pool.getQuantity(), pool.getProduct(), pool.getUpstreamPoolId()));
+
+        ProductAttribute virtAtt = pool.getProduct().getAttribute("virt_only");
+        // The following will make virt_only a pool attribute. That makes the
+        // pool explicitly virt_only to subscription manager and any other
+        // downstream consumer.
+        if (virtAtt != null && virtAtt.getValue() != null && !virtAtt.getValue().equals("")) {
+            pool.addAttribute(new PoolAttribute("virt_only", virtAtt.getValue()));
+        }
+
+        log.info("Checking if pools need to be created for: {}", pool);
+        if (!hasMasterPool(existingPools)) {
+            if (pool.getSourceSubscription() != null &&
+                    pool.getSourceSubscription().getSubscriptionSubKey().contentEquals("derived")) {
+                // while we can create bonus pool from master pool, the reverse
+                // is not possible without the subscription itself
+                throw new IllegalStateException("Cannot create master pool from bonus pool");
+            }
+            pools.add(pool);
+            log.info("Creating new master pool: {}", pool);
+        }
+        Pool bonusPool = createBonusPool(pool, existingPools);
+        if (bonusPool != null) {
+            pools.add(bonusPool);
+        }
+        return pools;
+    }
+
+    /*
+     * if you are using this method, you might want to override the quantity
+     * with calculateQuantity
+     */
+    public Pool convertToPool(Subscription sub) {
         if (sub == null) {
             throw new IllegalArgumentException("subscription is null");
         }
+        Pool pool = new Pool(sub.getOwner(), sub.getProduct(), sub.getProvidedProducts(),
+                sub.getQuantity(), sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
+                sub.getAccountNumber(), sub.getOrderNumber());
 
-        log.info("Checking if pools need to be created for subscription: {}", sub);
-        PoolHelper helper = new PoolHelper(this.poolManager, null);
+        // Add all product references
+        pool.setDerivedProduct(sub.getDerivedProduct());
+        pool.setDerivedProvidedProducts(sub.getDerivedProvidedProducts());
 
-        List<Pool> pools = new LinkedList<Pool>();
-        Map<String, String> attributes = helper.getFlattenedAttributes(sub.getProduct());
-        long quantity = calculateQuantity(sub);
-
-        if (!hasMasterPool(existingPools)) {
-            Pool newPool = new Pool(sub.getOwner(), sub.getProduct(), null, quantity,
-                sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
-                sub.getAccountNumber(), sub.getOrderNumber()
-            );
-
-            // Add all product references
-            newPool.setProvidedProducts(sub.getProvidedProducts());
-            newPool.setDerivedProduct(sub.getDerivedProduct());
-            newPool.setDerivedProvidedProducts(sub.getDerivedProvidedProducts());
-
-            // Add in branding
-            for (Branding b : sub.getBranding()) {
-                newPool.getBranding().add(new Branding(b.getProductId(), b.getType(), b.getName()));
-            }
-
-            newPool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
-            ProductAttribute virtAtt = sub.getProduct().getAttribute("virt_only");
-
-            // note: the product attributes are getting copied above, but the following will
-            // make virt_only a pool attribute. That makes the pool explicitly virt_only to
-            // subscription manager and any other downstream comsumer.
-            if (virtAtt != null && virtAtt.getValue() != null && !virtAtt.getValue().equals("")) {
-                newPool.addAttribute(new PoolAttribute("virt_only", virtAtt.getValue()));
-            }
-
-            // Copy over upstream details...?
-            newPool.setUpstreamPoolId(sub.getUpstreamPoolId());
-            newPool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
-            newPool.setUpstreamConsumerId(sub.getUpstreamConsumerId());
-
-            newPool.setCdn(sub.getCdn());
-            newPool.setCertificate(sub.getCertificate());
-
-            pools.add(newPool);
-
-            log.info("Creating new master pool: {}", newPool);
+        // Add in branding
+        for (Branding b : sub.getBranding()) {
+            pool.getBranding().add(new Branding(b.getProductId(), b.getType(), b.getName()));
         }
+        pool.setSubscriptionId(sub.getId());
+        pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
 
-        // If this subscription carries a virt_limit, we need to either create a bonus
-        // pool for any guest (legacy behavior, only in hosted), or a pool for temporary
-        // use of unmapped guests. (current behavior for any pool with virt_limit)
-        boolean hostLimited = attributes.containsKey("host_limited") &&
-            attributes.get("host_limited").equals("true");
-        if (attributes.containsKey("virt_limit") && !hasBonusPool(existingPools)) {
+        // Copy over upstream details...?
+        pool.setUpstreamPoolId(sub.getUpstreamPoolId());
+        pool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
+        pool.setUpstreamConsumerId(sub.getUpstreamConsumerId());
+        pool.setCdn(sub.getCdn());
+        pool.setCertificate(sub.getCertificate());
+        return pool;
+    }
 
+    /*
+     * If this subscription carries a virt_limit, we need to either create a
+     * bonus pool for any guest (legacy behavior, only in hosted), or a pool for
+     * temporary use of unmapped guests. (current behavior for any pool with
+     * virt_limit)
+     */
+    private Pool createBonusPool(Pool masterPool, List<Pool> existingPools) {
+        PoolHelper helper = new PoolHelper(this.poolManager, null);
+        Map<String, String> attributes = helper.getFlattenedAttributes(masterPool.getProduct());
+        String virtQuantity = getVirtQuantity(attributes.get("virt_limit"), masterPool.getQuantity());
+
+        log.info("Checking if bonus pools need to be created for pool: {}", masterPool);
+
+        if (attributes.containsKey("virt_limit") && !hasBonusPool(existingPools) && virtQuantity != null) {
+
+            boolean hostLimited = attributes.containsKey("host_limited") &&
+                    attributes.get("host_limited").equals("true");
             HashMap<String, String> virtAttributes = new HashMap<String, String>();
             virtAttributes.put("virt_only", "true");
             virtAttributes.put("pool_derived", "true");
@@ -170,26 +196,19 @@ public class PoolRules {
             // otherwise this will recurse infinitely
             virtAttributes.put("virt_limit", "0");
 
-            String virtQuantity = getVirtQuantity(attributes.get("virt_limit"), quantity);
-            if (virtQuantity != null) {
-                // Favor derived products if they are available
-                Product sku = sub.getDerivedProduct() != null ?
-                    sub.getDerivedProduct() :
-                    sub.getProduct();
+            // Favor derived products if they are available
+            Product sku = masterPool.getDerivedProduct() != null ? masterPool.getDerivedProduct() :
+                    masterPool.getProduct();
 
-                Pool derivedPool = helper.createPool(
-                    sub, sku, virtQuantity, virtAttributes, prodCurator
-                );
+            // Using derived here because only one derived pool is created for
+            // this subscription
+            Pool bonusPool = helper.clonePool(masterPool, sku, virtQuantity, virtAttributes, "derived",
+                    prodCurator);
 
-                // Using derived here because only one derived pool
-                // is created for this subscription
-                derivedPool.setSourceSubscription(new SourceSubscription(sub.getId(), "derived"));
-                pools.add(derivedPool);
-                log.info("Creating new derived pool: {}", derivedPool);
-            }
+            log.info("Creating new derived pool: {}", bonusPool);
+            return bonusPool;
         }
-
-        return pools;
+        return null;
     }
 
     private boolean hasMasterPool(List<Pool> pools) {
@@ -308,7 +327,7 @@ public class PoolRules {
 
                 update.setProductsChanged(
                     checkForChangedProducts(
-                        sub.getProduct(),
+                        useDerived ? sub.getDerivedProduct() : sub.getProduct(),
                         getExpectedProvidedProducts(sub, existingPool, useDerived),
                         existingPool,
                         changedProducts
@@ -565,7 +584,8 @@ public class PoolRules {
 
         // Expected quantity is normally the subscription's quantity, but for
         // virt only pools we expect it to be sub quantity * virt_limit:
-        long expectedQuantity = calculateQuantity(sub);
+        long expectedQuantity = calculateQuantity(sub.getQuantity(), sub.getProduct(),
+                sub.getUpstreamPoolId());
         expectedQuantity = processVirtLimitPools(existingPools,
             attributes, existingPool, expectedQuantity);
 

@@ -11,21 +11,21 @@ describe 'Entitlement Certificate' do
   end
 
   def change_dt_and_qty
-      sub = @cp.list_subscriptions(@owner['key'])[0]
-      sub.endDate = sub.endDate.to_date + 10
-      sub.startDate = sub.startDate.to_date - 10
-      sub.quantity = sub.quantity + 10
+      pool = @cp.list_owner_pools(@owner['key'])[0]
+      poolOrSub = get_pool_or_subscription(pool)
+      poolOrSub.endDate = poolOrSub.endDate.to_date + 10
+      poolOrSub.startDate = poolOrSub.startDate.to_date - 10
+      poolOrSub.quantity = poolOrSub.quantity + 10
 
-      @cp.update_subscription(sub)
-      @cp.refresh_pools(@owner['key'])
-      return sub
+      update_pool_or_subscription(poolOrSub)
+      return poolOrSub
   end
 
   before(:each) do
     @owner = create_owner random_string('test_owner')
     monitoring = create_product()
 
-    @cp.create_subscription(@owner['key'], monitoring.id, 10)
+    @pool = create_pool_and_subscription(@owner['key'], monitoring.id, 10)
 
     @user = user_client(@owner, random_string('billy'))
 
@@ -63,8 +63,7 @@ describe 'Entitlement Certificate' do
 
   it 'can be manually regenerated for a product' do
     coolapp = create_product
-    @cp.create_subscription(@owner['key'], coolapp.id, 10)
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], coolapp.id, 10)
     @system.consume_product coolapp.id
 
     @system.list_certificates.length.should == 2
@@ -82,34 +81,29 @@ describe 'Entitlement Certificate' do
   end
 
   it 'will be regenerated when changing existing subscription\'s end date' do
-    sub = @cp.list_subscriptions(@owner['key'])[0]
-    sub.endDate = sub.endDate.to_date + 2
+    subOrPool = get_pool_or_subscription(@pool)
+    subOrPool.endDate = subOrPool.endDate.to_date + 2
     old_cert = @system.list_certificates()[0]
-    @cp.update_subscription(sub)
-
-    @cp.refresh_pools(@owner['key'])
+    update_pool_or_subscription(subOrPool)
 
     new_cert = @system.list_certificates()[0]
     old_cert.serial.id.should_not == new_cert.serial.id
 
     ent = @system.get_entitlement(@entitlement.id)
-    sub.endDate.should == ent.endDate.to_date
+    subOrPool.endDate.should == ent.endDate.to_date
   end
 
   it 'single entitlement in excess will be deleted when existing subscription quantity is decreased' do
       # this entitlement makes the counts inconclusive
       @system.unbind_entitlement(@entitlement.id)
       prod = create_product(nil, nil, {:attributes => {"multi-entitlement" => "yes"}})
-      sub = @cp.create_subscription(@owner['key'], prod.id, 10)
-      @cp.refresh_pools(@owner['key'])
-      pool = @system.list_pools({:owner => @owner['id'], :product => prod['id']})[0]
+      pool = create_pool_and_subscription(@owner['key'], prod.id, 10)
 
       @system.consume_pool(pool['id'], {:quantity => 6})
       @system.list_certificates().size.should == 1
-      sub.quantity = sub.quantity.to_i - 5
-      @cp.update_subscription(sub)
-
-      @cp.refresh_pools(@owner['key'])
+      subOrPool = get_pool_or_subscription(pool)
+      subOrPool.quantity = subOrPool.quantity.to_i - 5
+      update_pool_or_subscription(subOrPool)
 
       @system.list_certificates().size.should == 0
   end
@@ -118,18 +112,15 @@ describe 'Entitlement Certificate' do
       # this entitlement makes the counts inconclusive
       @system.unbind_entitlement(@entitlement.id)
       prod = create_product(nil, nil, {:attributes => {"multi-entitlement" => "yes"}})
-      sub = @cp.create_subscription(@owner['key'], prod.id, 10)
-      @cp.refresh_pools(@owner['key'])
-      pool = @system.list_pools({:owner => @owner['id'], :product => prod['id']})[0]
+      pool = create_pool_and_subscription(@owner['key'], prod.id, 10)
 
       for i in 0..4
           @system.consume_pool(pool['id'], {:quantity => 2})
       end
       @system.list_certificates().size.should == 5
-
-      sub.quantity = sub.quantity.to_i - 5
-      @cp.update_subscription(sub)
-      @cp.refresh_pools(@owner['key'])
+      subOrPool = get_pool_or_subscription(pool)
+      subOrPool.quantity = subOrPool.quantity.to_i - 5
+      update_pool_or_subscription(subOrPool)
       @system.list_certificates().size.should == 2
   end
 
@@ -141,11 +132,11 @@ describe 'Entitlement Certificate' do
   end
 
   it 'will be regenerated and dates will have the same values as that of the subscription which was changed' do
-      sub = change_dt_and_qty()
+      poolOrSub = change_dt_and_qty()
       new_cert = @system.list_certificates()[0]
       x509 = OpenSSL::X509::Certificate.new(new_cert['cert'])
-      sub['startDate'].should == x509.not_before().strftime('%Y-%m-%d').to_date
-      sub['endDate'].should == x509.not_after().strftime('%Y-%m-%d').to_date
+      poolOrSub['startDate'].should == x509.not_before().strftime('%Y-%m-%d').to_date
+      poolOrSub['endDate'].should == x509.not_after().strftime('%Y-%m-%d').to_date
   end
 
   it "won't let one consumer regenerate another's certificates" do
@@ -182,12 +173,12 @@ describe 'Entitlement Certificate' do
     prod3 = create_product(prod_id, "test product", {:owner => owner3['key']})
     safe_prod3 = create_product(safe_prod_id, "safe product", {:owner => owner3['key']})
 
-    @cp.create_subscription(owner1['key'], prod1.id, 10)
-    @cp.create_subscription(owner1['key'], safe_prod1.id, 10)
-    @cp.create_subscription(owner2['key'], prod2.id, 10)
-    @cp.create_subscription(owner2['key'], safe_prod2.id, 10)
-    @cp.create_subscription(owner3['key'], prod3.id, 10)
-    @cp.create_subscription(owner3['key'], safe_prod3.id, 10)
+    create_pool_and_subscription(owner1['key'], prod1.id, 10)
+    create_pool_and_subscription(owner1['key'], safe_prod1.id, 10)
+    create_pool_and_subscription(owner2['key'], prod2.id, 10)
+    create_pool_and_subscription(owner2['key'], safe_prod2.id, 10)
+    create_pool_and_subscription(owner3['key'], prod3.id, 10)
+    create_pool_and_subscription(owner3['key'], safe_prod3.id, 10)
 
     user1 = user_client(owner1, random_string('user1'))
     user2 = user_client(owner2, random_string('user2'))

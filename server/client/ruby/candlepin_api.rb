@@ -427,6 +427,7 @@ class Candlepin
     path << "consumer=#{params[:consumer]}&" if params[:consumer]
     path << "product=#{params[:product]}&" if params[:product]
     path << "listall=#{params[:listall]}&" if params[:listall]
+    path << "activeon=#{params[:activeon]}&" if params[:activeon]
     path << "page=#{params[:page]}&" if params[:page]
     path << "per_page=#{params[:per_page]}&" if params[:per_page]
     path << "order=#{params[:order]}&" if params[:order]
@@ -970,8 +971,30 @@ class Candlepin
       'providedProducts' => provided_products.collect { |pid| {'productId' => pid} }
     }
 
+    if params[:branding]
+      pool['branding'] = params[:branding]
+    end
+
+    if params[:contract_number]
+      pool['contractNumber'] = params[:contract_number]
+    end
+
+    if params[:account_number]
+      pool['accountNumber'] = params[:account_number]
+    end
+
+    if params[:order_number]
+      pool['orderNumber'] = params[:order_number]
+    end
+
     if params[:derived_product_id]
       pool['derivedProduct'] = { 'id' => params[:derived_product_id] }
+    end
+
+    if params[:source_subscription]
+      pool['sourceSubscription'] = {}
+      pool['sourceSubscription']['subscriptionId'] = params[:source_subscription]['id']
+      pool['sourceSubscription']['subscriptionSubKey'] = 'master'
     end
 
     if params[:derived_provided_products]
@@ -979,6 +1002,10 @@ class Candlepin
     end
 
     return post("/owners/#{owner_key}/pools", pool)
+  end
+
+  def update_pool(owner_key, pool)
+    put("/owners/#{owner_key}/pools", pool)
   end
 
   def list_activation_keys(owner_key=nil)
@@ -1236,10 +1263,13 @@ class Candlepin
     get("/consumers/#{consumer_id}/guests")
   end
 
-  def get(uri, accept_header = :json)
+  def get(uri, accept_header=:json, dont_parse=false)
     puts ("GET #{uri}") if @verbose
     response = get_client(uri, Net::HTTP::Get, :get)[URI.escape(uri)].get \
       :accept => accept_header
+    if dont_parse
+      return response
+    end
     return JSON.parse(response.body)
   end
 
@@ -1359,11 +1389,14 @@ class Candlepin
     return JSON.parse(response.body) unless response.body.empty?
   end
 
-  def delete(uri, data=nil)
+  def delete(uri, data=nil, dont_parse=false)
     puts ("DELETE #{uri}") if @verbose
     client = get_client(uri, Net::HTTP::Delete, :delete)
     client.options[:payload] = data.to_json if not data.nil?
     response = client[URI.escape(uri)].delete(:content_type => :json, :accepts => :json)
+    if dont_parse
+      return response
+    end
     return JSON.parse(response.body) unless response.body.empty?
   end
 

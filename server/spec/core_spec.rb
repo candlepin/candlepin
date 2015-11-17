@@ -15,7 +15,7 @@ describe 'Core Limiting' do
                  :management_enabled => true,
                  :support_level => 'standard',
                  :support_type => 'excellent',})
-    @core_sub = @cp.create_subscription(@owner['key'], @core_product.id, 10, [], '1888', '1234')
+    @core_pool = create_pool_and_subscription(@owner['key'], @core_product.id, 10, [], '1888', '1234')
 
     # Create a product limiting by core and sockets.
     @core_and_socket_product = create_product(nil, random_string("Product2"), :attributes =>
@@ -26,11 +26,8 @@ describe 'Core Limiting' do
                  :management_enabled => true,
                  :support_level => 'standard',
                  :support_type => 'excellent',})
-    @core_socket_sub = @cp.create_subscription(@owner['key'], @core_and_socket_product.id, 10,
+    @core_socket_pool = create_pool_and_subscription(@owner['key'], @core_and_socket_product.id, 10,
                                               [], '18881', '1222')
-
-    # Refresh pools so that the subscription pools will be available to the test systems.
-    @cp.refresh_pools(@owner['key'])
 
     @user = user_client(@owner, random_string('test-user'))
   end
@@ -72,10 +69,9 @@ describe 'Core Limiting' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @core_sub.id)
-    pool.should_not == nil
+    @core_pool.should_not == nil
 
-    entitlement = system.consume_pool(pool.id, {:quantity => 1})
+    entitlement = system.consume_pool(@core_pool.id, {:quantity => 1})
     entitlement.should_not == nil
 
     compliance_status = system.get_compliance(consumer_id=system.uuid)
@@ -100,10 +96,9 @@ describe 'Core Limiting' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @core_socket_sub.id)
-    pool.should_not == nil
+    @core_socket_pool.should_not == nil
 
-    entitlement = system.consume_pool(pool.id, {:quantity => 1})
+    entitlement = system.consume_pool(@core_socket_pool.id, {:quantity => 1})
     entitlement.should_not == nil
 
     compliance_status = system.get_compliance(consumer_id=system.uuid)
@@ -128,10 +123,9 @@ describe 'Core Limiting' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @core_socket_sub.id)
-    pool.should_not == nil
+    @core_socket_pool.should_not == nil
 
-    entitlement = system.consume_pool(pool.id, {:quantity => 1})
+    entitlement = system.consume_pool(@core_socket_pool.id, {:quantity => 1})
     entitlement.should_not == nil
 
     compliance_status = system.get_compliance(consumer_id=system.uuid)

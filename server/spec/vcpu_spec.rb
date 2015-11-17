@@ -17,7 +17,7 @@ describe 'vCPU Limiting' do
                  :management_enabled => true,
                  :support_level => 'standard',
                  :support_type => 'excellent',})
-    @vcpu_sub = @cp.create_subscription(@owner['key'], @vcpu_product.id, 10, [], '1888', '1234')
+    @vcpu_pool = create_pool_and_subscription(@owner['key'], @vcpu_product.id, 10, [], '1888', '1234')
 
     @vcpu_stackable_prod = create_product(nil, random_string("Product2"), :attributes =>
                 {:version => '6.4',
@@ -30,10 +30,7 @@ describe 'vCPU Limiting' do
                  :support_type => 'excellent',
                  :'multi-entitlement' => 'yes',
                  :stacking_id => '12344321'})
-    @vcpu_stackable_sub = @cp.create_subscription(@owner['key'], @vcpu_stackable_prod.id, 10, [], '1888', '1234')
-
-    # Refresh pools so that the subscription pools will be available to the test systems.
-    @cp.refresh_pools(@owner['key'])
+    @vcpu_stackable_pool = create_pool_and_subscription(@owner['key'], @vcpu_stackable_prod.id, 10, [], '1888', '1234')
 
     @user = user_client(@owner, random_string('test-user'))
   end
@@ -70,10 +67,9 @@ describe 'vCPU Limiting' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    pool = find_pool(@owner.id, @vcpu_sub.id)
-    pool.should_not == nil
+    @vcpu_pool.should_not == nil
 
-    entitlement = system.consume_pool(pool.id, {:quantity => 1})
+    entitlement = system.consume_pool(@vcpu_pool.id, {:quantity => 1})
     entitlement.should_not == nil
 
     compliance_status = system.get_compliance(consumer_id=system.uuid)

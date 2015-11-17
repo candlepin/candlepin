@@ -104,6 +104,7 @@ import org.candlepin.resource.StatisticResource;
 import org.candlepin.resource.StatusResource;
 import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.resource.UserResource;
+import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.resteasy.filter.AuthenticationFilter;
@@ -179,6 +180,7 @@ public class CandlepinModule extends AbstractModule {
             .asEagerSingleton();
         bind(X509ExtensionUtil.class);
         bind(CrlGenerator.class);
+        bind(ResolverUtil.class);
         bind(ConsumerResource.class);
         bind(ConsumerContentOverrideResource.class);
         bind(ActivationKeyContentOverrideResource.class);

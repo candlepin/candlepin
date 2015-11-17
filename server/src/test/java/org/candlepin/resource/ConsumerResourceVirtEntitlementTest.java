@@ -110,7 +110,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         limitSub.setId(Util.generateDbUUID());
         subscriptions.add(limitSub);
 
-        limitPools = poolManager.createPoolsForSubscription(limitSub);
+        limitPools = poolManager.createAndEnrichPools(limitSub);
 
         // create a physical pool with unlimited virt_limit
         productUnlimit = TestUtil.createProduct(owner);
@@ -127,7 +127,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         unlimitSub.setId(Util.generateDbUUID());
         subscriptions.add(unlimitSub);
 
-        unlimitPools = poolManager.createPoolsForSubscription(unlimitSub);
+        unlimitPools = poolManager.createAndEnrichPools(unlimitSub);
     }
 
     /**

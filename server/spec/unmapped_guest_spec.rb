@@ -19,8 +19,7 @@ describe 'Unmapped Guest Pools' do
         :'multi-entitlement' => 'yes'
       }
     })
-    @sub1 = @cp.create_subscription(@owner['key'], @virt_limit_product.id, 10)
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], @virt_limit_product.id, 10)
 
     # should only be the base pool and the bonus pool for unmapped guests
     @pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id

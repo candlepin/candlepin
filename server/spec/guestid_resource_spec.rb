@@ -152,10 +152,8 @@ describe 'GuestId Resource' do
       {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, @owner1['key'], [], [])
     # Create a product/subscription
     super_awesome = create_product(nil, random_string('super_awesome'),
-                            :attributes => { "virt_limit" => "10" }, :owner => @owner1['key'])
-    @cp.create_subscription(@owner1['key'], super_awesome.id, 20)
-    @cp.refresh_pools(@owner1['key'])
-
+                            :attributes => { "virt_limit" => "10", "host_limited" => "true" }, :owner => @owner1['key'])
+    create_pool_and_subscription(@owner1['key'], super_awesome.id, 20)
     consumer_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
     new_consumer_client = Candlepin.new(nil, nil, new_host_consumer['idCert']['cert'], new_host_consumer['idCert']['key'])
     guest_client = Candlepin.new(nil, nil, guest_consumer['idCert']['cert'], guest_consumer['idCert']['key'])
@@ -169,7 +167,6 @@ describe 'GuestId Resource' do
 
     # The original pool and the new host limited pool should be available
     pools.length.should == 2
-
     # Get the guest pool
     guest_pool = pools.find_all { |i| !i['sourceEntitlement'].nil? }[0]
 
@@ -208,9 +205,8 @@ describe 'GuestId Resource' do
       {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, @owner1['key'], [], [])
     # Create a product/subscription
     super_awesome = create_product(nil, random_string('super_awesome'),
-                            :attributes => { "virt_limit" => "10" }, :owner => @owner1['key'])
-    @cp.create_subscription(@owner1['key'], super_awesome.id, 20)
-    @cp.refresh_pools(@owner1['key'])
+                            :attributes => { "virt_limit" => "10", "host_limited" => "true" }, :owner => @owner1['key'])
+    create_pool_and_subscription(@owner1['key'], super_awesome.id, 20)
 
     consumer_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
     guest_client = Candlepin.new(nil, nil, guest_consumer['idCert']['cert'], guest_consumer['idCert']['key'])

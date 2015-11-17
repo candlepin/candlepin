@@ -15,7 +15,7 @@ describe 'Consumer Dev Resource' do
 
     # active subscription to allow this all to work
     active_prod = create_product()
-    @active_sub = @cp.create_subscription(@owner['key'], active_prod.id, 10)
+    create_pool_and_subscription(@owner['key'], active_prod.id, 10)
     pools = @cp.list_owner_pools(@owner['key'])
     pools.length.should == 1
 

@@ -1,9 +1,14 @@
 require 'candlepin_api'
+require 'hostedtest_api'
 
 require 'pp'
 require 'zip/zip'
 
 module CandlepinMethods
+
+  include HostedTest
+
+  @@hosted_mode = nil
 
   # Wrapper for ruby API so we can track all owners we created and clean them
   # up. Note that this entails cleanup of all objects beneath that owner, so
@@ -106,6 +111,117 @@ module CandlepinMethods
     @cp.create_batch_content(owner, contents)
   end
 
+  def ensure_hostedtest_resource()
+    if is_hosted? && !is_hostedtest_alive?
+      raise "Could not find hostedtest rest API. Please run \'deploy -ha\' or add the following to candlepin.conf:\n" \
+          " module.config.hosted.configuration.module=org.candlepin.hostedtest.AdapterOverrideModule"
+    end
+  end
+
+  # Lets spec tests be agnostic of what mode we are testing in, standalone or hosted.
+  # Always returns the main pool that was created ( unless running in hosted mode and refresh is skipped )
+  def create_pool_and_subscription(owner_key, product_id, quantity=1,
+                          provided_products=[], contract_number='',
+                          account_number='', order_number='',
+                          start_date=nil, end_date=nil, skip_refresh=false, params={})
+
+    params[:start_date] = start_date
+    params[:end_date] = end_date
+    params[:contract_number] = contract_number
+    params[:account_number] = account_number
+    params[:order_number] = order_number
+    params[:quantity] = quantity
+    params[:provided_products] = provided_products
+    pool = nil
+    if is_hosted?
+      ensure_hostedtest_resource
+      sub = create_hostedtest_subscription(owner_key, product_id, quantity, params)
+      if not skip_refresh
+        active_on = Date.strptime(sub.startDate, "%Y-%m-%d")+1
+        @cp.refresh_pools(owner_key)
+        pool = find_main_pool(owner_key, sub['id'], activeon=active_on, true)
+      end
+    else
+      params[:source_subscription] = { 'id' => random_string('source_sub_') }
+      pool = @cp.create_pool(owner_key, product_id, params)
+    end
+    return pool
+  end
+
+  # Lets spec tests be agnostic of what mode we are testing in, standalone or hosted.
+  # if we are running in hosted mode, delete the upstream subscription and refresh pools.
+  # else, simply delete the pool
+  def delete_pool_and_subscription(pool)
+    if is_hosted?
+      ensure_hostedtest_resource
+      delete_hostedtest_subscription(pool.subscriptionId)
+      @cp.refresh_pools(pool['owner']['key'], true)
+    else
+      @cp.delete_pool(pool.id)
+    end
+  end
+
+  # Lets spec tests be agnostic of what mode we are testing in, standalone or hosted.
+  # This method is used when we need to update the upstream subscription's details.
+  # first we fetch the upstrean pool ( if standalone mode ) or subscription ( if hosted mode )
+  # using get_pool_or_subscription(pool) and then use update_pool_or_subscription
+  # to update the upstream entity.
+  #
+  # input is always a pool, but the out may be either a subscription or a pool
+  def get_pool_or_subscription(pool)
+    if is_hosted?
+      ensure_hostedtest_resource
+      return get_hostedtest_subscription(pool.subscriptionId)
+    else
+      return pool
+    end
+  end
+
+  # Lets spec tests be agnostic of what mode we are testing in, standalone or hosted.
+  # This method is used when we need to update the upstream subscription's details.
+  # first we fetch the upstrean pool ( if standalone mode ) or subscription ( if hosted mode )
+  # using get_pool_or_subscription(pool) and then use update_pool_or_subscription
+  # to update the upstream entity.
+  #
+  # input may be either a subscription or a pool, and there is no output
+  def update_pool_or_subscription(subOrPool)
+    if is_hosted?
+      ensure_hostedtest_resource
+      update_hostedtest_subscription(subOrPool)
+      active_on = case subOrPool.startDate
+        when String then Date.strptime(subOrPool.startDate, "%Y-%m-%d")+1
+        when Date then subOrPool.startDate+1
+        else raise "invalid date format"
+      end
+      @cp.refresh_pools(subOrPool['owner']['key'], true)
+      sleep 1
+    else
+      @cp.update_pool(subOrPool['owner']['key'], subOrPool)
+    end
+  end
+
+  # Lets spec tests be agnostic of what mode we are testing in, standalone or hosted.
+  # This method is used when we need to update the dependent entities of a 
+  # upstream subscription or pool. simply fetching and updating the subscription forces
+  # a re-resolve of products, owners, etc.
+  #
+  # input is alwasy a pool, and there is no output
+  def refresh_upstream_subscription(pool)
+    if is_hosted?
+      ensure_hostedtest_resource
+      sub = get_hostedtest_subscription(pool.subscriptionId)
+      update_hostedtest_subscription(sub)
+      @cp.refresh_pools(pool['owner']['key'], true)
+    end
+  end
+
+  def cleanup_subscriptions
+    if is_hosted?
+      ensure_hostedtest_resource
+      delete_all_hostedtest_subscriptions
+    end
+  end
+
   # Wrapper for ruby API so we can track all distributor versions we created and clean them up.
   def create_distributor_version(dist_name, display_name, capabilities=[])
     dist_version = @cp.create_distributor_version(dist_name, display_name, capabilities)
@@ -203,10 +319,10 @@ module CandlepinMethods
   # a specific subscription ID. (we often want to verify what pool was used,
   # but the pools are created indirectly after a refresh so it's hard to
   # locate a specific reference without this)
-  def find_pool(owner_id, sub_id, activeon=nil)
-    pools = @cp.list_pools({:owner => owner_id, :activeon => activeon})
+  def find_main_pool(owner_key, sub_id, activeon=nil, return_normal)
+    pools = @cp.list_owner_pools(owner_key, {:activeon => activeon})
     pools.each do |pool|
-      if pool['subscriptionId'] == sub_id
+      if pool['subscriptionId'] == sub_id && (!return_normal || pool['type'] == 'NORMAL')
         return pool
       end
     end
@@ -255,11 +371,17 @@ module CandlepinMethods
   end
 
   def is_hosted?
-    return ! @cp.get_status()['standalone']
+    if @@hosted_mode.nil?
+      @@hosted_mode = ! @cp.get_status()['standalone']
+    end
+    return @@hosted_mode
   end
 
   def is_standalone?
-    return @cp.get_status()['standalone']
+    if @@hosted_mode.nil?
+      @@hosted_mode = ! @cp.get_status()['standalone']
+    end
+    return !@@hosted_mode
   end
 
 end
@@ -431,16 +553,14 @@ class StandardExporter < Exporter
         :name => "Branded Eng Product"
       }
     ]
-    @cp.create_subscription(@owner['key'], @products[:product1].id, 2,
-      [@products[:eng_product]['id']], '', '12345', '6789', nil, end_date,
+    create_pool_and_subscription(@owner['key'], @products[:product1].id, 2,
+      [@products[:eng_product]['id']], '', '12345', '6789', nil, end_date, true,
       {:branding => brandings})
-    @cp.create_subscription(@owner['key'], @products[:product2].id, 4, [], '', '12345', '6789', nil, end_date)
-    @cp.create_subscription(@owner['key'], @products[:virt_product].id, 10, [], '', '12345', '6789', nil, end_date)
-    @cp.create_subscription(@owner['key'], @products[:product3].id, 5, [], '', '12345', '6789', nil, end_date,
-      {'derived_product_id' => @products[:derived_product]['id'],  'derived_provided_products' => [@products[:derived_provided_prod]['id']]})
-    @cp.create_subscription(@owner['key'], @products[:product_up].id, 10, [], '', '12345', '6789', nil, end_date)
-
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], @products[:product2].id, 4, [], '', '12345', '6789', nil, end_date, true)
+    create_pool_and_subscription(@owner['key'], @products[:virt_product].id, 10, [], '', '12345', '6789', nil, end_date, true)
+    create_pool_and_subscription(@owner['key'], @products[:product3].id, 5, [], '', '12345', '6789', nil, end_date, true,
+      {:derived_product_id => @products[:derived_product]['id'],  :derived_provided_products => [@products[:derived_provided_prod]['id']]})
+    create_pool_and_subscription(@owner['key'], @products[:product_up].id, 10, [], '', '12345', '6789', nil, end_date)
 
     # Pool names is a list of names of instance variables that will be created
     pool_names = ["pool1", "pool2", "pool3", "pool4", "pool_up"]
@@ -460,7 +580,6 @@ class StandardExporter < Exporter
     ent_names.zip([@pool1, @pool2, @pool4, @pool_up]).each do |ent_name, pool|
       instance_variable_set("@#{ent_name}", @candlepin_client.consume_pool(pool.id, {:quantity => 1})[0])
     end
-
     # pool3 is special
     @candlepin_client.consume_pool(@pool3.id, {:quantity => 1})
 
@@ -486,13 +605,8 @@ class StandardExporter < Exporter
     @cp.add_content_to_product(@owner['key'], product2.id, arch_content.id)
 
     end_date = Date.new(2025, 5, 29)
-    @cp.create_subscription(@owner['key'], product1.id, 12, [], '', '12345', '6789', nil, end_date)
-    @cp.create_subscription(@owner['key'], product2.id, 14, [], '', '12345', '6789', nil, end_date)
-
-    @cp.refresh_pools(@owner['key'])
-
-    pool1 = @cp.list_pools(:owner => @owner.id, :product => product1.id)[0]
-    pool2 = @cp.list_pools(:owner => @owner.id, :product => product2.id)[0]
+    pool1 = create_pool_and_subscription(@owner['key'], product1.id, 12, [], '', '12345', '6789', nil, end_date)
+    pool2 = create_pool_and_subscription(@owner['key'], product2.id, 14, [], '', '12345', '6789', nil, end_date)
 
     @candlepin_client.consume_pool(pool1.id, {:quantity => 1})
     @candlepin_client.consume_pool(pool2.id, {:quantity => 1})

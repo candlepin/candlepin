@@ -34,14 +34,12 @@ describe 'Entitlements' do
     @cp.add_content_to_product(@owner['key'], @ram_provided.id, content2.id)
 
     #entitle owner for the virt and monitoring products.
-    @cp.create_subscription(@owner['key'], @virt.id, 20)
-    @cp.create_subscription(@owner['key'], @monitoring.id, 4)
-    @cp.create_subscription(@owner['key'], @super_awesome.id, 4)
-    @cp.create_subscription(@owner['key'], @virt_limit.id, 5)
-    @cp.create_subscription(@owner['key'], @instance_based.id, 10)
-    @cp.create_subscription(@owner['key'], @ram.id, 4, [@ram_provided.id])
-
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], @virt.id, 20)
+    create_pool_and_subscription(@owner['key'], @monitoring.id, 4)
+    create_pool_and_subscription(@owner['key'], @super_awesome.id, 4)
+    create_pool_and_subscription(@owner['key'], @virt_limit.id, 5)
+    create_pool_and_subscription(@owner['key'], @instance_based.id, 10)
+    create_pool_and_subscription(@owner['key'], @ram.id, 4, [@ram_provided.id])
 
     #create consumer
     @user = user_client(@owner, random_string('billy'))
@@ -67,14 +65,14 @@ describe 'Entitlements' do
   end
 
   it 'should allow an entitlement to be consumed by pool' do
-    pool = find_pool @virt
+    pool = find_pool_for_product @virt
     @system.consume_pool pool.id
 
     @system.list_entitlements.should have(1).things
   end
 
   it 'should allow consumption of quantity 10' do
-    pool = find_pool @virt
+    pool = find_pool_for_product @virt
     @system.consume_pool(pool.id, {:quantity => 10})
 
     @system.list_entitlements.first.quantity.should == 10
@@ -95,15 +93,15 @@ describe 'Entitlements' do
   end
 
   it 'should have the correct product ID when subscribing by pool' do
-    @system.consume_pool find_pool(@monitoring).id
+    @system.consume_pool find_pool_for_product(@monitoring).id
 
     entitlements = @system.list_entitlements(:product_id => @monitoring.id)
     entitlements.should have(1).things
   end
 
   it 'should filter entitlements by product attribute' do
-    @system.consume_pool find_pool(@virt_limit).id
-    @system.consume_pool find_pool(@super_awesome).id
+    @system.consume_pool find_pool_for_product(@virt_limit).id
+    @system.consume_pool find_pool_for_product(@super_awesome).id
     @system.list_entitlements().should have(2).things
 
     entitlements = @system.list_entitlements(:attr_filters => {:variant => "Satellite*"})
@@ -120,8 +118,8 @@ describe 'Entitlements' do
   end
 
   it 'should filter consumer entitlements by matches parameter' do
-    @system.consume_pool find_pool(@ram).id
-    @system.consume_pool find_pool(@super_awesome).id
+    @system.consume_pool find_pool_for_product(@ram).id
+    @system.consume_pool find_pool_for_product(@super_awesome).id
     @system.list_entitlements().should have(2).things
 
     entitlements = @system.list_entitlements(:matches => "*ram*")
@@ -154,7 +152,7 @@ describe 'Entitlements' do
   end
 
   it 'should not allow consuming two entitlements in same pool' do
-    pool = find_pool @super_awesome
+    pool = find_pool_for_product @super_awesome
     @system.consume_pool pool.id
     lambda do
       @system.consume_pool pool.id
@@ -162,20 +160,20 @@ describe 'Entitlements' do
   end
 
   it 'should not allow consuming an odd quantity' do
-    pool = find_pool @instance_based
+    pool = find_pool_for_product @instance_based
     lambda do
       @system.consume_pool(pool.id, {:quantity => 3})
     end.should raise_exception(RestClient::Forbidden)
   end
 
   it 'should allow consuming an even quantity' do
-    pool = find_pool @instance_based
+    pool = find_pool_for_product @instance_based
     @system.consume_pool(pool.id, {:quantity => 2})
   end
 
   private
 
-  def find_pool(product, consumer=nil)
+  def find_pool_for_product(product, consumer=nil)
     consumer ||= @system
     consumer.list_pools(:product => product.id, :consumer => consumer.uuid).first
   end

@@ -10,7 +10,7 @@ describe 'Job Status' do
     @user = user_client(@owner, random_string("test_user"))
     @monitoring = create_product
 
-    @cp.create_subscription(@owner['key'], @monitoring.id, 4)
+    create_pool_and_subscription(@owner['key'], @monitoring.id, 4)
   end
 
   it 'should contain the owner key' do
@@ -34,14 +34,16 @@ describe 'Job Status' do
         jobs << @cp.autoheal_org(@owner['key'])
         wait_for_job(jobs[-1]['id'], 15)
     }
-
-    @cp.list_jobs(@owner['key']).length.should == 3
+    # in hosted mode we will get a refresh pools job
+    jobs = @cp.list_jobs(@owner['key'])
+    jobs = jobs.select{ |job| job.id.start_with?('heal_entire_org') }
+    jobs.length.should == 3
   end
 
   it 'should only find jobs with the correct owner key' do
     owner2 = create_owner(random_string('some_owner'))
     product = create_product(nil, nil, :owner => owner2['key'])
-    @cp.create_subscription(owner2['key'], product.id, 100)
+    create_pool_and_subscription(owner2['key'], product.id, 100)
 
     jobs = []
     # Just some random numbers here
@@ -55,8 +57,14 @@ describe 'Job Status' do
         jobs << @cp.autoheal_org(owner2['key'])
         wait_for_job(jobs[-1]['id'], 15)
     }
-
-    @cp.list_jobs(@owner['key']).length.should == 4
+    jobs2 = []
+    jobs2 = @cp.list_jobs(@owner['key'])
+    jobs2.each do |job|
+      job.targetId.should == @owner['key']
+    end
+    # in hosted mode we will get a refresh pools job
+    jobs2 = jobs2.select{ |job| job.id.start_with?('heal_entire_org') }
+    jobs2.length.should == 4
   end
 
   it 'should find an empty list if the owner key is wrong' do

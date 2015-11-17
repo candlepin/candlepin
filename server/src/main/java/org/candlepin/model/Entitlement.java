@@ -271,8 +271,8 @@ public class Entitlement extends AbstractHibernateObject
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Entitlement[id=").append(id);
-        sb.append(", product=").append(getPool().getProductId());
         if (pool != null) {
+            sb.append(", product=").append(pool.getProductId());
             sb.append(", pool=").append(pool.getId());
         }
         if (consumer != null) {

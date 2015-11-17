@@ -9,6 +9,7 @@ describe 'Import', :serial => true do
 
   before(:all) do
     @cp = Candlepin.new('admin', 'admin')
+    pending("candlepin running in hosted mode") if is_hosted?
     @owners = []
     @owner = @cp.create_owner(random_string('owner'))
     @user = user_client(@owner, random_string('user'))
@@ -43,10 +44,10 @@ describe 'Import', :serial => true do
           :sockets=>'8'
       }
     })
-    datacenter_sub = @cp.create_subscription(@owner['key'], stacked_datacenter_product.id,
-      10, [], '222', '', '', nil, nil,
+    datacenter_pool = create_pool_and_subscription(@owner['key'], stacked_datacenter_product.id,
+      10, [], '222', '', '', nil, nil, false,
       {
-        'derived_product_id' => derived_product.id
+        :derived_product_id => derived_product.id
       })
     @cp.refresh_pools(@owner['key'])
     pool = @cp.list_owner_pools(@owner['key'], {:product => stacked_datacenter_product.id})[0]
@@ -65,7 +66,7 @@ describe 'Import', :serial => true do
 
     # remove client at 'host'
     consumer_client.unregister consumer_client.uuid
-    @cp.delete_subscription(datacenter_sub['id'])
+    delete_pool_and_subscription(datacenter_pool)
 
     # import to make org at 'distributor'
     import_user_client = user_client(@dist_owner, random_string("user"))

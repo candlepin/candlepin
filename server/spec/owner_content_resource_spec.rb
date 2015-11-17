@@ -44,12 +44,10 @@ describe 'Owner Content Resource' do
   end
 
   it 'should force entitlements providing changed content to be regenerated' do
-    product_sub = @cp.create_subscription(@owner['key'], @product.id, 100, [], '1888', '1234')
-    # @cp.refresh_pools(@owner['key'])
+    product_pool = create_pool_and_subscription(@owner['key'], @product.id, 100, [], '1888', '1234')
     consumer_client = consumer_client(@user,  random_string("consumer"))
 
-    pool = find_pool(@owner.id, product_sub.id)
-    consumer_client.consume_pool(pool.id, {:quantity => 1})
+    consumer_client.consume_pool(product_pool.id, {:quantity => 1})
     original_serial = consumer_client.list_certificate_serials[0]['serial']
 
     # Modify content

@@ -62,10 +62,10 @@ import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
@@ -79,6 +79,7 @@ import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.pinsetter.tasks.UndoImportsJob;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.EntitlementFinderUtil;
+import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
@@ -114,7 +115,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -172,6 +172,7 @@ public class OwnerResource {
     private ProductCurator prodCurator;
     private Configuration config;
     private ContentCurator contentCurator;
+    private ResolverUtil resolverUtil;
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator,
@@ -200,7 +201,8 @@ public class OwnerResource {
         OwnerServiceAdapter ownerService,
         ProductCurator productCurator,
         Configuration config,
-        ContentCurator contentCurator) {
+        ContentCurator contentCurator,
+        ResolverUtil resolverUtil) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -229,6 +231,7 @@ public class OwnerResource {
         this.prodCurator = productCurator;
         this.config = config;
         this.contentCurator = contentCurator;
+        this.resolverUtil = resolverUtil;
     }
 
     /**
@@ -867,155 +870,6 @@ public class OwnerResource {
         return consumer;
     }
 
-    private Product findProduct(Owner owner, String productId) {
-        Product product = this.prodCurator.lookupById(owner, productId);
-
-        if (product == null) {
-            throw new NotFoundException(i18n.tr(
-                "Unable to find a product with the ID \"{0}\" for owner \"{1}\"",
-                productId, owner.getKey()
-            ));
-        }
-
-        return product;
-    }
-
-    private Owner resolveOwner(Owner owner) {
-        if (owner == null || (owner.getKey() == null && owner.getId() == null)) {
-            throw new BadRequestException(i18n.tr(
-                "No owner specified, or owner lacks identifying information"
-            ));
-        }
-
-        if (owner.getKey() != null) {
-            owner = this.ownerCurator.lookupByKey(owner.getKey());
-
-            if (owner == null) {
-                throw new NotFoundException(i18n.tr(
-                    "Unable to find an owner with the key \"{0}\"", owner.getKey()
-                ));
-            }
-        }
-        else {
-            owner = this.ownerCurator.find(owner.getId());
-
-            if (owner == null) {
-                throw new NotFoundException(i18n.tr(
-                    "Unable to find an owner with the ID \"{0}\"", owner.getId()
-                ));
-            }
-        }
-
-        return owner;
-    }
-
-    private Product resolveProduct(Owner owner, Product product) {
-        if (product == null) {
-            throw new BadRequestException(i18n.tr(
-                "No product specified, or product lacks identifying information"
-            ));
-        }
-        return resolveProduct(owner, product.getId());
-    }
-
-    private Product resolveProduct(Owner owner, String productId) {
-        if (productId == null) {
-            throw new BadRequestException(i18n.tr(
-                "No product specified, or product lacks identifying information"
-            ));
-        }
-
-        // TODO: Maybe add UUID resolution as well?
-        return this.findProduct(owner, productId);
-    }
-
-    private Subscription resolveSubscription(Subscription subscription) {
-        // Impl note:
-        // We don't check that the subscription exists here, because it's entirely possible that it
-        // doesn't (i.e. during creation). We just need to make sure it's not null.
-        if (subscription == null) {
-            throw new BadRequestException(i18n.tr(
-                "No subscription specified"
-            ));
-        }
-
-        // Ensure the owner is set and is valid
-        Owner owner = this.resolveOwner(subscription.getOwner());
-        subscription.setOwner(owner);
-
-        // Ensure the specified product(s) exists for the given owner
-        subscription.setProduct(this.resolveProduct(owner, subscription.getProduct()));
-
-        if (subscription.getDerivedProduct() != null) {
-            subscription.setDerivedProduct(
-                this.resolveProduct(owner, subscription.getDerivedProduct())
-            );
-        }
-
-        HashSet<Product> presolved = new HashSet<Product>();
-
-        for (Product product : subscription.getProvidedProducts()) {
-            presolved.add(this.resolveProduct(owner, product));
-        }
-
-        subscription.setProvidedProducts(presolved);
-        presolved.clear();
-
-        for (Product product : subscription.getDerivedProvidedProducts()) {
-            presolved.add(this.resolveProduct(owner, product));
-        }
-
-        subscription.setDerivedProvidedProducts(presolved);
-
-        // TODO: Do we need to resolve Branding objects?
-
-        return subscription;
-    }
-
-    private Pool resolvePool(Pool pool) {
-        // Impl note:
-        // We don't check that the subscription exists here, because it's entirely possible that it
-        // doesn't (i.e. during creation). We just need to make sure it's not null.
-        if (pool == null) {
-            throw new BadRequestException(i18n.tr(
-                "No subscription specified"
-            ));
-        }
-
-        // Ensure the owner is set and is valid
-        Owner owner = this.resolveOwner(pool.getOwner());
-        pool.setOwner(owner);
-
-        // Ensure the specified product(s) exists for the given owner
-        pool.setProduct(this.resolveProduct(owner, pool.getProduct()));
-
-        if (pool.getDerivedProduct() != null) {
-            pool.setDerivedProduct(
-                this.resolveProduct(owner, pool.getDerivedProduct())
-            );
-        }
-
-        HashSet<Product> presolved = new HashSet<Product>();
-
-        for (ProvidedProduct product : pool.getProvidedProductDtos()) {
-            // TODO: Maybe add UUID resolution as well?
-            presolved.add(resolveProduct(owner, product.getProductId()));
-        }
-
-        pool.setProvidedProducts(presolved);
-        presolved.clear();
-
-        for (ProvidedProduct product : pool.getDerivedProvidedProductDtos()) {
-            presolved.add(this.resolveProduct(owner, product.getProductId()));
-        }
-
-        pool.setDerivedProvidedProducts(presolved);
-
-        // TODO: Do we need to resolve Branding objects?
-
-        return pool;
-    }
-
     /**
      * Updates an Owner
      * <p>
@@ -1114,53 +968,27 @@ public class OwnerResource {
         Owner owner = findOwner(ownerKey);
         subscription.setOwner(owner);
 
-        subscription = this.resolveSubscription(subscription);
+        subscription = resolverUtil.resolveSubscription(subscription);
 
         if (subscription.getId() == null) {
             subscription.setId(Util.generateDbUUID());
         }
 
-        poolManager.createPoolsForSubscription(subscription);
+        poolManager.createAndEnrichPools(subscription);
         return subscription;
-    }
-
-    /**
-     * Creates a custom pool for an Owner.
-     *
-     * Floating pools are not tied to any upstream subscription, and are most commonly
-     * used for custom content delivery in Satellite.
-     *
-     * @return a Pool object
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/pools")
-    public Pool createPool(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        Pool pool) {
-
-        log.info("Creating custom pool for owner {}: {}" + ownerKey, pool);
-
-        // Correct owner & products
-        Owner owner = findOwner(ownerKey);
-        pool.setOwner(owner);
-
-        pool = resolvePool(pool);
-        return poolManager.createPool(pool);
     }
 
     /**
      * Updates a Subscription for an Owner
      *
+     * @deprecated Please update pools directly with POST /pools.
      * @httpcode 404
      * @httpcode 200
      */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/subscriptions")
+    @Deprecated
     public void updateSubscription(Subscription subscription) {
         if (this.poolManager.getMasterPoolBySubscriptionId(subscription.getId()) == null) {
             throw new NotFoundException(i18n.tr(
@@ -1168,7 +996,7 @@ public class OwnerResource {
             ));
         }
 
-        subscription = this.resolveSubscription(subscription);
+        subscription = resolverUtil.resolveSubscription(subscription);
 
         this.poolManager.updatePoolsForSubscription(subscription);
     }
@@ -1214,6 +1042,62 @@ public class OwnerResource {
         }
 
         return RefreshPoolsJob.forOwner(owner, lazyRegen);
+    }
+
+    /**
+     * Creates a custom pool for an Owner. Floating pools are not tied to any
+     * upstream subscription, and are most commonly used for custom content
+     * delivery in Satellite.
+     * Also helps in on-site deployment testing
+     *
+     * @return a Pool object
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/pools")
+    public Pool createPool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey, Pool pool) {
+
+        log.info("Creating custom pool for owner {}: {}" + ownerKey, pool);
+
+        // Correct owner & products
+        Owner owner = findOwner(ownerKey);
+        pool.setOwner(owner);
+
+        pool = resolverUtil.resolvePool(pool);
+        return poolManager.createAndEnrichPools(pool);
+    }
+
+    /**
+     * Updates a pool for an Owner.
+     * assumes this is a normal pool, and errors out otherwise cause we cannot
+     * create master pools from bonus pools
+     * TODO: while this method replaces the now deprecated updateSubsciption, it
+     * still uses it underneath. We need to re-implement the wheel like we did
+     * in createPool
+     *
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/pools")
+    public void updatePool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+            Pool pool) {
+
+        if (pool.getType() != PoolType.NORMAL) {
+            throw new BadRequestException(i18n.tr("Cannot update bonus pools, as they are auto generated"));
+        }
+
+        // convert to subscription so we can use updateSubscription
+        Subscription subscription = new Subscription(pool.getOwner(), pool.getProduct(),
+                pool.getProvidedProducts(), pool.getQuantity(), pool.getStartDate(), pool.getEndDate(),
+                new Date());
+        subscription.setId(pool.getSubscriptionId());
+        updateSubscription(subscription);
     }
 
     /**

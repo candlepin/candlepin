@@ -25,6 +25,13 @@ module CleanupHooks
     if (@rules)
       @cp.delete_rules
     end
+    if !@cp.get_status()['standalone']
+      begin
+        @cp.delete('/hostedtest/subscriptions/', nil, true)
+      rescue RestClient::ResourceNotFound
+        puts "skipping hostedtest cleanup"
+      end
+    end
   end
 end
 
@@ -64,11 +71,8 @@ RSpec.configure do |config|
     })
 
     #create two subs, to do migration testing
-    @sub1 = @cp.create_subscription(@owner['key'],
-      @virt_limit_product.id, 10)
-    @sub2 = @cp.create_subscription(@owner['key'],
-      @virt_limit_product.id, 10)
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], @virt_limit_product.id, 10)
+    create_pool_and_subscription(@owner['key'], @virt_limit_product.id, 10)
 
     @pools = @user.list_pools :owner => @owner.id, \
       :product => @virt_limit_product.id

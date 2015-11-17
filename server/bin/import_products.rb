@@ -20,6 +20,7 @@ if not ARGV.empty?
 end
 
 data = {}
+@sourceSubId = 0
 
 filenames.each do |filename|
   puts filename
@@ -249,10 +250,9 @@ def create_eng_product(cp, thread_pool, owner, product)
 
 end
 
-def create_mkt_product(cp, owner, product)
+def create_mkt_product_and_pools(cp, owner, product)
   product_ret = create_product(cp, owner, product)
-
-  if product.has_key?('skip_subs')
+  if product.has_key?('skip_pools')
     return
   end
 
@@ -262,85 +262,65 @@ def create_mkt_product(cp, owner, product)
     small_quantity = large_quantity = product['quantity']
   end
 
-  provided_products = product['provided_products'] || []
-  derived_product_id = product['derived_product_id']
-  derived_provided_products = product['derived_provided_products'] || []
+  params = {}
+  params[:provided_products] = product['provided_products'] || []
+  params[:derived_product_id] = product['derived_product_id']
+  params[:derived_provided_products] = product['derived_provided_products'] || []
 
-  startDate1 =  Date.today
-  endDate1 = startDate1 + 365
-  startDate2 = endDate1 - 10
-  endDate2 = startDate2 + 365
-  startDate3 = endDate1 + 1
-  endDate3 = startDate2 + 365
+  params[:start_date] =  Date.today
+  params[:end_date] =  params[:start_date] + 365
 
-  contract_number = 0
   # Create a SMALL and a LARGE with the slightly similar begin/end dates.
 
-  brandings = []
-  if !provided_products.empty? && product_ret['name'].include?('OS')
-    brandings = [
+  params[:branding] = []
+  if !params[:provided_products].empty? && product_ret['name'].include?('OS')
+    params[:branding] = [
       {
-        :productId => provided_products[0],
+        :productId => params[:provided_products][0],
         :type => 'OS',
         :name => 'Branded ' + product_ret['name']
       }
     ]
   end
 
-  subscription = cp.create_subscription(
+  params[:contract_number] = 0
+  params[:account_number] = '12331131231'
+  params[:order_number] = 'order-8675309'
+
+  params[:quantity] = small_quantity
+  @sourceSubId += 1
+  params[:source_subscription] = { 'id' => "#{@sourceSubId}" }
+
+  pool = cp.create_pool(
     owner['name'],
     product_ret['id'],
-    small_quantity,
-    provided_products,
-    contract_number,
-    '12331131231',
-    'order-8675309',
-    startDate1,
-    endDate1,
-    {
-      'derived_product_id' => derived_product_id,
-      'derived_provided_products' => derived_provided_products,
-      :branding => brandings
-    }
+    params
   )
 
-  contract_number += 1
-  subscription = cp.create_subscription(
+  params[:contract_number] += 1
+  params[:quantity] = large_quantity
+  @sourceSubId += 1
+  params[:source_subscription] = { 'id' => "#{@sourceSubId}" }
+
+  pool = cp.create_pool(
     owner['name'],
     product_ret['id'],
-    large_quantity,
-    provided_products,
-    contract_number,
-    '12331131231',
-    'order-8675309',
-    startDate1,
-    endDate1,
-    {
-      'derived_product_id' => derived_product_id,
-      'derived_provided_products' => derived_provided_products,
-      :branding => brandings
-    }
+    params
   )
 
-  # Create a subscription for the future:
-  subscription = cp.create_subscription(
+  # Create a pool for the future:
+  params[:quantity] = 15
+  params[:start_date] =  params[:end_date] - 10
+  params[:end_date] =  params[:start_date] + 365
+  @sourceSubId += 1
+  params[:source_subscription] = { 'id' => "#{@sourceSubId}" }
+
+  pool = cp.create_pool(
     owner['name'],
     product_ret['id'],
-    15,
-    provided_products,
-    contract_number,
-    '12331131231',
-    'order-8675309',
-    startDate2,
-    endDate2,
-    {
-      'derived_product_id' => derived_product_id,
-      'derived_provided_products' => derived_provided_products,
-      :branding => brandings
-    }
+    params
   )
 
-  contract_number += 1
 end
 
 
@@ -376,21 +356,11 @@ eng_products.each do |eng_product|
 end
 thread_pool.shutdown
 
-puts "creating mkt products"
+puts "creating mkt products and pools"
 thread_pool = Pool.new(6)
 mkt_products.each do |mkt_product|
     thread_pool.schedule do
-        create_mkt_product(cp, mkt_product[0], mkt_product[1])
-    end
-end
-thread_pool.shutdown
-
-# Refresh to create pools for all subscriptions just created:
-thread_pool = Pool.new(5)
-owner_keys.each do |owner_key|
-    thread_pool.schedule do
-        puts "refreshing pools for " + owner_key
-        cp.refresh_pools(owner_key)
+        create_mkt_product_and_pools(cp, mkt_product[0], mkt_product[1])
     end
 end
 thread_pool.shutdown

@@ -18,8 +18,7 @@ describe 'Consumer Resource Activation Key' do
   it 'should allow a consumer to register with activation keys' do
     prod1 = create_product(random_string('product1'), random_string('product1'),
                            :attributes => { :'multi-entitlement' => 'yes'})
-    subs1 = @cp.create_subscription(@owner['key'], prod1.id, 10)
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], prod1.id, 10)
     pool1 = @cp.list_pools({:owner => @owner['id']}).first
 
     key1 = @cp.create_activation_key(@owner['key'], 'key1')
@@ -35,9 +34,8 @@ describe 'Consumer Resource Activation Key' do
     # create extra product/pool to show selectivity
     prod1 = create_product(random_string('product1'), random_string('product1'))
     prod2 = create_product(random_string('product2'), random_string('product2'))
-    subs1 = @cp.create_subscription(@owner['key'], prod1.id, 10)
-    subs2 = @cp.create_subscription(@owner['key'], prod2.id, 10)
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], prod1.id, 10)
+    create_pool_and_subscription(@owner['key'], prod2.id, 10)
     pool1 = @cp.list_pools(:owner => @owner['id'], :product => prod1.id).first
 
     key1 = @cp.create_activation_key(@owner['key'], 'key1')
@@ -82,8 +80,7 @@ describe 'Consumer Resource Activation Key' do
   it 'should allow a consumer to register with activation keys with service level' do
     prod1 = create_product(random_string('product1'), random_string('product1'),
                            :attributes => { :'support_level' => 'VIP'})
-    subs1 = @cp.create_subscription(@owner['key'], prod1.id, 10)
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], prod1.id, 10)
 
     key1 = @cp.create_activation_key(@owner['key'], 'key1', 'VIP')
     key2 = @cp.create_activation_key(@owner['key'], 'key2')
@@ -121,8 +118,7 @@ describe 'Consumer Resource Activation Key' do
                            :attributes => { :'multi-entitlement' => 'yes',
                                             :'stacking_id' => random_string('stacking_id'),
                                             :'sockets' => '1'})
-    subs1 = @cp.create_subscription(@owner['key'], prod1.id, 10)
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], prod1.id, 10)
     pool1 = @cp.list_pools({:owner => @owner['id']}).first
 
     act_key1 = @cp.create_activation_key(@owner['key'], 'act_key1')
@@ -141,10 +137,9 @@ describe 'Consumer Resource Activation Key' do
   it 'should allow a consumer to register with an activation key with an auto-attach across pools' do
     # create extra product/pool to show selectivity
     prod1 = create_product(random_string('product1'), random_string('product1'))
-    subs1 = @cp.create_subscription(@owner['key'], prod1.id, 1)
-    subs2 = @cp.create_subscription(@owner['key'], prod1.id, 1)
-    subs3 = @cp.create_subscription(@owner['key'], prod1.id, 2)
-    @cp.refresh_pools(@owner['key'])
+    create_pool_and_subscription(@owner['key'], prod1.id, 1)
+    create_pool_and_subscription(@owner['key'], prod1.id, 1)
+    create_pool_and_subscription(@owner['key'], prod1.id, 2)
     pools = @cp.list_pools(:owner => @owner['id'], :product => prod1.id)
 
     key1 = @cp.create_activation_key(@owner['key'], 'key1')
