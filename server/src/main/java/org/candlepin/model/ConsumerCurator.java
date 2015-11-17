@@ -268,8 +268,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      *
      * @return A consumer locked in the database
      */
-    public Consumer findForUpdateByUuid(String uuid) {
-        Consumer c = getConsumer(uuid);
+    public Consumer lockAndLoad(Consumer c) {
         getEntityManager().lock(c, LockModeType.PESSIMISTIC_WRITE);
         return c;
     }

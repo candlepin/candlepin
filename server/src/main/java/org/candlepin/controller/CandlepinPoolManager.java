@@ -800,7 +800,6 @@ public class CandlepinPoolManager implements PoolManager {
      * @throws EntitlementRefusedException if entitlement is refused
      */
     @Override
-    @Transactional
     public Entitlement entitleByPool(Consumer consumer, Pool pool,
         Integer quantity) throws EntitlementRefusedException {
         return addOrUpdateEntitlement(consumer, pool, null, quantity,
@@ -808,14 +807,12 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    @Transactional
     public Entitlement ueberCertEntitlement(Consumer consumer, Pool pool,
         Integer quantity) throws EntitlementRefusedException {
         return addOrUpdateEntitlement(consumer, pool, null, 1, true, CallerType.UNKNOWN);
     }
 
     @Override
-    @Transactional
     public Entitlement adjustEntitlementQuantity(Consumer consumer,
         Entitlement entitlement, Integer quantity)
         throws EntitlementRefusedException {
@@ -827,7 +824,27 @@ public class CandlepinPoolManager implements PoolManager {
             change, true, CallerType.UNKNOWN);
     }
 
-    private Entitlement addOrUpdateEntitlement(Consumer consumer, Pool pool,
+    /**
+     * It is imperative that this entire method be within the same transaction.
+     * Otherwise multiple entitlement jobs will deadlock.
+     *
+     * T1 and T2 are entitlement jobs
+     *
+     * 1. T1 grabs a shared lock on cp_consumer.id due to the FK in cp_entitlement
+     *    when inserting into cp_entitlement
+     * 2. T2 grabs a shared lock on cp_consumer.id due to the FK in cp_entitlement
+     *    when inserting into cp_entitlement
+     * 3. T1 attempts to grab an exclusive lock on cp_consumer.id for an
+     *    update to cp_entitlement.  T1 blocks waiting for the T2's shared lock to be released.
+     * 4. T2 attempts to grab an exclusive lock on cp_consumer.id for an
+     *    update to cp_entitlement.
+     * 5. Deadlock.  T2 is waiting for T1's shared lock to be released but
+     *    T1 is waiting for T2's shared lock to be released.
+     *
+     * See BZ #1274074
+     */
+    @Transactional
+    protected Entitlement addOrUpdateEntitlement(Consumer consumer, Pool pool,
         Entitlement entitlement, Integer quantity, boolean generateUeberCert,
         CallerType caller)
         throws EntitlementRefusedException {
@@ -836,7 +853,7 @@ public class CandlepinPoolManager implements PoolManager {
         // pool
         // when it was read. As such we're going to reload it with a lock
         // before starting this process.
-        log.info("Locking pool: " + pool.getId());
+        log.info("Locking pool {}", pool.getId());
         pool = poolCurator.lockAndLoad(pool);
 
         if (quantity > 0) {
@@ -858,6 +875,9 @@ public class CandlepinPoolManager implements PoolManager {
         else {
             handler = new UpdateHandler();
         }
+
+        // Grab an exclusive lock on the consumer to prevent deadlock.
+        consumer = consumerCurator.lockAndLoad(consumer);
 
         log.info("Processing entitlement.");
         entitlement = handler.handleEntitlement(consumer, pool, entitlement, quantity);
@@ -887,8 +907,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // we might have changed the bonus pool quantities, lets find out.
         handler.handleBonusPools(pool, entitlement);
-        log.info("Granted entitlement: " + entitlement.getId() + " from pool: " +
-            pool.getId());
+        log.info("Granted entitlement: {} from pool: {}", entitlement.getId(), pool.getId());
         return entitlement;
     }
 

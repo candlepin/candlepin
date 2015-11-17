@@ -166,6 +166,14 @@ public class PoolManagerTest {
         dummyComplianceStatus = new ComplianceStatus(new Date());
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class))).thenReturn(
             dummyComplianceStatus);
+
+        when(consumerCuratorMock.lockAndLoad(any(Consumer.class))).thenAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                return args[0];
+            }
+        });
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
