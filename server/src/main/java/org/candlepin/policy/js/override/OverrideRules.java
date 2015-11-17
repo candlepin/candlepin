@@ -14,6 +14,8 @@
  */
 package org.candlepin.policy.js.override;
 
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RulesObjectMapper;
@@ -33,10 +35,12 @@ public class OverrideRules {
     private JsRunner jsRules;
     private RulesObjectMapper mapper;
     private static Logger log = LoggerFactory.getLogger(OverrideRules.class);
+    protected Configuration config;
 
     @Inject
-    public OverrideRules(JsRunner jsRules) {
+    public OverrideRules(JsRunner jsRules, Configuration config) {
         this.jsRules = jsRules;
+        this.config = config;
 
         mapper = RulesObjectMapper.instance();
         jsRules.init("override_name_space");
@@ -47,6 +51,7 @@ public class OverrideRules {
 
         args.put("name", name);
         args.put("log", log, false);
+        args.put("hosted", !config.getBoolean(ConfigProperties.STANDALONE));
 
         return !jsRules.runJsFunction(Boolean.class, "get_allow_override", args);
     }

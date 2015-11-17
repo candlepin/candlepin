@@ -138,8 +138,7 @@ module CandlepinMethods
       sub = create_hostedtest_subscription(owner_key, product_id, quantity, params)
       if not skip_refresh
         active_on = Date.strptime(sub.startDate, "%Y-%m-%d")+1
-        @cp.refresh_pools(owner_key, true)
-        sleep 1
+        @cp.refresh_pools(owner_key)
         pool = find_main_pool(owner_key, sub['id'], activeon=active_on, true)
       end
     else

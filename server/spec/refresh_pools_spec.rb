@@ -217,10 +217,8 @@ describe 'Refresh Pools' do
     sub["owner"] = owner2
     update_hostedtest_subscription(sub)
     #TODO - removing sleeps gives concurrent modification errrors - investigate
-    @cp.refresh_pools(owner1["key"], true)
-    sleep 1
-    @cp.refresh_pools(owner2["key"], true)
-    sleep 1
+    @cp.refresh_pools(owner1["key"])
+    @cp.refresh_pools(owner2["key"])
 
     # Check that the pools are removed from the first owner
     @cp.list_pools({:owner => owner1.id}).length.should == 0

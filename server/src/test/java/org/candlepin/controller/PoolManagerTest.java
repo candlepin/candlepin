@@ -1583,10 +1583,10 @@ public class PoolManagerTest {
         pool.setAttribute("pool_derived", "true");
         pool.setAttribute("physical_only", "false");
         pool.setAttribute("virt_limit", "0");
-        pool.setStartDate(new Date(now.getTime() - (1000 * 60 * 60 * 24)));
+        pool.setStartDate(new Date(now.getTime() - (1000 * 60 * 60 * 24 * 2)));
 
         Entitlement ent = TestUtil.createEntitlement(o, guest, pool, null);
-        ent.setEndDateOverride(now);
+        ent.setEndDateOverride(new Date(now.getTime() - (1000 * 60 * 60 * 24 * 1)));
         ent.setId("test-ent-id");
         ent.setQuantity(1);
         Set<Entitlement> entitlements = new HashSet<Entitlement>();
@@ -1601,10 +1601,9 @@ public class PoolManagerTest {
         event.setType(Type.EXPIRED);
         when(eventFactory.entitlementExpired(eq(ent))).thenReturn(event);
         when(mockPoolCurator.lockAndLoad(eq(pool))).thenReturn(pool);
-
         manager.removeEntitlement(ent, false);
         String message = event.getMessageText();
-        assertFalse(message == null);
+        assertNotNull(message);
         message = message.split(": ")[1];
         assertEquals(message,
                 i18n.tr("Unmapped guest entitlement expired without establishing a host/guest mapping."));
