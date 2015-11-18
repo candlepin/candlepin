@@ -415,6 +415,28 @@ public class ConsumerResourceTest {
             Long.valueOf(1234L));
     }
 
+    /**
+     * Basic test. If invalid id is given, should throw
+     * {@link NotFoundException}
+     */
+    @Test(expected = NotFoundException.class)
+    public void unbindByInvalidPoolIdShouldFail() {
+        Consumer consumer = createConsumer();
+        ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
+        when(consumerCurator.verifyAndLookupConsumer(eq("fake-uuid"))).thenReturn(consumer);
+        EntitlementCurator entitlementCurator = mock(EntitlementCurator.class);
+
+        when(entitlementCurator
+                .listByConsumerAndPoolId(eq(consumer),
+                        any(String.class))).thenReturn(new ArrayList<Entitlement>());
+
+        ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
+                null, null, entitlementCurator, null, null, i18n, null, null, null,
+                null, null, null, null, null, null, null, null, null, null, null,
+                null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+        consumerResource.unbindByPool("fake-uuid", "Run Forest!");
+    }
+
     @Test(expected = BadRequestException.class)
     public void testBindMultipleParams() throws Exception {
         ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
