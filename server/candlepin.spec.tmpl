@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.51.9
+Version: 0.9.51.10
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -213,6 +213,9 @@ fi
 
 #raw
 %changelog
+* Wed Nov 18 2015 Alex Wood <awood@redhat.com> 0.9.51.10-1
+- Reduce the amount of time the consumer lock is held. (awood@redhat.com)
+
 * Wed Nov 11 2015 Alex Wood <awood@redhat.com> 0.9.51.9-1
 - Set the lock mode with the entity manager to avoid problems in Postgres.
   (awood@redhat.com)
