@@ -1743,6 +1743,35 @@ public class ConsumerResource {
     }
 
     /**
+     * Removes all Entitlements from a Consumer
+     * <p>
+     * By Pool Id
+     *
+     * @httpcode 403
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @DELETE
+    @Produces(MediaType.WILDCARD)
+    @Path("/{consumer_uuid}/entitlements/pool/{pool_id}")
+    public void unbindByPool(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        @PathParam("pool_id") String poolId) {
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        List<Entitlement> entitlementsToDelete = entitlementCurator
+            .listByConsumerAndPoolId(consumer, poolId);
+        if (!entitlementsToDelete.isEmpty()) {
+            for (Entitlement toDelete: entitlementsToDelete) {
+                poolManager.revokeEntitlement(toDelete);
+            }
+        }
+        else {
+            throw new NotFoundException(i18n.tr(
+                "No entitlements for consumer ''{0}'' with pool id ''{1}''", consumerUuid, poolId));
+        }
+    }
+
+    /**
      * Retrieves a list of Consumer Events
      *
      * @return a list of Event objects
