@@ -20,7 +20,9 @@ setup_mysql() {
     sleep 5
 
     mysql --user=root mysql --execute="CREATE USER 'candlepin'@'localhost'; GRANT ALL PRIVILEGES on candlepin.* TO 'candlepin'@'localhost' WITH GRANT OPTION"
+    mysql --user=root mysql --execute="CREATE USER 'gutterball'@'localhost'; GRANT ALL PRIVILEGES on gutterball.* TO 'gutterball'@'localhost' WITH GRANT OPTION"
     mysqladmin --user="candlepin" create candlepin
+    mysqladmin --user="gutterball" create gutterball
 
     echo "USE_MYSQL=\"1\"" >> /root/.candlepinrc
 }
