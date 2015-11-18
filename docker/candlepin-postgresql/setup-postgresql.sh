@@ -21,6 +21,7 @@ POSTGRES_SUPERVISOR
     /usr/bin/supervisord -c /etc/supervisord.conf &
     sleep 5
     su - postgres -c 'createuser -dls candlepin'
+    su - postgres -c 'createuser -dls gutterball'
     supervisorctl stop postgres
 }
 
