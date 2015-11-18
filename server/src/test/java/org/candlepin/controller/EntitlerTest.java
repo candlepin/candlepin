@@ -78,8 +78,6 @@ public class EntitlerTest {
         sink = mock(EventSink.class);
         cc = mock(ConsumerCurator.class);
         consumer = mock(Consumer.class);
-        when(consumer.getUuid()).thenReturn("abcd1234");
-        when(cc.findForUpdateByUuid(eq("abcd1234"))).thenReturn(consumer);
 
         entitlementCurator = mock(EntitlementCurator.class);
         i18n = I18nFactory.getI18n(
