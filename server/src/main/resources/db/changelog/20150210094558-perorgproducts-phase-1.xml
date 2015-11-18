@@ -14,18 +14,12 @@
     <!-- cpo_products -->
     <changeSet id="20150210094558-1" author="crog">
         <createTable tableName="cpo_products">
-            <column name="uuid" type="varchar(32)">
-                <constraints primaryKey="true" primaryKeyName="cpo_products_pk"/>
-            </column>
+            <column name="uuid" type="varchar(32)"/>
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
             <column name="multiplier" type="int"/>
             <column name="owner_id" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_products_fk1"
-                    references="cp_owner(id)"
-                />
+                <constraints nullable="false"/>
             </column>
             <column name="product_id" type="varchar(32)"
                 remarks="RH product ID; not to be confused with the uuid">
@@ -37,52 +31,26 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-2" author="crog">
-        <addUniqueConstraint tableName="cpo_products"
-            columnNames="owner_id, product_id"
-            constraintName="cpo_products_unq1"
-        />
-    </changeSet>
-
 
 
     <!-- cpo_activation_key_products -->
-    <changeSet id="20150210094558-3" author="crog">
+    <changeSet id="20150210094558-2" author="crog">
         <createTable tableName="cpo_activation_key_products">
             <column name="key_id" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_actkeyprod_fk1"
-                    references="cp_activation_key(id)"
-                    deleteCascade="true"
-                />
+                <constraints nullable="false"/>
             </column>
             <column name="product_uuid" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_actkeyprod_fk2"
-                    references="cpo_products(uuid)"
-                    deleteCascade="true"
-                />
+                <constraints nullable="false"/>
             </column>
         </createTable>
-    </changeSet>
-
-    <changeSet id="20150210094558-4" author="crog">
-        <addPrimaryKey tableName="cpo_activation_key_products"
-            columnNames="key_id,product_uuid"
-            constraintName="cpo_actkeyprod_pk"
-        />
     </changeSet>
 
 
 
     <!-- cpo_content -->
-    <changeSet id="20150210094558-5" author="crog">
+    <changeSet id="20150210094558-3" author="crog">
         <createTable tableName="cpo_content">
-            <column name="uuid" type="varchar(32)">
-                <constraints primaryKey="true" primaryKeyName="cpo_content_pk"/>
-            </column>
+            <column name="uuid" type="varchar(32)"/>
             <column name="content_id" type="varchar(32)"
                 remarks="RH content ID; not to be confused with the uuid">
                 <constraints nullable="false"/>
@@ -90,11 +58,7 @@
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
             <column name="owner_id" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_content_fk1"
-                    references="cp_owner(id)"
-                />
+                <constraints nullable="false"/>
             </column>
             <column name="contenturl" type="varchar(255)"/>
             <column name="gpgurl" type="varchar(255)"/>
@@ -117,16 +81,10 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-6" author="crog">
-        <addUniqueConstraint tableName="cpo_content"
-            columnNames="owner_id, content_id"
-            constraintName="cpo_content_unq1"
-        />
-    </changeSet>
 
 
     <!-- cpo_content_modified_products -->
-    <changeSet id="20150210094558-7" author="crog">
+    <changeSet id="20150210094558-4" author="crog">
         <createTable tableName="cpo_content_modified_products">
             <column name="content_uuid" type="varchar(32)">
                 <constraints nullable="false"/>
@@ -138,56 +96,31 @@
 
 
     <!-- cpo_environment_content -->
-    <changeSet id="20150210094558-8" author="crog">
+    <changeSet id="20150210094558-5" author="crog">
         <createTable tableName="cpo_environment_content">
-            <column name="id" type="varchar(32)">
-                <constraints primaryKey="true" primaryKeyName="cpo_environment_content_pk"/>
-            </column>
+            <column name="id" type="varchar(32)"/>
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
             <column name="content_uuid" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_environment_content_fk1"
-                    references="cpo_content(uuid)"
-                    deleteCascade="true"
-                />
+                <constraints nullable="false"/>
             </column>
             <column name="environment_id" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_environment_content_fk2"
-                    references="cp_environment(id)"
-                    deleteCascade="true"
-                />
+                <constraints nullable="false"/>
             </column>
             <column name="enabled" type="boolean"/>
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-9" author="crog">
-        <addUniqueConstraint tableName="cpo_environment_content"
-            columnNames="content_uuid, environment_id"
-            constraintName="cpo_environment_content_unq1"
-        />
-    </changeSet>
-
 
 
     <!-- cpo_installed_products -->
-    <changeSet id="20150210094558-10" author="crog">
+    <changeSet id="20150210094558-6" author="crog">
         <createTable tableName="cpo_installed_products">
-            <column name="id" type="varchar(32)">
-                <constraints primaryKey="true" primaryKeyName="cpo_installed_products_pk"/>
-            </column>
+            <column name="id" type="varchar(32)"/>
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
             <column name="consumer_id" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_installed_products_fk1"
-                    references="cp_consumer(id)"
-                />
+                <constraints nullable="false"/>
             </column>
             <column name="product_uuid" type="varchar(32)">
                 <constraints nullable="false"/>
@@ -195,79 +128,40 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-11" author="crog">
-        <addUniqueConstraint tableName="cpo_installed_products"
-            columnNames="consumer_id, product_uuid"
-            constraintName="cpo_installed_products_unq1"
-        />
-    </changeSet>
-
 
 
     <!-- cpo_pool_provided_products -->
-    <changeSet id="20150210094558-12" author="crog">
+    <changeSet id="20150210094558-7" author="crog">
         <createTable tableName="cpo_pool_provided_products">
             <column name="pool_id" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_pool_provided_products_fk1"
-                    references="cp_pool(id)"
-                />
+                <constraints nullable="false"/>
             </column>
             <column name="product_uuid" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_pool_provided_products_fk2"
-                    references="cpo_products(uuid)"
-                />
+                <constraints nullable="false"/>
             </column>
         </createTable>
-    </changeSet>
-
-    <changeSet id="20150210094558-13" author="crog">
-        <addPrimaryKey tableName="cpo_pool_provided_products"
-            columnNames="pool_id, product_uuid"
-            constraintName="cpo_pool_provided_products_pk"
-        />
     </changeSet>
 
 
 
     <!-- cpo_pool_derived_products -->
-    <changeSet id="20150210094558-14" author="crog">
+    <changeSet id="20150210094558-8" author="crog">
         <createTable tableName="cpo_pool_derived_products">
             <column name="pool_id" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_pool_derived_products_fk1"
-                    references="cp_pool(id)"
-                />
+                <constraints nullable="false"/>
             </column>
             <column name="product_uuid" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_pool_derived_products_fk2"
-                    references="cpo_products(uuid)"
-                />
+                <constraints nullable="false"/>
             </column>
         </createTable>
-    </changeSet>
-
-    <changeSet id="20150210094558-15" author="crog">
-        <addPrimaryKey tableName="cpo_pool_derived_products"
-            columnNames="pool_id, product_uuid"
-            constraintName="cpo_pool_derived_products_pk"
-        />
     </changeSet>
 
 
 
     <!-- cpo_product_attributes -->
-    <changeSet id="20150210094558-16" author="crog">
+    <changeSet id="20150210094558-9" author="crog">
         <createTable tableName="cpo_product_attributes">
-            <column name="id" type="varchar(32)">
-                <constraints primaryKey="true" primaryKeyName="cpo_product_attributes_pk"/>
-            </column>
+            <column name="id" type="varchar(32)"/>
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
             <column name="name" type="varchar(255)">
@@ -275,12 +169,7 @@
             </column>
             <column name="value" type="varchar(255)"/>
             <column name="product_uuid" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_product_attributes_fk1"
-                    references="cpo_products(uuid)"
-                    deleteCascade="true"
-                />
+                <constraints nullable="false"/>
             </column>
         </createTable>
     </changeSet>
@@ -288,11 +177,9 @@
 
 
     <!-- cpo_product_certificates -->
-    <changeSet id="20150210094558-17" author="crog">
+    <changeSet id="20150210094558-10" author="crog">
         <createTable tableName="cpo_product_certificates">
-            <column name="id" type="varchar(32)">
-                <constraints primaryKey="true" primaryKeyName="cpo_product_certificates_pk"/>
-            </column>
+            <column name="id" type="varchar(32)"/>
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
             <column name="cert" type="blob">
@@ -302,12 +189,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="product_uuid" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_product_certificates_fk1"
-                    references="cpo_products(uuid)"
-                    deleteCascade="true"
-                />
+                <constraints nullable="false"/>
             </column>
         </createTable>
     </changeSet>
@@ -315,23 +197,13 @@
 
 
     <!-- cpo_product_content -->
-    <changeSet id="20150210094558-18" author="crog">
+    <changeSet id="20150210094558-11" author="crog">
         <createTable tableName="cpo_product_content">
             <column name="product_uuid" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_product_content_fk1"
-                    references="cpo_products(uuid)"
-                    deleteCascade="true"
-                />
+                <constraints nullable="false"/>
             </column>
             <column name="content_uuid" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_product_content_fk2"
-                    references="cpo_content(uuid)"
-                    deleteCascade="true"
-                />
+                <constraints nullable="false"/>
             </column>
             <column name="enabled" type="boolean"/>
             <column name="created" type="${timestamp.type}"/>
@@ -339,40 +211,18 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-19" author="crog">
-        <addPrimaryKey tableName="cpo_product_content"
-            columnNames="product_uuid, content_uuid"
-            constraintName="cpo_product_content_pk"
-        />
-    </changeSet>
-
-
-
     <!-- cpo_product_dependent_products -->
-    <changeSet id="20150210094558-20" author="crog">
+    <changeSet id="20150210094558-12" author="crog">
         <createTable tableName="cpo_product_dependent_products">
-            <column name="product_uuid" type="varchar(32)">
-                <constraints
-                    foreignKeyName="cpo_proddepprod_fk1"
-                    references="cpo_products(uuid)"
-                    deleteCascade="true"
-                />
-            </column>
+            <column name="product_uuid" type="varchar(32)"/>
             <column name="element" type="varchar(255)"/>
         </createTable>
-    </changeSet>
-
-    <changeSet id="20150210094558-21" author="crog">
-        <addPrimaryKey tableName="cpo_product_dependent_products"
-            columnNames="product_uuid, element"
-            constraintName="cpo_proddepprod_pk"
-        />
     </changeSet>
 
 
 
     <!-- cp_pool -->
-    <changeSet id="20150210094558-22" author="crog">
+    <changeSet id="20150210094558-13" author="crog">
         <addColumn tableName="cp_pool">
             <column name="product_uuid" type="varchar(32)"/>
             <column name="derived_product_uuid" type="varchar(32)"/>
@@ -394,7 +244,7 @@
         </createIndex>
     </changeSet>
 
-    <changeSet id="20150210094558-24" author="crog">
+    <changeSet id="20150210094558-14" author="crog">
         <renameColumn tableName="cp_pool"
             oldColumnName="productid"
             newColumnName="product_id_old"
@@ -403,7 +253,7 @@
         <!--remarks="deprecated; obsoleted by product_id"-->
     </changeSet>
 
-    <changeSet id="20150210094558-25" author="crog">
+    <changeSet id="20150210094558-15" author="crog">
         <renameColumn tableName="cp_pool"
             oldColumnName="derivedproductid"
             newColumnName="derived_product_id_old"
@@ -412,19 +262,19 @@
         <!--remarks="deprecated; obsoleted by derived_product_id"-->
     </changeSet>
 
-    <changeSet id="20150210094558-26" author="crog">
+    <changeSet id="20150210094558-16" author="crog">
         <dropColumn tableName="cp_pool"
             columnName="productname"
         />
     </changeSet>
 
-    <changeSet id="20150210094558-27" author="crog">
+    <changeSet id="20150210094558-17" author="crog">
         <dropColumn tableName="cp_pool"
             columnName="derivedproductname"
         />
     </changeSet>
 
-    <changeSet id="20150210094558-28" author="crog">
+    <changeSet id="20150210094558-18" author="crog">
         <dropNotNullConstraint tableName="cp_pool"
             columnName="product_id_old"
             columnDataType="varchar(255)"
@@ -434,7 +284,7 @@
 
 
     <!-- cp_pool_branding -->
-    <changeSet id="20150210094558-29" author="crog">
+    <changeSet id="20150210094558-19" author="crog">
         <renameColumn tableName="cp_branding"
             oldColumnName="productid"
             newColumnName="product_id"
@@ -442,21 +292,12 @@
         />
     </changeSet>
 
-    <changeSet id="20150210094558-30" author="crog">
-        <addPrimaryKey tableName="cp_pool_branding"
-            columnNames="pool_id, branding_id"
-            constraintName="cp_pool_branding_pk"
-        />
-    </changeSet>
-
 
 
     <!-- cpo_pool_source_sub -->
-    <changeSet id="20150210094558-32" author="crog">
+    <changeSet id="20150210094558-20" author="crog">
         <createTable tableName="cpo_pool_source_sub">
-            <column name="id" type="varchar(32)">
-                <constraints primaryKey="true" primaryKeyName="cpo_pool_source_sub_pk"/>
-            </column>
+            <column name="id" type="varchar(32)"/>
             <column name="subscription_id" type="varchar(32)">
                 <constraints nullable="false"/>
             </column>
@@ -464,29 +305,17 @@
                 <constraints nullable="false"/>
             </column>
             <column name="pool_id" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    unique="true"
-                    foreignKeyName="cpo_pool_source_sub_fk2"
-                    references="cp_pool(id)"
-                />
+                <constraints nullable="false"/>
             </column>
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-33" author="crog">
-        <addUniqueConstraint tableName="cpo_pool_source_sub"
-            columnNames="subscription_id, subscription_sub_key"
-            constraintName="cpo_pool_source_sub_unq1"
-        />
-    </changeSet>
-
 
 
     <!-- migration task -->
-    <changeSet id="20150210094558-40" author="crog">
+    <changeSet id="20150210094558-21" author="crog">
         <preConditions onSqlOutput="FAIL" onFail="CONTINUE">
             <changeLogPropertyDefined property="project.name"/>
         </preConditions>
@@ -494,6 +323,325 @@
         <comment>Migrate data from obsoleted tables to new org-specific tables.</comment>
 
         <customChange class="org.candlepin.liquibase.PerOrgProductsUpgradeLiquibaseWrapper"/>
+    </changeSet>
+
+
+
+    <!-- Keys and constraints -->
+    <changeSet id="20150210094558-mysql" author="crog" runAlways="true">
+        <preConditions onFail="CONTINUE">
+            <dbms type="mysql"/>
+        </preConditions>
+
+        <sql>
+            SET FOREIGN_KEY_CHECKS=0
+        </sql>
+    </changeSet>
+
+    <changeSet id="20150210094558-30" author="crog">
+        <addPrimaryKey tableName="cpo_products"
+            columnNames="uuid"
+            constraintName="cpo_products_pk"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-31" author="crog">
+        <addForeignKeyConstraint baseColumnNames="owner_id"
+                baseTableName="cpo_products"
+                constraintName="cpo_products_fk1"
+                onDelete="NO ACTION"
+                onUpdate="NO ACTION"
+                referencedColumnNames="id"
+                referencedTableName="cp_owner"/>
+    </changeSet>
+
+    <changeSet id="20150210094558-32" author="crog">
+        <addUniqueConstraint tableName="cpo_products"
+            columnNames="owner_id, product_id"
+            constraintName="cpo_products_unq1"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-33" author="crog">
+        <addForeignKeyConstraint baseColumnNames="key_id"
+                baseTableName="cpo_activation_key_products"
+                constraintName="cpo_actkeyprod_fk1"
+                onDelete="CASCADE"
+                onUpdate="NO ACTION"
+                referencedColumnNames="id"
+                referencedTableName="cp_activation_key"/>
+    </changeSet>
+
+    <changeSet id="20150210094558-34" author="crog">
+        <addForeignKeyConstraint baseColumnNames="product_uuid"
+                baseTableName="cpo_activation_key_products"
+                constraintName="cpo_actkeyprod_fk2"
+                onDelete="CASCADE"
+                onUpdate="NO ACTION"
+                referencedColumnNames="uuid"
+                referencedTableName="cpo_products"/>
+    </changeSet>
+
+    <changeSet id="20150210094558-35" author="crog">
+        <addPrimaryKey tableName="cpo_activation_key_products"
+            columnNames="key_id,product_uuid"
+            constraintName="cpo_actkeyprod_pk"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-36" author="crog">
+        <addPrimaryKey tableName="cpo_content"
+            columnNames="uuid"
+            constraintName="cpo_content_pk"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-37" author="crog">
+        <addForeignKeyConstraint baseColumnNames="owner_id"
+                baseTableName="cpo_content"
+                constraintName="cpo_content_fk1"
+                onDelete="NO ACTION"
+                onUpdate="NO ACTION"
+                referencedColumnNames="id"
+                referencedTableName="cp_owner"/>
+    </changeSet>
+
+    <changeSet id="20150210094558-38" author="crog">
+        <addUniqueConstraint tableName="cpo_content"
+            columnNames="owner_id, content_id"
+            constraintName="cpo_content_unq1"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-39" author="crog">
+        <addPrimaryKey tableName="cpo_environment_content"
+            columnNames="id"
+            constraintName="cpo_environment_content_pk"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-40" author="crog">
+        <addForeignKeyConstraint baseColumnNames="content_uuid"
+                baseTableName="cpo_environment_content"
+                constraintName="cpo_environment_content_fk1"
+                onDelete="CASCADE"
+                onUpdate="NO ACTION"
+                referencedColumnNames="uuid"
+                referencedTableName="cpo_content"/>
+    </changeSet>
+
+    <changeSet id="20150210094558-41" author="crog">
+        <addForeignKeyConstraint baseColumnNames="environment_id"
+                baseTableName="cpo_environment_content"
+                constraintName="cpo_environment_content_fk2"
+                onDelete="CASCADE"
+                onUpdate="NO ACTION"
+                referencedColumnNames="id"
+                referencedTableName="cp_environment"/>
+    </changeSet>
+
+    <changeSet id="20150210094558-42" author="crog">
+        <addUniqueConstraint tableName="cpo_environment_content"
+            columnNames="content_uuid, environment_id"
+            constraintName="cpo_environment_content_unq1"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-43" author="crog">
+        <addPrimaryKey tableName="cpo_installed_products"
+            columnNames="id"
+            constraintName="cpo_installed_products_pk"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-44" author="crog">
+        <addForeignKeyConstraint baseColumnNames="consumer_id"
+                baseTableName="cpo_installed_products"
+                constraintName="cpo_installed_products_fk1"
+                onDelete="NO ACTION"
+                onUpdate="NO ACTION"
+                referencedColumnNames="id"
+                referencedTableName="cp_consumer"/>
+    </changeSet>
+
+    <changeSet id="20150210094558-45" author="crog">
+        <addUniqueConstraint tableName="cpo_installed_products"
+            columnNames="consumer_id, product_uuid"
+            constraintName="cpo_installed_products_unq1"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-46" author="crog">
+        <addForeignKeyConstraint baseColumnNames="pool_id"
+                baseTableName="cpo_pool_provided_products"
+                constraintName="cpo_pool_provided_products_fk1"
+                onDelete="NO ACTION"
+                onUpdate="NO ACTION"
+                referencedColumnNames="id"
+                referencedTableName="cp_pool"/>
+    </changeSet>
+
+    <changeSet id="20150210094558-47" author="crog">
+        <addForeignKeyConstraint baseColumnNames="product_uuid"
+                baseTableName="cpo_pool_provided_products"
+                constraintName="cpo_pool_provided_products_fk2"
+                onDelete="NO ACTION"
+                onUpdate="NO ACTION"
+                referencedColumnNames="uuid"
+                referencedTableName="cpo_products"/>
+    </changeSet>
+
+    <changeSet id="20150210094558-48" author="crog">
+        <addPrimaryKey tableName="cpo_pool_provided_products"
+            columnNames="pool_id, product_uuid"
+            constraintName="cpo_pool_provided_products_pk"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-49" author="crog">
+        <addForeignKeyConstraint baseColumnNames="pool_id"
+                baseTableName="cpo_pool_derived_products"
+                constraintName="cpo_pool_derived_products_fk1"
+                onDelete="NO ACTION"
+                onUpdate="NO ACTION"
+                referencedColumnNames="id"
+                referencedTableName="cp_pool"/>
+    </changeSet>
+
+    <changeSet id="20150210094558-50" author="crog">
+        <addForeignKeyConstraint baseColumnNames="product_uuid"
+                baseTableName="cpo_pool_derived_products"
+                constraintName="cpo_pool_derived_products_fk2"
+                onDelete="NO ACTION"
+                onUpdate="NO ACTION"
+                referencedColumnNames="uuid"
+                referencedTableName="cpo_products"/>
+    </changeSet>
+
+    <changeSet id="20150210094558-51" author="crog">
+        <addPrimaryKey tableName="cpo_pool_derived_products"
+            columnNames="pool_id, product_uuid"
+            constraintName="cpo_pool_derived_products_pk"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-52" author="crog">
+        <addPrimaryKey tableName="cpo_product_attributes"
+            columnNames="id"
+            constraintName="cpo_product_attributes_pk"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-53" author="crog">
+        <addForeignKeyConstraint baseColumnNames="product_uuid"
+                baseTableName="cpo_product_attributes"
+                constraintName="cpo_product_attributes_fk1"
+                onDelete="CASCADE"
+                onUpdate="NO ACTION"
+                referencedColumnNames="uuid"
+                referencedTableName="cpo_products"/>
+    </changeSet>
+
+    <changeSet id="20150210094558-54" author="crog">
+        <addPrimaryKey tableName="cpo_product_certificates"
+            columnNames="id"
+            constraintName="cpo_product_certificates_pk"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-55" author="crog">
+        <addForeignKeyConstraint baseColumnNames="product_uuid"
+                baseTableName="cpo_product_certificates"
+                constraintName="cpo_product_certificates_fk1"
+                onDelete="CASCADE"
+                onUpdate="NO ACTION"
+                referencedColumnNames="uuid"
+                referencedTableName="cpo_products"/>
+    </changeSet>
+
+    <changeSet id="20150210094558-56" author="crog">
+        <addForeignKeyConstraint baseColumnNames="product_uuid"
+                baseTableName="cpo_product_content"
+                constraintName="cpo_product_content_fk1"
+                onDelete="CASCADE"
+                onUpdate="NO ACTION"
+                referencedColumnNames="uuid"
+                referencedTableName="cpo_products"/>
+    </changeSet>
+
+    <changeSet id="20150210094558-57" author="crog">
+        <addForeignKeyConstraint baseColumnNames="content_uuid"
+                baseTableName="cpo_product_content"
+                constraintName="cpo_product_content_fk2"
+                onDelete="CASCADE"
+                onUpdate="NO ACTION"
+                referencedColumnNames="uuid"
+                referencedTableName="cpo_content"/>
+    </changeSet>
+
+    <changeSet id="20150210094558-58" author="crog">
+        <addPrimaryKey tableName="cpo_product_content"
+            columnNames="product_uuid, content_uuid"
+            constraintName="cpo_product_content_pk"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-59" author="crog">
+        <addForeignKeyConstraint baseColumnNames="product_uuid"
+                baseTableName="cpo_product_dependent_products"
+                constraintName="cpo_proddepprod_fk1"
+                onDelete="CASCADE"
+                onUpdate="NO ACTION"
+                referencedColumnNames="uuid"
+                referencedTableName="cpo_products"/>
+    </changeSet>
+
+    <changeSet id="20150210094558-60" author="crog">
+        <addPrimaryKey tableName="cpo_product_dependent_products"
+            columnNames="product_uuid, element"
+            constraintName="cpo_proddepprod_pk"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-61" author="crog">
+        <addPrimaryKey tableName="cp_pool_branding"
+            columnNames="pool_id, branding_id"
+            constraintName="cp_pool_branding_pk"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-62" author="crog">
+        <addForeignKeyConstraint baseColumnNames="pool_id"
+                baseTableName="cpo_pool_source_sub"
+                constraintName="cpo_pool_source_sub_fk2"
+                onDelete="NO ACTION"
+                onUpdate="NO ACTION"
+                referencedColumnNames="id"
+                referencedTableName="cp_pool"/>
+    </changeSet>
+
+    <changeSet id="20150210094558-63" author="crog">
+        <addPrimaryKey tableName="cpo_pool_source_sub"
+            columnNames="id"
+            constraintName="cpo_pool_source_sub_pk"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-64" author="crog">
+        <addUniqueConstraint tableName="cpo_pool_source_sub"
+            columnNames="pool_id"
+            constraintName="cpo_pool_source_sub_unq1"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-65" author="crog">
+        <addUniqueConstraint tableName="cpo_pool_source_sub"
+            columnNames="subscription_id, subscription_sub_key"
+            constraintName="cpo_pool_source_sub_unq2"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-66" author="crog">
     </changeSet>
 
 </databaseChangeLog>
