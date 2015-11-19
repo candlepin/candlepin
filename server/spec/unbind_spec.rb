@@ -28,8 +28,7 @@ describe 'Unbind' do
     consumer = consumer_client(@user, 'consumer')
 
     testing = create_product(nil, random_string('testing'))
-    @cp.create_subscription(@owner['key'], testing.id, 4)
-    @cp.refresh_pools @owner['key']
+    create_pool_and_subscription(@owner['key'], testing.id, 4)
 
     pool1 = consumer.list_pools(
       :product => @monitoring.id,
