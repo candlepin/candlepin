@@ -190,8 +190,10 @@ public class PoolManagerTest {
     @Test
     public void testRefreshPoolsOnlyRegeneratesFloatingWhenNecessary() {
         List<Subscription> subscriptions = Util.newList();
-        Product product = TestUtil.createProduct(o);
-        Subscription sub = TestUtil.createSubscription(getOwner(), product);
+
+        Owner owner = this.getOwner();
+        Product product = TestUtil.createProduct(owner);
+        Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setId("testing-subid");
         subscriptions.add(sub);
 
@@ -210,8 +212,10 @@ public class PoolManagerTest {
         mockSubsList(subscriptions);
 
         mockPoolsList(pools);
-        when(ownerCuratorMock.lookupByKey(sub.getOwner().getKey())).thenReturn(sub.getOwner());
-        this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
+        when(ownerCuratorMock.lookupByKey(owner.getKey())).thenReturn(owner);
+        when(productCuratorMock.lookupById(owner, product.getId())).thenReturn(product);
+
+        this.manager.getRefresher(mockSubAdapter).add(owner).run();
         List<Pool> expectedFloating = new LinkedList();
 
         // Make sure that only the floating pool was regenerated
@@ -224,8 +228,10 @@ public class PoolManagerTest {
     @Test
     public void testRefreshPoolsOnlyRegeneratesWhenNecessary() {
         List<Subscription> subscriptions = Util.newList();
-        Product product = TestUtil.createProduct(o);
-        Subscription sub = TestUtil.createSubscription(getOwner(), product);
+
+        Owner owner = this.getOwner();
+        Product product = TestUtil.createProduct(owner);
+        Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setId("testing-subid");
         subscriptions.add(sub);
 
@@ -235,14 +241,15 @@ public class PoolManagerTest {
         // Should be unchanged
         Pool p = TestUtil.createPool(product);
         p.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
-        p.setOwner(sub.getOwner());
+        p.setOwner(owner);
         pools.add(p);
 
         mockSubsList(subscriptions);
-
         mockPoolsList(pools);
-        when(ownerCuratorMock.lookupByKey(sub.getOwner().getKey())).thenReturn(sub.getOwner());
-        this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
+        when(ownerCuratorMock.lookupByKey(owner.getKey())).thenReturn(owner);
+        when(productCuratorMock.lookupById(owner, product.getId())).thenReturn(product);
+
+        this.manager.getRefresher(mockSubAdapter).add(owner).run();
         List<Pool> expectedModified = new LinkedList();
 
         // Make sure that only the floating pool was regenerated
@@ -388,8 +395,11 @@ public class PoolManagerTest {
     public void refreshPoolsCreatingPoolsForExistingSubscriptions() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Subscription s = TestUtil.createSubscription(getOwner(),
-            TestUtil.createProduct(o));
+
+        Owner owner = this.getOwner();
+        Product product = TestUtil.createProduct(owner);
+
+        Subscription s = TestUtil.createSubscription(owner, product);
         subscriptions.add(s);
         mockSubsList(subscriptions);
 
@@ -400,8 +410,10 @@ public class PoolManagerTest {
         p.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
         newPools.add(p);
         when(poolRulesMock.createAndEnrichPools(eq(s), any(List.class))).thenReturn(newPools);
-        when(ownerCuratorMock.lookupByKey(s.getOwner().getKey())).thenReturn(s.getOwner());
-        this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
+        when(ownerCuratorMock.lookupByKey(owner.getKey())).thenReturn(owner);
+        when(productCuratorMock.lookupById(owner, product.getId())).thenReturn(product);
+
+        this.manager.getRefresher(mockSubAdapter).add(owner).run();
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
     }
 
@@ -410,14 +422,17 @@ public class PoolManagerTest {
     public void refreshPoolsCleanupPoolThatLostVirtLimit() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Subscription s = TestUtil.createSubscription(getOwner(),
-            TestUtil.createProduct(o));
+
+        Owner owner = getOwner();
+        Product product = TestUtil.createProduct(owner);
+
+        Subscription s = TestUtil.createSubscription(owner, product);
         s.setId("01923");
         subscriptions.add(s);
-        Pool p = TestUtil.createPool(s.getProduct());
+        Pool p = TestUtil.createPool(product);
         p.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
         p.setMarkedForDelete(true);
-        p.setOwner(s.getOwner());
+        p.setOwner(owner);
         pools.add(p);
 
         mockSubsList(subscriptions);
@@ -429,9 +444,12 @@ public class PoolManagerTest {
         u.setQuantityChanged(true);
         u.setOrderChanged(true);
         updates.add(u);
+
         when(poolRulesMock.updatePools(eq(s), eq(pools), any(Set.class))).thenReturn(updates);
-        when(ownerCuratorMock.lookupByKey(s.getOwner().getKey())).thenReturn(s.getOwner());
-        this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
+        when(ownerCuratorMock.lookupByKey(owner.getKey())).thenReturn(owner);
+        when(productCuratorMock.lookupById(owner, product.getId())).thenReturn(product);
+
+        this.manager.getRefresher(mockSubAdapter).add(owner).run();
         verify(this.mockPoolCurator, times(1)).delete(any(Pool.class));
     }
 
@@ -601,8 +619,10 @@ public class PoolManagerTest {
 
         List<Subscription> subscriptions = Util.newList();
 
-        Subscription sub = TestUtil.createSubscription(getOwner(),
-            TestUtil.createProduct(o));
+        Owner owner = this.getOwner();
+        Product product = TestUtil.createProduct(owner);
+
+        Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setStartDate(expiredStart);
         sub.setEndDate(expiredDate);
         sub.setId("123");
@@ -611,7 +631,7 @@ public class PoolManagerTest {
         mockSubsList(subscriptions);
 
         List<Pool> pools = Util.newList();
-        Pool p = TestUtil.createPool(sub.getOwner(), sub.getProduct());
+        Pool p = TestUtil.createPool(owner, sub.getProduct());
         p.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
         p.setStartDate(expiredStart);
         p.setEndDate(expiredDate);
@@ -632,8 +652,10 @@ public class PoolManagerTest {
 
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
-        when(ownerCuratorMock.lookupByKey(sub.getOwner().getKey())).thenReturn(sub.getOwner());
-        this.manager.getRefresher(mockSubAdapter).add(sub.getOwner()).run();
+        when(ownerCuratorMock.lookupByKey(owner.getKey())).thenReturn(owner);
+        when(productCuratorMock.lookupById(owner, product.getId())).thenReturn(product);
+
+        this.manager.getRefresher(mockSubAdapter).add(owner).run();
 
         verify(mockPoolCurator).delete(eq(p));
 
@@ -795,8 +817,9 @@ public class PoolManagerTest {
 
         List<Subscription> subscriptions = Util.newList();
 
-        Subscription sub = TestUtil.createSubscription(getOwner(),
-            TestUtil.createProduct(getOwner()));
+        Owner owner = this.getOwner();
+        Product product = TestUtil.createProduct(owner);
+        Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setId("123");
         subscriptions.add(sub);
 
@@ -822,8 +845,10 @@ public class PoolManagerTest {
 
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
-        when(ownerCuratorMock.lookupByKey(sub.getOwner().getKey())).thenReturn(sub.getOwner());
-        this.manager.getRefresher(mockSubAdapter).add(sub.getOwner()).run();
+        when(ownerCuratorMock.lookupByKey(owner.getKey())).thenReturn(owner);
+        when(productCuratorMock.lookupById(owner, product.getId())).thenReturn(product);
+
+        this.manager.getRefresher(mockSubAdapter).add(owner).run();
 
         // The pool left over from the pre-migrated subscription should be deleted
         // and granted entitlements should be revoked

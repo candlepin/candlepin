@@ -305,7 +305,10 @@ public class CandlepinPoolManager implements PoolManager {
             Content existing = contentMap.get(content.getId());
 
             if (existing != null && !content.equals(existing)) {
-                log.warn("Content changes detected: {}", content.getId());
+                log.warn(
+                    "Multiple versions of the same content found on a single subscription: {}.{}",
+                    (content.getOwner() != null ? content.getOwner().getId() : null), content.getId()
+                );
             }
 
             contentMap.put(content.getId(), content);
@@ -338,15 +341,16 @@ public class CandlepinPoolManager implements PoolManager {
         for (Content inbound : content) {
             Content existing = this.contentCurator.lookupById(owner, inbound.getId());
 
+            // We always want to ensure it contains the proper owner reference
+            inbound.setOwner(owner);
+
             if (existing == null) {
                 log.info("Creating new content for org {}: {}", owner.getKey(), inbound.getId());
-                inbound.setOwner(owner);
 
                 this.contentCurator.create(inbound);
             }
             else if (!inbound.equals(existing)) {
                 log.info("Updating existing content for org {}: {}", owner.getKey(), inbound.getId());
-                inbound.setOwner(owner);
 
                 this.contentCurator.createOrUpdate(inbound);
                 changed.add(inbound);
@@ -412,7 +416,10 @@ public class CandlepinPoolManager implements PoolManager {
             Product existing = productMap.get(product.getId());
 
             if (existing != null && !this.hasProductChanged(existing, product)) {
-                log.warn("Product changes detected: {}", product.getId());
+                log.warn(
+                    "Multiple versions of the same product found on a single subscription: {}.{}",
+                    (product.getOwner() != null ? product.getOwner().getId() : null), product.getId()
+                );
             }
 
             productMap.put(product.getId(), product);
@@ -424,32 +431,40 @@ public class CandlepinPoolManager implements PoolManager {
 
         if (product != null && product.getOwner() != null && product.getId() != null) {
             resolved = this.prodCurator.lookupById(product.getOwner(), product.getId());
+
+            if (resolved == null) {
+                // This should never happen.
+                throw new RuntimeException("Unable to resolve product reference");
+            }
         }
 
-        return resolved != null ? resolved : product;
+        return resolved;
     }
 
-    public Set<Product> getChangedProducts(Owner o, Collection<Product> allProducts) {
+    public Set<Product> getChangedProducts(Owner owner, Collection<Product> allProducts) {
         Set<Product> changedProducts = Util.newSet();
 
         HashMap<String, Content> cmap = new HashMap<String, Content>();
 
         log.debug("Syncing {} incoming products.", allProducts.size());
         for (Product incoming : allProducts) {
-            Product existing = prodCurator.lookupById(o, incoming.getId());
+            Product existing = prodCurator.lookupById(owner, incoming.getId());
+
+            // We always want to ensure the owner is the one we've refreshed
+            incoming.setOwner(owner);
 
             if (existing == null) {
-                log.info("Creating new product for org {}: {}", o.getKey(), incoming.getId());
-                incoming.setOwner(o);
+                log.info("Creating new product for org {}: {}", owner.getKey(), incoming.getId());
+
                 prodCurator.create(incoming);
             }
-            else {
-                if (hasProductChanged(existing, incoming)) {
-                    log.info("Product changed for org {}: {}", o.getKey(), incoming.getId());
-                    incoming.setOwner(o);
-                    prodCurator.createOrUpdate(incoming);
-                    changedProducts.add(incoming);
-                }
+            // TODO: Eventually change this to use Product.equals so we're not maintaining two
+            // ways of checking for equality
+            else if (hasProductChanged(existing, incoming)) {
+                log.info("Product changed for org {}: {}", owner.getKey(), incoming.getId());
+
+                prodCurator.createOrUpdate(incoming);
+                changedProducts.add(incoming);
             }
         }
 
