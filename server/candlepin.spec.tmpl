@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.9
+Version: 2.0.10
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -213,6 +213,75 @@ fi
 
 #raw
 %changelog
+* Wed Nov 18 2015 Michael Stead <mstead@redhat.com> 2.0.10-1
+- Updated the per-org products migration for performance with lots of data
+  (crog@redhat.com)
+- Fixed checkstyle issue from merge of #1016 (vrjain@redhat.com)
+- Reverted fetch type on product dependent products (crog@redhat.com)
+- Allow baseurl to be overridden in standalone (wpoteat@redhat.com)
+- Set production logging level back to INFO. (awood@redhat.com)
+- migration spec test now uses async refresh pools (vrjain@redhat.com)
+- Candlepin scenarios now does async refresh pools (vrjain@redhat.com)
+- Fixed non deterministic unit test failure in PoolManagerTest
+  (vrjain@redhat.com)
+- fix import spec , all not each (vrjain@redhat.com)
+- ignore import spec in hosted mode (vrjain@redhat.com)
+- Add resolution back to hosted test resources (vrjain@redhat.com)
+- Added correction to the output of some getters in Product; few misc bug fixes
+  (crog@redhat.com)
+- Post review changes (vrjain@redhat.com)
+- Refresher no longer compares Owner object instances when checking
+  subscriptions (ceiu@cericlabs.com)
+- 1280403: TransientObjectException when Refreshing Pools (vrjain@redhat.com)
+- Remove resolution from hostedtest resolver util (vrjain@redhat.com)
+- Revert "Resolve Subscriptions after sub service adapter" (vrjain@redhat.com)
+- Fixed skip_refresh boolean (vrjain@redhat.com)
+- added argument in create_pools_and_subscription to allow skipping refresh
+  (vrjain@redhat.com)
+- Resolve Subscriptions after sub service adapter (vrjain@redhat.com)
+- Updated consumer resource host guest spec to use
+  create_pool_and_subscrtiption (vrjain@redhat.com)
+- Impose SLA from guest to host for auto-bind (wpoteat@redhat.com)
+- Adding configuration options for HornetQ to prevent server overload
+  (fnguyen@redhat.com)
+- Audit filtering. Hack to help debugging Audit performance problems at
+  customers (fnguyen@redhat.com)
+- Create new event for Entitlement Expiration (wpoteat@redhat.com)
+- Fixed Entitlement.java toString (vrjain@redhat.com)
+- Added unit tests for update pool owner resource API (vrjain@redhat.com)
+- Fix junit compilation issues with OwnerResource (vrjain@redhat.com)
+- Fix spec help cleanup (vrjain@redhat.com)
+- Fix spec helper circular dependency issue (vrjain@redhat.com)
+- Cache candlepin mode to reduce number of rest calls to candlepin, and clean
+  up upstream subscriptions after tests (vrjain@redhat.com)
+- clean up and comment for PR (vrjain@redhat.com)
+- exlude hostedtest resources unless explicitly requested (vrjain@redhat.com)
+- Fix date format in update pool or subscription (vrjain@redhat.com)
+- created ResolverUtil and fixed modifier spec (vrjain@redhat.com)
+- Added update pools resource and fixes entitlement cert tests
+  (vrjain@redhat.com)
+- fix refresh pools spec for standalone mode (vrjain@redhat.com)
+- fix one sub pool stack test (vrjain@redhat.com)
+- Fix derived product spec tests and code (vrjain@redhat.com)
+- Fixed derived pool derived product override issue in refresh pools
+  (vrjain@redhat.com)
+- added delete_subscription_and_pool (vrjain@redhat.com)
+- move refreshpools to create_product_and_subscription (vrjain@redhat.com)
+- Data needs to comply with real use requirements (wpoteat@redhat.com)
+- Added create_pool_and_subscription to candlepin scenarios (vrjain@redhat.com)
+- Fix NPE in IllegalState check (vrjain@redhat.com)
+- Use a logical AND when using  pool-based searching criteria.
+  (awood@redhat.com)
+- Add HostedTest resource, module, adapter, client and update candlepin
+  scenarios with  new api to create pools and subscriptions (vrjain@redhat.com)
+- Update import products to create pools instead of creating subscriptions
+  (vrjain@redhat.com)
+- createPools - more unit tests (vrjain@redhat.com)
+- rename method and add unit tests for PoolManager (vrjain@redhat.com)
+- Fix pool unit tests (vrjain@redhat.com)
+- createPools now mimics createSubscriptions in OwnerResource
+  (vrjain@redhat.com)
+
 * Thu Oct 15 2015 Alex Wood <awood@redhat.com> 2.0.9-1
 - Update pom files with new version of common. (awood@redhat.com)
 

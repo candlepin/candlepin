@@ -66,6 +66,7 @@ usage() {
         -d  deploy a live candlepin
         -t  populate Candlepin database with test data (implies -d)
         -r  run rspec test suite (implies -d)
+        -h  run rspec tests in "hosted" mode (implies -r and -d)
         -u  run unit test suite
         -l  run the linter against the code
         -s  run a bash shell when done
@@ -75,7 +76,7 @@ usage() {
 HELP
 }
 
-while getopts ":dtrulsc:p:v" opt; do
+while getopts ":dtrhulsc:p:v" opt; do
     case $opt in
         d  ) DEPLOY="1";;
         t  )
@@ -83,6 +84,11 @@ while getopts ":dtrulsc:p:v" opt; do
             TESTDATA="1"
             ;;
         r  )
+            RSPEC="1"
+            DEPLOY="1"
+            ;;
+        h  )
+            HOSTED="1"
             RSPEC="1"
             DEPLOY="1"
             ;;
@@ -143,6 +149,10 @@ if [ "$DEPLOY" == "1" ]; then
     echo "Deploying candlepin."
 
     DEPLOY_FLAGS="-g"
+
+    if [ "$RSPEC" == "1" ] && [ "$HOSTED" == "1" ]; then
+        DEPLOY_FLAGS="$DEPLOY_FLAGS -h -a"
+    fi
 
     if [ "$TESTDATA" == "1" ]; then
         DEPLOY_FLAGS="$DEPLOY_FLAGS -t"

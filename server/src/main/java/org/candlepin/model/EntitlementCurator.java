@@ -110,6 +110,14 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return criteria.list();
     }
 
+    @SuppressWarnings("unchecked")
+    public List<Entitlement> listByConsumerAndPoolId(Consumer consumer, String poolId) {
+        Criteria query = currentSession().createCriteria(Entitlement.class)
+                    .add(Restrictions.eq("pool.id", poolId));
+        query.add(Restrictions.eq("consumer", consumer));
+        return listByCriteria(query);
+    }
+
     public Page<List<Entitlement>> listByConsumer(Consumer consumer, String productId,
             EntitlementFilterBuilder filters, PageRequest pageRequest) {
         return listFilteredPages(consumer, "consumer", productId, filters, pageRequest);

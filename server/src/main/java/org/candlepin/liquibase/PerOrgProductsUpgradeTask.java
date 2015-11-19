@@ -64,7 +64,6 @@ public class PerOrgProductsUpgradeTask {
         this.preparedStatements = new HashMap<String, PreparedStatement>();
     }
 
-
     protected PreparedStatement prepareStatement(String sql, Object... argv)
         throws DatabaseException, SQLException {
 
@@ -76,15 +75,17 @@ public class PerOrgProductsUpgradeTask {
 
         statement.clearParameters();
 
-        for (int i = 0; i < argv.length; ++i) {
-            if (argv[i] != null) {
-                statement.setObject(i + 1, argv[i]);
-            }
-            else {
-                // Impl note:
-                // Oracle has trouble with setNull. See the comments on this SO question for details:
-                // http://stackoverflow.com/questions/11793483/setobject-method-of-preparedstatement
-                statement.setNull(i + 1, Types.VARCHAR);
+        if (argv != null) {
+            for (int i = 0; i < argv.length; ++i) {
+                if (argv[i] != null) {
+                    statement.setObject(i + 1, argv[i]);
+                }
+                else {
+                    // Impl note:
+                    // Oracle has trouble with setNull. See the comments on this SO question for details:
+                    // http://stackoverflow.com/questions/11793483/setobject-method-of-preparedstatement
+                    statement.setNull(i + 1, Types.VARCHAR);
+                }
             }
         }
 
@@ -155,10 +156,21 @@ public class PerOrgProductsUpgradeTask {
         try {
             this.connection.setAutoCommit(false);
 
+            // Get org count
+            ResultSet result = this.executeQuery("SELECT count(id) FROM cp_owner");
+            result.next();
+            int count = result.getInt(1);
+            result.close();
+
+            // Migrate orgs
             ResultSet orgids = this.executeQuery("SELECT id FROM cp_owner");
-            while (orgids.next()) {
+            for (int index = 1; orgids.next(); ++index) {
                 String orgid = orgids.getString(1);
-                this.logger.info(String.format("Migrating data for org %s", orgid));
+
+                this.logger.info(String.format(
+                    "Migrating data for org %s (%d of %d)",
+                    orgid, index, count
+                ));
 
                 this.migrateProductData(orgid);
                 this.migrateActivationKeyData(orgid);
@@ -167,7 +179,6 @@ public class PerOrgProductsUpgradeTask {
             }
 
             orgids.close();
-
             this.connection.commit();
         }
         finally {
@@ -233,14 +244,17 @@ public class PerOrgProductsUpgradeTask {
             orgid, orgid, orgid, orgid, orgid, orgid, orgid
         );
 
+        // TODO:
+        // Should we also clean up dangling references to products...?
+
         while (productids.next()) {
             String productid = productids.getString(1);
             String productuuid = this.generateUUID();
 
             // Make sure we haven't already migrated this product.
             if (productCache.get(productid) != null) {
-                this.logger.info(String.format(
-                    "Skipping migration for product %s; product has already been migrated.",
+                this.logger.warn(String.format(
+                    "Skipping migration for product \"%s\"; product has already been migrated.",
                     productid
                 ));
 
@@ -250,22 +264,33 @@ public class PerOrgProductsUpgradeTask {
             productCache.put(productid, productuuid);
 
             this.logger.info(
-                String.format("Mapping org/prod %s/%s to UUID %s", orgid, productid, productuuid)
+                String.format("Mapping org/prod \"%s\"/\"%s\" to UUID \"%s\"", orgid, productid, productuuid)
             );
 
-            // Migration information from pre-existing tables to cpo_* tables
-            this.executeUpdate(
+            // Migration information from pre-existing tables to cpo_* tables. This should always
+            // be 0, 1 or an exception.
+            int migrated = this.executeUpdate(
                 "INSERT INTO cpo_products " +
                 "SELECT ?, created, updated, multiplier, ?, ?, name " +
                 "FROM cp_product WHERE id = ?",
                 productuuid, orgid, productid, productid
             );
 
+            if (migrated < 1) {
+                this.logger.error(String.format(
+                    "Unable to migrate product \"%s\"; likely a dangling reference to a product that " +
+                    "no longer exists.",
+                    productid
+                ));
+
+                continue;
+            }
+
             this.executeUpdate(
                 "INSERT INTO cpo_pool_provided_products " +
                 "SELECT pool_id, ? " +
                 "FROM cp_pool_products pp, cp_pool p WHERE pp.pool_id = p.id " +
-                "    AND p.owner_id = ? AND pp.product_id = ? AND pp.dtype='provided' ",
+                "    AND p.owner_id = ? AND pp.product_id = ? AND pp.dtype = 'provided' ",
                 productuuid, orgid, productid
             );
 
@@ -273,7 +298,7 @@ public class PerOrgProductsUpgradeTask {
                 "INSERT INTO cpo_pool_derived_products " +
                 "SELECT pool_id, ? " +
                 "FROM cp_pool_products pp, cp_pool p WHERE pp.pool_id = p.id " +
-                "     AND p.owner_id = ? AND pp.product_id = ? AND pp.dtype='derived' ",
+                "     AND p.owner_id = ? AND pp.product_id = ? AND pp.dtype = 'derived' ",
                 productuuid, orgid, productid
             );
 
@@ -359,7 +384,6 @@ public class PerOrgProductsUpgradeTask {
                         contentuuid, orgid, contentid
                     );
 
-                    // update content tables
                     this.executeUpdate(
                         "INSERT INTO cpo_content_modified_products " +
                         "SELECT ?, element " +
@@ -387,7 +411,6 @@ public class PerOrgProductsUpgradeTask {
                     content.close();
                 }
 
-                // update product => content links
                 this.executeUpdate(
                     "INSERT INTO cpo_product_content " +
                     "SELECT ?, ?, enabled, created, updated " +

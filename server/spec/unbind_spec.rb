@@ -24,6 +24,26 @@ describe 'Unbind' do
     consumer.list_entitlements.should be_empty
   end
 
+  it 'should remove entitlements by pool id without touching other entitlements' do
+    consumer = consumer_client(@user, 'consumer')
+
+    testing = create_product(nil, random_string('testing'))
+    create_pool_and_subscription(@owner['key'], testing.id, 4)
+
+    pool1 = consumer.list_pools(
+      :product => @monitoring.id,
+      :consumer => consumer.uuid).first
+    pool2 = consumer.list_pools(
+      :product => testing.id,
+      :consumer => consumer.uuid).first
+
+    ent1 = consumer.consume_pool(pool1.id, {:quantity => 1}).first
+    ent2 = consumer.consume_pool(pool2.id, {:quantity => 1}).first
+
+    consumer.unbind_entitlements_by_pool(consumer.uuid, pool1.id)
+    expect(consumer.list_entitlements).to(match_array([ent2]))
+  end
+
   it 'should add unbound entitlements back to the pool' do
     consumer = consumer_client(@user, 'consumer')
     pool = consumer.list_pools(
@@ -79,5 +99,3 @@ describe 'Unbind' do
     serials.each { |serial| @cp.get_serial(serial).revoked.should be_false }
   end
 end
-
-
