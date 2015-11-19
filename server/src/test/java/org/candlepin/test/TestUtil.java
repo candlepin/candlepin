@@ -14,6 +14,8 @@
  */
 package org.candlepin.test;
 
+import static org.junit.Assert.*;
+
 import org.candlepin.auth.Access;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
@@ -356,13 +358,43 @@ public class TestUtil {
             sub.getAccountNumber(),
             sub.getOrderNumber()
         );
-
+        p.setUpstreamPoolId(sub.getUpstreamPoolId());
         p.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
 
         // Copy sub-product data if there is any:
         p.setDerivedProduct(sub.getDerivedProduct());
+        p.setDerivedProvidedProducts(new HashSet<Product>(sub.getDerivedProvidedProducts()));
 
         for (Branding b : sub.getBranding()) {
+            p.getBranding().add(new Branding(b.getProductId(), b.getType(), b.getName()));
+        }
+
+        return p;
+    }
+
+    /**
+     * @param pool source pool
+     * @return pool the clone pool
+     */
+    public static Pool clone(Pool pool) {
+        Pool p = new Pool(pool.getOwner(),
+            pool.getProduct(),
+            new HashSet<Product>(pool.getProvidedProducts()),
+            pool.getQuantity(),
+            pool.getStartDate(),
+            pool.getEndDate(),
+            pool.getContractNumber(),
+            pool.getAccountNumber(),
+            pool.getOrderNumber()
+        );
+
+        p.setSourceSubscription(new SourceSubscription(pool.getSubscriptionId(),
+                pool.getSubscriptionSubKey()));
+
+        // Copy sub-product data if there is any:
+        p.setDerivedProduct(pool.getDerivedProduct());
+
+        for (Branding b : pool.getBranding()) {
             p.getBranding().add(new Branding(b.getProductId(), b.getType(), b.getName()));
         }
 
@@ -430,5 +462,40 @@ public class TestUtil {
             result.add(p);
         }
         return result;
+    }
+
+    public static void assertPoolsAreEqual(Pool pool1, Pool pool2) {
+        assertEquals(pool1.getAccountNumber(), pool2.getAccountNumber());
+        assertEquals(pool1.getContractNumber(), pool2.getContractNumber());
+        assertEquals(pool1.getOrderNumber(), pool2.getOrderNumber());
+        assertEquals(pool1.getType(), pool2.getType());
+        assertEquals(pool1.getOwner(), pool2.getOwner());
+        assertEquals(pool1.getQuantity(), pool2.getQuantity());
+        assertEquals(pool1.getActiveSubscription(), pool2.getActiveSubscription());
+        assertEquals(pool1.getSourceEntitlement(), pool2.getSourceEntitlement());
+        assertEquals(pool1.getSourceStack(), pool2.getSourceStack());
+        assertEquals(pool1.getSubscriptionId(), pool2.getSubscriptionId());
+        assertEquals(pool1.getSubscriptionSubKey(), pool2.getSubscriptionSubKey());
+        assertEquals(pool1.getStartDate(), pool2.getStartDate());
+        assertEquals(pool1.getEndDate(), pool2.getEndDate());
+        assertEquals(pool1.getProduct(), pool2.getProduct());
+        assertEquals(pool1.getProvidedProducts(), pool2.getProvidedProducts());
+        assertEquals(pool1.getDerivedProvidedProducts(), pool2.getDerivedProvidedProducts());
+        assertEquals(pool1.getProvidedProductDtos(), pool2.getProvidedProductDtos());
+        assertEquals(pool1.getDerivedProvidedProductDtos(), pool2.getDerivedProvidedProductDtos());
+        assertEquals(pool1.getAttributes(), pool2.getAttributes());
+        assertEquals(pool1.getEntitlements(), pool2.getEntitlements());
+        assertEquals(pool1.getConsumed(), pool2.getConsumed());
+        assertEquals(pool1.getExported(), pool2.getExported());
+        assertEquals(pool1.getBranding(), pool2.getBranding());
+        assertEquals(pool1.getCalculatedAttributes(), pool2.getCalculatedAttributes());
+        assertEquals(pool1.isMarkedForDelete(), pool2.isMarkedForDelete());
+        assertEquals(pool1.getImportedProductId(), pool2.getImportedProductId());
+        assertEquals(pool1.getUpstreamConsumerId(), pool2.getUpstreamConsumerId());
+        assertEquals(pool1.getUpstreamEntitlementId(), pool2.getUpstreamEntitlementId());
+        assertEquals(pool1.getUpstreamPoolId(), pool2.getUpstreamPoolId());
+        assertEquals(pool1.getCertificate(), pool2.getCertificate());
+        assertEquals(pool1.getCdn(), pool2.getCdn());
+
     }
 }

@@ -57,24 +57,19 @@ public interface PoolManager {
      */
     Pool createAndEnrichPools(Pool pool);
 
-    /**
-     * Updates the pools associated with the specified subscription, using the information stored
-     * in the given subscription. Because the input subscription is used to lookup pools, the ID
-     * field must be set for this method to operate properly.
-     *
-     * @param subscription
-     *  The subscription to use for updating the associated pools
-     */
-    void updatePoolsForSubscription(Subscription subscription);
+    Pool createAndEnrichPools(Pool pool, List<Pool> existingPools);
+
+    Pool convertToMasterPool(Subscription subscription);
 
     /**
-     * Deletes the pools associated with the specified subscription. Because the input subscription
-     * is used to lookup pools, the ID field must be set for this method to operate properly.
+     * Updates the pools using the information stored in the given pool. Because
+     * the input subscription is used to lookup pools, the ID field must be set
+     * for this method to operate properly.
      *
-     * @param subscription
-     *  The subscription to use for deleting the associated pools
+     * @param pool
+     *        The pool to use for updating the associated pools
      */
-    void deletePoolsForSubscription(Subscription subscription);
+    void updateMasterPool(Pool pool);
 
     /**
      * Deletes the pools associated with the specified subscription IDs.

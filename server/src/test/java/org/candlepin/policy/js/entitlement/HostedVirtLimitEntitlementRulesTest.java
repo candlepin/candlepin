@@ -31,10 +31,12 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.pool.PoolHelper;
+import org.candlepin.test.TestUtil;
 
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -62,7 +64,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, "10");
         consumer.setType(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
-        List<Pool> pools = poolRules.createAndEnrichPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(TestUtil.copyFromSub(s), new LinkedList<Pool>());
         assertEquals(2, pools.size());
 
         Pool physicalPool = pools.get(0);
@@ -101,7 +103,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, "unlimited");
         s.getProduct().setAttribute("host_limited", "true");
-        List<Pool> pools = poolRules.createAndEnrichPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(TestUtil.copyFromSub(s), new LinkedList<Pool>());
         assertEquals(2, pools.size());
 
         Pool physicalPool = pools.get(0);
@@ -121,7 +123,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
     public void hostedVirtLimitUnlimitedBonusPoolQuantity() {
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, "unlimited");
-        List<Pool> pools = poolRules.createAndEnrichPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(TestUtil.copyFromSub(s), new LinkedList<Pool>());
         assertEquals(2, pools.size());
 
         Pool physicalPool = pools.get(0);
@@ -159,7 +161,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
     public void noBonusPoolsForHostedNonDistributorBinds() {
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, "unlimited");
-        List<Pool> pools = poolRules.createAndEnrichPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(TestUtil.copyFromSub(s), new LinkedList<Pool>());
         assertEquals(2, pools.size());
 
         Pool physicalPool = pools.get(0);
@@ -192,7 +194,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         consumer.setType(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, "unlimited");
-        List<Pool> pools = poolRules.createAndEnrichPools(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(TestUtil.copyFromSub(s), new LinkedList<Pool>());
         assertEquals(2, pools.size());
 
         Pool physicalPool = pools.get(0);

@@ -995,10 +995,8 @@ public class OwnerResource {
                 "Unable to find a subscription with the ID \"{0}\".", subscription.getId()
             ));
         }
+        updatePool(subscription.getOwner().getKey(), this.poolManager.convertToMasterPool(subscription));
 
-        subscription = resolverUtil.resolveSubscription(subscription);
-
-        this.poolManager.updatePoolsForSubscription(subscription);
     }
 
     /**
@@ -1086,18 +1084,23 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
     public void updatePool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-            Pool pool) {
+            Pool newPool) {
 
-        if (pool.getType() != PoolType.NORMAL) {
+        Pool currentPool = this.poolManager.find(newPool.getId());
+        if (currentPool == null) {
+            throw new NotFoundException(i18n.tr(
+                "Unable to find a pool with the ID \"{0}\".", newPool.getId()
+            ));
+        }
+
+        if (currentPool.getType() != PoolType.NORMAL ||
+                newPool.getType() != PoolType.NORMAL) {
             throw new BadRequestException(i18n.tr("Cannot update bonus pools, as they are auto generated"));
         }
 
-        // convert to subscription so we can use updateSubscription
-        Subscription subscription = new Subscription(pool.getOwner(), pool.getProduct(),
-                pool.getProvidedProducts(), pool.getQuantity(), pool.getStartDate(), pool.getEndDate(),
-                new Date());
-        subscription.setId(pool.getSubscriptionId());
-        updateSubscription(subscription);
+        newPool = resolverUtil.resolvePool(newPool);
+
+        this.poolManager.updateMasterPool(newPool);
     }
 
     /**

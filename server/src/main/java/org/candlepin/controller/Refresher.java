@@ -21,7 +21,6 @@ import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
-import com.google.inject.persist.Transactional;
 import com.google.inject.persist.UnitOfWork;
 
 import org.slf4j.Logger;
@@ -134,12 +133,17 @@ public class Refresher {
             }
 
             /*
-             * on the off chance that this is actually a new subscription, make the required
-             * pools. this shouldn't happen; we should really get a refreshpools by owner
-             * call for it, but why not handle it, just in case!
+             * on the off chance that this is actually a new subscription, make
+             * the required pools. this shouldn't happen; we should really get a
+             * refresh pools by owner call for it, but why not handle it, just
+             * in case!
+             *
+             * Regenerate certificates here, that way if it fails, the whole
+             * thing rolls back. We don't want to refresh without marking ents
+             * dirty, they will never get regenerated
              */
-            List<Pool> pools = poolManager.lookupBySubscriptionId(subscription.getId());
-            refreshPoolsForSubscription(subscription, pools);
+            Pool masterPool = poolManager.convertToMasterPool(subscription);
+            poolManager.refreshPoolsForMasterPool(masterPool, true, lazy, new HashSet<Product>());
         }
 
         for (Owner owner : this.owners.values()) {
@@ -147,17 +151,4 @@ public class Refresher {
         }
     }
 
-    // TODO: Ties into the refresh all pools using a product comment above, which is
-    // a broken code path and due to be fixed in near future.
-    @Transactional
-    private void refreshPoolsForSubscription(Subscription subscription, List<Pool> pools) {
-        poolManager.removeAndDeletePoolsOnOtherOwners(pools, subscription);
-
-        poolManager.createAndEnrichPools(subscription, pools);
-        // Regenerate certificates here, that way if it fails, the whole thing rolls back.
-        // We don't want to refresh without marking ents dirty, they will never get regenerated
-        poolManager.regenerateCertificatesByEntIds(
-                poolManager.updatePoolsForSubscription(pools, subscription, true,
-                        new HashSet<Product>()), lazy);
-    }
 }
