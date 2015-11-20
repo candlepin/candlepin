@@ -34,11 +34,16 @@ describe 'Entitlements' do
     @cp.add_content_to_product(@owner['key'], @ram_provided.id, content2.id)
 
     #entitle owner for the virt and monitoring products.
-    create_pool_and_subscription(@owner['key'], @virt.id, 20)
-    create_pool_and_subscription(@owner['key'], @monitoring.id, 4)
-    create_pool_and_subscription(@owner['key'], @super_awesome.id, 4)
-    create_pool_and_subscription(@owner['key'], @virt_limit.id, 5)
-    create_pool_and_subscription(@owner['key'], @instance_based.id, 10)
+    create_pool_and_subscription(@owner['key'], @virt.id, 20,
+				[], '', '', '', nil, nil, true)
+    create_pool_and_subscription(@owner['key'], @monitoring.id, 4,
+				[], '', '', '', nil, nil, true)
+    create_pool_and_subscription(@owner['key'], @super_awesome.id, 4,
+				[], '', '', '', nil, nil, true)
+    create_pool_and_subscription(@owner['key'], @virt_limit.id, 5,
+				[], '', '', '', nil, nil, true)
+    create_pool_and_subscription(@owner['key'], @instance_based.id, 10,
+				[], '', '', '', nil, nil, true)
     create_pool_and_subscription(@owner['key'], @ram.id, 4, [@ram_provided.id])
 
     #create consumer

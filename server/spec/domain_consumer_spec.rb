@@ -12,7 +12,8 @@ describe 'Domain Consumer' do
         :attributes => { :requires_consumer_type => :domain }
     })
 
-    create_pool_and_subscription(@owner['key'], @monitoring.id, 4)
+    create_pool_and_subscription(@owner['key'], @monitoring.id, 4,
+				[], '', '', '', nil, nil, true)
     create_pool_and_subscription(@owner['key'], @domain_product.id, 4)
   end
 

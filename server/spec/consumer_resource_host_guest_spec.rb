@@ -223,7 +223,8 @@ describe 'Consumer Resource Host/Guest' do
       random_string('product'),
       {:owner => @owner1['key']})
     
-    create_pool_and_subscription(@owner1['key'], vip_product.id, 10, [provided_product.id])
+    create_pool_and_subscription(@owner1['key'], vip_product.id, 10, [provided_product.id],
+				'', '', '', nil, nil, true)
     create_pool_and_subscription(@owner1['key'], std_product.id, 10, [provided_product.id])
 
     installed = [

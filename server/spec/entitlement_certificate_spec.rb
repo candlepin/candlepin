@@ -173,11 +173,14 @@ describe 'Entitlement Certificate' do
     prod3 = create_product(prod_id, "test product", {:owner => owner3['key']})
     safe_prod3 = create_product(safe_prod_id, "safe product", {:owner => owner3['key']})
 
-    create_pool_and_subscription(owner1['key'], prod1.id, 10)
+    create_pool_and_subscription(owner1['key'], prod1.id, 10,
+				 [], '', '', '', nil, nil, true)
     create_pool_and_subscription(owner1['key'], safe_prod1.id, 10)
-    create_pool_and_subscription(owner2['key'], prod2.id, 10)
+    create_pool_and_subscription(owner2['key'], prod2.id, 10
+				[], '', '', '', nil, nil, true)
     create_pool_and_subscription(owner2['key'], safe_prod2.id, 10)
-    create_pool_and_subscription(owner3['key'], prod3.id, 10)
+    create_pool_and_subscription(owner3['key'], prod3.id, 10,
+				[], '', '', '', nil, nil, true)
     create_pool_and_subscription(owner3['key'], safe_prod3.id, 10)
 
     user1 = user_client(owner1, random_string('user1'))
