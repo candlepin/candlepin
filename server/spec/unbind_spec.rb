@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'candlepin_scenarios'
+require 'util'
 
 describe 'Unbind' do
   include CandlepinMethods
@@ -39,9 +40,15 @@ describe 'Unbind' do
 
     ent1 = consumer.consume_pool(pool1.id, {:quantity => 1}).first
     ent2 = consumer.consume_pool(pool2.id, {:quantity => 1}).first
-
     consumer.unbind_entitlements_by_pool(consumer.uuid, pool1.id)
-    expect(consumer.list_entitlements).to(match_array([ent2]))
+    results = consumer.list_entitlements
+    expected = [ent2]
+    date_time_pattern = /[0-9]+-[0-9]{0,2}-[0-9]{0,2}T[012]{0,1}[0-9]{1,1}:[0-5]{0,1}[0-9]{1,1}:[0-5]{0,1}[0-9]\.[0-9]{0,3}\+[0-9]{0,4}/
+    # mysql does not support milliseconds. So remove time fields.
+    [results, expected].each do |item|
+      remove_matching!(item, date_time_pattern)
+    end
+    expect(results).to(match_array(expected))
   end
 
   it 'should add unbound entitlements back to the pool' do
