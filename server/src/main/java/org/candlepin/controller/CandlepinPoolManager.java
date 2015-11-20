@@ -278,15 +278,15 @@ public class CandlepinPoolManager implements PoolManager {
         // Go back through each sub and update content references so we don't end up with dangling,
         // transient or duplicate references on any of the subs' products.
         for (Subscription sub : subs) {
-            this.updateContentRefs(sub.getProduct());
-            this.updateContentRefs(sub.getDerivedProduct());
+            this.updateContentRefs(owner, sub.getProduct());
+            this.updateContentRefs(owner, sub.getDerivedProduct());
 
             for (Product product : sub.getProvidedProducts()) {
-                this.updateContentRefs(product);
+                this.updateContentRefs(owner, product);
             }
 
             for (Product product : sub.getDerivedProvidedProducts()) {
-                this.updateContentRefs(product);
+                this.updateContentRefs(owner, product);
             }
         }
 
@@ -298,8 +298,26 @@ public class CandlepinPoolManager implements PoolManager {
             return;
         }
 
+        Map<String, Content> mapped = new HashMap<String, Content>();
+        List<ProductContent> duplicates = new LinkedList<ProductContent>();
+
         for (ProductContent pc : product.getProductContent()) {
             Content content = pc.getContent();
+
+            // Check that this product isn't linking to the same content multiple times...
+            if (mapped.containsKey(content.getId())) {
+                log.warn(
+                    "Multiple references to the same content found on a single product; " +
+                    "discarding duplicate: {} => {}, {}",
+                    product, content, mapped.get(content.getId())
+                );
+
+                duplicates.add(pc);
+                continue;
+            }
+
+            mapped.put(content.getId(), content);
+
 
             // Check that the content hasn't changed if we've already seen it.
             Content existing = contentMap.get(content.getId());
@@ -313,16 +331,22 @@ public class CandlepinPoolManager implements PoolManager {
 
             contentMap.put(content.getId(), content);
         }
+
+        // Remove duplicate references from the product so we don't die trying to persist it...
+        product.getProductContent().removeAll(duplicates);
     }
 
-    private void updateContentRefs(Product product) {
+    private void updateContentRefs(Owner owner, Product product) {
         if (product == null) {
             return;
         }
 
+        // TODO:
+        // Explore caching the output from the curator.create(orupdate) calls in getChangedContent
+        // to avoid doing another potential DB hit for every content instance here.
         for (ProductContent pc : product.getProductContent()) {
             Content content = pc.getContent();
-            Content existing = this.contentCurator.lookupById(content.getOwner(), content.getId());
+            Content existing = this.contentCurator.lookupById(owner, content.getId());
 
             if (existing == null) {
                 // This should never happen.
@@ -360,7 +384,7 @@ public class CandlepinPoolManager implements PoolManager {
         return changed;
     }
 
-    Set<Product> refreshProducts(Owner o, List<Subscription> subs) {
+    Set<Product> refreshProducts(Owner owner, List<Subscription> subs) {
         /*
          * Build a master list of all products on the incoming subscriptions. Note that
          * these product objects are detached, and need to be synced with what's in the
@@ -383,26 +407,26 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
-        Set<Product> changed = this.getChangedProducts(o, products.values());
+        Set<Product> changed = this.getChangedProducts(owner, products.values());
 
         // Go back through each sub and update product references so we don't end up with dangling,
         // transient or duplicate references on any of the subs.
         for (Subscription sub : subs) {
-            sub.setProduct(this.resolveProductRef(sub.getProduct()));
+            sub.setProduct(this.resolveProductRef(owner, sub.getProduct()));
 
             if (sub.getDerivedProduct() != null) {
-                sub.setDerivedProduct(this.resolveProductRef(sub.getDerivedProduct()));
+                sub.setDerivedProduct(this.resolveProductRef(owner, sub.getDerivedProduct()));
             }
 
             Set<Product> pset = new HashSet<Product>();
             for (Product product : sub.getProvidedProducts()) {
-                pset.add(this.resolveProductRef(product));
+                pset.add(this.resolveProductRef(owner, product));
             }
             sub.setProvidedProducts(pset);
 
             pset.clear();
             for (Product product : sub.getDerivedProvidedProducts()) {
-                pset.add(this.resolveProductRef(product));
+                pset.add(this.resolveProductRef(owner, product));
             }
             sub.setDerivedProvidedProducts(pset);
         }
@@ -426,15 +450,20 @@ public class CandlepinPoolManager implements PoolManager {
         }
     }
 
-    private Product resolveProductRef(Product product) {
+    private Product resolveProductRef(Owner owner, Product product) {
         Product resolved = null;
 
-        if (product != null && product.getOwner() != null && product.getId() != null) {
-            resolved = this.prodCurator.lookupById(product.getOwner(), product.getId());
+        // TODO:
+        // Explore caching the output from the curator.create(orupdate) calls in getChangedProducts
+        // to avoid doing another potential DB hit for every product instance here.
+        if (product != null) {
+            resolved = this.prodCurator.lookupById(owner, product.getId());
 
             if (resolved == null) {
                 // This should never happen.
-                throw new RuntimeException("Unable to resolve product reference");
+                throw new RuntimeException(String.format(
+                    "Unable to resolve product reference for product: %s", product
+                ));
             }
         }
 
