@@ -216,7 +216,6 @@ describe 'Refresh Pools' do
     sub = get_hostedtest_subscription(pool.subscriptionId)
     sub["owner"] = owner2
     update_hostedtest_subscription(sub)
-    #TODO - removing sleeps gives concurrent modification errrors - investigate
     @cp.refresh_pools(owner1["key"])
     @cp.refresh_pools(owner2["key"])
 
