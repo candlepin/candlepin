@@ -1,38 +1,19 @@
+require 'date'
+
 # A file for utility functions and classes that are miscellaneous
-def remove_matching!(object, pattern)
-    # Recursively removes all string items matching a given regexp,
-    # deleting key's where appropriate
+def fix_times!(object, list_of_keys_to_check)
+    # Recursively fixes times for the list of keys provided
     if object.is_a? Hash
         object.each do |key, value|
-            new_value = remove_matching!(value, pattern)
-            if new_value.respond_to? :empty?
-                if new_value.empty?
-                    object.delete(key)
-                end
-            elsif new_value.nil?
-                object.delete(key)
+            if list_of_keys_to_check.include?(key) and value.is_a? String
+                object[key] = DateTime.strptime(value, "%Y-%m-%dT%H:%M:%S")
             else
-                object[key] = new_value
+                object[key] = fix_times!(value, list_of_keys_to_check)
             end
         end
     elsif object.is_a? Array
         object.each_with_index do |item, index|
-            new_value = remove_matching!(item, pattern)
-            if new_value.respond_to? :empty?
-                if new_value.empty?
-                    object.delete_at(index)
-                end
-            elsif new_value.nil?
-                object.delete_at(index)
-            else
-                object[index] = new_value
-            end
-        end
-    elsif object.is_a? String
-        if pattern.match(object)
-            return nil
-        else
-            return object
+            object[index] = fix_times!(item, list_of_keys_to_check)
         end
     else
         return object
