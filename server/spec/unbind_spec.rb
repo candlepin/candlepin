@@ -43,10 +43,9 @@ describe 'Unbind' do
     consumer.unbind_entitlements_by_pool(consumer.uuid, pool1.id)
     results = consumer.list_entitlements
     expected = [ent2]
-    date_time_pattern = /[0-9]+-[0-9]{0,2}-[0-9]{0,2}T[012]{0,1}[0-9]{1,1}:[0-5]{0,1}[0-9]{1,1}:[0-5]{0,1}[0-9]\.[0-9]{0,3}\+[0-9]{0,4}/
     # mysql does not support milliseconds. So remove time fields.
     [results, expected].each do |item|
-      remove_matching!(item, date_time_pattern)
+      fix_times!(item, ['updated', 'created','startDate','endDate', 'expiration'])
     end
     expect(results).to(match_array(expected))
   end
