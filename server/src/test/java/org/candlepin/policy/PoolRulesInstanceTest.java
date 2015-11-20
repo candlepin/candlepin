@@ -113,6 +113,7 @@ public class PoolRulesInstanceTest {
         assertEquals(1, pools.size());
         Pool pool = pools.get(0);
 
+        p = TestUtil.copyFromSub(s);
         // Change the value of instance multiplier:
         p.getProduct().setAttribute("instance_multiplier", "4");
         // Change the quantity:
@@ -120,7 +121,7 @@ public class PoolRulesInstanceTest {
 
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
-        List<PoolUpdate> updates = poolRules.updatePools(p, existingPools,
+        List<PoolUpdate> updates = poolRules.updatePools(p, existingPools, p.getQuantity(),
                 TestUtil.stubChangedProducts(p.getProduct()));
 
         assertEquals(1, updates.size());
@@ -146,7 +147,7 @@ public class PoolRulesInstanceTest {
 
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
-        List<PoolUpdate> updates = poolRules.updatePools(masterPool, existingPools,
+        List<PoolUpdate> updates = poolRules.updatePools(masterPool, existingPools, s.getQuantity(),
                 TestUtil.stubChangedProducts(masterPool.getProduct()));
 
         assertEquals(1, updates.size());
@@ -173,7 +174,7 @@ public class PoolRulesInstanceTest {
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
         List<PoolUpdate> updates = poolRules.updatePools(masterPool, existingPools,
-                TestUtil.stubChangedProducts(masterPool.getProduct()));
+                masterPool.getQuantity(), TestUtil.stubChangedProducts(masterPool.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);

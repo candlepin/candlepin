@@ -257,7 +257,7 @@ public class PoolRules {
         return updates;
     }
 
-    public List<PoolUpdate> updatePools(Pool masterPool, List<Pool> existingPools,
+    public List<PoolUpdate> updatePools(Pool masterPool, List<Pool> existingPools, Long originalQuantity,
             Set<Product> changedProducts) {
 
         //local.setCertificate(subscription.getCertificate());
@@ -287,8 +287,8 @@ public class PoolRules {
             update.setDatesChanged(checkForDateChange(masterPool.getStartDate(), masterPool.getEndDate(),
                     existingPool));
 
-            update.setQuantityChanged(checkForQuantityChange(masterPool, existingPool, existingPools,
-                    attributes));
+            update.setQuantityChanged(checkForQuantityChange(masterPool, existingPool, originalQuantity,
+                    existingPools, attributes));
 
             if (!existingPool.isMarkedForDelete()) {
                 boolean useDerived = BooleanUtils.toBoolean(
@@ -543,12 +543,12 @@ public class PoolRules {
         return datesChanged;
     }
 
-    private boolean checkForQuantityChange(Pool pool, Pool existingPool,
+    private boolean checkForQuantityChange(Pool pool, Pool existingPool, Long originalQuantity,
         List<Pool> existingPools, Map<String, String> attributes) {
 
         // Expected quantity is normally the main pool's quantity, but for
         // virt only pools we expect it to be main pool quantity * virt_limit:
-        long expectedQuantity = calculateQuantity(pool.getQuantity(), pool.getProduct(),
+        long expectedQuantity = calculateQuantity(originalQuantity, pool.getProduct(),
                 pool.getUpstreamPoolId());
         expectedQuantity = processVirtLimitPools(existingPools,
             attributes, existingPool, expectedQuantity);

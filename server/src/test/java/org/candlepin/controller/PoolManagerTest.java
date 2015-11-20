@@ -251,8 +251,8 @@ public class PoolManagerTest {
         verify(this.manager)
             .updateFloatingPools(eq(new LinkedList()), eq(true), any(Set.class));
         ArgumentCaptor<Pool> argPool = ArgumentCaptor.forClass(Pool.class);
-        verify(this.manager)
-            .updatePoolsForMasterPool(eq(expectedModified), argPool.capture(), eq(false), any(Set.class));
+        verify(this.manager).updatePoolsForMasterPool(eq(expectedModified), argPool.capture(),
+                eq(sub.getQuantity()), eq(false), any(Set.class));
         TestUtil.assertPoolsAreEqual(TestUtil.copyFromSub(sub), argPool.getValue());
     }
 
@@ -548,7 +548,8 @@ public class PoolManagerTest {
         u.setOrderChanged(true);
         updates.add(u);
         ArgumentCaptor<Pool> argPool = ArgumentCaptor.forClass(Pool.class);
-        when(poolRulesMock.updatePools(argPool.capture(), eq(pools), any(Set.class))).thenReturn(updates);
+        when(poolRulesMock.updatePools(argPool.capture(), eq(pools), eq(s.getQuantity()), any(Set.class)))
+                .thenReturn(updates);
         when(ownerCuratorMock.lookupByKey(s.getOwner().getKey())).thenReturn(s.getOwner());
         this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
         verify(poolRulesMock).createAndEnrichPools(argPool.capture(), any(List.class));

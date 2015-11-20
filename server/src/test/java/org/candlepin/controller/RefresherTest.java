@@ -106,7 +106,7 @@ public class RefresherTest {
 
         verify(poolManager, times(1)).refreshPoolsWithRegeneration(eq(subAdapter), eq(owner), eq(false));
         verify(poolManager, times(0)).updatePoolsForMasterPool(any(List.class),
-            any(Pool.class), eq(false), any(Set.class));
+            any(Pool.class), eq(pool.getQuantity()), eq(false), any(Set.class));
     }
 
     @Test

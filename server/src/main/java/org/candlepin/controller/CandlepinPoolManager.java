@@ -504,13 +504,16 @@ public class CandlepinPoolManager implements PoolManager {
         // Cleans up pools on other owners who have migrated subs away
         removeAndDeletePoolsOnOtherOwners(subscriptionPools, pool);
 
+        // capture the original quantity to check for updates later
+        Long originalQuantity = pool.getQuantity();
         // BUG 1012386 This will regenerate master/derived for bonus scenarios
         //  if only one of the pair still exists.
         createAndEnrichPools(pool, subscriptionPools);
 
         // don't update floating here, we'll do that later so we don't update anything twice
         regenerateCertificatesByEntIds(
-                updatePoolsForMasterPool(subscriptionPools, pool, updateStackDerived, changedProducts),
+                updatePoolsForMasterPool(subscriptionPools, pool, originalQuantity, updateStackDerived,
+                        changedProducts),
                 lazy);
     }
 
@@ -574,10 +577,11 @@ public class CandlepinPoolManager implements PoolManager {
      *
      * @param existingPools the existing pools
      * @param pool the master pool
+     * @param originalQuantity the pool's original quantity before multiplier was applied
      * @param updateStackDerived whether or not to attempt to update stack
      *        derived pools
      */
-    Set<String> updatePoolsForMasterPool(List<Pool> existingPools, Pool pool,
+    Set<String> updatePoolsForMasterPool(List<Pool> existingPools, Pool pool, Long originalQuantity,
             boolean updateStackDerived, Set<Product> changedProducts) {
 
         /*
@@ -600,7 +604,8 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // Hand off to rules to determine which pools need updating:
-        List<PoolUpdate> updatedPools = poolRules.updatePools(pool, existingPools, changedProducts);
+        List<PoolUpdate> updatedPools = poolRules.updatePools(pool, existingPools, originalQuantity,
+                changedProducts);
 
         String virtLimit = pool.getProduct().getAttributeValue("virt_limit");
         boolean createsSubPools = !StringUtils.isBlank(virtLimit) && !"0".equals(virtLimit);
