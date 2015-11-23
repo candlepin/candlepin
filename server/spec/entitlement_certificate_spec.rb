@@ -176,7 +176,7 @@ describe 'Entitlement Certificate' do
     create_pool_and_subscription(owner1['key'], prod1.id, 10,
 				 [], '', '', '', nil, nil, true)
     create_pool_and_subscription(owner1['key'], safe_prod1.id, 10)
-    create_pool_and_subscription(owner2['key'], prod2.id, 10
+    create_pool_and_subscription(owner2['key'], prod2.id, 10,
 				[], '', '', '', nil, nil, true)
     create_pool_and_subscription(owner2['key'], safe_prod2.id, 10)
     create_pool_and_subscription(owner3['key'], prod3.id, 10,

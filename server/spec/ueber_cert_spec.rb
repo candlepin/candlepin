@@ -55,7 +55,7 @@ describe 'Uebercert' do
 
     create_pool_and_subscription(owner1['key'], prod1.id, 10, [], '12345', '6789', 'order1',
 				nil, nil, true)
-    create_pool_and_subscription(owner1['key'], prod2.id, 10, [], 'abcde', 'fghi', 'order2'
+    create_pool_and_subscription(owner1['key'], prod2.id, 10, [], 'abcde', 'fghi', 'order2',
 				nil, nil, true)
     create_pool_and_subscription(owner1['key'], prod3.id, 10, [], 'qwert', 'yuio', 'order3')
 
