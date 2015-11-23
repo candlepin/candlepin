@@ -1578,6 +1578,7 @@ module Candlepin
           :product_content => [],
           :relies_on => [],
           :key => key,
+          :legacy => false,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :key)
@@ -1600,7 +1601,13 @@ module Candlepin
         end
         product.compact!
 
-        post("/owners/#{opts[:key]}/products", product)
+        if opts[:legacy]
+          url = "/products"
+        else
+          url = "/owners/#{opts[:key]}/products"
+        end
+
+        post(url, product)
       end
 
       def update_product(opts = {})
@@ -2108,6 +2115,37 @@ module Candlepin
     def raw_client
       client = super
       # TODO OAuth stuff here
+      client
+    end
+  end
+
+  class TrustedAuthHeaderFilter
+    def initialize(username)
+      @username = username
+    end
+
+    def filter_request(req)
+      req.header['cp-user'] = @username
+    end
+
+    def filter_response(req, res)
+    end
+  end
+
+  class TrustedAuthClient < NoAuthClient
+    attr_accessor :username
+
+    def initialize(opts = {})
+      defaults = {
+        :username => 'admin',
+      }
+      opts = defaults.merge(opts)
+      super(opts)
+    end
+
+    def raw_client
+      client = super
+      client.request_filter << TrustedAuthHeaderFilter.new(username)
       client
     end
   end
