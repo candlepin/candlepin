@@ -629,8 +629,7 @@ describe 'Consumer Resource' do
       random_string('product'),
       {:attributes => {:support_level => 'Ultra-VIP'},
       :owner => @owner1['key']})
-    pool1 = create_pool_and_subscription(@owner1['key'], product1.id,
-					1, [], '', '', '', nil, nil, true)
+    pool1 = create_pool_and_subscription(@owner1['key'], product1.id)
     pool2 = create_pool_and_subscription(@owner1['key'], product2.id)
 
     user_cp = user_client(@owner1, random_string('billy'))
