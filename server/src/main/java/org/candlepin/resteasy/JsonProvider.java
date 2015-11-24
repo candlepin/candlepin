@@ -19,12 +19,15 @@ import org.candlepin.common.jackson.DynamicPropertyFilter;
 import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.common.jackson.MultiFilter;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.jackson.DateSerializer;
 
+import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate4.Hibernate4Module;
 import com.fasterxml.jackson.jaxrs.cfg.Annotations;
@@ -34,6 +37,8 @@ import com.google.inject.Inject;
 
 import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+
+import java.util.Date;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
@@ -70,10 +75,13 @@ public class JsonProvider extends JacksonJsonProvider {
         Hibernate4Module hbm = new Hibernate4Module();
         hbm.enable(Hibernate4Module.Feature.FORCE_LAZY_LOADING);
         mapper.registerModule(hbm);
+        SimpleModule dateModule = new SimpleModule("DateModule", new Version(1, 0, 0, null, null, null));
+        // Ensure our DateSerializer is used for all Date objects
+        dateModule.addSerializer(Date.class, new DateSerializer());
+        mapper.registerModule(dateModule);
         configureHateoasObjectMapper(mapper, indentJson);
         setMapper(mapper);
     }
-
     private void configureHateoasObjectMapper(ObjectMapper mapper, boolean indentJson) {
         mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
@@ -101,3 +109,4 @@ public class JsonProvider extends JacksonJsonProvider {
         mapper.setAnnotationIntrospector(pair);
     }
 }
+
