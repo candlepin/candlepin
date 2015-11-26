@@ -1453,9 +1453,10 @@ public class ConsumerResource {
         Date entitleDate = ResourceDateParser.parseDateString(entitleDateStr);
 
         // Verify consumer exists:
-        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumerWithEntitlements(consumerUuid);
 
         log.debug("Consumer (post verify): {}", consumer);
+
         try {
             // I hate double negatives, but if they have accepted all
             // terms, we want comeToTerms to be true.

@@ -359,7 +359,7 @@ public class ConsumerResourceTest {
 
         when(c.getOwner()).thenReturn(o);
         when(sa.hasUnacceptedSubscriptionTerms(eq(o))).thenReturn(false);
-        when(cc.verifyAndLookupConsumer(eq("fakeConsumer"))).thenReturn(c);
+        when(cc.verifyAndLookupConsumerWithEntitlements(eq("fakeConsumer"))).thenReturn(c);
         when(e.bindByProducts(any(AutobindData.class))).thenReturn(null);
 
         ConsumerResource cr = new ConsumerResource(cc, null,
@@ -384,7 +384,7 @@ public class ConsumerResourceTest {
         when(c.getOwner()).thenReturn(o);
         when(cip.getProductId()).thenReturn("product-foo");
         when(sa.hasUnacceptedSubscriptionTerms(eq(o))).thenReturn(false);
-        when(cc.verifyAndLookupConsumer(eq("fakeConsumer"))).thenReturn(c);
+        when(cc.verifyAndLookupConsumerWithEntitlements(eq("fakeConsumer"))).thenReturn(c);
 
         ConsumerResource cr = new ConsumerResource(cc, null, null, sa,
             null, null, null, null, null, null, null, null, null, null,
@@ -453,7 +453,7 @@ public class ConsumerResourceTest {
     @Test(expected = NotFoundException.class)
     public void testBindByPoolBadConsumerUuid() throws Exception {
         ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
-        when(consumerCurator.verifyAndLookupConsumer(any(String.class)))
+        when(consumerCurator.verifyAndLookupConsumerWithEntitlements(any(String.class)))
             .thenThrow(new NotFoundException(""));
         ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
             null, null, null, null, null, i18n, null, null, null,
