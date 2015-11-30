@@ -179,7 +179,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
         newJobStatus().state(JobStatus.JobState.RUNNING)
             .jobClass(HealEntireOrgJob.class)
             .owner("my_owner").create();
-        long result = curator.findNumRunningByOwnerAndClass("my_owner",
+        long result = curator.findNumRunningByClassAndTarget("my_owner",
             RefreshPoolsJob.class);
         assertEquals(1, result);
     }
@@ -211,7 +211,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
         newJobStatus().state(JobStatus.JobState.FINISHED)
             .jobClass(HealEntireOrgJob.class)
             .owner("my_owner").create();
-        JobStatus result = curator.getByClassAndOwner("my_owner",
+        JobStatus result = curator.getByClassAndTarget("my_owner",
             HealEntireOrgJob.class);
         assertEquals(expected, result);
     }

@@ -14,12 +14,14 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.quartz.JobBuilder.*;
+import static org.quartz.JobBuilder.newJob;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;
 
@@ -29,6 +31,9 @@ import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.Trigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,15 +43,17 @@ import java.util.List;
  * EntitlerJob
  */
 public class EntitlerJob extends KingpinJob {
-
     private static Logger log = LoggerFactory.getLogger(EntitlerJob.class);
+
+    @Inject private static Configuration conf;
+
     protected Entitler entitler;
     protected ConsumerCurator consumerCurator;
 
     @Inject
     public EntitlerJob(Entitler e, ConsumerCurator c) {
-        entitler = e;
-        consumerCurator = c;
+        this.entitler = e;
+        this.consumerCurator = c;
     }
 
     @Override
@@ -82,9 +89,33 @@ public class EntitlerJob extends KingpinJob {
         JobDetail detail = newJob(EntitlerJob.class)
             .withIdentity("bind_by_pool_" + Util.generateUUID())
             .requestRecovery(false) // do not recover the job upon restarts
+            .storeDurably()
             .usingJobData(map)
             .build();
 
         return detail;
+    }
+
+    public static boolean isSchedulable(JobCurator jobCurator, JobStatus status) {
+        long running = jobCurator.findNumRunningByClassAndTarget(
+            status.getTargetId(), status.getJobClass());
+        // We can start the job if there are less than N others running
+
+        int throttle = conf.getInt("pinsetter." + EntitlerJob.class.getName() + ".throttle", 7);
+        return running < throttle;
+    }
+
+    public static JobStatus scheduleJob(JobCurator jobCurator,
+        Scheduler scheduler, JobDetail detail, Trigger trigger) throws SchedulerException {
+
+        JobStatus status = jobCurator.getByClassAndTarget(
+            detail.getJobDataMap().getString(JobStatus.TARGET_ID),
+            EntitlerJob.class);
+
+        // Insert as a waiting job if a bunch of EntitlerJobs are already running
+        if (status != null && !isSchedulable(jobCurator, status)) {
+            trigger = null;
+        }
+        return KingpinJob.scheduleJob(jobCurator, scheduler, detail, trigger);
     }
 }
