@@ -64,7 +64,7 @@ public class UniqueByOwnerJobTest {
         JobStatus preExistingJobStatus = new JobStatus();
         preExistingJobStatus.setState(JobState.WAITING);
         TestUniqueByOwnerJob job = new TestUniqueByOwnerJob();
-        when(jobCurator.getByClassAndOwner(eq("TaylorSwift"), any(Class.class))).thenReturn(
+        when(jobCurator.getByClassAndTarget(eq("TaylorSwift"), any(Class.class))).thenReturn(
                 preExistingJobStatus);
 
         JobStatus resultStatus = job.scheduleJob(jobCurator, null, detail, null);
