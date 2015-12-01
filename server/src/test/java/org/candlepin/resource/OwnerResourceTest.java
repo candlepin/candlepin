@@ -95,6 +95,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -190,7 +191,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         productCurator.create(prod);
         Pool pool = createPoolAndSub(createOwner(), prod, 1000L,
             TestUtil.createDate(2009, 11, 30),
-            TestUtil.createDate(2015, 11, 30));
+            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 10, 11, 30));
         Owner owner = pool.getOwner();
 
         Subscription sub = new Subscription(owner, prod,
@@ -807,13 +808,15 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         boolean fifo) throws ParseException {
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
+
         Pool pool = createPoolAndSub(createOwner(), prod, 1000L,
-            TestUtil.createDate(2009, 11, 30),
-            TestUtil.createDate(2015, 11, 30));
+                       TestUtil.createDate(2009, 11, 30),
+                       TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 10, 11, 30));
         Owner owner = pool.getOwner();
         Consumer consumer = createConsumer(owner);
         Consumer consumer1 = createConsumer(owner);
         Subscription sub = this.subCurator.find(pool.getSubscriptionId());
+
         sub.setQuantity(subQ);
         this.subCurator.merge(sub);
         // this.ownerResource.refreshEntitlementPools(owner.getKey(), false);
