@@ -90,6 +90,7 @@ import java.lang.annotation.Annotation;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -803,7 +804,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         productCurator.create(prod);
         Pool pool = createPoolAndSub(createOwner(), prod, 1000L,
             TestUtil.createDate(2009, 11, 30),
-            TestUtil.createDate(2015, 11, 30));
+            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 10, 11, 30));
         Owner owner = pool.getOwner();
         Consumer consumer = createConsumer(owner);
         Consumer consumer1 = createConsumer(owner);
