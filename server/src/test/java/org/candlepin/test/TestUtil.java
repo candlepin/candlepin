@@ -214,7 +214,7 @@ public class TestUtil {
             providedProducts,
             Long.valueOf(quantity),
             TestUtil.createDate(2009, 11, 30),
-            TestUtil.createDate(2015, 11, 30),
+            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 10, 11, 30),
             "SUB234598S" + random,
             "ACC123" + random,
             "ORD222" + random

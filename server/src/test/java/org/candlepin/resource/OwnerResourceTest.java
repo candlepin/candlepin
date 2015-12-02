@@ -96,6 +96,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -876,7 +877,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Subscription sub = new Subscription(owner, prod,
             new HashSet<Product>(), 1000L, TestUtil.createDate(2009, 11, 30),
-            TestUtil.createDate(2015, 100, 30), TestUtil.createDate(2015, 11, 30));
+            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 10, 10, 30),
+            TestUtil.createDate(2015, 11, 30));
         sub.setId(Util.generateDbUUID());
         subscriptions.add(sub);
 
