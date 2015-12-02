@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.51.10
+Version: 0.9.51.11
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -213,6 +213,11 @@ fi
 
 #raw
 %changelog
+* Wed Dec 02 2015 Alex Wood <awood@redhat.com> 0.9.51.11-1
+- Limit the number of binds per consumer that can run concurrently.
+  (awood@redhat.com)
+- Fixing broken tests due to expiry dates (mstead@redhat.com)
+
 * Wed Nov 18 2015 Alex Wood <awood@redhat.com> 0.9.51.10-1
 - Reduce the amount of time the consumer lock is held. (awood@redhat.com)
 
