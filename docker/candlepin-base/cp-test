@@ -34,27 +34,51 @@ trapex() {
     done
 }
 
+collect_artifacts() {
+    # If the caller mounted a volume at /artifacts, copy server logs out:
+    if [ -d "/artifacts" ]; then
+        echo "Collecting artifacts..."
+
+        # It's entirely possible for these to not exist, so we'll copy them if we can, but if we
+        # fail, we shouldn't abort
+        cp -v /var/log/candlepin/access.log /artifacts/ || true
+        cp -v /var/log/candlepin/audit.log /artifacts/ || true
+        cp -v /var/log/candlepin/candlepin.log /artifacts/ || true
+        cp -v /var/log/candlepin/error.log /artifacts/ || true
+    fi
+}
+
 # Be sure to run cleanup on any error, SIGINT, or SIGTERM
 trapex cleanup SIGINT SIGTERM ERR EXIT
+CLEANUP_RUN=0
+
 cleanup() {
-    # Remove our traps so we don't end up calling this more than once
-    trap - $signals
-    trap "" ERR EXIT
+    if [ "$CLEANUP_RUN" == "0" ]; then
+        CLEANUP_RUN=1
 
-    # Run buildr clean in our target CP directory
-    cd $CP_HOME
-    buildr clean
+        # Remove our traps so we don't keep trying to call this
+        trap - $signals
+        trap "" ERR EXIT
 
-    # Errors in the script should still launch the shell, as they're likely CP config errors, not
-    # actual errors with the script
-    if [ "$1" == "" ] || [ "$1" == "ERR" ] || [ "$1" == "EXIT" ]; then
-        if [ "$LAUNCHSHELL" == "1" ]; then
-            echo "Launching shell..."
-            /bin/bash -i -l
+        # Run buildr clean in our target CP directory
+        cd $CP_HOME
+        buildr clean
+
+        # Collect artifacts up to this point. If we're about to drop into a shell, we'll leave any
+        # additional artifact collection up to the user
+        collect_artifacts
+
+        # Errors in the script should still launch the shell, as they're likely CP config errors, not
+        # actual errors with the script
+        if [ "$1" == "" ] || [ "$1" == "ERR" ] || [ "$1" == "EXIT" ]; then
+            if [ "$LAUNCHSHELL" == "1" ]; then
+                echo "Launching shell..."
+                /bin/bash -i -l
+            fi
+        else
+            # exit, propagating any signal we received
+            kill -$1 $$
         fi
-    else
-        # exit, propagating any signal we received
-        kill -$1 $$
     fi
 }
 
@@ -169,15 +193,6 @@ fi
 if [ "$RSPEC" == "1" ]; then
     echo "Running rspec tests."
     buildr rspec
-
-    # If the caller mounted a volume at /artifacts, copy server logs out:
-    if [ -d "/artifacts" ]; then
-        echo "Copying logs to /artifacts."
-        cp -v /var/log/candlepin/access.log /artifacts/
-        cp -v /var/log/candlepin/audit.log /artifacts/
-        cp -v /var/log/candlepin/candlepin.log /artifacts/
-        cp -v /var/log/candlepin/error.log /artifacts/
-    fi
 fi
 
 cleanup
