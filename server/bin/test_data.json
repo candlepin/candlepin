@@ -1983,6 +1983,7 @@
             "name": "Development SKU Product",
             "id": "dev-sku-product",
             "type": "MKT",
+            "skip_pools": "true",
             "attributes": {
                 "support_level" : "Premium",
                 "support_type" : "Level 3",

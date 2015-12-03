@@ -20,7 +20,6 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
-import org.candlepin.common.paging.Page;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -30,7 +29,6 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
-import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
@@ -48,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -222,14 +221,17 @@ public class Entitler {
                         "Development units may only be used on hosted servers" +
                         " and with orgs that have active subscriptions."));
             }
+
+            // Look up the dev pool for this consumer, and if not found
+            // create one. If a dev pool already exists, remove it and
+            // create a new one.
             String sku = consumer.getFact("dev_sku");
-            Pool devPool = getDevPool(consumer, sku);
-            if (devPool == null) {
-                devPool = poolManager.createPool(assembleDevPool(consumer, sku));
+            Pool devPool = poolCurator.findDevPool(consumer, sku);
+            if (devPool != null) {
+                poolManager.deletePool(devPool);
             }
-            List<String> pools = new ArrayList<String>();
-            pools.add(devPool.getId());
-            data.setPossiblePools(pools);
+            devPool = poolManager.createPool(assembleDevPool(consumer, sku));
+            data.setPossiblePools(Arrays.asList(devPool.getId()));
         }
 
         // Attempt to create entitlements:
@@ -259,91 +261,105 @@ public class Entitler {
         return 1000 * 60 * 60 * 24 * interval;
     }
 
-    private Pool getDevPool(Consumer consumer, String sku) {
-        PoolFilterBuilder poolFilters = new PoolFilterBuilder();
-        poolFilters.addAttributeFilter(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
-        poolFilters.addAttributeFilter(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
-        Page<List<Pool>> poolsPage = poolManager.listAvailableEntitlementPools(consumer, null,
-                consumer.getOwner(), null, null, true, true, poolFilters, null);
-        if (poolsPage != null &&
-            poolsPage.getPageData() != null &&
-            poolsPage.getPageData().size() == 1) {
-            return poolsPage.getPageData().get(0);
-        }
-        else {
-            return null;
-        }
-    }
-
+    /**
+     * Create a development pool for the specified consumer that starts when
+     * the consumer was registered and expires after the duration specified
+     * by the SKU. The pool will be bound to the consumer via the
+     * requires_consumer attribute, meaning only the consumer can bind to
+     * entitlements from it.
+     *
+     * @param consumer the consumer the associate the pool with.
+     * @param sku the product id of the developer SKU.
+     * @return the newly created developer pool (note: not yet persisted)
+     */
     protected Pool assembleDevPool(Consumer consumer, String sku) {
-        Set<Product> providedProducts = new HashSet<Product>();
-        Date now = new Date();
-        List<String> devProductIds = new ArrayList<String>();
-        Product skuProd = null;
+        DeveloperProducts devProducts = getDeveloperPoolProducts(consumer, sku);
 
-        devProductIds.add(sku);
-        for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
-            devProductIds.add(ip.getProductId());
-        }
-        List<Product> prods = productAdapter.getProductsByIds(consumer.getOwner(), devProductIds);
-        verifyDevProducts(devProductIds, prods);
-        for (Product prod : prods) {
-            prod.setOwner(consumer.getOwner());
-            for (ProductContent pc : prod.getProductContent()) {
-                pc.getContent().setOwner(consumer.getOwner());
-            }
-            if (sku.equals(prod.getId())) {
-                if (StringUtils.isEmpty(prod.getAttributeValue("support_level"))) {
-                    // if there is no SLA, apply the default
-                    prod.setAttribute("support_level", this.DEFAULT_DEV_SLA);
-                }
-                skuProd = prod;
-            }
-            else {
-                providedProducts.add(prod);
-            }
-            productCurator.createOrUpdate(prod);
-        }
+        Product skuProduct = devProducts.getSku();
 
-        Date then = new Date(now.getTime() + getPoolInterval(skuProd));
-        Pool p = new Pool(consumer.getOwner(), skuProd, providedProducts, 1L, now, then, "", "", "");
-        log.info("Created development pool with SKU " + skuProd.getId());
+        Date startDate = consumer.getCreated();
+        Date endDate = new Date(startDate.getTime() + getPoolInterval(skuProduct));
+        Pool p = new Pool(consumer.getOwner(), skuProduct, devProducts.getProvided(), 1L, startDate,
+                endDate, "", "", "");
+        log.info("Created development pool with SKU " + skuProduct.getId());
         p.setAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
         p.setAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
         return p;
     }
 
+    private DeveloperProducts getDeveloperPoolProducts(Consumer consumer, String sku) {
+        DeveloperProducts devProducts = getDevProductMap(consumer, sku);
+        verifyDevProducts(consumer, sku, devProducts);
+        updateDevProducts(consumer, devProducts);
+        return devProducts;
+    }
+
     /**
+     * Update the developer product references as they will be out of sync
+     * when retrieved from the server.
      *
-     * @param prodIds List of Ids we expect in the product list. The first is the sku.
-     * @param products
-     * @return
-     * @throws ForbiddenException
+     * @param devConsumer
+     * @param devProducts
      */
-    protected void verifyDevProducts(List<String> prodIds, List<Product> products)
-            throws ForbiddenException {
-        if (prodIds.size() == products.size()) {
-            return;
+    protected void updateDevProducts(Consumer devConsumer, DeveloperProducts devProducts) {
+        Product skuProduct = devProducts.getSku();
+        if (StringUtils.isEmpty(skuProduct.getAttributeValue("support_level"))) {
+            // if there is no SLA, apply the default
+            skuProduct.setAttribute("support_level", this.DEFAULT_DEV_SLA);
         }
-        Map<String, Product> prodMap = new HashMap<String, Product>();
-        List<String> missingInstalled = new ArrayList<String>();
-        for (Product prod : products) {
-            prodMap.put(prod.getId(), prod);
-        }
-        for (int i = 0; i < prodIds.size(); i++) {
-            if (prodMap.get(prodIds.get(i)) == null) {
-                if (i == 0) {
-                    throw new ForbiddenException(i18n.tr("SKU product not available to this " +
-                            "development unit: ''{0}''", prodIds.get(i)));
-                }
-                else {
-                    missingInstalled.add(prodIds.get(i));
-                }
+
+        // Update the owner references on the retrieved Product and content.
+        for (Product prod : devProducts.getAll()) {
+            prod.setOwner(devConsumer.getOwner());
+            for (ProductContent pc : prod.getProductContent()) {
+                pc.getContent().setOwner(devConsumer.getOwner());
             }
+            productCurator.createOrUpdate(prod);
         }
-        if (missingInstalled.size() > 0) {
-            log.warn(i18n.tr("Installed product(s) not available to this " +
-                    "development unit: {0}", missingInstalled.toString()));
+    }
+
+    /**
+     * Looks up all Products matching the specified SKU and the consumer's
+     * installed products.
+     *
+     * @param consumer the consumer to pull the installed product id list from.
+     * @param sku the product id of the SKU.
+     * @return a {@link DeveloperProducts} object that contains the Product objects
+     *         from the adapter.
+     */
+    private DeveloperProducts getDevProductMap(Consumer consumer, String sku) {
+        List<String> devProductIds = new ArrayList<String>();
+        devProductIds.add(sku);
+        for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
+            devProductIds.add(ip.getProductId());
+        }
+        List<Product> prods = productAdapter.getProductsByIds(consumer.getOwner(), devProductIds);
+        return new DeveloperProducts(sku, prods);
+    }
+
+    /**
+     * Verifies that the expected developer SKU product was found and logs any
+     * consumer installed products that were not found by the adapter.
+     *
+     * @param consumer the consumer who's installed products are to be checked.
+     * @param expectedSku the product id of the developer sku that must be found
+     *                    in order to build the development pool.
+     * @param devProducts all products retrieved from the adapter that are validated.
+     * @throws ForbiddenException thrown if the sku was not found by the adapter.
+     */
+    protected void verifyDevProducts(Consumer consumer, String expectedSku, DeveloperProducts devProducts)
+        throws ForbiddenException {
+
+        if (!devProducts.foundSku()) {
+            throw new ForbiddenException(i18n.tr("SKU product not available to this " +
+                    "development unit: ''{0}''", expectedSku));
+        }
+
+        for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
+            if (!devProducts.containsProduct(ip.getProductId())) {
+                log.warn(i18n.tr("Installed product not available to this " +
+                        "development unit: {0}", ip.getProductId()));
+            }
         }
     }
 
@@ -413,5 +429,54 @@ public class Entitler {
                 sink.queueEvent(event);
             }
         }
+    }
+
+
+    /**
+     * A private sub class that encapsulates the products obtained from the
+     * product adapter that are used to create the development pool. Its
+     * general purpose is to distinguish between the sku and the provided
+     * products without having to iterate a map to identify the sku.
+     */
+    private class DeveloperProducts {
+
+        private Product sku;
+        private Map<String, Product> provided;
+
+        public DeveloperProducts(String expectedSku, List<Product> products) {
+            provided = new HashMap<String, Product>();
+            for (Product prod : products) {
+                if (expectedSku.equals(prod.getId())) {
+                    sku = prod;
+                }
+                else {
+                    provided.put(prod.getId(), prod);
+                }
+            }
+
+        }
+
+        public Set<Product> getAll() {
+            Set<Product> all = new HashSet<Product>(provided.values());
+            all.add(sku);
+            return all;
+        }
+
+        public Product getSku() {
+            return sku;
+        }
+
+        public Set<Product> getProvided() {
+            return new HashSet<Product>(provided.values());
+        }
+
+        public boolean foundSku() {
+            return sku != null;
+        }
+
+        public boolean containsProduct(String productId) {
+            return (foundSku() && productId.equals(sku.getId())) || provided.containsKey(productId);
+        }
+
     }
 }

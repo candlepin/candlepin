@@ -97,7 +97,7 @@ public class TestUtil {
             owner,
             createConsumerType()
         );
-
+        consumer.setCreated(new Date());
         consumer.setFact("foo", "bar");
         consumer.setFact("foo1", "bar1");
 
