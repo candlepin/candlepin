@@ -22,6 +22,8 @@ describe 'Owner Product Resource' do
 
   it 'updates individual product fields' do
     prod = create_product(nil, 'tacos', {:multiplier => 2, :dependentProductIds => [2, 4]})
+    #Ensure the dates are at least one second different
+    sleep 1
     prod2 = create_product(nil, 'enchiladas', {:multiplier => 4})
 
     prod.name.should_not == prod2.name
