@@ -38,7 +38,7 @@ public class Status {
     private Date timeUTC;
     private String[] managerCapabilities = {"cores", "ram", "instance_multiplier",
         "derived_product", "cert_v3", "guest_limit", "vcpu", "hypervisors_async",
-        "storage_band"};
+        "storage_band", "remove_by_pool_id"};
 
     private RulesSourceEnum rulesSource;
 
