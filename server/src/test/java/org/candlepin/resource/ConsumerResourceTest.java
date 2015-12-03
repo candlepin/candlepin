@@ -31,6 +31,8 @@ import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Entitler;
@@ -68,6 +70,7 @@ import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ServiceLevelValidator;
 
+import org.hibernate.mapping.Collection;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -576,4 +579,83 @@ public class ConsumerResourceTest {
         cr.consumerExists("uuid");
     }
 
+    @Test(expected = BadRequestException.class)
+    public void testFetchAllConsumers() {
+        ConsumerResource cr = new ConsumerResource(null, null,
+                null, null, null, null, null, i18n, null, null, null,
+                null, null, null, null, null, null, null, null, null,
+                null, null, null, new CandlepinCommonTestConfig(),
+                null, null, null, null);
+        cr.list(null, null, null, null, null, null, null);
+    }
+
+    @Test
+    public void testFetchAllConsumersForUser() {
+        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
+                null, null, null, null, null, i18n, null, null, null,
+                null, null, null, null, null, null, null, null, null,
+                null, null, null, new CandlepinCommonTestConfig(),
+                null, null, null, null);
+        Page<List<Consumer>> page = new Page<List<Consumer>>();
+        ArrayList<Consumer> consumers = new ArrayList<Consumer>();
+        page.setPageData(consumers);
+        when(mockedConsumerCurator.searchOwnerConsumers(
+                any(Owner.class), anyString(), (java.util.Collection<ConsumerType>) any(Collection.class),
+                any(List.class), any(List.class), any(List.class),
+                any(List.class), any(List.class), any(List.class),
+                any(PageRequest.class))).thenReturn(page);
+        List<Consumer> result = cr.list("TaylorSwift", null, null, null, null, null, null);
+        assertEquals(consumers, result);
+    }
+
+    public void testFetchAllConsumersForOwner() {
+        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
+                null, null, null, null, null, i18n, null, null, null,
+                null, null, null, null, null, mockedOwnerCurator, null, null, null,
+                null, null, null, new CandlepinCommonTestConfig(),
+                null, null, null, null);
+        Page<List<Consumer>> page = new Page<List<Consumer>>();
+        ArrayList<Consumer> consumers = new ArrayList<Consumer>();
+        page.setPageData(consumers);
+
+        when(mockedOwnerCurator.lookupByKey(eq("taylorOwner"))).thenReturn(new Owner());
+        when(mockedConsumerCurator.searchOwnerConsumers(
+                any(Owner.class), anyString(), (java.util.Collection<ConsumerType>) any(Collection.class),
+                any(List.class), any(List.class), any(List.class),
+                any(List.class), any(List.class), any(List.class),
+                any(PageRequest.class))).thenReturn(page);
+        List<Consumer> result = cr.list(null, null, "taylorOwner", null, null, null, null);
+        assertEquals(consumers, result);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testFetchAllConsumersForEmptyUUIDs() {
+        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
+                null, null, null, null, null, i18n, null, null, null,
+                null, null, null, null, null, null, null, null, null,
+                null, null, null, new CandlepinCommonTestConfig(),
+                null, null, null, null);
+        List<Consumer> result = cr.list(null, null, null, new ArrayList<String>(), null, null, null);
+    }
+
+    @Test
+    public void testFetchAllConsumersForSomeUUIDs() {
+        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
+                null, null, null, null, null, i18n, null, null, null,
+                null, null, null, null, null, null, null, null, null,
+                null, null, null, new CandlepinCommonTestConfig(),
+                null, null, null, null);
+        Page<List<Consumer>> page = new Page<List<Consumer>>();
+        ArrayList<Consumer> consumers = new ArrayList<Consumer>();
+        page.setPageData(consumers);
+        when(mockedConsumerCurator.searchOwnerConsumers(
+                any(Owner.class), anyString(), (java.util.Collection<ConsumerType>) any(Collection.class),
+                any(List.class), any(List.class), any(List.class),
+                any(List.class), any(List.class), any(List.class),
+                any(PageRequest.class))).thenReturn(page);
+        List<String> uuids = new ArrayList<String>();
+        uuids.add("swiftuuid");
+        List<Consumer> result = cr.list(null, null, null, uuids, null, null, null);
+        assertEquals(consumers, result);
+    }
 }

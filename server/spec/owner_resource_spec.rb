@@ -9,6 +9,26 @@ describe 'Owner Resource' do
 
   include CandlepinMethods
 
+  it 'lets an owner see only their system consumer types' do
+    owner1 = create_owner random_string('test_owner1')
+    username1 = random_string("user1")
+    consumername1 = random_string("consumer1")
+    user1 = user_client(owner1, username1)
+    consumer1 = consumer_client(user1, consumername1)
+
+    user1.list_owner_consumers(owner1['key'], ['system']).length.should == 1
+  end
+
+  it 'lets an owner admin see only their consumers' do
+    owner1 = create_owner random_string('test_owner1')
+    username1 = random_string("user1")
+    consumername1 = random_string("consumer1")
+    user1 = user_client(owner1, username1)
+    consumer1 = consumer_client(user1, consumername1)
+
+    user1.list_owner_consumers(owner1['key']).length.should == 1
+  end
+
   it 'allows consumers to view their service levels' do
     owner = create_owner random_string('owner1')
     owner_admin = user_client(owner, random_string('bill'))

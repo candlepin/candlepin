@@ -70,7 +70,7 @@ describe 'Response JSON Filtering' do
   it 'should allow filters on encapsulated lists' do
     consumer = @user1.register(random_string("test1"))
     consumer = @user1.register(random_string("test2"))
-    consumers = @cp.get("/consumers?include=id&include=owner.id")
+    consumers = @cp.get("/consumers?type=system&include=id&include=owner.id")
     consumers.each do |consumer|
       consumer.keys.size.should == 2
       consumer["id"].should_not == nil

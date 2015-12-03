@@ -37,7 +37,7 @@ describe 'System Admins' do
     @cp.list_consumers({:owner => @owner['key']}).size.should == 2
 
     # User should just see one:
-    my_systems = @user_cp.list_consumers({:owner => @owner['key']})
+    my_systems = @user_cp.list_owner_consumers(@owner['key'])
     my_systems.size.should == 1
     my_systems[0]['uuid'].should == @consumer1['uuid']
 
@@ -169,7 +169,7 @@ describe 'System admins with read-only on org' do
     @cp.list_consumers({:owner => @owner['key']}).size.should == 2
 
     # User should just see one:
-    my_systems = @user_cp.list_consumers({:owner => @owner['key']})
+    my_systems = @user_cp.list_owner_consumers(@owner['key'])
     my_systems.size.should == 2
 
     lookedup = @user_cp.get_consumer(@consumer2['uuid'])
