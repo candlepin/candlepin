@@ -32,27 +32,26 @@ import java.util.List;
  */
 public class DynamicPropertyFilter extends CheckableBeanPropertyFilter {
 
-    private List<String> path = new ArrayList<String>(10);
-
     public boolean isSerializable(Object obj, JsonGenerator jsonGenerator,
         SerializerProvider serializerProvider, PropertyWriter writer) {
 
         DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
 
         if (filterData != null) {
-            this.path.clear();
-            this.path.add(0, writer.getName());
+            List<String> path = new ArrayList<String>(10);
+            path.clear();
+            path.add(0, writer.getName());
 
             // Build full path from the context...
             JsonStreamContext context = jsonGenerator.getOutputContext();
             while ((context = context.getParent()) != null) {
                 String cname = context.getCurrentName();
                 if (cname != null) {
-                    this.path.add(0, cname);
+                    path.add(0, cname);
                 }
             }
 
-            return !filterData.isAttributeExcluded(this.path);
+            return !filterData.isAttributeExcluded(path);
         }
 
         // Allow serialization by default
