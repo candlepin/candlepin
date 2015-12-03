@@ -211,7 +211,7 @@ module CandlepinMethods
       ensure_hostedtest_resource
       sub = get_hostedtest_subscription(pool.subscriptionId)
       update_hostedtest_subscription(sub)
-      @cp.refresh_pools(pool['owner']['key'], true)
+      @cp.refresh_pools(pool['owner']['key'])
     end
   end
 
