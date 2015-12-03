@@ -253,6 +253,12 @@ public class ConsumerResource {
             List<KeyValueParameter> attrFilters,
         @Context PageRequest pageRequest) {
 
+        if (userName == null && (typeLabels == null || typeLabels.isEmpty()) && ownerKey == null &&
+                (uuids == null || uuids.isEmpty()) && (hypervisorIds == null || hypervisorIds.isEmpty()) &&
+                (attrFilters == null || attrFilters.isEmpty())) {
+            throw new BadRequestException(i18n.tr("Must specify at least one search criteria."));
+        }
+
         Owner owner = null;
         if (ownerKey != null) {
             owner = ownerCurator.lookupByKey(ownerKey);

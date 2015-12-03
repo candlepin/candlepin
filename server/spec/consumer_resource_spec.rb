@@ -96,11 +96,11 @@ describe 'Consumer Resource' do
     }.should raise_exception(RestClient::ResourceNotFound)
   end
 
-  it 'should receive paged data back when requested' do
+  it 'should receive paged consumers back when requested' do
     (1..4).each do |i|
       consumer_client(@user1, random_string('system'))
     end
-    consumers = @cp.list_consumers({:page => 1, :per_page => 2, :sort_by => "id", :order => "asc"})
+    consumers = @cp.list_consumers({:owner => @owner1['key'], :page => 1, :per_page => 2, :sort_by => "id", :order => "asc"})
     consumers.length.should == 2
     (consumers[0].id <=> consumers[1].id).should == -1
   end
@@ -152,7 +152,7 @@ describe 'Consumer Resource' do
   #TODO Get this working in parallel
   it 'allows super admins to see all consumers', :serial => true do
     uuids = []
-    @cp.list_consumers.each do |c|
+    @cp.list_consumers({:type => 'system'}).each do |c|
       uuids << c['uuid']
       # Consumer lists should not have idCert or facts:
       c['facts'].should be_nil
@@ -174,19 +174,10 @@ describe 'Consumer Resource' do
     returned_uuids.length.should == 2
   end
 
-  it 'lets an owner admin see only their consumers' do
-    @user2.list_consumers({:owner => @owner2['key']}).length.should == 1
-  end
-
   #TODO Get this working in parallel
   it 'lets a super admin filter consumers by owner', :serial => true do
-    @cp.list_consumers.size.should be > 1
+    @cp.list_consumers({:type => 'system'}).size.should be > 1
     @cp.list_consumers({:owner => @owner1['key']}).size.should == 1
-  end
-
-
-  it 'lets an owner see only their system consumer types' do
-    @user1.list_consumers({:type => 'system', :owner => @owner1['key']}).length.should == 1
   end
 
   it 'lets a super admin see a peson consumer with a given username' do

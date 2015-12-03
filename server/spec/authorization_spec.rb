@@ -52,7 +52,7 @@ describe 'Authorization' do
     end.should raise_exception(RestClient::Request::Unauthorized)
   end
 
-  it 'allows in trused users' do
+  it 'allows in trusted users' do
     ownerID = random_string('test_owner1')
     owner1 = create_owner ownerID
     username = random_string("user1")
