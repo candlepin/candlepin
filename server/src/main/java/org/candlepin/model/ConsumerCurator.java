@@ -29,6 +29,7 @@ import com.google.inject.persist.Transactional;
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaQuery;
@@ -626,6 +627,30 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             throw new NotFoundException(i18n.tr(
                 "Unit with ID ''{0}'' could not be found.", consumerUuid));
         }
+        return consumer;
+    }
+
+    public Consumer verifyAndLookupConsumerWithEntitlements(
+            String consumerUuid) {
+        Consumer consumer = this.findByUuid(consumerUuid);
+        if (consumer == null) {
+            throw new NotFoundException(i18n.tr(
+                    "Unit with ID ''{0}'' could not be found.", consumerUuid));
+        }
+
+        for (Entitlement e : consumer.getEntitlements()) {
+            Hibernate.initialize(e.getCertificates());
+
+            if (e.getPool() != null) {
+                Hibernate.initialize(e.getPool().getBranding());
+                Hibernate.initialize(e.getPool().getDerivedProvidedProducts());
+                Hibernate.initialize(e.getPool().getProvidedProducts());
+                Hibernate.initialize(e.getPool().getProductAttributes());
+                Hibernate.initialize(e.getPool().getAttributes());
+                Hibernate.initialize(e.getPool().getDerivedProductAttributes());
+            }
+        }
+
         return consumer;
     }
 
