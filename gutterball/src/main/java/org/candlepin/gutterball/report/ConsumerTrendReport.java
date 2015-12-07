@@ -68,7 +68,8 @@ public class ConsumerTrendReport extends Report<ReportResult> {
         );
 
         addParameter(
-            builder.init("hours", i18n.tr("The number of hours to filter on (used indepent of date range)."))
+            builder.init("hours", i18n.tr(
+                        "The number of hours to filter on (used independent of date range)."))
                    .mustBeInteger()
                    .mustNotHave("start_date", "end_date")
                    .getParameter());
@@ -89,7 +90,7 @@ public class ConsumerTrendReport extends Report<ReportResult> {
 
         addParameter(
             builder.init(CUSTOM_RESULTS_PARAM, i18n.tr("Enables/disables custom report result " +
-                        "functionality via attribute filtering (boolean).")).getParameter());
+                        "functionality via attribute filtering (Boolean).")).getParameter());
 
         addParameter(builder.init("include",
                 i18n.tr("Includes the specified attribute in the result JSON"))

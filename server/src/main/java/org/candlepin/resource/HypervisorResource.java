@@ -118,7 +118,7 @@ public class HypervisorResource {
         if (hostGuestMap == null) {
             log.debug("Host/Guest mapping provided during hypervisor checkin was null.");
             throw new BadRequestException(
-                i18n.tr("Host to guest mapping was not provided for hypervisor checkin."));
+                i18n.tr("Host to guest mapping was not provided for hypervisor check-in."));
         }
 
         Owner owner = this.getOwner(ownerKey);

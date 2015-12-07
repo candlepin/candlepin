@@ -150,7 +150,7 @@ describe 'Activation Keys' do
   end
 
   it 'should verify override name is below 256 length' do
-    # Should reject values too large for the databse
+    # Should reject values too large for the database
     override = {"name" => "a" * 256, "value" => "somval", "contentLabel" => "somelabel"}
     lambda {
       @cp.add_content_overrides_to_key(@activation_key['id'], [override])

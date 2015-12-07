@@ -239,7 +239,7 @@ public class GuestIdResource {
     private GuestId validateGuestId(GuestId guest, String guestUuid) {
         if (guest == null) {
             throw new NotFoundException(i18n.tr(
-                "Guest with uuid {0} could not be found.", guestUuid));
+                "Guest with UUID {0} could not be found.", guestUuid));
         }
         return guest;
     }

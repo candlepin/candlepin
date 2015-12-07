@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-03 12:24-0500\n"
+"POT-Creation-Date: 2015-12-07 00:44-0500\n"
 "PO-Revision-Date: 2015-01-21 01:56-0500\n"
 "Last-Translator: shanky <shanky@fedoraproject.org>\n"
 "Language-Team: Kannada\n"
@@ -131,8 +131,8 @@ msgid "must be between {min} and {max}"
 msgstr "{min} ಮತ್ತು {max} ನಡುವೆ ಇರಬೇಕು"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:89
-msgid "may have unsafe html content"
-msgstr "ಅಸುರಕ್ಷಿತವಾದ html ಕಂಟೆಂಟ್ ಅನ್ನು ಹೊಂದಿರಬಹುದು"
+msgid "may have unsafe HTML content"
+msgstr "ಅಸುರಕ್ಷಿತವಾದ HTML ಕಂಟೆಂಟ್ ಅನ್ನು ಹೊಂದಿರಬಹುದು"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:91
 #, java-format
@@ -172,7 +172,7 @@ msgstr ""
 
 #: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:95
 #: gutterball/src/main/java/org/candlepin/gutterball/report/StatusTrendReport.java:115
-msgid "The entitlement sku on which to filter"
+msgid "The entitlement SKU on which to filter"
 msgstr ""
 
 #: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:100
@@ -184,14 +184,14 @@ msgstr ""
 #: gutterball/src/main/java/org/candlepin/gutterball/report/StatusTrendReport.java:129
 msgid ""
 "Filter on subscriptions which have management enabled set to this value "
-"(boolean)"
+"(Boolean)"
 msgstr ""
 
 #: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:113
-#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:91
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:92
 msgid ""
 "Enables/disables custom report result functionality via attribute filtering "
-"(boolean)."
+"(Boolean)."
 msgstr ""
 
 #: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:116
@@ -199,12 +199,12 @@ msgid "Include status reasons in results"
 msgstr ""
 
 #: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:120
-#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:95
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:96
 msgid "Includes the specified attribute in the result JSON"
 msgstr ""
 
 #: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:126
-#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:102
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:103
 msgid "Excludes the specified attribute in the result JSON"
 msgstr ""
 
@@ -212,16 +212,16 @@ msgstr ""
 msgid "Lists the status of each consumer over a date range"
 msgstr ""
 
-#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:71
-msgid "The number of hours to filter on (used indepent of date range)."
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:72
+msgid "The number of hours to filter on (used independent of date range)."
 msgstr ""
 
-#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:77
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:78
 #, java-format
 msgid "The start date to filter on (used with {0})."
 msgstr ""
 
-#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:84
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:85
 #, java-format
 msgid "The end date to filter on (used with {0})"
 msgstr ""
@@ -336,8 +336,10 @@ msgstr ""
 
 #: gutterball/src/main/java/org/candlepin/gutterball/resteasy/filter/OAuthFilter.java:109
 #: gutterball/src/main/java/org/candlepin/gutterball/resteasy/filter/OAuthFilter.java:122
+#: server/src/main/java/org/candlepin/auth/OAuth.java:119
+#: server/src/main/java/org/candlepin/auth/OAuth.java:156
 msgid "Invalid OAuth unit or secret"
-msgstr ""
+msgstr "ಅಮಾನ್ಯವಾದ OAuth ಘಟಕ ಅಥವ ಸಿಕ್ರೆಟ್"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
@@ -360,8 +362,9 @@ msgid "message is null"
 msgstr ""
 
 #: gutterball/src/main/java/org/candlepin/gutterball/resteasy/filter/OAuthFilter.java:172
+#: server/src/main/java/org/candlepin/auth/OAuth.java:161
 msgid "Error getting OAuth unit key"
-msgstr ""
+msgstr "OAuth ಘಟಕ ಕೀಲಿಯನ್ನು ಪಡೆಯುವಲ್ಲಿ ದೋಷ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
@@ -546,7 +549,7 @@ msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಅತಿಥಿ idಯನ�
 
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:165
 #, java-format
-msgid "{0} updated the rules in the databse to version {1}"
+msgid "{0} updated the rules in the database to version {1}"
 msgstr "ದತ್ತಸಂಚಯದಲ್ಲಿನ ನಿಯಮಗಳನ್ನು ಆವೃತ್ತಿ {1} ಕ್ಕೆ {0} ಅಪ್‌ಡೇಟ್ ಮಾಡಿದೆ"
 
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:167
@@ -577,15 +580,6 @@ msgstr "ಬಳಕೆದಾರ ಸೇವೆಯನ್ನು ಸಂಪರ್ಕಿ�
 #, java-format
 msgid "Unit {0} has been deleted"
 msgstr "{0}ಘಟಕವನ್ನು ಅಳಿಸಲಾಗಿದೆ"
-
-#: server/src/main/java/org/candlepin/auth/OAuth.java:119
-#: server/src/main/java/org/candlepin/auth/OAuth.java:156
-msgid "Invalid oauth unit or secret"
-msgstr "ಅಮಾನ್ಯವಾದ oauth ಘಟಕ ಅಥವ ಸಿಕ್ರೆಟ್"
-
-#: server/src/main/java/org/candlepin/auth/OAuth.java:161
-msgid "Error getting oauth unit key"
-msgstr "oauth ಘಟಕ ಕೀಲಿಯನ್ನು ಪಡೆಯುವಲ್ಲಿ ದೋಷ"
 
 #: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:220
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:52
@@ -690,7 +684,7 @@ msgstr "''{0}'' ಗುಣವಿಶೇಷವು ಒಂದು ದೊಡ್ಡ ಮ�
 
 #: server/src/main/java/org/candlepin/model/ProductCurator.java:331
 #, java-format
-msgid "The attribute ''{0}'' must be a boolean value."
+msgid "The attribute ''{0}'' must be a Boolean value."
 msgstr "''{0}'' ಗುಣವಿಶೇಷವು ಒಂದು ಬೂಲಿಯನ್ ಮೌಲ್ಯವಾಗಿರಬೇಕು."
 
 #: server/src/main/java/org/candlepin/model/RulesCurator.java:104
@@ -1296,11 +1290,11 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/GuestIdResource.java:242
 #, java-format
-msgid "Guest with uuid {0} could not be found."
-msgstr "uuid {0} ಹೊಂದಿರುವ ಅತಿಥಿ ಕಂಡು ಬಂದಿಲ್ಲ."
+msgid "Guest with UUID {0} could not be found."
+msgstr "UUID {0} ಹೊಂದಿರುವ ಅತಿಥಿ ಕಂಡು ಬಂದಿಲ್ಲ."
 
 #: server/src/main/java/org/candlepin/resource/HypervisorResource.java:121
-msgid "Host to guest mapping was not provided for hypervisor checkin."
+msgid "Host to guest mapping was not provided for hypervisor check-in."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/HypervisorResource.java:155
@@ -1419,16 +1413,16 @@ msgstr "ರಫ್ತು ಆರ್ಕೈವ್ ಅನ್ನು ಓದುವಲ್
 # keys, author shanky
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1388
 #, java-format
-msgid "Problem generating ueber cert for owner {0}"
-msgstr "{0} ಎಂಬ ಗ್ರಾಹಕನಿಗಾಗಿ ueber cert ಅನ್ನು ಉತ್ಪಾದಿಸುವಲ್ಲಿ ತೊಂದರೆ ಉಂಟಾಗಿದೆ"
+msgid "Problem generating uber cert for owner {0}"
+msgstr "{0} ಎಂಬ ಗ್ರಾಹಕನಿಗಾಗಿ uber cert ಅನ್ನು ಉತ್ಪಾದಿಸುವಲ್ಲಿ ತೊಂದರೆ ಉಂಟಾಗಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1416
 #, java-format
-msgid "ueber certificate for owner {0} was not found. Please generate one."
+msgid "uber certificate for owner {0} was not found. Please generate one."
 msgstr ""
-"{0} ಎಂಬ ಮಾಲಿಕನಿಗಾಗಿ ueber ಪ್ರಮಾಣಪತ್ರವು ಕಂಡುಬಂದಿಲ್ಲ. ದಯವಿಟ್ಟು ಹೊಸತೊಂದನ್ನು ರಚಿಸಿ."
+"{0} ಎಂಬ ಮಾಲಿಕನಿಗಾಗಿ uber ಪ್ರಮಾಣಪತ್ರವು ಕಂಡುಬಂದಿಲ್ಲ. ದಯವಿಟ್ಟು ಹೊಸತೊಂದನ್ನು ರಚಿಸಿ."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
@@ -1642,12 +1636,9 @@ msgstr "{1} ಎಂಬ idಯನ್ನು ಹೊಂದಿರುv {0} ಕಂಡು 
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"to address this problem. See knowledge database https://access.redhat.com/"
+"knowledge/node/129003 for more information."
 msgstr ""
-"{0} ಪ್ರಮಾಣಪತ್ರಕ್ಕೆ ಬಹಳಷ್ಟು ಕಂಟೆಂಟ್ ಸೆಟ್‌ಗಳು. ಈ ತೊಂದರೆಯನ್ನು ಪರಿಹರಿಸಲು ಒಬ್ಬ ಹೊಸ ಕ್ಲೈಂಟ್ "
-"ಲಭ್ಯವಿರಬಹುದು. ಹೆಚ್ಚಿನ ಮಾಹಿತಿಗಾಗಿ kbase https://access.redhat.com/knowledge/"
-"node/129003 ಅನ್ನು ನೋಡಿ."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
