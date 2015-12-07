@@ -22,6 +22,7 @@ import org.candlepin.gutterball.model.snapshot.Compliance;
 import org.candlepin.gutterball.util.AutoEvictingColumnarResultsIterator;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
@@ -48,6 +49,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import javax.persistence.CacheRetrieveMode;
+import javax.persistence.CacheStoreMode;
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.ParameterExpression;
+import javax.persistence.criteria.Root;
 
 
 
@@ -1149,5 +1159,53 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
         return (year != 0 ? year : (month != 0 ? month : date));
     }
 
+    /**
+     * Deletes any compliances older than the specified duration in minutes.
+     *
+     * @param minutes
+     *  The number of minutes to use for cleaning up compliances
+     *
+     * @return
+     *  the number of compliance snapshots deleted during the cleanup operation
+     */
+    @Transactional
+    public int cleanupCompliances(int minutes) {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.MINUTE, -1 * minutes);
+
+        int batchSize = 256;
+        int count = 0;
+
+        // Build our JPA query...
+        EntityManager em = this.getEntityManager();
+
+        CriteriaBuilder builder = em.getCriteriaBuilder();
+        CriteriaQuery<Compliance> cquery = builder.createQuery(Compliance.class);
+
+        Root<Compliance> croot = cquery.from(Compliance.class);
+        ParameterExpression<Date> param = builder.parameter(Date.class);
+        cquery.select(croot).where(builder.lessThanOrEqualTo(croot.<Date>get("date"), param));
+
+        TypedQuery<Compliance> query = em.createQuery(cquery);
+        query.setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.BYPASS);
+        query.setHint("javax.persistence.cache.storeMode", CacheStoreMode.BYPASS);
+        query.setParameter(param, cal.getTime());
+        query.setMaxResults(batchSize);
+
+        // Repeatedly execute it so long as we're getting the batch size back
+        List<Compliance> compliances;
+        do {
+            compliances = (List<Compliance>) query.getResultList();
+
+            for (Compliance compliance : compliances) {
+                em.remove(compliance);
+            }
+
+            em.flush();
+            count += compliances.size();
+        } while (compliances.size() == batchSize);
+
+        return count;
+    }
 
 }
