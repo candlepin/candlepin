@@ -21,6 +21,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.gutterball.config.ConfigProperties;
 import org.candlepin.gutterball.curator.EventCurator;
 import org.slf4j.Logger;
@@ -28,6 +29,16 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
+
+
+
+// Impl note:
+// Currently this task exists outside of the Quartz/pinsetter tooling that CP uses. At the time of
+// writing, this is the only periodic task in GB and, as such, is probably not worth migrating the
+// afore mentioned pinsetter stuff up to common (and all that comes with it -- db changes, deps,
+// etc.).
+// If we start adding more tasks in the future, it will be worth investigating whether or not GB has
+// a need for pinsetter proper.
 
 /**
  * An EventCleanupTask is run periodically to clean up old events that are no longer needed by
@@ -38,16 +49,20 @@ import com.google.inject.persist.UnitOfWork;
  * This task is configurable via the gutterball.conf file. See {@link ConfigProperties} for
  * more details.
  *
- * <PRE>
- *     gutterball.tasks.event_cleanup.unit:
- *         the unit of time defined by {@link TimeUnit} (default: hours)
- *     gutterball.tasks.event_cleanup.interval:
- *         the number of 'units' to rerun this task (default: 24)
- *     gutterball.tasks.event_cleanup.max_age_in_minutes:
- *         the max age, in minutes, of an event before it is deleted
- *         (default: 1440 minutes (24 hours))
- * </PRE>
- *
+ * <pre>
+ *      gutterball.tasks.event_cleanup.enabled:
+ *          whether or not the event_cleanup tasks is enabled (default: false)
+ *      gutterball.tasks.event_cleanup.interval:
+ *          the interval (in interval_units) at which run this task (default: 24)
+ *      gutterball.tasks.event_cleanup.interval_units:
+ *          the unit of time (defined by {@link TimeUnit}) for event_cleanup.interval_units
+ *          (default: hours)
+ *      gutterball.tasks.event_cleanup.max_age
+ *          the age (in max_age_units) at which events will be pruned (default: 24)
+ *      gutterball.tasks.event_cleanup.max_age_units:
+ *          the unit of time (defined by {@link TimeUnit} for event_cleanup.max_age
+ *          (default: hours)
+ * </pre>
  */
 public class EventCleanupTask implements Runnable {
     private static Logger log = LoggerFactory.getLogger(EventCleanupTask.class);
@@ -59,38 +74,69 @@ public class EventCleanupTask implements Runnable {
 
     private EventCurator eventCurator;
 
-    private int maxAgeOfEventInMinutes;
+    private int maxEventAge;
+    private TimeUnit maxEventAgeUnits;
 
     @Inject
-    public EventCleanupTask(Configuration config, EventCurator eventCurator, UnitOfWork uow) {
+    public EventCleanupTask(Configuration config, EventCurator eventCurator, UnitOfWork uow)
+        throws ConfigurationException {
+
         this.eventCurator = eventCurator;
         this.uow = uow;
-        service = Executors.newSingleThreadScheduledExecutor();
 
-        int interval = config.getInt(ConfigProperties.EVENT_CLEANUP_TASK_INTERVAL);
-        TimeUnit unit = timeUnitFromString(
-            config.getString(ConfigProperties.EVENT_CLEANUP_TASK_INTERVAL_UNIT));
-        maxAgeOfEventInMinutes = config.getInt(ConfigProperties.MAX_AGE_OF_EVENT_IN_MINUTES);
+        boolean enabled = config.getBoolean(ConfigProperties.EVENT_CLEANUP_TASK_ENABLED, false);
 
-        log.info("Event Cleanup Task -- [interval: " + interval + " " + unit.toString().toLowerCase() +
-            ", Max Event Age: " + maxAgeOfEventInMinutes + " minutes ]");
-        scheduled = service.scheduleAtFixedRate(this, interval, interval, unit);
+        int interval = config.getInt(ConfigProperties.EVENT_CLEANUP_TASK_INTERVAL, 24);
+        TimeUnit intervalUnits = this.timeUnitFromString(
+            config.getString(ConfigProperties.EVENT_CLEANUP_TASK_INTERVAL_UNIT, "hours")
+        );
+
+        this.maxEventAge = config.getInt(ConfigProperties.EVENT_CLEANUP_TASK_MAX_EVENT_AGE, 24);
+        this.maxEventAgeUnits = this.timeUnitFromString(
+            config.getString(ConfigProperties.EVENT_CLEANUP_TASK_MAX_EVENT_AGE_UNIT, "hours")
+        );
+
+        long minutes = this.maxEventAgeUnits.toMinutes(this.maxEventAge);
+        if (minutes > Integer.MAX_VALUE || minutes < 0) {
+            throw new ConfigurationException(String.format(
+                "Invalid max event age: %s %s",
+                this.maxEventAge, this.maxEventAgeUnits.toString().toLowerCase()
+            ));
+        }
+
+        if (enabled && interval > 0 && maxEventAge > 0) {
+            log.info("Event Cleanup Task -- [Interval: {} {}, Max Event Age: {} {}]",
+                interval, intervalUnits.toString().toLowerCase(), this.maxEventAge,
+                this.maxEventAgeUnits.toString().toLowerCase()
+            );
+
+            service = Executors.newSingleThreadScheduledExecutor();
+            scheduled = service.scheduleAtFixedRate(this, interval, interval, intervalUnits);
+        }
     }
 
     public void shutdown() {
         log.info("Shutting down event cleanup task");
-        service.shutdownNow();
-        scheduled.cancel(true);
+
+        if (this.service != null) {
+            service.shutdownNow();
+        }
+
+        if (this.scheduled != null) {
+            scheduled.cancel(true);
+        }
     }
 
     @Override
     public void run() {
-        log.info("Starting cleanup");
+        log.info("Starting event cleanup");
+
         try {
+            int minutes = (int) this.maxEventAgeUnits.toMinutes(this.maxEventAge);
+
             uow.begin();
-            int cleaned = eventCurator.cleanupEvents(maxAgeOfEventInMinutes);
-            log.info("Cleaned up " + cleaned + " events.");
-            uow.end();
+            int cleaned = eventCurator.cleanupEvents(minutes);
+            log.info("Cleaned up {} events.", cleaned);
         }
         catch (Exception e) {
             log.error("Could not clean up events.", e);
@@ -101,18 +147,13 @@ public class EventCleanupTask implements Runnable {
     }
 
     private TimeUnit timeUnitFromString(String unit) {
-        TimeUnit timeUnit = TimeUnit.SECONDS;
-        if (unit == null || unit.isEmpty()) {
-            return timeUnit;
-        }
-
         try {
-            timeUnit = TimeUnit.valueOf(unit.toUpperCase());
+            // Null and empty values will be caught by various exceptions here
+            return TimeUnit.valueOf(unit.toUpperCase());
         }
         catch (Exception e) {
-            // Default to seconds.
+            return TimeUnit.SECONDS;
         }
-        return timeUnit;
     }
 
 }

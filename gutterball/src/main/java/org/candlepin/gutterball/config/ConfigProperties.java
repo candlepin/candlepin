@@ -41,10 +41,14 @@ public class ConfigProperties {
 
     public static final String PREFIX_APIURL = "gutterball.export.prefix.apiurl";
 
+    public static final String EVENT_CLEANUP_TASK_ENABLED = "gutterball.tasks.event_cleanup.enabled";
     public static final String EVENT_CLEANUP_TASK_INTERVAL = "gutterball.tasks.event_cleanup.interval";
-    public static final String EVENT_CLEANUP_TASK_INTERVAL_UNIT = "gutterball.tasks.event_cleanup.unit";
-    public static final String MAX_AGE_OF_EVENT_IN_MINUTES =
-        "gutterball.tasks.event_cleanup.max_age_in_minutes";
+    public static final String EVENT_CLEANUP_TASK_INTERVAL_UNIT =
+        "gutterball.tasks.event_cleanup.interval_units";
+    public static final String EVENT_CLEANUP_TASK_MAX_EVENT_AGE =
+        "gutterball.tasks.event_cleanup.max_event_age";
+    public static final String EVENT_CLEANUP_TASK_MAX_EVENT_AGE_UNIT =
+        "gutterball.tasks.event_cleanup.max_event_age_units";
 
     // Authentication
     public static final String OAUTH_AUTHENTICATION = "gutterball.auth.oauth.enable";
@@ -74,9 +78,12 @@ public class ConfigProperties {
                 this.put(JPA_DB_USERNAME, "gutterball");
                 this.put(JPA_DB_PASSWORD, "");
 
+
+                this.put(EVENT_CLEANUP_TASK_ENABLED, "false");
                 this.put(EVENT_CLEANUP_TASK_INTERVAL, "24");
                 this.put(EVENT_CLEANUP_TASK_INTERVAL_UNIT, "hours");
-                this.put(MAX_AGE_OF_EVENT_IN_MINUTES, "1440"); // 24 hours old
+                this.put(EVENT_CLEANUP_TASK_MAX_EVENT_AGE, "24");
+                this.put(EVENT_CLEANUP_TASK_MAX_EVENT_AGE_UNIT, "hours");
             }
         };
 }
