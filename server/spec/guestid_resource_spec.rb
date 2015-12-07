@@ -140,6 +140,8 @@ describe 'GuestId Resource' do
   end
 
   it 'should allow a single guest to be updated and revokes host-limited ents' do
+    # bonus pools are created on refresh in hosted mode.
+    pending("candlepin running in standalone mode") if is_hosted?
     uuid1 = random_string('system.uuid')
     guests = [{:guestId => uuid1}]
 
@@ -198,6 +200,8 @@ describe 'GuestId Resource' do
   end
 
   it 'should allow a single guest to be updated and not revoke host-limited ents' do
+    # bonus pools are created on refresh in hosted mode.
+    pending("candlepin running in standalone mode") if is_hosted?
     uuid1 = random_string('system.uuid')
     guests = [{:guestId => uuid1}]
 

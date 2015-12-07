@@ -39,6 +39,8 @@ describe 'Import', :serial => true do
   end
 
   it 'ignores multiplier for pool quantity' do
+    # multiplier will not be ignored in hosted mode.
+    pending("candlepin running in standalone mode") if is_hosted?
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
     pools.length.should == 6
 
@@ -48,7 +50,10 @@ describe 'Import', :serial => true do
     # remove unmapped guest pool, not part of test
     filter_unmapped_guest_pools(pools)
 
+    puts pools.size()
+
     pools.each do |p|
+      puts p['subscriptionSubKey']
       p['quantity'].should == 1
     end
   end

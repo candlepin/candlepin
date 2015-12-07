@@ -102,6 +102,7 @@ describe 'Derived Products' do
   # SKU are available, the guest autobind will have it's host autobind to the derived and
   # prefer it's virt_only sub-pool to instance based.
   it 'prefers a host-autobind virt-only sub-pool to instance based pool during guest autobind' do
+    pending("candlepin running in standalone mode") if is_hosted?
     # create instance based subscription:
     instance_product = create_product(nil, nil, {
       :attributes => {
@@ -130,6 +131,7 @@ describe 'Derived Products' do
   end
 
   it 'transfers sub-product data to main pool' do
+    pending("candlepin running in standalone mode") if is_hosted?
     @main_pool['derivedProductId'].should == @derived_product['id']
     @main_pool['derivedProvidedProducts'].size.should == 1
     @main_pool['derivedProvidedProducts'][0]['productId'].should ==
