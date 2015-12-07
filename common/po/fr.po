@@ -1,10 +1,10 @@
 # samfreemanz <sfriedma@redhat.com>, 2012. #zanata
-# jfenal <jfenal@free.fr>, 2013. #zanata
 # samfreemanz <sfriedma@redhat.com>, 2013. #zanata
 # John Sefler <jsefler@redhat.com>, 2014. #zanata
 # jcarbone <jcarbone@redhat.com>, 2014. #zanata
 # samfreemanz <sfriedma@redhat.com>, 2014. #zanata
 # Eliovir <eliovir@gmail.com>, 2015. #zanata
+# Vritant Jain <vrjain@redhat.com>, 2015. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
@@ -702,6 +702,7 @@ msgstr ""
 msgid "Multi-entitlement not supported for pool ''{0}''"
 msgstr ""
 "Les multiples droits d''accès ne sont pas pris en charge par le pool ''{0}''."
+""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -813,8 +814,8 @@ msgstr ""
 msgid ""
 "Unit does not support instance based calculation required by pool ''{0}''"
 msgstr ""
-"L''unité ne prend pas en charge les calculs basés sur instances requis par le "
-"pool « {0} »"
+"L''unité ne prend pas en charge les calculs basés sur instances requis par "
+"le pool « {0} »"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:94
 #, java-format
@@ -832,14 +833,15 @@ msgstr ""
 #, java-format
 msgid "Unit does not support RAM calculation required by pool ''{0}''"
 msgstr ""
-"L''unité ne prend pas en charge les calculs de RAM requis par le pool « {0} »"
+"L''unité ne prend pas en charge les calculs de RAM requis par le pool "
+"« {0} »"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:106
 #, java-format
 msgid "Unit does not support derived products data required by pool ''{0}''"
 msgstr ""
-"L''unité ne prend pas en charge les données de produits dérivés requis par le "
-"pool « {0} »"
+"L''unité ne prend pas en charge les données de produits dérivés requis par "
+"le pool « {0} »"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:110
 #, java-format
@@ -876,8 +878,8 @@ msgstr ""
 msgid ""
 "There are not enough free subscriptions available for the product ''{0}''"
 msgstr ""
-"Il n''y a pas suffisamment d''abonnements gratuits disponibles pour le produit "
-"« {0} »"
+"Il n''y a pas suffisamment d''abonnements gratuits disponibles pour le "
+"produit « {0} »"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:140
 #, java-format
@@ -900,8 +902,8 @@ msgstr "Impossible d''attacher un abonnement pour le produit « {0} » : {1}.
 msgid ""
 "Insufficient pool quantity available for adjustment to entitlement ''{0}''."
 msgstr ""
-"Quantité disponible du pool insuffisante pour l''ajustement au droit d''accès "
-"« {0} »."
+"Quantité disponible du pool insuffisante pour l''ajustement au droit "
+"d''accès « {0} »."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:166
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:171
@@ -916,8 +918,8 @@ msgstr ""
 #, java-format
 msgid "Unable to adjust quantity for the entitlement with id ''{0}'': {1}"
 msgstr ""
-"Impossible d''ajuster la quantité pour le droit d''accès avec l''ID « {0} » : "
-"{1}"
+"Impossible d''ajuster la quantité pour le droit d''accès avec l''ID « {0} » :"
+" {1}"
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:191
 #, java-format
@@ -1149,7 +1151,8 @@ msgstr "Le système avec l''UUID {0} n''est pas un invité virtuel."
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2084
 #, java-format
 msgid "Deletion record for hypervisor ''{0}'' not found."
-msgstr "L''archive de suppression pour l''hyperviseur « {0} » est introuvable."
+msgstr ""
+"L''archive de suppression pour l''hyperviseur « {0} » est introuvable."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerTypeResource.java:95
 #, java-format
@@ -1203,7 +1206,8 @@ msgstr "L''objet avec l''ID « {0} » est introuvable."
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:135
 #, java-format
 msgid "Unit ''{0}'' has no subscription for product ''{1}''."
-msgstr "L''unité « {0} » ne possède pas d''abonnement pour le produit « {1} »."
+msgstr ""
+"L''unité « {0} » ne possède pas d''abonnement pour le produit « {1} »."
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:233
 msgid "Quantity value must be greater than 0."

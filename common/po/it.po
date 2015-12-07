@@ -2,6 +2,7 @@
 # fvalen <fvalen@fedoraproject.org>, 2013. #zanata
 # John Sefler <jsefler@redhat.com>, 2014. #zanata
 # fvalen <fvalen@fedoraproject.org>, 2014. #zanata
+# Vritant Jain <vrjain@redhat.com>, 2015. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
@@ -10,7 +11,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2014-11-18 06:43-0500\n"
+"PO-Revision-Date: 2014-11-18 06:41-0500\n"
 "Last-Translator: fvalen <fvalen@fedoraproject.org>\n"
 "Language-Team: Italian\n"
 "Language: it\n"
@@ -1127,8 +1128,8 @@ msgstr "Il sistema con UUID {0} non è un guest virtuale."
 #, java-format
 msgid "Deletion record for hypervisor ''{0}'' not found."
 msgstr ""
-"Impossibile trovare le informazioni sulla rimozione per l''Hypervisor ''{0}''."
-""
+"Impossibile trovare le informazioni sulla rimozione per l''Hypervisor "
+"''{0}''."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerTypeResource.java:95
 #, java-format
@@ -1182,7 +1183,8 @@ msgstr "Oggetto con ID ''{0}'' non trovato."
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:135
 #, java-format
 msgid "Unit ''{0}'' has no subscription for product ''{1}''."
-msgstr "L''Unità ''{0}'' non ha alcuna sottoscrizione per il prodotto ''{1}''."
+msgstr ""
+"L''Unità ''{0}'' non ha alcuna sottoscrizione per il prodotto ''{1}''."
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:233
 msgid "Quantity value must be greater than 0."
@@ -1198,8 +1200,8 @@ msgstr "Impossibile trovare il certificato originale per l''entitlement: {0}"
 #, java-format
 msgid "Entitlement migration is not permissible for units of type ''{0}''"
 msgstr ""
-"Non è possibile eseguire la migrazione dell''entitlement per le unità di tipo "
-"''{0}''"
+"Non è possibile eseguire la migrazione dell''entitlement per le unità di "
+"tipo ''{0}''"
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:393
 msgid "Source and destination units must belong to the same organization"
@@ -1266,8 +1268,8 @@ msgstr "Inserire un id del guest valido"
 #, java-format
 msgid "Guest ID in json \"{0}\" does not match path guest ID \"{1}\""
 msgstr ""
-"L''ID del Guest in json \"{0}\" non corrisponde al percorso dell''ID del guest "
-"\"{1}\""
+"L''ID del Guest in json \"{0}\" non corrisponde al percorso dell''ID del "
+"guest \"{1}\""
 
 #: server/src/main/java/org/candlepin/resource/GuestIdResource.java:242
 #, java-format
@@ -1292,6 +1294,7 @@ msgid ""
 "You must specify exactly one of owner key, unit UUID, or principal name."
 msgstr ""
 "Specifica una chiave del proprietario, UUID dell''unità o un nome principale."
+""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
@@ -1726,7 +1729,8 @@ msgstr "Impossibile estrarre l''archivio di esportazione"
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:320
 msgid "Certificate exception checking archive signature"
-msgstr "Controllo firma dell''archivio da parte dell''eccezione del certificato"
+msgstr ""
+"Controllo firma dell''archivio da parte dell''eccezione del certificato"
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:345
 msgid "The archive does not contain the required meta.json file"
