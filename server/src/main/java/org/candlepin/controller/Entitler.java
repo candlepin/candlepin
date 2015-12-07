@@ -126,8 +126,8 @@ public class Entitler {
 
     private Entitlement createEntitlementByPool(Consumer consumer, Pool pool,
         Integer quantity) {
-        // Attempt to create an entitlement:
         try {
+            // Attempt to create an entitlement:
             Entitlement e = poolManager.entitleByPool(consumer, pool, quantity);
             log.debug("Created entitlement: " + e);
             return e;

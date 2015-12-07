@@ -20,6 +20,7 @@ import static org.candlepin.common.config.ConfigurationPrefixes.JPA_CONFIG_PREFI
 import org.candlepin.pinsetter.tasks.ActiveEntitlementJob;
 import org.candlepin.pinsetter.tasks.CancelJobJob;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
+import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.pinsetter.tasks.ExpiredPoolsJob;
 import org.candlepin.pinsetter.tasks.ExportCleaner;
 import org.candlepin.pinsetter.tasks.ImportRecordJob;
@@ -167,6 +168,9 @@ public class ConfigProperties {
         UnmappedGuestEntitlementCleanerJob.class.getName(),
     };
 
+    public static final String ENTITLER_JOB_THROTTLE =
+        "pinsetter." + EntitlerJob.class.getName() + ".throttle";
+
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
     public static final String CONSUMER_FACTS_MATCHER = "candlepin.consumer.facts.match_regex";
 
@@ -295,6 +299,7 @@ public class ConfigProperties {
                 this.put("org.quartz.threadPool.threadCount", "15");
                 this.put("org.quartz.threadPool.threadPriority", "5");
                 this.put(DEFAULT_TASKS, StringUtils.join(DEFAULT_TASK_LIST, ","));
+                this.put(ENTITLER_JOB_THROTTLE, "7");
 
                 // AMQP (Qpid) configuration used by events
                 this.put(AMQP_INTEGRATION_ENABLED, String.valueOf(false));

@@ -37,7 +37,7 @@ public abstract class UniqueByOwnerJob extends KingpinJob {
     public static JobStatus scheduleJob(JobCurator jobCurator,
         Scheduler scheduler, JobDetail detail,
         Trigger trigger) throws SchedulerException {
-        JobStatus result = jobCurator.getByClassAndOwner(
+        JobStatus result = jobCurator.getByClassAndTarget(
             detail.getJobDataMap().getString(JobStatus.TARGET_ID),
             (Class<? extends KingpinJob>) detail.getJobClass());
         if (result == null) {
@@ -55,7 +55,7 @@ public abstract class UniqueByOwnerJob extends KingpinJob {
     }
 
     public static boolean isSchedulable(JobCurator jobCurator, JobStatus status) {
-        long running = jobCurator.findNumRunningByOwnerAndClass(
+        long running = jobCurator.findNumRunningByClassAndTarget(
             status.getTargetId(), status.getJobClass());
         return running == 0;  // We can start the job if there are 0 like it running
     }

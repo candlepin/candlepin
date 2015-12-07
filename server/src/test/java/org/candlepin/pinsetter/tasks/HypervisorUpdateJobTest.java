@@ -208,7 +208,7 @@ public class HypervisorUpdateJobTest {
         Scheduler scheduler = mock(Scheduler.class);
         ListenerManager lm = mock(ListenerManager.class);
 
-        when(jobCurator.getByClassAndOwner(anyString(), any(Class.class))).thenReturn(
+        when(jobCurator.getByClassAndTarget(anyString(), any(Class.class))).thenReturn(
                 preExistingJobStatus);
         when(scheduler.getListenerManager()).thenReturn(lm);
         when(jobCurator.create(any(JobStatus.class))).thenReturn(newlyScheduledJobStatus);
@@ -226,7 +226,7 @@ public class HypervisorUpdateJobTest {
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobStatus newJob = new JobStatus(detail);
         JobCurator jobCurator = mock(JobCurator.class);
-        when(jobCurator.findNumRunningByOwnerAndClass(owner.getKey(), HypervisorUpdateJob.class))
+        when(jobCurator.findNumRunningByClassAndTarget(owner.getKey(), HypervisorUpdateJob.class))
                 .thenReturn(1L);
         assertFalse(HypervisorUpdateJob.isSchedulable(jobCurator, newJob));
     }

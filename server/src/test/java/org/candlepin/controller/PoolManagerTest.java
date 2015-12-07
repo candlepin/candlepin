@@ -152,7 +152,6 @@ public class PoolManagerTest {
     private Pool pool;
     private Product product;
     private ComplianceStatus dummyComplianceStatus;
-    private PoolRules poolRules;
 
     protected static Map<String, List<Pool>> subToPools;
 
@@ -184,6 +183,14 @@ public class PoolManagerTest {
         dummyComplianceStatus = new ComplianceStatus(new Date());
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class))).thenReturn(
             dummyComplianceStatus);
+
+        when(consumerCuratorMock.lockAndLoad(any(Consumer.class))).thenAnswer(new Answer<Consumer>() {
+            @Override
+            public Consumer answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                return (Consumer) args[0];
+            }
+        });
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -260,7 +267,6 @@ public class PoolManagerTest {
             .updatePoolsForSubscription(eq(expectedModified), eq(sub), eq(false), any(Set.class));
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void testRefreshPoolsDeletesOrphanedPools() {
         List<Subscription> subscriptions = Util.newList();
@@ -277,7 +283,6 @@ public class PoolManagerTest {
         verify(this.manager).deletePool(same(p));
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void testRefreshPoolsDeletesOrphanedHostedVirtBonusPool() {
         List<Subscription> subscriptions = Util.newList();
@@ -300,7 +305,6 @@ public class PoolManagerTest {
         verify(this.manager).deletePool(same(p));
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void testRefreshPoolsSkipsOrphanedEntitlementDerivedPools() {
         List<Subscription> subscriptions = Util.newList();
@@ -323,7 +327,6 @@ public class PoolManagerTest {
         verify(this.manager, never()).deletePool(same(p));
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void testRefreshPoolsSkipsOrphanedStackDerivedPools() {
         List<Subscription> subscriptions = Util.newList();
@@ -346,7 +349,6 @@ public class PoolManagerTest {
         verify(this.manager, never()).deletePool(same(p));
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void testRefreshPoolsSkipsDevelopmentPools() {
         List<Subscription> subscriptions = Util.newList();
@@ -367,7 +369,7 @@ public class PoolManagerTest {
         verify(this.manager, never()).deletePool(same(p));
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings("rawtypes")
     @Test
     public void testRefreshPoolsSortsStackDerivedPools() {
         List<Subscription> subscriptions = Util.newList();
@@ -578,7 +580,6 @@ public class PoolManagerTest {
         pools.add(pool2);
         Date now = new Date();
 
-
         ValidationResult result = mock(ValidationResult.class);
         Page page = mock(Page.class);
 
@@ -609,7 +610,6 @@ public class PoolManagerTest {
         assertEquals(e.size(), 1);
     }
 
-    @SuppressWarnings("rawtypes")
     @Test
     public void testRefreshPoolsRemovesExpiredSubscriptionsAlongWithItsPoolsAndEnts() {
         PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
@@ -759,7 +759,7 @@ public class PoolManagerTest {
         return newPool;
     }
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void testEntitleByProductsEmptyArray() throws Exception {
         Product product = TestUtil.createProduct(o);
@@ -777,7 +777,6 @@ public class PoolManagerTest {
         mockCompliance.addNonCompliantProduct(installedPids[0]);
         when(complianceRules.getStatus(any(Consumer.class),
             any(Date.class), any(Boolean.class))).thenReturn(mockCompliance);
-
 
         Page page = mock(Page.class);
         when(page.getPageData()).thenReturn(pools);
@@ -891,7 +890,7 @@ public class PoolManagerTest {
         when(mockPoolCurator.getOwnersFloatingPools(any(Owner.class))).thenReturn(floating);
         when(mockPoolCurator.getPoolsFromBadSubs(any(Owner.class), any(Collection.class)))
             .thenAnswer(new Answer<List<Pool>>() {
-
+                @SuppressWarnings("unchecked")
                 @Override
                 public List<Pool> answer(InvocationOnMock iom) throws Throwable {
                     Collection<String> subIds = (Collection<String>) iom.getArguments()[1];
@@ -914,7 +913,6 @@ public class PoolManagerTest {
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
                 productCuratorMock);
         List<Subscription> subscriptions = Util.newList();
-        List<Pool> pools = Util.newList();
         Product prod = TestUtil.createProduct(owner);
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
@@ -963,7 +961,6 @@ public class PoolManagerTest {
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
                 productCuratorMock);
         List<Subscription> subscriptions = Util.newList();
-        List<Pool> pools = Util.newList();
         Product prod = TestUtil.createProduct(owner);
         Set<Product> products = new HashSet<Product>();
         products.add(prod);

@@ -117,6 +117,23 @@ public class ComplianceRules {
             currentCompliance = true;
 
         }
+        if (currentCompliance) {
+            for (Entitlement ent : c.getEntitlements()) {
+                if (!ent.isUpdatedOnStart() && ent.isValid()) {
+                    ent.setUpdatedOnStart(true);
+                    entCurator.merge(ent);
+                }
+            }
+        }
+
+        /*
+         * Do not calculate compliance status for distributors. It is prohibitively
+         * expensive and meaningless
+         */
+        if (c.getType().isManifest()) {
+            return new ComplianceStatus(new Date());
+        }
+
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", c);
         args.put("entitlements", c.getEntitlements());
@@ -132,13 +149,6 @@ public class ComplianceRules {
                 generator.setMessage(c, reason, result.getDate());
             }
             if (currentCompliance) {
-                for (Entitlement ent : c.getEntitlements()) {
-                    if (!ent.isUpdatedOnStart() && ent.isValid()) {
-                        ent.setUpdatedOnStart(true);
-                        entCurator.merge(ent);
-                    }
-                }
-
                 String newHash = getComplianceStatusHash(result, c);
                 boolean complianceChanged = !newHash.equals(c.getComplianceStatusHash());
                 if (complianceChanged) {
