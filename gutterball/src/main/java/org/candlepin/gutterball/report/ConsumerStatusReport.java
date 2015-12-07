@@ -92,7 +92,7 @@ public class ConsumerStatusReport extends Report<ReportResult> {
         );
 
         this.addParameter(
-            builder.init("sku", i18n.tr("The entitlement sku on which to filter"))
+            builder.init("sku", i18n.tr("The entitlement SKU on which to filter"))
                 .getParameter()
         );
 
@@ -104,14 +104,14 @@ public class ConsumerStatusReport extends Report<ReportResult> {
         this.addParameter(
             builder.init(
                 "management_enabled",
-                i18n.tr("Filter on subscriptions which have management enabled set to this value (boolean)")
+                i18n.tr("Filter on subscriptions which have management enabled set to this value (Boolean)")
             )
                 .getParameter()
         );
 
         addParameter(
             builder.init(CUSTOM_RESULTS_PARAM, i18n.tr("Enables/disables custom report result " +
-                    "functionality via attribute filtering (boolean).")).getParameter());
+                    "functionality via attribute filtering (Boolean).")).getParameter());
 
         addParameter(builder.init("include_reasons", i18n.tr("Include status reasons in results"))
                 .mustNotHave(CUSTOM_RESULTS_PARAM)

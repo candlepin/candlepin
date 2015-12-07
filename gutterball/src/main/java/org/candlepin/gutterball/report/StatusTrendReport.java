@@ -112,7 +112,7 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
         );
 
         this.addParameter(
-            builder.init("sku", i18n.tr("The entitlement sku on which to filter"))
+            builder.init("sku", i18n.tr("The entitlement SKU on which to filter"))
                 .mustNotHave("product_name", "subscription_name", "management_enabled")
                 .getParameter()
         );
@@ -126,7 +126,7 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
         this.addParameter(
             builder.init(
                 "management_enabled",
-                i18n.tr("Filter on subscriptions which have management enabled set to this value (boolean)")
+                i18n.tr("Filter on subscriptions which have management enabled set to this value (Boolean)")
             )
                 .mustNotHave("product_name", "sku", "subscription_name")
                 .getParameter()

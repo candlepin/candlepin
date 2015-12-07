@@ -1383,9 +1383,9 @@ public class OwnerResource {
             return ueberCertGenerator.generate(o, principal);
         }
         catch (Exception e) {
-            log.error("Problem generating ueber cert for owner: " + o.getKey(), e);
+            log.error("Problem generating uber cert for owner: " + o.getKey(), e);
             throw new BadRequestException(i18n.tr(
-                "Problem generating ueber cert for owner {0}", e));
+                "Problem generating uber cert for owner {0}", e));
         }
     }
 
@@ -1413,7 +1413,7 @@ public class OwnerResource {
 
         if (ueberConsumer == null) {
             throw new NotFoundException(i18n.tr(
-                "ueber certificate for owner {0} was not found. Please generate one.",
+                "uber certificate for owner {0} was not found. Please generate one.",
                 o.getKey()));
         }
 

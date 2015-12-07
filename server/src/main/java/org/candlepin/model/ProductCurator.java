@@ -328,7 +328,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                 !"1".equalsIgnoreCase(attr.getValue()) &&
                 !"0".equalsIgnoreCase(attr.getValue())) {
                 throw new BadRequestException(i18n.tr(
-                    "The attribute ''{0}'' must be a boolean value.",
+                    "The attribute ''{0}'' must be a Boolean value.",
                     attr.getName()));
             }
         }
