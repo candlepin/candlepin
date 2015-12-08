@@ -21,6 +21,7 @@ import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
@@ -696,4 +697,9 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
             return entitlementVersion != null && entitlementVersion.startsWith("3.");
         }
     }
+
+    public boolean isDev() {
+        return !StringUtils.isEmpty(getFact("dev_sku"));
+    }
+
 }

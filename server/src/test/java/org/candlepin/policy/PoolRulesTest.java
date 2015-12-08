@@ -50,6 +50,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -1105,6 +1106,18 @@ public class PoolRulesTest {
         PoolUpdate update = updates.get(0);
         assertTrue(update.getOrderChanged());
         assertEquals("123", update.getPool().getAccountNumber());
+    }
+
+    @Test
+    public void productNameChangedDevPool() {
+        Pool p = TestUtil.createPool(TestUtil.createProduct());
+        p.setSourceSubscription(null);
+        p.setAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
+        List<Pool> floatingPools = new ArrayList<Pool>();
+        floatingPools.add(p);
+
+        List<PoolUpdate> updates = this.poolRules.updatePools(floatingPools);
+        assertEquals(0, updates.size());
     }
 
 }

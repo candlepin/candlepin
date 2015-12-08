@@ -32,6 +32,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -1080,6 +1081,54 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(expected, result);
     }
 
+    @Test
+    public void testLookupDevPoolForConsumer() throws Exception {
+        Pool pool = createPoolAndSub(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
+            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
+        pool.setAttribute("requires_consumer", consumer.getUuid());
+        pool.setAttribute("dev_pool", "true");
+        poolCurator.create(pool);
+
+        Pool found = poolCurator.findDevPool(consumer, product.getId());
+        assertNotNull(found);
+        assertEquals(pool.getId(), found.getId());
+    }
+
+    @Test
+    public void testDevPoolForConsumerNotFoundReturnsNullWhenNoMatchOnConsumer() throws Exception {
+        Pool pool = createPoolAndSub(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
+            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
+        pool.setAttribute("requires_consumer", "does-not-exist");
+        pool.setAttribute("dev_pool", "true");
+        poolCurator.create(pool);
+
+        Pool found = poolCurator.findDevPool(consumer, product.getId());
+        assertNull(found);
+    }
+
+    @Test
+    public void testDevPoolForConsumerNotFoundReturnsNullWhenNoMatchOnDevPool() throws Exception {
+        Pool pool = createPoolAndSub(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
+            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
+        pool.setAttribute("requires_consumer", consumer.getUuid());
+        poolCurator.create(pool);
+
+        Pool found = poolCurator.findDevPool(consumer, product.getId());
+        assertNull(found);
+    }
+
+    @Test
+    public void testDevPoolForConsumerNotFoundReturnsNullWhenNoMatchOnProductId() throws Exception {
+        Pool pool = createPoolAndSub(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
+            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
+        pool.setAttribute("requires_consumer", consumer.getUuid());
+        pool.setAttribute("dev_pool", "true");
+        poolCurator.create(pool);
+
+        Pool found = poolCurator.findDevPool(consumer, "does-not-exist");
+        assertNull(found);
+    }
+
     private Product generateProduct(String id, String name) {
         Product product = TestUtil.createProduct(id, name);
         this.productCurator.create(product);
@@ -1102,4 +1151,5 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool.setSourceSubscription(new SourceSubscription(subId, "master"));
         return poolCurator.create(pool);
     }
+
 }

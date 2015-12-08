@@ -319,6 +319,25 @@ public class PoolManagerTest {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
+    public void testRefreshPoolsSkipsDevelopmentPools() {
+        List<Subscription> subscriptions = Util.newList();
+        List<Pool> pools = Util.newList();
+        Pool p = TestUtil.createPool(TestUtil.createProduct());
+        p.setSourceSubscription(null);
+
+        // Mock a development pool
+        p.setAttribute("dev_pool", "true");
+
+        pools.add(p);
+        mockSubsList(subscriptions);
+
+        mockPoolsList(pools);
+        this.manager.getRefresher().add(getOwner()).run();
+        verify(this.manager, never()).deletePool(same(p));
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
     public void testRefreshPoolsSortsStackDerivedPools() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
