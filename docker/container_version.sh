@@ -8,11 +8,11 @@ else
 fi
 
 
-CP_VERSION="$(docker run -ti --rm $IMAGE_NAME:latest rpm -q --queryformat '%{VERSION}' candlepin)"
+CP_VERSION="$(docker run -i --rm $IMAGE_NAME:latest rpm -q --queryformat '%{VERSION}' candlepin)"
 
 if (! echo $CP_VERSION | grep -E -q --regex="^[0-9]+\.[0-9]+.*") then
   # We probably checked it out from git
-  CP_VERSION="$(docker run -ti --rm $IMAGE_NAME:latest /bin/sh cd /candlepin && git describe | cut -d- -f 2)"
+  CP_VERSION="$(docker run -i --rm $IMAGE_NAME:latest /bin/sh cd /candlepin && git describe | cut -d- -f 2)"
 fi
 
 if (! echo $CP_VERSION | grep -E -q --regex="^[0-9]+\.[0-9]+.*") then
