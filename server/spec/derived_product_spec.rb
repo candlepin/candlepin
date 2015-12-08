@@ -49,6 +49,7 @@ describe 'Derived Products' do
         :virt_limit => "unlimited",
         :stacking_id => "stackme",
         :sockets => "2",
+        'host_limited' => "true",
         'multi-entitlement' => "yes"
       }
     })
@@ -56,6 +57,7 @@ describe 'Derived Products' do
     @datacenter_product_2 = create_product(nil, nil, {
       :attributes => {
         :virt_limit => "unlimited",
+        'host_limited' => "true"
       }
     })
 
