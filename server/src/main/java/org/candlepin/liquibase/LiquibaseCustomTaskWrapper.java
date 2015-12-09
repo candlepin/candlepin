@@ -24,10 +24,23 @@ import liquibase.resource.ResourceAccessor;
 
 
 /**
- * The PerOrgProductsUpgradeLiquibaseWrapper class wraps the PerOrgProductsUpgradeTask to allow it to be
+ * The LiquibaseCustomTaskWrapper class wraps a LiquibaseCustomTask to allow it to be
  * programatically performed via Liquibase.
+ *
+ * @param <T>
+ *  the class being wrapped by this class
  */
-public class PerOrgProductsUpgradeLiquibaseWrapper implements CustomTaskChange {
+public abstract class LiquibaseCustomTaskWrapper<T extends LiquibaseCustomTask> implements CustomTaskChange {
+
+    private Class<T> typeClass;
+
+    protected LiquibaseCustomTaskWrapper(Class<T> typeClass) {
+        if (typeClass == null) {
+            throw new IllegalArgumentException("typeClass cannot be null");
+        }
+
+        this.typeClass = typeClass;
+    }
 
     @Override
     public String getConfirmationMessage() {
@@ -51,12 +64,10 @@ public class PerOrgProductsUpgradeLiquibaseWrapper implements CustomTaskChange {
 
     @Override
     public void execute(Database database) throws CustomChangeException {
-        PerOrgProductsUpgradeTask task = new PerOrgProductsUpgradeTask(
-            database,
-            new LiquibaseCustomTaskLogger()
-        );
-
         try {
+            T task = this.typeClass.getConstructor(Database.class, CustomTaskLogger.class)
+                        .newInstance(database, new LiquibaseCustomTaskLogger());
+
             task.execute();
         }
         catch (Exception e) {

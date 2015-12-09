@@ -221,79 +221,6 @@
 
 
 
-    <!-- cp_pool -->
-    <changeSet id="20150210094558-13" author="crog">
-        <addColumn tableName="cp_pool">
-            <column name="product_uuid" type="varchar(32)"/>
-            <column name="derived_product_uuid" type="varchar(32)"/>
-            <column name="cdn_id" type="varchar(32)">
-                <constraints foreignKeyName="cp_pool_fk1" references="cp_cdn(id)"/>
-            </column>
-            <column name="certificate_id" type="varchar(32)">
-                <constraints foreignKeyName="cp_pool_fk2" references="cp_certificate(id)"/>
-            </column>
-            <column name="upstream_entitlement_id" type="varchar(32)"/>
-            <column name="upstream_consumer_id" type="varchar(255)"/>
-            <column name="upstream_pool_id" type="varchar(255)"/>
-        </addColumn>
-    </changeSet>
-
-    <changeSet id="20150210094558-23" author="dgoodwin">
-        <createIndex indexName="cp_pool_upstream_pool_id_idx" tableName="cp_pool" unique="false">
-            <column name="upstream_pool_id"/>
-        </createIndex>
-    </changeSet>
-
-    <changeSet id="20150210094558-14" author="crog">
-        <renameColumn tableName="cp_pool"
-            oldColumnName="productid"
-            newColumnName="product_id_old"
-            columnDataType="varchar(255)"
-        />
-        <!--remarks="deprecated; obsoleted by product_id"-->
-    </changeSet>
-
-    <changeSet id="20150210094558-15" author="crog">
-        <renameColumn tableName="cp_pool"
-            oldColumnName="derivedproductid"
-            newColumnName="derived_product_id_old"
-            columnDataType="varchar(255)"
-        />
-        <!--remarks="deprecated; obsoleted by derived_product_id"-->
-    </changeSet>
-
-    <changeSet id="20150210094558-16" author="crog">
-        <dropColumn tableName="cp_pool"
-            columnName="productname"
-        />
-    </changeSet>
-
-    <changeSet id="20150210094558-17" author="crog">
-        <dropColumn tableName="cp_pool"
-            columnName="derivedproductname"
-        />
-    </changeSet>
-
-    <changeSet id="20150210094558-18" author="crog">
-        <dropNotNullConstraint tableName="cp_pool"
-            columnName="product_id_old"
-            columnDataType="varchar(255)"
-        />
-    </changeSet>
-
-
-
-    <!-- cp_pool_branding -->
-    <changeSet id="20150210094558-19" author="crog">
-        <renameColumn tableName="cp_branding"
-            oldColumnName="productid"
-            newColumnName="product_id"
-            columnDataType="varchar(255)"
-        />
-    </changeSet>
-
-
-
     <!-- cpo_pool_source_sub -->
     <changeSet id="20150210094558-20" author="crog">
         <createTable tableName="cpo_pool_source_sub">
@@ -322,7 +249,7 @@
 
         <comment>Migrate data from obsoleted tables to new org-specific tables.</comment>
 
-        <customChange class="org.candlepin.liquibase.PerOrgProductsUpgradeLiquibaseWrapper"/>
+        <customChange class="org.candlepin.liquibase.PerOrgProductsUpgradeLiquibaseWrapperA"/>
     </changeSet>
 
 
@@ -600,13 +527,6 @@
         <addPrimaryKey tableName="cpo_product_dependent_products"
             columnNames="product_uuid, element"
             constraintName="cpo_proddepprod_pk"
-        />
-    </changeSet>
-
-    <changeSet id="20150210094558-61" author="crog">
-        <addPrimaryKey tableName="cp_pool_branding"
-            columnNames="pool_id, branding_id"
-            constraintName="cp_pool_branding_pk"
         />
     </changeSet>
 

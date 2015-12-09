@@ -17,14 +17,14 @@ package org.candlepin.liquibase;
 
 
 /**
- * Liquibase wrapper class for the pool-type upgrade task
+ * Liquibase wrapper class for the per-org products upgrade task
  */
-public class PoolTypeUpgradeLiquibaseWrapper
-    extends LiquibaseCustomTaskWrapper<PoolTypeUpgradeTask> {
+public class PerOrgProductsUpgradeLiquibaseWrapperB
+    extends LiquibaseCustomTaskWrapper<PerOrgProductsUpgradeTask> {
 
-    public PoolTypeUpgradeLiquibaseWrapper() {
-        super(PoolTypeUpgradeTask.class);
+    public PerOrgProductsUpgradeLiquibaseWrapperB() {
+        super(PerOrgProductsUpgradeTaskB.class);
     }
 
-    // Nothing else to do
+    // Nothing else to do here
 }
