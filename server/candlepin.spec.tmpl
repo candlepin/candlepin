@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.51.11
+Version: 0.9.51.12
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -213,6 +213,12 @@ fi
 
 #raw
 %changelog
+* Wed Dec 09 2015 Michael Stead <mstead@redhat.com> 0.9.51.12-1
+- Port Developer Subscriptions from master to 0.9.51 (wpoteat@redhat.com)
+- Fixed some hosted spec tests for 0.9.51 (vrjain@redhat.com)
+- The deploy scripts no longer use sudo when unnecessary or unavailable
+  (crog@redhat.com)
+
 * Wed Dec 02 2015 Alex Wood <awood@redhat.com> 0.9.51.11-1
 - Limit the number of binds per consumer that can run concurrently.
   (awood@redhat.com)
