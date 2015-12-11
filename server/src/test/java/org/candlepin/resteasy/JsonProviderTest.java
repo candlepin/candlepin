@@ -31,6 +31,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 import javax.ws.rs.core.MediaType;
 
@@ -55,6 +56,7 @@ public class JsonProviderTest {
     public void serializedDateDoesNotIncludeMilliseconds() throws JsonProcessingException {
         Date now = new Date();  // will be initialized to when it was allocated with millisecond precision
         SimpleDateFormat iso8601WithoutMilliseconds = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+        iso8601WithoutMilliseconds.setTimeZone(TimeZone.getTimeZone("UTC"));
         String expectedDate = "\"" + iso8601WithoutMilliseconds.format(now) + "\"";
         JsonProvider provider = new JsonProvider(config);
         ObjectMapper mapper = provider.locateMapper(Object.class,
