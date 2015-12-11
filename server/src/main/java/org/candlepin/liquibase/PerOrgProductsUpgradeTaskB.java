@@ -28,7 +28,7 @@ import java.util.Map;
  * The PerOrgProductsUpgradeTaskB performs the post-db upgrade on the pre-existing cp_* tables. This
  * task also checks if any changes have been made to product or content information since the
  */
-public class PerOrgProductsUpgradeTaskB extends LiquibaseCustomTask {
+public class PerOrgProductsUpgradeTaskB extends PerOrgProductsUpgradeTaskA {
 
     public PerOrgProductsUpgradeTaskB(Database database) {
         super(database);
@@ -62,28 +62,27 @@ public class PerOrgProductsUpgradeTaskB extends LiquibaseCustomTask {
             result.close();
 
             // Migrate orgs
-            ResultSet orgids = this.executeQuery("SELECT id FROM cp_owner");
+            ResultSet orgids = this.executeQuery("SELECT id, account FROM cp_owner");
             for (int index = 1; orgids.next(); ++index) {
                 String orgid = orgids.getString(1);
+                String account = orgids.getString(2);
 
                 this.logger.info(String.format(
-                    "Migrating data for org %s (%d of %d)",
-                    orgid, index, count
+                    "Migrating data for org %s (%s) (%d of %d)",
+                    account, orgid, index, count
                 ));
 
-                // This is basically the same as task A, except we need to check for things that
-                // need to be re-migrated because it's changed since the last time this has run.
-
-                // Also, we can now do our updates to cp_pool
-
-
-                // this.migrateProductData(orgid);
-                // this.migrateActivationKeyData(orgid);
-                // this.migratePoolData(orgid);
-                // this.migrateSubscriptionData(orgid);
+                this.migrateProductData(orgid);
+                this.migrateContentData(orgid);
+                this.migrateActivationKeyData(orgid);
+                this.migratePoolData(orgid);
+                this.migrateSubscriptionData(orgid);
             }
 
             orgids.close();
+
+            this.updatePoolObjectReferences();
+
             this.connection.commit();
         }
         finally {
@@ -92,25 +91,11 @@ public class PerOrgProductsUpgradeTaskB extends LiquibaseCustomTask {
         }
     }
 
-    /**
-     * Migrates product data. Must be called per-org.
-     *
-     * @param orgid
-     *  The id of the owner/organization for which to migrate product data
-     */
-    @SuppressWarnings("checkstyle:methodlength")
-    private void updateMigratedProductData(String orgid) throws DatabaseException, SQLException {
-
-        Map<String, String> productCache = new HashMap<String, String>();
-        Map<String, String> contentCache = new HashMap<String, String>();
-
-        this.logger.info("Migrating product data for org " + orgid);
-
-        // Retrieve a list of products such that:
-        //  - The products are referenced by the old tables/columns
-        //  - The products are either newer than the migrated info or have not yet been migrated
-        ResultSet productids = this.executeQuery(
-            "SELECT cp_product.id, cpo_products.uuid " +
+    protected ResultSet getProductIds(String orgid) throws DatabaseException, SQLException {
+        return this.executeQuery(
+            "SELECT " +
+            "  cp_product.id, cpo_products.uuid, cp_product.created, cp_product.updated, " +
+            "  cp_product.multiplier, cp_product.name " +
             "FROM " +
             "  (SELECT p.product_id_old AS product_id " +
             "    FROM cp_pool p " +
@@ -155,275 +140,13 @@ public class PerOrgProductsUpgradeTaskB extends LiquibaseCustomTask {
             "  INNER JOIN cp_product " +
             "    ON cp_product.id = plist.product_id " +
             "  LEFT JOIN cpo_products " +
-            "    ON cpo_products.product_id = cp_product.id " +
+            "    ON (cpo_products.product_id = cp_product.id AND cpo_products.owner_id = ?)" +
             "WHERE " +
             "  cpo_products.uuid IS NULL " +
-            "  OR ( " +
-            "    cpo_products.owner_id = ? " +
-            "    AND ( " +
-            "      cp_product.created > cpo_products.created " +
-            "      OR cp_product.updated > cpo_products.updated " +
-            "    ) " +
-            "  ) ",
+            "  OR cp_product.created > cpo_products.created " +
+            "  OR cp_product.updated > cpo_products.updated ",
             orgid, orgid, orgid, orgid, orgid, orgid, orgid, orgid
         );
-
-        // TODO:
-        // Should we also clean up dangling references to products...?
-
-        while (productids.next()) {
-            String productid = productids.getString(1);
-            String productuuid = productids.getString(2);
-
-            if (productuuid != null) {
-                // Product changed -- need to update it
-
-                // Need to update the product here. We're going to be lazy and delete all of the
-                // existing product data, and then re-insert it. Allows us to do this in two queries
-                // instead of three, more complex, queries for each related set.
-
-                // We can just do the deletes here, then fall into the migration code below for the
-                // remainder.
-            }
-            else {
-                // New product entirely
-                productuuid = this.generateUUID();
-
-                this.executeUpdate(
-                    "INSERT INTO cpo_products " +
-                    "SELECT ?, created, updated, multiplier, ?, ?, name " +
-                    "FROM cp_product WHERE id = ?",
-                    productuuid, orgid, productid, productid
-                );
-            }
-
-
-
-
-            // Make sure we haven't already migrated this product.
-            if (productCache.get(productid) != null) {
-                this.logger.warn(String.format(
-                    "Skipping migration for already-migrated product \"%s\"",
-                    productid
-                ));
-
-                continue;
-            }
-
-            productCache.put(productid, productuuid);
-
-            this.logger.info(
-                String.format("Mapping org/prod \"%s\"/\"%s\" to UUID \"%s\"", orgid, productid, productuuid)
-            );
-
-            // Migration information from pre-existing tables to cpo_* tables. This should always
-            // be 0, 1 or an exception.
-            int migrated =
-
-            if (migrated < 1) {
-                this.logger.error(String.format(
-                    "Unable to migrate product \"%s\"; likely a dangling reference to a product that " +
-                    "no longer exists.",
-                    productid
-                ));
-
-                continue;
-            }
-
-            this.executeUpdate(
-                "INSERT INTO cpo_pool_provided_products " +
-                "SELECT pool_id, ? " +
-                "FROM cp_pool_products pp, cp_pool p WHERE pp.pool_id = p.id " +
-                "    AND p.owner_id = ? AND pp.product_id = ? AND pp.dtype = 'provided' ",
-                productuuid, orgid, productid
-            );
-
-            this.executeUpdate(
-                "INSERT INTO cpo_pool_derived_products " +
-                "SELECT pool_id, ? " +
-                "FROM cp_pool_products pp, cp_pool p WHERE pp.pool_id = p.id " +
-                "     AND p.owner_id = ? AND pp.product_id = ? AND pp.dtype = 'derived' ",
-                productuuid, orgid, productid
-            );
-
-            ResultSet attributes = this.executeQuery(
-                "SELECT id, created, updated, name, value, product_id " +
-                "FROM cp_product_attribute WHERE product_id = ?",
-                productid
-            );
-
-            while (attributes.next()) {
-                this.executeUpdate(
-                    "INSERT INTO cpo_product_attributes" +
-                    "  (id, created, updated, name, value, product_uuid) " +
-                    "VALUES(?, ?, ?, ?, ?, ?)",
-                    this.generateUUID(), attributes.getTimestamp(2), attributes.getTimestamp(3),
-                    attributes.getString(4), attributes.getString(5), productuuid
-                );
-            }
-
-            attributes.close();
-
-            ResultSet certificates = this.executeQuery(
-                "SELECT id, created, updated, cert, privatekey, product_id " +
-                "FROM cp_product_certificate WHERE product_id = ?",
-                productid
-            );
-
-            while (certificates.next()) {
-                this.executeUpdate(
-                    "INSERT INTO cpo_product_certificates" +
-                    "  (id, created, updated, cert, privatekey, product_uuid) " +
-                    "VALUES(?, ?, ?, ?, ?, ?)",
-                    this.generateUUID(), certificates.getTimestamp(2), certificates.getTimestamp(3),
-                    certificates.getBytes(4), certificates.getBytes(5), productuuid
-                );
-            }
-
-            certificates.close();
-
-            this.executeUpdate(
-                "INSERT INTO cpo_product_dependent_products " +
-                "SELECT ?, element " +
-                "FROM cp_product_dependent_products WHERE cp_product_id = ?",
-                productuuid, productid
-            );
-
-            // Update new product columns on existing tables:
-            this.executeUpdate(
-                "UPDATE cp_pool " +
-                "SET product_uuid = ? " +
-                "WHERE product_id_old = ? AND owner_id = ?",
-                productuuid, productid, orgid
-            );
-
-            this.executeUpdate(
-                "UPDATE cp_pool " +
-                "SET derived_product_uuid = ? " +
-                "WHERE derived_product_id_old = ? AND owner_id = ?",
-                productuuid, productid, orgid
-            );
-
-            // Update product's content
-            ResultSet contentids = this.executeQuery(
-                "SELECT content_id FROM cp_product_content WHERE product_id = ?",
-                productid
-            );
-
-            while (contentids.next()) {
-                String contentid = contentids.getString(1);
-                String contentuuid = contentCache.get(contentid);
-
-                if (contentuuid == null) {
-                    contentuuid = this.generateUUID();
-                    contentCache.put(contentid, contentuuid);
-
-                    // update cpo_content
-                    this.executeUpdate(
-                        "INSERT INTO cpo_content " +
-                        "SELECT ?, id, created, updated, ?, contenturl, gpgurl, label, " +
-                        "       metadataexpire, name, releasever, requiredtags, type, " +
-                        "       vendor, arches " +
-                        "FROM cp_content WHERE id = ?",
-                        contentuuid, orgid, contentid
-                    );
-
-                    this.executeUpdate(
-                        "INSERT INTO cpo_content_modified_products " +
-                        "SELECT ?, element " +
-                        "FROM cp_content_modified_products " +
-                        "WHERE cp_content_id = ?",
-                        contentuuid, contentid
-                    );
-
-                    ResultSet content = this.executeQuery(
-                        "SELECT id, created, updated, contentid, enabled, environment_id " +
-                        "FROM cp_env_content WHERE contentid = ?",
-                        contentid
-                    );
-
-                    while (content.next()) {
-                        this.executeUpdate(
-                            "INSERT INTO cpo_environment_content" +
-                            "  (id, created, updated, content_uuid, enabled, environment_id) " +
-                            "VALUES(?, ?, ?, ?, ?, ?)",
-                            this.generateUUID(), content.getTimestamp(2), content.getTimestamp(3),
-                            contentuuid, content.getBoolean(5), content.getString(6)
-                        );
-                    }
-
-                    content.close();
-                }
-
-                this.executeUpdate(
-                    "INSERT INTO cpo_product_content " +
-                    "SELECT ?, ?, enabled, created, updated " +
-                    "FROM cp_product_content WHERE product_id = ? AND content_id = ?",
-                    productuuid, contentuuid, productid, contentid
-                );
-            }
-
-            contentids.close();
-        }
-
-        productids.close();
-    }
-
-    /**
-     * Migrates activation key data. Must be called per-org.
-     *
-     * @param orgid
-     *  The id of the owner/organization for which to migrate activation key data
-     */
-    private void migrateActivationKeyData(String orgid) throws DatabaseException, SQLException {
-        this.logger.info("Migrating activation key data for org " + orgid);
-
-        this.executeUpdate(
-            "INSERT INTO cpo_activation_key_products(key_id, product_uuid) " +
-            "SELECT AK.id, (SELECT uuid FROM cpo_products " +
-            "  WHERE owner_id = ? AND product_id = AKP.product_id) " +
-            "FROM cp_activation_key AK " +
-            "  JOIN cp_activationkey_product AKP ON AKP.key_id = AK.id " +
-            "WHERE AK.owner_id = ?",
-            orgid, orgid
-        );
-    }
-
-    /**
-     * Migrates pool data. Must be called per-org.
-     *
-     * @param orgid
-     *  The id of the owner/organization for which to migrate pool data
-     */
-    private void migratePoolData(String orgid) throws DatabaseException, SQLException {
-        this.logger.info("Migrating pool data for org " + orgid);
-
-        ResultSet pools = this.executeQuery("SELECT id FROM cp_pool WHERE owner_id = ?", orgid);
-
-        while (pools.next()) {
-            String poolid = pools.getString(1);
-
-            // Migrate pool source subscription info
-            ResultSet sourcesub = this.executeQuery(
-                "SELECT id, subscriptionid, subscriptionsubkey, pool_id, created, updated " +
-                "FROM cp_pool_source_sub WHERE pool_id = ?",
-                poolid
-            );
-
-            while (sourcesub.next()) {
-                this.executeUpdate(
-                    "INSERT INTO cpo_pool_source_sub " +
-                    "  (id, subscription_id, subscription_sub_key, pool_id, created, updated)" +
-                    "VALUES(?, ?, ?, ?, ?, ?)",
-                    this.generateUUID(), sourcesub.getString(2), sourcesub.getString(3), poolid,
-                    sourcesub.getTimestamp(5), sourcesub.getTimestamp(6)
-                );
-            }
-
-            sourcesub.close();
-        }
-
-        pools.close();
     }
 
     /**
@@ -433,8 +156,10 @@ public class PerOrgProductsUpgradeTaskB extends LiquibaseCustomTask {
      *  The id of the owner/organization for which to migrate subscription data
      */
     @SuppressWarnings("checkstyle:methodlength")
-    private void migrateSubscriptionData(String orgid) throws DatabaseException, SQLException {
-        this.logger.info("Migrating subscription data for org " + orgid);
+    protected void migrateSubscriptionData(String orgid) throws DatabaseException, SQLException {
+        this.logger.info("  Migrating subscription information...");
+        int migrated = 0;
+        int updated = 0;
 
         ResultSet subscriptiondata = this.executeQuery(
             "SELECT id, certificate_id, cdn_id, upstream_entitlement_id, upstream_consumer_id, " +
@@ -460,7 +185,7 @@ public class PerOrgProductsUpgradeTaskB extends LiquibaseCustomTask {
                 // If we didn't delete anything, the pools haven't been refreshed after the sub was
                 // added, so we'll need to migrate it ourselves.
                 if (count == 0) {
-                    this.executeUpdate(
+                    migrated += this.executeUpdate(
                         "INSERT INTO cp_pool (" +
                         "  id, created, updated, activesubscription, accountnumber, contractnumber, " +
                         "  enddate, quantity, startdate, owner_id, ordernumber, type, product_uuid, " +
@@ -480,7 +205,7 @@ public class PerOrgProductsUpgradeTaskB extends LiquibaseCustomTask {
             // ...otherwise we need to migrate upstream information to the master pool
             else {
                 // Update any master pools which make use of this subscription information
-                this.executeUpdate(
+                updated += this.executeUpdate(
                     "UPDATE cp_pool SET " +
                     "  certificate_id = ?, " +
                     "  cdn_id = ?, " +
@@ -498,6 +223,23 @@ public class PerOrgProductsUpgradeTaskB extends LiquibaseCustomTask {
         }
 
         subscriptiondata.close();
+        this.logger.info(String.format("  Done. %d subscriptions migrated, %d updated", migrated, updated));
     }
 
+    /**
+     * Updates pools to point to the newly migrated objects
+     */
+    protected void updatePoolObjectReferences() throws DatabaseException, SQLException {
+        this.logger.info("Updating pool object references...");
+
+        int updated = this.executeUpdate(
+            "UPDATE cp_pool p " +
+            "SET product_uuid = (SELECT uuid FROM cpo_products prod " +
+            "  WHERE prod.product_id = p.product_id_old AND prod.owner_id = p.owner_id), " +
+            "derived_product_uuid = (SELECT uuid FROM cpo_products prod " +
+            "  WHERE prod.product_id = p.derived_product_id_old AND prod.owner_id = p.owner_id)"
+        );
+
+        this.logger.info(String.format("Done. %d pools updated", updated));
+    }
 }

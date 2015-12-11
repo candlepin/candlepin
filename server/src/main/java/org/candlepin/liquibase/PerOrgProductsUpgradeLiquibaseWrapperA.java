@@ -20,7 +20,7 @@ package org.candlepin.liquibase;
  * Liquibase wrapper class for the per-org products upgrade task
  */
 public class PerOrgProductsUpgradeLiquibaseWrapperA
-    extends LiquibaseCustomTaskWrapper<PerOrgProductsUpgradeTask> {
+    extends LiquibaseCustomTaskWrapper<PerOrgProductsUpgradeTaskA> {
 
     public PerOrgProductsUpgradeLiquibaseWrapperA() {
         super(PerOrgProductsUpgradeTaskA.class);
