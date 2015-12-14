@@ -11,7 +11,7 @@
   </parent>
   <groupId>org.candlepin</groupId>
   <artifactId>candlepin</artifactId>
-  <version>0.9.51.12</version>
+  <version>0.9.51.13</version>
   <packaging>war</packaging>
   <properties>
     <release>1</release>

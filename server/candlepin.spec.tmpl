@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.51.12
+Version: 0.9.51.13
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -213,6 +213,10 @@ fi
 
 #raw
 %changelog
+* Mon Dec 14 2015 Alex Wood <awood@redhat.com> 0.9.51.13-1
+- 1252145: Backport allow searching consumers by SKU, contract, or sub ID.
+  (awood@redhat.com)
+
 * Wed Dec 09 2015 Michael Stead <mstead@redhat.com> 0.9.51.12-1
 - Port Developer Subscriptions from master to 0.9.51 (wpoteat@redhat.com)
 - Fixed some hosted spec tests for 0.9.51 (vrjain@redhat.com)
