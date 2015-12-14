@@ -255,6 +255,7 @@ public class CandlepinModule extends AbstractModule {
         // Async Jobs
         bind(RefreshPoolsJob.class);
         bind(EntitlerJob.class);
+        requestStaticInjection(EntitlerJob.class);
         bind(HypervisorUpdateJob.class);
 
         // UeberCerts

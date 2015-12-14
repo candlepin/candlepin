@@ -43,11 +43,13 @@ import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -58,25 +60,26 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+
 /**
  * EntitlerTest
  */
+@RunWith(MockitoJUnitRunner.class)
 public class EntitlerTest {
-    private PoolManager pm;
-    private EventFactory ef;
-    private EventSink sink;
     private I18n i18n;
     private Entitler entitler;
-    private Consumer consumer;
-    private ConsumerCurator cc;
     private EntitlementRulesTranslator translator;
-    private SubscriptionServiceAdapter subAdapter;
-    private EntitlementCurator entitlementCurator;
-    private Configuration config;
-    private PoolCurator poolCurator;
-    private ProductCurator productCurator;
-    private ProductServiceAdapter productAdapter;
 
+    @Mock private PoolManager pm;
+    @Mock private EventFactory ef;
+    @Mock private EventSink sink;
+    @Mock private Consumer consumer;
+    @Mock private ConsumerCurator cc;
+    @Mock private EntitlementCurator entitlementCurator;
+    @Mock private Configuration config;
+    @Mock private PoolCurator poolCurator;
+    @Mock private ProductCurator productCurator;
+    @Mock private ProductServiceAdapter productAdapter;
 
     private ValidationResult fakeOutResult(String msg) {
         ValidationResult result = new ValidationResult();
@@ -87,23 +90,12 @@ public class EntitlerTest {
 
     @Before
     public void init() {
-        pm = mock(PoolManager.class);
-        ef = mock(EventFactory.class);
-        sink = mock(EventSink.class);
-        cc = mock(ConsumerCurator.class);
-        consumer = mock(Consumer.class);
-        entitlementCurator = mock(EntitlementCurator.class);
         i18n = I18nFactory.getI18n(
             getClass(),
             Locale.US,
             I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK
         );
         translator = new EntitlementRulesTranslator(i18n);
-        subAdapter = mock(SubscriptionServiceAdapter.class);
-        config = mock(Configuration.class);
-        poolCurator = mock(PoolCurator.class);
-        productCurator = mock(ProductCurator.class);
-        productAdapter = mock(ProductServiceAdapter.class);
 
         entitler = new Entitler(pm, cc, i18n, ef, sink, translator, entitlementCurator, config,
                 poolCurator, productCurator, productAdapter);
@@ -480,7 +472,6 @@ public class EntitlerTest {
         List<Product> devProds = new ArrayList<Product>();
         Product p = new Product("test-product", "Test Product", owner);
         devProds.add(p);
-        List<Pool> activeList = new ArrayList<Pool>();
 
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p.getId());
@@ -547,7 +538,7 @@ public class EntitlerTest {
         Pool expectedPool = entitler.assembleDevPool(devSystem, p.getId());
         when(pm.createPool(any(Pool.class))).thenReturn(expectedPool);
         AutobindData ad = new AutobindData(devSystem);
-        List<Entitlement> ents = entitler.bindByProducts(ad);
+        entitler.bindByProducts(ad);
     }
 
     @Test

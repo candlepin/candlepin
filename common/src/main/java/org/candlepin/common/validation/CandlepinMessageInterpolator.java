@@ -86,7 +86,7 @@ public class CandlepinMessageInterpolator implements MessageInterpolator {
                     new ValidationMessage(I18n.marktr("must be between {min} and {max}"),
                         "min", "max"));
                 put("{org.hibernate.validator.constraints.SafeHtml.message}",
-                    new ValidationMessage(I18n.marktr("may have unsafe html content")));
+                    new ValidationMessage(I18n.marktr("may have unsafe HTML content")));
                 put("{org.hibernate.validator.constraints.ScriptAssert.message}",
                     new ValidationMessage(I18n.marktr("script expression ''{0}'' didn't evaluate to true"),
                         "script"));

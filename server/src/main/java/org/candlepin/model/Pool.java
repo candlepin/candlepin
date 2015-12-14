@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
@@ -253,6 +254,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
         inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
     )
+    @BatchSize(size = 1000)
     private Set<Product> providedProducts = new HashSet<Product>();
 
     @ManyToMany
@@ -261,6 +263,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
         inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
     )
+    @BatchSize(size = 1000)
     private Set<Product> derivedProvidedProducts = new HashSet<Product>();
 
     /**
@@ -282,6 +285,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @OneToMany(mappedBy = "pool")
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @BatchSize(size = 1000)
     private Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
 
     @OneToMany(mappedBy = "pool", cascade = CascadeType.ALL)
@@ -315,6 +319,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         inverseJoinColumns = @JoinColumn(name = "branding_id"))
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @BatchSize(size = 1000)
     private Set<Branding> branding = new HashSet<Branding>();
 
     @Version

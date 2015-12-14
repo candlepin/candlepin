@@ -276,7 +276,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         if (contentCounter > X509ExtensionUtil.V1_CONTENT_LIMIT) {
             String cause = i18n.tr("Too many content sets for certificate {0}. A newer " +
                     "client may be available to address this problem. " +
-                    "See kbase https://access.redhat.com/knowledge/node/129003 for more " +
+                    "See knowledge database https://access.redhat.com/knowledge/node/129003 for more " +
                     "information.", ent.getPool().getProductName());
             throw new CertificateSizeException(cause);
         }

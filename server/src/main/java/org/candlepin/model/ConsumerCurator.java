@@ -29,6 +29,7 @@ import com.google.inject.persist.Transactional;
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaQuery;
@@ -56,6 +57,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
+import javax.persistence.LockModeType;
 
 /**
  * ConsumerCurator
@@ -279,6 +282,21 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return getConsumer(uuid);
     }
 
+    /**
+     * Apply a SELECT FOR UPDATE on a consumer.
+     *
+     * Note this method is not transactional.  It is meant to be used within
+     * a larger transaction.  Starting a transaction, running a select for update,
+     * and then ending the transaction is pointless.
+     *
+     * @return A consumer locked in the database
+     */
+    public Consumer lockAndLoad(Consumer c) {
+        getEntityManager().lock(c, LockModeType.PESSIMISTIC_WRITE);
+        return c;
+
+    }
+
     @Transactional
     public List<Consumer> findByUuids(Collection<String> uuids) {
         return listByCriteria(
@@ -297,8 +315,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     // to bypass the authentication. Do not call it!
     // TODO: Come up with a better way to do this!
     public Consumer getConsumer(String uuid) {
-        return (Consumer) createSecureCriteria()
-            .add(Restrictions.eq("uuid", uuid)).uniqueResult();
+        Criteria criteria = createSecureCriteria()
+            .add(Restrictions.eq("uuid", uuid));
+
+        return (Consumer) criteria.uniqueResult();
     }
 
     @SuppressWarnings("unchecked")
@@ -626,6 +646,30 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             throw new NotFoundException(i18n.tr(
                 "Unit with ID ''{0}'' could not be found.", consumerUuid));
         }
+        return consumer;
+    }
+
+    public Consumer verifyAndLookupConsumerWithEntitlements(
+            String consumerUuid) {
+        Consumer consumer = this.findByUuid(consumerUuid);
+        if (consumer == null) {
+            throw new NotFoundException(i18n.tr(
+                    "Unit with ID ''{0}'' could not be found.", consumerUuid));
+        }
+
+        for (Entitlement e : consumer.getEntitlements()) {
+            Hibernate.initialize(e.getCertificates());
+
+            if (e.getPool() != null) {
+                Hibernate.initialize(e.getPool().getBranding());
+                Hibernate.initialize(e.getPool().getDerivedProvidedProducts());
+                Hibernate.initialize(e.getPool().getProvidedProducts());
+                Hibernate.initialize(e.getPool().getProductAttributes());
+                Hibernate.initialize(e.getPool().getAttributes());
+                Hibernate.initialize(e.getPool().getDerivedProductAttributes());
+            }
+        }
+
         return consumer;
     }
 

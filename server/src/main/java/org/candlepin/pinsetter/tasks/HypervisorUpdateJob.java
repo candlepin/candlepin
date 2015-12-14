@@ -89,7 +89,7 @@ public class HypervisorUpdateJob extends KingpinJob {
     public static JobStatus scheduleJob(JobCurator jobCurator,
         Scheduler scheduler, JobDetail detail,
         Trigger trigger) throws SchedulerException {
-        JobStatus result = jobCurator.getByClassAndOwner(
+        JobStatus result = jobCurator.getByClassAndTarget(
             detail.getJobDataMap().getString(JobStatus.TARGET_ID),
             HypervisorUpdateJob.class);
         if (result == null) {
@@ -101,7 +101,7 @@ public class HypervisorUpdateJob extends KingpinJob {
     }
 
     public static boolean isSchedulable(JobCurator jobCurator, JobStatus status) {
-        long running = jobCurator.findNumRunningByOwnerAndClass(
+        long running = jobCurator.findNumRunningByClassAndTarget(
             status.getTargetId(), HypervisorUpdateJob.class);
         return running == 0;  // We can start the job if there are 0 like it running
     }

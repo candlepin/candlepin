@@ -105,7 +105,7 @@ public class EntitlerJobTest {
     public void recoveryIsFalse() {
         JobDetail detail = EntitlerJob.bindByPool("pool10", consumer, 1);
         assertFalse(detail.requestsRecovery());
-        assertFalse(detail.isDurable());
+        assertTrue(detail.isDurable());
     }
 
     private void serialize(Object obj) throws IOException {

@@ -18,6 +18,7 @@ import org.candlepin.common.jackson.HateoasInclude;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
@@ -98,7 +99,10 @@ public class Entitlement extends AbstractHibernateObject
     // Not positive this should be mapped here, not all entitlements will have
     // certificates.
     @OneToMany(mappedBy = "entitlement", cascade = CascadeType.ALL)
-    private Set<EntitlementCertificate> certificates = new HashSet<EntitlementCertificate>();
+    @BatchSize(size = 100)
+    private Set<EntitlementCertificate> certificates =
+        new HashSet<EntitlementCertificate>();
+
 
     private Integer quantity;
 
