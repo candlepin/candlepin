@@ -366,7 +366,7 @@ public class OwnerResource {
             }
             else {
                 // otherwise just remove them without touching the CRL
-                poolManager.removeAllEntitlements(c);
+                poolManager.revokeAllEntitlements(c);
             }
         }
 

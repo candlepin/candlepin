@@ -14,17 +14,15 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
-import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestUtil;
-
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
-
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -32,6 +30,15 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
+
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
+import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
+import org.hamcrest.Matchers;
+import org.hibernate.Hibernate;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * EntitlementCuratorTest
@@ -44,6 +51,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Inject private EntitlementCurator entitlementCurator;
     @Inject private EnvironmentCurator envCurator;
 
+
+    private Entitlement ent1modif;
+    private Entitlement ent2modif;
     private Entitlement secondEntitlement;
     private Entitlement firstEntitlement;
     private EntitlementCertificate firstCertificate;
@@ -57,6 +67,53 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     private Product providedProduct1;
     private Product providedProduct2;
     private Product testProduct;
+
+    /**
+     * Reproducer of EXTRA Lazy problem. This test is here mainly to demonstrate
+     * the problem. The problem is that Pool.entitlements is an extra lazy
+     * collection and at the same time it is cascading CREATE.
+     * The most important lines in this method are:
+     *     (1) ent.getPool().getEntitlements().remove(ent);
+     *     (2) Hibernate.initialize(ent.getPool().getEntitlements());
+     * The problem is that remove() in (1) will not initialize the collection because
+     * it is EXTRA LAZY. Then (2) will initialize without removed entitlement
+     * Then when owning consumer c is being deleted, hibernate will recreate
+     * the entitlements from the initialized collection Pool.entitlements and
+     * subsequent delete of Consumer will cause foreign key exception.
+     */
+    @Test
+    public void removeConsumerWithEntitlements() {
+        beginTransaction();
+        Consumer c = createConsumer(owner);
+        consumerCurator.create(c);
+        Product product = TestUtil.createProduct(owner);
+        productCurator.create(product);
+        Pool p = createPool(owner, product, 2L, dateSource.currentDate(), createDate(2020, 1, 1));
+        poolCurator.create(p);
+        EntitlementCertificate cert = createEntitlementCertificate("keyx", "certificatex");
+        Entitlement entitlement = createEntitlement(owner, c, p, cert);
+        entitlementCurator.create(entitlement);
+        commitTransaction();
+        entityManager().clear();
+
+        beginTransaction();
+        c = consumerCurator.find(c.getId());
+        for (Entitlement ent : c.getEntitlements()) {
+            ent.getPool().getEntitlements().remove(ent);
+            Hibernate.initialize(ent.getPool().getEntitlements());
+        }
+        try {
+            consumerCurator.delete(c);
+            consumerCurator.flush();
+        }
+        catch (Exception ex) {
+            assertEquals(ex.getCause().getCause().getClass(),
+                    SQLIntegrityConstraintViolationException.class);
+        }
+        finally {
+            rollbackTransaction();
+        }
+    }
 
     @Before
     public void setUp() {
@@ -155,6 +212,114 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertEquals(0, ents.size());
     }
 
+    public void prepareEntitlementsForModifying() {
+        Content contentPool1 = new Content(owner, "fakecontent", "fakecontent",
+                "facecontent", "yum", "RH", "http://", "http://",
+                "x86_64");
+        Content contentPool2 = new Content(owner, "fakecontent2", "fakecontent2",
+                "facecontent2", "yum", "RH", "http://",
+                "http://", "x86_64");
+
+        /**
+         * Each of these products are provided by respective Entitlements
+         */
+        Product providedProductEnt1 = TestUtil.createProduct("ppent1", "ppent1", owner);
+        Product providedProductEnt2 = TestUtil.createProduct("ppent2", "ppent2", owner);
+        Product providedProductEnt3 = TestUtil.createProduct("ppent3", "ppent3", owner);
+        Product providedProductEnt4 = TestUtil.createProduct("ppent4", "ppent4", owner);
+
+        productCurator.create(providedProductEnt1);
+        productCurator.create(providedProductEnt2);
+        productCurator.create(providedProductEnt3);
+        productCurator.create(providedProductEnt4);
+
+        ent1modif = createPool("p1", createDate(1999, 1, 1), createDate(1999, 2, 1), providedProductEnt1);
+        ent2modif = createPool("p2", createDate(2000, 4, 4), createDate(2001, 3, 3), providedProductEnt2);
+
+        /**
+         * Ent1 and Ent2 entitlements are being modified by contentPool1 and
+         * contentPool2
+         */
+        Set<String> modifiedIds1 = new HashSet<String>();
+        Set<String> modifiedIds2 = new HashSet<String>();
+        modifiedIds1.add(providedProductEnt1.getId());
+        modifiedIds2.add(ent2modif.getPool().getProductId());
+
+        /**
+         * ContentPool1 modifies Ent1 ContentPool2 modifies Ent2
+         */
+        contentPool1.setModifiedProductIds(modifiedIds1);
+        contentPool2.setModifiedProductIds(modifiedIds2);
+
+        contentCurator.create(contentPool1);
+        contentCurator.create(contentPool2);
+
+        /**
+         * Ent3 has content 1 and Ent4 has content 2
+         */
+        providedProductEnt3.addContent(contentPool1);
+        providedProductEnt4.addContent(contentPool2);
+
+        createPool("p3", createDate(1998, 1, 1), createDate(2003, 2, 1),
+                providedProductEnt3);
+        createPool("p4", createDate(2001, 2, 30), createDate(2002, 1, 10),
+                providedProductEnt4);
+
+        createPool("p5", createDate(2000, 5, 5), createDate(2000, 5, 10), null);
+
+        createPool("p6", createDate(1998, 1, 1), createDate(1998, 12, 31), null);
+        createPool("p7", createDate(2003, 2, 2), createDate(2003, 3, 3), null);
+    }
+
+    @Test
+    public void getOverlappingForModifying() {
+        prepareEntitlementsForModifying();
+
+        ProductEntitlements pents = entitlementCurator.getOverlappingForModifying(
+                Arrays.asList(ent1modif, ent2modif));
+
+        assertTrue(!pents.isEmpty());
+        assertEquals(9, pents.getAllProductIds().size());
+        for (String id : Arrays.asList("prod-p1", "prod-p2", "prod-p3", "prod-p4", "prod-p5", "ppent1",
+                "ppent2", "ppent3", "ppent4")) {
+            assertTrue("Overlapping entitlements [" + pents + "] " +
+                     "doesn't contain product id [" + id + "]", pents.getAllProductIds().contains(id));
+        }
+    }
+
+    private Entitlement createPool(String id, Date startDate, Date endDate, Product provided) {
+        EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
+        Product poolProd = TestUtil.createProduct("prod-" + id, "prod-" + id, owner);
+        productCurator.create(poolProd);
+        Pool p = TestUtil.createPool(owner, poolProd);
+
+        if (provided != null) {
+            p.addProvidedProduct(provided);
+        }
+
+        p.setStartDate(startDate);
+        p.setEndDate(endDate);
+        Entitlement e1 = createEntitlement(owner, consumer, p, cert);
+        poolCurator.create(p);
+        entitlementCurator.create(e1);
+
+        return e1;
+    }
+
+    @Test
+    public void batchListModifying() {
+        prepareEntitlementsForModifying();
+        Set<Entitlement> ents = entitlementCurator.batchListModifying(Arrays.asList(ent1modif, ent2modif));
+
+        assertEquals(2, ents.size());
+
+        for (Entitlement ent : ents) {
+            assertTrue(ent.getPool().getProductId().equals("prod-p3") ||
+                    ent.getPool().getProductId().equals("prod-p4"));
+        }
+    }
+
+
     private Entitlement setupListProvidingEntitlement() {
         Date startDate = createDate(2000, 1, 1);
         Date endDate = createDate(2005, 1, 1);
@@ -194,6 +359,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertTrue(results.contains(ent.getPool().getProductId()));
     }
 
+
     @Test
     public void listEntitledProductIdsEndDateOverlap() {
         Entitlement ent = setupListProvidingEntitlement();
@@ -215,7 +381,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void listEntitledProductIdsNoOverlap() {
-        Entitlement ent = setupListProvidingEntitlement();
+        setupListProvidingEntitlement();
         Set<String> results = entitlementCurator.listEntitledProductIds(consumer,
                 pastDate, pastDate);
         assertEquals(0, results.size());

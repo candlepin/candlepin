@@ -207,6 +207,9 @@ public class DatabaseTestFixture {
         entityManager().getTransaction().commit();
     }
 
+    protected void rollbackTransaction() {
+        entityManager().getTransaction().rollback();
+    }
     /**
      * Create an entitlement pool.
      *

@@ -64,9 +64,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -209,6 +209,21 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertEquals(null, poolManager.entitleByProducts(data));
 
         assertEquals(Long.valueOf(5), monitoringPool.getConsumed());
+    }
+
+    @Test
+    public void testDeletePool() throws Exception {
+        Pool pool = createPool(o, socketLimitedProduct, 100L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        poolCurator.create(pool);
+        List<Pool> pools = poolCurator.listByOwner(o);
+        assertEquals(5, poolCurator.listByOwner(o).size());
+        poolManager.deletePools(Arrays.asList(pool, pools.get(0)));
+        pools = poolCurator.listByOwner(o);
+        assertEquals(3, pools.size());
+        poolManager.deletePools(pools);
+        pools = poolCurator.listByOwner(o);
+        assertTrue(pools.isEmpty());
     }
 
     @Test

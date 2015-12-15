@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Order;
@@ -259,18 +260,15 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return false;
     }
 
+
     /*
      * Creates date filtering criteria to for checking if an entitlement has any overlap
      * with a "modifying" entitlement that has just been granted.
      */
-    private Criteria createModifiesDateFilteringCriteria(Consumer consumer, Date startDate,
-        Date endDate, Entitlement excludeEnt) {
+    private Criteria createModifiesDateFilteringCriteria(Set<Consumer> consumers, Date startDate,
+        Date endDate) {
         Criteria criteria = currentSession().createCriteria(Entitlement.class)
-            .add(Restrictions.eq("consumer", consumer));
-
-        if (excludeEnt != null) {
-            criteria = criteria.add(Restrictions.ne("id", excludeEnt.getId()));
-        }
+            .add(Restrictions.in("consumer", consumers));
 
         criteria = criteria.createCriteria("pool")
                 .add(Restrictions.or(
@@ -283,6 +281,82 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                         Restrictions.le("startDate", startDate),
                         Restrictions.ge("endDate", endDate))));
         return criteria;
+    }
+
+    /*
+     * Creates date filtering criteria to for checking if an entitlement has any
+     * overlap with a "modifying" entitlement that has just been granted.
+     */
+    private Criteria createModifiesDateFilteringCriteria(Consumer consumer, Date startDate,
+        Date endDate, Entitlement excludeEnt) {
+        Criteria criteria = currentSession().createCriteria(Entitlement.class)
+            .add(Restrictions.eq("consumer", consumer));
+
+        if (excludeEnt != null) {
+            criteria = criteria.add(Restrictions.ne("id", excludeEnt.getId()));
+        }
+
+        criteria = criteria.createCriteria("pool")
+                .add(Restrictions.or(
+                        // Dates overlap if the start or end date is in our
+                        // range
+                        Restrictions.or(Restrictions.between("startDate",
+                                startDate, endDate),
+                                Restrictions.between("endDate", startDate, endDate)),
+                Restrictions.and(
+                        // The dates overlap if our range is completely
+                        // encapsulated
+                        Restrictions.le("startDate", startDate),
+                        Restrictions.ge("endDate", endDate))));
+        return criteria;
+    }
+
+    /**
+     * A version of list Modifying that finds Entitlements that modify
+     * input entitlements.
+     * When dealing with large amount of entitlements for which it is necessary
+     * to determine their modifier products.
+     * @param entitlement
+     * @return Entitlements that are being modified by the input entitlements
+     */
+    public Set<Entitlement> batchListModifying(List<Entitlement> entitlements) {
+        Set<Entitlement> modifying = new HashSet<Entitlement>();
+        // Get the map of product Ids to the set of
+        // overlapping entitlements that provide them
+        ProductEntitlements pidEnts = getOverlappingForModifying(entitlements);
+        if (pidEnts.isEmpty()) {
+            // Empty collections break hibernate queries
+            return modifying;
+        }
+
+        List<Product> overlappingProducts =
+                productCurator.listAllByIds(pidEnts.getAllProductIds());
+
+        for (Product overlappingProduct : overlappingProducts) {
+            boolean modifies = false;
+            for (Entitlement inputEntitlement : entitlements) {
+                if (overlappingProduct.modifies(inputEntitlement.getPool().getProductId())) {
+                    modifies = true;
+                }
+                Iterator<Product> providedProductOfInput = inputEntitlement
+                        .getPool().getProvidedProducts()
+                        .iterator();
+                // No need to continue checking once we have found a modified
+                // product
+                while (!modifies && providedProductOfInput.hasNext()) {
+                    if (overlappingProduct.modifies(providedProductOfInput.next().getId())) {
+                        modifies = true;
+                    }
+                }
+
+                if (modifies) {
+                    // Return all entitlements for the modified product
+                    modifying.addAll(pidEnts.getEntitlementsByProductId(overlappingProduct.getId()));
+                }
+            }
+        }
+
+        return modifying;
     }
 
     public Set<Entitlement> listModifying(Entitlement entitlement) {
@@ -335,6 +409,48 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         for (Product pp : e.getPool().getProvidedProducts()) {
             addProductIdToMap(map, pp.getId(), e);
         }
+    }
+
+    public Set<Consumer> getDistinctConsumers(
+            List<Entitlement> entsToRevoke) {
+        Set<Consumer> result = new HashSet<Consumer>();
+        for (Entitlement ent : entsToRevoke) {
+            result.add(ent.getConsumer());
+        }
+        return result;
+    }
+    @SuppressWarnings("unchecked")
+    public ProductEntitlements getOverlappingForModifying(List<Entitlement> e) {
+        Date earliestStartDate = findEarliestStartDate(e);
+        Date latestEndDate = findLatestEndDate(e);
+        Set<Consumer> consumers = getDistinctConsumers(e);
+
+        List<Entitlement> overlapEnts = createModifiesDateFilteringCriteria(
+                consumers, earliestStartDate, latestEndDate)
+                .list();
+
+        return new ProductEntitlements(overlapEnts);
+    }
+
+    private Date findLatestEndDate(List<Entitlement> entitlements) {
+        Date max = null;
+        for (Entitlement e : entitlements) {
+            if (max == null || max.before(e.getEndDate())) {
+                max = e.getEndDate();
+            }
+        }
+
+        return max;
+    }
+
+    private Date findEarliestStartDate(List<Entitlement> entitlements) {
+        Date min = null;
+        for (Entitlement e : entitlements) {
+            if (min == null || min.after(e.getStartDate())) {
+                min = e.getStartDate();
+            }
+        }
+        return min;
     }
 
     @SuppressWarnings("unchecked")
@@ -443,6 +559,33 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         }
 
         return criteria.list();
+    }
+
+    /**
+     * Batch deletes a list of entitlements.
+     * @param pools
+     */
+    public void batchDelete(List<Entitlement> entitlements) {
+        for (Entitlement ent : entitlements) {
+            log.debug("Deleting entitlement: " + ent);
+            log.debug("certs.size = " + ent.getCertificates().size());
+
+            for (EntitlementCertificate cert : ent.getCertificates()) {
+                getEntityManager().remove(cert);
+            }
+            ent.getCertificates().clear();
+            getEntityManager().remove(ent);
+        }
+
+        // Maintain runtime consistency.
+        for (Entitlement ent : entitlements) {
+            ent.getCertificates().clear();
+            // Pool.entitlements is EXTRA Lazy. Before removing anything
+            // from that collection, its necessary to initialize it
+            Hibernate.initialize(ent.getPool().getEntitlements());
+            ent.getPool().getEntitlements().remove(ent);
+            ent.getConsumer().getEntitlements().remove(ent);
+        }
     }
 
     @SuppressWarnings("unchecked")

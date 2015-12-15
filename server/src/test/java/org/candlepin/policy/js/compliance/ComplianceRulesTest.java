@@ -2015,7 +2015,7 @@ public class ComplianceRulesTest {
         ComplianceStatus originalStatus = compliance.getStatus(c);
         assertEquals("valid", originalStatus.getStatus());
 
-        verify(consumerCurator).update(eq(c));
+        verify(consumerCurator).updateNoFlush(eq(c));
         String pid = "testinstalledprod";
         c.addInstalledProduct(new ConsumerInstalledProduct(pid, pid));
         ComplianceStatus updated = compliance.getStatus(c);
@@ -2033,7 +2033,7 @@ public class ComplianceRulesTest {
         assertNotNull(initialHash);
         assertFalse(initialHash.isEmpty());
 
-        verify(consumerCurator).update(eq(c));
+        verify(consumerCurator).updateNoFlush(eq(c));
         String pid = "testinstalledprod";
         c.addInstalledProduct(new ConsumerInstalledProduct(pid, pid));
         ComplianceStatus updated = compliance.getStatus(c);
