@@ -21,12 +21,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductEntitlements;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.SourceStack;
 import org.candlepin.paging.Page;
@@ -36,7 +38,9 @@ import org.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -45,6 +49,8 @@ import java.util.Set;
  * EntitlementCuratorTest
  */
 public class EntitlementCuratorTest extends DatabaseTestFixture {
+    private Entitlement ent1modif;
+    private Entitlement ent2modif;
     private Entitlement secondEntitlement;
     private Entitlement firstEntitlement;
     private EntitlementCertificate firstCertificate;
@@ -162,6 +168,110 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Set<Entitlement> results = entitlementCurator.listProviding(consumer,
                 providedProduct1.getId(), ent.getStartDate(), ent.getEndDate());
         assertEquals(1, results.size());
+    }
+
+
+    public void prepareEntitlementsForModifying() {
+        Content contentPool1 = new Content("fakecontent", "fakecontent",
+                "facecontent", "yum", "RH", "http://", "http://",
+                "x86_64");
+        Content contentPool2 = new Content("fakecontent2", "fakecontent2",
+                "facecontent2", "yum", "RH", "http://",
+                "http://", "x86_64");
+
+        /**
+         * Each of these products are provided by respective Entitlements
+         */
+        Product providedProductEnt1 = TestUtil.createProduct("ppent1", "ppent1");
+        Product providedProductEnt2 = TestUtil.createProduct("ppent2", "ppent2");
+        Product providedProductEnt3 = TestUtil.createProduct("ppent3", "ppent3");
+        Product providedProductEnt4 = TestUtil.createProduct("ppent4", "ppent4");
+
+        ent1modif = createPool("p1", createDate(1999, 1, 1), createDate(1999, 2, 1), providedProductEnt1);
+        ent2modif = createPool("p2", createDate(2000, 4, 4), createDate(2001, 3, 3), providedProductEnt2);
+
+        productCurator.create(providedProductEnt1);
+        productCurator.create(providedProductEnt2);
+        productCurator.create(providedProductEnt3);
+        productCurator.create(providedProductEnt4);
+
+        /**
+         * Ent1 and Ent2 entitlements are being modified by contentPool1 and
+         * contentPool2
+         */
+        Set<String> modifiedIds1 = new HashSet<String>();
+        Set<String> modifiedIds2 = new HashSet<String>();
+        modifiedIds1.add(providedProductEnt1.getId());
+        modifiedIds2.add(ent2modif.getProductId());
+
+        /**
+         * ContentPool1 modifies Ent1 ContentPool2 modifies Ent2
+         */
+        contentPool1.setModifiedProductIds(modifiedIds1);
+        contentPool2.setModifiedProductIds(modifiedIds2);
+
+        contentCurator.create(contentPool1);
+        contentCurator.create(contentPool2);
+
+        /**
+         * Ent3 has content 1 and Ent4 has content 2
+         */
+        providedProductEnt3.addContent(contentPool1);
+        providedProductEnt4.addContent(contentPool2);
+
+        createPool("p3", createDate(1998, 1, 1), createDate(2003, 2, 1),
+                providedProductEnt3);
+        createPool("p4", createDate(2001, 2, 30), createDate(2002, 1, 10),
+                providedProductEnt4);
+
+        createPool("p5", createDate(2000, 5, 5), createDate(2000, 5, 10), null);
+
+        createPool("p6", createDate(1998, 1, 1), createDate(1998, 12, 31), null);
+        createPool("p7", createDate(2003, 2, 2), createDate(2003, 3, 3), null);
+    }
+
+    @Test
+    public void getOverlappingForModifying() {
+        prepareEntitlementsForModifying();
+
+        ProductEntitlements pents = entitlementCurator.getOverlappingForModifying(
+                Arrays.asList(ent1modif, ent2modif));
+
+        assertTrue(!pents.isEmpty());
+        assertEquals(9, pents.getAllProductIds().size());
+        for (String id : Arrays.asList("p1", "p2", "p3", "p4", "p5", "ppent1",
+                "ppent2", "ppent3", "ppent4")) {
+            assertTrue(pents.getAllProductIds().contains(id));
+        }
+    }
+
+    private Entitlement createPool(String id, Date startDate, Date endDate, Product provided) {
+        EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
+        Pool p = TestUtil.createPool(owner, TestUtil.createProduct(id, id));
+
+        if (provided != null) {
+            p.addProvidedProduct(new ProvidedProduct(provided.getId(), provided.getName()));
+        }
+
+        p.setStartDate(startDate);
+        p.setEndDate(endDate);
+        Entitlement e1 = createEntitlement(owner, consumer, p, cert);
+        poolCurator.create(p);
+        entitlementCurator.create(e1);
+
+        return e1;
+    }
+
+    @Test
+    public void batchListModifying() {
+        prepareEntitlementsForModifying();
+        Set<Entitlement> ents = entitlementCurator.batchListModifying(Arrays.asList(ent1modif, ent2modif));
+
+        assertEquals(2, ents.size());
+
+        for (Entitlement ent : ents) {
+            assertTrue(ent.getProductId().equals("p3") || ent.getProductId().equals("p4"));
+        }
     }
 
 

@@ -120,7 +120,7 @@ public interface PoolManager {
 
     int revokeAllEntitlements(Consumer consumer);
 
-    int removeAllEntitlements(Consumer consumer);
+    void revokeEntitlements(List<Entitlement> ents);
 
     void revokeEntitlement(Entitlement entitlement);
 
@@ -230,4 +230,6 @@ public interface PoolManager {
     List<Entitlement> entitleByProductsForHost(Consumer consumer,
         Consumer host, Date entitleDate)
         throws EntitlementRefusedException;
+
+    void deletePools(List<Pool> pools);
 }
