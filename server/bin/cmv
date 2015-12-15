@@ -355,6 +355,13 @@ class VerifyCommand < CMVCommand
                     exclude or (messages << "ERROR: New value found in collection in deployment data at: #{path}\nValue: #{extra}")
                 end
             end
+        elsif expected.to_s.include?("+0000") || actual.to_s.include?("+0000") then
+            # date time parse and then a to string strips out milliseconds
+            expected_date = DateTime.parse(expected) rescue nil
+            actual_date = DateTime.parse(actual) rescue nil
+            if expected_date == nil || actual_date == nil || expected_date.to_s != actual_date.to_s then
+                exclude or (messages << "ERROR: Value mismatch at: #{path}\nExpected: #{expected}\nActual:   #{actual}")
+            end
         elsif actual != expected then
             exclude or (messages << "ERROR: Value mismatch at: #{path}\nExpected: #{expected}\nActual:   #{actual}")
         end
