@@ -30,10 +30,6 @@ import java.util.Map;
  */
 public class PerOrgProductsUpgradeTaskB extends PerOrgProductsUpgradeTaskA {
 
-    public PerOrgProductsUpgradeTaskB(Database database) {
-        super(database);
-    }
-
     public PerOrgProductsUpgradeTaskB(Database database, CustomTaskLogger logger) {
         super(database, logger);
     }
@@ -72,10 +68,6 @@ public class PerOrgProductsUpgradeTaskB extends PerOrgProductsUpgradeTaskA {
                     account, orgid, index, count
                 ));
 
-                this.migrateProductData(orgid);
-                this.migrateContentData(orgid);
-                this.migrateActivationKeyData(orgid);
-                this.migratePoolData(orgid);
                 this.migrateSubscriptionData(orgid);
             }
 
@@ -89,64 +81,6 @@ public class PerOrgProductsUpgradeTaskB extends PerOrgProductsUpgradeTaskA {
             // Restore original autocommit state
             this.connection.setAutoCommit(autocommit);
         }
-    }
-
-    protected ResultSet getProductIds(String orgid) throws DatabaseException, SQLException {
-        return this.executeQuery(
-            "SELECT " +
-            "  cp_product.id, cpo_products.uuid, cp_product.created, cp_product.updated, " +
-            "  cp_product.multiplier, cp_product.name " +
-            "FROM " +
-            "  (SELECT p.product_id_old AS product_id " +
-            "    FROM cp_pool p " +
-            "    WHERE p.owner_id = ? " +
-            "      AND NOT NULLIF(p.product_id_old, '') IS NULL " +
-            "  UNION " +
-            "  SELECT p.derived_product_id_old " +
-            "    FROM cp_pool p " +
-            "    WHERE p.owner_id = ? " +
-            "      AND NOT NULLIF(p.derived_product_id_old, '') IS NULL " +
-            "  UNION " +
-            "  SELECT pp.product_id " +
-            "    FROM cp_pool p " +
-            "    JOIN cp_pool_products pp " +
-            "      ON p.id = pp.pool_id " +
-            "    WHERE p.owner_id = ? " +
-            "      AND NOT NULLIF(pp.product_id, '') IS NULL " +
-            "  UNION " +
-            "  SELECT s.product_id " +
-            "    FROM cp_subscription s " +
-            "    WHERE s.owner_id = ? " +
-            "      AND NOT NULLIF(s.product_id, '') IS NULL " +
-            "  UNION " +
-            "  SELECT s.derivedproduct_id " +
-            "    FROM cp_subscription s " +
-            "    WHERE s.owner_id = ? " +
-            "      AND NOT NULLIF(s.derivedproduct_id, '') IS NULL " +
-            "  UNION " +
-            "  SELECT sp.product_id " +
-            "    FROM cp_subscription_products sp " +
-            "    JOIN cp_subscription s " +
-            "      ON s.id = sp.subscription_id " +
-            "    WHERE s.owner_id = ? " +
-            "      AND NOT NULLIF(sp.product_id, '') IS NULL " +
-            "  UNION " +
-            "  SELECT sdp.product_id " +
-            "    FROM cp_sub_derivedprods sdp " +
-            "    JOIN cp_subscription s " +
-            "      ON s.id = sdp.subscription_id " +
-            "    WHERE s.owner_id = ? " +
-            "      AND NOT NULLIF(sdp.product_id, '') IS NULL) AS plist " +
-            "  INNER JOIN cp_product " +
-            "    ON cp_product.id = plist.product_id " +
-            "  LEFT JOIN cpo_products " +
-            "    ON (cpo_products.product_id = cp_product.id AND cpo_products.owner_id = ?)" +
-            "WHERE " +
-            "  cpo_products.uuid IS NULL " +
-            "  OR cp_product.created > cpo_products.created " +
-            "  OR cp_product.updated > cpo_products.updated ",
-            orgid, orgid, orgid, orgid, orgid, orgid, orgid, orgid
-        );
     }
 
     /**

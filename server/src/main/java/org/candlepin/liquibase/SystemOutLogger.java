@@ -21,19 +21,24 @@ package org.candlepin.liquibase;
  */
 public class SystemOutLogger implements CustomTaskLogger {
 
+
     @Override
-    public void info(String message) {
-        System.out.println(message);
+    public void info(String message, Object... params) {
+        System.out.printf(message, params);
+        System.out.println();
     }
 
     @Override
-    public void warn(String message) {
-        System.out.println("WARN: " + message);
+    public void warn(String message, Object... params) {
+        System.out.print("WARN: ");
+        System.out.printf(message, params);
+        System.out.println();
     }
 
     @Override
-    public void error(String message) {
-        System.err.println(message);
+    public void error(String message, Object... params) {
+        System.out.printf(message, params);
+        System.out.println();
     }
 
 }

@@ -31,10 +31,6 @@ public class PoolTypeUpgradeTask extends LiquibaseCustomTask {
 
     public static final int UPDATE_BATCH_SIZE = 1024;
 
-    public PoolTypeUpgradeTask(Database database) {
-        super(database);
-    }
-
     public PoolTypeUpgradeTask(Database database, CustomTaskLogger logger) {
         super(database, logger);
     }
