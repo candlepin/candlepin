@@ -26,6 +26,7 @@ import com.google.inject.Injector;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
+import org.hibernate.FetchMode;
 import org.hibernate.Filter;
 import org.hibernate.LockOptions;
 import org.hibernate.Query;
@@ -43,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -117,6 +119,45 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             results = new LinkedList<Pool>();
         }
         return results;
+    }
+
+    /**
+     * TODO this works just for one level of sourceEntitlements
+     *
+     * Return all pools referencing the given entitlements as their source entitlements.
+     *
+     * @param ents list of potential source entitlements
+     * @return Pools created as a result of this entitlement.
+     */
+    public List<Pool> listBySourceEntitlements(List<Entitlement> ents) {
+        if (ents.size() == 0)
+            return new ArrayList<Pool>();
+
+        List<Pool> results = createSecureCriteria()
+            .add(Restrictions.in("sourceEntitlement", ents))
+            .setFetchMode("entitlements", FetchMode.JOIN)
+            .list();
+
+        if (results == null) {
+            results = new LinkedList<Pool>();
+        }
+
+        if (results.size() > 0) {
+            List<Pool> pools = listBySourceEntitlements(convertPoolsToEntitlements(results));
+            results.addAll(pools);
+        }
+
+        return results;
+    }
+
+    private List<Entitlement> convertPoolsToEntitlements(List<Pool> pools) {
+        List<Entitlement> result = new ArrayList<Entitlement>();
+
+        for (Pool p : pools) {
+            result.addAll(p.getEntitlements());
+        }
+
+        return result;
     }
 
     /**
@@ -539,6 +580,22 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
         else {
             log.info("Pool " + entity.getId() + " not found. Skipping deletion. noop");
+        }
+    }
+
+    /**
+     * Batch deletes a list of pools. This method is not transactinal
+     * because the caller should take responsibility of transaction
+     * demarcation.
+     * @param pools
+     */
+    public void batchDelete(List<Pool> pools) {
+        for (Pool pool : pools) {
+            currentSession().delete(pool);
+            //Maintain runtime consistency. The entitlements for the pool
+            //have been deleted because delete is cascaded on
+            //Pool.entitlements relation
+            pool.getEntitlements().clear();
         }
     }
 
