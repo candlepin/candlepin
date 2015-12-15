@@ -865,7 +865,8 @@ public class CandlepinPoolManager implements PoolManager {
                 List<Entitlement> entitlements = new LinkedList<Entitlement>();
 
                 List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
-                if (consumer != null && consumer.isDev()) {
+                // fromPools will be empty if the dev pool was already created.
+                if (consumer != null && consumer.isDev() && !fromPools.isEmpty()) {
                     String poolId = fromPools.iterator().next();
                     PoolQuantity pq = new PoolQuantity(poolCurator.find(poolId), 1);
                     bestPools.add(pq);
