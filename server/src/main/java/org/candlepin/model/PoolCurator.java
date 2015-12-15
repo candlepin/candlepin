@@ -26,7 +26,9 @@ import com.google.inject.Injector;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
+import org.hibernate.FetchMode;
 import org.hibernate.Filter;
+import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
@@ -117,6 +119,47 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             results = new LinkedList<Pool>();
         }
         return results;
+    }
+
+    /**
+     * Return all pools referencing the given entitlements as their source entitlements.
+     * Works recursively. The method always takes the result and return all source entitlements
+     * of the pools.
+     * This method finds all the pools that have been created as direct consequence of creating
+     * some of ents. So for example bonus pools created as consequence of creating ents.
+     * @param ents Entitlements for which we search the pools
+     * @return Pools created as a result of creation of one of the ents.
+     */
+    public List<Pool> listBySourceEntitlements(List<Entitlement> ents) {
+        if (ents.size() == 0) {
+            return new ArrayList<Pool>();
+        }
+
+        List<Pool> results = createSecureCriteria()
+            .add(Restrictions.in("sourceEntitlement", ents))
+            .setFetchMode("entitlements", FetchMode.JOIN)
+            .list();
+
+        if (results == null) {
+            results = new LinkedList<Pool>();
+        }
+
+        if (results.size() > 0) {
+            List<Pool> pools = listBySourceEntitlements(convertPoolsToEntitlements(results));
+            results.addAll(pools);
+        }
+
+        return results;
+    }
+
+    private List<Entitlement> convertPoolsToEntitlements(List<Pool> pools) {
+        List<Entitlement> result = new ArrayList<Entitlement>();
+
+        for (Pool p : pools) {
+            result.addAll(p.getEntitlements());
+        }
+
+        return result;
     }
 
     /**
@@ -567,6 +610,23 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
         else {
             log.info("Pool " + entity.getId() + " not found. Skipping deletion. noop");
+        }
+    }
+
+    /**
+     * Batch deletes a list of pools.
+     * @param pools
+     */
+    public void batchDelete(List<Pool> pools) {
+        for (Pool pool : pools) {
+            currentSession().delete(pool);
+        }
+        for (Pool pool : pools) {
+            // Maintain runtime consistency. The entitlements for the pool
+            // have been deleted on the database because delete is cascaded on
+            // Pool.entitlements relation
+            Hibernate.initialize(pool.getEntitlements());
+            pool.getEntitlements().clear();
         }
     }
 
