@@ -74,6 +74,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -150,6 +151,9 @@ public class PoolManagerTest {
         when(eventFactory.getEventBuilder(any(Target.class), any(Type.class))).thenReturn(eventBuilder);
         when(eventBuilder.setNewEntity(any(AbstractHibernateObject.class))).thenReturn(eventBuilder);
         when(eventBuilder.setOldEntity(any(AbstractHibernateObject.class))).thenReturn(eventBuilder);
+        doNothing().when(entitlementCurator).flush();
+        doNothing().when(consumerCuratorMock).flush();
+
         this.productCache = new ProductCache(mockConfig, mockProductAdapter);
 
         this.principal = TestUtil.createOwnerPrincipal();
@@ -166,6 +170,15 @@ public class PoolManagerTest {
         dummyComplianceStatus = new ComplianceStatus(new Date());
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class))).thenReturn(
             dummyComplianceStatus);
+    }
+
+    @Test
+    public void deletePoolsTest() {
+        List<Pool> pools = new ArrayList<Pool>();
+        pools.add(TestUtil.createPool(TestUtil.createProduct()));
+        doNothing().when(mockPoolCurator).batchDelete(pools);
+        manager.deletePools(pools);
+        verify(mockPoolCurator).batchDelete(eq(pools));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -192,8 +205,8 @@ public class PoolManagerTest {
         mockSubsList(subscriptions);
 
         mockPoolsList(pools);
-        this.manager.getRefresher().add(getOwner()).run();
         List<Pool> expectedFloating = new LinkedList();
+        this.manager.getRefresher().add(getOwner()).run();
 
         // Make sure that only the floating pool was regenerated
         expectedFloating.add(floating);
@@ -243,7 +256,9 @@ public class PoolManagerTest {
 
         mockPoolsList(pools);
         this.manager.getRefresher().add(getOwner()).run();
-        verify(this.manager).deletePool(same(p));
+        List<Pool> poolsToDelete = Arrays.asList(p);
+
+        verify(this.manager).deletePools(eq(poolsToDelete));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -264,7 +279,8 @@ public class PoolManagerTest {
 
         mockPoolsList(pools);
         this.manager.getRefresher().add(getOwner()).run();
-        verify(this.manager).deletePool(same(p));
+        List<Pool> delPools = Arrays.asList(p);
+        verify(this.manager).deletePools(eq(delPools));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -466,6 +482,7 @@ public class PoolManagerTest {
 
         assertEquals(2, total);
         verify(entitlementCurator, never()).listModifying(any(Entitlement.class));
+        //TODO assert batch revokes have been called
     }
 
     @Test
@@ -482,8 +499,40 @@ public class PoolManagerTest {
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool);
 
         manager.revokeEntitlement(e);
+        List<Entitlement> entsToDelete = Arrays.asList(e);
+        verify(entitlementCurator).batchDelete(eq(entsToDelete));
+    }
 
-        verify(entitlementCurator).delete(e);
+    @Test
+    public void testBatchRevokeCleansUpCorrectPoolsWithSourceEnt() throws Exception {
+        Consumer c = TestUtil.createConsumer(o);
+        Pool pool2 = TestUtil.createPool(o, product);
+
+        Entitlement e = new Entitlement(pool, c, 1);
+        Entitlement e2 = new Entitlement(pool2, c, 1);
+        Entitlement e3 = new Entitlement(pool2, c, 1);
+
+        List<Entitlement> entsToDelete = Util.newList();
+        entsToDelete.add(e);
+        entsToDelete.add(e2);
+
+        List<Pool> poolsWithSource = createPoolsWithSourceEntitlement(e, product);
+        poolsWithSource.get(0).getEntitlements().add(e3);
+        when(mockPoolCurator.listBySourceEntitlements(entsToDelete)).thenReturn(poolsWithSource);
+
+        PreUnbindHelper preHelper = mock(PreUnbindHelper.class);
+        ValidationResult result = new ValidationResult();
+        when(preHelper.getResult()).thenReturn(result);
+
+        when(mockConfig.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
+
+        when(mockPoolCurator.lockAndLoad(eq(pool))).thenReturn(pool);
+        when(mockPoolCurator.lockAndLoad(eq(pool2))).thenReturn(pool2);
+
+        manager.revokeEntitlements(entsToDelete);
+        entsToDelete.add(e3);
+        verify(entitlementCurator).batchDelete(eq(entsToDelete));
+        verify(mockPoolCurator).batchDelete(eq(poolsWithSource));
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -564,18 +613,19 @@ public class PoolManagerTest {
         ent.setPool(p);
         ent.setQuantity(1);
         poolEntitlements.add(ent);
-
-        when(mockPoolCurator.entitlementsIn(eq(p))).thenReturn(poolEntitlements);
+        p.getEntitlements().addAll(poolEntitlements);
 
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
 
         this.manager.getRefresher().add(sub.getOwner()).run();
 
-        verify(mockSubAdapter).deleteSubscription(eq(sub));
-        verify(mockPoolCurator).delete(eq(p));
+        List<Entitlement> entsToDelete = Arrays.asList(ent);
+        List<Pool> poolsToDelete = Arrays.asList(p);
 
-        verify(entitlementCurator).delete(eq(ent));
+        verify(mockSubAdapter).deleteSubscription(eq(sub));
+        verify(mockPoolCurator).batchDelete(eq(poolsToDelete));
+        verify(entitlementCurator).batchDelete(eq(entsToDelete));
     }
 
     private List<Pool> createPoolsWithSourceEntitlement(Entitlement e, Product p) {
@@ -767,8 +817,10 @@ public class PoolManagerTest {
 
         // The pool left over from the pre-migrated subscription should be deleted
         // and granted entitlements should be revoked
+        List<Entitlement> entsToDelete = Arrays.asList(ent);
+
         verify(mockPoolCurator).delete(eq(p));
-        verify(entitlementCurator).delete(eq(ent));
+        verify(entitlementCurator).batchDelete(eq(entsToDelete));
         // Make sure pools that don't match the owner were removed from the list
         // They shouldn't cause us to attempt to update existing pools when we
         // haven't created them in the first place

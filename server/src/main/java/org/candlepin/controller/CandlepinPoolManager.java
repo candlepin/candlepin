@@ -177,13 +177,16 @@ public class CandlepinPoolManager implements PoolManager {
         // remove everything that isn't actually active
         subIds.removeAll(deletedSubs);
         // delete pools whose subscription disappeared:
-
+        List<Pool> poolsToDelete = new ArrayList<Pool>();
         for (Pool p : poolCurator.getPoolsFromBadSubs(owner, subIds)) {
             if ((p.getType() == PoolType.NORMAL || p.getType() == PoolType.BONUS) &&
                 (ueberPoolId == null || !ueberPoolId.equals(p.getId()))) {
-                deletePool(p);
+                poolsToDelete.add(p);
             }
         }
+
+        deletePools(poolsToDelete);
+
 
         // TODO: break this call into smaller pieces.  There may be lots of floating pools
         List<Pool> floatingPools = poolCurator.getOwnersFloatingPools(owner);
@@ -1201,35 +1204,153 @@ public class CandlepinPoolManager implements PoolManager {
         sink.queueEvent(event);
     }
 
+
+    /**
+     * Revokes the given set of entitlements.
+     *
+     * @param entsToRevoke entitlements to revoke
+     */
+    @Override
+    @Transactional
+    public void revokeEntitlements(List<Entitlement> entsToRevoke) {
+        if (entsToRevoke.isEmpty()) {
+            return;
+        }
+
+        log.info("Batch revoking entitlements: " + entsToRevoke.size());
+
+        entsToRevoke =  new ArrayList<Entitlement>(entsToRevoke);
+
+        List<Pool> poolsToDelete = poolCurator.listBySourceEntitlements(entsToRevoke);
+
+        for (Pool pool : poolsToDelete) {
+            entsToRevoke.addAll(pool.getEntitlements());
+        }
+
+        for (Entitlement ent : entsToRevoke) {
+            //We need to trigger lazy load of provided products
+            //to have access to those products later in this method.
+            ent.getPool().getProvidedProducts().size();
+            Pool pool = ent.getPool();
+            pool.setConsumed(pool.getConsumed() - ent.getQuantity());
+
+            Consumer consumer = ent.getConsumer();
+            if (consumer.getType().isManifest()) {
+                pool.setExported(pool.getExported() - ent.getQuantity());
+            }
+        }
+
+        log.info("Starting batch delete of pools and entitlements");
+        poolCurator.batchDelete(poolsToDelete);
+        entitlementCurator.batchDelete(entsToRevoke);
+        entitlementCurator.flush();
+        log.info("All deletes flushed successfully");
+
+        List<Entitlement> stackingEntitlements = filterStackingEntitlements(entsToRevoke);
+
+        for (Entitlement ent : stackingEntitlements) {
+            Pool pool = ent.getPool();
+            Consumer consumer = ent.getConsumer();
+            String stackId = pool.getProductAttributeValue("stacking_id");
+            Pool stackedSubPool = poolCurator.getSubPoolForStackId(consumer, stackId);
+            if (stackedSubPool != null) {
+                List<Entitlement> stackedEnts =
+                    this.entitlementCurator.findByStackId(consumer, stackId);
+
+                // If there are no stacked entitlements, we need to delete the
+                // stacked sub pool, else we update it based on the entitlements
+                // currently in the stack.
+                if (stackedEnts.isEmpty()) {
+                    log.info("Revoke Entitlements: deleting single stacked sub-pool");
+                    deletePool(stackedSubPool);
+                }
+                else {
+                    updatePoolFromStackedEntitlements(stackedSubPool, stackedEnts);
+                    poolCurator.merge(stackedSubPool);
+                }
+            }
+        }
+
+        // post unbind actions
+        for (Entitlement ent : entsToRevoke) {
+            PoolHelper poolHelper = new PoolHelper(this, productCache, ent);
+            enforcer.postUnbind(ent.getConsumer(), poolHelper, ent);
+        }
+
+        List<Entitlement> batch = new ArrayList<Entitlement>();
+        for (int i = 0; i < entsToRevoke.size(); i++) {
+            Entitlement entitlement = entsToRevoke.get(i);
+            batch.add(entitlement);
+
+            // We work in batches of maximum size 1000.
+            if (i % 1000 == 0) {
+                Set<Entitlement> modifiedEnts = entitlementCurator.batchListModifying(batch);
+                this.regenerateCertificatesOf(modifiedEnts, true);
+                batch.clear();
+            }
+        }
+
+        if (!batch.isEmpty()) {
+            this.regenerateCertificatesOf(entitlementCurator.batchListModifying(batch), true);
+        }
+
+        log.info("Modifier entitlements done.");
+
+        Set<Consumer> distinctConsumers = entitlementCurator.getDistinctConsumers(entsToRevoke);
+
+        log.info("Recomputing status for " + distinctConsumers.size() + " consumers.");
+        int i = 1;
+        for (Consumer consumer : distinctConsumers) {
+            if (i++ % 1000 == 0) {
+                consumerCurator.flush();
+            }
+            complianceRules.getStatus(consumer);
+        }
+        consumerCurator.flush();
+
+        log.info("All statuses recomputed.");
+
+        // for each deleted entitlement, create an event
+        for (Entitlement entitlement : entsToRevoke) {
+            Event event = eventFactory.entitlementDeleted(entitlement);
+            sink.queueEvent(event);
+        }
+    }
+
+    /**
+     * Filter the given entitlements so that this method returns only
+     * the entitlements that are part of some stack.
+     * @param entitlements Entitlements to be filtered
+     * @return Entitlements that are stacked
+     */
+    private List<Entitlement> filterStackingEntitlements(List<Entitlement> entitlements) {
+        List<Entitlement> stackingEntitlements = new ArrayList<Entitlement>();
+
+        for (Entitlement ent : entitlements) {
+            Pool pool = ent.getPool();
+
+            if (!"true".equals(pool.getAttributeValue("pool_derived")) &&
+                    pool.hasProductAttribute("stacking_id")) {
+                stackingEntitlements.add(ent);
+            }
+        }
+        return stackingEntitlements;
+    }
+
     @Override
     @Transactional
     public void revokeEntitlement(Entitlement entitlement) {
-        removeEntitlement(entitlement, true);
+        revokeEntitlements(Collections.singletonList(entitlement));
     }
 
     @Override
     @Transactional
     public int revokeAllEntitlements(Consumer consumer) {
-        int count = 0;
-        for (Entitlement e : entitlementCurator.listByConsumer(consumer)) {
-            removeEntitlement(e, false);
-            count++;
-        }
-        // Rerun compliance after removing all entitlements
-        complianceRules.getStatus(consumer);
-        return count;
+        List<Entitlement> entsToDelete = entitlementCurator.listByConsumer(consumer);
+        revokeEntitlements(entsToDelete);
+        return entsToDelete.size();
     }
 
-    @Override
-    @Transactional
-    public int removeAllEntitlements(Consumer consumer) {
-        int count = 0;
-        for (Entitlement e : entitlementCurator.listByConsumer(consumer)) {
-            removeEntitlement(e, false);
-            count++;
-        }
-        return count;
-    }
 
     /**
      * Cleanup entitlements and safely delete the given pool.
@@ -1248,6 +1369,30 @@ public class CandlepinPoolManager implements PoolManager {
 
         poolCurator.delete(pool);
         sink.queueEvent(event);
+    }
+
+    @Override
+    @Transactional
+    public void deletePools(List<Pool> pools) {
+        if (pools.isEmpty()) {
+            return;
+        }
+
+        List<Entitlement> entitlementsToRevoke = new ArrayList<Entitlement>();
+
+        for (Pool p : pools) {
+            entitlementsToRevoke.addAll(p.getEntitlements());
+        }
+
+        if (!pools.isEmpty()) {
+            revokeEntitlements(entitlementsToRevoke);
+            poolCurator.batchDelete(pools);
+        }
+
+        for (Pool pool : pools) {
+            Event event = eventFactory.poolDeleted(pool);
+            sink.queueEvent(event);
+        }
     }
 
     /**

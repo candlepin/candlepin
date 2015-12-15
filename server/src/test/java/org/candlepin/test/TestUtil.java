@@ -183,7 +183,8 @@ public class TestUtil {
 
         Pool pool = new Pool(owner, product.getId(), product.getName(),
             providedProducts, Long.valueOf(quantity), TestUtil.createDate(2009,
-                11, 30), TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR), 11, 30), "SUB234598S" + random,
+                11, 30), TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR), 11, 30),
+            "SUB234598S" + random,
             "ACC123" + random, "ORD222" + random);
         pool.setSourceSubscription(new SourceSubscription(
             "SUB234598S" + random, "master" + random));
