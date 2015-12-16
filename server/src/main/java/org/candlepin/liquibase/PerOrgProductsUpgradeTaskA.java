@@ -17,6 +17,7 @@ package org.candlepin.liquibase;
 import liquibase.database.Database;
 import liquibase.exception.DatabaseException;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -32,16 +33,89 @@ import java.util.Map;
  */
 public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
 
-
     private Map<String, Map<String, Object>> productCache;
     private Map<String, Map<String, Object>> contentCache;
-
 
     public PerOrgProductsUpgradeTaskA(Database database, CustomTaskLogger logger) {
         super(database, logger);
 
         this.productCache = new HashMap<String, Map<String, Object>>();
         this.contentCache = new HashMap<String, Map<String, Object>>();
+    }
+
+    /**
+     * Generates a prepared statement for performing a bulk insert into the given table
+     *
+     * @param table
+     *  the table into which to insert the data
+     *
+     * @param rows
+     *  the number of rows being inserted
+     *
+     * @param cols
+     *  the columns receiving data for each row
+     *
+     * @return
+     *  a PreparedStatement instance representing the bulk insert operation
+     */
+    protected PreparedStatement generateBulkInsertStatement(String table, int rows, String... cols)
+        throws DatabaseException, SQLException {
+
+        if (rows > 0) {
+
+            StringBuilder builder, rowbuilder;
+
+            if (!this.database.getDatabaseProductName().matches(".*(?i:oracle).*")) {
+                rowbuilder = new StringBuilder(2 + cols.length << 1);
+
+                rowbuilder.append('(');
+                for (int i = 0; i < cols.length; ++i) {
+                    rowbuilder.append("?,");
+                }
+                rowbuilder.deleteCharAt(rowbuilder.length() - 1).append(')');
+
+                builder = new StringBuilder(15 + 20 * cols.length + table.length() +
+                    (2 + cols.length * 3) * rows);
+
+                builder.append("INSERT INTO ").append(table).append('(');
+                for (String column : cols) {
+                    builder.append(column).append(',');
+                }
+                builder.deleteCharAt(builder.length() - 1).append(") VALUES");
+
+                for (int i = 0; i < rows; ++i) {
+                    builder.append(rowbuilder).append(',');
+                }
+                builder.deleteCharAt(builder.length() - 1);
+
+            }
+            else {
+                rowbuilder = new StringBuilder(20 * cols.length + table.length());
+
+                rowbuilder.append("INTO ").append(table).append('(');
+                for (String column : cols) {
+                    rowbuilder.append(column).append(',');
+                }
+                rowbuilder.deleteCharAt(rowbuilder.length() - 1).append(") VALUES(");
+                for (int i = 0; i < cols.length; ++i) {
+                    rowbuilder.append("?,");
+                }
+                rowbuilder.deleteCharAt(rowbuilder.length() - 1).append(") ");
+
+                builder = new StringBuilder(30 + (20 * cols.length + table.length()) * rows);
+                builder.append("INSERT ALL ");
+
+                for (int i = 0; i < rows; ++i) {
+                    builder.append(rowbuilder);
+                }
+
+                builder.append("SELECT 1 FROM DUAL");
+            }
+
+            return this.connection.prepareStatement(builder.toString());
+        }
+
+        return null;
     }
 
     /**
@@ -85,6 +159,8 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
                 this.migrateActivationKeyData(orgid);
                 this.migratePoolData(orgid);
             }
+
+            this.migrateGlobalProductData();
 
             orgids.close();
             this.connection.commit();
@@ -131,6 +207,10 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
 
             attrQuery.close();
             product.put("attributes", attributes);
+            product.put("attributes_statement", this.generateBulkInsertStatement(
+                "cpo_product_attributes", attributes.size(),
+                "id", "created", "updated", "name", "value", "product_uuid"
+            ));
 
             // Fetch certificates
             ResultSet certQuery = this.executeQuery(
@@ -150,6 +230,10 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
 
             certQuery.close();
             product.put("certificates", certificates);
+            product.put("certificates_statement", this.generateBulkInsertStatement(
+                "cpo_product_certificates", certificates.size(),
+                "id", "created", "updated", "cert", "privatekey", "product_uuid"
+            ));
 
             // Fetch linked content
             ResultSet contentQuery = this.executeQuery(
@@ -171,6 +255,10 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
 
             contentQuery.close();
             product.put("content", content);
+            product.put("content_statement", this.generateBulkInsertStatement(
+                "cpo_product_content", content.size(),
+                "product_uuid", "content_uuid", "enabled", "created", "updated"
+            ));
 
             // Fetch dependent products
             ResultSet dprodQuery = this.executeQuery(
@@ -184,6 +272,10 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
 
             dprodQuery.close();
             product.put("dependents", dependents);
+            product.put("dependents_statement", this.generateBulkInsertStatement(
+                "cpo_dependent_products", dependents.size(),
+                "product_uuid", "element"
+            ));
 
             this.productCache.put(productid, product);
         }
@@ -226,6 +318,10 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
 
             prodQuery.close();
             content.put("products", products);
+            content.put("products_statement", this.generateBulkInsertStatement(
+                "cpo_content_modified_products", products.size(),
+                "content_uuid", "element"
+            ));
 
             // Fetch environment content...
             ResultSet ecQuery = this.executeQuery(
@@ -245,6 +341,10 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
 
             ecQuery.close();
             content.put("envcontent", envcontent);
+            content.put("envcontent_statement", this.generateBulkInsertStatement(
+                "cpo_environment_content", envcontent.size(),
+                "id", "created", "updated", "content_uuid", "environment_id", "enabled"
+            ));
 
             this.contentCache.put(contentid, content);
         }
@@ -253,13 +353,87 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
     }
 
     /**
-     * Retrieves a result set to pull product IDs for a given org
+     * Migrates content data.
+     *
+     * @param contentid
+     *  The id of the content to migrate
+     *
+     * @param orgid
+     *  The id of the owner/organization for which to migrate product data
+     *
+     * @return
+     *  The UUID for the newly migrated content
+     */
+    @SuppressWarnings("checkstyle:methodlength")
+    protected String migrateContentData(String contentid, String orgid)
+        throws DatabaseException, SQLException {
+
+        String contentuuid = this.generateUUID();
+        Map<String, Object> content = this.contentCache.get(contentid);
+
+        if (content == null) {
+            return null;
+        }
+
+        Object[] info = (Object[]) content.get("info");
+        info[0] = contentuuid;
+        info[4] = orgid;
+
+        this.executeUpdate(
+            "INSERT INTO cpo_content " +
+            "  (uuid, content_id, created, updated, owner_id, contenturl, gpgurl, label, " +
+            "  metadataexpire, name, releasever, requiredtags, type, vendor, arches) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            info
+        );
+
+        // Migrate environment content...
+        PreparedStatement statement = (PreparedStatement) content.get("envcontent_statement");
+        int index = 0;
+
+        if (statement != null) {
+            statement.clearParameters();
+            for (Object[] params : (List<Object[]>) content.get("envcontent")) {
+                this.setParameter(statement, ++index, this.generateUUID());
+                this.setParameter(statement, ++index, params[1]);
+                this.setParameter(statement, ++index, params[2]);
+                this.setParameter(statement, ++index, contentuuid);
+                this.setParameter(statement, ++index, params[4]);
+                this.setParameter(statement, ++index, params[5]);
+            }
+            statement.executeUpdate();
+        }
+
+        // Migrate modified products
+        statement = (PreparedStatement) content.get("products_statement");
+        index = 0;
+
+        if (statement != null) {
+            statement.clearParameters();
+            for (Object[] params : (List<Object[]>) content.get("products")) {
+                this.setParameter(statement, ++index, contentuuid);
+                this.setParameter(statement, ++index, params[1]);
+            }
+            statement.executeUpdate();
+        }
+
+        return contentuuid;
+    }
+
+    /**
+     * Migrates product data. Must be called per-org.
      *
      * @param orgid
      *  The id of the owner/organization for which to migrate product data
      */
-    protected ResultSet getProductIds(String orgid) throws DatabaseException, SQLException {
-        return this.executeQuery(
+    @SuppressWarnings("checkstyle:methodlength")
+    protected void migrateProductData(String orgid) throws DatabaseException, SQLException {
+        Map<String, String> productsMigrated = new HashMap<String, String>();
+        Map<String, String> contentMigrated = new HashMap<String, String>();
+
+        this.logger.info("  Migrating product data...");
+
+        ResultSet productids = this.executeQuery(
             "SELECT p.productid AS product_id " +
             "  FROM cp_pool p " +
             "  WHERE p.owner_id = ? " +
@@ -302,92 +476,7 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
             "    AND NOT NULLIF(sdp.product_id, '') IS NULL",
             orgid, orgid, orgid, orgid, orgid, orgid, orgid
         );
-    }
 
-
-
-    /**
-     * Migrates content data.
-     *
-     * @param contentid
-     *  The id of the content to migrate
-     *
-     * @param orgid
-     *  The id of the owner/organization for which to migrate product data
-     *
-     * @return
-     *  The UUID for the newly migrated content
-     */
-    @SuppressWarnings("checkstyle:methodlength")
-    protected String migrateContentData(String contentid, String orgid) throws DatabaseException, SQLException {
-        String contentuuid = this.generateUUID();
-        Map<String, Object> content = this.contentCache.get(contentid);
-
-        if (content == null) {
-            return null;
-        }
-
-        Object[] info = (Object[]) content.get("info");
-        info[0] = contentuuid;
-        info[4] = orgid;
-
-        this.executeUpdate(
-            "INSERT INTO cpo_content " +
-            "  (uuid, content_id, created, updated, owner_id, contenturl, gpgurl, label, " +
-            "  metadataexpire, name, releasever, requiredtags, type, vendor, arches) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            info
-        );
-
-        // Migrate environment content...
-        List<Object[]> envcontent = (List<Object[]>) content.get("envcontent");
-
-        // TODO:
-        // Convert this to a bulk insert. Oracle makes this suck (naturally), but if detection is
-        // feasible, it should be doable.
-        for (Object[] params : envcontent) {
-            params[0] = this.generateUUID();
-            params[3] = contentuuid;
-
-            this.executeUpdate(
-                "INSERT INTO cpo_environment_content " +
-                "  (id, created, updated, content_uuid, environment_id, enabled) " +
-                "VALUES (?, ?, ?, ?, ?, ?)",
-                params
-            );
-        }
-
-        // Migrate modified products
-        // Note: For some reason, these are actual product IDs, not UUIDs.
-        // TODO: This should also be a bulk insert
-        for (Object[] params : (List<Object[]>) content.get("products")) {
-            params[0] = contentuuid;
-
-            this.executeUpdate(
-                "INSERT INTO cpo_content_modified_products (content_uuid, element) VALUES (?, ?)",
-                params
-            );
-        }
-
-        return contentuuid;
-    }
-
-    /**
-     * Migrates product data. Must be called per-org.
-     *
-     * @param orgid
-     *  The id of the owner/organization for which to migrate product data
-     */
-    @SuppressWarnings("checkstyle:methodlength")
-    protected void migrateProductData(String orgid) throws DatabaseException, SQLException {
-        Map<String, String> productsMigrated = new HashMap<String, String>();
-        Map<String, String> contentMigrated = new HashMap<String, String>();
-        int migrated = 0;
-        int updated = 0;
-
-        this.logger.info("  Migrating product data...");
-
-        ResultSet productids = this.getProductIds(orgid);
         while (productids.next()) {
             String productid = productids.getString(1);
 
@@ -399,7 +488,7 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
                 continue;
             }
 
-            this.logger.info(String.format("    Migrating product: %s", productid));
+            // this.logger.info(String.format("    Migrating product: %s", productid));
 
             Map<String, Object> product = this.productCache.get(productid);
             String productuuid = this.generateUUID();
@@ -425,104 +514,112 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
             );
 
             // Migrate product attributes
-            List<Object[]> attributes = (List<Object[]>) product.get("attributes");
+            PreparedStatement statement = (PreparedStatement) product.get("attributes_statement");
+            int index = 0;
 
-            for (Object[] params : attributes) {
-                params[0] = this.generateUUID();
-                params[5] = productuuid;
-
-                // TODO: Convert this to a bulk insert
-                this.executeUpdate(
-                    "INSERT INTO cpo_product_attributes " +
-                    "  (id, created, updated, name, value, product_uuid) " +
-                    "VALUES (?, ?, ?, ?, ?, ?)",
-                    params
-                );
+            if (statement != null) {
+                statement.clearParameters();
+                for (Object[] params : (List<Object[]>) product.get("attributes")) {
+                    this.setParameter(statement, ++index, this.generateUUID());
+                    this.setParameter(statement, ++index, params[1]);
+                    this.setParameter(statement, ++index, params[2]);
+                    this.setParameter(statement, ++index, params[3]);
+                    this.setParameter(statement, ++index, params[4]);
+                    this.setParameter(statement, ++index, productuuid);
+                }
+                statement.executeUpdate();
             }
 
             // Migrate product certificates
-            List<Object[]> certificates = (List<Object[]>) product.get("certificates");
+            statement = (PreparedStatement) product.get("certificates_statement");
+            index = 0;
 
-            for (Object[] params : certificates) {
-                params[0] = this.generateUUID();
-                params[5] = productuuid;
-
-                // TODO: Another bulk insert here
-                this.executeUpdate(
-                    "INSERT INTO cpo_product_certificates " +
-                    "  (id, created, updated, cert, privatekey, product_uuid) " +
-                    "VALUES (?, ?, ?, ?, ?, ?)",
-                    params
-                );
+            if (statement != null) {
+                statement.clearParameters();
+                for (Object[] params : (List<Object[]>) product.get("certificates")) {
+                    this.setParameter(statement, ++index, this.generateUUID());
+                    this.setParameter(statement, ++index, params[1]);
+                    this.setParameter(statement, ++index, params[2]);
+                    this.setParameter(statement, ++index, params[3]);
+                    this.setParameter(statement, ++index, params[4]);
+                    this.setParameter(statement, ++index, productuuid);
+                }
+                statement.executeUpdate();
             }
 
             // Migrate content used by product
-            List<Object[]> content = (List<Object[]>) product.get("content");
+            statement = (PreparedStatement) product.get("content_statement");
+            index = 0;
 
-            for (Object[] params : content) {
-                String contentuuid = contentMigrated.get((String) params[1]);
-
-                if (contentuuid == null) {
-                    contentuuid = this.migrateContentData((String) params[1], orgid);
+            if (statement != null) {
+                statement.clearParameters();
+                for (Object[] params : (List<Object[]>) product.get("content")) {
+                    String contentuuid = contentMigrated.get((String) params[1]);
 
                     if (contentuuid == null) {
-                        this.logger.error(
-                            "      Content referenced by product which does not exist " +
-                            "(product: %s, content: %s)",
-                            productid, params[1]
-                        );
+                        contentuuid = this.migrateContentData((String) params[1], orgid);
 
-                        continue;
+                        if (contentuuid == null) {
+                            this.logger.error(
+                                "      Content referenced by product which does not exist " +
+                                "(product: %s, content: %s)",
+                                productid, params[1]
+                            );
+
+                            continue;
+                        }
                     }
+
+                    this.setParameter(statement, ++index, productuuid);
+                    this.setParameter(statement, ++index, contentuuid);
+                    this.setParameter(statement, ++index, params[2]);
+                    this.setParameter(statement, ++index, params[3]);
+                    this.setParameter(statement, ++index, params[4]);
+
+                    contentMigrated.put((String) params[1], contentuuid);
                 }
-
-                // TODO: Yet another bulk insert here
-                this.executeUpdate(
-                    "INSERT INTO cpo_product_content " +
-                    "  (product_uuid, content_uuid, enabled, created, updated) " +
-                    "VALUES (?, ?, ?, ?, ?)",
-                    productuuid, contentuuid, params[2], params[3], params[4]
-                );
-
-                contentMigrated.put((String) params[1], contentuuid);
+                statement.executeUpdate();
             }
 
             // Migrate dependent products
-            List<Object[]> dependents = (List<Object[]>) product.get("dependents");
+            statement = (PreparedStatement) product.get("dependents_statement");
+            index = 0;
 
-            for (Object[] params : dependents) {
-                params[0] = productuuid;
-
-                // TODO: And another bulk insert
-                this.executeUpdate(
-                    "INSERT INTO cpo_product_dependent_products " +
-                    "  (product_uuid, element) " +
-                    "VALUES (?, ?)",
-                    params
-                );
+            if (statement != null) {
+                statement.clearParameters();
+                for (Object[] params : (List<Object[]>) product.get("dependents")) {
+                    this.setParameter(statement, ++index, productuuid);
+                    this.setParameter(statement, ++index, params[1]);
+                }
+                statement.executeUpdate();
             }
-
-            // These two are particularly painful, as we don't have a pool id available, so we're
-            // almost forced to do insert-selects
-            this.executeUpdate(
-                "INSERT INTO cpo_pool_provided_products " +
-                "SELECT pool_id, ? " +
-                "FROM cp_pool_products pp, cp_pool p WHERE pp.pool_id = p.id " +
-                "    AND p.owner_id = ? AND pp.product_id = ? AND pp.dtype = 'provided' ",
-                productuuid, orgid, productid
-            );
-
-            this.executeUpdate(
-                "INSERT INTO cpo_pool_derived_products " +
-                "SELECT pool_id, ? " +
-                "FROM cp_pool_products pp, cp_pool p WHERE pp.pool_id = p.id " +
-                "     AND p.owner_id = ? AND pp.product_id = ? AND pp.dtype = 'derived' ",
-                productuuid, orgid, productid
-            );
         }
 
         productids.close();
-        this.logger.info(String.format("  Done. %d products migrated, %d updated", migrated, updated));
+    }
+
+    private void migrateGlobalProductData() throws DatabaseException, SQLException {
+        this.logger.info("Migrating global product data...");
+
+        this.executeUpdate(
+            "INSERT INTO cpo_pool_provided_products " +
+            "SELECT pool.id, prod.uuid " +
+            "FROM cp_pool pool " +
+            "INNER JOIN cp_pool_products pp ON pool.id = pp.pool_id " +
+            "INNER JOIN cpo_products prod ON " +
+            "  (pp.product_id = prod.product_id AND pool.owner_id = prod.owner_id) " +
+            "WHERE pp.dtype = 'provided'"
+        );
+
+        this.executeUpdate(
+            "INSERT INTO cpo_pool_derived_products " +
+            "SELECT pool.id, prod.uuid " +
+            "FROM cp_pool pool " +
+            "INNER JOIN cp_pool_products pp ON pool.id = pp.pool_id " +
+            "INNER JOIN cpo_products prod ON " +
+            "  (pp.product_id = prod.product_id AND pool.owner_id = prod.owner_id) " +
+            "WHERE pp.dtype = 'derived'"
+        );
     }
 
     /**
@@ -532,7 +629,7 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
      *  The id of the owner/organization for which to migrate activation key data
      */
     private void migrateActivationKeyData(String orgid) throws DatabaseException, SQLException {
-        this.logger.info("Migrating activation key data for org " + orgid);
+        this.logger.info("  Migrating activation key data...");
 
         this.executeUpdate(
             "INSERT INTO cpo_activation_key_products(key_id, product_uuid) " +
@@ -552,7 +649,7 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
      *  The id of the owner/organization for which to migrate pool data
      */
     private void migratePoolData(String orgid) throws DatabaseException, SQLException {
-        this.logger.info("Migrating pool data for org " + orgid);
+        this.logger.info("  Migrating pool data...");
 
         ResultSet pools = this.executeQuery("SELECT id FROM cp_pool WHERE owner_id = ?", orgid);
 

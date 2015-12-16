@@ -68,6 +68,67 @@ public abstract class LiquibaseCustomTask {
     }
 
     /**
+     * Sets the parameter at the specified index to the given value. This method attempts to perform
+     * safe assignment of parameters across all supported platforms.
+     *
+     * @param statement
+     *  the statement on which to set a parameter
+     *
+     * @param index
+     *  the index of the parameter to set
+     *
+     * @param value
+     *  the value to set
+     *
+     * @throws NullPointerException
+     *  if statement is null
+     *
+     * @return
+     *  the PreparedStatement being updated
+     */
+    protected PreparedStatement setParameter(PreparedStatement statement, int index, Object value)
+        throws DatabaseException, SQLException {
+
+        if (value != null) {
+            statement.setObject(index, value);
+        }
+        else {
+            statement.setNull(index, this.nullType);
+        }
+
+        return statement;
+    }
+
+    /**
+     * Fills the parameters of a prepared statement with the given arguments
+     *
+     * @param statement
+     *  the statement to fill
+     *
+     * @param argv
+     *  the collection of arguments with which to fill the statement's parameters
+     *
+     * @throws NullPointerException
+     *  if statement is null
+     *
+     * @return
+     *  the provided PreparedStatement
+     */
+    protected PreparedStatement fillStatementParameters(PreparedStatement statement, Object... argv)
+        throws DatabaseException, SQLException {
+
+        statement.clearParameters();
+
+        if (argv != null) {
+            for (int i = 0; i < argv.length; ++i) {
+                this.setParameter(statement, i + 1, argv[i]);
+            }
+        }
+
+        return statement;
+    }
+
+    /**
      * Prepares a statement and populates it with the specified arguments, pulling from cache when
      * possible.
      *
@@ -89,20 +150,7 @@ public abstract class LiquibaseCustomTask {
             this.preparedStatements.put(sql, statement);
         }
 
-        statement.clearParameters();
-
-        if (argv != null) {
-            for (int i = 0; i < argv.length; ++i) {
-                if (argv[i] != null) {
-                    statement.setObject(i + 1, argv[i]);
-                }
-                else {
-                    statement.setNull(i + 1, this.nullType);
-                }
-            }
-        }
-
-        return statement;
+        return this.fillStatementParameters(statement, argv);
     }
 
     /**
