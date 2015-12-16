@@ -88,7 +88,7 @@ public class Subscription implements Owned, Named {
     public String toString() {
         String subscription = "Subscription [id = " + getId();
         if (product != null) {
-            subscription += getProduct().getId();
+            subscription += ", product = " + getProduct().getId();
         }
         if (owner != null) {
             subscription += ", owner = " + getOwner().getKey();
