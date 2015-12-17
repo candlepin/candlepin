@@ -9,6 +9,8 @@ GEM
       tzinfo (~> 1.1)
     atoulme-Antwrap (0.7.5)
       rjb (>= 1.0.3)
+    binding_of_caller (0.7.2)
+      debug_inspector (>= 0.0.1)
     builder (3.2.2)
     buildr (1.4.19)
       atoulme-Antwrap (~> 0.7.4)
@@ -31,7 +33,9 @@ GEM
       xml-simple (= 1.1.2)
     buildr-findBugs (0.1.1)
       buildr (>= 1.4.0)
+    byebug (8.2.2)
     coderay (1.1.0)
+    debug_inspector (0.0.2)
     diff-lcs (1.2.4)
     digest-murmurhash (1.1.1)
     hoe (3.7.1)
@@ -57,6 +61,12 @@ GEM
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)
+    pry-byebug (3.3.0)
+      byebug (~> 8.0)
+      pry (~> 0.10)
+    pry-stack_explorer (0.4.9.2)
+      binding_of_caller (>= 0.7)
+      pry (>= 0.9.11)
     rake (0.9.2.2)
     rjb (1.4.8)
     rspec (2.14.1)
@@ -91,6 +101,8 @@ DEPENDENCIES
   parallel_tests
   pmd
   pry
+  pry-byebug
+  pry-stack_explorer
   rspec
   stringex
   webrick

@@ -110,6 +110,26 @@ class JSONClient < HTTPClient
     request(:delete,  uri, jsonify(argument_to_hash(args, :body, :query, :header)), &block)
   end
 
+  def request(method, uri, *args, &block)
+    # Hack to address https://github.com/nahi/httpclient/issues/285
+    # We need to strip off any leading slash on a relative URL
+    u = HTTPClient::Util.urify(uri)
+    if @base_url && u.scheme.nil? && u.host.nil?
+      uri = uri[1..-1] if uri[0] == "/"
+    end
+    super
+  end
+
+  def request_async2(method, uri, *args, &block)
+    # Hack to address https://github.com/nahi/httpclient/issues/285
+    # We need to strip off any leading slash on a relative URL
+    u = HTTPClient::Util.urify(uri)
+    if @base_url && u.scheme.nil? && u.host.nil?
+      uri = uri[1..-1] if uri[0] == "/"
+    end
+    super
+  end
+
 private
 
   def jsonify(hash)
@@ -1916,7 +1936,7 @@ module Candlepin
       :head,
       :options,
       :request,
-      :request_async,
+      :request_async2,
       :success_content,
       :trace
 
@@ -1996,6 +2016,8 @@ module Candlepin
         :port => port,
         :path => context,
       }
+      # See https://github.com/nahi/httpclient/issues/285
+      components[:path] += "/" unless components[:path][-1] == "/"
       if use_ssl
         uri = URI::HTTPS.build(components)
       else
@@ -2003,6 +2025,7 @@ module Candlepin
       end
       uri.to_s
     end
+
 
     def get_text(*args, &block)
       get_type('text/plain', *args, &block)

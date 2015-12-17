@@ -114,6 +114,8 @@ module Candlepin
       include_context("functional context")
 
       it 'creates activation keys' do
+        owner_client = BasicAuthClient.new
+        owner_client.key = owner[:key]
         res = owner_client.create_activation_key(
           :name => rand_string,
           :description => rand_string,
@@ -1392,9 +1394,9 @@ module Candlepin
         simple_client = NoAuthClient.new(
           :host => "www.example.com",
           :port => 8443,
-          :context => "/some_path",
+          :context => "/some_path/",
         )
-        expect(simple_client.base_url).to eq("https://www.example.com:8443/some_path")
+        expect(simple_client.base_url).to eq("https://www.example.com:8443/some_path/")
       end
 
       it 'handles a context with no leading slash' do
@@ -1403,7 +1405,7 @@ module Candlepin
           :port => 8443,
           :context => "no_slash_path",
         )
-        expect(simple_client.base_url).to eq("https://www.example.com:8443/no_slash_path")
+        expect(simple_client.base_url).to eq("https://www.example.com:8443/no_slash_path/")
       end
 
       it 'reloads underlying client when necessary' do
@@ -1412,7 +1414,7 @@ module Candlepin
           :port => 8443,
           :context => "/1",
         )
-        url1 = "https://www.example.com:8443/1"
+        url1 = "https://www.example.com:8443/1/"
         expect(simple_client.base_url).to eq(url1)
         expect(simple_client.raw_client.base_url).to eq(url1)
         expect(simple_client.raw_client).to be_kind_of(HTTPClient)
@@ -1420,7 +1422,7 @@ module Candlepin
         simple_client.context = "/2"
         simple_client.reload
 
-        url2 = "https://www.example.com:8443/2"
+        url2 = "https://www.example.com:8443/2/"
         expect(simple_client.base_url).to eq(url2)
         expect(simple_client.raw_client.base_url).to eq(url2)
       end
