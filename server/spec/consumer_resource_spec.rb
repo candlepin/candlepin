@@ -320,6 +320,20 @@ describe 'Consumer Resource' do
     consumer['created'].should == created_date
   end
 
+  it 'should let a consumer register dates with milliseconds' do
+    # to confirm the lack of a parse exception.
+    owner = create_owner(random_string('owner'))
+    user_name = random_string('user')
+    client = user_client(owner, user_name)
+    created_date = '2015-05-09T13:23:55.968+0000'
+    checkin_date = '2015-05-19T13:25:55.222+0000'
+    consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
+              owner['key'], [], [], nil, [], nil, [], created_date, checkin_date)
+    consumer = client.get_consumer(consumer['uuid'])
+    consumer['lastCheckin'].should == '2015-05-19T13:25:55+0000'
+    consumer['created'].should == '2015-05-09T13:23:55+0000'
+  end
+
   it "should not let a consumer register with a used hypervisorId in same the org" do
     some_owner = create_owner(random_string('someowner'))
     client = user_client(some_owner, random_string('bob'))
