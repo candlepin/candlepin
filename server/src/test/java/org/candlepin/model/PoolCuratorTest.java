@@ -27,11 +27,13 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.hamcrest.Matchers;
+import org.hibernate.Hibernate;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -525,6 +527,42 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool3);
 
         assertEquals(2, poolCurator.listBySourceEntitlement(e).size());
+
+    }
+
+
+    @Test
+    public void testListBySourceEntitlements() {
+        Pool sourcePool = TestUtil.createPool(owner, product);
+        Pool sourcePool2 = TestUtil.createPool(owner, product);
+        Pool sourcePool3 = TestUtil.createPool(owner, product);
+        poolCurator.create(sourcePool);
+        poolCurator.create(sourcePool2);
+        poolCurator.create(sourcePool3);
+        Entitlement e = new Entitlement(sourcePool, consumer, 1);
+        Entitlement e2 = new Entitlement(sourcePool2, consumer, 1);
+        Entitlement e3 = new Entitlement(sourcePool3, consumer, 1);
+        entitlementCurator.create(e);
+        entitlementCurator.create(e2);
+        entitlementCurator.create(e3);
+
+        Pool pool2 = TestUtil.createPool(owner, product);
+        pool2.setSourceEntitlement(e);
+        Pool pool3 = TestUtil.createPool(owner, product);
+        pool3.setSourceEntitlement(e);
+        Pool pool4 = TestUtil.createPool(owner, product);
+        pool4.setSourceEntitlement(e2);
+        Pool pool5 = TestUtil.createPool(owner, product);
+        pool5.setSourceEntitlement(e3);
+
+        poolCurator.create(pool2);
+        poolCurator.create(pool3);
+        poolCurator.create(pool4);
+        poolCurator.create(pool5);
+
+
+        List<Pool> pools = poolCurator.listBySourceEntitlements(Arrays.asList(e, e2));
+        assertEquals(3, pools.size());
 
     }
 

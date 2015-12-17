@@ -116,6 +116,7 @@ public interface PoolManager {
 
     int removeAllEntitlements(Consumer consumer);
 
+    void revokeEntitlements(List<Entitlement> ents);
     void revokeEntitlement(Entitlement entitlement);
 
     Pool updatePoolQuantity(Pool pool, long adjust);
@@ -226,4 +227,7 @@ public interface PoolManager {
     List<Entitlement> entitleByProductsForHost(Consumer guest, Consumer host,
             Date entitleDate, Collection<String> possiblePools)
         throws EntitlementRefusedException;
+
+
+    void deletePools(List<Pool> pools);
 }

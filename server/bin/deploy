@@ -36,7 +36,8 @@ gendb() {
         LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
     fi
     LQCOMMAND="$LQCOMMAND update -Dcommunity=True"
-    (cd $PROJECT_DIR && $LQCOMMAND)
+    echo $LQCOMMAND
+ #   (cd $PROJECT_DIR && $LQCOMMAND)
     evalrc $? "Liquibase command failed"
 }
 

@@ -363,7 +363,30 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
         return criteria.list();
     }
+    
+    /**
+     * Batch deletes a list of entitlements. This method is not transactinal
+     * because the caller should take responsibility of transaction
+     * demarcation.
+     * @param pools
+     */
+    public void batchDelete(List<Entitlement> entitlements) {
+        for (Entitlement ent : entitlements) {
+            log.debug("Deleting entitlement: " + ent);
+            log.debug("certs.size = " + ent.getCertificates().size());
 
+            if (currentSession().contains(ent)) {
+                for (EntitlementCertificate cert : ent.getCertificates()) {
+                    currentSession().delete(cert);
+                }
+                currentSession().delete(ent);
+            }
+            //Maintain runtime consistency. The consumer.entitlements should
+            //no longer have the entitlement in its collection!
+            ent.getConsumer().getEntitlements().remove(ent);
+        }
+    }
+    
     @SuppressWarnings("unchecked")
     public List<Entitlement> findByPoolAttribute(String attributeName, String value) {
         return findByPoolAttribute(null, attributeName, value);
