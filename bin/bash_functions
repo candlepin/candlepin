@@ -129,7 +129,7 @@ recreate_postgresql() {
     local db_name="$1"
     local db_user="${2:-$db_name}"
     # Check if candlepin db exists and drop it if so:
-    if [[ `psql -U $db_user -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"` == "1" ]]; then
+    if [[ `psql -U postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"` == "1" ]]; then
         info_msg "Database '$db_name' exists.  Dropping it."
         dropdb -w -U "$db_user" "$db_name"
     fi

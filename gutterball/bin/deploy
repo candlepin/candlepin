@@ -1,6 +1,7 @@
 #! /bin/bash
 
 APP="gutterball"
+APP_DB_NAME="gutterball"
 
 # use tomcat 6, unless it doesnt exist and tomcat does
 TC=tomcat6
@@ -10,16 +11,18 @@ fi
 
 usage() {
     cat <<HELP
-    usage: deploy [options]
+usage: deploy [options]
 
-    OPTIONS:
-      -q  quiet; no notifications and minimal output
-      -t  hot deloy; do not stop and start Tomcat
-      -g  regenerate database
-      -m  deploy to MySQL
-      -o  deploy to Oracle
-      -l  logdriver; compile with Logdriver
-      -a  install an auto-generated gutterball.conf file
+OPTIONS:
+  -q          quiet; no notifications and minimal output
+  -t          hot deploy; do not stop and start Tomcat
+  -g          regenerate database
+  -m          deploy to MySQL
+  -o          deploy to Oracle
+  -l          logdriver; compile with Logdriver
+  -a          install an auto-generated gutterball.conf file
+  -d <name>   specify a database name to use when creating or updating the
+              Gutterball database
 HELP
 }
 
@@ -78,23 +81,23 @@ deploy() {
 
 generate_db() {
     if [ -n "$USE_ORACLE" ]; then
-        init_oracle_jdbc "gutterball"
+        init_oracle_jdbc $APP_DB_NAME
         [ -z "$DBPASSWORD" ] && DBPASSWORD="gutterball"
     elif [ -n "$USE_MYSQL" ]; then
-        init_mysql_jdbc "gutterball"
+        init_mysql_jdbc $APP_DB_NAME
     else
-        init_postgresql_jdbc "gutterball"
+        init_postgresql_jdbc $APP_DB_NAME
     fi
 
     CHANGELOG="changelog.xml"
     if [ -n "$GENDB" ]; then
         MESSAGE="Generating New Database"
         if [ -n "$USE_ORACLE" ]; then
-            recreate_oracle "gutterball"
+            recreate_oracle $APP_DB_NAME $DBUSER
         elif [ -n "$USE_MYSQL" ]; then
-            recreate_mysql "gutterball"
+            recreate_mysql $APP_DB_NAME $DBUSER
         else
-            recreate_postgresql "gutterball"
+            recreate_postgresql $APP_DB_NAME $DBUSER
         fi
     else
         MESSAGE="Updating Database"
@@ -159,8 +162,9 @@ trap clean_up EXIT INT TERM
 set -e
 
 LOGDRIVER=""
+DBUSER="gutterball"
 
-while getopts ":qtlmoga" opt; do
+while getopts ":qtlmogad:" opt; do
     case $opt in
         q  ) QUIET="1";;
         t  ) HOTDEPLOY="1";;
@@ -169,6 +173,7 @@ while getopts ":qtlmoga" opt; do
         o  ) USE_ORACLE="1";;
         g  ) GENDB="1";;
         a  ) AUTOCONF="1";;
+        d  ) APP_DB_NAME="${OPTARG}";;
         ?  ) usage; exit;;
     esac
 done
