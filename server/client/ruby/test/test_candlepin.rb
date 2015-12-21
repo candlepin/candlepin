@@ -110,6 +110,24 @@ module Candlepin
       end
     end
 
+    context "in an Admin only context", :functional => true do
+      include_context("functional context")
+
+      it "lists all pools" do
+        owner_client.create_subscription(
+          :key => owner[:key],
+          :product_id => product[:id],
+        )
+
+        res = user_client.get_all_pools(
+          :product => product[:id],
+          :owner => owner[:id],
+        )
+        expect(res).to be_2xx
+        expect(res.content.length).to eq(1)
+      end
+    end
+
     context "in an Activation Key context", :functional => true do
       include_context("functional context")
 
@@ -628,6 +646,35 @@ module Candlepin
 
         expect(content[:label]).to eq("goodbye")
         expect(content[:contentUrl]).to eq("http://www.example.com")
+      end
+    end
+
+    context "in an Environment context", :functional => true do
+      include_context("functional context")
+
+      it "creates an environment" do
+        env = user_client.create_owner_environment(
+          :key => owner[:key],
+          :name => rand_string,
+          :description => rand_string,
+          :id => rand_string
+        ).content
+
+        consumer = user_client.register(
+          :owner => owner[:key],
+          :username => owner_user[:username],
+          :name => rand_string,
+        ).content
+
+        # Used the returned consumer as a dummy
+        consumer.extract!(:id, :uuid, :idCert)
+
+        res = user_client.create_consumer_in_environment(
+          :consumer => consumer,
+          :owner => owner[:key],
+          :env_id => env[:id],
+        )
+        expect(res).to be_2xx
       end
     end
 

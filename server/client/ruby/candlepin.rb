@@ -734,6 +734,24 @@ module Candlepin
         url = "/environments/#{env_id}/content"
         post(url, content_promotions)
       end
+
+      def create_consumer_in_environment(opts = {})
+        defaults = {
+          :env_id => nil,
+          :username => nil,
+          :owner => key,
+          :activation_keys => [],
+          :consumer => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :env_id, :owner, :consumer)
+
+        opts.compact!
+        query = opts.slice(:username, :owner, :activation_keys)
+
+        url = "/environments/#{opts[:env_id]}/consumers"
+        post(url, :body => opts[:consumer], :query => query)
+      end
     end
 
     module ActivationKeyResource
@@ -1386,8 +1404,21 @@ module Candlepin
     end
 
     module PoolResource
-      def get_all_pools
-        get("/pools")
+      # This method is deprecated in Candlepin
+      def get_all_pools(opts = {})
+        defaults = {
+          :owner => nil,
+          :consumer => nil,
+          :product => nil,
+          :listall => false,
+          :activeon => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        opts.compact!
+        # Note that this method want the *owner ID* not the owner key
+        validate_keys(opts, :owner)
+
+        get("/pools", :query => opts)
       end
 
       def get_pool(opts = {})
