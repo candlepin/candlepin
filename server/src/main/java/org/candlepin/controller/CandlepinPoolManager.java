@@ -1546,6 +1546,7 @@ public class CandlepinPoolManager implements PoolManager {
         pool.getEntitlements().remove(entitlement);
         poolCurator.merge(pool);
         entitlementCurator.delete(entitlement);
+
         Event event = eventFactory.entitlementDeleted(entitlement);
         if (!entitlement.isValid() &&
                 entitlement.getPool().isUnmappedGuestPool() &&
@@ -1596,6 +1597,12 @@ public class CandlepinPoolManager implements PoolManager {
             // and regenerate those to remove the content sets.
             // Lazy regeneration is ok here.
             this.regenerateCertificatesOf(entitlementCurator.listModifying(entitlement), true);
+        }
+
+        // If we are deleting a developer entitlement, be sure to delete the
+        // associated pool as well.
+        if (pool.isDevelopmentPool()) {
+            poolCurator.delete(pool);
         }
 
         log.info("Revoked entitlement: {}", entitlement.getId());
