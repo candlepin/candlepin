@@ -975,20 +975,20 @@ module Candlepin
           :username => nil,
           :password => nil,
           :super_admin => false,
-          :key => key,
+          :owner => key,
         }
         opts = verify_and_merge(opts, defaults)
 
         all_roles = ok_content(get_all_roles)
 
-        role_name = "#{opts[:key]}-ALL"
+        role_name = "#{opts[:owner]}-ALL"
 
         role = all_roles.select { |r| r[:name] == role_name }.first
         if role.nil?
           if opts[:super_admin]
-            perm = all_owner_permission(opts[:key])
+            perm = all_owner_permission(opts[:owner])
           else
-            perm = ro_owner_permission(opts[:key])
+            perm = ro_owner_permission(opts[:owner])
           end
           role = ok_content(create_role(:name => role_name, :permissions => perm))
         end
@@ -1143,30 +1143,30 @@ module Candlepin
     module OwnerResource
       def get_owner(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
         }
         opts = verify_and_merge(opts, defaults)
 
-        get("/owners/#{opts[:key]}")
+        get("/owners/#{opts[:owner]}")
       end
 
       def get_owner_hypervisors(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
           :hypervisor_ids => [],
         }
         opts = verify_and_merge(opts, defaults)
 
-        get("/owners/#{opts[:key]}/hypervisors", :hypervisor_id => opts[:hypervisor_ids])
+        get("/owners/#{opts[:owner]}/hypervisors", :hypervisor_id => opts[:hypervisor_ids])
       end
 
       def get_owner_subresource(subresource, opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
         }
         opts = verify_and_merge(opts, defaults)
 
-        get("/owners/#{opts[:key]}/#{subresource}")
+        get("/owners/#{opts[:owner]}/#{subresource}")
       end
 
       def get_owner_info(opts = {})
@@ -1195,22 +1195,22 @@ module Candlepin
 
       def get_owner_service_levels(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
           :exempt => false,
         }
         opts = verify_and_merge(opts, defaults)
 
-        get("/owners/#{opts[:key]}/servicelevels", opts.slice(:exempt))
+        get("/owners/#{opts[:owner]}/servicelevels", opts.slice(:exempt))
       end
 
       def get_owner_environment(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
           :name => nil,
         }
         opts = verify_and_merge(opts, defaults)
 
-        get("/owners/#{opts[:key]}/environments", opts.slice(:name))
+        get("/owners/#{opts[:owner]}/environments", opts.slice(:name))
       end
 
       def get_all_owners
@@ -1219,7 +1219,7 @@ module Candlepin
 
       def get_owner_pools(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
           :consumer => nil,
           :product => nil,
           :listall => nil,
@@ -1227,68 +1227,71 @@ module Candlepin
         }.merge(page_options)
 
         opts = verify_and_merge(opts, defaults)
-        validate_keys(opts, :key)
+        validate_keys(opts, :owner)
         opts.compact!
 
-        params = opts.deep_dup.except!(:key)
+        params = opts.deep_dup.except!(:owner)
         params[:attributes] = opts[:attributes].map do |k, v|
           { :name => k, :value => v }
         end
 
-        get("/owners/#{opts[:key]}/pools", params)
+        get("/owners/#{opts[:owner]}/pools", params)
       end
 
       def autoheal_owner(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
         }
         opts = verify_and_merge(opts, defaults)
 
-        post("/owners/#{opts[:key]}/entitlements")
+        post("/owners/#{opts[:owner]}/entitlements")
       end
 
       def create_owner(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
           :display_name => nil,
           :parent_owner => nil,
         }
         opts = verify_and_merge(opts, defaults)
+        # The model in actually expects "key", but I'm keeping
+        # it as owner for consistency
+        opts[:key] = opts.extract!(:owner)[:owner]
 
         post("/owners", camelize_hash(opts))
       end
 
       def create_owner_environment(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
           :id => nil,
           :name => nil,
           :description => nil,
         }
         opts = verify_and_merge(opts, defaults)
 
-        post("/owners/#{opts[:key]}/environments", opts.slice(:id, :name, :description))
+        post("/owners/#{opts[:owner]}/environments", opts.slice(:id, :name, :description))
       end
 
       def create_ueber_cert(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
         }
         opts = verify_and_merge(opts, defaults)
 
-        post("/owners/#{opts[:key]}/uebercert")
+        post("/owners/#{opts[:owner]}/uebercert")
       end
 
       def refresh_pools_async(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
           :auto_create_owner => false,
           :lazy_regen => false,
         }
         opts = verify_and_merge(opts, defaults)
-        validate_keys(opts, :key)
+        validate_keys(opts, :owner)
 
-        put_async("/owners/#{opts[:key]}/subscriptions",
+        put_async("/owners/#{opts[:owner]}/subscriptions",
             :query => opts.slice(:auto_create_owner, :lazy_regen))
       end
 
@@ -1301,23 +1304,23 @@ module Candlepin
 
       def create_activation_key(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
           :service_level => nil,
           :name => nil,
           :description => nil,
         }
         opts = verify_and_merge(opts, defaults)
-        validate_keys(opts, :key, :name)
+        validate_keys(opts, :owner, :name)
 
         body = camelize_hash(
-          opts.deep_dup.compact.except(:key)
+          opts.deep_dup.compact.except(:owner)
         )
-        post("/owners/#{opts[:key]}/activation_keys", body)
+        post("/owners/#{opts[:owner]}/activation_keys", body)
       end
 
       def create_subscription(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
           :start_date => Date.today,
           :end_date => Date.today + 365,
           :quantity => 1,
@@ -1333,7 +1336,7 @@ module Candlepin
 
         body = camelize_hash(
           opts.deep_dup.compact.except(
-            :key,
+            :owner,
             :product_id,
             :provided_products,
             :derived_products,
@@ -1354,12 +1357,12 @@ module Candlepin
             body[camel_case(k)] = prods unless prods.empty?
         end
 
-        post("/owners/#{opts[:key]}/subscriptions", body)
+        post("/owners/#{opts[:owner]}/subscriptions", body)
       end
 
       def update_owner(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
           :display_name => nil,
           :parent_owner => nil,
           :default_service_level => nil,
@@ -1369,37 +1372,37 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
 
         body = camelize_hash(
-          opts.deep_dup.compact.except(:key)
+          opts.deep_dup.compact.except(:owner)
         )
-        put("/owners/#{opts[:key]}", body)
+        put("/owners/#{opts[:owner]}", body)
       end
 
       def set_owner_log_level(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
           :level => nil,
         }
         opts = verify_and_merge(opts, defaults)
 
-        put("/owners/#{opts[:key]}/log", :query => opts.slice(:level))
+        put("/owners/#{opts[:owner]}/log", :query => opts.slice(:level))
       end
 
       def delete_owner_log_level(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
         }
         opts = verify_and_merge(opts, defaults)
 
-        delete("/owners/#{opts[:key]}/log")
+        delete("/owners/#{opts[:owner]}/log")
       end
 
       def delete_owner(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
           :revoke => false,
         }
         opts = verify_and_merge(opts, defaults)
-        delete("/owners/#{opts[:key]}", opts.slice(:revoke))
+        delete("/owners/#{opts[:owner]}", opts.slice(:revoke))
       end
     end
 
@@ -1459,23 +1462,23 @@ module Candlepin
       def get_owner_content(opts = {})
         defaults = {
           :content_id => nil,
-          :key => key,
+          :owner => key,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts)
 
-        get("/owners/#{opts[:key]}/content/#{opts[:content_id]}")
+        get("/owners/#{opts[:owner]}/content/#{opts[:content_id]}")
       end
 
       def delete_owner_content(opts = {})
         defaults = {
           :content_id => nil,
-          :key => key,
+          :owner => key,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts)
 
-        delete("/owners/#{opts[:key]}/content/#{opts[:content_id]}")
+        delete("/owners/#{opts[:owner]}/content/#{opts[:content_id]}")
       end
 
       def create_owner_content(opts = {})
@@ -1491,25 +1494,25 @@ module Candlepin
           :arches => nil,
           :required_tags => nil,
           :metadata_expire => nil,
-          :key => key,
+          :owner => key,
         }
         opts = verify_and_merge(opts, defaults)
-        validate_keys(opts, :key)
+        validate_keys(opts, :owner)
 
         content = opts.dup
         content.delete(:content_id)
         content = camelize_hash(content)
         content[:id] = opts[:content_id]
-        post("/owners/#{opts[:key]}/content", content)
+        post("/owners/#{opts[:owner]}/content", content)
       end
 
       def create_batch_owner_content(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
           :content => [],
         }
         opts = verify_and_merge(opts, defaults)
-        validate_keys(opts, :key)
+        validate_keys(opts, :owner)
 
         content_defaults = {
           :content_id => nil,
@@ -1533,7 +1536,7 @@ module Candlepin
           body << camelize_hash(content)
         end
 
-        post("/owners/#{opts[:key]}/content/batch", body)
+        post("/owners/#{opts[:owner]}/content/batch", body)
       end
 
       def update_owner_content(opts = {})
@@ -1549,10 +1552,10 @@ module Candlepin
           :arches => nil,
           :required_tags => nil,
           :metadata_expire => nil,
-          :key => key,
+          :owner => key,
         }
         opts = verify_and_merge(opts, defaults)
-        validate_keys(opts, :key)
+        validate_keys(opts, :owner)
 
         content = opts.dup
         content = camelize_hash(content)
@@ -1565,7 +1568,7 @@ module Candlepin
         # here
         old_content = get_owner_content(
           :content_id => opts[:content_id],
-          :key => opts[:key],
+          :owner => opts[:owner],
         ).content
         # The content id cannot change so don't let it win in
         # the merge
@@ -1573,7 +1576,7 @@ module Candlepin
         content.compact!
         content.reverse_merge!(old_content)
 
-        put("/owners/#{opts[:key]}/content/#{opts[:content_id]}", content)
+        put("/owners/#{opts[:owner]}/content/#{opts[:content_id]}", content)
       end
     end
 
@@ -1601,21 +1604,21 @@ module Candlepin
     module OwnerProductResource
       def get_owner_product(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
           :product_id => nil,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts)
-        get("/owners/#{opts[:key]}/products/#{opts[:product_id]}")
+        get("/owners/#{opts[:owner]}/products/#{opts[:product_id]}")
       end
 
       def get_all_owner_products(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts)
-        get("/owners/#{opts[:key]}/products/")
+        get("/owners/#{opts[:owner]}/products/")
       end
 
       def create_product(opts = {})
@@ -1628,11 +1631,11 @@ module Candlepin
           :dependent_product_ids => [],
           :product_content => [],
           :relies_on => [],
-          :key => key,
+          :owner => key,
           :legacy => false,
         }
         opts = verify_and_merge(opts, defaults)
-        validate_keys(opts, :key)
+        validate_keys(opts, :owner)
         validate_keys(opts, :attributes) do |x|
           x.kind_of?(Hash)
         end
@@ -1655,7 +1658,7 @@ module Candlepin
         if opts[:legacy]
           url = "/products"
         else
-          url = "/owners/#{opts[:key]}/products"
+          url = "/owners/#{opts[:owner]}/products"
         end
 
         post(url, product)
@@ -1669,10 +1672,10 @@ module Candlepin
           :attributes => [],
           :dependent_product_ids => [],
           :relies_on => [],
-          :key => key,
+          :owner => key,
         }
         opts = verify_and_merge(opts, defaults)
-        validate_keys(opts, :key)
+        validate_keys(opts, :owner)
 
         product = camelize_hash(opts, :name, :multiplier, :dependent_product_ids, :relies_on)
         product[:id] = opts[:product_id]
@@ -1680,29 +1683,29 @@ module Candlepin
           { :name => k, :value => v }
         end
 
-        put("/owners/#{opts[:key]}/products/#{opts[:product_id]}", product)
+        put("/owners/#{opts[:owner]}/products/#{opts[:product_id]}", product)
       end
 
       def delete_product(opts = {})
         defaults = {
-          :key => key,
+          :owner => key,
           :product_id => nil,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts)
 
-        delete("/owners/#{opts[:key]}/products/#{opts[:product_id]}")
+        delete("/owners/#{opts[:owner]}/products/#{opts[:product_id]}")
       end
 
       def get_product_cert(opts = {})
         defaults = {
           :product_id => nil,
-          :key => key,
+          :owner => key,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts)
 
-        get("owners/#{opts[:key]}/products/#{opts[:product_id]}/certificate")
+        get("owners/#{opts[:owner]}/products/#{opts[:product_id]}/certificate")
       end
 
       def update_product_content(opts = {})
@@ -1710,12 +1713,12 @@ module Candlepin
           :product_id => nil,
           :content_id => nil,
           :enabled => true,
-          :key => key,
+          :owner => key,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts)
 
-        post("/owners/#{opts[:key]}/products/#{opts[:product_id]}/content/#{opts[:content_id]}",
+        post("/owners/#{opts[:owner]}/products/#{opts[:product_id]}/content/#{opts[:content_id]}",
           :query => opts.slice(:enabled))
       end
 
@@ -1723,12 +1726,12 @@ module Candlepin
         defaults = {
           :product_id => nil,
           :content_id => nil,
-          :key => key,
+          :owner => key,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts)
 
-        delete("/owners/#{opts[:key]}/products/#{opts[:product_id]}/content/#{opts[:content_id]}")
+        delete("/owners/#{opts[:owner]}/products/#{opts[:product_id]}/content/#{opts[:content_id]}")
       end
     end
 

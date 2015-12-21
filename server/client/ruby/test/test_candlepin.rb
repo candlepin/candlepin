@@ -56,7 +56,7 @@ module Candlepin
       let(:owner) do
         key = rand_string(:prefix => 'owner')
         user_client.create_owner(
-          :key => key,
+          :owner => key,
           :display_name => key,
         ).content
       end
@@ -71,7 +71,7 @@ module Candlepin
         user_client.create_user_under_owner(
           :username => rand_string(:prefix => 'owner_user'),
           :password => rand_string,
-          :key => owner[:key],
+          :owner => owner[:key],
           :super_admin => false,
         )
       end
@@ -80,7 +80,7 @@ module Candlepin
         user_client.create_user_under_owner(
           :username => rand_string(:prefix => 'owner_admin'),
           :password => rand_string,
-          :key => owner[:key],
+          :owner => owner[:key],
           :super_admin => trutrue,
         )
       end
@@ -96,7 +96,7 @@ module Candlepin
           :content_id => "hello",
           :name => "Hello",
           :label => "hello",
-          :key => owner[:key],
+          :owner => owner[:key],
         ).content
       end
 
@@ -105,7 +105,7 @@ module Candlepin
         user_client.create_product(
           :product_id => p,
           :name => "Product #{p}",
-          :key => owner[:key],
+          :owner => owner[:key],
         ).content
       end
     end
@@ -115,7 +115,7 @@ module Candlepin
 
       it "lists all pools" do
         owner_client.create_subscription(
-          :key => owner[:key],
+          :owner => owner[:key],
           :product_id => product[:id],
         )
 
@@ -153,7 +153,7 @@ module Candlepin
         ).content
 
         owner_client.create_subscription(
-          :key => owner[:key],
+          :owner => owner[:key],
           :product_id => product[:id],
         )
 
@@ -176,7 +176,7 @@ module Candlepin
         ).content
 
         owner_client.create_subscription(
-          :key => owner[:key],
+          :owner => owner[:key],
           :product_id => product[:id],
         )
 
@@ -292,7 +292,7 @@ module Candlepin
 
       it 'creates owners' do
         res = user_client.create_owner(
-          :key => rand_string,
+          :owner => rand_string,
           :display_name => rand_string,
         )
         expect(res).to be_2xx
@@ -301,7 +301,7 @@ module Candlepin
 
       it 'creates owner environments' do
         res = user_client.create_owner_environment(
-          :key => owner[:key],
+          :owner => owner[:key],
           :id => rand_string,
           :description => rand_string,
           :name => rand_string
@@ -312,14 +312,14 @@ module Candlepin
 
       it 'gets owner environments' do
         env = user_client.create_owner_environment(
-          :key => owner[:key],
+          :owner => owner[:key],
           :id => rand_string,
           :description => rand_string,
           :name => rand_string
         ).content
 
         res = user_client.get_owner_environment(
-          :key => owner[:key],
+          :owner => owner[:key],
           :name => env[:name]
         )
         expect(res).to be_2xx
@@ -352,14 +352,14 @@ module Candlepin
 
       it 'deletes owner log level' do
         res = user_client.set_owner_log_level(
-          :key => owner[:key],
+          :owner => owner[:key],
           :level => 'debug',
         )
         expect(res).to be_2xx
         expect(res.content[:logLevel]).to eq('DEBUG')
 
         res = user_client.delete_owner_log_level(
-          :key => owner[:key],
+          :owner => owner[:key],
         )
         expect(res).to be_2xx
       end
@@ -371,27 +371,27 @@ module Candlepin
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
-          :key => owner[:key],
+          :owner => owner[:key],
         )
 
         user_client.create_subscription(
-          :key => owner[:key],
+          :owner => owner[:key],
           :product_id => id1,
         )
 
-        pools = user_client.get_owner_pools(:key => owner[:key]).content
+        pools = user_client.get_owner_pools(:owner => owner[:key]).content
         expect(pools.first[:product][:multiplier]).to eq(2)
 
         user_client.update_product(
           :product_id => id1,
           :multiplier => 4,
-          :key => owner[:key],
+          :owner => owner[:key],
         )
 
-        result = user_client.refresh_pools(:key => owner[:key])
+        result = user_client.refresh_pools(:owner => owner[:key])
         expect(result).to be_2xx
 
-        pools = user_client.get_owner_pools(:key => owner[:key]).content
+        pools = user_client.get_owner_pools(:owner => owner[:key]).content
         expect(pools.first[:product][:multiplier]).to eq(4)
       end
 
@@ -446,12 +446,12 @@ module Candlepin
         ).content
 
         res = user_client.get_owner_hypervisors(
-          :key => owner[:key],
+          :owner => owner[:key],
         )
         expect(res).to be_2xx
 
         res = user_client.get_owner_hypervisors(
-          :key => owner[:key],
+          :owner => owner[:key],
           :hypervisor_ids => [host1[:uuid], host2[:uuid]],
         )
         expect(res).to be_2xx
@@ -463,7 +463,7 @@ module Candlepin
         expect(res).to be_2xx
 
         res = user_client.get_owner(
-          :key => owner[:key]
+          :owner => owner[:key]
         )
         expect(res).to be_missing
       end
@@ -487,7 +487,7 @@ module Candlepin
       it 'creates child owners' do
         parent = owner
         child = user_client.create_owner(
-          :key => rand_string,
+          :owner => rand_string,
           :display_name => rand_string,
           :parent_owner => parent,
         ).content
@@ -503,11 +503,11 @@ module Candlepin
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
-          :key => owner[:key],
+          :owner => owner[:key],
         )
 
         user_client.create_subscription(
-          :key => owner[:key],
+          :owner => owner[:key],
           :product_id => id1,
         )
 
@@ -525,7 +525,7 @@ module Candlepin
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
-          :key => owner[:key],
+          :owner => owner[:key],
         )
         expect(res).to be_2xx
         expect(res.content[:multiplier]).to eq(2)
@@ -537,18 +537,18 @@ module Candlepin
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
-          :key => owner[:key],
+          :owner => owner[:key],
         ).content
 
         res = user_client.delete_product(
           :product_id => product[:id],
-          :key => owner[:key],
+          :owner => owner[:key],
         )
         expect(res).to be_2xx
 
         res = user_client.get_owner_product(
           :product_id => product[:id],
-          :key => owner[:key],
+          :owner => owner[:key],
         )
         expect(res).to be_missing
       end
@@ -559,19 +559,19 @@ module Candlepin
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
-          :key => owner[:key],
+          :owner => owner[:key],
         ).content
 
         res = user_client.update_product(
           :product_id => product[:id],
           :multiplier => 8,
-          :key => owner[:key],
+          :owner => owner[:key],
         )
         expect(res).to be_2xx
 
         res = user_client.get_owner_product(
           :product_id => product[:id],
-          :key => owner[:key],
+          :owner => owner[:key],
         )
         expect(res.content[:multiplier]).to eq(8)
       end
@@ -608,7 +608,7 @@ module Candlepin
         end
 
         res = user_client.create_batch_owner_content(
-          :key => owner[:key],
+          :owner => owner[:key],
           :content => content,
         )
 
@@ -616,7 +616,7 @@ module Candlepin
 
         content = user_client.get_owner_content(
           :content_id => "content_4",
-          :key => owner[:key],
+          :owner => owner[:key],
         ).content
 
         expect(content[:label]).to eq("content_4")
@@ -627,13 +627,13 @@ module Candlepin
           :content_id => "hello",
           :name => "Hello",
           :label => "hello",
-          :key => owner[:key],
+          :owner => owner[:key],
           :content_url => "http://www.example.com",
         )
 
         res = user_client.update_owner_content(
           :content_id => "hello",
-          :key => owner[:key],
+          :owner => owner[:key],
           :label => "goodbye",
         )
 
@@ -641,7 +641,7 @@ module Candlepin
 
         content = user_client.get_owner_content(
           :content_id => "hello",
-          :key => owner[:key],
+          :owner => owner[:key],
         ).content
 
         expect(content[:label]).to eq("goodbye")
@@ -654,7 +654,7 @@ module Candlepin
 
       it "creates an environment" do
         env = user_client.create_owner_environment(
-          :key => owner[:key],
+          :owner => owner[:key],
           :name => rand_string,
           :description => rand_string,
           :id => rand_string
@@ -687,13 +687,13 @@ module Candlepin
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
-          :key => owner[:key],
+          :owner => owner[:key],
         ).content
 
         res = user_client.update_product_content(
           :product_id => product[:id],
           :content_id => content[:id],
-          :key => owner[:key],
+          :owner => owner[:key],
         )
 
         expect(res).to be_2xx
@@ -705,14 +705,14 @@ module Candlepin
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
-          :key => owner[:key],
+          :owner => owner[:key],
         ).content
         expect(product[:productContent]).to be_empty
 
         res = user_client.update_product_content(
           :product_id => product[:id],
           :content_id => content[:id],
-          :key => owner[:key],
+          :owner => owner[:key],
         )
         expect(res).to be_2xx
 
@@ -724,7 +724,7 @@ module Candlepin
         res = user_client.delete_product_content(
           :product_id => product[:id],
           :content_id => content[:id],
-          :key => owner[:key],
+          :owner => owner[:key],
         )
         expect(res).to be_2xx
 
@@ -857,11 +857,11 @@ module Candlepin
 
       it 'binds to a pool ID' do
         user_client.create_subscription(
-          :key => owner[:key],
+          :owner => owner[:key],
           :product_id => product[:id],
         ).content
 
-        pools = user_client.get_owner_pools(:key => owner[:key]).content
+        pools = user_client.get_owner_pools(:owner => owner[:key]).content
         expect(pools.first[:product][:id]).to eq(product[:id])
 
         x509_client = user_client.register_and_get_client(
@@ -879,11 +879,11 @@ module Candlepin
 
       it 'binds to a product ID' do
         user_client.create_subscription(
-          :key => owner[:key],
+          :owner => owner[:key],
           :product_id => product[:id],
         )
 
-        pools = user_client.get_owner_pools(:key => owner[:key]).content
+        pools = user_client.get_owner_pools(:owner => owner[:key]).content
         expect(pools.first[:product][:id]).to eq(product[:id])
 
         x509_client = user_client.register_and_get_client(
@@ -927,7 +927,7 @@ module Candlepin
         user = user_client.create_user_under_owner(
           :username => name,
           :password => password,
-          :key => owner[:key])
+          :owner => owner[:key])
         expect(user[:username]).to eq(name)
         expect(user[:password]).to eq(password)
 
@@ -942,7 +942,7 @@ module Candlepin
         user = user_client.create_user_under_owner(
           :username => name,
           :password => password,
-          :key => owner[:key])
+          :owner => owner[:key])
         expect(user[:username]).to eq(name)
         expect(user[:password]).to eq(password)
 
@@ -951,7 +951,7 @@ module Candlepin
         user2 = user_client.create_user_under_owner(
           :username => name2,
           :password => password2,
-          :key => owner[:key])
+          :owner => owner[:key])
         expect(user2[:username]).to eq(name2)
         expect(user2[:password]).to eq(password2)
 
@@ -968,7 +968,7 @@ module Candlepin
         user = user_client.create_user_under_owner(
           :username => name,
           :password => password,
-          :key => owner[:key])
+          :owner => owner[:key])
 
         expect(user_client.username).to eq('admin')
         user_client.switch_auth(user[:username], user[:password])
@@ -986,7 +986,7 @@ module Candlepin
         user = user_client.create_user_under_owner(
           :username => name,
           :password => password,
-          :key => owner[:key])
+          :owner => owner[:key])
 
         expect(user_client.username).to eq('admin')
         user_client.switch_auth(user)
@@ -1115,7 +1115,7 @@ module Candlepin
 
       it 'gets all owners with basic auth' do
         user_client.create_owner(
-          :key => rand_string,
+          :owner => rand_string,
           :display_name => rand_string,
         )
         res = user_client.get_all_owners
@@ -1224,7 +1224,7 @@ module Candlepin
 
       it 'creates subscriptions' do
         res = user_client.create_subscription(
-          :key => owner[:key],
+          :owner => owner[:key],
           :product_id => product[:id],
         )
         expect(res).to be_2xx
