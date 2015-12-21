@@ -81,7 +81,7 @@ module Candlepin
           :username => rand_string(:prefix => 'owner_admin'),
           :password => rand_string,
           :owner => owner[:key],
-          :super_admin => trutrue,
+          :super_admin => true,
         )
       end
 
