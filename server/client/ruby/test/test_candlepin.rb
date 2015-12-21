@@ -55,10 +55,12 @@ module Candlepin
 
       let(:owner) do
         key = rand_string(:prefix => 'owner')
-        user_client.create_owner(
+        res = user_client.create_owner(
           :owner => key,
           :display_name => key,
-        ).content
+        )
+        raise "Could not create owner for test" unless res.ok?
+        res.content
       end
 
       let(:owner_client) do
@@ -76,37 +78,34 @@ module Candlepin
         )
       end
 
-      let(:owner_admin) do
-        user_client.create_user_under_owner(
-          :username => rand_string(:prefix => 'owner_admin'),
-          :password => rand_string,
-          :owner => owner[:key],
-          :super_admin => true,
-        )
-      end
-
       let(:role) do
-        user_client.create_role(
+        res = user_client.create_role(
           :name => rand_string(:prefix => 'role'),
-        ).content
+        )
+        raise "Could not create role for test" unless res.ok?
+        res.content
       end
 
       let(:content) do
-        user_client.create_owner_content(
+        res = user_client.create_owner_content(
           :content_id => "hello",
           :name => "Hello",
           :label => "hello",
           :owner => owner[:key],
-        ).content
+        )
+        raise "Could not create content for test" unless res.ok?
+        res.content
       end
 
       let(:product) do
         p = rand_string(:prefix => 'product')
-        user_client.create_product(
+        res = user_client.create_product(
           :product_id => p,
           :name => "Product #{p}",
           :owner => owner[:key],
-        ).content
+        )
+        raise "Could not create product for test" unless res.ok?
+        res.content
       end
     end
 
