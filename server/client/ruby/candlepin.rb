@@ -419,11 +419,14 @@ module Candlepin
 
     module ConsumerResource
       def register_and_get_client(opts = {})
-        consumer = register(opts)
+        res = register(opts)
+        unless res.ok?
+          raise HTTPClient::BadResponseError.new("Could not register: #{res.header.inspect}")
+        end
         opts = @client_opts.dup
         opts.delete(:username)
         opts.delete(:password)
-        x509_client = X509Client.from_consumer(consumer.content, opts)
+        x509_client = X509Client.from_consumer(res.content, opts)
         x509_client
       end
 

@@ -936,6 +936,16 @@ module Candlepin
         res = x509_client.get_consumer
         expect(res.content[:uuid].length).to eq(36)
       end
+
+      it 'fails gracefully if a consumer client can not be created' do
+        expect do
+          x509_client = user_client.register_and_get_client(
+            :owner => "NO_OWNER",
+            :username => owner[:key],
+            :name => rand_string,
+          )
+        end.to raise_error(HTTPClient::BadResponseError)
+      end
     end
 
     context "in a Bind context", :functional => true do
