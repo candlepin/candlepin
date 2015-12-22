@@ -651,7 +651,7 @@ module Candlepin
     context "in an Environment context", :functional => true do
       include_context("functional context")
 
-      it "creates an environment" do
+      it 'creates an consumer in an environment' do
         env = user_client.create_owner_environment(
           :owner => owner[:key],
           :name => rand_string,
@@ -672,6 +672,42 @@ module Candlepin
           :consumer => consumer,
           :owner => owner[:key],
           :env_id => env[:id],
+        )
+        expect(res).to be_2xx
+      end
+
+      it 'promotes content to an environment' do
+        env = user_client.create_owner_environment(
+          :owner => owner[:key],
+          :name => rand_string,
+          :description => rand_string,
+          :id => rand_string
+        ).content
+
+        res = user_client.promote_content(
+          :env_id => env[:id],
+          :content_ids => content[:id],
+        )
+        expect(res).to be_2xx
+      end
+
+      it 'demotes content from an environment' do
+        env = user_client.create_owner_environment(
+          :owner => owner[:key],
+          :name => rand_string,
+          :description => rand_string,
+          :id => rand_string
+        ).content
+
+        res = user_client.promote_content(
+          :env_id => env[:id],
+          :content_ids => content[:id],
+        )
+        expect(res).to be_2xx
+
+        res = user_client.demote_content(
+          :env_id => env[:id],
+          :content_ids => content[:id],
         )
         expect(res).to be_2xx
       end

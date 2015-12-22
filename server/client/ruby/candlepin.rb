@@ -135,6 +135,8 @@ class JSONClient < HTTPClient
     super
   end
 
+  # This method appears to be deprecated in HTTPClient but I am
+  # overriding it here in case other HTTPClient internals use it.
   def request_async(method, uri, query = nil, body = nil, header = {})
     # Hack to address https://github.com/nahi/httpclient/issues/285
     # We need to strip off any leading slash on a relative URL
@@ -738,16 +740,53 @@ module Candlepin
         delete_by_id("/environments", :id, opts)
       end
 
-      def promote_content
+      # Note that the enabled flag passed in will be applied to
+      # *all* content ids provided.
+      def promote_content(opts = {})
         defaults = {
           :env_id => nil,
-          :content => nil,
+          :content_ids => nil,
+          :enabled => true,
+          :lazy_regen => true,
         }
         opts = verify_and_merge(opts, defaults)
-        validate_keys(opts, :env_id)
+        validate_keys(opts, :env_id, :content_ids)
 
-        url = "/environments/#{env_id}/content"
-        post(url, content_promotions)
+        unless opts[:content_ids].kind_of?(Array)
+          opts[:content_ids] = [opts[:content_ids]]
+        end
+
+        body = []
+        opts[:content_ids].each do |c|
+          body << {
+            :contentId => c,
+            :environmentId => opts[:env_id],
+            :enabled => opts[:enabled]
+          }
+        end
+
+        url = "/environments/#{opts[:env_id]}/content"
+        post(url,
+          :body => body,
+          :query => opts.slice(:lazy_regen))
+      end
+
+      def demote_content(opts = {})
+        defaults = {
+          :env_id => nil,
+          :content_ids => [],
+          :lazy_regen => true,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :env_id, :content_ids)
+
+        unless opts[:content_ids].kind_of?(Array)
+          opts[:content_ids] = [opts[:content_ids]]
+        end
+        url = "/environments/#{opts[:env_id]}/content"
+        query = opts.slice(:lazy_regen)
+        query[:content] = opts[:content_ids]
+        delete(url, :query => query)
       end
 
       def create_consumer_in_environment(opts = {})
