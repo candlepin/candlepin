@@ -821,6 +821,20 @@ module Candlepin
         delete_by_id("/activation_keys", :id, opts)
       end
 
+      # Using this method is not recommended as the JSON structure
+      # for an activation key is complex and no assistance is provided
+      # for building that structure.
+      def update_activation_key(opts = {})
+        defaults = {
+          :id => nil,
+          :activation_key => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :id, :activation_key)
+
+        put("/activation_keys/#{opts[:id]}", :body => opts[:activation_key])
+      end
+
       def get_activation_key_pools(opts = {})
         defaults = {
           :id => nil,

@@ -145,6 +145,26 @@ module Candlepin
         expect(res).to be_2xx
       end
 
+      it 'updates an activation key' do
+        owner_client = BasicAuthClient.new
+        owner_client.key = owner[:key]
+        res = owner_client.create_activation_key(
+          :name => rand_string,
+          :description => rand_string,
+        )
+        expect(res).to be_2xx
+
+        activation_key = res.content
+        modified_key = activation_key.deep_dup
+        modified_key.extract!(:id)
+        modified_key[:description] = "Something new"
+
+        res = user_client.update_activation_key(
+          :id => activation_key[:id],
+          :activation_key => modified_key)
+        expect(res).to be_2xx
+      end
+
       it 'adds pools to activation keys' do
         activation_key = owner_client.create_activation_key(
           :name => rand_string,
