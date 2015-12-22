@@ -4,7 +4,7 @@ require 'webrick'
 require 'webrick/https'
 
 require 'rspec/autorun'
-require '../candlepin'
+require_relative '../candlepin'
 
 RSpec.configure do |config|
   config.color = true
@@ -1395,6 +1395,27 @@ module Candlepin
           :port => TEST_PORT)
         res = simple_client.get_type('bad/type', '/status')
         expect(res.content).to eq("ERROR")
+      end
+
+      it 'fails fast if told to do so' do
+        simple_client = NoAuthClient.new(
+          :port => TEST_PORT,
+          :fail_fast => true)
+        expect do
+          res = simple_client.get('/does/not/exist')
+        end.to raise_error(HTTPClient::BadResponseError)
+      end
+
+      it 'fails fast if set after the fact' do
+        simple_client = NoAuthClient.new(
+          :port => TEST_PORT)
+        res = simple_client.get('/does/not/exist')
+        expect(res.status).to eq(404)
+
+        simple_client.fail_fast = true
+        expect do
+          res = simple_client.get('/does/not/exist')
+        end.to raise_error(HTTPClient::BadResponseError)
       end
 
       it 'fails to connect if no CA given in strict mode' do

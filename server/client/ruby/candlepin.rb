@@ -72,6 +72,7 @@ class JSONClient < HTTPClient
     @header_filter = JSONRequestHeaderFilter.new(self)
     @request_filter << @header_filter
     @content_type_json = 'application/json'
+    @fail_fast = keyword_argument(args, :fail_fast).first
   end
 
   # Takes in a uri, either a hash or individual arguments, and a block
@@ -117,10 +118,24 @@ class JSONClient < HTTPClient
     if @base_url && u.scheme.nil? && u.host.nil?
       uri = uri[1..-1] if uri[0] == "/"
     end
-    super
+    res = super
+    if !res.ok? && @fail_fast
+      raise BadResponseError.new("Failed request: #{res.header.inspect}")
+    end
+    res
   end
 
   def request_async2(method, uri, *args, &block)
+    # Hack to address https://github.com/nahi/httpclient/issues/285
+    # We need to strip off any leading slash on a relative URL
+    u = HTTPClient::Util.urify(uri)
+    if @base_url && u.scheme.nil? && u.host.nil?
+      uri = uri[1..-1] if uri[0] == "/"
+    end
+    super
+  end
+
+  def request_async(method, uri, query = nil, body = nil, header = {})
     # Hack to address https://github.com/nahi/httpclient/issues/285
     # We need to strip off any leading slash on a relative URL
     u = HTTPClient::Util.urify(uri)
@@ -1256,9 +1271,10 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         # The model in actually expects "key", but I'm keeping
         # it as owner for consistency
-        opts[:key] = opts.extract!(:owner)[:owner]
+        body = opts.except(:owner)
+        body[:key] = opts[:owner]
 
-        post("/owners", camelize_hash(opts))
+        post("/owners", camelize_hash(body))
       end
 
       def create_owner_environment(opts = {})
@@ -1977,11 +1993,12 @@ module Candlepin
     attr_accessor :use_ssl
     attr_accessor :host
     attr_accessor :port
-    attr_accessor :context
     attr_accessor :insecure
     attr_accessor :ca_path
     attr_accessor :connection_timeout
     attr_accessor :client
+    attr_reader :context
+    attr_reader :fail_fast
 
     # Shorten the name of this useful method
     alias_method :ok_content, :success_content
@@ -2000,6 +2017,8 @@ module Candlepin
     #     are often dealing with self-signed certificates.
     # * :connection_timeout:: How long in seconds to wait before the connection times
     #     out. Defaults to <b>3 seconds</b>.
+    # * :fail_fast:: If an exception should be raised on a non-200 response. Redirects
+    #     are considered failures.
     def initialize(opts = {})
       defaults = {
         :host => 'localhost',
@@ -2008,6 +2027,7 @@ module Candlepin
         :use_ssl => true,
         :insecure => true,
         :connection_timeout => 3,
+        :fail_fast => false,
       }
       @client_opts = defaults.merge(opts)
       # Subclasses must provide an attr_writer or attr_accessor for every key
@@ -2023,6 +2043,11 @@ module Candlepin
       if !val.nil? && val[0] != '/'
         @context = "/#{val}"
       end
+    end
+
+    def fail_fast=(val)
+      @fail_fast = val
+      reload if @client
     end
 
     def debug
@@ -2084,7 +2109,7 @@ module Candlepin
     # to communicate with the server.  In most circumstances, you should not
     # need to access it, but it is there if you need it.
     def raw_client
-      client = JSONClient.new(:base_url => base_url)
+      client = JSONClient.new(:base_url => base_url, :fail_fast => fail_fast)
       # Three seconds is the default and that is pretty aggressive, but this code is mainly
       # meant for spec tests and we don't want to wait all day for connections to timeout
       # if something is wrong.
