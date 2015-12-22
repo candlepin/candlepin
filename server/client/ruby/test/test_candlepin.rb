@@ -383,6 +383,27 @@ module Candlepin
         expect(res).to be_2xx
       end
 
+      it 'lists owner consumers by type' do
+        res = user_client.register(
+          :owner => owner[:key],
+          :username => owner_user[:username],
+          :name => rand_string,
+        )
+        res = user_client.get_owner_consumers(
+          :owner => owner[:key],
+          :types => :system,
+        )
+        expect(res).to be_2xx
+        expect(res.content.length).to eq(1)
+
+        res = user_client.get_owner_consumers(
+          :owner => owner[:key],
+          :types => :candlepin,
+        )
+        expect(res).to be_2xx
+        expect(res.content).to be_empty
+      end
+
       it 'refreshes pools synchronously' do
         prod_id = rand_string
         user_client.create_product(

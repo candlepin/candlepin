@@ -1276,6 +1276,7 @@ module Candlepin
           :owner => key,
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :owner)
 
         get("/owners/#{opts[:owner]}/#{subresource}")
       end
@@ -1293,7 +1294,25 @@ module Candlepin
       end
 
       def get_owner_consumers(opts = {})
-        get_owner_subresource("consumers", opts)
+        defaults = {
+          :owner => key,
+          :types => [],
+          :facts => [],
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :owner)
+
+        unless opts[:types].kind_of?(Array)
+          opts[:types] = [opts[:types]]
+        end
+
+        unless opts[:facts].kind_of?(Array)
+          opts[:facts] = [opts[:facts]]
+        end
+
+        get("/owners/#{opts[:owner]}/consumers",
+          :type => opts[:types],
+          :facts => opts[:facts])
       end
 
       def get_owner_subscriptions(opts = {})
