@@ -1891,6 +1891,33 @@ module Candlepin
 
         get("/products/#{opts[:product_id]}/statistics/#{opts[:val_type]}")
       end
+
+      def refresh_pools_for_product_async(opts = {})
+        defaults = {
+          :product_ids => [],
+          :lazy_regen => false,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :product_ids)
+        unless opts[:product_ids].kind_of?(Array)
+          opts[:product_ids] = [opts[:product_ids]]
+        end
+        query = opts.slice(:lazy_regen)
+        query[:product] = opts[:product_ids]
+
+        # HTTPClient is a little quirky here.  It does not expect
+        # a PUT without a body, so we need to provide a dummy body.
+        put_async("/products/subscriptions",
+          :query => query,
+          :body => nil)
+      end
+
+      # Same as async call but just block before returning
+      def refresh_pools_for_product(opts = {})
+        connection = refresh_pools_for_product_async(opts)
+        connection.join
+        connection.pop
+      end
     end
 
     module SubscriptionResource

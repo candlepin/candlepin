@@ -364,9 +364,9 @@ module Candlepin
       end
 
       it 'refreshes pools synchronously' do
-        id1 = rand_string
+        prod_id = rand_string
         user_client.create_product(
-          :product_id => id1,
+          :product_id => prod_id,
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
@@ -375,14 +375,14 @@ module Candlepin
 
         user_client.create_subscription(
           :owner => owner[:key],
-          :product_id => id1,
+          :product_id => prod_id,
         )
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
         expect(pools.first[:product][:multiplier]).to eq(2)
 
         user_client.update_product(
-          :product_id => id1,
+          :product_id => prod_id,
           :multiplier => 4,
           :owner => owner[:key],
         )
@@ -395,23 +395,23 @@ module Candlepin
       end
 
       it 'refreshes pools asynchronously' do
-        id1 = rand_string
+        prod_id = rand_string
         owner_client.create_product(
-          :product_id => id1,
+          :product_id => prod_id,
           :name => rand_string,
           :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
         )
 
         owner_client.create_subscription(
-          :product_id => id1,
+          :product_id => prod_id,
         )
 
         pools = owner_client.get_owner_pools.content
         expect(pools.first[:product][:multiplier]).to eq(2)
 
         owner_client.update_product(
-          :product_id => id1,
+          :product_id => prod_id,
           :multiplier => 4,
         )
 
@@ -421,6 +421,37 @@ module Candlepin
         expect(result.pop).to be_2xx
 
         pools = owner_client.get_owner_pools.content
+        expect(pools.first[:product][:multiplier]).to eq(4)
+      end
+
+      it 'refreshes pools for a product' do
+        prod_id = rand_string
+        user_client.create_product(
+          :product_id => prod_id,
+          :name => rand_string,
+          :multiplier => 2,
+          :attributes => { :arch => 'x86_64' },
+          :owner => owner[:key],
+        )
+
+        user_client.create_subscription(
+          :owner => owner[:key],
+          :product_id => prod_id,
+        )
+
+        pools = user_client.get_owner_pools(:owner => owner[:key]).content
+        expect(pools.first[:product][:multiplier]).to eq(2)
+
+        user_client.update_product(
+          :product_id => prod_id,
+          :multiplier => 4,
+          :owner => owner[:key],
+        )
+
+        result = user_client.refresh_pools_for_product(:product_ids => prod_id)
+        expect(result).to be_2xx
+
+        pools = user_client.get_owner_pools(:owner => owner[:key]).content
         expect(pools.first[:product][:multiplier]).to eq(4)
       end
 
