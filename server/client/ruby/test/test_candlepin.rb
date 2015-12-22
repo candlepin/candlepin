@@ -1105,7 +1105,9 @@ module Candlepin
       end
 
       it 'updates users' do
-        res = user_client.update_user(:username => owner_user[:username], :password => rand_string)
+        res = user_client.update_user(
+          :username => owner_user[:username],
+          :password => rand_string)
         expect(res.content[:hashedPassword]).to_not eq(owner_user[:hashedPassword])
       end
 
@@ -1243,6 +1245,80 @@ module Candlepin
           :capabilities => [:cores],
         )
         expect(res).to be_2xx
+      end
+
+      it 'regenerates a certificate by entitlement' do
+        consumer = user_client.register(
+          :owner => owner[:key],
+          :username => owner_user[:username],
+          :name => rand_string,
+        ).content
+
+        user_client.create_subscription(
+          :owner => owner[:key],
+          :product_id => product[:id],
+        )
+
+        pools = user_client.get_owner_pools(:owner => owner[:key]).content
+        expect(pools.first[:product][:id]).to eq(product[:id])
+
+        x509_client = user_client.register_and_get_client(
+          :owner => owner[:key],
+          :name => rand_string,
+        )
+
+        res = x509_client.bind(:pool_id => pools.first[:id])
+        expect(res).to be_2xx
+
+        entitlement = res.content.first
+
+        res = user_client.regen_certificates_by_consumer(
+          :uuid => consumer[:uuid],
+          :entitlement_id => entitlement[:id],
+          :lazy_regen => false)
+
+        expect(res).to be_2xx
+
+        regened_entitlement = x509_client.get_entitlement(
+          :entitlement_id => entitlement[:id]).content
+
+        new_cert = regened_entitlement[:certificates].first[:cert]
+        old_cert = entitlement[:certificates].first[:cert]
+        expect(new_cert).to_not eq(old_cert)
+      end
+
+      it 'regenerates a certificate by product' do
+        consumer = user_client.register(
+          :owner => owner[:key],
+          :username => owner_user[:username],
+          :name => rand_string,
+        ).content
+
+        user_client.create_subscription(
+          :owner => owner[:key],
+          :product_id => product[:id],
+        )
+
+        pools = user_client.get_owner_pools(:owner => owner[:key]).content
+        expect(pools.first[:product][:id]).to eq(product[:id])
+
+        x509_client = user_client.register_and_get_client(
+          :owner => owner[:key],
+          :name => rand_string,
+        )
+
+        res = x509_client.bind(:pool_id => pools.first[:id])
+        expect(res).to be_2xx
+
+        entitlement = res.content.first
+
+        res = user_client.regen_certificates_by_product(
+          :product_id => product[:id],
+          :lazy_regen => false)
+
+        expect(res).to be_2xx
+        # Regenerating by product begins a job
+        expect(res.content).to have_key(:state)
       end
 
       it 'allows a client to set a sticky uuid' do

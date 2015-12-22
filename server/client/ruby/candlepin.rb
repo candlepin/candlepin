@@ -537,6 +537,7 @@ module Candlepin
           :deleted_uuid => nil,
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :deleted_uuid)
 
         path = "/consumers/#{opts[:deleted_uuid]}/deletionrecord"
         delete(path)
@@ -547,6 +548,7 @@ module Candlepin
           :uuid => uuid,
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid)
 
         delete("/consumers/#{opts[:uuid]}/entitlements")
       end
@@ -557,6 +559,7 @@ module Candlepin
           :entitlement_id => nil,
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid, :entitlement_id)
 
         get("/consumers/#{opts[:uuid]}/entitlements/#{opts[:entitlement_id]}")
       end
@@ -566,6 +569,7 @@ module Candlepin
           :uuid => uuid,
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid)
 
         delete("/consumers/#{opts[:uuid]}")
       end
@@ -582,6 +586,7 @@ module Candlepin
           :capabilities => [],
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid)
 
         body = opts.dup
 
@@ -605,6 +610,7 @@ module Candlepin
           :uuid => uuid,
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid)
 
         get("/consumers/#{opts[:uuid]}")
       end
@@ -614,6 +620,7 @@ module Candlepin
           :uuid => uuid,
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid)
 
         get("/consumers/#{opts[:uuid]}/events")
       end
@@ -623,6 +630,7 @@ module Candlepin
           :uuid => uuid,
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid)
 
         get("/consumers/#{opts[:uuid]}/host")
       end
@@ -632,6 +640,7 @@ module Candlepin
           :uuid => uuid,
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid)
 
         get("/consumers/#{opts[:uuid]}/guests")
       end
@@ -641,6 +650,7 @@ module Candlepin
           :uuid => uuid,
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid)
 
         get_text("/consumers/#{opts[:uuid]}/atom")
       end
@@ -650,6 +660,7 @@ module Candlepin
           :uuid => uuid,
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid)
 
         get("/consumers/#{opts[:uuid]}/certificates/serials")
       end
@@ -660,6 +671,7 @@ module Candlepin
           :serials => [],
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid, :serials)
 
         unless opts[:serials].kind_of?(Array)
           opts[:serials] = [opts[:serials]]
@@ -668,6 +680,22 @@ module Candlepin
         get("/consumers/#{opts[:uuid]}/certificates", :query => {
           :serials => opts[:serials].join(",")
         })
+      end
+
+      def regen_certificates_by_consumer(opts = {})
+        defaults = {
+          :uuid => uuid,
+          :entitlement_id => nil,
+          :lazy_regen => true,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid)
+
+        query = opts.slice(:lazy_regen)
+        query[:entitlement] = opts[:entitlement_id] if opts[:entitlement_id]
+
+        put("/consumers/#{opts[:uuid]}/certificates",
+          :query => query)
       end
 
       def update_all_guest_ids(opts = {})
@@ -1004,6 +1032,18 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
 
         get_text("/entitlements/#{opts[:id]}/upstream_cert")
+      end
+
+      def regen_certificates_by_product(opts = {})
+        defaults = {
+          :product_id => nil,
+          :lazy_regen => true,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :product_id)
+
+        put("/entitlements/product/#{opts[:product_id]}",
+          :query => opts.slice(:lazy_regen))
       end
 
       def update_entitlement(opts = {})
