@@ -222,7 +222,7 @@ public class Entitler {
             // create one. If a dev pool already exists, remove it and
             // create a new one.
             String sku = consumer.getFact("dev_sku");
-            Pool devPool = poolCurator.findDevPool(consumer, sku);
+            Pool devPool = poolCurator.findDevPool(consumer);
             if (devPool != null) {
                 poolManager.deletePool(devPool);
             }
