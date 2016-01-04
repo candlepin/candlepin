@@ -760,15 +760,12 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return result;
     }
 
-    public Pool findDevPool(Consumer consumer, String sku) {
-
+    public Pool findDevPool(Consumer consumer) {
         PoolFilterBuilder filters = new PoolFilterBuilder();
         filters.addAttributeFilter(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
         filters.addAttributeFilter(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
 
-        Criteria criteria =  currentSession().createCriteria(Pool.class)
-                .createAlias("product", "p")
-                .add(Restrictions.eq("p.id", sku));
+        Criteria criteria =  currentSession().createCriteria(Pool.class);
         filters.applyTo(criteria);
         criteria.setMaxResults(1).uniqueResult();
         return (Pool) criteria.uniqueResult();
