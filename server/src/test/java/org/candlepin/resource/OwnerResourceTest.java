@@ -35,6 +35,7 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -1583,6 +1584,37 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         );
 
         EntitlementCertificate result = resource.createUeberCertificate(principal, "admin");
+    }
+
+    @Test
+    public void testReturnBlankSLAForDevConsumer() {
+        ConsumerCurator cc = mock(ConsumerCurator.class);
+        OwnerCurator oc = mock(OwnerCurator.class);
+        PoolManager pm = mock(PoolManager.class);
+        Principal p = mock(Principal.class);
+        Consumer c = mock(Consumer.class);
+        Owner o = mock(Owner.class);
+
+        when(cc.findByUuid(any(String.class))).thenReturn(c);
+        when(c.isDev()).thenReturn(true);
+        when(p.getType()).thenReturn("consumer");
+        when(p.getName()).thenReturn("uuid");
+        when(oc.lookupByKey(any(String.class))).thenReturn(o);
+        when(o.getId()).thenReturn("ownerId");
+        Set<String> levels = new HashSet<String>();
+        levels.add("High");
+        levels.add("Low");
+        when(pm.retrieveServiceLevelsForOwner(eq(o), eq(false))).thenReturn(levels);
+
+        OwnerResource resource = new OwnerResource(
+                oc, null, cc, null, i18n, null, null, null, null, null, pm, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null, null, null, null
+            );
+        Set<String> returnLevels = resource.ownerServiceLevels("owner-A", p, "false");
+        assert (returnLevels.size() == 1);
+        for (String s : returnLevels) {
+            assert (s.equals(""));
+        }
     }
 
 }
