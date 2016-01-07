@@ -531,6 +531,29 @@ module Candlepin
 
         post("/consumers/#{opts[:uuid]}/entitlements", :query => query_args)
       end
+      
+      def regen_identity_certificate(opts = {})
+        defaults = {
+          :uuid => uuid,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid)
+
+        post("/consumers/#{opts[:uuid]}")
+      end
+
+      def regen_identity_certificate_and_get_client(opts = {})
+        res = regen_identity_certificate(opts)
+
+        unless res.ok?
+          raise HTTPClient::BadResponseError.new("Could not register: #{res.header.inspect}")
+        end
+        opts = @client_opts.dup
+        opts.delete(:client_cert)
+        opts.delete(:client_key)
+        new_client = X509Client.from_consumer(res.content, opts)
+        new_client
+      end
 
       def delete_deletion_record(opts = {})
         defaults = {
@@ -603,6 +626,22 @@ module Candlepin
         put(path, body)
       end
 
+      def get_compliance_list(opts = {})
+        defaults = {
+          :uuids => [],
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuids)
+        
+        unless opts[:uuids].kind_of?(Array)
+          opts[:uuids] = [opts[:uuids]]
+        end
+
+        get("/consumers/compliance",
+          :uuid => opts[:uuids]
+        )
+      end
+
       def get_consumer(opts = {})
         # Can't use get_by_id here because of our usage of the
         # "sticky" uuid.
@@ -623,6 +662,20 @@ module Candlepin
         validate_keys(opts, :uuid)
 
         get("/consumers/#{opts[:uuid]}/events")
+      end
+
+      def get_consumer_compliance(opts = {})
+        defaults = {
+          :uuid => uuid,
+          :on_date => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid)
+
+        query = opts.slice(:on_date) if opts[:on_date]
+        get("/consumers/#{opts[:uuid]}/compliance",
+          :query => query
+        )
       end
 
       def get_consumer_host(opts = {})

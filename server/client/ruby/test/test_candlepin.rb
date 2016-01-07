@@ -969,6 +969,66 @@ module Candlepin
       end
     end
 
+    context "in a Consumer context", :functional => true do
+      include_context("functional context")
+
+      it 'gets compliance status' do
+        user_client.create_subscription(
+          :owner => owner[:key],
+          :product_id => product[:id],
+        ).content
+
+        pools = user_client.get_owner_pools(:owner => owner[:key]).content
+        expect(pools.first[:product][:id]).to eq(product[:id])
+
+        x509_client = user_client.register_and_get_client(
+          :owner => owner[:key],
+          :name => rand_string,
+        )
+        x509_client.bind(:pool_id => pools.first[:id])
+        res = x509_client.get_consumer_compliance
+        expect(res).to be_2xx
+        expect(res.content[:status]).to eq('valid')
+      end
+
+      it 'gets a list of compliance statuses' do
+        user_client.create_subscription(
+          :owner => owner[:key],
+          :product_id => product[:id],
+        ).content
+
+        pools = user_client.get_owner_pools(:owner => owner[:key]).content
+        expect(pools.first[:product][:id]).to eq(product[:id])
+
+        x509_client = user_client.register_and_get_client(
+          :owner => owner[:key],
+          :name => rand_string,
+        )
+        x509_client.bind(:pool_id => pools.first[:id])
+
+        res = user_client.get_compliance_list(:uuids => x509_client.uuid)
+        expect(res).to be_2xx
+        expect(res.content[x509_client.uuid.to_sym][:status]).to eq('valid')
+      end
+
+      it 'regenerates an identity certificate' do
+        x509_client = user_client.register_and_get_client(
+          :owner => owner[:key],
+          :name => rand_string,
+        )
+        res = x509_client.get_consumer_compliance
+        expect(res).to be_2xx
+        original_cert_serial = x509_client.client_cert.serial
+
+        new_client = x509_client.regen_identity_certificate_and_get_client
+        expect(res).to be_2xx
+
+        expect(new_client.client_cert.serial).to_not eq(original_cert_serial)
+        res = new_client.get_consumer_compliance
+        expect(res).to be_2xx
+      end
+    end
+
     context "in a Bind context", :functional => true do
       include_context("functional context")
 
