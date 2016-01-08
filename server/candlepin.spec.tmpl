@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.51.13
+Version: 0.9.51.14
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -213,6 +213,9 @@ fi
 
 #raw
 %changelog
+* Fri Jan 08 2016 Alex Wood <awood@redhat.com> 0.9.51.14-1
+- 1295452: Look up dev sku by consumer only (mstead@redhat.com)
+
 * Mon Dec 14 2015 Alex Wood <awood@redhat.com> 0.9.51.13-1
 - 1252145: Backport allow searching consumers by SKU, contract, or sub ID.
   (awood@redhat.com)
