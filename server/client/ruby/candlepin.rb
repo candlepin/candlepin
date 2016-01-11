@@ -1585,6 +1585,16 @@ module Candlepin
         post("/owners/#{opts[:owner]}/subscriptions", body)
       end
 
+      def update_subscription(opts = {})
+        defaults = {
+          :subscription => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :subscription)
+
+        put("/owners/subscriptions", opts[:subscription])
+      end
+
       def update_owner(opts = {})
         defaults = {
           :owner => key,

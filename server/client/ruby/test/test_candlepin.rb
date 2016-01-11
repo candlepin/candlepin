@@ -353,6 +353,22 @@ module Candlepin
         expect(res.content[:displayName]).to_not eq(old_name)
       end
 
+      it 'updates an owner subscription' do
+        sub = owner_client.create_subscription(
+          :owner => owner[:key],
+          :product_id => product[:id],
+        ).content
+
+        original_quantity = sub[:quantity]
+
+        sub[:quantity] = sub[:quantity] + 10
+        res = owner_client.update_subscription(:subscription => sub)
+        expect(res).to be_2xx
+
+        modified_sub = owner_client.get_owner_subscriptions.content.first
+        expect(modified_sub[:quantity]).to_not eq(original_quantity)
+      end
+
       it 'gets owner service levels' do
         res = owner_client.get_owner_service_levels(
           :exempt => true,
