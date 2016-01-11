@@ -1227,7 +1227,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool.setAttribute("dev_pool", "true");
         poolCurator.create(pool);
 
-        Pool found = poolCurator.findDevPool(consumer, product.getId());
+        Pool found = poolCurator.findDevPool(consumer);
         assertNotNull(found);
         assertEquals(pool.getId(), found.getId());
     }
@@ -1240,30 +1240,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool.setAttribute("dev_pool", "true");
         poolCurator.create(pool);
 
-        Pool found = poolCurator.findDevPool(consumer, product.getId());
-        assertNull(found);
-    }
-
-    @Test
-    public void testDevPoolForConsumerNotFoundReturnsNullWhenNoMatchOnDevPool() throws Exception {
-        Pool pool = createPool(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
-            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
-        pool.setAttribute("requires_consumer", consumer.getUuid());
-        poolCurator.create(pool);
-
-        Pool found = poolCurator.findDevPool(consumer, product.getId());
-        assertNull(found);
-    }
-
-    @Test
-    public void testDevPoolForConsumerNotFoundReturnsNullWhenNoMatchOnProductId() throws Exception {
-        Pool pool = createPool(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
-            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
-        pool.setAttribute("requires_consumer", consumer.getUuid());
-        pool.setAttribute("dev_pool", "true");
-        poolCurator.create(pool);
-
-        Pool found = poolCurator.findDevPool(consumer, "does-not-exist");
+        Pool found = poolCurator.findDevPool(consumer);
         assertNull(found);
     }
 }
