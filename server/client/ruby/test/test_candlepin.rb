@@ -1074,6 +1074,25 @@ module Candlepin
         expect(entitlement[:certificates].first.key?(:key)).to be_true
       end
 
+      it 'performs a dry run of autobind' do
+        user_client.create_subscription(
+          :owner => owner[:key],
+          :product_id => product[:id],
+        ).content
+
+        pools = user_client.get_owner_pools(:owner => owner[:key]).content
+        expect(pools.first[:product][:id]).to eq(product[:id])
+
+        x509_client = user_client.register_and_get_client(
+          :owner => owner[:key],
+          :name => rand_string,
+          :installed_products => product[:id],
+        )
+
+        res = x509_client.autobind_dryrun
+        expect(res).to be_2xx
+      end
+
       it 'binds to a product ID' do
         user_client.create_subscription(
           :owner => owner[:key],

@@ -531,7 +531,19 @@ module Candlepin
 
         post("/consumers/#{opts[:uuid]}/entitlements", :query => query_args)
       end
-      
+
+      def autobind_dryrun(opts = {})
+        defaults = {
+          :uuid => uuid,
+          :service_level => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid)
+
+        get("/consumers/#{opts[:uuid]}/entitlements/dry-run",
+          :query => opts.slice(:service_level).compact)
+      end
+
       def regen_identity_certificate(opts = {})
         defaults = {
           :uuid => uuid,
