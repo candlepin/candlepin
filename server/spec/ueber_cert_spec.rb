@@ -53,8 +53,10 @@ describe 'Uebercert' do
     @cp.add_content_to_product(owner1['key'], prod1.id, content2.id, true)
     @cp.add_content_to_product(owner1['key'], prod2.id, content3.id, true)
 
-    create_pool_and_subscription(owner1['key'], prod1.id, 10, [], '12345', '6789', 'order1')
-    create_pool_and_subscription(owner1['key'], prod2.id, 10, [], 'abcde', 'fghi', 'order2')
+    create_pool_and_subscription(owner1['key'], prod1.id, 10, [], '12345', '6789', 'order1',
+				nil, nil, true)
+    create_pool_and_subscription(owner1['key'], prod2.id, 10, [], 'abcde', 'fghi', 'order2',
+				nil, nil, true)
     create_pool_and_subscription(owner1['key'], prod3.id, 10, [], 'qwert', 'yuio', 'order3')
 
     # generate and verify cert

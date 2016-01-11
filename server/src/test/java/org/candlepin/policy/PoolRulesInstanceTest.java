@@ -80,7 +80,8 @@ public class PoolRulesInstanceTest {
     @Test
     public void hostedCreateInstanceBasedPool() {
         Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, false);
-        List<Pool> pools = poolRules.createAndEnrichPools(s);
+        Pool p = TestUtil.copyFromSub(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(1, pools.size());
 
         Pool pool = pools.get(0);
@@ -92,7 +93,8 @@ public class PoolRulesInstanceTest {
     @Test
     public void standaloneCreateInstanceBasedPool() {
         Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, true);
-        List<Pool> pools = poolRules.createAndEnrichPools(s);
+        Pool p = TestUtil.copyFromSub(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(1, pools.size());
 
         Pool pool = pools.get(0);
@@ -106,19 +108,21 @@ public class PoolRulesInstanceTest {
     @Test
     public void hostedInstanceBasedUpdatePool() {
         Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, false);
-        List<Pool> pools = poolRules.createAndEnrichPools(s);
+        Pool p = TestUtil.copyFromSub(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(1, pools.size());
         Pool pool = pools.get(0);
 
+        p = TestUtil.copyFromSub(s);
         // Change the value of instance multiplier:
-        s.getProduct().setAttribute("instance_multiplier", "4");
+        p.getProduct().setAttribute("instance_multiplier", "4");
         // Change the quantity:
-        s.setQuantity(new Long(200));
+        p.setQuantity(new Long(200));
 
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
-        List<PoolUpdate> updates = poolRules.updatePools(s, existingPools,
-                TestUtil.stubChangedProducts(s.getProduct()));
+        List<PoolUpdate> updates = poolRules.updatePools(p, existingPools, p.getQuantity(),
+                TestUtil.stubChangedProducts(p.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -129,20 +133,22 @@ public class PoolRulesInstanceTest {
     @Test
     public void hostedInstanceBasedRemoved() {
         Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, false);
-        List<Pool> pools = poolRules.createAndEnrichPools(s);
+        Pool masterPool = TestUtil.copyFromSub(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(masterPool, new LinkedList<Pool>());
         assertEquals(1, pools.size());
         Pool pool = pools.get(0);
 
         // Remove the instance multiplier attribute entirely, pool quantity should
         // revert to half of what it was. No existing entitlements need to be adjusted,
         // we will let a (future) overconsumption routine handle that.
-        ProductAttribute pa = s.getProduct().getAttribute("instance_multiplier");
-        s.getProduct().getAttributes().remove(pa);
+        masterPool = TestUtil.copyFromSub(s);
+        ProductAttribute pa = masterPool.getProduct().getAttribute("instance_multiplier");
+        masterPool.getProduct().getAttributes().remove(pa);
 
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
-        List<PoolUpdate> updates = poolRules.updatePools(s, existingPools,
-                TestUtil.stubChangedProducts(s.getProduct()));
+        List<PoolUpdate> updates = poolRules.updatePools(masterPool, existingPools, s.getQuantity(),
+                TestUtil.stubChangedProducts(masterPool.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -154,19 +160,21 @@ public class PoolRulesInstanceTest {
     @Test
     public void standaloneInstanceBasedUpdatePool() {
         Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, true);
-        List<Pool> pools = poolRules.createAndEnrichPools(s);
+        Pool masterPool = TestUtil.copyFromSub(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(masterPool, new LinkedList<Pool>());
         assertEquals(1, pools.size());
         Pool pool = pools.get(0);
 
+        masterPool = TestUtil.copyFromSub(s);
         // Change the value of instance multiplier:
-        s.getProduct().setAttribute("instance_multiplier", "4");
+        masterPool.getProduct().setAttribute("instance_multiplier", "4");
         // Change the quantity as well:
-        s.setQuantity(new Long(200));
+        masterPool.setQuantity(new Long(200));
 
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
-        List<PoolUpdate> updates = poolRules.updatePools(s, existingPools,
-                TestUtil.stubChangedProducts(s.getProduct()));
+        List<PoolUpdate> updates = poolRules.updatePools(masterPool, existingPools,
+                masterPool.getQuantity(), TestUtil.stubChangedProducts(masterPool.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -177,13 +185,11 @@ public class PoolRulesInstanceTest {
         assertEquals(new Long(200), update.getPool().getQuantity());
     }
 
-    private Subscription createInstanceBasedSub(String productId, int quantity,
-        int instanceMultiplier, boolean exported) {
+    private Subscription createInstanceBasedSub(String productId, int quantity, int instanceMultiplier,
+            boolean exported) {
         Owner owner = new Owner("Test Corporation");
         Product product = new Product(productId, productId, owner);
-        product.setAttribute("instance_multiplier",
-            Integer.toString(instanceMultiplier));
-        when(prodCuratorMock.lookupById(owner, productId)).thenReturn(product);
+        product.setAttribute("instance_multiplier", Integer.toString(instanceMultiplier));
         Subscription s = TestUtil.createSubscription(owner, product);
         if (exported) {
             s.setUpstreamPoolId("SOMETHING");

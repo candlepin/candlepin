@@ -23,7 +23,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
-import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.AttributeHelper;
 
 import org.apache.commons.lang.StringUtils;
@@ -256,9 +255,9 @@ public class PoolHelper extends AttributeHelper {
         return pool;
     }
 
-    public boolean checkForOrderChanges(Pool existingPool, Subscription sub) {
-        return (!StringUtils.equals(existingPool.getOrderNumber(), sub.getOrderNumber()) ||
-            !StringUtils.equals(existingPool.getAccountNumber(), sub.getAccountNumber()) ||
-            !StringUtils.equals(existingPool.getContractNumber(), sub.getContractNumber()));
+    public boolean checkForOrderChanges(Pool existingPool, Pool pool) {
+        return (!StringUtils.equals(existingPool.getOrderNumber(), pool.getOrderNumber()) ||
+                !StringUtils.equals(existingPool.getAccountNumber(), pool.getAccountNumber()) || !StringUtils
+                    .equals(existingPool.getContractNumber(), pool.getContractNumber()));
     }
 }

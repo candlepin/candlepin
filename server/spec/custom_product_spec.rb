@@ -24,7 +24,7 @@ describe 'Custom Product' do
     @cp.add_content_to_product(@owner['key'], product2.id, content.id)
     @end_date = Date.new(2025, 5, 29)
 
-    create_pool_and_subscription(@owner['key'], product1.id, 2, [], '', '12345', '6789', nil, @end_date)
+    create_pool_and_subscription(@owner['key'], product1.id, 2, [], '', '12345', '6789', nil, @end_date, true)
     create_pool_and_subscription(@owner['key'], product2.id, 4, [], '', '12345', '6789', nil, @end_date)
 
     pool1 = @cp.list_pools(:owner => @owner.id, :product => product1.id)[0]

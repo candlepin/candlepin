@@ -34,7 +34,7 @@ describe 'Consumer Resource Activation Key' do
     # create extra product/pool to show selectivity
     prod1 = create_product(random_string('product1'), random_string('product1'))
     prod2 = create_product(random_string('product2'), random_string('product2'))
-    create_pool_and_subscription(@owner['key'], prod1.id, 10)
+    create_pool_and_subscription(@owner['key'], prod1.id, 10, [], '', '', '', nil, nil, true)
     create_pool_and_subscription(@owner['key'], prod2.id, 10)
     pool1 = @cp.list_pools(:owner => @owner['id'], :product => prod1.id).first
 
@@ -137,8 +137,8 @@ describe 'Consumer Resource Activation Key' do
   it 'should allow a consumer to register with an activation key with an auto-attach across pools' do
     # create extra product/pool to show selectivity
     prod1 = create_product(random_string('product1'), random_string('product1'))
-    create_pool_and_subscription(@owner['key'], prod1.id, 1)
-    create_pool_and_subscription(@owner['key'], prod1.id, 1)
+    create_pool_and_subscription(@owner['key'], prod1.id, 1, [], '', '', '', nil, nil, true)
+    create_pool_and_subscription(@owner['key'], prod1.id, 1, [], '', '', '', nil, nil, true)
     create_pool_and_subscription(@owner['key'], prod1.id, 2)
     pools = @cp.list_pools(:owner => @owner['id'], :product => prod1.id)
 

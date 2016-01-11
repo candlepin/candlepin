@@ -30,6 +30,7 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.AbstractHibernateObject;
+import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -263,8 +264,123 @@ public class PoolManagerTest {
         expectedModified.add(p);
         verify(this.manager)
             .updateFloatingPools(eq(new LinkedList()), eq(true), any(Set.class));
-        verify(this.manager)
-            .updatePoolsForSubscription(eq(expectedModified), eq(sub), eq(false), any(Set.class));
+        ArgumentCaptor<Pool> argPool = ArgumentCaptor.forClass(Pool.class);
+        verify(this.manager).updatePoolsForMasterPool(eq(expectedModified), argPool.capture(),
+                eq(sub.getQuantity()), eq(false), any(Set.class));
+        TestUtil.assertPoolsAreEqual(TestUtil.copyFromSub(sub), argPool.getValue());
+    }
+
+    @Test
+    public void productAttributesCopiedOntoPoolWhenCreatingNewPool() {
+
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, productCuratorMock);
+        Product product = TestUtil.createProduct(o);
+        Subscription sub = TestUtil.createSubscription(o, product);
+        String testAttributeKey = "multi-entitlement";
+        String expectedAttributeValue = "yes";
+        sub.getProduct().setAttribute(testAttributeKey, expectedAttributeValue);
+
+        when(mockProductCurator.lookupById(product.getOwner(), product.getId())).thenReturn(product);
+
+        List<Pool> pools = pRules.createAndEnrichPools(sub);
+        assertEquals(1, pools.size());
+
+        Pool resultPool = pools.get(0);
+        assertNotNull(resultPool.getProduct());
+        assertTrue(resultPool.getProduct().hasAttribute(testAttributeKey));
+        assertEquals(expectedAttributeValue, resultPool.getProduct().getAttributeValue(testAttributeKey));
+    }
+
+    @Test
+    public void subProductAttributesCopiedOntoPoolWhenCreatingNewPool() {
+        Product product = TestUtil.createProduct(o);
+        Product subProduct = TestUtil.createProduct(o);
+
+        Subscription sub = TestUtil.createSubscription(o, product);
+        sub.setDerivedProduct(subProduct);
+        String testAttributeKey = "multi-entitlement";
+        String expectedAttributeValue = "yes";
+        subProduct.setAttribute(testAttributeKey, expectedAttributeValue);
+
+        when(this.mockProductCurator.lookupById(product.getOwner(), product.getId())).thenReturn(product);
+        when(this.mockProductCurator.lookupById(subProduct.getOwner(), subProduct.getId())).thenReturn(
+                subProduct);
+
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, productCuratorMock);
+        List<Pool> pools = pRules.createAndEnrichPools(sub);
+        assertEquals(1, pools.size());
+
+        Pool resultPool = pools.get(0);
+        assertNotNull(resultPool.getDerivedProduct());
+        assertTrue(resultPool.getDerivedProduct().hasAttribute(testAttributeKey));
+        assertEquals(expectedAttributeValue,
+                resultPool.getDerivedProduct().getAttributeValue(testAttributeKey));
+    }
+
+    @Test
+    public void subProductIdCopiedOntoPoolWhenCreatingNewPool() {
+        Product product = TestUtil.createProduct(o);
+        Product subProduct = TestUtil.createProduct(o);
+
+        Subscription sub = TestUtil.createSubscription(o, product);
+        sub.setDerivedProduct(subProduct);
+
+        when(this.mockProductCurator.lookupById(product.getOwner(), product.getId())).thenReturn(product);
+        when(this.mockProductCurator.lookupById(subProduct.getOwner(), subProduct.getId())).thenReturn(
+                subProduct);
+
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, productCuratorMock);
+        List<Pool> pools = pRules.createAndEnrichPools(sub);
+        assertEquals(1, pools.size());
+
+        Pool resultPool = pools.get(0);
+        assertEquals(subProduct, resultPool.getDerivedProduct());
+    }
+
+    @Test
+    public void derivedProvidedProductsCopiedOntoMasterPoolWhenCreatingNewPool() {
+        Product product = TestUtil.createProduct(o);
+        Product subProduct = TestUtil.createProduct(o);
+        Product subProvidedProduct = TestUtil.createProduct(o);
+
+        Subscription sub = TestUtil.createSubscription(o, product);
+        sub.setDerivedProduct(subProduct);
+        Set<Product> subProvided = new HashSet<Product>();
+        subProvided.add(subProvidedProduct);
+        sub.setDerivedProvidedProducts(subProvided);
+
+        when(this.mockProductCurator.lookupById(product.getOwner(), product.getId())).thenReturn(product);
+        when(this.mockProductCurator.lookupById(subProduct.getOwner(), subProduct.getId())).thenReturn(
+                subProduct);
+
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, productCuratorMock);
+        List<Pool> pools = pRules.createAndEnrichPools(sub);
+        assertEquals(1, pools.size());
+
+        Pool resultPool = pools.get(0);
+        assertEquals(1, resultPool.getDerivedProvidedProducts().size());
+    }
+
+    @Test
+    public void brandingCopiedWhenCreatingPools() {
+        Product product = TestUtil.createProduct(o);
+
+        Subscription sub = TestUtil.createSubscription(o, product);
+        Branding b1 = new Branding("8000", "OS", "Branded Awesome OS");
+        Branding b2 = new Branding("8001", "OS", "Branded Awesome OS 2");
+        sub.getBranding().add(b1);
+        sub.getBranding().add(b2);
+
+        when(this.mockProductCurator.lookupById(product.getOwner(), product.getId())).thenReturn(product);
+
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, productCuratorMock);
+        List<Pool> pools = pRules.createAndEnrichPools(sub);
+        assertEquals(1, pools.size());
+
+        Pool resultPool = pools.get(0);
+        assertEquals(2, resultPool.getBranding().size());
+        assertTrue(resultPool.getBranding().contains(b1));
+        assertTrue(resultPool.getBranding().contains(b2));
     }
 
     @Test
@@ -411,11 +527,12 @@ public class PoolManagerTest {
         Pool p = TestUtil.createPool(s.getProduct());
         p.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
         newPools.add(p);
-        when(poolRulesMock.createAndEnrichPools(eq(s), any(List.class))).thenReturn(newPools);
+        ArgumentCaptor<Pool> argPool = ArgumentCaptor.forClass(Pool.class);
+        when(poolRulesMock.createAndEnrichPools(argPool.capture(), any(List.class))).thenReturn(newPools);
         when(ownerCuratorMock.lookupByKey(owner.getKey())).thenReturn(owner);
         when(productCuratorMock.lookupById(owner, product.getId())).thenReturn(product);
-
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
+        TestUtil.assertPoolsAreEqual(TestUtil.copyFromSub(s), argPool.getValue());
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
     }
 
@@ -446,13 +563,15 @@ public class PoolManagerTest {
         u.setQuantityChanged(true);
         u.setOrderChanged(true);
         updates.add(u);
-
-        when(poolRulesMock.updatePools(eq(s), eq(pools), any(Set.class))).thenReturn(updates);
+        ArgumentCaptor<Pool> argPool = ArgumentCaptor.forClass(Pool.class);
+        when(poolRulesMock.updatePools(argPool.capture(), eq(pools), eq(s.getQuantity()), any(Set.class)))
+                .thenReturn(updates);
         when(ownerCuratorMock.lookupByKey(owner.getKey())).thenReturn(owner);
         when(productCuratorMock.lookupById(owner, product.getId())).thenReturn(product);
 
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
-        verify(this.mockPoolCurator, times(1)).delete(any(Pool.class));
+        verify(poolRulesMock).createAndEnrichPools(argPool.capture(), any(List.class));
+        TestUtil.assertPoolsAreEqual(TestUtil.copyFromSub(s), argPool.getValue());
     }
 
     @Test
@@ -825,7 +944,8 @@ public class PoolManagerTest {
         mockSubsList(subscriptions);
 
         List<Pool> pools = Util.newList();
-        Pool p = TestUtil.createPool(other, sub.getProduct());
+        Pool p = TestUtil.copyFromSub(sub);
+        p.setOwner(other);
         p.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
         p.setConsumed(1L);
         pools.add(p);
@@ -856,7 +976,9 @@ public class PoolManagerTest {
         // Make sure pools that don't match the owner were removed from the list
         // They shouldn't cause us to attempt to update existing pools when we
         // haven't created them in the first place
-        verify(poolRulesMock).createAndEnrichPools(eq(sub), any(List.class));
+        ArgumentCaptor<Pool> argPool = ArgumentCaptor.forClass(Pool.class);
+        verify(poolRulesMock).createAndEnrichPools(argPool.capture(), any(List.class));
+        TestUtil.assertPoolsAreEqual(TestUtil.copyFromSub(sub), argPool.getValue());
     }
 
     private void mockSubsList(List<Subscription> subs) {

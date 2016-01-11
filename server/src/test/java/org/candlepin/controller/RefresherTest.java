@@ -105,8 +105,8 @@ public class RefresherTest {
         refresher.run();
 
         verify(poolManager, times(1)).refreshPoolsWithRegeneration(eq(subAdapter), eq(owner), eq(false));
-        verify(poolManager, times(0)).updatePoolsForSubscription(any(List.class),
-            any(Subscription.class), eq(false), any(Set.class));
+        verify(poolManager, times(0)).updatePoolsForMasterPool(any(List.class),
+            any(Pool.class), eq(pool.getQuantity()), eq(false), any(Set.class));
     }
 
     @Test
@@ -132,11 +132,14 @@ public class RefresherTest {
         when(subAdapter.getSubscriptions(product2)).thenReturn(subscriptions);
         when(subAdapter.getSubscription("subId")).thenReturn(subscription);
         when(poolManager.lookupBySubscriptionId("subId")).thenReturn(pools);
+
+        Pool mainPool = TestUtil.copyFromSub(subscription);
+        when(poolManager.convertToMasterPool(subscription)).thenReturn(mainPool);
         refresher.add(product);
         refresher.add(product2);
         refresher.run();
 
-        verify(poolManager, times(1)).updatePoolsForSubscription(any(List.class),
-            any(Subscription.class), eq(true), any(Set.class));
+        verify(poolManager, times(1)).refreshPoolsForMasterPool(eq(mainPool), eq(true), eq(false),
+                any(Set.class));
     }
 }

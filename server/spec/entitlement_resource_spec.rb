@@ -12,7 +12,8 @@ describe 'Entitlement Resource' do
     @virt_prod= create_product(nil, 'virtualization')
 
     #entitle owner for the virt and monitoring products.
-    create_pool_and_subscription(@owner['key'], @monitoring_prod.id, 6)
+    create_pool_and_subscription(@owner['key'], @monitoring_prod.id, 6,
+				 [], '', '', '', nil, nil, true)
     create_pool_and_subscription(@owner['key'], @virt_prod.id, 6)
 
     #create consumer

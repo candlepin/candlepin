@@ -27,7 +27,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.AttributeHelper;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
@@ -35,7 +34,6 @@ import org.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -46,8 +44,6 @@ import java.util.Set;
  */
 public class PoolHelperTest {
 
-    private Pool pool;
-    private Subscription sub;
     private PoolManager pm;
     private ProductServiceAdapter psa;
     private Entitlement ent;
@@ -55,84 +51,88 @@ public class PoolHelperTest {
 
     @Before
     public void init() {
-        pool = mock(Pool.class);
-        sub = mock(Subscription.class);
         pm = mock(PoolManager.class);
         psa = mock(ProductServiceAdapter.class);
         ent = mock(Entitlement.class);
         Configuration config = mock(Configuration.class);
         when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
 
-        // default to an empty list, override in the test
-        when(pool.getProvidedProducts()).thenReturn(Collections.EMPTY_SET);
-        when(sub.getProvidedProducts()).thenReturn(Collections.EMPTY_SET);
-
         owner = TestUtil.createOwner();
     }
 
     @Test
     public void orderDataChangedOrderNumber() {
-        when(pool.getOrderNumber()).thenReturn("123A");
-        when(pool.getAccountNumber()).thenReturn("456");
-        when(pool.getContractNumber()).thenReturn("789");
-        when(sub.getOrderNumber()).thenReturn("123");
-        when(sub.getAccountNumber()).thenReturn("456");
-        when(sub.getContractNumber()).thenReturn("789");
+        Pool pool = new Pool();
+        pool.setOrderNumber("123A");
+        pool.setAccountNumber("456");
+        pool.setContractNumber("789");
+        Pool existingPool = new Pool();
+        existingPool.setOrderNumber("123");
+        existingPool.setAccountNumber("456");
+        existingPool.setContractNumber("789");
 
         PoolHelper ph = new PoolHelper(pm, null);
-        assertTrue(ph.checkForOrderChanges(pool, sub));
+        assertTrue(ph.checkForOrderChanges(existingPool, pool));
     }
 
     @Test
     public void orderDataChangedAccountNumber() {
-        when(pool.getOrderNumber()).thenReturn("123");
-        when(pool.getAccountNumber()).thenReturn("456A");
-        when(pool.getContractNumber()).thenReturn("789");
-        when(sub.getOrderNumber()).thenReturn("123");
-        when(sub.getAccountNumber()).thenReturn("456");
-        when(sub.getContractNumber()).thenReturn("789");
+        Pool pool = new Pool();
+        pool.setOrderNumber("123");
+        pool.setAccountNumber("456A");
+        pool.setContractNumber("789");
+        Pool existingPool = new Pool();
+        existingPool.setOrderNumber("123");
+        existingPool.setAccountNumber("456");
+        existingPool.setContractNumber("789");
 
         PoolHelper ph = new PoolHelper(pm, null);
-        assertTrue(ph.checkForOrderChanges(pool, sub));
+        assertTrue(ph.checkForOrderChanges(existingPool, pool));
     }
 
     @Test
     public void orderDataChangedContractNumber() {
-        when(pool.getOrderNumber()).thenReturn("123");
-        when(pool.getAccountNumber()).thenReturn("456");
-        when(pool.getContractNumber()).thenReturn("789A");
-        when(sub.getOrderNumber()).thenReturn("123");
-        when(sub.getAccountNumber()).thenReturn("456");
-        when(sub.getContractNumber()).thenReturn("789");
+        Pool pool = new Pool();
+        pool.setOrderNumber("123");
+        pool.setAccountNumber("456");
+        pool.setContractNumber("789A");
+        Pool existingPool = new Pool();
+        existingPool.setOrderNumber("123");
+        existingPool.setAccountNumber("456");
+        existingPool.setContractNumber("789");
 
         PoolHelper ph = new PoolHelper(pm, null);
-        assertTrue(ph.checkForOrderChanges(pool, sub));
+        assertTrue(ph.checkForOrderChanges(existingPool, pool));
     }
 
     @Test
     public void orderDataChanged() {
-        when(pool.getOrderNumber()).thenReturn("123");
-        when(pool.getAccountNumber()).thenReturn("456");
-        when(pool.getContractNumber()).thenReturn("789");
-        when(sub.getOrderNumber()).thenReturn("123");
-        when(sub.getAccountNumber()).thenReturn("456");
-        when(sub.getContractNumber()).thenReturn("789");
+        Pool pool = new Pool();
+        pool.setOrderNumber("123");
+        pool.setAccountNumber("456");
+        pool.setContractNumber("789");
+        Pool existingPool = new Pool();
+        existingPool.setOrderNumber("123");
+        existingPool.setAccountNumber("456");
+        existingPool.setContractNumber("789");
 
         PoolHelper ph = new PoolHelper(pm, null);
-        assertFalse(ph.checkForOrderChanges(pool, sub));
+        assertFalse(ph.checkForOrderChanges(existingPool, pool));
     }
 
     @Test
     public void usingPrimitiveEqualsOnStringIsBad() {
-        when(pool.getOrderNumber()).thenReturn("123");
-        when(pool.getAccountNumber()).thenReturn("456");
-        when(pool.getContractNumber()).thenReturn("789");
-        when(sub.getOrderNumber()).thenReturn(new String("123"));
-        when(sub.getAccountNumber()).thenReturn("456");
-        when(sub.getContractNumber()).thenReturn("789");
+        Pool pool = new Pool();
+        pool.setOrderNumber("123");
+        pool.setAccountNumber("456");
+        pool.setContractNumber("789");
+        Pool existingPool = new Pool();
+        existingPool.setOrderNumber(new String("123"));
+        existingPool.setAccountNumber("456");
+        existingPool.setContractNumber("789");
 
         PoolHelper ph = new PoolHelper(pm, null);
-        assertFalse(ph.checkForOrderChanges(pool, sub));
+        assertFalse(ph.checkForOrderChanges(existingPool, pool));
     }
 
     @Test

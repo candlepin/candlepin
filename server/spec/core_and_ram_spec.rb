@@ -244,7 +244,8 @@ describe 'Core and RAM Limiting' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    create_pool_and_subscription(owner['key'], prod1.id, 2)
+    create_pool_and_subscription(owner['key'], prod1.id, 2,
+				[], '', '', '', nil, nil, true)
     create_pool_and_subscription(owner['key'], prod2.id, 3)
 
     entitlements=[]

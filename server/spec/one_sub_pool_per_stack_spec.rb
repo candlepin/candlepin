@@ -80,15 +80,17 @@ describe 'One Sub Pool Per Stack' do
     @stacked_provided_product2 =  create_product()
 
     create_pool_and_subscription(@owner['key'],
-      @virt_limit_product.id, 10, [@virt_limit_provided_product.id], "123", "321", "333")
+      @virt_limit_product.id, 10, [@virt_limit_provided_product.id], "123", "321", "333",
+      nil, nil, true)
     create_pool_and_subscription(@owner['key'],
-      @virt_limit_product.id, 10, [], "456", '', '', nil, Date.today + 380)
+      @virt_limit_product.id, 10, [], "456", '', '', nil, Date.today + 380, true)
     create_pool_and_subscription(@owner['key'],
-      @virt_limit_product2.id, 10, [], "444", '', '', nil, Date.today + 380)
+      @virt_limit_product2.id, 10, [], "444", '', '', nil, Date.today + 380, true)
     create_pool_and_subscription(@owner['key'],
-      @regular_stacked_product.id, 4, [@regular_stacked_provided_product.id], "789")
+      @regular_stacked_product.id, 4, [@regular_stacked_provided_product.id], "789",
+      "","", nil, nil, true)
     create_pool_and_subscription(@owner['key'],
-      @non_stacked_product.id, 2, [], "234")
+      @non_stacked_product.id, 2, [], "234", "", "", nil, nil, true)
     create_pool_and_subscription(@owner['key'], @stacked_datacenter_product.id,
       10, [], '222', '', '', nil, nil, true,
       {

@@ -398,8 +398,8 @@ describe 'Consumer Resource' do
       {:attributes => { :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => '8888'}, :owner => owner['key']})
     prod2 = create_product(random_string('product'), random_string('product-stackable'),
       {:attributes => { :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => '8888'}, :owner => owner['key']})
-    create_pool_and_subscription(owner['key'], prod1.id, 1)
-    create_pool_and_subscription(owner['key'], prod1.id, 1)
+    create_pool_and_subscription(owner['key'], prod1.id, 1, [], '', '', '', nil, nil, true)
+    create_pool_and_subscription(owner['key'], prod1.id, 1, [], '', '', '', nil, nil, true)
     create_pool_and_subscription(owner['key'], prod2.id, 1)
 
     total = 0
@@ -576,7 +576,7 @@ describe 'Consumer Resource' do
       {:attributes => {:support_level => 'Layered',
       :support_level_exempt => 'true'},
       :owner => @owner1['key']})
-    create_pool_and_subscription(@owner1['key'], product1.id)
+    create_pool_and_subscription(@owner1['key'], product1.id, 1, [], '', '', '', nil, nil, true)
     create_pool_and_subscription(@owner1['key'], product2.id)
 
     user_cp = user_client(@owner1, random_string('billy'))
@@ -700,7 +700,7 @@ describe 'Consumer Resource' do
       {:attributes => {:support_level => 'LAYered'},
       :owner => @owner1['key']})
     pool1 = create_pool_and_subscription(@owner1['key'], product1.id)
-    create_pool_and_subscription(@owner1['key'], product2.id)
+    create_pool_and_subscription(@owner1['key'], product2.id, 1, [], '', '', '', nil, nil, true)
     create_pool_and_subscription(@owner1['key'], product3.id)
 
     user_cp = user_client(@owner1, random_string('billy'))
@@ -748,7 +748,7 @@ describe 'Consumer Resource' do
       random_string('product'),
       {:attributes => {:requires_consumer_type => :person},
       :owner => @owner1['key']})
-    create_pool_and_subscription(@owner1['key'], product1.id)
+    create_pool_and_subscription(@owner1['key'], product1.id, 1, [], '', '', '', nil, nil, true)
     create_pool_and_subscription(@owner1['key'], product2.id)
 
     user_cp = user_client(@owner1, random_string('billy'))

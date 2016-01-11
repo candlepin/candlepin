@@ -226,7 +226,8 @@ describe 'Owner Resource' do
         :owner => owner['key']
       }
     )
-    create_pool_and_subscription(owner['key'], product1.id, 10)
+    create_pool_and_subscription(owner['key'], product1.id, 10,
+				[], '', '', '', nil, nil, true)
     create_pool_and_subscription(owner['key'], product2.id, 10)
 
     # Set an initial service level:
@@ -347,8 +348,10 @@ describe 'Owner Resource' do
       }
     )
 
-    create_pool_and_subscription(owner['key'], product1.id, 10)
-    create_pool_and_subscription(owner['key'], product2.id, 10)
+    create_pool_and_subscription(owner['key'], product1.id, 10,
+				[], '', '', '', nil, nil, true)
+    create_pool_and_subscription(owner['key'], product2.id, 10,
+				[], '', '', '', nil, nil, true)
     create_pool_and_subscription(owner['key'], product3.id, 10)
 
     levels = consumer_client.list_owner_service_levels(owner['key'])
@@ -509,7 +512,8 @@ describe 'Owner Resource Pool Filter Tests' do
       }
     )
 
-    create_pool_and_subscription(@owner['key'], @product1.id, 10)
+    create_pool_and_subscription(@owner['key'], @product1.id, 10,
+				[], '', '', '', nil, nil, true)
     create_pool_and_subscription(@owner['key'], @product2.id, 10)
 
     pools = @cp.list_owner_pools(@owner['key'])
@@ -685,7 +689,8 @@ describe 'Owner Resource Entitlement List Tests' do
     @virt_prod= create_product(nil, 'virtualization')
 
     #entitle owner for the virt and monitoring products.
-    create_pool_and_subscription(@owner['key'], @monitoring_prod.id, 6)
+    create_pool_and_subscription(@owner['key'], @monitoring_prod.id, 6,
+				[], '', '', '', nil, nil, true)
     create_pool_and_subscription(@owner['key'], @virt_prod.id, 6)
 
     #create consumer

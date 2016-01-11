@@ -71,7 +71,8 @@ RSpec.configure do |config|
     })
 
     #create two subs, to do migration testing
-    create_pool_and_subscription(@owner['key'], @virt_limit_product.id, 10)
+    create_pool_and_subscription(@owner['key'], @virt_limit_product.id, 10,
+				[], '', '', '', nil, nil, true)
     create_pool_and_subscription(@owner['key'], @virt_limit_product.id, 10)
 
     @pools = @user.list_pools :owner => @owner.id, \
