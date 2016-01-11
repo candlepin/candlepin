@@ -632,7 +632,7 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :uuids)
-        
+
         unless opts[:uuids].kind_of?(Array)
           opts[:uuids] = [opts[:uuids]]
         end
@@ -733,6 +733,18 @@ module Candlepin
         get("/consumers/#{opts[:uuid]}/certificates", :query => {
           :serials => opts[:serials].join(",")
         })
+      end
+
+      def get_consumer_entitlements(opts = {})
+        defaults = {
+          :uuid => uuid,
+          :product_id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid, :product_id)
+
+        get("/consumers/#{opts[:uuid]}/entitlements",
+          :query => opts.slice(:product_id))
       end
 
       def regen_certificates_by_consumer(opts = {})
@@ -1085,6 +1097,19 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
 
         get_text("/entitlements/#{opts[:id]}/upstream_cert")
+      end
+
+      def migrate_entitlement(opts = {})
+        defaults = {
+          :entitlement_id => nil,
+          :quantity => 1,
+          :to_consumer => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :entitlement_id, :to_consumer)
+
+        put("/entitlements/#{opts[:entitlement_id]}/migrate",
+          :query => opts.slice(:to_consumer, :quantity))
       end
 
       def regen_certificates_by_product(opts = {})

@@ -991,6 +991,26 @@ module Candlepin
         expect(res.content[:status]).to eq('valid')
       end
 
+      it 'gets a list of entitlements' do
+        user_client.create_subscription(
+          :owner => owner[:key],
+          :product_id => product[:id],
+        ).content
+
+        pools = user_client.get_owner_pools(:owner => owner[:key]).content
+        expect(pools.first[:product][:id]).to eq(product[:id])
+
+        x509_client = user_client.register_and_get_client(
+          :owner => owner[:key],
+          :name => rand_string,
+        )
+        x509_client.bind(:pool_id => pools.first[:id])
+
+        res = x509_client.get_consumer_entitlements(:product_id => product[:id])
+        expect(res).to be_2xx
+        expect(res.content.length).to eq(1)
+      end
+
       it 'gets a list of compliance statuses' do
         user_client.create_subscription(
           :owner => owner[:key],
