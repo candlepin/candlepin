@@ -684,9 +684,8 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :uuid)
 
-        query = opts.slice(:on_date) if opts[:on_date]
         get("/consumers/#{opts[:uuid]}/compliance",
-          :query => query
+          :query => opts.slice(:on_date).compact
         )
       end
 
@@ -756,7 +755,7 @@ module Candlepin
         validate_keys(opts, :uuid, :product_id)
 
         get("/consumers/#{opts[:uuid]}/entitlements",
-          :query => opts.slice(:product_id))
+          :query => opts.slice(:product_id).compact)
       end
 
       def regen_certificates_by_consumer(opts = {})
@@ -769,10 +768,10 @@ module Candlepin
         validate_keys(opts, :uuid)
 
         query = opts.slice(:lazy_regen)
-        query[:entitlement] = opts[:entitlement_id] if opts[:entitlement_id]
+        query[:entitlement] = opts[:entitlement_id]
 
         put("/consumers/#{opts[:uuid]}/certificates",
-          :query => query)
+          :query => query.compact)
       end
 
       def update_all_guest_ids(opts = {})
@@ -912,7 +911,7 @@ module Candlepin
         query = opts.slice(:username, :owner, :activation_keys)
 
         url = "/environments/#{opts[:env_id]}/consumers"
-        post(url, :body => opts[:consumer], :query => query)
+        post(url, :body => opts[:consumer], :query => query.compact)
       end
     end
 
@@ -1082,7 +1081,9 @@ module Candlepin
          opts = verify_and_merge(opts, defaults)
 
          body = opts[:host_guest_mapping]
-         post('/hypervisors', :query => opts.slice(:owner, :create_missing), :body => body)
+         post('/hypervisors',
+          :query => opts.slice(:owner, :create_missing).compact,
+          :body => body)
       end
     end
 
@@ -1121,7 +1122,7 @@ module Candlepin
         validate_keys(opts, :entitlement_id, :to_consumer)
 
         put("/entitlements/#{opts[:entitlement_id]}/migrate",
-          :query => opts.slice(:to_consumer, :quantity))
+          :query => opts.slice(:to_consumer, :quantity).compact)
       end
 
       def regen_certificates_by_product(opts = {})
@@ -1156,7 +1157,8 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
 
         path = "/entitlements/#{opts[:id]}"
-        put(path, opts.slice(:to_consumer, :quantity))
+        put(path,
+          :query => opts.slice(:to_consumer, :quantity).compact)
       end
     end
 
@@ -1326,7 +1328,7 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        permission = opts.slice(:owner, :access, :type)
+        permission = opts.slice(:owner, :access, :type).compact
         post("/roles/#{opts[:role_id]}/permissions/", permission)
       end
 
@@ -1430,7 +1432,8 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        get("/owners/#{opts[:owner]}/environments", opts.slice(:name))
+        get("/owners/#{opts[:owner]}/environments",
+          :query => opts.slice(:name).compact)
       end
 
       def get_all_owners
@@ -1491,7 +1494,8 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        post("/owners/#{opts[:owner]}/environments", opts.slice(:id, :name, :description))
+        post("/owners/#{opts[:owner]}/environments",
+          opts.slice(:id, :name, :description))
       end
 
       def create_ueber_cert(opts = {})
@@ -1605,7 +1609,8 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        put("/owners/#{opts[:owner]}/log", :query => opts.slice(:level))
+        put("/owners/#{opts[:owner]}/log",
+          :query => opts.slice(:level).compact)
       end
 
       def delete_owner_log_level(opts = {})
@@ -2147,6 +2152,7 @@ module Candlepin
 
         query = opts.slice(:capability)
         query['name_search'] = opts[:name]
+        query.compact!
 
         get("/distributor_versions", query)
       end
@@ -2178,7 +2184,8 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        put("/cdn/#{opts[:label]}", opts.slice(:name, :url, :certificate))
+        put("/cdn/#{opts[:label]}",
+          :query => opts.slice(:name, :url, :certificate).compact)
       end
 
       def get_all_cdns
