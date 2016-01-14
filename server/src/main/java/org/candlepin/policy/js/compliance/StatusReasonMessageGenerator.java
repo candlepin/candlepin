@@ -93,6 +93,11 @@ public class StatusReasonMessageGenerator {
             reason.setMessage(i18n.tr("Guest has not been reported on any host" +
                 " and is using a temporary unmapped guest subscription."));
         }
+        else if (reason.getKey().equals("STORAGE_BAND")) {
+            reason.setMessage(i18n.tr("Only supports {0}TB of {1}TB of storage.",
+                    reason.getAttributes().get("covered"),
+                    reason.getAttributes().get("has")));
+        }
         else { //default fallback
             reason.setMessage(i18n.tr("{2} COVERAGE PROBLEM.  Supports {0} of {1}",
                 reason.getAttributes().get("covered"),

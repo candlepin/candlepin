@@ -17,12 +17,9 @@ package org.candlepin.policy.js.entitlement;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.policy.ValidationError;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Translates error keys returned from entitlement rules into translated error messages.
@@ -30,12 +27,10 @@ import org.xnap.commons.i18n.I18n;
 public class EntitlementRulesTranslator {
 
     private I18n i18n;
-    private Logger log;
 
     @Inject
     public EntitlementRulesTranslator(I18n i18n) {
         this.i18n = i18n;
-        log = LoggerFactory.getLogger(EntitlementRulesTranslator.class);
     }
 
     public String poolErrorToMessage(Pool pool, ValidationError error) {
@@ -98,6 +93,10 @@ public class EntitlementRulesTranslator {
         else if (errorKey.equals("rulefailed.instance.unsupported.by.consumer")) {
             msg = i18n.tr("Unit does not support instance based calculation " +
                 "required by pool ''{0}''", pool.getId());
+        }
+        else if (errorKey.equals("rulefailed.band.unsupported.by.consumer")) {
+            msg = i18n.tr("Unit does not support band calculation " +
+                    "required by pool ''{0}''", pool.getId());
         }
         else if (errorKey.equals("rulefailed.cores.unsupported.by.consumer")) {
             msg = i18n.tr("Unit does not support core calculation " +
