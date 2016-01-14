@@ -1007,6 +1007,47 @@ module Candlepin
         expect(res.content[:status]).to eq('valid')
       end
 
+      it 'gets a consumer export' do
+        user_client.create_subscription(
+          :owner => owner[:key],
+          :product_id => product[:id],
+        ).content
+
+        x509_client = user_client.register_and_get_client(
+          :owner => owner[:key],
+          :name => rand_string,
+          :type => :candlepin,
+        )
+        pools = user_client.get_owner_pools(:owner => owner[:key]).content
+        x509_client.bind(:pool_id => pools.first[:id])
+        res = x509_client.export_consumer
+        expect(res).to be_2xx
+        expect(res.content_type).to eq("application/zip")
+      end
+
+      it 'writes an export to disk' do
+        user_client.create_subscription(
+          :owner => owner[:key],
+          :product_id => product[:id],
+        ).content
+
+        x509_client = user_client.register_and_get_client(
+          :owner => owner[:key],
+          :name => rand_string,
+          :type => :candlepin,
+        )
+        pools = user_client.get_owner_pools(:owner => owner[:key]).content
+        x509_client.bind(:pool_id => pools.first[:id])
+        f = Tempfile.new(["test_export", ".zip"])
+        begin
+          x509_client.export_consumer_to_file(:export_file => f.path)
+          expect(File.size?(f.path)).to_not eq(0)
+        ensure
+          f.close
+          f.unlink
+        end
+      end
+
       it 'gets a list of entitlements' do
         user_client.create_subscription(
           :owner => owner[:key],
@@ -1341,6 +1382,21 @@ module Candlepin
 
     context "in an miscellaneous context", :functional => true do
       include_context("functional context")
+
+      # The statistics are so slow that the HTTP request times
+      # out half the time.  Not worth the trouble at the moment.
+      # it 'gets owner statistics' do
+      #   user_client.register(
+      #     :owner => owner[:key],
+      #     :username => owner_user[:username],
+      #     :name => rand_string,
+      #   )
+      #   res = user_client.get_owner_statistics(
+      #     :owner => owner[:key],
+      #     :type => "SYSTEM/PHYSICAL",
+      #   )
+      #   expect(res).to be_2xx
+      # end
 
       it 'gets a status as JSON' do
         res = no_auth_client.get('/status')

@@ -544,6 +544,40 @@ module Candlepin
           :query => opts.slice(:service_level).compact)
       end
 
+      def export_consumer(opts = {})
+        defaults = {
+          :uuid => uuid,
+          :cdn_label => nil,
+          :webapp_prefix => nil,
+          :api_url => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :uuid)
+
+        query = opts.slice(:cdn_label, :webapp_prefix, :api_url)
+        get("/consumers/#{opts[:uuid]}/export",
+          :query => query.compact)
+      end
+
+      def export_consumer_to_file(opts = {})
+        defaults = {
+          :export_file => File.join(Dir.pwd, "#{opts[:uuid]}-export.zip"),
+        }
+        delegated_opts = opts.deep_dup.except(:export_file)
+        opts = opts.extract!(:export_file)
+        opts = verify_and_merge(opts, defaults)
+
+        res = export_consumer(delegated_opts)
+
+        unless res.ok?
+          raise HTTPClient::BadResponseError.new("Could not fetch export: #{res.headers.inspect}")
+        end
+
+        File.open(opts[:export_file], "w") do |f|
+          f.write(res.content)
+        end
+      end
+
       def regen_identity_certificate(opts = {})
         defaults = {
           :uuid => uuid,
@@ -1383,6 +1417,23 @@ module Candlepin
 
       def get_owner_imports(opts = {})
         get_owner_subresource("imports", opts)
+      end
+
+      def get_owner_statistics(opts = {})
+        defaults = {
+          :owner => key,
+          :type => nil,
+          :reference => nil,
+          :from => nil,
+          :to => nil,
+          :days => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :owner, :type)
+
+        put("/statistics/generate")
+        get("/owners/#{opts[:owner]}/statistics/#{opts[:type]}",
+          :query => opts.slice(:reference, :from, :to, :days).compact)
       end
 
       def get_owner_consumers(opts = {})
