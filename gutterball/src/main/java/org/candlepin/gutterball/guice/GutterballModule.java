@@ -58,7 +58,7 @@ import org.candlepin.gutterball.resource.StatusResource;
 import org.candlepin.gutterball.resteasy.JsonProvider;
 import org.candlepin.gutterball.resteasy.filter.OAuthFilter;
 import org.candlepin.gutterball.resteasy.filter.SecurityHoleFeature;
-import org.candlepin.gutterball.tasks.EventCleanupTask;
+import org.candlepin.gutterball.tasks.DataCleanupTask;
 import org.candlepin.gutterball.util.EventHandlerLoader;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -197,7 +197,7 @@ public class GutterballModule extends AbstractModule {
     }
 
     protected void configureTasks() {
-        bind(EventCleanupTask.class).asEagerSingleton();
+        bind(DataCleanupTask.class).asEagerSingleton();
     }
 
     @Provides @Named("ValidationProperties")
