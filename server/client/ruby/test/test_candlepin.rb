@@ -344,6 +344,42 @@ module Candlepin
         expect(res).to be_2xx
       end
 
+      it 'imports a manifest' do
+        user_client.create_pool(
+          :owner => owner[:key],
+          :product_id => product[:id],
+        ).content
+
+        x509_client = user_client.register_and_get_client(
+          :owner => owner[:key],
+          :name => rand_string,
+          :type => :candlepin,
+        )
+        pools = user_client.get_owner_pools(:owner => owner[:key]).content
+        x509_client.bind(:pool_id => pools.first[:id])
+
+        f = Tempfile.new(["test_export", ".zip"])
+        begin
+          x509_client.export_consumer_to_file(:export_file => f.path)
+          expect(File.size?(f.path)).to_not eq(0)
+
+          new_owner = user_client.create_owner(
+            :owner => rand_string,
+            :display_name => rand_string,
+          ).content
+
+          res = user_client.import_manifest(
+            :owner => new_owner[:key],
+            :manifest => f.path
+          )
+
+          expect(res).to be_2xx
+        ensure
+          f.close
+          f.unlink
+        end
+      end
+
       it 'updates an owner' do
         old_name = owner[:displayName]
         res = owner_client.update_owner(
@@ -354,7 +390,6 @@ module Candlepin
       end
 
       it 'updates an owner pool' do
-        owner_client.debug
         p = owner_client.create_pool(
           :owner => owner[:key],
           :product_id => product[:id],
@@ -1021,6 +1056,7 @@ module Candlepin
         )
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
         x509_client.bind(:pool_id => pools.first[:id])
+
         res = x509_client.export_consumer
         expect(res).to be_2xx
         expect(res.content_type).to eq("application/zip")
@@ -1039,6 +1075,7 @@ module Candlepin
         )
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
         x509_client.bind(:pool_id => pools.first[:id])
+
         f = Tempfile.new(["test_export", ".zip"])
         begin
           x509_client.export_consumer_to_file(:export_file => f.path)

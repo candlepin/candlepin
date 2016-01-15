@@ -96,19 +96,32 @@ class JSONClient < HTTPClient
   # post('/path', :query => query_args, :body => json_body)
 
   def post(uri, *args, &block)
-    @header_filter.replace = true
-    request(:post, uri, jsonify(argument_to_hash(args, :body, :query, :header, :follow_redirect)), &block)
+    opts = argument_to_hash(args, :body, :query, :header, :follow_redirect)
+    # If the caller is setting their own Content-Type, respect it.
+    unless opts && opts[:header] && opts[:header]['Content-Type']
+      jsonify(opts)
+      @header_filter.replace = true
+    end
+    request(:post, uri, opts, &block)
   end
 
   # See documentation for post
   def put(uri, *args, &block)
-    @header_filter.replace = true
-    request(:put, uri, jsonify(argument_to_hash(args, :body, :query, :header)), &block)
+    opts = argument_to_hash(args, :body, :query, :header)
+    unless opts && opts[:header] && opts[:header]['Content-Type']
+      jsonify(opts)
+      @header_filter.replace = true
+    end
+    request(:put, uri, opts, &block)
   end
 
   def delete(uri, *args, &block)
-    @header_filter.replace = true
-    request(:delete,  uri, jsonify(argument_to_hash(args, :body, :query, :header)), &block)
+    opts = argument_to_hash(args, :body, :query, :header)
+    unless opts && opts[:header] && opts[:header]['Content-Type']
+      jsonify(opts)
+      @header_filter.replace = true
+    end
+    request(:delete,  uri, opts, &block)
   end
 
   def request(method, uri, *args, &block)
@@ -125,6 +138,8 @@ class JSONClient < HTTPClient
     res
   end
 
+  # TODO probably need to override post_async, put_async, delete_async
+  # to allow for custom setting on Content-Type header.
   def request_async2(method, uri, *args, &block)
     # Hack to address https://github.com/nahi/httpclient/issues/285
     # We need to strip off any leading slash on a relative URL
@@ -150,8 +165,8 @@ class JSONClient < HTTPClient
 private
 
   def jsonify(hash)
-    if !hash.nil? && hash.key?(:body)
-      hash[:body] = JSON.generate(hash[:body]) unless hash[:body].nil?
+    if !hash.nil? && hash.key?(:body) && !hash[:body].nil?
+      hash[:body] = JSON.generate(hash[:body])
     end
     hash
   end
@@ -555,7 +570,7 @@ module Candlepin
         validate_keys(opts, :uuid)
 
         query = opts.slice(:cdn_label, :webapp_prefix, :api_url)
-        get("/consumers/#{opts[:uuid]}/export",
+        get_file("/consumers/#{opts[:uuid]}/export",
           :query => query.compact)
       end
 
@@ -1670,6 +1685,7 @@ module Candlepin
           :level => nil,
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :owner)
 
         put("/owners/#{opts[:owner]}/log",
           :query => opts.slice(:level).compact)
@@ -1680,6 +1696,7 @@ module Candlepin
           :owner => key,
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :owner)
 
         delete("/owners/#{opts[:owner]}/log")
       end
@@ -1690,7 +1707,35 @@ module Candlepin
           :revoke => false,
         }
         opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :owner)
+
         delete("/owners/#{opts[:owner]}", opts.slice(:revoke))
+      end
+
+      def import_manifest(opts = {})
+        defaults = {
+          :owner => key,
+          :force => [],
+          :manifest => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        validate_keys(opts, :owner, :manifest)
+
+        unless opts[:force].kind_of?(Array)
+          opts[:force] = [opts[:force]]
+        end
+
+        if opts[:force].empty?
+          opts.extract!(:force)
+        end
+
+        File.open(opts[:manifest]) do |f|
+          post("/owners/#{opts[:owner]}/imports",
+            :query => opts.slice(:force),
+            :body => { 'import' => f },
+            :header => { 'Content-Type' => 'multipart/form-data' }
+          )
+        end
       end
     end
 
