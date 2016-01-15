@@ -1594,7 +1594,7 @@ module Candlepin
         post("/owners/#{opts[:owner]}/activation_keys", body)
       end
 
-      def create_subscription(opts = {})
+      def create_pool(opts = {})
         defaults = {
           :owner => key,
           :start_date => Date.today,
@@ -1633,17 +1633,18 @@ module Candlepin
             body[camel_case(k)] = prods unless prods.empty?
         end
 
-        post("/owners/#{opts[:owner]}/subscriptions", body)
+        post("/owners/#{opts[:owner]}/pools", body)
       end
 
-      def update_subscription(opts = {})
+      def update_pool(opts = {})
         defaults = {
-          :subscription => nil,
+          :owner => key,
+          :pool => nil,
         }
         opts = verify_and_merge(opts, defaults)
-        validate_keys(opts, :subscription)
+        validate_keys(opts, :owner, :pool)
 
-        put("/owners/subscriptions", opts[:subscription])
+        put("/owners/#{opts[:owner]}/pools", opts[:pool])
       end
 
       def update_owner(opts = {})

@@ -113,7 +113,7 @@ module Candlepin
       include_context("functional context")
 
       it "lists all pools" do
-        owner_client.create_subscription(
+        owner_client.create_pool(
           :owner => owner[:key],
           :product_id => product[:id],
         )
@@ -171,7 +171,7 @@ module Candlepin
           :description => rand_string,
         ).content
 
-        owner_client.create_subscription(
+        owner_client.create_pool(
           :owner => owner[:key],
           :product_id => product[:id],
         )
@@ -194,7 +194,7 @@ module Candlepin
           :description => rand_string,
         ).content
 
-        owner_client.create_subscription(
+        owner_client.create_pool(
           :owner => owner[:key],
           :product_id => product[:id],
         )
@@ -353,16 +353,17 @@ module Candlepin
         expect(res.content[:displayName]).to_not eq(old_name)
       end
 
-      it 'updates an owner subscription' do
-        sub = owner_client.create_subscription(
+      it 'updates an owner pool' do
+        owner_client.debug
+        p = owner_client.create_pool(
           :owner => owner[:key],
           :product_id => product[:id],
         ).content
 
-        original_quantity = sub[:quantity]
+        original_quantity = p[:quantity]
 
-        sub[:quantity] = sub[:quantity] + 10
-        res = owner_client.update_subscription(:subscription => sub)
+        p[:quantity] = p[:quantity] + 10
+        res = owner_client.update_pool(:pool => p)
         expect(res).to be_2xx
 
         modified_sub = owner_client.get_owner_subscriptions.content.first
@@ -430,7 +431,7 @@ module Candlepin
           :owner => owner[:key],
         )
 
-        user_client.create_subscription(
+        user_client.create_pool(
           :owner => owner[:key],
           :product_id => prod_id,
         )
@@ -460,7 +461,7 @@ module Candlepin
           :attributes => { :arch => 'x86_64' },
         )
 
-        owner_client.create_subscription(
+        owner_client.create_pool(
           :product_id => prod_id,
         )
 
@@ -491,7 +492,7 @@ module Candlepin
           :owner => owner[:key],
         )
 
-        user_client.create_subscription(
+        user_client.create_pool(
           :owner => owner[:key],
           :product_id => prod_id,
         )
@@ -593,7 +594,7 @@ module Candlepin
           :owner => owner[:key],
         )
 
-        user_client.create_subscription(
+        user_client.create_pool(
           :owner => owner[:key],
           :product_id => id1,
         )
@@ -976,7 +977,7 @@ module Candlepin
 
       it 'fails gracefully if a consumer client can not be created' do
         expect do
-          x509_client = user_client.register_and_get_client(
+          user_client.register_and_get_client(
             :owner => "NO_OWNER",
             :username => owner[:key],
             :name => rand_string,
@@ -989,7 +990,7 @@ module Candlepin
       include_context("functional context")
 
       it 'gets compliance status' do
-        user_client.create_subscription(
+        user_client.create_pool(
           :owner => owner[:key],
           :product_id => product[:id],
         ).content
@@ -1008,7 +1009,7 @@ module Candlepin
       end
 
       it 'gets a consumer export' do
-        user_client.create_subscription(
+        user_client.create_pool(
           :owner => owner[:key],
           :product_id => product[:id],
         ).content
@@ -1026,7 +1027,7 @@ module Candlepin
       end
 
       it 'writes an export to disk' do
-        user_client.create_subscription(
+        user_client.create_pool(
           :owner => owner[:key],
           :product_id => product[:id],
         ).content
@@ -1049,7 +1050,7 @@ module Candlepin
       end
 
       it 'gets a list of entitlements' do
-        user_client.create_subscription(
+        user_client.create_pool(
           :owner => owner[:key],
           :product_id => product[:id],
         ).content
@@ -1069,7 +1070,7 @@ module Candlepin
       end
 
       it 'gets a list of compliance statuses' do
-        user_client.create_subscription(
+        user_client.create_pool(
           :owner => owner[:key],
           :product_id => product[:id],
         ).content
@@ -1110,7 +1111,7 @@ module Candlepin
       include_context("functional context")
 
       it 'binds to a pool ID' do
-        user_client.create_subscription(
+        user_client.create_pool(
           :owner => owner[:key],
           :product_id => product[:id],
         ).content
@@ -1132,7 +1133,7 @@ module Candlepin
       end
 
       it 'performs a dry run of autobind' do
-        user_client.create_subscription(
+        user_client.create_pool(
           :owner => owner[:key],
           :product_id => product[:id],
         ).content
@@ -1151,7 +1152,7 @@ module Candlepin
       end
 
       it 'binds to a product ID' do
-        user_client.create_subscription(
+        user_client.create_pool(
           :owner => owner[:key],
           :product_id => product[:id],
         )
@@ -1446,7 +1447,7 @@ module Candlepin
           :name => rand_string,
         ).content
 
-        user_client.create_subscription(
+        user_client.create_pool(
           :owner => owner[:key],
           :product_id => product[:id],
         )
@@ -1480,13 +1481,13 @@ module Candlepin
       end
 
       it 'regenerates a certificate by product' do
-        consumer = user_client.register(
+        user_client.register(
           :owner => owner[:key],
           :username => owner_user[:username],
           :name => rand_string,
         ).content
 
-        user_client.create_subscription(
+        user_client.create_pool(
           :owner => owner[:key],
           :product_id => product[:id],
         )
@@ -1501,8 +1502,6 @@ module Candlepin
 
         res = x509_client.bind(:pool_id => pools.first[:id])
         expect(res).to be_2xx
-
-        entitlement = res.content.first
 
         res = user_client.regen_certificates_by_product(
           :product_id => product[:id],
@@ -1587,7 +1586,7 @@ module Candlepin
       end
 
       it 'creates subscriptions' do
-        res = user_client.create_subscription(
+        res = user_client.create_pool(
           :owner => owner[:key],
           :product_id => product[:id],
         )
@@ -1767,7 +1766,7 @@ module Candlepin
           :port => TEST_PORT,
           :fail_fast => true)
         expect do
-          res = simple_client.get('/does/not/exist')
+          simple_client.get('/does/not/exist')
         end.to raise_error(HTTPClient::BadResponseError)
       end
 
