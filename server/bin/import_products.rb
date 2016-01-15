@@ -1,12 +1,13 @@
 #!/usr/bin/env ruby
 
 require_relative "../client/ruby/candlepin_api"
+require_relative "./thread_pool"
 
 require 'rubygems'
 require 'date'
 require 'json'
 require 'pp'
-require 'thread'
+
 
 SMALL_SUB_QUANTITY = 5
 LARGE_SUB_QUANTITY = 10
@@ -33,37 +34,6 @@ filenames.each do |filename|
   data['roles'] = data.fetch('roles', []) + product_data['roles']
 end
 
-# from http://burgestrand.se/articles/quick-and-simple-ruby-thread-pool.html
-class Pool
-  def initialize(size)
-    @size = size
-    @jobs = Queue.new
-    @pool = Array.new(@size) do |i|
-      Thread.new do
-        Thread.current[:id] = i
-        catch(:exit) do
-          loop do
-            job, args = @jobs.pop
-            job.call(*args)
-          end
-        end
-      end
-    end
-  end
-
-  def schedule(*args, &block)
-    @jobs << [block, args]
-  end
-
-  def shutdown
-    @size.times do
-      schedule { throw :exit }
-    end
-
-    @pool.map(&:join)
-  end
-end
-
 cp = Candlepin.new('admin', 'admin', nil, nil, 'localhost', 8443)
 
 def create_owner(cp, new_owner)
@@ -80,9 +50,9 @@ def create_owner(cp, new_owner)
   cp.create_activation_key(owner['key'], "awesome_os_pool")
 end
 
-thread_pool = Pool.new(5)
+thread_pool = ThreadPool.new(5)
 data['owners'].each do |new_owner|
-    thread_pool.schedule do
+    thread_pool.schedule(new_owner) do |new_owner|
         create_owner(cp, new_owner)
     end
 end
@@ -102,11 +72,9 @@ def create_user(cp, new_user)
 end
 
 puts "Create some users"
-thread_pool = Pool.new(5)
+thread_pool = ThreadPool.new(5)
 data['users'].each do |new_user|
-    thread_pool.schedule do
-        create_user(cp, new_user)
-    end
+    thread_pool.schedule(new_user) {|new_user| create_user(cp, new_user) }
 end
 thread_pool.shutdown
 
@@ -133,11 +101,9 @@ def create_role(cp, new_role)
 
 end
 
-thread_pool = Pool.new(5)
+thread_pool = ThreadPool.new(5)
 data['roles'].each do |new_role|
-    thread_pool.schedule do
-        create_role(cp, new_role)
-    end
+    thread_pool.schedule(new_role) {|new_role| create_role(cp, new_role) }
 end
 thread_pool.shutdown
 
@@ -175,20 +141,16 @@ def create_content(cp, owner, content)
   )
 end
 
-thread_pool = Pool.new(5)
+thread_pool = ThreadPool.new(5)
 data['owners'].each do |owner|
     if owner.has_key?('content')
         owner['content'].each do |content|
-          thread_pool.schedule do
-              create_content(cp, owner, content)
-          end
+          thread_pool.schedule(owner, content) {|owner, content| create_content(cp, owner, content) }
         end
     end
 
     data['content'].each do |content|
-        thread_pool.schedule do
-            create_content(cp, owner, content)
-        end
+        thread_pool.schedule(owner, content) {|owner, content| create_content(cp, owner, content) }
     end
 end
 thread_pool.shutdown
@@ -235,7 +197,7 @@ def create_product(cp, owner, product)
   return product_ret
 end
 
-def create_eng_product(cp, thread_pool, owner, product)
+def create_eng_product(cp, owner, product)
   product_ret = create_product(cp, owner, product)
   product_content = product['content'] || []
 
@@ -247,7 +209,6 @@ def create_eng_product(cp, thread_pool, owner, product)
   if not product_content.empty?
     cp.add_all_content_to_product(owner['name'], product_ret['id'], product_content)
   end
-
 end
 
 def create_mkt_product_and_pools(cp, owner, product)
@@ -348,25 +309,24 @@ data['owners'].each do |owner|
 end
 
 puts "creating eng products"
-thread_pool = Pool.new(6)
+thread_pool = ThreadPool.new(6)
 eng_products.each do |eng_product|
-    thread_pool.schedule do
-        create_eng_product(cp, thread_pool, eng_product[0], eng_product[1])
+    thread_pool.schedule(eng_product[0], eng_product[1]) do |owner, product|
+      create_eng_product(cp, owner, product)
     end
 end
 thread_pool.shutdown
 
 puts "creating mkt products and pools"
-thread_pool = Pool.new(6)
+thread_pool = ThreadPool.new(6)
 mkt_products.each do |mkt_product|
-    thread_pool.schedule do
-        create_mkt_product_and_pools(cp, mkt_product[0], mkt_product[1])
+    thread_pool.schedule(mkt_product[0], mkt_product[1]) do |owner, product|
+      create_mkt_product_and_pools(cp, owner, product)
     end
 end
 thread_pool.shutdown
 
 def create_activation_key_for_pool(cp, pool, owner_key)
-    #pp pool contractNumber
     key_name = owner_key + '-' + pool['productId'] + '-' + pool['contractNumber'] + '-key'
     puts "creating activation_key " + key_name
     key = cp.create_activation_key(owner_key, key_name)
@@ -375,9 +335,9 @@ end
 
 exit
 
-thread_pool = Pool.new(6)
+thread_pool = ThreadPool.new(6)
 owner_keys.each do |owner_key|
-    thread_pool.schedule do
+    thread_pool.schedule(owner_key) do |owner_key|
         pools = cp.list_owner_pools(owner_key)
         pools.each do |pool|
             create_activation_key_for_pool(cp, pool, owner_key)
