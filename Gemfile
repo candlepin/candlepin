@@ -19,4 +19,8 @@ group :development do
   gem 'pry'
   gem 'pry-byebug'
   gem 'pry-stack_explorer'
+  # Rubocop can add new checks in new releases which
+  # can result in new errors, so we control the version
+  # very strictly
+  gem 'rubocop', '=0.36.0'
 end

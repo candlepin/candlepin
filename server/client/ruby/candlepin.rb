@@ -17,9 +17,7 @@ module HTTP
       if JSONClient::CONTENT_TYPE_JSON_REGEX =~ content_type && !original_content.empty?
         json = JSON.parse(original_content)
         if json.is_a?(Array)
-          json.map! do |i|
-            i.deep_symbolize_keys!
-          end
+          json.map!(&:deep_symbolize_keys!)
         else
           json.deep_symbolize_keys!
         end
@@ -62,7 +60,7 @@ class JSONClient < HTTPClient
       req.header['content-type'] = @client.content_type_json if @replace
     end
 
-    def filter_response(req, res)
+    def filter_response(_req, _res)
       @replace = false
     end
   end
@@ -121,7 +119,7 @@ class JSONClient < HTTPClient
       jsonify(opts)
       @header_filter.replace = true
     end
-    request(:delete,  uri, opts, &block)
+    request(:delete, uri, opts, &block)
   end
 
   def request(method, uri, *args, &block)
@@ -138,7 +136,7 @@ class JSONClient < HTTPClient
     res
   end
 
-  # TODO probably need to override post_async, put_async, delete_async
+  # TODO: probably need to override post_async, put_async, delete_async
   # to allow for custom setting on Content-Type header.
   def request_async2(method, uri, *args, &block)
     # Hack to address https://github.com/nahi/httpclient/issues/285
@@ -162,7 +160,7 @@ class JSONClient < HTTPClient
     super
   end
 
-private
+  private
 
   def jsonify(hash)
     if !hash.nil? && hash.key?(:body) && !hash[:body].nil?
@@ -203,14 +201,14 @@ module Candlepin
     #     select_from(h, :hello) do |subset, original|
     #       h[:send_off] = original[:goodbye].upcase
     #     end
-    def select_from(hash, *args, &block)
+    def select_from(hash, *args)
       missing = args.flatten.reject { |key| hash.key?(key) }
       unless missing.empty?
         raise ArgumentError.new("Missing keys: #{missing}")
       end
 
       pairs = args.map do |key|
-          hash.assoc(key)
+        hash.assoc(key)
       end
       h = Hash[pairs]
       yield h, hash if block_given?
@@ -220,7 +218,7 @@ module Candlepin
     # Validate the value associated with a hash key.  By default, the method validates
     # the key is not nil, but if a block is passed then the block will be evaluated and
     # if the block returns a false value the value will be considered invalid.
-    def validate_keys(hash, *check_keys, &block)
+    def validate_keys(hash, *check_keys)
       if check_keys.empty?
         check_keys = hash.keys
       end
@@ -229,8 +227,8 @@ module Candlepin
       check_keys.each do |k|
         if block_given?
           invalid << k unless yield hash[k]
-        else
-          invalid << k if hash[k].nil?
+        elsif hash[k].nil?
+          invalid << k
         end
       end
 
@@ -265,7 +263,7 @@ module Candlepin
     #  * URL construction should be performed with the Ruby URI class and/or the
     #    to_query methods added to Object, Array, and Hash.  No ad hoc string manipulations.
 
-    # TODO At some point it might make more sense to set up some AOP advice at
+    # TODO: At some point it might make more sense to set up some AOP advice at
     # the "before method call" joinpoint around defining, merging, and
     # validating the default options.  (The Aquarium gem seems to be a good fit)
     # E.g.
@@ -292,23 +290,23 @@ module Candlepin
       # file if the methods aren't grouped into logical sections.
       klass.constants.each do |sym|
         klass.class_eval do
-          include const_get(sym) if const_get(sym).kind_of?(Module)
+          include const_get(sym) if const_get(sym).is_a?(Module)
         end
       end
     end
 
     attr_writer :uuid
     def uuid
-      return @uuid || nil
+      @uuid || nil
     end
 
     attr_writer :key
     def key
-      return @key || nil
+      @key || nil
     end
 
     def page_options
-      return {
+      {
         :page => nil,
         :per_page => nil,
         :order => nil,
@@ -461,7 +459,7 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        unless opts[:installed_products].kind_of?(Array)
+        unless opts[:installed_products].is_a?(Array)
           opts[:installed_products] = [opts[:installed_products]]
         end
 
@@ -485,7 +483,7 @@ module Candlepin
 
         consumer_json[:installed_products] = []
         opts[:installed_products].each do |ip|
-          if ip.kind_of?(Hash)
+          if ip.is_a?(Hash)
             consumer_json[:installed_products] << { :id => ip[:id] }
           else
             consumer_json[:installed_products] << { :id => ip }
@@ -537,7 +535,7 @@ module Candlepin
           :product,
           :quantity,
           :async,
-          :entitle_date,
+          :entitle_date
         )
         # Use the option :pool_id for consistency among all the other method calls
         # Just transparently transform it to match the API's requirements.
@@ -694,13 +692,11 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :uuids)
 
-        unless opts[:uuids].kind_of?(Array)
+        unless opts[:uuids].is_a?(Array)
           opts[:uuids] = [opts[:uuids]]
         end
 
-        get("/consumers/compliance",
-          :uuid => opts[:uuids]
-        )
+        get("/consumers/compliance", :uuid => opts[:uuids])
       end
 
       def get_consumer(opts = {})
@@ -734,8 +730,7 @@ module Candlepin
         validate_keys(opts, :uuid)
 
         get("/consumers/#{opts[:uuid]}/compliance",
-          :query => opts.slice(:on_date).compact
-        )
+          :query => opts.slice(:on_date).compact)
       end
 
       def get_consumer_host(opts = {})
@@ -786,13 +781,12 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :uuid, :serials)
 
-        unless opts[:serials].kind_of?(Array)
+        unless opts[:serials].is_a?(Array)
           opts[:serials] = [opts[:serials]]
         end
 
-        get("/consumers/#{opts[:uuid]}/certificates", :query => {
-          :serials => opts[:serials].join(",")
-        })
+        get("/consumers/#{opts[:uuid]}/certificates",
+          :query => { :serials => opts[:serials].join(",") })
       end
 
       def get_consumer_entitlements(opts = {})
@@ -832,7 +826,7 @@ module Candlepin
 
         path = "/consumers/#{opts[:uuid]}/guestids"
         body = opts[:guest_ids].map do |id|
-            { :guestId => id }
+          { :guestId => id }
         end
         put(path, body)
       end
@@ -908,7 +902,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :env_id, :content_ids)
 
-        unless opts[:content_ids].kind_of?(Array)
+        unless opts[:content_ids].is_a?(Array)
           opts[:content_ids] = [opts[:content_ids]]
         end
 
@@ -917,7 +911,7 @@ module Candlepin
           body << {
             :contentId => c,
             :environmentId => opts[:env_id],
-            :enabled => opts[:enabled]
+            :enabled => opts[:enabled],
           }
         end
 
@@ -936,7 +930,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :env_id, :content_ids)
 
-        unless opts[:content_ids].kind_of?(Array)
+        unless opts[:content_ids].is_a?(Array)
           opts[:content_ids] = [opts[:content_ids]]
         end
         url = "/environments/#{opts[:env_id]}/content"
@@ -969,7 +963,7 @@ module Candlepin
         get_by_id("/activation_keys", :id, opts)
       end
 
-      def get_all_activation_keys(opts = {})
+      def get_all_activation_keys
         get("/activation_keys")
       end
 
@@ -1010,7 +1004,8 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :id, :pool_id)
 
-        post("/activation_keys/#{opts[:id]}/pools/#{opts[:pool_id]}", :query => opts.slice(:quantity))
+        post("/activation_keys/#{opts[:id]}/pools/#{opts[:pool_id]}",
+          :query => opts.slice(:quantity))
       end
 
       def delete_pool_from_activation_key(opts = {})
@@ -1073,7 +1068,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :id)
 
-        unless opts[:overrides].kind_of?(Array)
+        unless opts[:overrides].is_a?(Array)
           opts[:overrides] = [opts[:overrides]]
         end
 
@@ -1100,7 +1095,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :id)
 
-        unless opts[:overrides].kind_of?(Array)
+        unless opts[:overrides].is_a?(Array)
           opts[:overrides] = [opts[:overrides]]
         end
 
@@ -1123,14 +1118,14 @@ module Candlepin
     module HypervisorResource
       def post_hypervisor_check_in(opts = {})
         defaults = {
-           :owner => key,
-           :host_guest_mapping => {},
-           :create_missing => nil,
-         }
-         opts = verify_and_merge(opts, defaults)
+          :owner => key,
+          :host_guest_mapping => {},
+          :create_missing => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
 
-         body = opts[:host_guest_mapping]
-         post('/hypervisors',
+        body = opts[:host_guest_mapping]
+        post('/hypervisors',
           :query => opts.slice(:owner, :create_missing).compact,
           :body => body)
       end
@@ -1143,7 +1138,7 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        get('/deleted_consumers')
+        get('/deleted_consumers', :query => opts)
       end
     end
 
@@ -1235,7 +1230,7 @@ module Candlepin
 
         role_name = "#{opts[:owner]}-ALL"
 
-        role = all_roles.select { |r| r[:name] == role_name }.first
+        role = all_roles.detect { |r| r[:name] == role_name }
         if role.nil?
           if opts[:super_admin]
             perm = all_owner_permission(opts[:owner])
@@ -1301,7 +1296,7 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        unless opts[:permissions].kind_of?(Array)
+        unless opts[:permissions].is_a?(Array)
           opts[:permissions] = [opts[:permissions]]
         end
 
@@ -1460,11 +1455,11 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :owner)
 
-        unless opts[:types].kind_of?(Array)
+        unless opts[:types].is_a?(Array)
           opts[:types] = [opts[:types]]
         end
 
-        unless opts[:facts].kind_of?(Array)
+        unless opts[:facts].is_a?(Array)
           opts[:facts] = [opts[:facts]]
         end
 
@@ -1583,7 +1578,7 @@ module Candlepin
         validate_keys(opts, :owner)
 
         put_async("/owners/#{opts[:owner]}/subscriptions",
-            :query => opts.slice(:auto_create_owner, :lazy_regen))
+          :query => opts.slice(:auto_create_owner, :lazy_regen))
       end
 
       # Same as refresh_pools_async but just block before returning
@@ -1631,21 +1626,19 @@ module Candlepin
             :product_id,
             :provided_products,
             :derived_products,
-            :derived_provided_products,
+            :derived_provided_products
           )
         )
 
         body[:product] = { :id => opts[:product_id] }
-        opts.slice(
-          :provided_products,
-          :derived_products,
-          :derived_provided_products).each do |k, v|
-            prods = []
-            v = [v] unless v.kind_of?(Array)
-            v.each do |p|
-              prods << { :id => p }
-            end
-            body[camel_case(k)] = prods unless prods.empty?
+        products = opts.slice(:provided_products, :derived_products, :derived_provided_products)
+        products.each do |k, v|
+          prods = []
+          v = [v] unless v.is_a?(Array)
+          v.each do |p|
+            prods << { :id => p }
+          end
+          body[camel_case(k)] = prods unless prods.empty?
         end
 
         post("/owners/#{opts[:owner]}/pools", body)
@@ -1721,7 +1714,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :owner, :manifest)
 
-        unless opts[:force].kind_of?(Array)
+        unless opts[:force].is_a?(Array)
           opts[:force] = [opts[:force]]
         end
 
@@ -1733,8 +1726,7 @@ module Candlepin
           post("/owners/#{opts[:owner]}/imports",
             :query => opts.slice(:force),
             :body => { 'import' => f },
-            :header => { 'Content-Type' => 'multipart/form-data' }
-          )
+            :header => { 'Content-Type' => 'multipart/form-data' })
         end
       end
     end
@@ -1901,7 +1893,7 @@ module Candlepin
         # here
         old_content = get_owner_content(
           :content_id => opts[:content_id],
-          :owner => opts[:owner],
+          :owner => opts[:owner]
         ).content
         # The content id cannot change so don't let it win in
         # the merge
@@ -1970,7 +1962,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :owner)
         validate_keys(opts, :attributes) do |x|
-          x.kind_of?(Hash)
+          x.is_a?(Hash)
         end
 
         opts[:attributes][:type] = opts.extract!(:type)[:type]
@@ -1980,8 +1972,7 @@ module Candlepin
           :multiplier,
           :dependent_product_ids,
           :relies_on,
-          :product_content,
-        )
+          :product_content)
         product[:id] = opts[:product_id]
         product[:attributes] = opts[:attributes].map do |k, v|
           { :name => k, :value => v }
@@ -2077,7 +2068,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :uuid)
 
-        unless opts[:overrides].kind_of?(Array)
+        unless opts[:overrides].is_a?(Array)
           opts[:overrides] = [opts[:overrides]]
         end
 
@@ -2114,7 +2105,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :uuid)
 
-        unless opts[:overrides].kind_of?(Array)
+        unless opts[:overrides].is_a?(Array)
           opts[:overrides] = [opts[:overrides]]
         end
 
@@ -2147,9 +2138,10 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :product_ids) do |k|
-          not k.empty?
+          !k.empty?
         end
-        get("/products/owners", :query => {'product' => opts[:product_ids]})
+        get("/products/owners",
+          :query => { 'product' => opts[:product_ids] })
       end
 
       def get_product_certificate(opts = {})
@@ -2177,7 +2169,7 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :product_ids)
-        unless opts[:product_ids].kind_of?(Array)
+        unless opts[:product_ids].is_a?(Array)
           opts[:product_ids] = [opts[:product_ids]]
         end
         query = opts.slice(:lazy_regen)
@@ -2275,7 +2267,7 @@ module Candlepin
           :label => nil,
           :name => nil,
           :url => nil,
-          :certificate => nil
+          :certificate => nil,
         }
         opts = verify_and_merge(opts, defaults)
 
@@ -2287,7 +2279,7 @@ module Candlepin
           :label => nil,
           :name => nil,
           :url => nil,
-          :certificate => nil
+          :certificate => nil,
         }
         opts = verify_and_merge(opts, defaults)
 
@@ -2379,7 +2371,7 @@ module Candlepin
       # Subclasses must provide an attr_writer or attr_accessor for every key
       # in the options hash.  The snippet below sends the values to the setter methods.
       @client_opts.each do |k, v|
-        self.send(:"#{k}=", v)
+        send(:"#{k}=", v)
       end
       reload
     end
@@ -2396,8 +2388,8 @@ module Candlepin
       reload if @client
     end
 
-    def debug
-      self.debug=(true)
+    def debug!
+      self.debug = true
     end
 
     def debug=(value)
@@ -2431,7 +2423,6 @@ module Candlepin
       uri.to_s
     end
 
-
     def get_text(*args, &block)
       get_type('text/plain', *args, &block)
     end
@@ -2463,8 +2454,8 @@ module Candlepin
       if use_ssl
         if insecure
           client.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_NONE
-        else
-          client.ssl_config.add_trust_ca(ca_path) if ca_path
+        elsif ca_path
+          client.ssl_config.add_trust_ca(ca_path)
         end
       end
       client
@@ -2542,7 +2533,7 @@ module Candlepin
 
     def raw_client
       client = super
-      # TODO OAuth stuff here
+      # TODO: OAuth stuff here
       client
     end
   end
@@ -2598,7 +2589,7 @@ module Candlepin
     end
 
     def switch_auth(*args)
-      if args.length == 1 && args.first.kind_of?(Hash)
+      if args.length == 1 && args.first.is_a?(Hash)
         @username = args.first[:username]
         @password = args.first[:password]
       else

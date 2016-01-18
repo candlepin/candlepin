@@ -1,0 +1,61 @@
+AbcSize:
+  Enabled: false
+AccessorMethodName:
+  Enabled: false
+Alias:
+  Enabled: false
+AlignParameters:
+  EnforcedStyle: with_fixed_indentation
+ClassLength:
+  Enabled: false
+CollectionMethods:
+  PreferredMethods:
+    collect: 'map'
+    reduce: 'inject'
+    detect: 'find'
+    find_all: 'select'
+ConditionalAssignment:
+  Enabled: false
+CyclomaticComplexity:
+  Enabled: false
+Documentation:
+  Enabled: false
+GuardClause:
+  Enabled: false
+HashSyntax:
+  EnforcedStyle: hash_rockets
+IfUnlessModifier:
+  Enabled: false
+LineLength:
+  Enabled: true
+  Max: 100
+MethodLength:
+  Enabled: false
+ModuleLength:
+  Enabled: false
+ParenthesesAroundCondition:
+  AllowSafeAssignment: false
+PerceivedComplexity:
+  Enabled: false
+PerlBackrefs:
+  Enabled: false
+RaiseArgs:
+  EnforcedStyle: compact
+RedundantReturn:
+  AllowMultipleReturnValues: true
+RegexpLiteral:
+  Enabled: false
+SignalException:
+  EnforcedStyle: only_raise
+SpaceAroundEqualsInParameterDefault:
+  EnforcedStyle: space
+SpaceInsideHashLiteralBraces:
+  EnforcedStyle: space
+StringLiterals:
+  Enabled: false
+TrailingCommaInArguments:
+  EnforcedStyleForMultiline: no_comma
+TrailingCommaInLiteral:
+  EnforcedStyleForMultiline: comma
+WhileUntilModifier:
+  Enabled: false
