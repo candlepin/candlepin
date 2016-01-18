@@ -33,6 +33,8 @@ MethodLength:
   Enabled: false
 ModuleLength:
   Enabled: false
+NumericLiterals:
+  Enabled: false
 ParenthesesAroundCondition:
   AllowSafeAssignment: false
 PerceivedComplexity:
@@ -53,9 +55,14 @@ SpaceInsideHashLiteralBraces:
   EnforcedStyle: space
 StringLiterals:
   Enabled: false
+# None of the enforcement options suited my taste.  I believe trailing
+# commas are okay in methods where the parameters are a big options hash
+# getting sent in, but not for arguments that are just regular objects.
 TrailingCommaInArguments:
-  EnforcedStyleForMultiline: no_comma
+  Enabled: false
 TrailingCommaInLiteral:
   EnforcedStyleForMultiline: comma
 WhileUntilModifier:
   Enabled: false
+WordArray:
+  MinSize: 7

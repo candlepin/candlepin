@@ -13,25 +13,25 @@ RSpec.configure do |config|
   end
 end
 
-RSpec::Matchers.define :be_2xx do |expected|
+RSpec::Matchers.define :be_2xx do
   match do |res|
-    (200..206).include?(res.status_code)
+    (200..206).cover?(res.status_code)
   end
 end
 
-RSpec::Matchers.define :be_unauthorized do |expected|
+RSpec::Matchers.define :be_unauthorized do
   match do |res|
     res.status_code == 401
   end
 end
 
-RSpec::Matchers.define :be_forbidden do |expected|
+RSpec::Matchers.define :be_forbidden do
   match do |res|
     res.status_code == 403
   end
 end
 
-RSpec::Matchers.define :be_missing do |expected|
+RSpec::Matchers.define :be_missing do
   match do |res|
     res.status_code == 404
   end
@@ -42,10 +42,10 @@ module Candlepin
     def rand_string(opts = {})
       len = opts[:len] || 9
       prefix = opts[:prefix] || ''
-      o = [('a'..'z'), ('A'..'Z'), ('1'..'9')].map { |range| range.to_a }.flatten
+      o = [('a'..'z'), ('A'..'Z'), ('1'..'9')].map(&:to_a).flatten
       rand = (0...len).map { o[rand(o.length)] }.join
 
-      return (prefix.empty?) ? rand : "#{prefix}-#{rand}"
+      prefix.empty? ? rand : "#{prefix}-#{rand}"
     end
 
     shared_context "functional context" do
@@ -208,7 +208,7 @@ module Candlepin
         expect(res).to be_2xx
         expect(res.content[:pools].length).to eq(1)
 
-        res = owner_client.delete_pool_from_activation_key(
+        owner_client.delete_pool_from_activation_key(
           :id => activation_key[:id],
           :pool_id => pools.first[:id],
         )
@@ -258,7 +258,7 @@ module Candlepin
         result_key = owner_client.get_activation_key(:id => activation_key[:id]).content
         expect(result_key[:contentOverrides].length).to eq(1)
 
-        res = owner_client.delete_overrides_from_activation_key(
+        owner_client.delete_overrides_from_activation_key(
           :id => activation_key[:id],
           :overrides => override,
         )
@@ -295,7 +295,7 @@ module Candlepin
         expect(res).to be_2xx
         expect(res.content[:products].length).to eq(1)
 
-        res = owner_client.delete_product_from_activation_key(
+        owner_client.delete_product_from_activation_key(
           :id => activation_key[:id],
           :product_id => product[:id],
         )
@@ -436,7 +436,7 @@ module Candlepin
       end
 
       it 'lists owner consumers by type' do
-        res = user_client.register(
+        user_client.register(
           :owner => owner[:key],
           :username => owner_user[:username],
           :name => rand_string,
@@ -1394,9 +1394,9 @@ module Candlepin
         ).content
 
         single_override = {
-            :content_label => "x",
-            :name => "y",
-            :value => "z",
+          :content_label => "x",
+          :name => "y",
+          :value => "z",
         }
         res = user_client.create_content_overrides(
           :uuid => consumer[:uuid],
@@ -1726,11 +1726,14 @@ module Candlepin
         }
 
         @server = WEBrick::HTTPServer.new(server_config)
-        @client_cert_server = WEBrick::HTTPServer.new(server_config.merge({
-          :SSLVerifyClient => OpenSSL::SSL::VERIFY_PEER | OpenSSL::SSL::VERIFY_FAIL_IF_NO_PEER_CERT,
-          :SSLCACertificateFile => 'certs/test-ca.crt',
-          :Port => CLIENT_CERT_TEST_PORT,
-        }))
+        @client_cert_server = WEBrick::HTTPServer.new(
+          server_config.merge(
+            :SSLVerifyClient =>
+              OpenSSL::SSL::VERIFY_PEER | OpenSSL::SSL::VERIFY_FAIL_IF_NO_PEER_CERT,
+            :SSLCACertificateFile => 'certs/test-ca.crt',
+            :Port => CLIENT_CERT_TEST_PORT,
+          )
+        )
 
         [server, client_cert_server].each do |s|
           s.mount_proc('/candlepin/status') do |req, res|
@@ -2054,7 +2057,6 @@ module Candlepin
           UtilTest.new.validate_keys(h, :z)
         end.to_not raise_error
       end
-
 
       it 'validates keys are not nil' do
         h = {
