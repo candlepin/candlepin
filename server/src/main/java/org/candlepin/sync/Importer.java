@@ -287,10 +287,10 @@ public class Importer {
             File rulesFile = new File(exportDir, ImportFile.RULES_FILE.fileName());
             importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFile);
 
-            ConsumerDto consumer = importObjects(owner, importFiles, overrides);
+            List<Subscription> importSubs = importObjects(owner, importFiles, overrides);
             Meta m = mapper.readValue(importFiles.get(ImportFile.META.fileName()),
                 Meta.class);
-            result.put("consumer", consumer);
+            result.put("subscriptions", importSubs);
             result.put("meta", m);
             return result;
         }
@@ -334,7 +334,7 @@ public class Importer {
     @Transactional(rollbackOn = {IOException.class, ImporterException.class,
             RuntimeException.class, ImportConflictException.class})
     // WARNING: Keep this method public, otherwise @Transactional is ignored:
-    ConsumerDto importObjects(Owner owner, Map<String, File> importFiles,
+    List<Subscription> importObjects(Owner owner, Map<String, File> importFiles,
         ConflictOverrides overrides)
         throws IOException, ImporterException {
 
@@ -436,7 +436,6 @@ public class Importer {
                 importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(), importer, owner
             );
 
-            meta = mapper.readValue(metadata, Meta.class);
             importSubs = importEntitlements(owner, productsToImport,
                     entitlements.listFiles(), consumer, meta);
         }
@@ -453,7 +452,7 @@ public class Importer {
         refresher.add(owner);
         refresher.run();
 
-        return consumer;
+        return importSubs;
     }
 
     public void importRules(File rulesFile, File metadata) throws IOException {

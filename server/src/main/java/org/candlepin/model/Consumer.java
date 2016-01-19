@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.audit.Eventful;
 import org.candlepin.common.jackson.HateoasArrayExclude;
 import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -75,7 +76,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp_consumer")
 @JsonFilter("ConsumerFilter")
-public class Consumer extends AbstractHibernateObject implements Linkable, Owned, Named, ConsumerProperty {
+public class Consumer extends AbstractHibernateObject implements Linkable, Owned, Named, ConsumerProperty,
+        Eventful {
 
     public static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
 

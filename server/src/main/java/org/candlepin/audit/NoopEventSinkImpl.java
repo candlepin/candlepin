@@ -20,6 +20,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 import org.slf4j.Logger;
@@ -94,6 +95,11 @@ public class NoopEventSinkImpl implements EventSink {
     }
 
     @Override
+    public void emitSubscriptionExpired(Subscription subscription) {
+        log.debug("emitSubscriptionExpired:" + subscription);
+    }
+
+    @Override
     public void emitRulesModified(Rules oldRules, Rules newRules) {
         log.debug("emitRulesModified: oldRules:" + oldRules + " newRules:" + oldRules);
     }
@@ -118,4 +124,5 @@ public class NoopEventSinkImpl implements EventSink {
     public List<QueueStatus> getQueueInfo() {
         return null;
     }
+
 }

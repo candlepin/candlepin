@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.audit.Eventful;
 import org.candlepin.policy.js.RuleParseException;
 
 import org.hibernate.annotations.GenericGenerator;
@@ -42,7 +43,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp_rules")
 @Embeddable
-public class Rules extends AbstractHibernateObject implements Named {
+public class Rules extends AbstractHibernateObject implements Named, Eventful {
 
     private static final Pattern VERSION_REGEX =
         Pattern.compile("[//|#]+ *[V|v]ersion: *([0-9]+(\\.[0-9]+)*) *");

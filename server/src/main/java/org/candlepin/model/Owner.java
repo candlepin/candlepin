@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.audit.Eventful;
 import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.resteasy.InfoProperty;
@@ -52,7 +53,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = "cp_owner")
 @JsonFilter("OwnerFilter")
 public class Owner extends AbstractHibernateObject implements Serializable,
-    Linkable, Owned, Named {
+    Linkable, Owned, Named, Eventful {
 
     @OneToOne
     @JoinColumn(name = "parent_owner", nullable = true)

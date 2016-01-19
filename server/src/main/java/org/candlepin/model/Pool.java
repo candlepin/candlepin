@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.audit.Eventful;
 import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.util.DateSource;
 
@@ -67,7 +68,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp_pool")
 @JsonFilter("PoolFilter")
-public class Pool extends AbstractHibernateObject implements Persisted, Owned, Named, Comparable<Pool> {
+public class Pool extends AbstractHibernateObject implements Persisted, Owned, Named, Comparable<Pool>,
+    Eventful {
 
     /**
      * Attribute used to determine whether or not the pool is derived from the use of an

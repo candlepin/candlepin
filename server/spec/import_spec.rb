@@ -21,8 +21,9 @@ describe 'Import', :serial => true do
     @import_owner = @cp.create_owner(random_string("test_owner"))
     @import_username = random_string("import-user")
     @import_owner_client = user_client(@import_owner, @import_username)
-    @cp.import(@import_owner['key'], @cp_export_file)
-
+    import_record = @cp.import(@import_owner['key'], @cp_export_file)
+    import_record.status.should == 'SUCCESS'
+    import_record.statusMessage.should == "#{@import_owner['key']} file imported successfully."
     @exporters = [@cp_export]
   end
 

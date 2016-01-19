@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.audit.Eventful;
 import org.candlepin.common.jackson.HateoasArrayExclude;
 import org.candlepin.common.jackson.HateoasInclude;
 
@@ -57,7 +58,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp_consumer_guests")
 @JsonFilter("GuestFilter")
-public class GuestId extends AbstractHibernateObject implements Owned, Named, ConsumerProperty {
+public class GuestId extends AbstractHibernateObject implements Owned, Named, ConsumerProperty, Eventful {
 
     @Id
     @GeneratedValue(generator = "system-uuid")

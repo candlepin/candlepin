@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.audit.Eventful;
 import org.candlepin.common.jackson.HateoasInclude;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
@@ -64,7 +65,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = "cp_entitlement")
 @JsonFilter("EntitlementFilter")
 public class Entitlement extends AbstractHibernateObject
-    implements Linkable, Owned, Named, ConsumerProperty, Comparable<Entitlement> {
+    implements Linkable, Owned, Named, ConsumerProperty, Comparable<Entitlement>, Eventful {
 
     private static final long serialVersionUID = 1L;
 

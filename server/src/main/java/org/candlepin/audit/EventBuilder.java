@@ -16,7 +16,6 @@ package org.candlepin.audit;
 
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
-import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerProperty;
 import org.candlepin.model.Entitlement;
@@ -43,7 +42,7 @@ public class EventBuilder {
                 null, null, null, null, null, null, null);
     }
 
-    private void setEventData(AbstractHibernateObject entity) {
+    private void setEventData(Eventful entity) {
         // Be careful to check for null before setting so we don't overwrite anything useful
         if (entity instanceof Named && ((Named) entity).getName() != null) {
             event.setTargetName(((Named) entity).getName());
@@ -72,7 +71,7 @@ public class EventBuilder {
         }
     }
 
-    public EventBuilder setOldEntity(AbstractHibernateObject old) {
+    public EventBuilder setOldEntity(Eventful old) {
         // Allow null, but don't do anything
         if (old != null) {
             // If the value is non-null and a value is set, we shouldn't allow it to continue
@@ -85,7 +84,7 @@ public class EventBuilder {
         return this;
     }
 
-    public EventBuilder setNewEntity(AbstractHibernateObject updated) {
+    public EventBuilder setNewEntity(Eventful updated) {
         if (updated != null) {
             if (event.getType() == Type.DELETED || event.getType() == Type.EXPIRED) {
                 throw new IllegalArgumentException("You cannot set the new entity for a deletion event");
