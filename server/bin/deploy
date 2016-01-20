@@ -132,7 +132,7 @@ OPTIONS:
   -f          force cert regeneration
   -g          generate database
   -t          import test data
-  -h          include test resources for hosted mode
+  -H          include test resources for hosted mode
   -o          use Oracle
   -l          use Logdriver
   -m          use MySQL
@@ -183,11 +183,11 @@ init
 
 DBUSER="candlepin"
 
-while getopts ":fgtholmavd:" opt; do
+while getopts ":fgtHolmavd:" opt; do
     case $opt in
         f  ) FORCECERT="1" ;;
         g  ) GENDB="1";;
-        h  ) HOSTEDTEST="hostedtest";;
+        H  ) HOSTEDTEST="hostedtest";;
         t  ) TESTDATA="1";;
         o  ) USE_ORACLE="1";;
         l  ) LOGDRIVER="logdriver";;
