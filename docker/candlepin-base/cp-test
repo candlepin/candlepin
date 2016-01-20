@@ -174,7 +174,7 @@ if [ "$DEPLOY" == "1" ]; then
 
     DEPLOY_FLAGS="-g"
 
-    if [ "$RSPEC" == "1" ] && [ "$HOSTED" == "1" ]; then
+    if [ "$RSPEC" == "1" ] && [ "$HOSTED" == "1" ] && (bin/deploy '-?' | grep -q -- '-h'); then
         DEPLOY_FLAGS="$DEPLOY_FLAGS -h -a"
     fi
 
