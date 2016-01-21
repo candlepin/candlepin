@@ -44,7 +44,7 @@ PerlBackrefs:
 RaiseArgs:
   EnforcedStyle: compact
 RedundantReturn:
-  AllowMultipleReturnValues: true
+  Enabled: false
 RegexpLiteral:
   Enabled: false
 SignalException:
