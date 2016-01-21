@@ -68,6 +68,10 @@ public class TestUtil {
     private TestUtil() {
     }
 
+    public static Owner createOwner() {
+        return new Owner("Test Owner " + randomInt());
+    }
+
     public static Consumer createConsumer(ConsumerType type, Owner owner) {
         return new Consumer("TestConsumer" + randomInt(), "User", owner, type);
     }
