@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.51.14
+Version: 0.9.51.15
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -213,6 +213,11 @@ fi
 
 #raw
 %changelog
+* Thu Jan 21 2016 Alex Wood <awood@redhat.com> 0.9.51.15-1
+- 1300705: Fix perf issue finding dev pools (mstead@redhat.com)
+- Reverted required Guice version to 3.0 (crog@redhat.com)
+- Fixed the rules import spec tests on MySQL (crog@redhat.com)
+
 * Fri Jan 08 2016 Alex Wood <awood@redhat.com> 0.9.51.14-1
 - 1295452: Look up dev sku by consumer only (mstead@redhat.com)
 
