@@ -27,12 +27,12 @@
     <commons-io-commons-io.version>1.3.2</commons-io-commons-io.version>
     <commons-lang-commons-lang.version>2.5</commons-lang-commons-lang.version>
     <com.googlecode.gettext-commons-gettext-commons.version>0.9.8</com.googlecode.gettext-commons-gettext-commons.version>
-    <com.google.inject.extensions-guice-assistedinject.version>4.0</com.google.inject.extensions-guice-assistedinject.version>
-    <com.google.inject.extensions-guice-multibindings.version>4.0</com.google.inject.extensions-guice-multibindings.version>
-    <com.google.inject.extensions-guice-servlet.version>4.0</com.google.inject.extensions-guice-servlet.version>
-    <com.google.inject.extensions-guice-throwingproviders.version>4.0</com.google.inject.extensions-guice-throwingproviders.version>
-    <com.google.inject.extensions-guice-persist.version>4.0</com.google.inject.extensions-guice-persist.version>
-    <com.google.inject-guice.version>4.0</com.google.inject-guice.version>
+    <com.google.inject.extensions-guice-assistedinject.version>3.0</com.google.inject.extensions-guice-assistedinject.version>
+    <com.google.inject.extensions-guice-multibindings.version>3.0</com.google.inject.extensions-guice-multibindings.version>
+    <com.google.inject.extensions-guice-servlet.version>3.0</com.google.inject.extensions-guice-servlet.version>
+    <com.google.inject.extensions-guice-throwingproviders.version>3.0</com.google.inject.extensions-guice-throwingproviders.version>
+    <com.google.inject.extensions-guice-persist.version>3.0</com.google.inject.extensions-guice-persist.version>
+    <com.google.inject-guice.version>3.0</com.google.inject-guice.version>
     <aopalliance-aopalliance.version>1.0</aopalliance-aopalliance.version>
     <javax.inject-javax.inject.version>1</javax.inject-javax.inject.version>
     <org.hibernate-hibernate-core.version>4.2.5.Final</org.hibernate-hibernate-core.version>

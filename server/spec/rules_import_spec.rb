@@ -30,6 +30,10 @@ describe 'Rules Import', :serial => true do
   end
 
   def upload_dummy_rules
+    # Wait a moment to ensure we get a different timestamp when using DBs without millisecond
+    # resolution (MySQL)
+    sleep 3
+
     encoded_rules = Base64.encode64(@rules)
     result = @cp.upload_rules(encoded_rules)
     fetched_rules = @cp.list_rules

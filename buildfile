@@ -126,8 +126,8 @@ SERVLET = 'javax.servlet:servlet-api:jar:2.5'
 GUICE =  [group('guice-assistedinject', 'guice-multibindings',
                 'guice-servlet', 'guice-throwingproviders', 'guice-persist',
                 :under=>'com.google.inject.extensions',
-                :version=>'4.0'),
-           'com.google.inject:guice:jar:4.0',
+                :version=>'3.0'),
+           'com.google.inject:guice:jar:3.0',
            'aopalliance:aopalliance:jar:1.0',
            'javax.inject:javax.inject:jar:1']
 
