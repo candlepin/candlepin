@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.52
+Version: 0.9.53
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -213,6 +213,9 @@ fi
 
 #raw
 %changelog
+* Thu Jan 21 2016 Alex Wood <awood@redhat.com> 0.9.53-1
+- Update version in pom file. (awood@redhat.com)
+
 * Thu Jan 21 2016 Chris Rog <crog@redhat.com> 0.9.52-1
 - 1259248: Fixed issue with refresh pools removing ueber certs
   (crog@redhat.com)
