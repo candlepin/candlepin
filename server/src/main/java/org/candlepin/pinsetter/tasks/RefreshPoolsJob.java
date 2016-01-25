@@ -41,7 +41,7 @@ import javax.persistence.PersistenceException;
  * Asynchronous job for refreshing the entitlement pools for specific
  * {@link Owner}.
  */
-public class RefreshPoolsJob extends UniqueByOwnerJob {
+public class RefreshPoolsJob extends UniqueByEntityJob {
 
     private static Logger log = LoggerFactory.getLogger(RefreshPoolsJob.class);
     protected OwnerCurator ownerCurator;
