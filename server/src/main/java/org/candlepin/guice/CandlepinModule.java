@@ -47,7 +47,6 @@ import org.candlepin.common.resteasy.filter.PageRequestFilter;
 import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
-import org.candlepin.controller.CrlGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.UeberCertificateGenerator;
@@ -179,7 +178,6 @@ public class CandlepinModule extends AbstractModule {
         bind(PKIReader.class).to(BouncyCastlePKIReader.class)
             .asEagerSingleton();
         bind(X509ExtensionUtil.class);
-        bind(CrlGenerator.class);
         bind(ResolverUtil.class);
         bind(ConsumerResource.class);
         bind(ConsumerContentOverrideResource.class);

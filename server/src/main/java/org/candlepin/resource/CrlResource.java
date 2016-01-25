@@ -18,18 +18,21 @@ import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.controller.CrlGenerator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.X509CRLEntryWrapper;
 import org.candlepin.util.CrlFileUtil;
 
 import com.google.inject.Inject;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.cert.CRLException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509CRL;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.ws.rs.DELETE;
@@ -39,6 +42,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+
 
 /**
  * CrlResource
@@ -46,20 +52,19 @@ import javax.ws.rs.core.MediaType;
 @Path("/crl")
 public class CrlResource {
 
-    private CrlGenerator crlGenerator;
-    private CrlFileUtil crlFileUtil;
     private Configuration config;
+    private CrlFileUtil crlFileUtil;
+    private PKIUtility pkiUtility;
     private CertificateSerialCurator certificateSerialCurator;
 
 
     @Inject
-    public CrlResource(CrlGenerator crlGenerator,
-        CrlFileUtil crlFileUtil, Configuration config,
+    public CrlResource(Configuration config, CrlFileUtil crlFileUtil, PKIUtility pkiUtility,
         CertificateSerialCurator certificateSerialCurator) {
 
-        this.crlGenerator = crlGenerator;
-        this.crlFileUtil = crlFileUtil;
         this.config = config;
+        this.crlFileUtil = crlFileUtil;
+        this.pkiUtility = pkiUtility;
         this.certificateSerialCurator = certificateSerialCurator;
     }
 
@@ -72,25 +77,27 @@ public class CrlResource {
      * @httpcode 200
      */
     @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
-    public String getCurrentCrl(@Context Principal principal)
-        throws CRLException, IOException {
-
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response getCurrentCrl(@Context Principal principal) throws CRLException {
         String filePath = getCrlFilePath();
         File crlFile = new File(filePath);
 
-        byte[] encoded = null;
-
         try {
-            X509CRL crl = crlFileUtil.readCRLFile(crlFile);
-            crl = crlGenerator.syncCRLWithDB(crl);
-            encoded = crlFileUtil.writeCRLFile(crlFile, crl);
+            this.crlFileUtil.syncCRLWithDB(crlFile);
+
+            // Create an empty CRL if we didn't have anything to write
+            if (!crlFile.exists() || crlFile.length() < 1) {
+                pkiUtility.writePemEncoded(
+                    pkiUtility.createX509CRL(new LinkedList<X509CRLEntryWrapper>(), BigInteger.ZERO),
+                    new FileOutputStream(crlFile)
+                );
+            }
+
+            return Response.ok().entity(new FileInputStream(crlFile)).build();
         }
-        catch (CertificateException e) {
+        catch (IOException e) {
             throw new IseException(e.getMessage(), e);
         }
-
-        return new String(encoded);
     }
 
     /**
@@ -109,18 +116,16 @@ public class CrlResource {
         File crlFile = new File(filePath);
 
         try {
-            X509CRL crl = crlFileUtil.readCRLFile(crlFile);
+            List<BigInteger> serials = new LinkedList<BigInteger>();
+            for (CertificateSerial serial : certificateSerialCurator.listBySerialIds(serialIds)) {
+                serials.add(serial.getSerial());
+            }
 
-            // get crl file if it exists
-            // lookup entitlement, find CertificateSerial
-            List<CertificateSerial> serials =
-                certificateSerialCurator.listBySerialIds(serialIds);
-
-            crl = crlGenerator.removeEntries(crl, serials);
-
-            crlFileUtil.writeCRLFile(crlFile,  crl);
+            if (serials.size() > 0) {
+                this.crlFileUtil.updateCRLFile(crlFile, null, serials);
+            }
         }
-        catch (CertificateException e) {
+        catch (IOException e) {
             throw new IseException(e.getMessage(), e);
         }
     }

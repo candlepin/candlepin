@@ -20,6 +20,7 @@
     <org.apache.mina-mina-core.version>1.0.1</org.apache.mina-mina-core.version>
     <org.apache.mina-mina-filter-ssl.version>1.0.1</org.apache.mina-mina-filter-ssl.version>
     <geronimo-spec-geronimo-spec-jms.version>1.1-rc4</geronimo-spec-geronimo-spec-jms.version>
+    <org.bouncycastle-bcmail-jdk16.version>1.46</org.bouncycastle-bcmail-jdk16.version>
     <org.bouncycastle-bcprov-jdk16.version>1.46</org.bouncycastle-bcprov-jdk16.version>
     <com.google.guava-guava.version>13.0</com.google.guava-guava.version>
     <commons-codec-commons-codec.version>1.4</commons-codec-commons-codec.version>
@@ -142,6 +143,17 @@
       <groupId>geronimo-spec</groupId>
       <artifactId>geronimo-spec-jms</artifactId>
       <version>${geronimo-spec-geronimo-spec-jms.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcmail-jdk16</artifactId>
+      <version>${org.bouncycastle-bcmail-jdk16.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>

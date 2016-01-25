@@ -16,7 +16,6 @@ package org.candlepin.pinsetter.tasks;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.controller.CrlGenerator;
 import org.candlepin.util.CrlFileUtil;
 
 import com.google.inject.Inject;
@@ -28,9 +27,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.security.cert.CRLException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509CRL;
+
+
 
 /**
  * CertificateRevocationListTask synchronizes the CRL with the DB, we add newly
@@ -42,7 +40,6 @@ public class CertificateRevocationListTask extends KingpinJob {
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
 
     private Configuration config;
-    private CrlGenerator crlGenerator;
     private CrlFileUtil crlFileUtil;
 
     private static Logger log =
@@ -55,11 +52,9 @@ public class CertificateRevocationListTask extends KingpinJob {
      * @param conf the conf
      */
     @Inject
-    public CertificateRevocationListTask(Configuration conf,
-        CrlFileUtil crlFileUtil, CrlGenerator crlGenerator) {
+    public CertificateRevocationListTask(Configuration conf, CrlFileUtil crlFileUtil) {
         this.config = conf;
         this.crlFileUtil = crlFileUtil;
-        this.crlGenerator = crlGenerator;
     }
 
     public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
@@ -67,22 +62,11 @@ public class CertificateRevocationListTask extends KingpinJob {
         log.info("Executing CRL Job. CRL filePath=" + filePath);
 
         if (filePath == null) {
-            throw new JobExecutionException("Invalid " +
-                ConfigProperties.CRL_FILE_PATH, false);
+            throw new JobExecutionException("Invalid " + ConfigProperties.CRL_FILE_PATH, false);
         }
         try {
             File crlFile = new File(filePath);
-            X509CRL crl = crlFileUtil.readCRLFile(crlFile);
-            crl = crlGenerator.syncCRLWithDB(crl);
-            crlFileUtil.writeCRLFile(crlFile, crl);
-        }
-        catch (CRLException e) {
-            log.error("CRLException:", e);
-            throw new JobExecutionException(e, false);
-        }
-        catch (CertificateException e) {
-            log.error("CertificateException:", e);
-            throw new JobExecutionException(e, false);
+            this.crlFileUtil.syncCRLWithDB(crlFile);
         }
         catch (IOException e) {
             log.error("IOException:", e);
