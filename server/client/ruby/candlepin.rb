@@ -17,12 +17,26 @@ module HTTP
       if JSONClient::CONTENT_TYPE_JSON_REGEX =~ content_type && !original_content.empty?
         json = JSON.parse(original_content)
         if json.is_a?(Array)
-          json.map!(&:deep_symbolize_keys!)
+          # Sometimes we get a list of hash objects, and sometimes we just get
+          # a list of strings
+          begin
+            json.map!(&:deep_symbolize_keys!)
+          rescue NoMethodError
+            json
+          end
         else
           json.deep_symbolize_keys!
         end
       else
         original_content
+      end
+    end
+
+    def ok_content
+      if ok?
+        content
+      else
+        raise HTTPClient::BadResponseError.new("unexpected response: #{header.inspect}")
       end
     end
   end
@@ -1533,17 +1547,12 @@ module Candlepin
 
       def create_owner(opts = {})
         defaults = {
-          :owner => key,
+          :key => key,
           :display_name => nil,
           :parent_owner => nil,
         }
         opts = verify_and_merge(opts, defaults)
-        # The model in actually expects "key", but I'm keeping
-        # it as owner for consistency
-        body = opts.except(:owner)
-        body[:key] = opts[:owner]
-
-        post("/owners", camelize_hash(body))
+        post("/owners", camelize_hash(opts))
       end
 
       def create_owner_environment(opts = {})

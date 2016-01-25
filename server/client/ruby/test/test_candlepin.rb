@@ -53,7 +53,7 @@ module Candlepin
       let(:owner) do
         key = rand_string('owner')
         res = user_client.create_owner(
-          :owner => key,
+          :key => key,
           :display_name => key,
         )
         raise "Could not create owner for test" unless res.ok?
@@ -308,7 +308,7 @@ module Candlepin
 
       it 'creates owners' do
         res = user_client.create_owner(
-          :owner => rand_string,
+          :key => rand_string,
           :display_name => rand_string,
         )
         expect(res).to be_success
@@ -361,7 +361,7 @@ module Candlepin
           expect(File.size?(f.path)).to_not eq(0)
 
           new_owner = user_client.create_owner(
-            :owner => rand_string,
+            :key => rand_string,
             :display_name => rand_string,
           ).content
 
@@ -607,7 +607,7 @@ module Candlepin
       it 'creates child owners' do
         parent = owner
         child = user_client.create_owner(
-          :owner => rand_string,
+          :key => rand_string,
           :display_name => rand_string,
           :parent_owner => parent,
         ).content
@@ -1440,7 +1440,7 @@ module Candlepin
 
       it 'gets all owners with basic auth' do
         user_client.create_owner(
-          :owner => rand_string,
+          :key => rand_string,
           :display_name => rand_string,
         )
         res = user_client.get_all_owners
