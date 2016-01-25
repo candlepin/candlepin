@@ -30,8 +30,8 @@ import org.slf4j.LoggerFactory;
  * for the same owner that has not started running yet. A job will wait for the
  * running job to finish before beginning execution.
  */
-public abstract class UniqueByOwnerJob extends KingpinJob {
-    private static Logger log = LoggerFactory.getLogger(UniqueByOwnerJob.class);
+public abstract class UniqueByEntityJob extends KingpinJob {
+    private static Logger log = LoggerFactory.getLogger(UniqueByEntityJob.class);
 
     @SuppressWarnings("unchecked")
     public static JobStatus scheduleJob(JobCurator jobCurator,

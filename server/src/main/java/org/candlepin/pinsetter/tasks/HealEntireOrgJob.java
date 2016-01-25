@@ -41,7 +41,7 @@ import java.util.List;
 /**
  * HealEntireOrgJob
  */
-public class HealEntireOrgJob extends UniqueByOwnerJob {
+public class HealEntireOrgJob extends UniqueByEntityJob {
     private static Logger log = LoggerFactory.getLogger(HealEntireOrgJob.class);
     protected OwnerCurator ownerCurator;
     protected Entitler entitler;

@@ -55,7 +55,7 @@ import javax.persistence.PersistenceException;
  *
  * {@link Owner}.
  */
-public class UndoImportsJob extends UniqueByOwnerJob {
+public class UndoImportsJob extends UniqueByEntityJob {
 
     private static Logger log = LoggerFactory.getLogger(UndoImportsJob.class);
 

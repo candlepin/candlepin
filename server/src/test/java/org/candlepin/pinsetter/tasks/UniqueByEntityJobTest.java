@@ -36,7 +36,7 @@ import org.quartz.ListenerManager;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 
-public class UniqueByOwnerJobTest {
+public class UniqueByEntityJobTest {
 
     @Mock private JobCurator jobCurator;
     @Mock private Scheduler scheduler;
@@ -48,7 +48,7 @@ public class UniqueByOwnerJobTest {
     }
 
     /*
-     * if a UniqueByOwnerJob's skipIfExists is true, don't schedule another job
+     * if a UniqueByEntityJob's skipIfExists is true, don't schedule another job
      */
     @Test
     public void skipIfExistsTest() throws JobExecutionException, SchedulerException {
@@ -56,14 +56,14 @@ public class UniqueByOwnerJobTest {
         JobDataMap map = new JobDataMap();
         map.put(JobStatus.TARGET_ID, "TaylorSwift");
         JobKey jobKey = new JobKey("name", "group");
-        JobDetail detail = newJob(TestUniqueByOwnerJob.class)
+        JobDetail detail = newJob(TestUniqueByEntityJob.class)
                 .withIdentity(jobKey)
                 .requestRecovery(true)
                 .usingJobData(map).storeDurably(true)
                 .build();
         JobStatus preExistingJobStatus = new JobStatus();
         preExistingJobStatus.setState(JobState.WAITING);
-        TestUniqueByOwnerJob job = new TestUniqueByOwnerJob();
+        TestUniqueByEntityJob job = new TestUniqueByEntityJob();
         when(jobCurator.getByClassAndTarget(eq("TaylorSwift"), any(Class.class))).thenReturn(
                 preExistingJobStatus);
 
