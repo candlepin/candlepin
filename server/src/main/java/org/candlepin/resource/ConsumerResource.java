@@ -2063,7 +2063,7 @@ public class ConsumerResource {
     }
 
     /**
-     * Retrieves a Compliance Status list for a Consumer
+     * Retrieves a Compliance Status list for a list of Consumers
      *
      * @param uuids
      * @return a list of ComplianceStatus objects
