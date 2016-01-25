@@ -22,6 +22,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -155,7 +156,6 @@ public class EventSinkImpl implements EventSink {
         return results;
     }
 
-
     /**
      * Adds an event to the queue to be sent on successful completion of the request or job.
      * sendEvents() must be called for these events to actually go out. This happens
@@ -252,6 +252,11 @@ public class EventSinkImpl implements EventSink {
 
     public void emitActivationKeyCreated(ActivationKey key) {
         Event e = eventFactory.activationKeyCreated(key);
+        queueEvent(e);
+    }
+
+    public void emitSubscriptionExpired(Subscription subscription) {
+        Event e = eventFactory.subscriptionExpired(subscription);
         queueEvent(e);
     }
 

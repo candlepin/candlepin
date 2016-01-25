@@ -500,6 +500,10 @@ class Exporter
   def export_dir
     @exports.last.export_dir
   end
+
+  def tmp_dir
+    @exports.last.tmp_dir
+  end
 end
 
 class StandardExporter < Exporter

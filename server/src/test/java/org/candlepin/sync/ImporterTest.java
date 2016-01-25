@@ -30,20 +30,27 @@ import static org.mockito.Mockito.when;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.Refresher;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCurator;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.Importer.ImportFile;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
@@ -545,6 +552,75 @@ public class ImporterTest {
             return;
         }
         fail();
+
+    }
+
+    @Test
+    public void testReturnsSubscriptionsFromManifest() throws IOException, ImporterException {
+
+        Owner owner = mock(Owner.class);
+
+        ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
+        when(emc.lookupByTypeAndOwner("per_user", owner)).thenReturn(null);
+
+        ConsumerType type = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        ConsumerTypeCurator ctc = mock(ConsumerTypeCurator.class);
+        when(ctc.lookupByLabel(eq("system"))).thenReturn(type);
+
+        OwnerCurator oc = mock(OwnerCurator.class);
+        when(oc.lookupWithUpstreamUuid(any(String.class))).thenReturn(null);
+
+        PoolManager pm = mock(PoolManager.class);
+        Refresher refresher = mock(Refresher.class);
+        when(pm.getRefresher(any(SubscriptionServiceAdapter.class))).thenReturn(refresher);
+
+        Map<String, File> importFiles = new HashMap<String, File>();
+        File ruleDir = mock(File.class);
+        File[] rulesFiles = createMockJsFile(MOCK_JS_PATH);
+        when(ruleDir.listFiles()).thenReturn(rulesFiles);
+
+        File actualmeta = createFile("meta.json", "0.0.3", new Date(),
+            "test_user", "prefix");
+        importFiles.put(ImportFile.META.fileName(), actualmeta);
+
+        File consumerFile = new File("target/test/resources/upstream/consumer.json");
+        importFiles.put(ImportFile.CONSUMER.fileName(), consumerFile);
+
+        File cTypes = mock(File.class);
+        when(cTypes.listFiles()).thenReturn(new File[]{});
+        importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), cTypes);
+
+        Product prod = new Product("prodId", "prodTest", null);
+        prod.setDependentProductIds(null);
+        File prodFile = new File("product.json");
+        mapper.writeValue(prodFile, prod);
+        File products = mock(File.class);
+        when(products.listFiles()).thenReturn(new File[]{prodFile});
+        importFiles.put(ImportFile.PRODUCTS.fileName(), products);
+
+        Entitlement ent = new Entitlement();
+        Pool pool = new Pool();
+        pool.setProduct(prod);
+        ent.setPool(pool);
+        ent.setQuantity(2);
+        File entFile = new File("entitlement.json");
+        mapper.writeValue(entFile, ent);
+        File entitlements = mock(File.class);
+        when(entitlements.listFiles()).thenReturn(new File[]{entFile});
+        importFiles.put(ImportFile.ENTITLEMENTS.fileName(), entitlements);
+
+        RulesImporter ri = mock(RulesImporter.class);
+        importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFiles[0]);
+
+        ConflictOverrides co = mock(ConflictOverrides.class);
+
+        Importer i = new Importer(ctc, null, ri, oc, null, null, pm,
+                null, config, emc, null, null, i18n, null, null);
+        List<Subscription> subscriptions = i.importObjects(owner, importFiles, co);
+
+        assertEquals(1, subscriptions.size());
+        assertEquals("prodId", subscriptions.get(0).getProduct().getId());
+        assertEquals(2, subscriptions.get(0).getQuantity().longValue());
 
     }
 

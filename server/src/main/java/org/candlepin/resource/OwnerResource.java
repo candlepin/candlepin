@@ -1144,6 +1144,7 @@ public class OwnerResource {
      * This will bring in any products, content, and subscriptions that were assigned to
      * the distributor who generated the manifest.
      *
+     * @return a ImportRecord object if the import is successful.
      * @httpcode 400
      * @httpcode 404
      * @httpcode 500
@@ -1152,9 +1153,9 @@ public class OwnerResource {
      */
     @POST
     @Path("{owner_key}/imports")
-    @Produces(MediaType.WILDCARD)
+    @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public void importManifest(
+    public ImportRecord importManifest(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("force") String[] overrideConflicts, MultipartInput input) {
 
@@ -1207,7 +1208,7 @@ public class OwnerResource {
             data = importer.loadExport(owner, archive, overrides);
 
             sink.emitImportCreated(owner);
-            recordImportSuccess(owner, data, overrides, filename);
+            return recordImportSuccess(owner, data, overrides, filename);
         }
         catch (IOException e) {
             recordImportFailure(owner, data, e, filename);
@@ -1474,7 +1475,7 @@ public class OwnerResource {
         return consumerCurator.getHypervisorsBulk(hypervisorIds, ownerKey);
     }
 
-    private void recordImportSuccess(Owner owner, Map data,
+    private ImportRecord recordImportSuccess(Owner owner, Map data,
         ConflictOverrides forcedConflicts, String filename) {
 
         ImportRecord record = new ImportRecord(owner);
@@ -1486,14 +1487,37 @@ public class OwnerResource {
         record.setUpstreamConsumer(createImportUpstreamConsumer(owner, null));
         record.setFileName(filename);
 
+        List<Subscription> subscriptions = (List<Subscription>) data.get("subscriptions");
+        boolean activeSubscriptionFound = false, expiredSubscriptionFound = false;
+        Date currentDate = new Date();
+        for (Subscription subscription : subscriptions) {
+            if (subscription.getEndDate() == null || subscription.getEndDate().after(currentDate)) {
+                activeSubscriptionFound = true;
+            }
+            else {
+                expiredSubscriptionFound = true;
+                sink.emitSubscriptionExpired(subscription);
+            }
+        }
         String msg = i18n.tr("{0} file imported successfully.", owner.getKey());
         if (!forcedConflicts.isEmpty()) {
-            msg = i18n.tr("{0} file imported forcibly", owner.getKey());
+            msg = i18n.tr("{0} file imported forcibly.", owner.getKey());
         }
 
-        record.recordStatus(ImportRecord.Status.SUCCESS, msg);
+        if (!activeSubscriptionFound) {
+            msg += i18n.tr("No active subscriptions found in the file.");
+            record.recordStatus(ImportRecord.Status.SUCCESS_WITH_WARNING, msg);
+        }
+        else if (expiredSubscriptionFound) {
+            msg += i18n.tr("One or more inactive subscriptions found in the file.");
+            record.recordStatus(ImportRecord.Status.SUCCESS_WITH_WARNING, msg);
+        }
+        else {
+            record.recordStatus(ImportRecord.Status.SUCCESS, msg);
+        }
 
         this.importRecordCurator.create(record);
+        return record;
     }
 
     private void recordImportFailure(Owner owner, Map data, Throwable error,

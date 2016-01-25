@@ -14,6 +14,7 @@
  */
 package org.candlepin.model.activationkeys;
 
+import org.candlepin.audit.Eventful;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Named;
 import org.candlepin.model.Owned;
@@ -55,7 +56,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "cp_activation_key",
     uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "owner_id"})}
 )
-public class ActivationKey extends AbstractHibernateObject implements Owned, Named {
+public class ActivationKey extends AbstractHibernateObject implements Owned, Named, Eventful {
 
     public static final int RELEASE_VERSION_LENGTH = 255;
 

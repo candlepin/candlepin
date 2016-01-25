@@ -26,6 +26,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
@@ -209,6 +210,12 @@ public class EventFactory {
         return getEventBuilder(Target.GUESTID, Type.DELETED)
                 .setOldEntity(guestId)
                 .buildEvent();
+    }
+
+    public Event subscriptionExpired(Subscription subscription) {
+        return getEventBuilder(Target.SUBSCRIPTION, Type.EXPIRED)
+                 .setOldEntity(subscription)
+                 .buildEvent();
     }
 
     public Event complianceCreated(Consumer consumer,

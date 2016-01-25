@@ -20,6 +20,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 import java.util.List;
@@ -51,6 +52,8 @@ public interface EventSink {
     void emitImportCreated(Owner owner);
 
     void emitActivationKeyCreated(ActivationKey key);
+
+    void emitSubscriptionExpired(Subscription subscription);
 
     void emitRulesModified(Rules oldRules, Rules newRules);
 

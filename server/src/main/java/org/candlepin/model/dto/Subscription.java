@@ -14,6 +14,7 @@
  */
 package org.candlepin.model.dto;
 
+import org.candlepin.audit.Eventful;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.Named;
@@ -46,7 +47,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFilter("DefaultFilter")
-public class Subscription implements Owned, Named {
+public class Subscription implements Owned, Named, Eventful {
 
     private String id;
     private Date created;
