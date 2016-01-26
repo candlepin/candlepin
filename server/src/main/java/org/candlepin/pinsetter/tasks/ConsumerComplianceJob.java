@@ -67,6 +67,7 @@ public class ConsumerComplianceJob extends UniqueByEntityJob {
             if (forceUpdate) {
                 consumerCurator.update(consumer);
             }
+            ctx.setResult("Compliance computed for consumer: " + consumer.getUuid());
         }
         catch (Exception e) {
             log.error("ConsumerComplianceJob encountered a problem.", e);
