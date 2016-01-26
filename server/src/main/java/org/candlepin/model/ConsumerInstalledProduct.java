@@ -65,7 +65,7 @@ public class ConsumerInstalledProduct extends AbstractHibernateObject {
     private String productName;
 
     @Column(name = "product_version")
-    @Size(max = 20)
+    @Size(max = 99)
     private String version;
 
     @Column(name = "product_arch")
