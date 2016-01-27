@@ -1917,11 +1917,85 @@ public class CandlepinPoolManager implements PoolManager {
             throw new IllegalArgumentException("pool is null");
         }
 
+        Long poolQuantity = pool.getQuantity();
+        Long multiplier = 1L;
+
+        if (pool.getProduct() != null) {
+            multiplier = pool.getProduct().getMultiplier();
+        }
+        else {
+            log.error("Master product for the pool {} is null", pool.getId());
+        }
+
+
+        /**
+         * The following code reconstructs Subscription quantity from the Pool quantity.
+         * To understand it, it is important to understand how pool (the parameter)
+         * is created in candlepin from a source subscription.
+         * The pool has quantity was computed from
+         * source subscription quantity and was multiplied by product.multiplier.
+         * To reconstruct subscription, we must therefore divide the quantity of the pool
+         * by the product.multiplier.
+         * It's not easy to find COMPLETE code related to the conversion of
+         * subscription to the pool. There is a method convertToMasterPool in this class,
+         * that should do part of that (multiplication is not there).
+         * But looking at its javadoc, it directly instructs callers of the
+         * convertToMasterPool method to override quantity with method
+         * PoolRules.calculateQuantity (when browsing the code that calls convertToMasterPool,
+         * the calculateQuantity is usually called after convertToMasterPool).
+         * The method PoolRules.calculateQuantity does the actual
+         * multiplication of pool.quantity by pool.product.multiplier.
+         * It seems that we also need to account account for
+         * instance_multiplier (again logic is in calculateQuantity). If the attribute
+         * is present, we must further divide the poolQuantity by
+         * product.getAttributeValue("instance_multiplier").
+         */
+        if (poolQuantity != null && multiplier != null && multiplier != 0 &&
+                pool.getProduct() != null) {
+            if (poolQuantity % multiplier != 0) {
+                log.error("Pool {} from which we fabricate " +
+                        "subscription has quantity {} that is not divisable " +
+                        "by its product's multiplier {}! Division wont be made.",
+                        pool.getId(), poolQuantity, multiplier);
+            }
+            else {
+                poolQuantity /= multiplier;
+            }
+
+            //This is reverse of what part of PooRules.calculateQuantity does. See that method
+            //to understand why we check that upstreamPoolId must be null.
+            if (pool.getProduct().hasAttribute("instance_multiplier") &&
+                    pool.getUpstreamPoolId() == null) {
+                Integer instMult = null;
+                String stringInstmult = pool.getProduct().getAttributeValue("instance_multiplier");
+                try {
+                    instMult = Integer.parseInt(stringInstmult);
+                }
+                catch (NumberFormatException nfe) {
+                    log.error("Instance multilier couldn't be parsed: {} ", stringInstmult);
+                }
+                if (instMult != null && instMult != 0 && poolQuantity % instMult == 0) {
+                    poolQuantity /=  instMult;
+                }
+                else {
+                    log.error("Cannot divide pool quantity by instance multiplier. Won't touch the " +
+                            "current value {} " +
+                            "instance multiplier: {}, pool quantity: {}",
+                            poolQuantity, instMult, poolQuantity);
+                }
+            }
+        }
+        else {
+            log.warn("Either quantity or multiplier or product is null:" +
+                    " {}, {}, productInstance={}", poolQuantity, multiplier, pool.getProduct());
+        }
+
+
         Subscription fabricated = new Subscription(
             pool.getOwner(),
             pool.getProduct(),
             pool.getProvidedProducts(),
-            pool.getQuantity(),
+            poolQuantity,
             pool.getStartDate(),
             pool.getEndDate(),
             pool.getUpdated()
@@ -1931,6 +2005,9 @@ public class CandlepinPoolManager implements PoolManager {
         fabricated.setUpstreamEntitlementId(pool.getUpstreamEntitlementId());
         fabricated.setCdn(pool.getCdn());
         fabricated.setCertificate(pool.getCertificate());
+        //Pool.getBranding should return entity Branding. The Branding
+        //entity has no futher relationships so everything should be ok.
+        fabricated.setBranding(pool.getBranding());
 
         // TODO:
         // There's probably a fair amount of other stuff we need to migrate over to the
