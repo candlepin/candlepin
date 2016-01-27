@@ -14,52 +14,17 @@
  */
 package org.candlepin.liquibase;
 
-import liquibase.change.custom.CustomTaskChange;
-import liquibase.database.Database;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.exception.CustomChangeException;
-import liquibase.exception.SetupException;
-import liquibase.exception.ValidationErrors;
-import liquibase.resource.ResourceAccessor;
+
 
 /**
- * The PoolTypeUpgradeLiquibaseWrapper class wraps the PoolTypeUpgradeTask to allow it to be
- * programatically performed via Liquibase.
+ * Liquibase wrapper class for the pool-type upgrade task
  */
-public class PoolTypeUpgradeLiquibaseWrapper implements CustomTaskChange {
+public class PoolTypeUpgradeLiquibaseWrapper
+    extends LiquibaseCustomTaskWrapper<PoolTypeUpgradeTask> {
 
-    @Override
-    public String getConfirmationMessage() {
-        return null;
+    public PoolTypeUpgradeLiquibaseWrapper() {
+        super(PoolTypeUpgradeTask.class);
     }
 
-    @Override
-    public void setFileOpener(ResourceAccessor accessor) {
-        // Do nothing
-    }
-
-    @Override
-    public void setUp() throws SetupException {
-        // Do nothing
-    }
-
-    @Override
-    public ValidationErrors validate(Database database) {
-        return null;
-    }
-
-    @Override
-    public void execute(Database database) throws CustomChangeException {
-        PoolTypeUpgradeTask task = new PoolTypeUpgradeTask(
-            (JdbcConnection) database.getConnection(),
-            new LiquibaseCustomTaskLogger()
-        );
-
-        try {
-            task.execute();
-        }
-        catch (Exception e) {
-            throw new CustomChangeException(e);
-        }
-    }
+    // Nothing else to do
 }

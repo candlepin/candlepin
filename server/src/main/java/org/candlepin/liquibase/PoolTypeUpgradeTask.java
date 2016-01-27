@@ -14,112 +14,26 @@
  */
 package org.candlepin.liquibase;
 
-import liquibase.database.jvm.JdbcConnection;
+import liquibase.database.Database;
 import liquibase.exception.DatabaseException;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 
 
 /**
  * The PoolTypeUpgradeTask performs the post-db upgrade data migration to the cpo_* tables.
  */
-public class PoolTypeUpgradeTask {
+public class PoolTypeUpgradeTask extends LiquibaseCustomTask {
 
     public static final int UPDATE_BATCH_SIZE = 1024;
 
-    private JdbcConnection connection;
-    private CustomTaskLogger logger;
-
-    private Map<String, PreparedStatement> preparedStatements;
-
-
-    public PoolTypeUpgradeTask(JdbcConnection connection) {
-        this(connection, new SystemOutLogger());
+    public PoolTypeUpgradeTask(Database database, CustomTaskLogger logger) {
+        super(database, logger);
     }
-
-    public PoolTypeUpgradeTask(JdbcConnection connection, CustomTaskLogger logger) {
-        if (connection == null) {
-            throw new IllegalArgumentException("connection is null");
-        }
-
-        if (logger == null) {
-            throw new IllegalArgumentException("logger is null");
-        }
-
-        this.connection = connection;
-        this.logger = logger;
-
-        this.preparedStatements = new HashMap<String, PreparedStatement>();
-    }
-
-
-    protected PreparedStatement prepareStatement(String sql, Object... argv)
-        throws DatabaseException, SQLException {
-
-        PreparedStatement statement = this.preparedStatements.get(sql);
-        if (statement == null) {
-            statement = this.connection.prepareStatement(sql);
-            this.preparedStatements.put(sql, statement);
-        }
-
-        statement.clearParameters();
-
-        for (int i = 0; i < argv.length; ++i) {
-            if (argv[i] != null) {
-                statement.setObject(i + 1, argv[i]);
-            }
-            else {
-                // Impl note:
-                // Oracle has trouble with setNull. See the comments on this SO question for details:
-                // http://stackoverflow.com/questions/11793483/setobject-method-of-preparedstatement
-                statement.setNull(i + 1, Types.VARCHAR);
-            }
-        }
-
-        return statement;
-    }
-
-    /**
-     * Executes the given SQL query.
-     *
-     * @param sql
-     *  The SQL to execute. The given SQL may be parameterized.
-     *
-     * @param argv
-     *  The arguments to use when executing the given query.
-     *
-     * @return
-     *  A ResultSet instance representing the result of the query.
-     */
-    protected ResultSet executeQuery(String sql, Object... argv) throws DatabaseException, SQLException {
-        PreparedStatement statement = this.prepareStatement(sql, argv);
-        return statement.executeQuery();
-    }
-
-    /**
-     * Executes the given SQL update/insert.
-     *
-     * @param sql
-     *  The SQL to execute. The given SQL may be parameterized.
-     *
-     * @param argv
-     *  The arguments to use when executing the given update.
-     *
-     * @return
-     *  The number of rows affected by the update.
-     */
-    protected int executeUpdate(String sql, Object... argv) throws DatabaseException, SQLException {
-        PreparedStatement statement = this.prepareStatement(sql, argv);
-        return statement.executeUpdate();
-    }
-
 
     /**
      * Executes a bulk update on a table from which we'll be querying data. Used to work around an
