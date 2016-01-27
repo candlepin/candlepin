@@ -328,6 +328,12 @@ public class CandlepinPoolManager implements PoolManager {
 
                 if (update.changed()) {
                     updatedPools.add(update);
+
+                    EventBuilder eventBuilder = eventFactory
+                            .getEventBuilder(Target.POOL, Type.MODIFIED)
+                            .setOldEntity(subPool);
+
+                    poolEvents.put(subPool.getId(), eventBuilder);
                 }
             }
         }
@@ -372,10 +378,15 @@ public class CandlepinPoolManager implements PoolManager {
                     .retrieveFreeEntitlementIdsOfPool(existingPool, true);
                 entitlementsToRegen.addAll(entitlements);
             }
-            Event event = poolEvents.get(existingPool.getId())
-                    .setNewEntity(existingPool)
-                    .buildEvent();
-            sink.queueEvent(event);
+
+            EventBuilder builder = poolEvents.get(existingPool.getId());
+            if (builder != null) {
+                Event event = builder.setNewEntity(existingPool).buildEvent();
+                sink.queueEvent(event);
+            }
+            else {
+                log.warn("Pool updated without an event builder: {}", existingPool);
+            }
         }
 
         return entitlementsToRegen;
