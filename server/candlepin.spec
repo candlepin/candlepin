@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.49.9
+Version: 0.9.49.10
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,11 @@ fi
 
 
 %changelog
+* Wed Jan 27 2016 Alex Wood <awood@redhat.com> 0.9.49.10-1
+- 1301812: Fixed an issue with event generation for stack derived pools
+  (crog@redhat.com)
+- Fixing broken tests due to expiry date (mstead@redhat.com)
+
 * Thu Oct 29 2015 Alex Wood <awood@redhat.com> 0.9.49.9-1
 - Enable configurable paging settings for HornetQ. (awood@redhat.com)
 - Configuration of paging for HornetQ (fnguyen@redhat.com)
