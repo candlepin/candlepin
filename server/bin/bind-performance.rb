@@ -8,9 +8,12 @@
 # Can be run and re-run against a typical dev deployment without any arguments.
 
 require  "../client/ruby/candlepin_api"
+require  "../client/ruby/hostedtest_api"
 require 'pp'
 
 require 'benchmark'
+
+include HostedTest
 
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin"
@@ -26,9 +29,9 @@ def time_rand from = 0.0, to = Time.now
   Time.at(from + rand * (to.to_f - from.to_f))
 end
 
-cp = Candlepin.new(ADMIN_USERNAME, ADMIN_PASSWORD, nil, nil, HOST, PORT)
+@cp = Candlepin.new(ADMIN_USERNAME, ADMIN_PASSWORD, nil, nil, HOST, PORT)
 
-owner = cp.create_owner random_string("consumertest")
+owner = @cp.create_owner random_string("consumertest")
 puts "Created owner: #{owner['key']}"
 
 prod_attrs = {}
@@ -36,7 +39,7 @@ prod_attrs = {}
   prod_attrs[random_string("attr")] = random_string("val")
 end
 prod_attrs['multi-entitlement'] = "yes"
-product1 = cp.create_product(random_string(), random_string(),
+product1 = @cp.create_product(owner['key'], random_string(), random_string(),
   {:attributes => prod_attrs})
 
 ent_count = 50
@@ -60,7 +63,7 @@ all_provided_products = [random_string(),
   random_string(),
   random_string()]
 all_provided_products.each do |pid|
-  cp.create_product(pid, pid, {})
+  @cp.create_product(owner['key'], pid, pid, {})
 end
 
 Benchmark.bm (10) do |x|
@@ -68,20 +71,20 @@ Benchmark.bm (10) do |x|
     (0..ent_count).each do |i|
       start_date = Date.parse(time_rand(Time.local(2000, 1, 1), Time.now).to_s)
       end_date = Date.parse(time_rand(Time.now, Time.local(2050, 1, 1)).to_s)
-      sub1 = cp.create_subscription(owner['key'], product1['id'], 1, all_provided_products.sample(8), '', '12345', nil, start_date, end_date)
+      sub1 = create_pool_and_subscription(owner['key'], product1['id'], 1, all_provided_products.sample(8), '', '12345', nil, start_date, end_date, true)
     end
   }
 end
 
 Benchmark.bm (10) do |x|
   x.report("Refresh:") {
-    cp.refresh_pools(owner['key'])
+    @cp.refresh_pools(owner['key'])
   }
 end
 
 org_admin_username = random_string("orgadmin")
 org_admin_password = 'password'
-cp.create_user(org_admin_username, org_admin_password, true)
+@cp.create_user(org_admin_username, org_admin_password, true)
 org_admin_cp = Candlepin.new(org_admin_username, org_admin_password)
 facts = {
     "distributor_version" => "sat-6.0",
@@ -94,7 +97,7 @@ puts "Created consumer: id = #{consumer['id']}, uuid = #{consumer['uuid']}"
 consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'],
   HOST, PORT)
 
-pools = cp.list_owner_pools(owner['key'])
+pools = @cp.list_owner_pools(owner['key'])
 puts "Grabbing #{ent_count} entitlements"
 
 Benchmark.bm (10) do |x|

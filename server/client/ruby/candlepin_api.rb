@@ -677,7 +677,6 @@ class Candlepin
   end
 
   def create_product(owner_key, id, name, params={})
-
     multiplier = params[:multiplier] || 1
     attributes = params[:attributes] || {}
     dependentProductIds = params[:dependentProductIds] || []
@@ -920,41 +919,15 @@ class Candlepin
                           provided_products=[], contract_number='',
                           account_number='', order_number='',
                           start_date=nil, end_date=nil, params={})
-    start_date ||= Date.today
-    end_date ||= start_date + 365
-
-    subscription = {
-      'startDate' => start_date,
-      'endDate'   => end_date,
-      'quantity'  =>  quantity,
-      'accountNumber' => account_number,
-      'orderNumber' => order_number,
-      'product' => { 'id' => product_id },
-      'providedProducts' => provided_products.collect { |pid| {'id' => pid} },
-      'contractNumber' => contract_number
-    }
-
-    if params[:branding]
-      subscription['branding'] = params[:branding]
-    end
-
-    if params['derived_product_id']
-      subscription['derivedProduct'] = { 'id' => params['derived_product_id'] }
-    end
-
-    if params['derived_provided_products']
-      subscription['derivedProvidedProducts'] = params['derived_provided_products'].collect { |pid| {'id' => pid} }
-    end
-
-    return post("/owners/#{owner_key}/subscriptions", subscription)
+      raise "Deprecated API. Please use create_pool or HostedTest resources"
   end
 
   def update_subscription(subscription)
-    return put("/owners/subscriptions", subscription)
+      raise "Deprecated API. Please use update_pool or HostedTest resources"
   end
 
   def delete_subscription(subscription_id)
-    return delete("/subscriptions/#{subscription_id}")
+      raise "Deprecated API. Please use delete_pool or HostedTest resources"
   end
 
   def create_pool(owner_key, product_id, params={})

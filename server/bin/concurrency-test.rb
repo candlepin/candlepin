@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 # This script is used to create a given number of consumers in threads and
 # have them all attempt to consume from the pools for a particular product.
 #
@@ -9,8 +10,11 @@
 # watch the details in terminal 1
 
 require "../client/ruby/candlepin_api"
+require "../client/ruby/hostedtest_api"
 require 'pp'
 require 'optparse'
+
+include HostedTest
 
 CP_SERVER = "localhost"
 CP_PORT = 8443
@@ -42,20 +46,17 @@ end
 
 # Create a product and pool to consume:
 product_id = "concurproduct-#{rand(100000)}"
-cp = Candlepin.new(username=CP_ADMIN_USER, password=CP_ADMIN_PASS,
+@cp = Candlepin.new(username=CP_ADMIN_USER, password=CP_ADMIN_PASS,
   cert=nil, key=nil,
   host=CP_SERVER, port=CP_PORT)
-test_owner = cp.create_owner("testowner-#{rand(100000)}")
+test_owner = @cp.create_owner("testowner-#{rand(100000)}")
 attributes = {'multi-entitlement' => "yes"}
-cp.create_product(product_id, product_id, {:attributes => attributes})
-cp.create_subscription(test_owner['key'], product_id, 10)
-cp.refresh_pools(test_owner['key'])
-pools = cp.list_pools(:owner => test_owner['id'])
-pool = pools[0]
+@cp.create_product(test_owner['key'], product_id, product_id, {:attributes => attributes})
+pool = create_pool_and_subscription(test_owner['key'], product_id, 10)
 
 # Create a consumer to bind entitlements to. We'll just use one combined
 # with a pool that supports multi-entitlement:
-consumer = cp.register("test" << rand(10000).to_s, :candlepin,
+consumer = @cp.register("test" << rand(10000).to_s, :candlepin,
   nil, {}, nil, test_owner['key'])
 consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
   consumer['idCert']['key'], CP_SERVER, CP_PORT)
