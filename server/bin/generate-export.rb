@@ -27,8 +27,8 @@ product1 = cp.create_product(owner['key'], random_string(), random_string())
 product2 = cp.create_product(owner['key'], random_string(), random_string())
 
 end_date = Date.new(2025, 5, 29)
-sub1 = cp.create_subscription(owner['key'], product1['id'], 20, [], '', '12345', nil, nil, end_date)
-sub2 = cp.create_subscription(owner['key'], product2['id'], 30, [], '', '76534', nil, nil, end_date)
+sub1 = cp.create_pool(owner['key'], product1['id'], { :quantity => 20, :account_number => '12345', :end_date => end_date })
+sub2 = cp.create_pool(owner['key'], product2['id'], { :quantity => 30, :account_number => '76534', :end_date => end_date })
 cp.refresh_pools(owner['key'])
 
 pool1 = cp.list_pools(:owner => owner['id'], :product => product1['id'])[0]
