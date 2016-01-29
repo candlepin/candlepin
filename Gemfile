@@ -14,6 +14,9 @@ gem 'digest-murmurhash'
 gem 'httpclient'
 gem 'activesupport'
 
+# Remove this once we are fully using the new Ruby bindings
+gem 'rest-client', '~> 1.6.0'
+
 group :development do
   gem 'webrick'
   gem 'pry'
