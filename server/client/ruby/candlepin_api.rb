@@ -908,6 +908,10 @@ class Candlepin
     return get("/subscriptions/#{sub_id}")
   end
 
+  def get_pools_for_subscription(owner_key, sub_id)
+    return get("/owners/#{owner_key}/pools?subscription=#{sub_id}")
+  end
+
   def get_subscription_cert(sub_id)
     return get_text("/subscriptions/#{sub_id}/cert", 'text/plain')
   end

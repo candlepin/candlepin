@@ -185,7 +185,7 @@ public interface PoolManager {
      * @return List of entitlement pools.
      */
     Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer, ActivationKey key,
-        Owner owner, String productId, Date activeOn, boolean activeOnly,
+        Owner owner, String productId, String subscriptionId, Date activeOn, boolean activeOnly,
         boolean includeWarnings, PoolFilterBuilder filterBuilder, PageRequest pageRequest);
 
     /**

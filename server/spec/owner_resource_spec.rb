@@ -571,6 +571,22 @@ describe 'Owner Resource Pool Filter Tests' do
     test_pool.providedProducts.size.should == 3
   end
 
+  it 'should allow user to list standard pool by subscription id' do
+      product = create_product(nil, nil)
+      pool = create_pool_and_subscription(@owner['key'], product.id, 5)
+      user = user_client(@owner, random_string('user'))
+      # needs to be an owner level user
+      user.get_pools_for_subscription(@owner['key'], pool.subscriptionId).size.should == 1
+  end
+
+  it 'should allow user to list bonus pool also by subscription id' do
+      product = create_product(nil, nil, {:attributes => {"virt_limit" => "unlimited"}})
+      pool = create_pool_and_subscription(@owner['key'], product.id, 5)
+      user = user_client(@owner, random_string('user'))
+      # needs to be an owner level user
+      user.get_pools_for_subscription(@owner['key'], pool.subscriptionId).size.should == 2
+  end
+
 end
 
 describe 'Owner Resource Consumer Fact Filter Tests' do
