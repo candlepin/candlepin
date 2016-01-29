@@ -20,6 +20,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.JsRunner;
@@ -33,6 +34,8 @@ import com.google.inject.Inject;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -69,45 +72,63 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     @Override
     public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
         Integer quantity, CallerType caller) {
-        Consumer host = consumer.hasFact("virt.uuid") ?
-                consumerCurator.getHost(consumer.getFact("virt.uuid"),
-                        consumer.getOwner()) : null;
-        return preEntitlement(consumer, host, entitlementPool, quantity, caller);
+
+        return preEntitlement(consumer, getHost(consumer), entitlementPool, quantity, caller);
     }
 
     public ValidationResult preEntitlement(Consumer consumer, Consumer host,
         Pool entitlementPool, Integer quantity, CallerType caller) {
 
+        List<PoolQuantity> poolQuantities = new ArrayList<PoolQuantity>();
+        poolQuantities.add(new PoolQuantity(entitlementPool, quantity));
+        return preEntitlement(consumer, host, poolQuantities, caller).get(entitlementPool.getId());
+    }
+
+    @Override
+    public Map<String, ValidationResult> preEntitlement(Consumer consumer,
+            Collection<PoolQuantity> entitlementPoolQuantities,
+            CallerType caller) {
+        return preEntitlement(consumer, getHost(consumer), entitlementPoolQuantities, caller);
+    }
+
+    @Override
+    public Map<String, ValidationResult> preEntitlement(Consumer consumer, Consumer host,
+            Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
         JsonJsContext args = new JsonJsContext(objectMapper);
         args.put("consumer", consumer);
         args.put("hostConsumer", host);
         args.put("consumerEntitlements", consumer.getEntitlements());
         args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
-        args.put("pool", entitlementPool);
-        args.put("quantity", quantity);
+        args.put("poolQuantities", entitlementPoolQuantities);
         args.put("caller", caller.getLabel());
         args.put("log", log, false);
 
-        String json = jsRules.runJsFunction(String.class, "validate_pool", args);
-        ValidationResult result;
+        String json = jsRules.runJsFunction(String.class, "validate_pools_batch", args);
+        Map<String, ValidationResult> resultMap;
+        TypeReference<Map<String, ValidationResult>> typeref =
+                new TypeReference<Map<String, ValidationResult>>() {};
         try {
-            result = objectMapper.toObject(json, ValidationResult.class);
-            finishValidation(result, entitlementPool, quantity);
+            resultMap = objectMapper.toObject(json, typeref);
+            for (PoolQuantity poolQuantity : entitlementPoolQuantities) {
+                if (!resultMap.containsKey(poolQuantity.getPool().getId())) {
+                    resultMap.put(poolQuantity.getPool().getId(), new ValidationResult());
+                    log.info("no result returned for pool:" + poolQuantity.getPool());
+                }
+                finishValidation(resultMap.get(poolQuantity.getPool().getId()), poolQuantity.getPool(),
+                        poolQuantity.getQuantity());
+            }
         }
         catch (Exception e) {
             throw new RuleExecutionException(e);
         }
-
-        return result;
+        return resultMap;
     }
 
     @Override
     public List<Pool> filterPools(Consumer consumer, List<Pool> pools, boolean showAll) {
         JsonJsContext args = new JsonJsContext(objectMapper);
         args.put("consumer", consumer);
-        args.put("hostConsumer", consumer.hasFact("virt.uuid") ?
-            this.consumerCurator.getHost(consumer.getFact("virt.uuid"),
-                consumer.getOwner()) : null);
+        args.put("hostConsumer", getHost(consumer));
         args.put("consumerEntitlements", consumer.getEntitlements());
         args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
         args.put("pools", pools);
@@ -146,6 +167,12 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         return filteredPools;
     }
 
+    private Consumer getHost(Consumer consumer) {
+        Consumer host = consumer.hasFact("virt.uuid") ? consumerCurator.getHost(
+                consumer.getFact("virt.uuid"), consumer.getOwner()) : null;
+        return host;
+    }
+
     private void finishValidation(ValidationResult result, Pool pool, Integer quantity) {
         validatePoolQuantity(result, pool, quantity);
         if (pool.isExpired(dateSource)) {
@@ -155,4 +182,5 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
                     pool.getEndDate())));
         }
     }
+
 }

@@ -50,7 +50,7 @@ RSpec.configure do |config|
   # run the :after hook so you can do a post-mortem.  If that's the case
   # set this value to false using an environment variable.
   config.add_setting(:run_after_hook, :default => true)
-  RSpec.configuration.run_after_hook = false if ENV['run_after_hook'] == 'false'
+  RSpec.configuration.run_after_hook = false
 
   include CleanupHooks
 

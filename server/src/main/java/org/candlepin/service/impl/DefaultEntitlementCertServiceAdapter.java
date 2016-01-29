@@ -60,6 +60,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -107,13 +108,39 @@ public class DefaultEntitlementCertServiceAdapter extends
     @Override
     public EntitlementCertificate generateEntitlementCert(Entitlement entitlement, Product product)
         throws GeneralSecurityException, IOException {
-        return generateEntitlementCert(entitlement, product, false);
+        return generateSingleCert(entitlement, product, false);
     }
 
     @Override
     public EntitlementCertificate generateUeberCert(Entitlement entitlement, Product product)
         throws GeneralSecurityException, IOException {
-        return generateEntitlementCert(entitlement, product, true);
+        return generateSingleCert(entitlement, product, true);
+    }
+
+    private EntitlementCertificate generateSingleCert(Entitlement entitlement, Product product,
+            Boolean isUber) throws GeneralSecurityException, IOException {
+        Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
+        entitlements.put(entitlement.getPool().getId(), entitlement);
+        Map<String, Product> products = new HashMap<String, Product>();
+        products.put(entitlement.getPool().getId(), product);
+        Map<String, EntitlementCertificate> result = generateEntitlementCerts(entitlement.getConsumer(),
+                entitlements, products, false);
+
+        return result.get(entitlement.getPool().getId());
+    }
+
+    @Override
+    public Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer,
+            Map<String, Entitlement> entitlements, Map<String, Product> products)
+        throws GeneralSecurityException, IOException {
+        return generateEntitlementCerts(consumer, entitlements, products, false);
+    }
+
+    @Override
+    public Map<String, EntitlementCertificate> generateUeberCerts(Consumer consumer,
+            Map<String, Entitlement> entitlements, Map<String, Product> products)
+        throws GeneralSecurityException, IOException {
+        return generateEntitlementCerts(consumer, entitlements, products, true);
     }
 
     private Set<Product> getDerivedProductsForDistributor(Entitlement ent) {
@@ -327,77 +354,103 @@ public class DefaultEntitlementCertServiceAdapter extends
         return output.toString().replace("%24", "$");
     }
 
-    private EntitlementCertificate generateEntitlementCert(Entitlement entitlement, Product product,
-        boolean thisIsUeberCert) throws GeneralSecurityException, IOException {
+    /**
+     * @param entitlements a map of entitlements indexed by pool ids to generate
+     *        the certs of
+     * @param productMap a map of respective products indexed by pool id
+     * @throws IOException
+     * @throws GeneralSecurityException
+     * @return entitlementCerts the respective entitlement certs indexed by pool
+     *         id
+     */
+    private Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer,
+            Map<String, Entitlement> entitlements, Map<String, Product> productMap, boolean thisIsUeberCert)
+        throws GeneralSecurityException, IOException {
 
-        log.info("Generating entitlement cert for entitlement: {}", entitlement);
+        log.info("Generating entitlement cert for entitlements");
+        KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
+        byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
 
-        KeyPair keyPair = keyPairCurator.getConsumerKeyPair(entitlement.getConsumer());
-        CertificateSerial serial = new CertificateSerial(entitlement.getEndDate());
-        // We need the sequence generated id before we create the EntitlementCertificate,
-        // otherwise we could have used cascading create
-        serial = serialCurator.create(serial);
-
-        Set<Product> products = new HashSet<Product>(entitlement.getPool().getProvidedProducts());
-
-        // If creating a certificate for a distributor, we need
-        // to add any derived products as well so that their content
-        // is available in the upstream certificate.
-        products.addAll(getDerivedProductsForDistributor(entitlement));
-        products.add(product);
-
-        Map<String, EnvironmentContent> promotedContent = getPromotedContent(entitlement);
-        String contentPrefix = getContentPrefix(entitlement, !thisIsUeberCert);
-
-        log.info("Creating X509 cert for product: {}", product);
-        log.debug("Provided products: {}", products);
-        List<org.candlepin.model.dto.Product> productModels =
-                v3extensionUtil.createProducts(product, products, contentPrefix,
-                        promotedContent,
-                        entitlement.getConsumer(), entitlement);
-
-        X509Certificate x509Cert = createX509Certificate(entitlement,
-            product, products, productModels, BigInteger.valueOf(serial.getId()), keyPair,
-            !thisIsUeberCert);
-
-        EntitlementCertificate cert = new EntitlementCertificate();
-        cert.setSerial(serial);
-        cert.setKeyAsBytes(pki.getPemEncoded(keyPair.getPrivate()));
-
-        log.info("Getting PEM encoded cert.");
-        String pem = new String(this.pki.getPemEncoded(x509Cert));
-
-        if (shouldGenerateV3(entitlement)) {
-            log.debug("Generating v3 entitlement data");
-
-            byte[] payloadBytes = v3extensionUtil.createEntitlementDataPayload(product,
-                    productModels, entitlement, contentPrefix, promotedContent);
-
-            String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
-            payload += Util.toBase64(payloadBytes);
-            payload += "-----END ENTITLEMENT DATA-----\n";
-
-            byte[] bytes = pki.getSHA256WithRSAHash(new ByteArrayInputStream(payloadBytes));
-            String signature = "-----BEGIN RSA SIGNATURE-----\n";
-            signature += Util.toBase64(bytes);
-            signature += "-----END RSA SIGNATURE-----\n";
-
-            pem += payload + signature;
+        Map<String, CertificateSerial> serialMap = new HashMap<String, CertificateSerial>();
+        for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
+            serialMap.put(entry.getKey(), new CertificateSerial(entry.getValue().getEndDate()));
         }
 
-        cert.setCert(pem);
-        cert.setEntitlement(entitlement);
+        // We need the sequence generated id before we create the
+        // EntitlementCertificate, otherwise we could have used cascading create
+        serialCurator.saveOrUpdateAll(serialMap.values());
 
-        if (log.isDebugEnabled()) {
-            log.debug("Generated cert serial number: " + serial.getId());
-            log.debug("Key: " + cert.getKey());
-            log.debug("Cert: " + cert.getCert());
+        Map<String, EntitlementCertificate> entitlementCerts = new HashMap<String, EntitlementCertificate>();
+
+        for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
+
+            Entitlement entitlement = entry.getValue();
+            CertificateSerial serial = serialMap.get(entry.getKey());
+            Product product = productMap.get(entry.getKey());
+
+            log.info("Generating entitlement cert for entitlement: {}", entitlement);
+
+            Set<Product> products = new HashSet<Product>(entitlement.getPool().getProvidedProducts());
+
+            // If creating a certificate for a distributor, we need
+            // to add any derived products as well so that their content
+            // is available in the upstream certificate.
+            products.addAll(getDerivedProductsForDistributor(entitlement));
+            products.add(product);
+
+            Map<String, EnvironmentContent> promotedContent = getPromotedContent(entitlement);
+            String contentPrefix = getContentPrefix(entitlement, !thisIsUeberCert);
+
+            log.info("Creating X509 cert for product: {}", product);
+            log.debug("Provided products: {}", products);
+            List<org.candlepin.model.dto.Product> productModels = v3extensionUtil.createProducts(product,
+                    products, contentPrefix, promotedContent, entitlement.getConsumer(), entitlement);
+
+            X509Certificate x509Cert = createX509Certificate(entitlement, product, products, productModels,
+                    BigInteger.valueOf(serial.getId()), keyPair, !thisIsUeberCert);
+
+            EntitlementCertificate cert = new EntitlementCertificate();
+            cert.setSerial(serial);
+            cert.setKeyAsBytes(pemEncodedKeyPair);
+
+            log.info("Getting PEM encoded cert.");
+            String pem = new String(this.pki.getPemEncoded(x509Cert));
+
+            if (shouldGenerateV3(entitlement)) {
+                log.debug("Generating v3 entitlement data");
+
+                byte[] payloadBytes = v3extensionUtil.createEntitlementDataPayload(product, productModels,
+                        entitlement, contentPrefix, promotedContent);
+
+                String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
+                payload += Util.toBase64(payloadBytes);
+                payload += "-----END ENTITLEMENT DATA-----\n";
+
+                byte[] bytes = pki.getSHA256WithRSAHash(new ByteArrayInputStream(payloadBytes));
+                String signature = "-----BEGIN RSA SIGNATURE-----\n";
+                signature += Util.toBase64(bytes);
+                signature += "-----END RSA SIGNATURE-----\n";
+
+                pem += payload + signature;
+            }
+
+            cert.setCert(pem);
+            cert.setEntitlement(entitlement);
+
+            if (log.isDebugEnabled()) {
+                log.debug("Generated cert serial number: " + serial.getId());
+                log.debug("Key: " + cert.getKey());
+                log.debug("Cert: " + cert.getCert());
+            }
+
+            entitlement.getCertificates().add(cert);
+            entitlementCerts.put(entry.getKey(), cert);
         }
 
-        log.info("Persisting cert.");
-        entitlement.getCertificates().add(cert);
-        entCertCurator.create(cert);
-        return cert;
+        log.info("Persisting certs.");
+        entCertCurator.saveOrUpdateAll(entitlementCerts.values());
+
+        return entitlementCerts;
     }
 
     private String createDN(Entitlement ent) {

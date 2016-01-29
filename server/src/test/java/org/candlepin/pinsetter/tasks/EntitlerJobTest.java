@@ -63,7 +63,7 @@ public class EntitlerJobTest {
     public void bindByPoolSetup() {
         String pool = "pool10";
 
-        JobDetail detail = EntitlerJob.bindByPool(pool, consumer, 1);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(pool, consumer, 1);
         assertNotNull(detail);
         String resultpool = (String) detail.getJobDataMap().get("pool_id");
         assertEquals("pool10", resultpool);
@@ -75,15 +75,15 @@ public class EntitlerJobTest {
     public void bindByPoolExec() throws JobExecutionException {
         String pool = "pool10";
 
-        JobDetail detail = EntitlerJob.bindByPool(pool, consumer, 1);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(pool, consumer, 1);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         List<Entitlement> ents = new ArrayList<Entitlement>();
-        when(e.bindByPool(eq(pool), eq(consumerUuid), eq(1))).thenReturn(ents);
+        when(e.bindByPoolString(eq(pool), eq(consumerUuid), eq(1))).thenReturn(ents);
 
         EntitlerJob job = new EntitlerJob(e, null);
         job.execute(ctx);
-        verify(e).bindByPool(eq(pool), eq(consumerUuid), eq(1));
+        verify(e).bindByPoolString(eq(pool), eq(consumerUuid), eq(1));
         verify(e).sendEvents(eq(ents));
     }
 
@@ -97,13 +97,13 @@ public class EntitlerJobTest {
      */
     @Test
     public void serializeJobDataMapForPool() throws IOException {
-        JobDetail detail = EntitlerJob.bindByPool("pool10", consumer, 1);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities("pool10", consumer, 1);
         serialize(detail.getJobDataMap());
     }
 
     @Test
     public void recoveryIsFalse() {
-        JobDetail detail = EntitlerJob.bindByPool("pool10", consumer, 1);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities("pool10", consumer, 1);
         assertFalse(detail.requestsRecovery());
         assertTrue(detail.isDurable());
     }
@@ -117,10 +117,10 @@ public class EntitlerJobTest {
     @Test(expected = JobExecutionException.class)
     public void handleException() throws JobExecutionException {
         String pool = "pool10";
-        JobDetail detail = EntitlerJob.bindByPool(pool, consumer, 1);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(pool, consumer, 1);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        when(e.bindByPool(eq(pool), eq(consumerUuid), eq(1))).thenThrow(
+        when(e.bindByPoolString(eq(pool), eq(consumerUuid), eq(1))).thenThrow(
             new ForbiddenException("job should fail"));
 
         EntitlerJob job = new EntitlerJob(e, null);

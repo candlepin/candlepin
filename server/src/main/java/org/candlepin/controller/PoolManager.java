@@ -34,6 +34,7 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -42,6 +43,8 @@ import java.util.Set;
 public interface PoolManager {
 
     Pool createPool(Pool p);
+
+    void createPools(List<Pool> pools);
 
     /**
      * @param sub
@@ -88,20 +91,16 @@ public interface PoolManager {
 
     /**
      * Request an entitlement by pool..
-     *
-     * If the entitlement cannot be granted, null will be returned.
-     *
-     * TODO: Throw exception if entitlement not granted. Report why.
+     * VRITANT DESCRIBE RESULT HERE
      *
      * @param consumer
-     * consumer requesting to be entitled
-     * @param pool
-     * entitlement pool to consume from
-     * @return Entitlement
-     *
+     *        consumer requesting to be entitled
+     * @param poolQuantities
+     *        entitlement pool and respective quantities to consume from
+     * @return Entitlements
      * @throws EntitlementRefusedException if entitlement is refused
      */
-    Entitlement entitleByPool(Consumer consumer, Pool pool, Integer quantity)
+    List<Entitlement> entitleByPools(Consumer consumer, Map<String, Integer> poolQuantities)
         throws EntitlementRefusedException;
 
     Entitlement ueberCertEntitlement(Consumer consumer, Pool pool,
@@ -127,7 +126,11 @@ public interface PoolManager {
 
     Pool find(String poolId);
 
+    List<Pool> find(Collection<String> poolId);
+
     List<Pool> lookupBySubscriptionId(String id);
+
+    List<Pool> lookupBySubscriptionIds(Collection<String> id);
 
     Refresher getRefresher(SubscriptionServiceAdapter subAdapter);
     Refresher getRefresher(SubscriptionServiceAdapter subAdapter, boolean lazy);
@@ -234,6 +237,14 @@ public interface PoolManager {
     PoolUpdate updatePoolFromStack(Pool pool, Set<Product> changedProducts);
 
     /**
+     * Updates the pools based on the entitlements in the specified stack.
+     * 
+     * @param consumer
+     * @param pools
+     */
+    void updatePoolsFromStack(Consumer consumer, List<Pool> pool);
+
+    /**
      * @param guest products we want to provide for
      * @param host to bind entitlements to
      * @param entitleDate
@@ -302,4 +313,5 @@ public interface PoolManager {
      *  a list of known master pools
      */
     List<Pool> listMasterPools();
+
 }

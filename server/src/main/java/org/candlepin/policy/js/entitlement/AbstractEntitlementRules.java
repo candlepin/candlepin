@@ -16,6 +16,7 @@ package org.candlepin.policy.js.entitlement;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
@@ -35,6 +36,7 @@ import org.slf4j.Logger;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -42,6 +44,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -263,32 +266,35 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
     }
 
-    protected void runPostEntitlement(PoolHelper postHelper, Entitlement entitlement) {
-        Pool pool = entitlement.getPool();
-        Consumer c = entitlement.getConsumer();
+    protected void runPostEntitlement(PoolManager poolManager, Consumer consumer,
+            Map<String, Entitlement> entitlementMap, List<Pool> subPoolsForStackIds) {
 
-        Map<String, String> attributes = postHelper.getFlattenedAttributes(pool);
-
-        // Perform pool management based on the attributes of the pool:
-        // TODO: should really be cleaned up, this used to be post rules but
-        // because
-        // it actually manages pools we pulled back to engine. Needs re-org.
-        if (attributes.containsKey("virt_limit")) {
-            postBindVirtLimit(postHelper, entitlement, pool, c, attributes);
+        Map<String, Map<String, String>> flatAttributeMaps = new HashMap<String, Map<String, String>>();
+        Map<String, Entitlement> virtLimitEntitlements = new HashMap<String, Entitlement>();
+        for (Entry<String, Entitlement> entry : entitlementMap.entrySet()) {
+            Entitlement entitlement = entry.getValue();
+            Map<String, String> attributes = PoolHelper.getFlattenedAttributes(entitlement.getPool());
+            if (attributes.containsKey("virt_limit")) {
+                virtLimitEntitlements.put(entry.getKey(), entitlement);
+                flatAttributeMaps.put(entry.getKey(), attributes);
+            }
         }
+        // Perform pool management based on the attributes of the pool:
+        postBindVirtLimit(poolManager, consumer, virtLimitEntitlements, flatAttributeMaps,
+                subPoolsForStackIds);
     }
 
-    protected void runPostUnbind(PoolHelper postHelper, Entitlement entitlement) {
+    protected void runPostUnbind(PoolManager poolManager, Entitlement entitlement) {
         Pool pool = entitlement.getPool();
 
         if (pool.hasAttribute("virt_limit") || pool.getProduct().hasAttribute("virt_limit")) {
-            Map<String, String> attributes = postHelper.getFlattenedAttributes(pool);
+            Map<String, String> attributes = PoolHelper.getFlattenedAttributes(pool);
             Consumer c = entitlement.getConsumer();
-            postUnbindVirtLimit(postHelper, entitlement, pool, c, attributes);
+            postUnbindVirtLimit(poolManager, entitlement, pool, c, attributes);
         }
     }
 
-    private void postUnbindVirtLimit(PoolHelper postHelper,
+    private void postUnbindVirtLimit(PoolManager poolManager,
         Entitlement entitlement, Pool pool, Consumer c,
         Map<String, String> attributes) {
         log.debug("Running virt_limit post unbind.");
@@ -305,12 +311,12 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                 int virtQuantity = Integer.parseInt(virtLimit) *
                     entitlement.getQuantity();
                 if (virtQuantity > 0) {
-                    List<Pool> pools = postHelper.lookupBySubscriptionId(pool
+                    List<Pool> pools = poolManager.lookupBySubscriptionId(pool
                         .getSubscriptionId());
                     for (int idex = 0; idex < pools.size(); idex++) {
                         Pool derivedPool = pools.get(idex);
                         if (derivedPool.getAttributeValue("pool_derived") != null) {
-                            postHelper.updatePoolQuantity(derivedPool,
+                            poolManager.updatePoolQuantity(derivedPool,
                                 virtQuantity);
                         }
                     }
@@ -321,56 +327,82 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                 // was previously
                 // exported, we need to set the unlimited bonus pool quantity to
                 // -1.
-                List<Pool> pools = postHelper.lookupBySubscriptionId(pool
+                List<Pool> pools = poolManager.lookupBySubscriptionId(pool
                     .getSubscriptionId());
                 for (int idex = 0; idex < pools.size(); idex++) {
                     Pool derivedPool = pools.get(idex);
                     if (derivedPool.getAttributeValue("pool_derived") != null &&
                         derivedPool.getQuantity() == 0) {
-                        postHelper.setPoolQuantity(derivedPool, -1);
+                        poolManager.setPoolQuantity(derivedPool, -1);
                     }
                 }
             }
         }
     }
 
-    private void postBindVirtLimit(PoolHelper postHelper, Entitlement entitlement, Pool pool,
-        Consumer c, Map<String, String> attributes) {
+    private void postBindVirtLimit(PoolManager poolManager, Consumer c,
+            Map<String, Entitlement> entitlementMap, Map<String, Map<String, String>> attributeMaps,
+            List<Pool> subPoolsForStackIds) {
+
+        Set<String> stackIdsThathaveSubPools = new HashSet<String>();
+        for (Pool pool : subPoolsForStackIds) {
+            stackIdsThathaveSubPools.add(pool.getSourceStackId());
+        }
 
         log.debug("Running virt_limit post-bind.");
-        boolean hostLimited = attributes.containsKey("host_limited") &&
-            attributes.get("host_limited").equals("true");
-        if (!c.getType().isManifest() &&
-            !"true".equalsIgnoreCase(c.getFact("virt.is_guest")) &&
-            (config.getBoolean(ConfigProperties.STANDALONE) || hostLimited)) {
-            Product product = pool.getProduct();
-            String virtLimit = attributes.get("virt_limit");
 
-            String stackId = attributes.get("stacking_id");
-            boolean createSubPool = stackId == null ||
-                poolCurator.getSubPoolForStackId(c, stackId) == null;
+        boolean consumerFactExpression = !c.getType().isManifest() &&
+                !"true".equalsIgnoreCase(c.getFact("virt.is_guest"));
 
-            if (createSubPool) {
-                log.debug("Creating a new sub-pool.");
-                try {
-                    int virtQuantity = Integer.parseInt(virtLimit);
-                    if (virtQuantity <= 0) {
-                        return;
+        boolean isStandalone = config.getBoolean(ConfigProperties.STANDALONE);
+
+        List<Pool> createHostRestrictedPoolFor = new ArrayList<Pool>();
+        List<Entitlement> decrementHostedBonusPoolQuantityFor = new ArrayList<Entitlement>();
+
+        for (Entitlement entitlement : entitlementMap.values()) {
+
+            Pool pool = entitlement.getPool();
+            Map<String, String> attributes = attributeMaps.get(pool.getId());
+            boolean hostLimited = attributes.containsKey("host_limited") &&
+                    attributes.get("host_limited").equals("true");
+
+            if (consumerFactExpression && (isStandalone || hostLimited)) {
+                String virtLimit = attributes.get("virt_limit");
+                String stackId = attributes.get("stacking_id");
+                boolean createSubPool = stackId == null || stackIdsThathaveSubPools.contains(stackId);
+                if (createSubPool) {
+                    log.debug("Creating a new sub-pool for {}", pool);
+                    try {
+                        int virtQuantity = Integer.parseInt(virtLimit);
+                        if (virtQuantity <= 0) {
+                            continue;
+                        }
                     }
-                }
-                catch (NumberFormatException nfe) {
-                    if (!"unlimited".equals(virtLimit)) {
-                        return;
+                    catch (NumberFormatException nfe) {
+                        if (!"unlimited".equals(virtLimit)) {
+                            continue;
+                        }
                     }
+                    createHostRestrictedPoolFor.add(pool);
                 }
-                postHelper.createHostRestrictedPool(product, pool, virtLimit);
+                else {
+                    log.debug("Skipping sub-pool creation for: {}", pool);
+                }
             }
             else {
-                log.debug("Skipping sub-pool creation");
+                decrementHostedBonusPoolQuantityFor.add(entitlement);
             }
         }
-        else {
-            decrementHostedBonusPoolQuantity(postHelper, entitlement, pool, c, attributes);
+
+        if (createHostRestrictedPoolFor != null && !createHostRestrictedPoolFor.isEmpty()) {
+            log.debug("creating host restricted pools for: {}", createHostRestrictedPoolFor);
+            PoolHelper.createHostRestrictedPools(poolManager, c, createHostRestrictedPoolFor,
+                    entitlementMap, attributeMaps);
+        }
+        if (decrementHostedBonusPoolQuantityFor != null && !decrementHostedBonusPoolQuantityFor.isEmpty()) {
+            log.debug("decrementHostedBonusPoolQuantity for: {}", decrementHostedBonusPoolQuantityFor);
+            decrementHostedBonusPoolQuantity(poolManager, c, decrementHostedBonusPoolQuantityFor,
+                    attributeMaps);
         }
     }
 
@@ -378,66 +410,81 @@ public abstract class AbstractEntitlementRules implements Enforcer {
      * When distributors bind to virt_limit pools in hosted, we need to go adjust the
      * quantity on the bonus pool, as those entitlements have now been exported to on-site.
      */
-    private void decrementHostedBonusPoolQuantity(PoolHelper postHelper,
-        Entitlement entitlement, Pool pool, Consumer c,
-        Map<String, String> attributes) {
-        boolean hostLimited = attributes.containsKey("host_limited") &&
-            attributes.get("host_limited").equals("true");
-        if (c.getType().isManifest() && !config.getBoolean(ConfigProperties.STANDALONE) &&
-                !hostLimited) {
-            String virtLimit = attributes.get("virt_limit");
-            if (!"unlimited".equals(virtLimit)) {
-                // if the bonus pool is not unlimited, then the bonus pool
-                // quantity
-                // needs to be adjusted based on the virt limit
-                int virtQuantity = Integer.parseInt(virtLimit) *
-                    entitlement.getQuantity();
-                if (virtQuantity > 0) {
-                    List<Pool> pools = postHelper
-                        .lookupBySubscriptionId(pool.getSubscriptionId());
-                    for (int idex = 0; idex < pools.size(); idex++) {
-                        Pool derivedPool = pools.get(idex);
-                        if (derivedPool.getAttributeValue("pool_derived") != null) {
-                            derivedPool = postHelper.updatePoolQuantity(
-                                derivedPool, -1 * virtQuantity);
+    private void decrementHostedBonusPoolQuantity(PoolManager poolManager, Consumer c,
+            List<Entitlement> entitlements, Map<String, Map<String, String>> attributesMaps) {
+
+        boolean consumerFactExpression = c.getType().isManifest() &&
+                !config.getBoolean(ConfigProperties.STANDALONE);
+
+        // pre-fetch subscription and respective pools in a batch
+        Set<String> subscriptionIds = new HashSet<String>();
+        for (Entitlement entitlement : entitlements) {
+            subscriptionIds.add(entitlement.getPool().getSubscriptionId());
+        }
+        List<Pool> subscriptionPools = poolManager.lookupBySubscriptionIds(subscriptionIds);
+        Map<String, List<Pool>> subscriptionPoolMap = new HashMap<String, List<Pool>>();
+        for (Pool pool : subscriptionPools) {
+            if (!subscriptionPoolMap.containsKey(pool.getSubscriptionId())) {
+                subscriptionPoolMap.put(pool.getSubscriptionId(), new ArrayList<Pool>());
+            }
+            subscriptionPoolMap.get(pool.getSubscriptionId()).add(pool);
+        }
+
+        for (Entitlement entitlement : entitlements) {
+
+            Pool pool = entitlement.getPool();
+            Map<String, String> attributes = attributesMaps.get(pool.getId());
+
+            boolean hostLimited = attributes.containsKey("host_limited") &&
+                    attributes.get("host_limited").equals("true");
+
+            if (consumerFactExpression && !hostLimited) {
+                String virtLimit = attributes.get("virt_limit");
+                if (!"unlimited".equals(virtLimit)) {
+                    // if the bonus pool is not unlimited, then the bonus pool
+                    // quantity needs to be adjusted based on the virt limit
+                    int virtQuantity = Integer.parseInt(virtLimit) * entitlement.getQuantity();
+                    if (virtQuantity > 0) {
+                        List<Pool> pools = subscriptionPoolMap.get(pool.getSubscriptionId());
+                        for (int idex = 0; idex < pools.size(); idex++) {
+                            Pool derivedPool = pools.get(idex);
+                            if (derivedPool.getAttributeValue("pool_derived") != null) {
+                                derivedPool = poolManager
+                                        .updatePoolQuantity(derivedPool, -1 * virtQuantity);
+                            }
                         }
                     }
                 }
-            }
-            else {
-                // if the bonus pool is unlimited, then the quantity needs
-                // to go to 0
-                // when the physical pool is exhausted completely by export.
-                // A quantity of 0 will block future binds, whereas -1 does
-                // not.
-                if (pool.getQuantity().equals(pool.getExported())) {
-                    // getting all pools matching the sub id. Filtering out
-                    // the 'parent'.
-                    List<Pool> pools = postHelper
-                        .lookupBySubscriptionId(pool.getSubscriptionId());
-                    for (int idex = 0; idex < pools.size(); idex++) {
-                        Pool derivedPool = pools.get(idex);
-                        if (derivedPool.getAttributeValue("pool_derived") != null) {
-                            derivedPool = postHelper.setPoolQuantity(
-                                derivedPool, 0);
+                else {
+                    // if the bonus pool is unlimited, then the quantity needs
+                    // to go to 0 when the physical pool is exhausted completely
+                    // by export. A quantity of 0 will block future binds,
+                    // whereas -1 does not.
+                    if (pool.getQuantity().equals(pool.getExported())) {
+                        // getting all pools matching the sub id. Filtering out
+                        // the 'parent'.
+                        List<Pool> pools = subscriptionPoolMap.get(pool.getSubscriptionId());
+                        for (int idex = 0; idex < pools.size(); idex++) {
+                            Pool derivedPool = pools.get(idex);
+                            if (derivedPool.getAttributeValue("pool_derived") != null) {
+                                derivedPool = poolManager.setPoolQuantity(derivedPool, 0);
+                            }
                         }
                     }
                 }
             }
         }
+
     }
 
-    public PoolHelper postEntitlement(Consumer consumer,
-        PoolHelper postEntHelper, Entitlement ent) {
-
-        runPostEntitlement(postEntHelper, ent);
-        return postEntHelper;
+    public void postEntitlement(PoolManager poolManager, Consumer consumer,
+            Map<String, Entitlement> entitlements, List<Pool> subPoolsForStackIds) {
+        runPostEntitlement(poolManager, consumer, entitlements, subPoolsForStackIds);
     }
 
-    public PoolHelper postUnbind(Consumer c, PoolHelper postHelper,
+    public void postUnbind(Consumer c, PoolManager poolManager,
         Entitlement ent) {
-        runPostUnbind(postHelper, ent);
-        return postHelper;
+        runPostUnbind(poolManager, ent);
     }
 
     @Override

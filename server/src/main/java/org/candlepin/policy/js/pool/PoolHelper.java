@@ -15,7 +15,9 @@
 package org.candlepin.policy.js.pool;
 
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.Attribute;
 import org.candlepin.model.Branding;
+import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -23,11 +25,12 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
-import org.candlepin.policy.js.AttributeHelper;
 
 import org.apache.commons.lang.StringUtils;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -37,116 +40,103 @@ import java.util.Set;
 
 
 /**
- * Post Entitlement Helper, this object is provided as a global variable to the
- * post entitlement javascript functions allowing them to perform a specific set
- * of operations we support.
+ * Post Entitlement Helper, and some attribute utility methods.
  */
-public class PoolHelper extends AttributeHelper {
+public class PoolHelper {
 
-    private PoolManager poolManager;
-    private Entitlement sourceEntitlement;
+    private PoolHelper() {
+    }
 
-    public PoolHelper(PoolManager poolManager, Entitlement sourceEntitlement) {
-        this.poolManager = poolManager;
-        this.sourceEntitlement = sourceEntitlement;
+    /**
+     * Both products and pools can carry attributes, we need to
+     * trigger rules for each. In this map, pool attributes will
+     * override product attributes, should the same key be set
+     * for both.
+     *
+     * @param pool Pool can be null.
+     * @return Map of all attribute names and values. Pool attributes
+     *         have priority.
+     */
+    public static Map<String, String> getFlattenedAttributes(Pool pool) {
+        Map<String, String> allAttributes = new HashMap<String, String>();
+        if (pool != null) {
+            allAttributes.putAll(getFlattenedAttributes(pool.getProductAttributes()));
+            allAttributes.putAll(getFlattenedAttributes(pool.getAttributes()));
+        }
+        return allAttributes;
+    }
+
+    public static Map<String, String> getFlattenedAttributes(Set<? extends Attribute> attrs) {
+        Map<String, String> flattened = new HashMap<String, String>();
+        for (Attribute a : attrs) {
+            flattened.put(a.getName(), a.getValue());
+        }
+        return flattened;
+    }
+
+    public static Map<String, String> getFlattenedAttributes(Product product) {
+        return getFlattenedAttributes(product.getAttributes());
     }
 
     /**
      * Create a pool only for virt guests of a particular host consumer.
      *
-     * @param product Label of the product the pool is for.
-     * @param pool Pool this host restricted pool is being derived from.
-     * @param quantity Number of entitlements for this pool, also accepts "unlimited".
-     * @return the pool which was created
+     * @param pools Pools these host restricted pools are being derived from.
      */
-    public Pool createHostRestrictedPool(Product product, Pool pool, String quantity) {
+    public static void createHostRestrictedPools(PoolManager poolManager, Consumer consumer,
+            List<Pool> pools,
+            Map<String, Entitlement> sourceEntitlements, Map<String, Map<String, String>> attributeMaps) {
 
-        Pool consumerSpecificPool = null;
-        if (pool.getDerivedProduct() == null) {
-            consumerSpecificPool = this.createPool(
-                product,
-                pool.getOwner(),
-                quantity,
-                pool.getStartDate(),
-                pool.getEndDate(),
-                pool.getContractNumber(),
-                pool.getAccountNumber(),
-                pool.getOrderNumber(),
-                pool.getProvidedProducts()
-            );
-        }
-        else {
-            // If a derived product is on the pool, we want to define the derived pool
-            // with the derived product data that was defined on the parent pool,
-            // allowing the derived pool to have different attributes than the parent.
-            consumerSpecificPool = this.createPool(
-                pool.getDerivedProduct(),
-                pool.getOwner(),
-                quantity,
-                pool.getStartDate(),
-                pool.getEndDate(),
-                pool.getContractNumber(),
-                pool.getAccountNumber(),
-                pool.getOrderNumber(),
-                pool.getDerivedProvidedProducts()
-            );
-        }
+        List<Pool> poolsToCreate = new ArrayList<Pool>();
+        List<Pool> poolsToUpdateFromStack = new ArrayList<Pool>();
+        for (Pool pool : pools) {
+            Product product = pool.getProduct();
+            Pool consumerSpecificPool = null;
+            Map<String, String> attributes = attributeMaps.get(pool.getId());
+            String quantity = attributes.get("virt_limit");
+            if (pool.getDerivedProduct() == null) {
+                consumerSpecificPool = createPool(product, pool.getOwner(), quantity, pool.getStartDate(),
+                        pool.getEndDate(), pool.getContractNumber(), pool.getAccountNumber(),
+                        pool.getOrderNumber(), pool.getProvidedProducts(),
+                        sourceEntitlements.get(pool.getId()));
+            }
+            else {
+                // If a derived product is on the pool, we want to define the
+                // derived pool
+                // with the derived product data that was defined on the parent
+                // pool,
+                // allowing the derived pool to have different attributes than
+                // the parent.
+                consumerSpecificPool = createPool(pool.getDerivedProduct(), pool.getOwner(), quantity,
+                        pool.getStartDate(), pool.getEndDate(), pool.getContractNumber(),
+                        pool.getAccountNumber(), pool.getOrderNumber(), pool.getDerivedProvidedProducts(),
+                        sourceEntitlements.get(pool.getId()));
+            }
 
-        consumerSpecificPool.setAttribute("requires_host", sourceEntitlement.getConsumer().getUuid());
-        consumerSpecificPool.setAttribute("pool_derived", "true");
-        consumerSpecificPool.setAttribute("virt_only", "true");
-        consumerSpecificPool.setAttribute("physical_only", "false");
+            consumerSpecificPool.setAttribute("requires_host", consumer.getUuid());
+            consumerSpecificPool.setAttribute("pool_derived", "true");
+            consumerSpecificPool.setAttribute("virt_only", "true");
+            consumerSpecificPool.setAttribute("physical_only", "false");
 
-        // If the originating pool is stacked, we want to create the derived pool based on
-        // the entitlements in the stack, instead of just the parent pool.
-        if (pool.isStacked()) {
-            poolManager.updatePoolFromStack(consumerSpecificPool, null);
-        }
-        else {
-            // attribute per 795431, useful for rolling up pool info in headpin
-            consumerSpecificPool.setAttribute("source_pool_id", pool.getId());
-            consumerSpecificPool.setSourceSubscription(
-                new SourceSubscription(
-                    pool.getSubscriptionId(),
-                    sourceEntitlement.getId()
-                )
-            );
+            // If the originating pool is stacked, we want to create the derived
+            // pool based on the entitlements in the stack, instead of just the
+            // parent pool.
+            if (pool.isStacked()) {
+                poolsToUpdateFromStack.add(consumerSpecificPool);
+            }
+            else {
+                // attribute per 795431, useful for rolling up pool info in headpin
+                consumerSpecificPool.setAttribute("source_pool_id", pool.getId());
+                consumerSpecificPool.setSourceSubscription(new SourceSubscription(pool.getSubscriptionId(),
+                        sourceEntitlements.get(pool.getId()).getId()));
+            }
+            poolsToCreate.add(consumerSpecificPool);
         }
 
-        poolManager.createPool(consumerSpecificPool);
-        return consumerSpecificPool;
-    }
-
-    /**
-     * Retrieve all pools with the subscription id.
-     *
-     * @param id Subscription Id for cross-reference.
-     * @return list of found pools
-     */
-    public List<Pool> lookupBySubscriptionId(String id) {
-        return poolManager.lookupBySubscriptionId(id);
-    }
-
-    /**
-     * Update count for a pool.
-     *
-     * @param pool The pool.
-     * @param adjust the amount to adjust (+/-)
-     * @return pool
-     */
-    public Pool updatePoolQuantity(Pool pool, int adjust) {
-        return poolManager.updatePoolQuantity(pool, adjust);
-    }
-
-    /**
-     * Set count for a pool.
-     *
-     * @param pool The pool.
-     * @param set the long amount to set
-     * @return pool
-     */
-    public Pool setPoolQuantity(Pool pool, long set) {
-        return poolManager.setPoolQuantity(pool, set);
+        if (poolsToUpdateFromStack != null && !poolsToUpdateFromStack.isEmpty()) {
+            poolManager.updatePoolsFromStack(consumer, poolsToUpdateFromStack);
+        }
+        poolManager.createPools(poolsToCreate);
     }
 
     /**
@@ -155,7 +145,7 @@ public class PoolHelper extends AttributeHelper {
      * @param source subscription
      * @param destination pool
      */
-    private void copyProvidedProducts(Pool source, Pool destination,
+    private static void copyProvidedProducts(Pool source, Pool destination,
         ProductCurator prodCurator) {
 
         Set<Product> products;
@@ -180,13 +170,14 @@ public class PoolHelper extends AttributeHelper {
         }
     }
 
-    public Pool clonePool(Pool sourcePool, Product product, String quantity,
-            Map<String, String> attributes, String subKey, ProductCurator prodCurator) {
+    public static Pool clonePool(Pool sourcePool, Product product, String quantity,
+            Map<String, String> attributes, String subKey, ProductCurator prodCurator,
+            Entitlement sourceEntitlement) {
 
         Pool pool = createPool(product, sourcePool.getOwner(), quantity,
                 sourcePool.getStartDate(), sourcePool.getEndDate(),
                 sourcePool.getContractNumber(), sourcePool.getAccountNumber(),
-                sourcePool.getOrderNumber(), new HashSet<Product>());
+                sourcePool.getOrderNumber(), new HashSet<Product>(), sourceEntitlement);
 
         pool.setSourceSubscription(
                     new SourceSubscription(sourcePool.getSubscriptionId(), subKey));
@@ -205,9 +196,9 @@ public class PoolHelper extends AttributeHelper {
         return pool;
     }
 
-    private Pool createPool(Product product, Owner owner, String quantity, Date startDate,
+    private static Pool createPool(Product product, Owner owner, String quantity, Date startDate,
         Date endDate, String contractNumber, String accountNumber, String orderNumber,
-        Set<Product> providedProducts) {
+            Set<Product> providedProducts, Entitlement sourceEntitlement) {
 
         Long q = null;
         if (quantity.equalsIgnoreCase("unlimited")) {
@@ -255,9 +246,10 @@ public class PoolHelper extends AttributeHelper {
         return pool;
     }
 
-    public boolean checkForOrderChanges(Pool existingPool, Pool pool) {
+    public static boolean checkForOrderChanges(Pool existingPool, Pool pool) {
         return (!StringUtils.equals(existingPool.getOrderNumber(), pool.getOrderNumber()) ||
                 !StringUtils.equals(existingPool.getAccountNumber(), pool.getAccountNumber()) || !StringUtils
                     .equals(existingPool.getContractNumber(), pool.getContractNumber()));
     }
+
 }

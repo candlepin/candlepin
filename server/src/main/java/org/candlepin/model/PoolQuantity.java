@@ -16,6 +16,9 @@ package org.candlepin.model;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
+import java.util.Comparator;
+import java.util.Map;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -89,4 +92,14 @@ public class PoolQuantity implements Comparable<PoolQuantity> {
         }
         return compare;
     }
+
+    public static class IdComparator implements Comparator<PoolQuantity> {
+
+        @Override
+        public int compare(PoolQuantity arg0, PoolQuantity arg1) {
+            return arg0.getPool().compareTo(arg1.getPool());
+        }
+
+    }
+
 }

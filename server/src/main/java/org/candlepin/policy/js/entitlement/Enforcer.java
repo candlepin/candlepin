@@ -14,13 +14,18 @@
  */
 package org.candlepin.policy.js.entitlement;
 
+import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.ValidationResult;
+import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.pool.PoolHelper;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Enforces the entitlement rules definitions.
@@ -88,6 +93,41 @@ public interface Enforcer {
         Integer quantity, CallerType caller);
 
     /**
+     * Run pre-entitlement checks on a batch of pools.
+     * Ensures sufficient entitlements remain, but also verifies all attributes
+     * on the product and relevant entitlement pool pass using the current
+     * policy.
+     * This is run prior to granting an entitlement.
+     *
+     * @param consumer Consumer who wishes to consume an entitlement.
+     * @param entitlementPoolQuantities Entitlement pools to consume from, and
+     *        the respective number of entitlements to consume.
+     * @param caller the context calling the rules.
+     * @return {@link ValidationResult} a validation result from the
+     *         pre-entitlement run.
+     */
+    Map<String, ValidationResult> preEntitlement(Consumer consumer,
+            Collection<PoolQuantity> entitlementPoolQuantities,
+            CallerType caller);
+
+    /**
+     * Run pre-entitlement checks on a batch of pools.
+     * Ensures sufficient entitlements remain, but also verifies all attributes
+     * on the product and relevant entitlement pool pass using the current
+     * policy.
+     * This is run prior to granting an entitlement.
+     *
+     * @param consumer Consumer who wishes to consume an entitlement.
+     * @param entitlementPoolQuantities Entitlement pools to consume from, and
+     *        the respective number of entitlements to consume.
+     * @param caller the context calling the rules.
+     * @return {@link ValidationResult} a validation result from the
+     *         pre-entitlement run.
+     */
+    Map<String, ValidationResult> preEntitlement(Consumer consumer, Consumer host,
+            Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller);
+
+    /**
      * @param consumer Consumer who wishes to consume an entitlement.
      * @param pools Entitlement pools to potentially consume from.
      * @param showAll if true, allows pools with warnings
@@ -98,19 +138,20 @@ public interface Enforcer {
     /**
      * Run post-entitlement actions.
      *
-     * @param postEntHelper A post entitlement helper.
-     * @param ent The entitlement that was just granted.
-     * @return post-entitlement processor
+     * @param c consumer
+     * @param subPoolsForStackIds
+     * @param ents The entitlement that was just granted.
      */
-    PoolHelper postEntitlement(Consumer c, PoolHelper postEntHelper, Entitlement ent);
+    void postEntitlement(PoolManager poolManager, Consumer c, Map<String, Entitlement> ents,
+            List<Pool> subPoolsForStackIds);
 
     /**
      * Run post-entitlement actions.
      *
-     * @param postEntHelper A post entitlement helper.
+     * @param poolManager
      * @param ent The entitlement that was just granted.
      * @return post-entitlement processor
      */
-    PoolHelper postUnbind(Consumer c, PoolHelper postEntHelper, Entitlement ent);
+    void postUnbind(Consumer c, PoolManager poolManager, Entitlement ent);
 
 }

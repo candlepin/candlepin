@@ -1,4 +1,4 @@
-// Version: 5.19
+// Version: 5.20
 
 /*
  * Default Candlepin rule set.
@@ -1335,6 +1335,15 @@ var Entitlement = {
             }
         }
 
+        if ("poolQuantities" in context) {
+
+            context.pools = []
+            for (var i = 0; i < context.poolQuantities.length; i++) {
+                context.pools[i] = createPool(context.poolQuantities[i].pool);
+                context.pools[i].quantityRequested = context.poolQuantities[i].quantity; 
+            }
+        }
+
         context.hasEntitlement = function(poolId) {
             for (var k = 0; k < this.consumerEntitlements.length; k++) {
                 var e = this.consumerEntitlements[k];
@@ -1793,6 +1802,25 @@ var Entitlement = {
             validators[k](context, result);
         }
         return JSON.stringify(result);
+    },
+
+    validate_pools_batch: function() {
+        context = this.get_attribute_context();
+
+        var result_map = {};
+        for (var i = 0; i < context.pools.length; i++) {
+            pool = context.pools[i]
+            validators = this.get_validators(pool);
+            var result = this.ValidationResult();
+            for (var k = 0; k < validators.length; k++) {
+                // Set up the context to work like an individual validation
+                context.quality = pool.requestedQuantity;
+                context.pool = pool;
+                validators[k](context, result);
+            }
+            result_map[pool['id']] = result;
+        }
+        return JSON.stringify(result_map);
     },
 
     validate_pools_list: function() {

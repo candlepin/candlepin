@@ -14,6 +14,8 @@
  */
 package org.candlepin.policy;
 
+import java.util.Map;
+
 /**
  * Thrown when an entitlement is not granted due to a rule failing.
  *
@@ -23,14 +25,15 @@ package org.candlepin.policy;
 public class EntitlementRefusedException extends Exception {
 
     private static final long serialVersionUID = 1L;
-    private ValidationResult result;
+    private Map<String, ValidationResult> results;
 
-    public EntitlementRefusedException(ValidationResult result) {
+    public EntitlementRefusedException(Map<String, ValidationResult> results) {
+
         super("Entitlement refused");
-        this.result = result;
+        this.results = results;
     }
 
-    public ValidationResult getResult() {
-        return this.result;
+    public Map<String, ValidationResult> getResults() {
+        return this.results;
     }
 }

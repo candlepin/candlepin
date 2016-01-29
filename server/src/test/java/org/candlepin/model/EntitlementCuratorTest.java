@@ -487,6 +487,31 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void findByStackIdsTest() {
+
+        String[] stackingIds = new String[3];
+        for (Integer i = 0; i < 4; i++) {
+            String stackingId = "test_stack_id" + i.toString();
+            if (i > 0) {
+                stackingIds[i - 1] = stackingId;
+            }
+            Product product = TestUtil.createProduct(owner);
+            product.setAttribute("stacking_id", stackingId);
+            productCurator.create(product);
+
+            Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
+            poolCurator.create(pool);
+            Entitlement created = bind(consumer, pool);
+        }
+
+        List<Entitlement> results = entitlementCurator.findByStackIds(consumer, stackingIds);
+        assertEquals(3, results.size());
+        for (Entitlement entitlement : results) {
+            System.out.println("VRITANT " + entitlement.getPool().getProductAttributeValue("stacking_id"));
+        }
+    }
+
+    @Test
     public void findByStackIdMultiTest() {
         String stackingId = "test_stack_id";
         Product product = TestUtil.createProduct(owner);

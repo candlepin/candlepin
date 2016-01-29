@@ -27,13 +27,17 @@ import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Disjunction;
+import org.hibernate.criterion.Junction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.SimpleExpression;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
@@ -42,12 +46,17 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
+
+import javax.persistence.LockModeType;
 
 /**
  * EntitlementPoolCurator
@@ -305,9 +314,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Entitlement> retrieveFreeEntitlementsOfPool(Pool existingPool,
+    public List<Entitlement> retrieveFreeEntitlementsOfPools(List<Pool> existingPools,
         boolean lifo) {
-        return criteriaToSelectEntitlementForPool(existingPool)
+        return criteriaToSelectEntitlementForPools(existingPools)
             .addOrder(lifo ? Order.desc("created") : Order.asc("created"))
             .list();
     }
@@ -334,6 +343,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .add(Restrictions.eq("pool", entitlementPool));
     }
 
+    private Criteria criteriaToSelectEntitlementForPools(List<Pool> entitlementPools) {
+        return this.currentSession().createCriteria(Entitlement.class)
+                .add(Restrictions.in("pool", entitlementPools));
+    }
+
     /**
      * @param entitlementPool entitlement pool to search.
      * @return entitlements in the given pool.
@@ -357,35 +371,61 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     /**
-     * Attempts to find pools which are over subscribed after the creation or modification
+     * @param subIds Subscriptions to look up pools by
+     * @return pools from the given subscriptions, sorted by pool.id to avoid
+     *         deadlocks
+     */
+    @SuppressWarnings("unchecked")
+    public List<Pool> lookupBySubscriptionIds(Collection<String> subIds) {
+        return createSecureCriteria()
+                .createAlias("sourceSubscription", "sourceSub")
+                .add(Restrictions.in("sourceSub.subscriptionId", subIds))
+                .addOrder(Order.asc("id"))
+                .list();
+    }
+
+    /**
+     * Attempts to find pools which are over subscribed after the creation or
+     * modification
      * of the given entitlement.
-     *
-     * To do this we search for only the pools related to the subscription ID which
+     * To do this we search for only the pools related to the subscription ID
+     * which
      * could have changed, the two cases where this can happen are:
-     *
-     * 1. Bonus pool (not derived from any entitlement) after a bind. (in cases such as
+     * 1. Bonus pool (not derived from any entitlement) after a bind. (in cases
+     * such as
      * exporting to downstream)
-     * 2. A derived pool whose source entitlement just had it's quantity reduced.
-     *
-     * This has to be done carefully to avoid potential performance problems with
+     * 2. A derived pool whose source entitlement just had it's quantity
+     * reduced.
+     * This has to be done carefully to avoid potential performance problems
+     * with
      * virt_bonus on-site subscriptions where one pool is created per physical
      * entitlement.
      *
-     * @param subId Subscription ID of the pool.
-     * @param ent Entitlement just created or modified.
+     * @param subIdMap Map where key is Subscription ID of the pool, and value
+     *        is the Entitlement just created or modified.
      * @return Pools with too many entitlements for their new quantity.
      */
     @SuppressWarnings("unchecked")
-    public List<Pool> lookupOversubscribedBySubscriptionId(String subId, Entitlement ent) {
-        return currentSession().createCriteria(Pool.class)
-            .createAlias("sourceSubscription", "sourceSub")
-            .add(Restrictions.eq("sourceSub.subscriptionId", subId))
-            .add(Restrictions.ge("quantity", 0L))
-            .add(Restrictions.gtProperty("consumed", "quantity"))
-            .add(Restrictions.or(
-                Restrictions.isNull("sourceEntitlement"),
-                Restrictions.eqOrIsNull("sourceEntitlement", ent)))
-            .list();
+    public List<Pool> lookupOversubscribedBySubscriptionIds(Map<String, Entitlement> subIdMap) {
+
+        List<Criterion> subIdMapCriteria = new ArrayList<Criterion>();
+        Criterion[] exampleCriteria = new Criterion[0];
+        for (Entry<String, Entitlement> entry : subIdMap.entrySet()) {
+            SimpleExpression subscriptionExpr = Restrictions.eq("sourceSub.subscriptionId", entry.getKey());
+            Junction subscriptionJunction =
+                    Restrictions.and(subscriptionExpr)
+                    .add(Restrictions.or(Restrictions.isNull("sourceEntitlement"),
+                                         Restrictions.eqOrIsNull("sourceEntitlement", entry.getValue())));
+            subIdMapCriteria.add(subscriptionJunction);
+        }
+
+        return currentSession()
+                .createCriteria(Pool.class)
+                .createAlias("sourceSubscription", "sourceSub")
+                .add(Restrictions.ge("quantity", 0L))
+                .add(Restrictions.gtProperty("consumed", "quantity"))
+                .add(Restrictions.or(subIdMapCriteria.toArray(exampleCriteria))).list();
+
     }
 
     @Transactional
@@ -467,6 +507,19 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         currentSession().refresh(pool, LockOptions.UPGRADE);
         getEntityManager().refresh(pool);
         return pool;
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Pool> lockAndLoad(Collection<String> ids) {
+
+        List<String> idsList = new ArrayList<String>(ids);
+        Collections.sort(idsList);
+        log.debug("Locking pools");
+        return getEntityManager()
+                .createQuery("SELECT p FROM Pool p WHERE id in :ids")
+                .setParameter("ids", idsList)
+                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+                .getResultList();
     }
 
     public List<ActivationKey> getActivationKeysForPool(Pool p) {
@@ -580,6 +633,20 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .add(Restrictions.and(Restrictions.isNotNull("ss.sourceStackId"),
                                   Restrictions.eq("ss.sourceStackId", stackId)));
         return (Pool) getCount.uniqueResult();
+    }
+
+    /**
+     * @param consumer
+     * @param stackIds
+     * @return Derived pools which exist for the given consumer and stack ids
+     */
+    public List<Pool> getSubPoolForStackIds(Consumer consumer, Collection stackIds) {
+        Criteria getPools = createSecureCriteria()
+                .createAlias("sourceStack", "ss")
+                .add(Restrictions.eq("ss.sourceConsumer", consumer))
+                .add(Restrictions.and(Restrictions.isNotNull("ss.sourceStackId"),
+                        Restrictions.in("ss.sourceStackId", stackIds)));
+        return (List<Pool>) getPools.list();
     }
 
     @SuppressWarnings("unchecked")
