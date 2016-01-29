@@ -36,7 +36,7 @@ module HTTP
       if ok?
         content
       else
-        raise HTTPClient::BadResponseError.new("unexpected response: #{header.inspect}")
+        raise HTTPClient::BadResponseError.new("unexpected response: #{inspect}")
       end
     end
   end
@@ -145,7 +145,7 @@ class JSONClient < HTTPClient
     end
     res = super
     if !res.ok? && @fail_fast
-      raise BadResponseError.new("Failed request: #{res.header.inspect}")
+      raise BadResponseError.new("Failed request: #{res.inspect}")
     end
     res
   end
@@ -448,7 +448,7 @@ module Candlepin
       def register_and_get_client(opts = {})
         res = register(opts)
         unless res.ok?
-          raise HTTPClient::BadResponseError.new("Could not register: #{res.header.inspect}")
+          raise HTTPClient::BadResponseError.new("Could not register: #{res.inspect}")
         end
         opts = @client_opts.dup
         opts.delete(:username)
@@ -597,7 +597,7 @@ module Candlepin
         res = export_consumer(delegated_opts)
 
         unless res.ok?
-          raise HTTPClient::BadResponseError.new("Could not fetch export: #{res.headers.inspect}")
+          raise HTTPClient::BadResponseError.new("Could not fetch export: #{res.inspect}")
         end
 
         File.open(opts[:export_file], "w") do |f|
@@ -619,7 +619,7 @@ module Candlepin
         res = regen_identity_certificate(opts)
 
         unless res.ok?
-          raise HTTPClient::BadResponseError.new("Could not register: #{res.header.inspect}")
+          raise HTTPClient::BadResponseError.new("Could not register: #{res.inspect}")
         end
         opts = @client_opts.dup
         opts.delete(:client_cert)
