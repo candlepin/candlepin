@@ -22,6 +22,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -67,6 +69,22 @@ public abstract class Principal implements Serializable, java.security.Principal
         String targetType = (target == null) ? "null" : target.getClass().getName();
         log.warn("Refused principal: '{}' access to: {}", getName(), targetType);
         return false;
+    }
+
+    public boolean canAccessAll(Collection targets, SubResource subResource, Access access) {
+        log.debug("{} principal checking for {} access to targets: {} sub-resource: {}", this.getClass()
+                .getName(), access, Arrays.toString(targets.toArray()), subResource);
+
+        if (hasFullAccess()) {
+            return true;
+        }
+
+        for (Object target : targets) {
+            if (!canAccess(target, subResource, access)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public abstract String getName();

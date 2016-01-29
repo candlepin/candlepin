@@ -69,6 +69,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -77,6 +78,7 @@ import org.candlepin.model.User;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.model.dto.PoolIdAndQuantity;
 import org.candlepin.pinsetter.tasks.EntitleByProductsJob;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -1405,8 +1407,6 @@ public class ConsumerResource {
      *
      * @param consumerUuid Consumer identifier to be entitled
      * @param poolIdString Entitlement pool id.
-     * @param email email address.
-     * @param emailLocale locale for email address.
      * @param async True if bind should be asynchronous, defaults to false.
      * @param entitleDateStr specific date to entitle by.
      * @return a Response object
@@ -1430,28 +1430,44 @@ public class ConsumerResource {
         @QueryParam("email_locale") String emailLocale,
         @QueryParam("async") @DefaultValue("false") boolean async,
         @QueryParam("entitle_date") String entitleDateStr,
-        @QueryParam("from_pool") List<String> fromPools) {
+        @QueryParam("from_pool") List<String> fromPools,
+        PoolIdAndQuantity[] poolQuantities,
+        @Context Principal principal) {
+
+        short parameters = 0;
 
         // Check that only one query param was set:
-        if (poolIdString != null && productIds != null && productIds.length > 0) {
+        boolean hasPoolQuantities = (poolQuantities != null && poolQuantities.length > 0);
+        if (hasPoolQuantities) {
+            parameters++;
+        }
+        if (poolIdString != null) {
+            parameters++;
+        }
+        if ((productIds != null && productIds.length > 0) || (fromPools != null && !fromPools.isEmpty()) ||
+                entitleDateStr != null) {
+            parameters++;
+        }
+        if (parameters > 1) {
             throw new BadRequestException(
                 i18n.tr("Cannot bind by multiple parameters."));
+        }
+
+        if (hasPoolQuantities) {
+            if(quantity != null) {
+                throw new BadRequestException(
+                        i18n.tr("Cannot specify a single quantity when binding a batch of exact pools."
+                                + " Please specify a quantity for each pool"));
+            }
+            else if (!async) {
+                throw new BadRequestException(
+                        i18n.tr("Batch bind can only be performed asynchronously"));
+            }
         }
 
         if (poolIdString == null && quantity != null) {
             throw new BadRequestException(
                 i18n.tr("Cannot specify a quantity when auto-binding."));
-        }
-
-        // doesn't make sense to bind by pool and a date.
-        if (poolIdString != null && entitleDateStr != null) {
-            throw new BadRequestException(
-                i18n.tr("Cannot bind by multiple parameters."));
-        }
-
-        if (fromPools != null && !fromPools.isEmpty() && poolIdString != null) {
-            throw new BadRequestException(
-                    i18n.tr("Cannot bind by multiple parameters."));
         }
 
         // TODO: really should do this in a before we get to this call
@@ -1488,6 +1504,25 @@ public class ConsumerResource {
             }
         }
 
+        if (hasPoolQuantities) {
+            Map<String, PoolIdAndQuantity> pqMap = new HashMap<String, PoolIdAndQuantity>();
+            for (PoolIdAndQuantity poolQuantity : poolQuantities) {
+                if (pqMap.containsKey(poolQuantity.getPoolId())) {
+                    pqMap.get(poolQuantity.getPoolId()).addQuantity(poolQuantity.getQuantity());
+                }
+                else {
+                    pqMap.put(poolQuantity.getPoolId(), poolQuantity);
+                }
+            }
+
+            List<Pool> pools = poolManager.find(pqMap.keySet());
+
+            if (!principal.canAccessAll(pools, SubResource.ENTITLEMENTS, Access.CREATE)) {
+                throw new ForbiddenException(i18n.tr("User {0} cannot access all pools.",
+                        principal.getName()));
+            }
+        }
+
         //
         // HANDLE ASYNC
         //
@@ -1496,6 +1531,9 @@ public class ConsumerResource {
 
             if (poolIdString != null) {
                 detail = EntitlerJob.bindByPool(poolIdString, consumer, quantity);
+            }
+            else if (hasPoolQuantities) {
+                detail = EntitlerJob.bindByPoolAndQuantities(consumer, poolQuantities);
             }
             else {
                 detail = EntitleByProductsJob.bindByProducts(productIds,
@@ -1513,7 +1551,7 @@ public class ConsumerResource {
         List<Entitlement> entitlements = null;
 
         if (poolIdString != null) {
-            entitlements = entitler.bindByPool(poolIdString, consumer, quantity);
+            entitlements = entitler.bindByPoolQuantity(consumer, poolIdString, quantity);
         }
         else {
             AutobindData autobindData = AutobindData.create(consumer).on(entitleDate)

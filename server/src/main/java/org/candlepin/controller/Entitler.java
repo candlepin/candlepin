@@ -52,7 +52,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -97,45 +96,38 @@ public class Entitler {
         this.productAdapter = productAdapter;
     }
 
-    public List<Entitlement> bindByPool(String poolId, String consumeruuid,
-        Integer quantity) {
+    public List<Entitlement> bindByPoolQuantities(String consumeruuid,
+            Map<String, Integer> poolIdAndQuantities) throws EntitlementRefusedException {
         Consumer c = consumerCurator.findByUuid(consumeruuid);
-        return bindByPool(poolId, c, quantity);
+        return bindByPoolQuantities(c, poolIdAndQuantities);
     }
 
-    public List<Entitlement> bindByPool(String poolId, Consumer consumer,
-        Integer quantity) {
-        log.info("Looking up pool to bind: " + poolId);
-        Pool pool = poolManager.find(poolId);
-        List<Entitlement> entitlementList = new LinkedList<Entitlement>();
-
-        if (pool == null) {
-            throw new BadRequestException(i18n.tr(
-                "Subscription pool {0} does not exist.", poolId));
-        }
-
-        if (log.isDebugEnabled()) {
-            log.debug("pool: id[" + pool.getId() + "], consumed[" +
-                pool.getConsumed() + "], qty [" + pool.getQuantity() + "]");
-        }
-
-        // Attempt to create an entitlement:
-        entitlementList.add(createEntitlementByPool(consumer, pool, quantity));
-        return entitlementList;
-    }
-
-    private Entitlement createEntitlementByPool(Consumer consumer, Pool pool,
-        Integer quantity) {
+    public List<Entitlement> bindByPoolQuantity(Consumer consumer, String poolId, Integer quantity) {
+        Map<String, Integer> poolMap = new HashMap<String, Integer>();
+        poolMap.put(poolId, quantity);
         try {
-            // Attempt to create an entitlement:
-            Entitlement e = poolManager.entitleByPool(consumer, pool, quantity);
-            log.debug("Created entitlement: " + e);
-            return e;
+            return bindByPoolQuantities(consumer, poolMap);
         }
         catch (EntitlementRefusedException e) {
-            // TODO: Could be multiple errors, but we'll just report the first one for now
+            // TODO: Could be multiple errors, but we'll just report the first
+            // one for now
+            Pool pool = poolCurator.find(poolId);
             throw new ForbiddenException(messageTranslator.poolErrorToMessage(pool,
-                    e.getResult().getErrors().get(0)));
+                    e.getResults().get(poolId).getErrors().get(0)));
+        }
+    }
+
+    public List<Entitlement> bindByPoolQuantities(Consumer consumer,
+            Map<String, Integer> poolIdAndQuantities) throws EntitlementRefusedException {
+
+        // Attempt to create entitlements:
+        try {
+            List<Entitlement> entitlementList = poolManager.entitleByPools(consumer, poolIdAndQuantities);
+            log.debug("Created {} entitlements.", entitlementList.size());
+            return entitlementList;
+        }
+        catch (IllegalArgumentException e) {
+            throw new BadRequestException(e.getMessage(), e);
         }
     }
 
@@ -148,7 +140,7 @@ public class Entitler {
         catch (EntitlementRefusedException e) {
             // TODO: Could be multiple errors, but we'll just report the first one for now:
             throw new ForbiddenException(messageTranslator.entitlementErrorToMessage(ent,
-                    e.getResult().getErrors().get(0)));
+                    e.getResults().values().iterator().next().getErrors().get(0)));
         }
     }
 
@@ -250,7 +242,7 @@ public class Entitler {
                 productId = data.getProductIds()[0];
             }
             throw new ForbiddenException(messageTranslator.productErrorToMessage(productId,
-                    e.getResult().getErrors().get(0)));
+                    e.getResults().values().iterator().next().getErrors().get(0)));
         }
     }
 
@@ -414,7 +406,8 @@ public class Entitler {
             // We will debug log the message, but returning does not seem to add
             // to the process
             if (log.isDebugEnabled()) {
-                String message = e.getResult().getErrors().get(0).getResourceKey();
+                String message = e.getResults().values().iterator().next().getErrors().get(0)
+                        .getResourceKey();
                 log.debug("consumer dry-run " + consumer.getUuid() + ": " + message);
             }
         }

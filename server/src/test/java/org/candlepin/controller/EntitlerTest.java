@@ -112,7 +112,7 @@ public class EntitlerTest {
         when(pm.find(eq(poolid))).thenReturn(pool);
         when(pm.entitleByPool(eq(consumer), eq(pool), eq(1))).thenReturn(ent);
 
-        List<Entitlement> ents = entitler.bindByPool(poolid, "abcd1234", 1);
+        List<Entitlement> ents = entitler.bindByPoolString(poolid, "abcd1234", 1);
         assertNotNull(ents);
         assertEquals(ent, ents.get(0));
     }
@@ -126,7 +126,7 @@ public class EntitlerTest {
         when(pm.find(eq(poolid))).thenReturn(pool);
         when(pm.entitleByPool(eq(consumer), eq(pool), eq(1))).thenReturn(ent);
 
-        List<Entitlement> ents = entitler.bindByPool(poolid, consumer, 1);
+        List<Entitlement> ents = entitler.bindByPoolOBJECT(poolid, consumer, 1);
         assertNotNull(ents);
         assertEquals(ent, ents.get(0));
     }
@@ -153,7 +153,7 @@ public class EntitlerTest {
         String poolid = "foo";
         Consumer c = null; // keeps me from casting null
         when(pm.find(eq(poolid))).thenReturn(null);
-        entitler.bindByPool(poolid, c, 10);
+        entitler.bindByPoolOBJECT(poolid, c, 10);
     }
 
     @Test(expected = ForbiddenException.class)
@@ -238,7 +238,7 @@ public class EntitlerTest {
             when(pool.getId()).thenReturn(poolid);
             when(pm.find(eq(poolid))).thenReturn(pool);
             when(pm.entitleByPool(eq(consumer), eq(pool), eq(1))).thenThrow(ere);
-            entitler.bindByPool(poolid, consumer, 1);
+            entitler.bindByPoolOBJECT(poolid, consumer, 1);
         }
         catch (EntitlementRefusedException e) {
             fail(msg + ": threw unexpected error");

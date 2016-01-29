@@ -14,15 +14,19 @@
  */
 package org.candlepin.test;
 
+import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.pool.PoolHelper;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -31,9 +35,8 @@ import java.util.List;
 public class EnforcerForTesting implements Enforcer {
 
     @Override
-    public PoolHelper postEntitlement(
-            Consumer consumer, PoolHelper postEntHelper, Entitlement ent) {
-        return postEntHelper;
+    public void postEntitlement(PoolManager manager, Consumer consumer, Map<String, Entitlement> ent,
+            List<Pool> subPoolsForStackIds) {
     }
 
     @Override
@@ -52,14 +55,28 @@ public class EnforcerForTesting implements Enforcer {
         return new PreUnbindHelper(null);
     }
 
-    public PoolHelper postUnbind(Consumer consumer, PoolHelper postEntHelper,
+    @Override
+    public void postUnbind(Consumer consumer, PoolManager poolManager,
             Entitlement ent) {
-        return postEntHelper;
     }
 
     @Override
     public List<Pool> filterPools(Consumer consumer, List<Pool> pools,
         boolean showAll) {
         return pools;
+    }
+
+    @Override
+    public Map<String, ValidationResult> preEntitlement(Consumer consumer,
+            Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Map<String, ValidationResult> preEntitlement(Consumer consumer, Consumer host,
+            Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
