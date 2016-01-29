@@ -141,7 +141,7 @@ module HostedTest
     if is_hosted?
       ensure_hostedtest_resource
       delete_hostedtest_subscription(pool.subscriptionId)
-      @cp.refresh_pools(pool['owner']['key'], true)
+      @cp.refresh_pools(pool['owner']['key'])
     else
       @cp.delete_pool(pool.id)
     end
