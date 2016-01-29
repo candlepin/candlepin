@@ -1586,8 +1586,11 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :owner)
 
+        # HTTPClient is a little quirky here.  It does not expect
+        # a PUT without a body, so we need to provide a dummy body.
         put_async("/owners/#{opts[:owner]}/subscriptions",
-          :query => opts.slice(:auto_create_owner, :lazy_regen))
+          :query => opts.slice(:auto_create_owner, :lazy_regen),
+          :body => nil)
       end
 
       # Same as refresh_pools_async but just block before returning
