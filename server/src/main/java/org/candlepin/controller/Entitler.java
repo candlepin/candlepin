@@ -47,6 +47,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -73,7 +74,7 @@ public class Entitler {
     private PoolCurator poolCurator;
     private ProductCurator productCurator;
     private ProductServiceAdapter productAdapter;
-    private long maxDevLifeDays = 90;
+    private int maxDevLifeDays = 90;
     final String DEFAULT_DEV_SLA = "Self-Service";
 
     @Inject
@@ -252,13 +253,17 @@ public class Entitler {
         }
     }
 
-    private long getPoolInterval(Product prod) {
-        long interval = maxDevLifeDays;
-        String prodThenString = prod.getAttributeValue("expires_after");
-        if (prodThenString != null && Long.parseLong(prodThenString) < maxDevLifeDays) {
-            interval = Long.parseLong(prodThenString);
+    private Date getEndDate(Product prod, Date startTime) {
+        int interval = maxDevLifeDays;
+        String prodExp = prod.getAttributeValue("expires_after");
+        if (prodExp != null &&  Integer.parseInt(prodExp) < maxDevLifeDays) {
+            interval = Integer.parseInt(prodExp);
         }
-        return 1000 * 60 * 60 * 24 * interval;
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(startTime);
+        cal.add(Calendar.DAY_OF_YEAR, interval);
+
+        return cal.getTime();
     }
 
     /**
@@ -278,7 +283,7 @@ public class Entitler {
         Product skuProduct = devProducts.getSku();
 
         Date startDate = consumer.getCreated();
-        Date endDate = new Date(startDate.getTime() + getPoolInterval(skuProduct));
+        Date endDate = getEndDate(skuProduct, startDate);
         Pool p = new Pool(consumer.getOwner(), skuProduct, devProducts.getProvided(), 1L, startDate,
                 endDate, "", "", "");
         log.info("Created development pool with SKU " + skuProduct.getId());
