@@ -343,6 +343,31 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
+     * @param updatedConsumer updated Consumer values.
+     * @return Updated consumers
+     */
+    @Transactional
+    public Consumer updateNoFlush(Consumer updatedConsumer) {
+        Consumer existingConsumer = find(updatedConsumer.getId());
+        if (existingConsumer == null) {
+            return create(updatedConsumer);
+        }
+
+        // TODO: Are any of these read-only?
+        existingConsumer.setEntitlements(entitlementCurator
+            .bulkUpdate(updatedConsumer.getEntitlements()));
+        Map<String, String> newFacts = filterAndVerifyFacts(updatedConsumer);
+        if (factsChanged(newFacts, existingConsumer.getFacts())) {
+            existingConsumer.setFacts(newFacts);
+        }
+        existingConsumer.setName(updatedConsumer.getName());
+        existingConsumer.setOwner(updatedConsumer.getOwner());
+        existingConsumer.setType(updatedConsumer.getType());
+        existingConsumer.setUuid(updatedConsumer.getUuid());
+
+        return existingConsumer;
+    }
+    /**
      * Modifies the last check in and persists the entity. Make sure that the data
      * is refreshed before using this method.
      * @param consumer the consumer to update
