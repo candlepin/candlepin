@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.49.10
+Version: 0.9.49.11
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,10 @@ fi
 
 
 %changelog
+* Mon Feb 01 2016 Alex Wood <awood@redhat.com> 0.9.49.11-1
+- Implementation of revokeEntitlements(List) to improve speed of Manifest
+  Import in Standlone Mode. (fnguyen@redhat.com)
+
 * Wed Jan 27 2016 Alex Wood <awood@redhat.com> 0.9.49.10-1
 - 1301812: Fixed an issue with event generation for stack derived pools
   (crog@redhat.com)
