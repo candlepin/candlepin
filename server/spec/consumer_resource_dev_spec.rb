@@ -66,4 +66,19 @@ describe 'Consumer Dev Resource' do
     return entitlements[0]
   end
 
+  it 'should allow sub-man-gui process for auto-bind' do
+    pending("candlepin running in standalone mode") if not is_hosted?
+
+    pools = @consumer.autobind_dryrun()
+    pools.length.should == 1
+    ents = @consumer.consume_pool(pools[0].pool.id)
+    ents.length.should == 1
+    ent_pool = ents[0].pool
+    ent_pool.type.should == "DEVELOPMENT"
+    ent_pool.product.id.should == "dev_product"
+    ent_pool.providedProducts.length.should == 2
+    ent_pool.id.should == pools[0].pool.id
+  end
+
+
 end

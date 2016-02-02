@@ -115,6 +115,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -514,9 +515,18 @@ public class OwnerResource {
     public Set<String> ownerServiceLevels(
         @PathParam("owner_key") @Verify(value = Owner.class,
         subResource = SubResource.SERVICE_LEVELS) String ownerKey,
+        @Context Principal principal,
         @QueryParam("exempt") @DefaultValue("false") String exempt) {
         Owner owner = findOwner(ownerKey);
 
+        if (principal.getType().equals("consumer")) {
+            Consumer c = consumerCurator.findByUuid(principal.getName());
+            if (c.isDev()) {
+                Set<String> result = new HashSet<String>();
+                result.add("");
+                return result;
+            }
+        }
         // test is on the string "true" and is case insensitive.
         return poolManager.retrieveServiceLevelsForOwner(owner,
             Boolean.parseBoolean(exempt));

@@ -377,9 +377,29 @@ public class Entitler {
         List<PoolQuantity> result = new ArrayList<PoolQuantity>();
         try {
             Owner owner = consumer.getOwner();
+            if (consumer.isDev()) {
+                if (config.getBoolean(ConfigProperties.STANDALONE) ||
+                        !poolCurator.hasActiveEntitlementPools(consumer.getOwner(), null)) {
+                    throw new ForbiddenException(i18n.tr(
+                            "Development units may only be used on hosted servers" +
+                            " and with orgs that have active subscriptions."));
+                }
 
-            result = poolManager.getBestPools(
-                consumer, null, null, owner, serviceLevelOverride, null);
+                // Look up the dev pool for this consumer, and if not found
+                // create one. If a dev pool already exists, remove it and
+                // create a new one.
+                String sku = consumer.getFact("dev_sku");
+                Pool devPool = poolCurator.findDevPool(consumer);
+                if (devPool != null) {
+                    poolManager.deletePool(devPool);
+                }
+                devPool = poolManager.createPool(assembleDevPool(consumer, sku));
+                result.add(new PoolQuantity(devPool, 1));
+            }
+            else {
+                result = poolManager.getBestPools(
+                    consumer, null, null, owner, serviceLevelOverride, null);
+            }
             log.debug("Created Pool Quantity list: " + result);
         }
         catch (EntitlementRefusedException e) {

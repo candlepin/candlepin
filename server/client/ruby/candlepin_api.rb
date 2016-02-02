@@ -892,7 +892,7 @@ class Candlepin
     delete("/consumers/#{consumer_id}/entitlements/pool/#{pool_id}")
   end
 
-  def autobind_dryrun(consumer_id, service_level=nil)
+  def autobind_dryrun(consumer_id=nil, service_level=nil)
     consumer_id ||= @uuid
     query = "/consumers/#{consumer_id}/entitlements/dry-run"
     query << "?service_level=#{service_level}" if service_level
