@@ -88,10 +88,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class X509CRLEntryStream implements Closeable, Iterator<X509CRLEntryObject> {
     private InputStream crlStream;
 
-    /* Long definite lengths can go up to 2^1008 - 1.  Integers max out at 2.1 billion
-     * which translates to about 2GB.  A CRL with around 1.5 million entries is about
-     * 90MB so if we end up with any sequences over 2GB, we are in real trouble. */
-    private Integer revokedSeqBytes;
+    private int revokedSeqBytes;
     private AtomicInteger count;
 
     /**
@@ -167,6 +164,14 @@ public class X509CRLEntryStream implements Closeable, Iterator<X509CRLEntryObjec
             tagNo = readTagNumber(s, tag, count);
         }
 
+        if (tagNo != SEQUENCE) {
+            // If we aren't at a sequence, then the CRL is empty and we are either
+            // at the crlExtensions or if there are no extensions, at the
+            // signatureAlgorithm
+            readLength(s, count);
+            return 0;
+        }
+
         // Return the length of the revokedCertificates sequence.  We need to
         // track the bytes we read and read no more than this length to prevent
         // decoding errors.
@@ -177,7 +182,16 @@ public class X509CRLEntryStream implements Closeable, Iterator<X509CRLEntryObjec
         try {
             // Strip the tag for the revokedCertificate entry
             int tag = readTag(crlStream, count);
-            readTagNumber(crlStream, tag, count);
+            int tagNo = readTagNumber(crlStream, tag, count);
+
+            if (tagNo == OBJECT_IDENTIFIER) {
+                // If our tag is an OID, it means we're in an empty CRL with no
+                // extensions.  We could potentially detect this by looking at the upcoming
+                // tag in hasNext(), but that screws up the stream for X509CRLStreamWriter because
+                // it leaves the stream in the middle of a TLV.
+                throw new IllegalStateException("v1 CRLs with zero entries are unsupported." +
+                    "  Please use a v2 CRL.");
+            }
 
             int entryLength = readLength(crlStream, count);
 
@@ -190,7 +204,7 @@ public class X509CRLEntryStream implements Closeable, Iterator<X509CRLEntryObjec
             writeLength(reconstructed, entryLength);
             reconstructed.write(entry);
 
-            /* NB: This BouncyCastle method is very slow.  If we just read the serial number
+            /* NB: This BouncyCastle method is a bit slow.  If we just read the serial number
              * alone out of the sequence, we can loop through 2 million entries in 500 ms.
              * Using this method takes around 2300 ms.  But we need the entire
              * X509CRLEntryObject for the X509CRLStreamWriter, so we're kind of stuck

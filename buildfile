@@ -130,13 +130,6 @@ BOUNCYCASTLE = group('bcmail-jdk16', 'bcprov-jdk16',
                      :under => 'org.bouncycastle',
                      :version => '1.46')
 
-# Classes to generate ad-hoc X509 certs and CRLs
-# Beginning with 1.47 many of the classes in this artifact move to bcpkix
-# so any upgrade to Bouncy Castle will need to change the artifact name
-BOUNCYCASTLE_TESTING = group('bcmail-jdk15on',
-                             :under => 'org.bouncycastle',
-                             :version => '1.46')
-
 SERVLET = 'javax.servlet:servlet-api:jar:2.5'
 
 GUICE =  [group('guice-assistedinject', 'guice-multibindings',
@@ -463,7 +456,6 @@ define "candlepin" do
       JUKITO,
       HSQLDB,
       LIQUIBASE_SLF4J,
-      BOUNCYCASTLE_TESTING,
     ])
     test.using(:java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ])
 

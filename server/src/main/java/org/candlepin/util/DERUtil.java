@@ -202,7 +202,6 @@ public class DERUtil {
             // since indefinite length formats are forbidden in DER.
             throw new IOException("Indefinite length encoding detected." +
                 "  Check that input is DER and not BER/CER.");
-            // return -1;
         }
 
         if (length > 127) {
@@ -210,6 +209,15 @@ public class DERUtil {
 
             // Note: The invalid long form "0xff" (see X.690 8.1.3.5c) will be caught here
             if (size > 4) {
+                /* Long definite lengths can go up to 2^1008 - 1 but since we are storing
+                 * length in an integer, we can only store lengths up to 2^31 - 1 (the maximum
+                 * for a Java integer).
+                 *
+                 * ASN1 lengths use the last 7 bits of subsequent octets to encode the length value
+                 * for long form lengths.  Therefore, a 4 byte length translates to 2^(8*3) maximum
+                 * or around 16 million bytes of data but a 5 byte length is 2^(8*4)
+                 * and larger than what an int can handle.
+                 */
                 throw new IOException("DER length more than 4 bytes: " + size);
             }
 
