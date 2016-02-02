@@ -21,7 +21,6 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
@@ -69,52 +68,12 @@ public class DefaultProductServiceAdapterTest {
     }
 
     @Test
-    public void productById() {
-        // assert that the product returned by pc is unchanged
-        Owner o = mock(Owner.class);
-        Product p = mock(Product.class);
-        when(p.getId()).thenReturn(someid);
-        when(pc.lookupById(eq(o), eq(someid))).thenReturn(p);
-        assertEquals(p, dpsa.getProductById(o, someid));
-    }
-
-    @Test
     public void productsByIds() {
         Owner o = mock(Owner.class);
         List<String> ids = new ArrayList<String>();
         ids.add(someid);
         dpsa.getProductsByIds(o, ids);
         verify(pc).listAllByIds(eq(o), eq(ids));
-    }
-
-    @Test
-    public void getProducts() {
-        List<Product> prods = new ArrayList<Product>();
-        prods.add(mock(Product.class));
-        prods.add(mock(Product.class));
-        when(pc.listAll()).thenReturn(prods);
-        List<Product> result = dpsa.getProducts();
-        assertEquals(prods, result);
-    }
-
-    @Test
-    public void deleteProductWithCerts() {
-        Product p = mock(Product.class);
-        ProductCertificate cert = mock(ProductCertificate.class);
-        doNothing().when(pcc).delete(any(ProductCertificate.class));
-        doReturn(cert).when(pcc).findForProduct(eq(p));
-        dpsa.deleteProduct(p);
-        verify(pcc).delete(eq(cert));
-        verify(pc).delete(eq(p));
-    }
-
-    @Test
-    public void deleteProductNoCerts() {
-        Product p = mock(Product.class);
-        doReturn(null).when(pcc).findForProduct(eq(p));
-        dpsa.deleteProduct(p);
-        verify(pcc, never()).delete(any(ProductCertificate.class));
-        verify(pc).delete(eq(p));
     }
 
     @Test
@@ -139,19 +98,6 @@ public class DefaultProductServiceAdapterTest {
         ProductCertificate result = dpsa.getProductCertificate(p);
         assertNotNull(result);
         assertEquals(p, result.getProduct());
-    }
-
-    @Test
-    public void removeContent() {
-        Owner o = mock(Owner.class);
-        Product p = mock(Product.class);
-        Content c = mock(Content.class);
-        when(pc.lookupById(eq(o), eq(someid))).thenReturn(p);
-        when(cc.lookupById(eq(o), eq("cid"))).thenReturn(c);
-
-        dpsa.removeContent(o, someid, "cid");
-
-        verify(pc, atLeastOnce()).removeProductContent(eq(p), eq(c));
     }
 
     @Test

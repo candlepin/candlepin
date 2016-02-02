@@ -239,8 +239,6 @@ public class EnforcerTest extends DatabaseTestFixture {
         product.setAttribute(PRODUCT_CPULIMITED, "2");
         productCurator.create(product);
 
-        when(this.productAdapter.getProductById(owner, "a-product")).thenReturn(product);
-
         ValidationResult result = enforcer.preEntitlement(
             TestUtil.createConsumer(),
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 2,

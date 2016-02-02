@@ -1396,11 +1396,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         inheritedArchProduct.setContent(Collections.singleton(noArchContent));
         products.add(inheritedArchProduct);
 
-        when(productAdapter.getProductById(
-            eq(inheritedArchProduct.getOwner()),
-            eq(inheritedArchProduct.getId()))
-        ).thenReturn(inheritedArchProduct);
-
         setupEntitlements(ARCH_LABEL, "3.2");
 
         Set<X509ExtensionWrapper> extensions =
@@ -1775,9 +1770,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         consumer.setUuid("test-consumer");
         consumer.setFact("system.certificate_version", "3.2");
         consumer.setFact("uname.machine", "x86_64");
-
-        when(productAdapter.getProductById(eq(extremeProduct.getOwner()), eq(extremeProduct.getId())))
-            .thenReturn(extremeProduct);
 
         certServiceAdapter.prepareV3Extensions(entitlement, "prefix", null);
         Set<X509ByteExtensionWrapper> byteExtensions =
