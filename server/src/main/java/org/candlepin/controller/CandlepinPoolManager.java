@@ -1245,6 +1245,13 @@ public class CandlepinPoolManager implements PoolManager {
             return;
         }
 
+        List<Pool> poolsToLock = new ArrayList<Pool>();
+        for (Entitlement ent: entsToRevoke) {
+            poolsToLock.add(ent.getPool());
+        }
+
+        poolCurator.lock(poolsToLock);
+
         log.info("Batch revoking entitlements: " + entsToRevoke.size());
 
         entsToRevoke =  new ArrayList<Entitlement>(entsToRevoke);
@@ -1254,6 +1261,8 @@ public class CandlepinPoolManager implements PoolManager {
         for (Pool pool : poolsToDelete) {
             entsToRevoke.addAll(pool.getEntitlements());
         }
+
+        poolCurator.lock(poolsToDelete);
 
         for (Entitlement ent : entsToRevoke) {
             //We need to trigger lazy load of provided products
