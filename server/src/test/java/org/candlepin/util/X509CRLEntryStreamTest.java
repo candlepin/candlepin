@@ -14,22 +14,26 @@
  */
 package org.candlepin.util;
 
+import static org.candlepin.test.MatchesPattern.matchesPattern;
 import static org.junit.Assert.*;
 
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.io.FileUtils;
 import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.CRLNumber;
 import org.bouncycastle.asn1.x509.CRLReason;
+import org.bouncycastle.asn1.x509.X509Extension;
 import org.bouncycastle.cert.X509CRLHolder;
 import org.bouncycastle.cert.X509v2CRLBuilder;
-import org.bouncycastle.cert.jcajce.JcaX509CRLConverter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.util.io.Streams;
+import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.BufferedInputStream;
@@ -53,6 +57,9 @@ public class X509CRLEntryStreamTest {
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     private File derFile;
     private File pemFile;
@@ -109,14 +116,68 @@ public class X509CRLEntryStreamTest {
     }
 
     @Test
-    public void testCRLwithoutUpdateTime() throws Exception {
+    public void testIterateOverEmptyCrl() throws Exception {
         X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(issuer, new Date());
-        crlBuilder.addCRLEntry(new BigInteger("100"), new Date(), CRLReason.unspecified);
+
+        crlBuilder.addExtension(X509Extension.authorityKeyIdentifier, false,
+            new AuthorityKeyIdentifierStructure(keyPair.getPublic()));
+        crlBuilder.addExtension(X509Extension.cRLNumber, false, new CRLNumber(new BigInteger("127")));
+
         X509CRLHolder holder = crlBuilder.build(signer);
-        X509CRL crl = new JcaX509CRLConverter().setProvider(BC).getCRL(holder);
 
         File noUpdateTimeCrl = new File(folder.getRoot(), "test.crl");
-        FileUtils.writeByteArrayToFile(noUpdateTimeCrl, crl.getEncoded());
+        FileUtils.writeByteArrayToFile(noUpdateTimeCrl, holder.getEncoded());
+
+        X509CRLEntryStream stream = new X509CRLEntryStream(noUpdateTimeCrl);
+        try {
+            Set<BigInteger> streamedSerials = new HashSet<BigInteger>();
+            while (stream.hasNext()) {
+                streamedSerials.add(stream.next().getSerialNumber());
+            }
+
+            assertEquals(0, streamedSerials.size());
+        }
+        finally {
+            stream.close();
+        }
+    }
+
+    @Test
+    public void testIterateOverEmptyCrlWithNoExtensions() throws Exception {
+        X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(issuer, new Date());
+
+        X509CRLHolder holder = crlBuilder.build(signer);
+
+        File noUpdateTimeCrl = new File(folder.getRoot(), "test.crl");
+        FileUtils.writeByteArrayToFile(noUpdateTimeCrl, holder.getEncoded());
+
+        X509CRLEntryStream stream = new X509CRLEntryStream(noUpdateTimeCrl);
+
+        thrown.expect(IllegalStateException.class);
+        thrown.expectMessage(matchesPattern("v1.*"));
+
+        try {
+            while (stream.hasNext()) {
+                stream.next();
+            }
+        }
+        finally {
+            stream.close();
+        }
+    }
+
+    @Test
+    public void testCRLwithoutUpdateTime() throws Exception {
+        X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(issuer, new Date());
+        crlBuilder.addExtension(X509Extension.authorityKeyIdentifier, false,
+            new AuthorityKeyIdentifierStructure(keyPair.getPublic()));
+        crlBuilder.addExtension(X509Extension.cRLNumber, false, new CRLNumber(new BigInteger("127")));
+        crlBuilder.addCRLEntry(new BigInteger("100"), new Date(), CRLReason.unspecified);
+
+        X509CRLHolder holder = crlBuilder.build(signer);
+
+        File noUpdateTimeCrl = new File(folder.getRoot(), "test.crl");
+        FileUtils.writeByteArrayToFile(noUpdateTimeCrl, holder.getEncoded());
 
         X509CRLEntryStream stream = new X509CRLEntryStream(noUpdateTimeCrl);
         try {

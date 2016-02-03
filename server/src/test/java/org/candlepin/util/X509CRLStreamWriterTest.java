@@ -18,6 +18,7 @@ import static org.candlepin.test.MatchesPattern.matchesPattern;
 import static org.junit.Assert.*;
 
 import org.apache.commons.io.FileUtils;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.DERInteger;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERTaggedObject;
@@ -103,13 +104,13 @@ public class X509CRLStreamWriterTest {
         return crlBuilder;
     }
 
-    private X509CRL createCRL() throws Exception {
+    private X509CRLHolder createCRL() throws Exception {
         X509v2CRLBuilder crlBuilder = createCRLBuilder();
         X509CRLHolder holder = crlBuilder.build(signer);
-        return new JcaX509CRLConverter().setProvider(BC).getCRL(holder);
+        return holder;
     }
 
-    private File writeCRL(X509CRL crl) throws Exception {
+    private File writeCRL(X509CRLHolder crl) throws Exception {
         File crlToChange = new File(folder.getRoot(), "test.crl");
         FileUtils.writeByteArrayToFile(crlToChange, crl.getEncoded());
         return crlToChange;
@@ -121,6 +122,8 @@ public class X509CRLStreamWriterTest {
     }
 
     private X509CRL readCRL(PublicKey signatureKey) throws Exception {
+        // We could return a X509CRLHolder but that class isn't as fully featured as the built in
+        // X509CRL.
         InputStream changedStream = new BufferedInputStream(new FileInputStream(outfile));
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         X509CRL changedCrl = (X509CRL) cf.generateCRL(changedStream);
@@ -200,10 +203,8 @@ public class X509CRLStreamWriterTest {
         X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(issuer, new Date());
         crlBuilder.addCRLEntry(new BigInteger("100"), new Date(), CRLReason.unspecified);
         X509CRLHolder holder = crlBuilder.build(signer);
-        X509CRL crl = new JcaX509CRLConverter().setProvider(BC).getCRL(holder);
 
-        File crlToChange = new File(folder.getRoot(), "test.crl");
-        FileUtils.writeByteArrayToFile(crlToChange, crl.getEncoded());
+        File crlToChange = writeCRL(holder);
 
         File outfile = new File(folder.getRoot(), "new.crl");
         X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
@@ -241,6 +242,104 @@ public class X509CRLStreamWriterTest {
         }
 
         assertEquals(expected, discoveredSerials);
+    }
+
+    @Test
+    public void testAddEntryToEmptyCRL() throws Exception {
+        X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(issuer, new Date());
+        crlBuilder.addExtension(X509Extension.authorityKeyIdentifier, false,
+            new AuthorityKeyIdentifierStructure(keyPair.getPublic()));
+        /* With a CRL number of 127, incrementing it should cause the number of bytes in the length
+         * portion of the TLV to increase by one.*/
+        crlBuilder.addExtension(X509Extension.cRLNumber, false, new CRLNumber(new BigInteger("127")));
+        X509CRLHolder holder = crlBuilder.build(signer);
+
+        File crlToChange = writeCRL(holder);
+
+        File outfile = new File(folder.getRoot(), "new.crl");
+        X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
+            (RSAPrivateKey) keyPair.getPrivate());
+
+        // Add enough items to cause the number of length bytes to change
+        Set<BigInteger> newSerials = new HashSet<BigInteger>(Arrays.asList(
+            new BigInteger("2358215310"),
+            new BigInteger("7231352433"),
+            new BigInteger("8233181205"),
+            new BigInteger("1455615868"),
+            new BigInteger("4323487764"),
+            new BigInteger("6673256679")
+        ));
+
+        for (BigInteger i : newSerials) {
+            stream.add(i, new Date(), CRLReason.privilegeWithdrawn);
+        }
+
+        stream.preScan(crlToChange).lock();
+        OutputStream o = new BufferedOutputStream(new FileOutputStream(outfile));
+        stream.write(o);
+        o.close();
+
+        X509CRL changedCrl = readCRL();
+
+        Set<BigInteger> discoveredSerials = new HashSet<BigInteger>();
+
+        for (X509CRLEntry entry : changedCrl.getRevokedCertificates()) {
+            discoveredSerials.add(entry.getSerialNumber());
+        }
+
+        X509CRL originalCrl = new JcaX509CRLConverter().setProvider(BC).getCRL(holder);
+
+        assertEquals(newSerials, discoveredSerials);
+        assertEquals(originalCrl.getIssuerX500Principal(), changedCrl.getIssuerX500Principal());
+
+        ASN1ObjectIdentifier crlNumberOID = X509Extension.cRLNumber;
+        byte[] oldCrlNumberBytes = originalCrl.getExtensionValue(crlNumberOID.getId());
+        byte[] newCrlNumberBytes = changedCrl.getExtensionValue(crlNumberOID.getId());
+
+        DEROctetString oldOctet = (DEROctetString) DERTaggedObject.fromByteArray(oldCrlNumberBytes);
+        DEROctetString newOctet = (DEROctetString) DERTaggedObject.fromByteArray(newCrlNumberBytes);
+        DERInteger oldNumber = (DERInteger) DERTaggedObject.fromByteArray(oldOctet.getOctets());
+        DERInteger newNumber = (DERInteger) DERTaggedObject.fromByteArray(newOctet.getOctets());
+        assertEquals(oldNumber.getValue().add(BigInteger.ONE), newNumber.getValue());
+
+        ASN1ObjectIdentifier authorityKeyOID = X509Extension.authorityKeyIdentifier;
+        byte[] oldAuthorityKeyId = originalCrl.getExtensionValue(authorityKeyOID.getId());
+        byte[] newAuthorityKeyId = changedCrl.getExtensionValue(authorityKeyOID.getId());
+        assertArrayEquals(oldAuthorityKeyId, newAuthorityKeyId);
+    }
+
+    @Test
+    public void testAddEntryToEmptyCRLWithNoExtensions() throws Exception {
+        X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(issuer, new Date());
+        X509CRLHolder holder = crlBuilder.build(signer);
+
+        File crlToChange = writeCRL(holder);
+
+        File outfile = new File(folder.getRoot(), "new.crl");
+        X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
+            (RSAPrivateKey) keyPair.getPrivate());
+
+        // Add enough items to cause the number of length bytes to change
+        Set<BigInteger> newSerials = new HashSet<BigInteger>(Arrays.asList(
+            new BigInteger("2358215310"),
+            new BigInteger("7231352433"),
+            new BigInteger("8233181205"),
+            new BigInteger("1455615868"),
+            new BigInteger("4323487764"),
+            new BigInteger("6673256679")
+        ));
+
+        for (BigInteger i : newSerials) {
+            stream.add(i, new Date(), CRLReason.privilegeWithdrawn);
+        }
+
+        thrown.expect(IllegalStateException.class);
+        thrown.expectMessage(matchesPattern("v1.*"));
+
+        stream.preScan(crlToChange).lock();
+        OutputStream o = new BufferedOutputStream(new FileOutputStream(outfile));
+        stream.write(o);
+        o.close();
     }
 
     @Test
@@ -300,9 +399,8 @@ public class X509CRLStreamWriterTest {
         X509v2CRLBuilder crlBuilder = createCRLBuilder();
         crlBuilder.addCRLEntry(new BigInteger("101"), new Date(), CRLReason.unspecified);
         X509CRLHolder holder = crlBuilder.build(signer);
-        X509CRL crl = new JcaX509CRLConverter().setProvider(BC).getCRL(holder);
 
-        File crlToChange = writeCRL(crl);
+        File crlToChange = writeCRL(holder);
 
         CRLEntryValidator validator = new CRLEntryValidator() {
             @Override
@@ -336,8 +434,8 @@ public class X509CRLStreamWriterTest {
 
     @Test
     public void testModifyUpdatedTime() throws Exception {
-        X509CRL crl = createCRL();
-        File crlToChange = writeCRL(crl);
+        X509CRLHolder holder = createCRL();
+        File crlToChange = writeCRL(holder);
 
         Thread.sleep(1000);
 
@@ -349,8 +447,9 @@ public class X509CRLStreamWriterTest {
         o.close();
 
         X509CRL changedCrl = readCRL();
+        X509CRL originalCrl = new JcaX509CRLConverter().setProvider(BC).getCRL(holder);
 
-        assertTrue("Error: CRL thisUpdate field unmodified", crl.getThisUpdate()
+        assertTrue("Error: CRL thisUpdate field unmodified", originalCrl.getThisUpdate()
             .before(changedCrl.getThisUpdate()));
     }
 
@@ -363,9 +462,8 @@ public class X509CRLStreamWriterTest {
         X509v2CRLBuilder crlBuilder = createCRLBuilder();
         crlBuilder.setNextUpdate(nextUpdate);
         X509CRLHolder holder = crlBuilder.build(signer);
-        X509CRL crl = new JcaX509CRLConverter().setProvider(BC).getCRL(holder);
 
-        File crlToChange = writeCRL(crl);
+        File crlToChange = writeCRL(holder);
 
         Thread.sleep(1000);
 
@@ -377,9 +475,10 @@ public class X509CRLStreamWriterTest {
         o.close();
 
         X509CRL changedCrl = readCRL();
+        X509CRL originalCrl = new JcaX509CRLConverter().setProvider(BC).getCRL(holder);
 
         assertTrue("Error: CRL nextUpdate field unmodified",
-            crl.getNextUpdate().before(changedCrl.getNextUpdate()));
+            originalCrl.getNextUpdate().before(changedCrl.getNextUpdate()));
     }
 
     @Test
@@ -392,9 +491,8 @@ public class X509CRLStreamWriterTest {
 
         X509v2CRLBuilder crlBuilder = createCRLBuilder();
         X509CRLHolder holder = crlBuilder.build(otherSigner);
-        X509CRL crl = new JcaX509CRLConverter().setProvider(BC).getCRL(holder);
 
-        File crlToChange = writeCRL(crl);
+        File crlToChange = writeCRL(holder);
 
         X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
             (RSAPrivateKey) keyPair.getPrivate());
@@ -453,9 +551,8 @@ public class X509CRLStreamWriterTest {
             .build(keyPair.getPrivate());
 
         X509CRLHolder holder = crlBuilder.build(sha1Signer);
-        X509CRL crl = new JcaX509CRLConverter().setProvider(BC).getCRL(holder);
 
-        File crlToChange = writeCRL(crl);
+        File crlToChange = writeCRL(holder);
 
         X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
             (RSAPrivateKey) keyPair.getPrivate());
