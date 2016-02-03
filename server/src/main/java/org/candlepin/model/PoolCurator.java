@@ -771,6 +771,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         filters.addAttributeFilter(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
 
         Criteria criteria =  currentSession().createCriteria(Pool.class);
+        criteria.add(Restrictions.eq("owner", consumer.getOwner()));
         filters.applyTo(criteria);
         criteria.setMaxResults(1).uniqueResult();
         return (Pool) criteria.uniqueResult();

@@ -1076,7 +1076,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         assertEquals(expected, this.poolCurator.getAllKnownProductIdsForOwner(owners.get(0)));
 
-
         expected = new HashSet<String>();
         expected.add("p2");
         expected.add("dp2");
@@ -1240,9 +1239,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testLookupDevPoolForConsumer() throws Exception {
+        // Make sure that multiple pools exist.
+        createPool(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
+                TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
         Pool pool = createPool(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
             TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
         pool.setAttribute("requires_consumer", consumer.getUuid());
+        pool.setAttribute("another_attr", "20");
         pool.setAttribute("dev_pool", "true");
         poolCurator.create(pool);
 
@@ -1253,6 +1256,9 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testDevPoolForConsumerNotFoundReturnsNullWhenNoMatchOnConsumer() throws Exception {
+        // Make sure that multiple pools exist.
+        createPool(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
+                TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
         Pool pool = createPool(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
             TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
         pool.setAttribute("requires_consumer", "does-not-exist");
