@@ -55,6 +55,7 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -563,8 +564,10 @@ public class EntitlerTest {
         when(productCurator.createOrUpdate(eq(p3))).thenReturn(p3);
 
         Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
-        long intervalMillis = created.getEndDate().getTime() - created.getStartDate().getTime();
-        assertEquals(intervalMillis, 1000 * 60 * 60 * 24 * Long.parseLong("47"));
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(created.getStartDate());
+        cal.add(Calendar.DAY_OF_YEAR, 47);
+        assertEquals(created.getEndDate(), cal.getTime());
         assertEquals("true", created.getAttributeValue(Pool.DEVELOPMENT_POOL_ATTRIBUTE));
         assertEquals(devSystem.getUuid(), created.getAttributeValue(Pool.REQUIRES_CONSUMER_ATTRIBUTE));
         assertEquals(p1.getId(), created.getProductId());
