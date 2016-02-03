@@ -204,7 +204,7 @@ public class CrlFileUtil {
             // Note: This will break if we ever stop using RSA keys
             PrivateKey key = this.pkiReader.getCaKey();
             X509CRLStreamWriter writer = new X509CRLStreamWriter(
-                input, (RSAPrivateKey) key);
+                input, (RSAPrivateKey) key, this.pkiReader.getCACert());
 
             // Add new entries
             if (revoke != null) {

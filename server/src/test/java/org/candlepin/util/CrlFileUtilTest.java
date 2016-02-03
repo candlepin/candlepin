@@ -43,7 +43,6 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.math.BigInteger;
 import java.net.URL;
-import java.security.Provider;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509CRL;
 import java.security.cert.X509CRLEntry;
@@ -59,7 +58,7 @@ import javax.inject.Inject;
 @RunWith(MockitoJUnitRunner.class)
 public class CrlFileUtilTest {
 
-    private static final Provider BC = new BouncyCastleProvider();
+    private static final BouncyCastleProvider BC = new BouncyCastleProvider();
     private CrlFileUtil cfu;
 
     @Inject private PKIReader pkiReader;
@@ -226,7 +225,7 @@ public class CrlFileUtilTest {
             try {
                 in = new BufferedInputStream(new FileInputStream(f));
                 x509crl = (X509CRL) CertificateFactory.getInstance("X.509").generateCRL(in);
-                x509crl.verify(pkiReader.getCACert().getPublicKey(), BC);
+                x509crl.verify(pkiReader.getCACert().getPublicKey(), BC.PROVIDER_NAME);
                 Set<BigInteger> s = new HashSet<BigInteger>();
 
                 for (X509CRLEntry entry : x509crl.getRevokedCertificates()) {

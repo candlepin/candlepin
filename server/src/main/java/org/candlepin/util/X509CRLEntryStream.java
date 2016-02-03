@@ -117,6 +117,11 @@ public class X509CRLEntryStream implements Closeable, Iterator<X509CRLEntryObjec
         this(new BufferedInputStream(new FileInputStream(crlFile)));
     }
 
+    @Override
+    public void remove() {
+        throw new UnsupportedOperationException("Remove is not implemented.");
+    }
+
     /**
      * Strip off the CRL meta-data and drill down to the sequence containing the
      * revokedCertificates objects.
