@@ -94,6 +94,18 @@ describe 'Owner Resource' do
     (pools[0].id <=> pools[1].id).should == -1
   end
 
+  it "lets owners update subscription" do
+    owner = create_owner random_string("test_owner1")
+    product = create_product(nil, nil, :owner => owner['key'])
+    pool = create_pool_and_subscription(owner['key'], product.id, 10)
+    sub = @cp.get_subscription(pool.subscriptionId)
+    tomorrow = (Time.now + 24 * 60 * 60).utc.iso8601
+    sub.startDate = tomorrow
+    @cp.update_subscription(sub)
+    updatedSub = @cp.get_subscription(pool.subscriptionId)
+    Time.parse(updatedSub.startDate) == Time.parse(tomorrow)
+  end
+
   it "lets owners list pools in pages for a consumer" do
     owner = create_owner random_string("test_owner1")
     user = user_client(owner, random_string("bob"))

@@ -1000,12 +1000,15 @@ public class OwnerResource {
     @Path("/subscriptions")
     @Deprecated
     public void updateSubscription(Subscription subscription) {
-        if (this.poolManager.getMasterPoolBySubscriptionId(subscription.getId()) == null) {
+        Pool existingPool = this.poolManager.getMasterPoolBySubscriptionId(subscription.getId());
+        if (existingPool == null) {
             throw new NotFoundException(i18n.tr(
                 "Unable to find a subscription with the ID \"{0}\".", subscription.getId()
             ));
         }
-        updatePool(subscription.getOwner().getKey(), this.poolManager.convertToMasterPool(subscription));
+        Pool updatedPool = this.poolManager.convertToMasterPool(subscription);
+        updatedPool.setId(existingPool.getId());
+        updatePool(subscription.getOwner().getKey(), updatedPool);
 
     }
 
