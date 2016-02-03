@@ -755,6 +755,7 @@ public class OwnerResource {
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("activation_key") String activationKeyName,
         @QueryParam("product") String productId,
+        @QueryParam("subscription") String subscriptionId,
         @QueryParam("listall") @DefaultValue("false") boolean listAll,
         @QueryParam("activeon") String activeOn,
         @QueryParam("matches") String matches,
@@ -809,7 +810,7 @@ public class OwnerResource {
         }
 
         Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, key, owner, productId,
-            activeOnDate, true, listAll, poolFilters, pageRequest
+                subscriptionId, activeOnDate, true, listAll, poolFilters, pageRequest
         );
         List<Pool> poolList = page.getPageData();
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);

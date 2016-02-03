@@ -26,5 +26,4 @@ describe 'Subscription Resource' do
       @cp.delete_subscription(subs.id)
       @cp.list_subscriptions(@owner['key']).size.should == 0
   end
-
 end

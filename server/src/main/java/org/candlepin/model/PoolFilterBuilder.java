@@ -44,6 +44,7 @@ public class PoolFilterBuilder extends FilterBuilder {
     private String alias = "";
     private List<String> matchFilters = new ArrayList<String>();
     private String productIdFilter;
+    private String subscriptionIdFilter;
 
     public PoolFilterBuilder() {
         super();
@@ -59,6 +60,10 @@ public class PoolFilterBuilder extends FilterBuilder {
             applyProductIdFilter(parentCriteria);
         }
 
+        if (subscriptionIdFilter != null && !subscriptionIdFilter.isEmpty()) {
+            applySubscriptionIdFilter(parentCriteria);
+        }
+
         for (String matches : matchFilters) {
             applyMatchFilter(matches);
         }
@@ -67,6 +72,10 @@ public class PoolFilterBuilder extends FilterBuilder {
 
     public void setProductIdFilter(String productId) {
         this.productIdFilter = productId;
+    }
+
+    public void setSubscriptionIdFilter(String subscriptionId) {
+        this.subscriptionIdFilter = subscriptionId;
     }
 
     /**
@@ -100,6 +109,17 @@ public class PoolFilterBuilder extends FilterBuilder {
             .setProjection(Projections.property("Pool2.id"));
 
         parent.add(Subqueries.exists(prodCrit));
+    }
+
+    private void applySubscriptionIdFilter(Criteria parent) {
+        String originalPoolAlias = this.alias.isEmpty() ? "this." : alias;
+        DetachedCriteria subCrit = DetachedCriteria.forClass(Pool.class, "Pool2")
+            .createAlias("sourceSubscription", "sourceSubscription")
+            .add(Property.forName(originalPoolAlias + "id").eqProperty("Pool2.id"))
+            .add(Restrictions.disjunction()
+                .add(Restrictions.eq("sourceSubscription.subscriptionId", this.subscriptionIdFilter)))
+            .setProjection(Projections.property("Pool2.id"));
+        parent.add(Subqueries.exists(subCrit));
     }
 
     private void applyMatchFilter(String matches) {

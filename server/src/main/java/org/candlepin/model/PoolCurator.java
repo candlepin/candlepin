@@ -167,14 +167,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o, String productId,
         Date activeOn, boolean activeOnly) {
 
-        return listAvailableEntitlementPools(c, o, productId, activeOn, activeOnly,
+        return listAvailableEntitlementPools(c, o, productId, null, activeOn, activeOnly,
             new PoolFilterBuilder(), null, false).getPageData();
     }
 
     @Transactional
     public List<Pool> listByFilter(PoolFilterBuilder filters) {
         return listAvailableEntitlementPools(
-                null, null, null, null, false, filters, null, false).getPageData();
+                null, null, null, null, null, false, filters, null, false).getPageData();
     }
 
     /**
@@ -196,8 +196,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @SuppressWarnings("unchecked")
     @Transactional
     public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o, String productId,
-        Date activeOn, boolean activeOnly, PoolFilterBuilder filters, PageRequest pageRequest,
-        boolean postFilter) {
+        String subscriptionId, Date activeOn, boolean activeOnly, PoolFilterBuilder filters,
+        PageRequest pageRequest, boolean postFilter) {
 
         if (o == null && c != null) {
             o = c.getOwner();
@@ -208,6 +208,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             log.debug("   consumer: " + c);
             log.debug("   owner: " + o);
             log.debug("   product: " + productId);
+            log.debug("   subscription: " + subscriptionId);
         }
 
         Criteria crit = createSecureCriteria()
@@ -244,6 +245,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         filters = filters == null ? new PoolFilterBuilder() : filters;
         if (productId != null) {
             filters.setProductIdFilter(productId);
+        }
+
+        if (subscriptionId != null) {
+            filters.setSubscriptionIdFilter(subscriptionId);
         }
 
         // Append any specified filters
