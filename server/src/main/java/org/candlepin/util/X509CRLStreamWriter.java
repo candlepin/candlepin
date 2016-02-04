@@ -72,8 +72,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.security.InvalidKeyException;
 import java.security.cert.CRLException;
+import java.security.cert.CertificateParsingException;
+import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
@@ -143,20 +147,39 @@ public class X509CRLStreamWriter {
     private int deletedEntriesLength;
     private RSADigestSigner signer;
     private RSAPrivateKey key;
-    private DERInteger newCrlNumber;
-    private int crlNumberHeaderBytesDelta;
+    private AuthorityKeyIdentifierStructure akiStructure;
 
     private int newSigLength;
     private int oldSigLength;
 
     private boolean emptyCrl;
 
-    public X509CRLStreamWriter(File crlToChange, RSAPrivateKey key)
-        throws CryptoException, IOException {
-        this(new BufferedInputStream(new FileInputStream(crlToChange)), key);
+    private int extensionsDelta;
+    private byte[] newExtensions;
+
+    public X509CRLStreamWriter(File crlToChange, RSAPrivateKey key, X509Certificate ca)
+        throws CryptoException, IOException, CertificateParsingException {
+        this(new BufferedInputStream(new FileInputStream(crlToChange)), key, ca);
     }
 
-    public X509CRLStreamWriter(InputStream crlToChange, RSAPrivateKey key)
+    public X509CRLStreamWriter(InputStream crlToChange, RSAPrivateKey key, X509Certificate ca)
+        throws CryptoException, IOException, CertificateParsingException {
+        this(crlToChange, key, new AuthorityKeyIdentifierStructure(ca));
+    }
+
+
+    public X509CRLStreamWriter(File crlToChange, RSAPrivateKey key, RSAPublicKey pubKey)
+        throws CryptoException, IOException, InvalidKeyException {
+        this(new BufferedInputStream(new FileInputStream(crlToChange)), key, pubKey);
+    }
+
+    public X509CRLStreamWriter(InputStream crlToChange, RSAPrivateKey key, RSAPublicKey pubKey)
+        throws CryptoException, IOException, InvalidKeyException {
+        this(crlToChange, key, new AuthorityKeyIdentifierStructure(pubKey));
+    }
+
+    public X509CRLStreamWriter(InputStream crlToChange,
+        RSAPrivateKey key, AuthorityKeyIdentifierStructure akiStructure)
         throws CryptoException, IOException {
         this.deletedEntries = new HashSet<BigInteger>();
         this.deletedEntriesLength = 0;
@@ -182,6 +205,7 @@ public class X509CRLStreamWriter {
         this.newSigLength = new DERBitString(dummySig).getDEREncoded().length;
 
         this.key = key;
+        this.akiStructure = akiStructure;
     }
 
     public X509CRLStreamWriter preScan(File crlToChange) throws IOException {
@@ -197,7 +221,6 @@ public class X509CRLStreamWriter {
         return preScan(crlToChange, null);
     }
 
-    @SuppressWarnings("rawtypes")
     public synchronized X509CRLStreamWriter preScan(InputStream crlToChange, CRLEntryValidator validator)
         throws IOException {
         if (locked) {
@@ -237,7 +260,7 @@ public class X509CRLStreamWriter {
              * the authority key identifier (Section 5.2.1) and the CRL number (Section 5.2.3)
              * extensions in all CRLs issued.
              */
-            DERSequence extensions = null;
+            byte[] oldExtensions = null;
             DERObject o;
             asn1In = new ASN1InputStream(crlToChange);
             while ((o = asn1In.readObject()) != null) {
@@ -264,30 +287,30 @@ public class X509CRLStreamWriter {
                     oldSigLength = o.getDEREncoded().length;
                 }
                 else {
-                    if (extensions != null) {
+                    if (oldExtensions != null) {
                         throw new IllegalStateException("Already read in CRL extensions.");
                     }
-                    DERTaggedObject taggedExts = (DERTaggedObject) o;
-                    extensions = (DERSequence) taggedExts.getObject();
+                    oldExtensions = ((DERTaggedObject) o).getDEREncoded();
                 }
             }
 
-            if (extensions == null) {
+            if (oldExtensions == null) {
                 /* v1 CRLs (defined in RFC 1422) don't require extensions but all new
                  * CRLs should be v2 (defined in RFC 5280).  In the extremely unlikely
                  * event that someone is working with a v1 CRL, we handle it here although
                  * we print a warning.
                  */
                 preScanned = true;
-                newCrlNumber = null;
-                crlNumberHeaderBytesDelta = 0;
+                newExtensions = null;
+                extensionsDelta = 0;
                 log.warn("The CRL you are modifying is a version 1 CRL." +
                     " Please investigate moving to a version 2 CRL by adding the CRL Number" +
                     " and Authority Key Identifier extensions.");
                 return this;
             }
-            readCrlNumber(extensions);
-
+            newExtensions = updateExtensions(oldExtensions);
+            extensionsDelta = (newExtensions.length - oldExtensions.length) +
+                findHeaderBytesDelta(oldExtensions.length, newExtensions.length);
         }
         finally {
             if (reaperStream != null) {
@@ -297,25 +320,6 @@ public class X509CRLStreamWriter {
         }
         preScanned = true;
         return this;
-    }
-
-    @SuppressWarnings("rawtypes")
-    protected void readCrlNumber(DERSequence exts) throws IOException {
-        // Now we need to read the extensions and find the CRL number and increment it,
-        // and determine if its length changed.
-        Enumeration objs = exts.getObjects();
-        while (objs.hasMoreElements()) {
-            DERSequence ext = (DERSequence) objs.nextElement();
-            DERObjectIdentifier oid = (DERObjectIdentifier) ext.getObjectAt(0);
-            if (X509Extension.cRLNumber.equals(oid)) {
-                DEROctetString s = (DEROctetString) ext.getObjectAt(1);
-                DERInteger i = (DERInteger) DERTaggedObject.fromByteArray(s.getOctets());
-                newCrlNumber = new DERInteger(i.getValue().add(BigInteger.ONE));
-                crlNumberHeaderBytesDelta =
-                    newCrlNumber.getDEREncoded().length - i.getDEREncoded().length;
-                break;
-            }
-        }
     }
 
     /**
@@ -402,7 +406,7 @@ public class X509CRLStreamWriter {
                     X509Extension reasonExt = extensions.getExtension(X509Extension.reasonCode);
 
                     if (reasonExt != null) {
-                        reason = ((DEREnumerated) reasonExt.getParsedValue()).getValue().intValueExact();
+                        reason = ((DEREnumerated) reasonExt.getParsedValue()).getValue().intValue();
                     }
                 }
                 crlBuilder.addCRLEntry(serial, revokeDate, reason);
@@ -505,7 +509,6 @@ public class X509CRLStreamWriter {
 
         // Copy the old extensions over
         if (extensions != null) {
-            byte[] newExtensions = incrementCrlNumber(extensions);
             out.write(newExtensions);
             signer.update(newExtensions, 0, newExtensions.length);
         }
@@ -524,9 +527,16 @@ public class X509CRLStreamWriter {
         }
     }
 
+    /**
+     * This method updates the crlNumber and authorityKeyIdentifier extensions.  Any
+     * other extensions are copied over unchanged.
+     * @param extensions
+     * @return
+     * @throws IOException
+     */
     @SuppressWarnings("rawtypes")
-    protected byte[] incrementCrlNumber(byte[] extensions) throws IOException {
-        DERTaggedObject taggedExts = (DERTaggedObject) DERTaggedObject.fromByteArray(extensions);
+    protected byte[] updateExtensions(byte[] obj) throws IOException {
+        DERTaggedObject taggedExts = (DERTaggedObject) DERTaggedObject.fromByteArray(obj);
         DERSequence seq = (DERSequence) taggedExts.getObject();
         ASN1EncodableVector modifiedExts = new ASN1EncodableVector();
 
@@ -537,6 +547,10 @@ public class X509CRLStreamWriter {
             DERSequence ext = (DERSequence) objs.nextElement();
             DERObjectIdentifier oid = (DERObjectIdentifier) ext.getObjectAt(0);
             if (X509Extension.cRLNumber.equals(oid)) {
+                DEROctetString s = (DEROctetString) ext.getObjectAt(1);
+                DERInteger i = (DERInteger) DERTaggedObject.fromByteArray(s.getOctets());
+                DERInteger newCrlNumber = new DERInteger(i.getValue().add(BigInteger.ONE));
+
                 X509Extension newNumberExt =
                     new X509Extension(false, new DEROctetString(newCrlNumber.getDEREncoded()));
 
@@ -545,10 +559,16 @@ public class X509CRLStreamWriter {
                 crlNumber.add(newNumberExt.getValue());
                 modifiedExts.add(new DERSequence(crlNumber));
             }
+            else if (X509Extension.authorityKeyIdentifier.equals(oid)) {
+                X509Extension newAuthorityKeyExt =
+                    new X509Extension(false, new DEROctetString(akiStructure.getDEREncoded()));
+
+                ASN1EncodableVector aki = new ASN1EncodableVector();
+                aki.add(X509Extension.authorityKeyIdentifier);
+                aki.add(newAuthorityKeyExt.getValue());
+                modifiedExts.add(new DERSequence(aki));
+            }
             else {
-                // FIXME: We need to allow for changes in the AuthorityKeyIdentifier.  If the
-                // user signs with a different private key, the old AuthorityKeyIdentifier will
-                // still be copied over.
                 modifiedExts.add(ext);
             }
         }
@@ -629,8 +649,8 @@ public class X509CRLStreamWriter {
         int revokedCertsHeaderBytesDelta = findHeaderBytesDelta(oldRevokedCertsLength, newRevokedCertsLength);
 
         int tbsCertListLengthDelta = revokedCertsLengthDelta +
-            crlNumberHeaderBytesDelta +
-            revokedCertsHeaderBytesDelta;
+            revokedCertsHeaderBytesDelta +
+            extensionsDelta;
         int newTbsLength = oldTbsLength + tbsCertListLengthDelta;
         int tbsHeaderBytesDelta = findHeaderBytesDelta(oldTbsLength, newTbsLength);
 
