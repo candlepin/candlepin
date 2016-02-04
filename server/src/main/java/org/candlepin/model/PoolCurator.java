@@ -52,6 +52,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.persistence.LockModeType;
+
 /**
  * EntitlementPoolCurator
  */
@@ -658,5 +660,18 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .add(Restrictions.isNull("sourceSub.subscriptionId"))
                 .addOrder(Order.asc("id"))
                 .list();
+    }
+
+    public void lock(List<Pool> poolsToLock) {
+        if (poolsToLock.isEmpty()) { 
+            log.debug("Nothing to lock");
+            return;
+        }
+            
+        log.debug("Locking pools");
+        getEntityManager().createQuery("SELECT p FROM Pool p WHERE p in :pools")
+        .setParameter("pools", poolsToLock)
+                .setLockMode(LockModeType.PESSIMISTIC_WRITE).getResultList();
+        log.debug("Done locking pools");
     }
 }
