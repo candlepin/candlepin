@@ -233,6 +233,7 @@ public class Entitler {
             }
             devPool = poolManager.createPool(assembleDevPool(consumer, sku));
             data.setPossiblePools(Arrays.asList(devPool.getId()));
+            data.setProductIds(new String[]{sku});
         }
 
         // Attempt to create entitlements:

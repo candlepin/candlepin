@@ -80,5 +80,20 @@ describe 'Consumer Dev Resource' do
     ent_pool.id.should == pools[0].pool.id
   end
 
+it 'should not allow entitlement for consumer past expiration' do
+    pending("candlepin running in standalone mode") if not is_hosted?
+    created_date = '2015-05-09T13:23:55+0000'
+    consumer = @user.register(random_string('system'), type=:system, nil, facts = {:dev_sku => "dev_product"}, @username,
+              @owner['key'], [], [], nil, [], nil, [], created_date)
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    expected_error = "Unable to attach subscription for the product 'dev_product': Subscriptions for dev_product expired on:"
+    begin
+        consumer_client.consume_product()
+        fail("Expected Forbidden since consumer is older than product expiry")
+    rescue RestClient::Forbidden => e
+      message = JSON.parse(e.http_body)['displayMessage']
+      message.should start_with(expected_error)
+    end
+  end
 
 end
