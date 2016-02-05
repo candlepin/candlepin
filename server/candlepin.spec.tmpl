@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.53
+Version: 0.9.54
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -215,6 +215,11 @@ fi
 
 #raw
 %changelog
+* Fri Feb 05 2016 Alex Wood <awood@redhat.com> 0.9.54-1
+- Add missing RPM requires. (awood@redhat.com)
+- 1301812: Fixed an issue with event generation for stack derived pools
+  (crog@redhat.com)
+
 * Thu Jan 21 2016 Alex Wood <awood@redhat.com> 0.9.53-1
 - Update version in pom file. (awood@redhat.com)
 
