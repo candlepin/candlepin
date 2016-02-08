@@ -207,7 +207,7 @@ public class ConsumerBindUtilTest {
         key1.addPool(ghost, 10L);
 
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        when(entitler.bindByPoolOBJECT(eq(ghost.getId()), eq(consumer), eq(10)))
+        when(entitler.bindByPoolQuantity(eq(consumer), eq(ghost.getId()), eq(10)))
             .thenThrow(new ForbiddenException("fail"));
         consumerBindUtil.handleActivationKeys(consumer, keys);
     }
@@ -232,9 +232,9 @@ public class ConsumerBindUtilTest {
         key1.addPool(pool3, 5L);
 
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        when(entitler.bindByPoolOBJECT(eq(pool1.getId()), eq(consumer), eq(10)))
+        when(entitler.bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(10)))
             .thenThrow(new ForbiddenException("fail"));
-        when(entitler.bindByPoolOBJECT(eq(pool2.getId()), eq(consumer), eq(10)))
+        when(entitler.bindByPoolQuantity(eq(consumer), eq(pool2.getId()), eq(10)))
             .thenThrow(new ForbiddenException("fail"));
         consumerBindUtil.handleActivationKeys(consumer, keys);
     }
@@ -261,9 +261,9 @@ public class ConsumerBindUtilTest {
         key2.addPool(pool3, 5L);
 
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        when(entitler.bindByPoolOBJECT(eq(pool1.getId()), eq(consumer), eq(10)))
+        when(entitler.bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(10)))
             .thenThrow(new ForbiddenException("fail"));
-        when(entitler.bindByPoolOBJECT(eq(pool2.getId()), eq(consumer), eq(10)))
+        when(entitler.bindByPoolQuantity(eq(consumer), eq(pool2.getId()), eq(10)))
             .thenThrow(new ForbiddenException("fail"));
         consumerBindUtil.handleActivationKeys(consumer, keys);
     }

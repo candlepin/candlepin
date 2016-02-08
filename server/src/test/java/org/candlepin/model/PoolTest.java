@@ -29,8 +29,10 @@ import org.junit.Test;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -156,7 +158,9 @@ public class PoolTest extends DatabaseTestFixture {
                 TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
 
-        poolManager.entitleByPool(consumer, consumerPool, 1);
+        Map<String, Integer> pQs = new HashMap<String, Integer>();
+        pQs.put(consumerPool.getId(), 1);
+        poolManager.entitleByPools(consumer, pQs);
 
         consumerPool = poolCurator.find(consumerPool.getId());
         assertFalse(consumerPool.entitlementsAvailable(1));
@@ -181,7 +185,9 @@ public class PoolTest extends DatabaseTestFixture {
         poolCurator.create(consumerPool);
 
         assertEquals(0, consumer.getEntitlements().size());
-        poolManager.entitleByPool(consumer, consumerPool, 1);
+        Map<String, Integer> pQs = new HashMap<String, Integer>();
+        pQs.put(consumerPool.getId(), 1);
+        poolManager.entitleByPools(consumer, pQs);
 
         assertEquals(1, consumerCurator.find(consumer.getId()).getEntitlements().size());
     }
@@ -309,7 +315,12 @@ public class PoolTest extends DatabaseTestFixture {
     // Will use spec tests to see if quantity rules are followed in this scenario.
     @Test
     public void testEntitlementQuantityChange() throws EntitlementRefusedException {
-        Entitlement ent = poolManager.entitleByPool(consumer, pool, 3);
+
+        Map<String, Integer> pQs = new HashMap<String, Integer>();
+        pQs.put(pool.getId(), 3);
+        List<Entitlement> entitlements = poolManager.entitleByPools(consumer, pQs);
+
+        Entitlement ent = entitlements.get(0);
         assertTrue(ent.getQuantity() == 3);
         poolManager.adjustEntitlementQuantity(consumer, ent, 5);
         Entitlement ent2 = entitlementCurator.find(ent.getId());

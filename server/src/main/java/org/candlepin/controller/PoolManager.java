@@ -44,7 +44,7 @@ public interface PoolManager {
 
     Pool createPool(Pool p);
 
-    void createPools(List<Pool> pools);
+    List<Pool> createPools(List<Pool> pools);
 
     /**
      * @param sub

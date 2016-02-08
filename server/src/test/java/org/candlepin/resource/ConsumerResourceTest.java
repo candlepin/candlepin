@@ -369,7 +369,8 @@ public class ConsumerResourceTest {
             null, sa, null, null, null, i18n, null, null, null, null, null,
             null, null, null, null, null, e, null, null, null, null,
             new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
-        Response r = cr.bind("fakeConsumer", null, prodIds, null, null, null, false, null, null);
+        Response r = cr
+                .bind("fakeConsumer", null, prodIds, null, null, null, false, null, null, null, null);
         assertEquals(null, r.getEntity());
     }
 
@@ -395,7 +396,7 @@ public class ConsumerResourceTest {
             new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
         String dtStr = "2011-09-26T18:10:50.184081+00:00";
         Date dt = ResourceDateParser.parseDateString(dtStr);
-        cr.bind("fakeConsumer", null, null, null, null, null, false, dtStr, null);
+        cr.bind("fakeConsumer", null, null, null, null, null, false, dtStr, null, null, null);
         AutobindData data = AutobindData.create(c).on(dt);
         verify(e).bindByProducts(eq(data));
     }
@@ -449,7 +450,7 @@ public class ConsumerResourceTest {
             null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
 
         consumerResource.bind("fake uuid", "fake pool uuid",
-            new String[]{"12232"}, 1, null, null, false, null, null);
+            new String[]{"12232"}, 1, null, null, false, null, null, null, null);
     }
 
 
@@ -464,7 +465,7 @@ public class ConsumerResourceTest {
             null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
 
         consumerResource.bind("notarealuuid", "fake pool uuid", null, null, null,
-            null, false, null, null);
+            null, false, null, null, null, null);
     }
 
     /**

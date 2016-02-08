@@ -24,11 +24,15 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
+import org.candlepin.model.dto.PoolIdAndQuantity;
 import org.candlepin.pinsetter.core.model.JobStatus;
+import org.candlepin.policy.EntitlementRefusedException;
 
+import org.hibernate.mapping.Map;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -39,6 +43,7 @@ import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -63,27 +68,39 @@ public class EntitlerJobTest {
     public void bindByPoolSetup() {
         String pool = "pool10";
 
-        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(pool, consumer, 1);
+        PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
+        pQs[0] = new PoolIdAndQuantity(pool, 1);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
         assertNotNull(detail);
-        String resultpool = (String) detail.getJobDataMap().get("pool_id");
-        assertEquals("pool10", resultpool);
+        PoolIdAndQuantity[] resultPools = (PoolIdAndQuantity[]) detail.getJobDataMap().get(
+                "pool_and_quanities");
+        assertEquals("pool10", resultPools[0].getPoolId());
+        assertEquals(1, resultPools[0].getQuantity().intValue());
         assertEquals(consumerUuid, detail.getJobDataMap().get(JobStatus.TARGET_ID));
         assertTrue(detail.getKey().getName().startsWith("bind_by_pool_"));
     }
 
     @Test
-    public void bindByPoolExec() throws JobExecutionException {
+    public void bindByPoolExec() throws JobExecutionException, EntitlementRefusedException {
         String pool = "pool10";
 
-        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(pool, consumer, 1);
+        PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
+        pQs[0] = new PoolIdAndQuantity(pool, 1);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         List<Entitlement> ents = new ArrayList<Entitlement>();
-        when(e.bindByPoolString(eq(pool), eq(consumerUuid), eq(1))).thenReturn(ents);
 
-        EntitlerJob job = new EntitlerJob(e, null);
+        Class<HashMap<String, Integer>> className = (Class<HashMap<String, Integer>>) (Class) Map.class;
+        ArgumentCaptor<HashMap<String, Integer>> pqMapCaptor = ArgumentCaptor.forClass(className);
+        when(e.bindByPoolQuantities(eq(consumerUuid), pqMapCaptor.capture())).thenReturn(ents);
+        HashMap<String, Integer> pqMap = pqMapCaptor.getValue();
+
+        assertEquals(1, pqMap.get(pool).intValue());
+
+        EntitlerJob job = new EntitlerJob(e, null, null, null);
         job.execute(ctx);
-        verify(e).bindByPoolString(eq(pool), eq(consumerUuid), eq(1));
+        verify(e).bindByPoolQuantities(eq(consumerUuid), eq(pqMap));
         verify(e).sendEvents(eq(ents));
     }
 
@@ -97,13 +114,17 @@ public class EntitlerJobTest {
      */
     @Test
     public void serializeJobDataMapForPool() throws IOException {
-        JobDetail detail = EntitlerJob.bindByPoolAndQuantities("pool10", consumer, 1);
+        PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
+        pQs[0] = new PoolIdAndQuantity("pool10", 1);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
         serialize(detail.getJobDataMap());
     }
 
     @Test
     public void recoveryIsFalse() {
-        JobDetail detail = EntitlerJob.bindByPoolAndQuantities("pool10", consumer, 1);
+        PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
+        pQs[0] = new PoolIdAndQuantity("pool10", 1);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
         assertFalse(detail.requestsRecovery());
         assertTrue(detail.isDurable());
     }
@@ -115,15 +136,18 @@ public class EntitlerJobTest {
     }
 
     @Test(expected = JobExecutionException.class)
-    public void handleException() throws JobExecutionException {
-        String pool = "pool10";
-        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(pool, consumer, 1);
+    public void handleException() throws JobExecutionException, EntitlementRefusedException {
+        PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
+        pQs[0] = new PoolIdAndQuantity("pool10", 1);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        when(e.bindByPoolString(eq(pool), eq(consumerUuid), eq(1))).thenThrow(
-            new ForbiddenException("job should fail"));
+        Class<HashMap<String, Integer>> className = (Class<HashMap<String, Integer>>) (Class) Map.class;
+        ArgumentCaptor<HashMap<String, Integer>> pqMapCaptor = ArgumentCaptor.forClass(className);
+        when(e.bindByPoolQuantities(eq(consumerUuid), pqMapCaptor.capture())).thenThrow(
+                new ForbiddenException("job should fail"));
 
-        EntitlerJob job = new EntitlerJob(e, null);
+        EntitlerJob job = new EntitlerJob(e, null, null, null);
         job.execute(ctx);
     }
 

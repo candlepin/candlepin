@@ -489,11 +489,11 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Test
     public void findByStackIdsTest() {
 
-        String[] stackingIds = new String[3];
+        Set<String> stackingIds = new HashSet<String>();
         for (Integer i = 0; i < 4; i++) {
             String stackingId = "test_stack_id" + i.toString();
             if (i > 0) {
-                stackingIds[i - 1] = stackingId;
+                stackingIds.add(stackingId);
             }
             Product product = TestUtil.createProduct(owner);
             product.setAttribute("stacking_id", stackingId);

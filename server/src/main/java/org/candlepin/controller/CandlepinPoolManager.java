@@ -838,7 +838,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public void createPools(List<Pool> pools) {
+    public List<Pool> createPools(List<Pool> pools) {
         if (pools != null && !pools.isEmpty()) {
             poolCurator.saveOrUpdateAll(pools);
 
@@ -850,6 +850,7 @@ public class CandlepinPoolManager implements PoolManager {
                 }
             }
         }
+        return pools;
     }
 
     @Override
