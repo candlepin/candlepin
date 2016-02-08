@@ -34,6 +34,8 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.EntitlementRefusedException;
+import org.candlepin.policy.ValidationError;
+import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.ProductServiceAdapter;
@@ -54,6 +56,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -406,9 +409,14 @@ public class Entitler {
             // We will debug log the message, but returning does not seem to add
             // to the process
             if (log.isDebugEnabled()) {
-                String message = e.getResults().values().iterator().next().getErrors().get(0)
-                        .getResourceKey();
-                log.debug("consumer dry-run " + consumer.getUuid() + ": " + message);
+
+                log.debug("consumer dry-run " + consumer.getUuid() + ": errors:");
+                for (Entry<String, ValidationResult> entry : e.getResults().entrySet()) {
+                    log.debug("errors for pool id: " + entry.getKey());
+                    for (ValidationError error : entry.getValue().getErrors()) {
+                        log.debug(error.getResourceKey());
+                    }
+                }
             }
         }
         return result;

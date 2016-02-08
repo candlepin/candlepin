@@ -251,5 +251,4 @@ public class PoolHelper {
                 !StringUtils.equals(existingPool.getAccountNumber(), pool.getAccountNumber()) || !StringUtils
                     .equals(existingPool.getContractNumber(), pool.getContractNumber()));
     }
-
 }

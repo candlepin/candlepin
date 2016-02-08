@@ -92,14 +92,4 @@ public class PoolQuantity implements Comparable<PoolQuantity> {
         }
         return compare;
     }
-
-    public static class IdComparator implements Comparator<PoolQuantity> {
-
-        @Override
-        public int compare(PoolQuantity arg0, PoolQuantity arg1) {
-            return arg0.getPool().compareTo(arg1.getPool());
-        }
-
-    }
-
 }

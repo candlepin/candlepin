@@ -506,9 +506,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         List<Entitlement> results = entitlementCurator.findByStackIds(consumer, stackingIds);
         assertEquals(3, results.size());
-        for (Entitlement entitlement : results) {
-            System.out.println("VRITANT " + entitlement.getPool().getProductAttributeValue("stacking_id"));
-        }
     }
 
     @Test
