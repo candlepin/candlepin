@@ -90,21 +90,19 @@ public interface PoolManager {
     void deletePool(Pool pool);
 
     /**
-     * Request an entitlement by pool..
-     * VRITANT DESCRIBE RESULT HERE
+     * Request an entitlement by poolid and quantity
      *
-     * @param consumer
-     *        consumer requesting to be entitled
-     * @param poolQuantities
-     *        entitlement pool and respective quantities to consume from
-     * @return Entitlements
+     * @param consumer consumer requesting to be entitled
+     * @param poolQuantities a map of entitlement pool ids and the respective
+     *        quantities to consume from
+     * @return Entitlements A list of entitlements created if the request is
+     *         successful
      * @throws EntitlementRefusedException if entitlement is refused
      */
     List<Entitlement> entitleByPools(Consumer consumer, Map<String, Integer> poolQuantities)
         throws EntitlementRefusedException;
 
-    Entitlement ueberCertEntitlement(Consumer consumer, Pool pool,
-        Integer quantity) throws EntitlementRefusedException;
+    Entitlement ueberCertEntitlement(Consumer consumer, Pool pool) throws EntitlementRefusedException;
 
     /**
      * Request an entitlement by product.
@@ -313,5 +311,4 @@ public interface PoolManager {
      *  a list of known master pools
      */
     List<Pool> listMasterPools();
-
 }

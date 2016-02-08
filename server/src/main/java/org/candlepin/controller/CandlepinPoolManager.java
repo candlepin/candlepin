@@ -839,13 +839,15 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public void createPools(List<Pool> pools) {
-        poolCurator.saveOrUpdateAll(pools);
+        if (pools != null && !pools.isEmpty()) {
+            poolCurator.saveOrUpdateAll(pools);
 
-        for (Pool pool : pools) {
-            log.debug("   new pool: {}", pool);
+            for (Pool pool : pools) {
+                log.debug("   new pool: {}", pool);
 
-            if (pool != null) {
-                sink.emitPoolCreated(pool);
+                if (pool != null) {
+                    sink.emitPoolCreated(pool);
+                }
             }
         }
     }
@@ -920,7 +922,10 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public List<Pool> find(Collection<String> poolIds) {
-        return this.poolCurator.listAllByIds(poolIds);
+        if (poolIds != null && !poolIds.isEmpty()) {
+            return this.poolCurator.listAllByIds(poolIds);
+        }
+        return new ArrayList<Pool>();
     }
 
     @Override
@@ -930,7 +935,10 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public List<Pool> lookupBySubscriptionIds(Collection<String> subscriptionIds) {
-        return this.poolCurator.lookupBySubscriptionIds(subscriptionIds);
+        if (subscriptionIds != null && !subscriptionIds.isEmpty()) {
+            return this.poolCurator.lookupBySubscriptionIds(subscriptionIds);
+        }
+        return new ArrayList<Pool>();
     }
 
     /**
@@ -985,13 +993,24 @@ public class CandlepinPoolManager implements PoolManager {
                 return entitleByPools(consumer, convertToMap(bestPools));
             }
             catch (EntitlementRefusedException e) {
-                String key = e.getResults().values().iterator().next().getErrors().get(0).getResourceKey();
 
-                if (key.equals("rulefailed.no.entitlements.available") && retries-- > 0) {
-                    log.info(
-                        "Entitlements exhausted between select best pools and bind operations; retrying"
-                    );
-
+                // if there are any pools that had only one error, and that was
+                // an availability error, try again
+                boolean retry = false;
+                if (retries > 0) {
+                    for (String poolId : e.getResults().keySet()) {
+                        if (e.getResults().get(poolId).getErrors().size() == 1 &&
+                                e.getResults().get(poolId).getErrors().get(0).getResourceKey()
+                                        .equals("rulefailed.no.entitlements.available")) {
+                            retry = true;
+                            break;
+                        }
+                    }
+                }
+                if (retry) {
+                    log.info("Entitlements exhausted between select best pools and bind operations;" +
+                        " retrying");
+                    retries--;
                     continue;
                 }
 
@@ -1300,27 +1319,31 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     /**
-     * Request an entitlement by pool.. VRITANT DESCRIBE RESULT HERE
+     * Request an entitlement by poolid and quantity
      *
      * @param consumer consumer requesting to be entitled
-     * @param pool entitlement pool to consume from
-     * @return Entitlement
+     * @param poolQuantities a map of entitlement pool ids and the respective
+     *        quantities to consume from
+     * @return Entitlements A list of entitlements created if the request is
+     *         successful
      * @throws EntitlementRefusedException if entitlement is refused
      */
     @Override
     @Transactional
     public List<Entitlement> entitleByPools(Consumer consumer, Map<String, Integer> poolQuantities)
         throws EntitlementRefusedException {
-
-        return addOrUpdateEntitlements(consumer, poolQuantities, null, false, CallerType.BIND);
+        if (poolQuantities != null && !poolQuantities.isEmpty()) {
+            return addOrUpdateEntitlements(consumer, poolQuantities, null, false, CallerType.BIND);
+        }
+        return new ArrayList<Entitlement>();
     }
 
     @Override
-    public Entitlement ueberCertEntitlement(Consumer consumer, Pool pool, Integer quantity)
+    public Entitlement ueberCertEntitlement(Consumer consumer, Pool pool)
         throws EntitlementRefusedException {
 
         Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
-        poolQuantities.put(pool.getId(), quantity);
+        poolQuantities.put(pool.getId(), 1);
         List<Entitlement> result = addOrUpdateEntitlements(consumer, poolQuantities, null, true,
                 CallerType.UNKNOWN);
         if (result != null && !result.isEmpty()) {
@@ -1352,9 +1375,33 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     /**
-     * This method is used both via batch and singular APIs. Batch APIs could
-     * trigger the consumer compliance on the last call, while singular APIs
-     * should always enforce consumer compliance check.
+     * Some History, hopefully irrelavant henceforth:
+     * This transaction used to update consumer's status hash and got dead
+     * locked because:
+     * T1 and T2 are entitlement jobs
+     *
+     * 1. T1 grabs a shared lock on cp_consumer.id due to the FK in cp_entitlement
+     *    when inserting into cp_entitlement
+     * 2. T2 grabs a shared lock on cp_consumer.id due to the FK in cp_entitlement
+     *    when inserting into cp_entitlement
+     * 3. T1 attempts to grab an exclusive lock on cp_consumer.id for an
+     *    update to cp_consumer's compliance hash.  T1 blocks waiting for the T2's
+     *    shared lock to be released.
+     * 4. T2 attempts to grab an exclusive lock on cp_consumer.id for an
+     *    update to cp_consumer's compliance hash.
+     * 5. Deadlock.  T2 is waiting for T1's shared lock to be released but
+     *    T1 is waiting for T2's shared lock to be released.
+     *
+     * The solution was to create a longer transaction and grab an exclusive lock
+     * on the cp_consumer row (using a select for update) at the start of the transaction.
+     * The other thread will then wait for the exclusive lock to be released instead of
+     * deadlocking.
+     *
+     * Another effort on the solution removed compliance status evaluation from
+     * this thread and created a separate asynchronous job to accomplish that,
+     * thus removing the need to hold that exclusive lock on cp_consumer
+     *
+     * See BZ #1274074 and git history for details
      */
     @Transactional
     protected List<Entitlement> addOrUpdateEntitlements(Consumer consumer,

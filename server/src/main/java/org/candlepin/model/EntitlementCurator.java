@@ -380,8 +380,10 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             }
             List<Entitlement> overlapEnts = createModifiesDateFilteringCriteria(consumer, minStartDate,
                     maxEndDate, entitlements).list();
-            for (Entitlement ent : overlapEnts) {
-                addToMap(pidEnts, ent);
+            if (overlapEnts != null) {
+                for (Entitlement ent : overlapEnts) {
+                    addToMap(pidEnts, ent);
+                }
             }
         }
         return pidEnts;

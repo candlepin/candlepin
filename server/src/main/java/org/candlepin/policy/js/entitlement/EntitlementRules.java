@@ -182,5 +182,4 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
                     pool.getEndDate())));
         }
     }
-
 }

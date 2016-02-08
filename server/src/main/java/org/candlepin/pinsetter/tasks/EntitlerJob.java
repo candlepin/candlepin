@@ -95,8 +95,7 @@ public class EntitlerJob extends KingpinJob {
             ctx.setResult(consumed);
         }
         catch (EntitlementRefusedException e) {
-            log.error("EntitlerJob encountered a problem.", e);
-            log.debug("translating errors");
+            log.error("EntitlerJob encountered a problem, translating errors", e);
             Map<String, ValidationResult> validationResults = e.getResults();
             List<Pool> pools = poolCurator.listAllByIds(validationResults.keySet());
 

@@ -399,45 +399,51 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     public Collection<E> saveOrUpdateAll(Collection<E> entries) {
-        try {
-            Session session = currentSession();
-            int i = 0;
-            Iterator<E> iter = entries.iterator();
-            while (iter.hasNext()) {
-                session.saveOrUpdate(iter.next());
-                if (i % batchSize == 0) {
-                    session.flush();
-                    session.clear();
+
+        if (entries != null && !entries.isEmpty()) {
+            try {
+                Session session = currentSession();
+                int i = 0;
+                Iterator<E> iter = entries.iterator();
+                while (iter.hasNext()) {
+                    session.saveOrUpdate(iter.next());
+                    if (i % batchSize == 0) {
+                        session.flush();
+                        session.clear();
+                    }
+                    i++;
                 }
-                i++;
+                session.flush();
+                session.clear();
             }
-            session.flush();
-            session.clear();
-        }
-        catch (OptimisticLockException e) {
-            throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
+            catch (OptimisticLockException e) {
+                throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
+            }
         }
         return entries;
     }
 
     public Collection<E> mergeAll(Collection<E> entries) {
-        try {
-            Session session = currentSession();
-            int i = 0;
-            Iterator<E> iter = entries.iterator();
-            while (iter.hasNext()) {
-                session.merge(iter.next());
-                if (i % batchSize == 0) {
-                    session.flush();
-                    session.clear();
+
+        if (entries != null && !entries.isEmpty()) {
+            try {
+                Session session = currentSession();
+                int i = 0;
+                Iterator<E> iter = entries.iterator();
+                while (iter.hasNext()) {
+                    session.merge(iter.next());
+                    if (i % batchSize == 0) {
+                        session.flush();
+                        session.clear();
+                    }
+                    i++;
                 }
-                i++;
+                session.flush();
+                session.clear();
             }
-            session.flush();
-            session.clear();
-        }
-        catch (OptimisticLockException e) {
-            throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
+            catch (OptimisticLockException e) {
+                throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
+            }
         }
         return entries;
     }
