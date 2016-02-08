@@ -68,10 +68,12 @@ import org.mockito.Mockito;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -228,11 +230,13 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             monitoring.getId()).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
 
-        Entitlement e = poolManager.entitleByPool(parentSystem, monitoringPool, 3);
-        assertNotNull(e);
+        Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
+        poolQuantities.put(monitoringPool.getId(), 3);
+        List<Entitlement> eList = poolManager.entitleByPools(parentSystem, poolQuantities);
+        assertEquals(1, eList.size());
         assertEquals(Long.valueOf(3), monitoringPool.getConsumed());
 
-        poolManager.revokeEntitlement(e);
+        poolManager.revokeEntitlement(eList.get(0));
         assertEquals(Long.valueOf(0), monitoringPool.getConsumed());
     }
 

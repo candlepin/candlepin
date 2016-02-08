@@ -30,6 +30,10 @@ import com.google.inject.Module;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import javax.inject.Inject;
 
 /**
@@ -80,8 +84,10 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         CandlepinPoolManager anotherEntitler =
             injector.getInstance(CandlepinPoolManager.class);
 
-        anotherEntitler.entitleByPool(consumer, consumerPool, 1);
-        anotherEntitler.entitleByPool(consumer, consumerPool, 1);
+        Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
+        poolQuantities.put(consumerPool.getId(), 1);
+        anotherEntitler.entitleByPools(consumer, poolQuantities);
+        anotherEntitler.entitleByPools(consumer, poolQuantities);
 
         assertFalse(poolCurator.find(consumerPool.getId())
                 .entitlementsAvailable(1));
@@ -102,10 +108,12 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         CandlepinPoolManager anotherEntitler =
             injector.getInstance(CandlepinPoolManager.class);
 
-        Entitlement e1 = poolManager.entitleByPool(consumer, consumerPool, 1);
-        assertNotNull(e1);
+        Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
+        poolQuantities.put(consumerPool.getId(), 1);
+        List<Entitlement> e1 = poolManager.entitleByPools(consumer, poolQuantities);
+        assertEquals(1, e1.size());
 
-        anotherEntitler.entitleByPool(consumer, consumerPool, 1);
+        anotherEntitler.entitleByPools(consumer, poolQuantities);
     }
 
     @Override

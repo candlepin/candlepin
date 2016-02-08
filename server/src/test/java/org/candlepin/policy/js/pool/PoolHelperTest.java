@@ -27,15 +27,16 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.policy.js.AttributeHelper;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -71,8 +72,7 @@ public class PoolHelperTest {
         existingPool.setAccountNumber("456");
         existingPool.setContractNumber("789");
 
-        PoolHelper ph = new PoolHelper(pm, null);
-        assertTrue(ph.checkForOrderChanges(existingPool, pool));
+        assertTrue(PoolHelper.checkForOrderChanges(existingPool, pool));
     }
 
     @Test
@@ -86,8 +86,7 @@ public class PoolHelperTest {
         existingPool.setAccountNumber("456");
         existingPool.setContractNumber("789");
 
-        PoolHelper ph = new PoolHelper(pm, null);
-        assertTrue(ph.checkForOrderChanges(existingPool, pool));
+        assertTrue(PoolHelper.checkForOrderChanges(existingPool, pool));
     }
 
     @Test
@@ -101,8 +100,7 @@ public class PoolHelperTest {
         existingPool.setAccountNumber("456");
         existingPool.setContractNumber("789");
 
-        PoolHelper ph = new PoolHelper(pm, null);
-        assertTrue(ph.checkForOrderChanges(existingPool, pool));
+        assertTrue(PoolHelper.checkForOrderChanges(existingPool, pool));
     }
 
     @Test
@@ -116,8 +114,7 @@ public class PoolHelperTest {
         existingPool.setAccountNumber("456");
         existingPool.setContractNumber("789");
 
-        PoolHelper ph = new PoolHelper(pm, null);
-        assertFalse(ph.checkForOrderChanges(existingPool, pool));
+        assertFalse(PoolHelper.checkForOrderChanges(existingPool, pool));
     }
 
     @Test
@@ -131,8 +128,7 @@ public class PoolHelperTest {
         existingPool.setAccountNumber("456");
         existingPool.setContractNumber("789");
 
-        PoolHelper ph = new PoolHelper(pm, null);
-        assertFalse(ph.checkForOrderChanges(existingPool, pool));
+        assertFalse(PoolHelper.checkForOrderChanges(existingPool, pool));
     }
 
     @Test
@@ -144,13 +140,24 @@ public class PoolHelperTest {
         targetProduct.setAttribute("A2", "V2");
         Pool targetPool = TestUtil.createPool(targetProduct);
         targetPool.setId("jso_speedwagon");
+        targetPool.setAttribute("virt_limit", "unlimited");
 
         // when(psa.getProductById(targetProduct.getUuid())).thenReturn(targetProduct);
         when(ent.getConsumer()).thenReturn(cons);
 
-        PoolHelper ph = new PoolHelper(pm, ent);
-        Pool hostRestrictedPool = ph.createHostRestrictedPool(targetProduct, targetPool, "unlimited");
+        List<Pool> targetPools = new ArrayList<Pool>();
+        targetPools.add(targetPool);
+        Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
+        entitlements.put(targetPool.getId(), ent);
 
+        Map<String, Map<String, String>> attributes = new HashMap<String, Map<String, String>>();
+        attributes.put(targetPool.getId(), PoolHelper.getFlattenedAttributes(targetPool));
+
+        List<Pool> pools = PoolHelper.createHostRestrictedPools(pm, cons, targetPools, entitlements,
+                attributes);
+
+        assertEquals(1, pools.size());
+        Pool hostRestrictedPool = pools.get(0);
         assertEquals(targetPool.getId(),
             hostRestrictedPool.getAttributeValue("source_pool_id"));
         assertEquals(2, hostRestrictedPool.getProduct().getAttributes().size());
@@ -186,15 +193,24 @@ public class PoolHelperTest {
         targetPool.setDerivedProduct(subProduct);
 
         targetPool.setDerivedProvidedProducts(derivedProducts);
-
+        targetPool.setAttribute("virt_limit", "unlimited");
         // when(psa.getProductById(subProduct.getUuid())).thenReturn(subProduct);
         when(ent.getConsumer()).thenReturn(cons);
 
-        PoolHelper ph = new PoolHelper(pm, ent);
-        Pool hostRestrictedPool = ph.createHostRestrictedPool(
-            targetPool.getDerivedProduct(), targetPool, "unlimited"
-        );
+        List<Pool> targetPools = new ArrayList<Pool>();
+        targetPools.add(targetPool);
 
+        Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
+        entitlements.put(targetPool.getId(), ent);
+
+        Map<String, Map<String, String>> attributes = new HashMap<String, Map<String, String>>();
+        attributes.put(targetPool.getId(), PoolHelper.getFlattenedAttributes(targetPool));
+        List<Pool> hostRestrictedPools = PoolHelper.createHostRestrictedPools(pm, cons, targetPools,
+                entitlements,
+                attributes);
+
+        assertEquals(1, hostRestrictedPools.size());
+        Pool hostRestrictedPool = hostRestrictedPools.get(0);
         assertEquals(targetPool.getId(), hostRestrictedPool.getAttributeValue("source_pool_id"));
         assertEquals(-1L, (long) hostRestrictedPool.getQuantity());
         assertEquals(2, hostRestrictedPool.getProduct().getAttributes().size());
@@ -222,10 +238,8 @@ public class PoolHelperTest {
         Branding branding = new Branding("id", "type", "name");
         Pool pool = TestUtil.createPool(owner, product);
         pool.getBranding().add(branding);
-        PoolHelper ph = new PoolHelper(pm, ent);
-        AttributeHelper ah = new AttributeHelper();
         String quant = "unlimited";
-        Pool clone = ph.clonePool(pool, product2, quant, attributes, "TaylorSwift", null);
+        Pool clone = PoolHelper.clonePool(pool, product2, quant, attributes, "TaylorSwift", null, ent);
         assertEquals(owner, clone.getOwner());
         assertEquals(new Long(-1L), clone.getQuantity());
         assertEquals(product2, clone.getProduct());

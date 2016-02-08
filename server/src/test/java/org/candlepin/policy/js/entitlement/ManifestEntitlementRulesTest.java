@@ -19,6 +19,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerType;
@@ -37,7 +38,9 @@ import org.candlepin.test.TestUtil;
 
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -48,7 +51,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void postEntitlement() {
         Consumer c = mock(Consumer.class);
-        PoolHelper ph = mock(PoolHelper.class);
+        PoolManager pm = mock(PoolManager.class);
         Entitlement e = mock(Entitlement.class);
         ConsumerType type = mock(ConsumerType.class);
         Pool pool = mock(Pool.class);
@@ -64,7 +67,9 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         when(product.getAttributes()).thenReturn(new HashSet<ProductAttribute>());
         when(pool.getAttributes()).thenReturn(new HashSet<PoolAttribute>());
 
-        assertEquals(ph, enforcer.postEntitlement(c, ph, e));
+        Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
+        entitlements.put("pool", e);
+        enforcer.postEntitlement(pm, c, entitlements, null);
     }
 
     @Test

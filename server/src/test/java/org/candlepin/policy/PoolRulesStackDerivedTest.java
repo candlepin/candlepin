@@ -48,9 +48,12 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -155,8 +158,17 @@ public class PoolRulesStackDerivedTest {
         stackedEnts.add(createEntFromPool(pool2));
         when(entCurMock.findByStackId(consumer, STACK)).thenReturn(stackedEnts);
 
-        PoolHelper helper = new PoolHelper(poolManagerMock, stackedEnts.get(0));
-        stackDerivedPool = helper.createHostRestrictedPool(prod2, pool2, "6");
+        pool2.setAttribute("virt_limit", "6");
+
+        List<Pool> reqPools = new ArrayList<Pool>();
+        reqPools.add(pool2);
+        Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
+        entitlements.put(pool2.getId(), stackedEnts.get(0));
+        Map<String, Map<String, String>> attributes = new HashMap<String, Map<String, String>>();
+        attributes.put(pool2.getId(), PoolHelper.getFlattenedAttributes(pool2));
+        List<Pool> resPools = PoolHelper.createHostRestrictedPools(poolManagerMock, consumer, reqPools,
+                entitlements, attributes);
+        stackDerivedPool = resPools.get(0);
     }
 
     private Subscription createStackedVirtSub(Owner owner, Product product,

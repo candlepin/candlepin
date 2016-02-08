@@ -82,10 +82,11 @@ public class PoolHelper {
      * Create a pool only for virt guests of a particular host consumer.
      *
      * @param pools Pools these host restricted pools are being derived from.
+     * @return pools the created pools
      */
-    public static void createHostRestrictedPools(PoolManager poolManager, Consumer consumer,
-            List<Pool> pools,
-            Map<String, Entitlement> sourceEntitlements, Map<String, Map<String, String>> attributeMaps) {
+    public static List<Pool> createHostRestrictedPools(PoolManager poolManager, Consumer consumer,
+            List<Pool> pools, Map<String, Entitlement> sourceEntitlements,
+            Map<String, Map<String, String>> attributeMaps) {
 
         List<Pool> poolsToCreate = new ArrayList<Pool>();
         List<Pool> poolsToUpdateFromStack = new ArrayList<Pool>();
@@ -95,9 +96,16 @@ public class PoolHelper {
             Map<String, String> attributes = attributeMaps.get(pool.getId());
             String quantity = attributes.get("virt_limit");
             if (pool.getDerivedProduct() == null) {
-                consumerSpecificPool = createPool(product, pool.getOwner(), quantity, pool.getStartDate(),
-                        pool.getEndDate(), pool.getContractNumber(), pool.getAccountNumber(),
-                        pool.getOrderNumber(), pool.getProvidedProducts(),
+                consumerSpecificPool = createPool(
+                        product,
+                        pool.getOwner(),
+                        quantity,
+                        pool.getStartDate(),
+                        pool.getEndDate(),
+                        pool.getContractNumber(),
+                        pool.getAccountNumber(),
+                        pool.getOrderNumber(),
+                        pool.getProvidedProducts(),
                         sourceEntitlements.get(pool.getId()));
             }
             else {
@@ -107,9 +115,16 @@ public class PoolHelper {
                 // pool,
                 // allowing the derived pool to have different attributes than
                 // the parent.
-                consumerSpecificPool = createPool(pool.getDerivedProduct(), pool.getOwner(), quantity,
-                        pool.getStartDate(), pool.getEndDate(), pool.getContractNumber(),
-                        pool.getAccountNumber(), pool.getOrderNumber(), pool.getDerivedProvidedProducts(),
+                consumerSpecificPool = createPool(
+                        pool.getDerivedProduct(),
+                        pool.getOwner(),
+                        quantity,
+                        pool.getStartDate(),
+                        pool.getEndDate(),
+                        pool.getContractNumber(),
+                        pool.getAccountNumber(),
+                        pool.getOrderNumber(),
+                        pool.getDerivedProvidedProducts(),
                         sourceEntitlements.get(pool.getId()));
             }
 
@@ -136,7 +151,7 @@ public class PoolHelper {
         if (poolsToUpdateFromStack != null && !poolsToUpdateFromStack.isEmpty()) {
             poolManager.updatePoolsFromStack(consumer, poolsToUpdateFromStack);
         }
-        poolManager.createPools(poolsToCreate);
+        return poolManager.createPools(poolsToCreate);
     }
 
     /**

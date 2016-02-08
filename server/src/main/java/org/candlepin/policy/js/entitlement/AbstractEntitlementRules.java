@@ -345,8 +345,10 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             List<Pool> subPoolsForStackIds) {
 
         Set<String> stackIdsThathaveSubPools = new HashSet<String>();
-        for (Pool pool : subPoolsForStackIds) {
-            stackIdsThathaveSubPools.add(pool.getSourceStackId());
+        if (subPoolsForStackIds != null && !subPoolsForStackIds.isEmpty()) {
+            for (Pool pool : subPoolsForStackIds) {
+                stackIdsThathaveSubPools.add(pool.getSourceStackId());
+            }
         }
 
         log.debug("Running virt_limit post-bind.");
