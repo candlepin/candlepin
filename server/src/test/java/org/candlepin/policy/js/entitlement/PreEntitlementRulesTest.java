@@ -181,6 +181,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test public void bindWithQuantityNoMultiEntitle() {
         Product product = new Product(productId, "A product for testing", owner);
         Pool pool = createPool(owner, product);
+        pool.setId("TaylorSwift");
         pool.setQuantity(new Long(100));
 
         when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))

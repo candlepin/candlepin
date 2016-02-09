@@ -24,7 +24,9 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -118,5 +120,13 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
             crit.add(Subqueries.propertyNotIn("id", certSerialQuery));
         }
         return crit;
+    }
+
+    /*
+     * This method is really not necessary, but is probably the cleanest way to
+     * unit test.
+     */
+    public Collection<CertificateSerial> saveOrUpdateAll(Map<String, CertificateSerial> serialMap) {
+        return this.saveOrUpdateAll(serialMap.values());
     }
 }

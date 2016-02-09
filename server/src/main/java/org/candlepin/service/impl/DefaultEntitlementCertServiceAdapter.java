@@ -378,7 +378,7 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         // We need the sequence generated id before we create the
         // EntitlementCertificate, otherwise we could have used cascading create
-        serialCurator.saveOrUpdateAll(serialMap.values());
+        serialCurator.saveOrUpdateAll(serialMap);
 
         Map<String, EntitlementCertificate> entitlementCerts = new HashMap<String, EntitlementCertificate>();
 

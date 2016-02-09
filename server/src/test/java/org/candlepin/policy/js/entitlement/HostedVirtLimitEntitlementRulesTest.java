@@ -35,12 +35,14 @@ import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * HostedVirtLimitEntitlementRulesTest: Complex tests around the hosted virt limit
@@ -89,6 +91,9 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         Entitlement e = new Entitlement(physicalPool, consumer, 1);
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
+        ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
+        when(poolManagerMock.lookupBySubscriptionIds(captor.capture()))
+            .thenReturn(poolList);
         when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId())))
             .thenReturn(poolList);
 
@@ -98,6 +103,10 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         List<Pool> physicalPools = new ArrayList<Pool>();
         physicalPools.add(physicalPool);
         enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null);
+        @SuppressWarnings("unchecked")
+        Set<String> subscriptionIds = captor.getValue();
+        assertEquals(1, subscriptionIds.size());
+        assertEquals("subId", subscriptionIds.iterator().next());
         verify(poolManagerMock).updatePoolQuantity(eq(virtBonusPool), eq(-10L));
 
         enforcer.postUnbind(consumer, poolManagerMock, e);
@@ -227,12 +236,19 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         physicalPool.setExported(10L);
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
-        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId())))
+        ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
+        when(poolManagerMock.lookupBySubscriptionIds(captor.capture()))
             .thenReturn(poolList);
-
+        when(poolManagerMock.lookupBySubscriptionId(eq("subId"))).thenReturn(poolList);
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put(physicalPool.getId(), e);
         enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null);
+
+        @SuppressWarnings("unchecked")
+        Set<String> subscriptionIds = captor.getValue();
+        assertEquals(1, subscriptionIds.size());
+        assertEquals("subId", subscriptionIds.iterator().next());
+
         verify(poolManagerMock).setPoolQuantity(eq(virtBonusPool), eq(0L));
         virtBonusPool.setQuantity(0L);
 

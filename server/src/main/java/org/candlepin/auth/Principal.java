@@ -76,8 +76,8 @@ public abstract class Principal implements Serializable, java.security.Principal
         if (targets == null) {
             log.debug(
                     "{} principal checking for {} access to sub-resource: {}. Access to null resource denied",
-                    this.getClass().getName(), access, Arrays.toString(targets.toArray()), subResource);
-            return false;
+                    this.getClass().getName(), access, subResource);
+            return canAccess(null, subResource, access);
         }
 
         log.debug("{} principal checking for {} access to targets: {} sub-resource: {}", this.getClass()

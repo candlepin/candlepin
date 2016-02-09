@@ -466,10 +466,12 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                         // getting all pools matching the sub id. Filtering out
                         // the 'parent'.
                         List<Pool> pools = subscriptionPoolMap.get(pool.getSubscriptionId());
-                        for (int idex = 0; idex < pools.size(); idex++) {
-                            Pool derivedPool = pools.get(idex);
-                            if (derivedPool.getAttributeValue("pool_derived") != null) {
-                                derivedPool = poolManager.setPoolQuantity(derivedPool, 0);
+                        if (pools != null) {
+                            for (int idex = 0; idex < pools.size(); idex++) {
+                                Pool derivedPool = pools.get(idex);
+                                if (derivedPool.getAttributeValue("pool_derived") != null) {
+                                    derivedPool = poolManager.setPoolQuantity(derivedPool, 0);
+                                }
                             }
                         }
                     }

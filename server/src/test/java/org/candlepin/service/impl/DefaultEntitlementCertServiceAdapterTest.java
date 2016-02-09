@@ -66,7 +66,9 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.ByteArrayOutputStream;
@@ -1618,9 +1620,20 @@ public class DefaultEntitlementCertServiceAdapterTest {
             "".getBytes());
         when(mockedPKI.getPemEncoded(any(Key.class))).thenReturn("".getBytes());
 
-        CertificateSerial serial = mock(CertificateSerial.class);
+        final CertificateSerial serial = mock(CertificateSerial.class);
         when(serial.getId()).thenReturn(1L);
-        when(serialCurator.create(any(CertificateSerial.class))).thenReturn(serial);
+
+        pool.setId("poolId");
+        doAnswer(new Answer<Map<String, CertificateSerial>>() {
+
+            @Override
+            public Map<String, CertificateSerial> answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                Map<String, CertificateSerial> map = (Map<String, CertificateSerial>) args[0];
+                map.put("poolId", serial);
+                return null;
+            }
+        }).when(serialCurator).saveOrUpdateAll(anyMap());
 
         EntitlementCertificate cert =
             certServiceAdapter.generateEntitlementCert(entitlement, product);

@@ -74,6 +74,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -147,6 +148,12 @@ public class PoolManagerTest {
     @Mock
     private OwnerCurator ownerCuratorMock;
 
+    @Captor
+    private ArgumentCaptor<Map<String, Entitlement>> entMapCaptor;
+
+    @Captor
+    private ArgumentCaptor<Map<String, Product>> productMapCaptor;
+
     private CandlepinPoolManager manager;
     private UserPrincipal principal;
 
@@ -178,9 +185,12 @@ public class PoolManagerTest {
             activationKeyRules, productCuratorMock, contentCuratorMock, ownerCuratorMock, i18n)
         );
 
-        when(entCertAdapterMock.generateEntitlementCert(any(Entitlement.class),
-            any(Product.class))).thenReturn(
-                new EntitlementCertificate());
+        Map<String, EntitlementCertificate> entCerts = new HashMap<String, EntitlementCertificate>();
+        entCerts.put(pool.getId(), new EntitlementCertificate());
+        when(entCertAdapterMock.generateEntitlementCerts(any(Consumer.class),
+                 anyMapOf(String.class, Entitlement.class),
+                 anyMapOf(String.class, Product.class)))
+                    .thenReturn(entCerts);
 
         dummyComplianceStatus = new ComplianceStatus(new Date());
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class))).thenReturn(
@@ -599,8 +609,8 @@ public class PoolManagerTest {
             product);
         s.setId("testSubId");
         pool.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
-        Entitlement e = new Entitlement(pool, TestUtil.createConsumer(o),
-            1);
+        Consumer con = TestUtil.createConsumer(o);
+        Entitlement e = new Entitlement(pool, con, 1);
         e.setDirty(true);
 
         when(mockSubAdapter.getSubscription(pool.getSubscriptionId())).thenReturn(s);
@@ -608,7 +618,11 @@ public class PoolManagerTest {
         manager.regenerateCertificatesOf(e, false, false);
         assertFalse(e.getDirty());
 
-        verify(entCertAdapterMock).generateEntitlementCert(eq(e), eq(product));
+        verify(entCertAdapterMock).generateEntitlementCerts(eq(con), entMapCaptor.capture(),
+                productMapCaptor.capture());
+        assertEquals(e, entMapCaptor.getValue().get(pool.getId()));
+        assertEquals(product, productMapCaptor.getValue().get(pool.getId()));
+
         verify(mockEventSink, times(1)).queueEvent(any(Event.class));
     }
 
@@ -709,7 +723,7 @@ public class PoolManagerTest {
             any(PoolFilterBuilder.class), any(PageRequest.class),
             anyBoolean())).thenReturn(page);
 
-        when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
+        when(mockPoolCurator.lockAndLoad(any(List.class))).thenReturn(Arrays.asList(pool1));
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),
             any(CallerType.class))).thenReturn(result);
 
@@ -907,7 +921,7 @@ public class PoolManagerTest {
             any(PageRequest.class), anyBoolean()))
                 .thenReturn(page);
 
-        when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
+        when(mockPoolCurator.lockAndLoad(anyListOf(String.class))).thenReturn(pools);
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),
             any(CallerType.class))).thenReturn(result);
 

@@ -14,9 +14,15 @@
  */
 package org.candlepin.policy.js.pool;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
+import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
@@ -153,6 +159,7 @@ public class PoolHelperTest {
         Map<String, Map<String, String>> attributes = new HashMap<String, Map<String, String>>();
         attributes.put(targetPool.getId(), PoolHelper.getFlattenedAttributes(targetPool));
 
+        when(pm.createPools(anyListOf(Pool.class))).then(returnsFirstArg());
         List<Pool> pools = PoolHelper.createHostRestrictedPools(pm, cons, targetPools, entitlements,
                 attributes);
 
@@ -205,6 +212,7 @@ public class PoolHelperTest {
 
         Map<String, Map<String, String>> attributes = new HashMap<String, Map<String, String>>();
         attributes.put(targetPool.getId(), PoolHelper.getFlattenedAttributes(targetPool));
+        when(pm.createPools(anyListOf(Pool.class))).then(returnsFirstArg());
         List<Pool> hostRestrictedPools = PoolHelper.createHostRestrictedPools(pm, cons, targetPools,
                 entitlements,
                 attributes);
