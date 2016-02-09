@@ -34,6 +34,12 @@ trapex() {
     done
 }
 
+move_artifact() {
+    if [ -f $1 ] && [ -d $2 ]; then
+        cp -v $1 $2 || true
+    fi
+}
+
 collect_artifacts() {
     # If the caller mounted a volume at /artifacts, copy server logs out:
     if [ -d "/artifacts" ]; then
@@ -41,10 +47,13 @@ collect_artifacts() {
 
         # It's entirely possible for these to not exist, so we'll copy them if we can, but if we
         # fail, we shouldn't abort
-        cp -v /var/log/candlepin/access.log /artifacts/ || true
-        cp -v /var/log/candlepin/audit.log /artifacts/ || true
-        cp -v /var/log/candlepin/candlepin.log /artifacts/ || true
-        cp -v /var/log/candlepin/error.log /artifacts/ || true
+        move_artifact '/var/log/candlepin/access.log' '/artifacts/'
+        move_artifact '/var/log/candlepin/audit.log' '/artifacts/'
+        move_artifact '/var/log/candlepin/candlepin.log' '/artifacts/'
+        move_artifact '/var/log/candlepin/error.log' '/artifacts/'
+        move_artifact '/var/log/candlepin/checkstyle.log' '/artifacts/'
+        move_artifact '/var/log/candlepin/unit_tests.log' '/artifacts/'
+        move_artifact '/var/log/candlepin/rspec.log' '/artifacts/'
     fi
 }
 
@@ -154,11 +163,12 @@ fi
 
 # Make sure we update the ruby bundle:
 bundle install
+mkdir -p /var/log/candlepin
 
 if [ "$LINTER" == "1" ]; then
     cd $CP_HOME
     echo "Running linter..."
-    buildr checkstyle
+    buildr checkstyle | tee /var/log/candlepin/checkstyle.log
 fi
 
 # TODO: keep track of return code?
@@ -166,7 +176,7 @@ cd $CP_HOME/$PROJECT
 
 if [ "$UNITTEST" == "1" ]; then
     echo "Running unit tests."
-    buildr test
+    buildr test | tee /var/log/candlepin/unit_tests.log
 fi
 
 if [ "$DEPLOY" == "1" ]; then
@@ -192,7 +202,7 @@ fi
 
 if [ "$RSPEC" == "1" ]; then
     echo "Running rspec tests."
-    buildr rspec
+    buildr rspec | tee /var/log/candlepin/rspec.log
 fi
 
 cleanup
