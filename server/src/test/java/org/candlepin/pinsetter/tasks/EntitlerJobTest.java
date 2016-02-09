@@ -91,16 +91,12 @@ public class EntitlerJobTest {
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         List<Entitlement> ents = new ArrayList<Entitlement>();
 
-        Class<HashMap<String, Integer>> className = (Class<HashMap<String, Integer>>) (Class) Map.class;
-        ArgumentCaptor<HashMap<String, Integer>> pqMapCaptor = ArgumentCaptor.forClass(className);
-        when(e.bindByPoolQuantities(eq(consumerUuid), pqMapCaptor.capture())).thenReturn(ents);
-        HashMap<String, Integer> pqMap = pqMapCaptor.getValue();
-
-        assertEquals(1, pqMap.get(pool).intValue());
+        when(e.bindByPoolQuantities(eq(consumerUuid), anyMapOf(String.class, Integer.class))).thenReturn(
+                ents);
 
         EntitlerJob job = new EntitlerJob(e, null, null, null);
         job.execute(ctx);
-        verify(e).bindByPoolQuantities(eq(consumerUuid), eq(pqMap));
+        verify(e).bindByPoolQuantities(eq(consumerUuid), anyMapOf(String.class, Integer.class));
         verify(e).sendEvents(eq(ents));
     }
 

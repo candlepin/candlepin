@@ -209,7 +209,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         // The cert should specify 5 monitoring entitlements, taking a 6th should fail:
         assertEquals(null, poolManager.entitleByProducts(data));
-
+        monitoringPool = poolCurator.find(monitoringPool.getId());
         assertEquals(Long.valueOf(5), monitoringPool.getConsumed());
     }
 
@@ -218,6 +218,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         AutobindData data = AutobindData.create(parentSystem).on(new Date())
                 .forProducts(new String [] {monitoring.getId()});
         Entitlement e = poolManager.entitleByProducts(data).get(0);
+        e = entitlementCurator.find(e.getId());
         poolManager.revokeEntitlement(e);
 
         List<Entitlement> entitlements = entitlementCurator.listByConsumer(parentSystem);
@@ -236,7 +237,10 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertEquals(1, eList.size());
         assertEquals(Long.valueOf(3), monitoringPool.getConsumed());
 
-        poolManager.revokeEntitlement(eList.get(0));
+        Entitlement e = entitlementCurator.find(eList.get(0).getId());
+        poolManager.revokeEntitlement(e);
+
+        monitoringPool = poolManager.find(monitoringPool.getId());
         assertEquals(Long.valueOf(0), monitoringPool.getConsumed());
     }
 
@@ -245,7 +249,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         throws Exception {
         AutobindData data = AutobindData.create(childVirtSystem).on(new Date())
                 .forProducts(new String [] {provisioning.getId()});
-        this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
+        poolManager.entitleByProducts(data).get(0);
         regenerateECAndAssertNotSameCertificates();
     }
 
@@ -280,8 +284,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         throws EntitlementRefusedException {
         AutobindData data = AutobindData.create(childVirtSystem).on(new Date())
                 .forProducts(new String [] {provisioning.getId()});
-        this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
-        this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
+        poolManager.entitleByProducts(data).get(0);
+        poolManager.entitleByProducts(data).get(0);
         regenerateECAndAssertNotSameCertificates();
     }
 
@@ -606,7 +610,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertEquals(1, results.size());
         assertEquals(results.get(0).getPool(), pool1);
 
-        poolManager.revokeEntitlement(results.get(0));
+        Entitlement e = entitlementCurator.find(results.get(0).getId());
+        poolManager.revokeEntitlement(e);
         assertNull(poolCurator.find(pool1.getId()));
         assertNotNull(poolCurator.find(pool2.getId()));
     }

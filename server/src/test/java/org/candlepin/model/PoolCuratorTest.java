@@ -28,6 +28,8 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
+import com.google.inject.persist.Transactional;
+
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -544,7 +546,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Map<String, Entitlement> subMap = new HashMap<String, Entitlement>();
         subMap.put(subid, e);
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(subMap));
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(subMap).size());
 
         e = new Entitlement(pool, consumer, 1);
         entitlementCurator.create(e);
@@ -1078,24 +1080,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         List<Pool> results = poolCurator.listByFilter(filters);
 
         assertThat(results, Matchers.hasItems(p1Attributes, p2Attributes));
-    }
-
-    @Test
-    public void testLockAndLoad() {
-        Owner owner1 = createOwner();
-        ownerCurator.create(owner1);
-
-        Pool p1Attributes = TestUtil.createPool(owner1, product);
-        Pool p1NoAttributes = TestUtil.createPool(owner1, product);
-
-        p1Attributes.addAttribute(new PoolAttribute("x", "true"));
-
-        Set<String> ids = new HashSet<String>();
-        ids.add(poolCurator.create(p1Attributes).getId());
-        ids.add(poolCurator.create(p1NoAttributes).getId());
-
-        List<Pool> result = poolCurator.lockAndLoad(ids);
-        assertEquals(2, result.size());
     }
 
     private List<Owner> setupDBForProductIdTests() {

@@ -151,6 +151,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
                     10, null, null, false, null, null, null, null);
                 consumerResource.bind(guestConsumer.getUuid(), p.getId(), null,
                     10, null, null, false, null, null, null, null);
+                p = poolManager.find(p.getId());
                 // ensure the correct # consumed from the bonus pool
                 assertTrue(p.getConsumed() == 20);
                 assertTrue(p.getQuantity() == 100);
@@ -165,6 +166,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         consumerResource.bind(manifestConsumer.getUuid(), parentPool.getId(), null, 7, null,
             null, false, null, null, null, null);
         for (Pool p : subscribedTo) {
+            p = poolManager.find(p.getId());
             assertTrue(p.getConsumed() == 20);
             assertTrue(p.getQuantity() == 30);
         }
@@ -173,6 +175,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         consumerResource.bind(manifestConsumer.getUuid(), parentPool.getId(), null, 2, null,
             null, false, null, null, null, null);
         for (Pool p : subscribedTo) {
+            p = poolManager.find(p.getId());
             assertTrue(p.getConsumed() == 10);
             assertTrue(p.getQuantity() == 10);
         }
@@ -181,6 +184,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         consumerResource.bind(systemConsumer.getUuid(), parentPool.getId(), null, 1, null,
             null, false, null, null, null, null);
         for (Pool p : subscribedTo) {
+            p = poolManager.find(p.getId());
             assertTrue(p.getConsumed() == 10);
             assertTrue(p.getQuantity() == 10);
         }
@@ -204,6 +208,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
                     10, null, null, false, null, null, null, null);
                 consumerResource.bind(guestConsumer.getUuid(), p.getId(), null,
                     10, null, null, false, null, null, null, null);
+                p = poolManager.find(p.getId());
                 assertTrue(p.getConsumed() == 20);
                 assertTrue(p.getQuantity() == -1);
                 poolManager.getRefresher(subAdapter).add(owner).run();
@@ -228,6 +233,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         consumerResource.bind(manifestConsumer.getUuid(), parentPool.getId(), null, 3, null,
             null, false, null, null, null, null);
         for (Pool p : subscribedTo) {
+            p = poolManager.find(p.getId());
             assertEquals(new Long(0), p.getConsumed());
             assertTrue(p.getQuantity() == 0);
         }

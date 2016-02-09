@@ -25,6 +25,7 @@ import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.pool.PoolHelper;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -69,14 +70,16 @@ public class EnforcerForTesting implements Enforcer {
     @Override
     public Map<String, ValidationResult> preEntitlement(Consumer consumer,
             Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
-        // TODO Auto-generated method stub
-        return null;
+        Map<String, ValidationResult> result = new HashMap<String, ValidationResult>();
+        for (PoolQuantity pool : entitlementPoolQuantities) {
+            result.put(pool.getPool().getId(), preEntitlement(consumer, pool.getPool(), pool.getQuantity()));
+        }
+        return result;
     }
 
     @Override
     public Map<String, ValidationResult> preEntitlement(Consumer consumer, Consumer host,
             Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
-        // TODO Auto-generated method stub
-        return null;
+        return preEntitlement(consumer, entitlementPoolQuantities, caller);
     }
 }

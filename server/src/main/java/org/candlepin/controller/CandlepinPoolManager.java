@@ -1457,9 +1457,9 @@ public class CandlepinPoolManager implements PoolManager {
         if (entitlements == null) {
             handler = new NewHandler();
         }
-        else if (entitlements.keySet().size() != poolQuantityMap.keySet().size() ||
-                !entitlements.keySet().containsAll(poolQuantityMap.keySet()) ||
-                !poolQuantityMap.keySet().containsAll(entitlements.keySet())) {
+        else if (entitlements.keySet().size() != poolQuantities.keySet().size() ||
+                !entitlements.keySet().containsAll(poolQuantities.keySet()) ||
+                !poolQuantities.keySet().containsAll(entitlements.keySet())) {
             throw new IllegalArgumentException(
                             i18n.tr("Argument mismatch in entitlement update, number of pools: {}," +
                             " number of entitlements: {}",
@@ -1974,10 +1974,16 @@ public class CandlepinPoolManager implements PoolManager {
                     stackIds.add(entitlement.getPool().getStackId());
                 }
             }
-            List<Pool> subPoolsForStackIds = poolCurator.getSubPoolForStackIds(consumer, stackIds);
-            if (subPoolsForStackIds != null && !subPoolsForStackIds.isEmpty()) {
-                poolRules.updatePoolsFromStack(consumer, subPoolsForStackIds);
-                poolCurator.mergeAll(subPoolsForStackIds);
+            List<Pool> subPoolsForStackIds = null;
+            if (!stackIds.isEmpty()) {
+                subPoolsForStackIds = poolCurator.getSubPoolForStackIds(consumer, stackIds);
+                if (subPoolsForStackIds != null && !subPoolsForStackIds.isEmpty()) {
+                    poolRules.updatePoolsFromStack(consumer, subPoolsForStackIds);
+                    poolCurator.mergeAll(subPoolsForStackIds);
+                }
+            }
+            else {
+                subPoolsForStackIds = new ArrayList<Pool>();
             }
 
             enforcer.postEntitlement(manager, consumer, entitlements, subPoolsForStackIds);

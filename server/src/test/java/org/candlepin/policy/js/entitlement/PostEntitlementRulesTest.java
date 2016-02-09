@@ -36,6 +36,7 @@ import org.mockito.ArgumentCaptor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -57,12 +58,12 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put(pool.getId(), e);
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
-        enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null);
-
         // Pool quantity should be virt_limit:
         Class<List<Pool>> listClass = (Class<List<Pool>>) (Class) ArrayList.class;
         ArgumentCaptor<List<Pool>> poolsArg = ArgumentCaptor.forClass(listClass);
-        verify(poolManagerMock.createPools(poolsArg.capture()));
+        when(poolManagerMock.createPools(poolsArg.capture())).thenReturn(new LinkedList<Pool>());
+        enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null);
+
         List<Pool> pools = poolsArg.getValue();
         assertEquals(1, pools.size());
         assertEquals(10L, pools.get(0).getQuantity().longValue());
@@ -77,12 +78,12 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put(pool.getId(), e);
+        Class<List<Pool>> listClass = (Class<List<Pool>>) (Class) ArrayList.class;
+        ArgumentCaptor<List<Pool>> poolsArg = ArgumentCaptor.forClass(listClass);
+        when(poolManagerMock.createPools(poolsArg.capture())).thenReturn(new LinkedList<Pool>());
         enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null);
 
         // Pool quantity should be virt_limit:
-        Class<List<Pool>> listClass = (Class<List<Pool>>) (Class) ArrayList.class;
-        ArgumentCaptor<List<Pool>> poolsArg = ArgumentCaptor.forClass(listClass);
-        verify(poolManagerMock.createPools(poolsArg.capture()));
         List<Pool> pools = poolsArg.getValue();
         assertEquals(1, pools.size());
         assertEquals(-1L, pools.get(0).getQuantity().longValue());

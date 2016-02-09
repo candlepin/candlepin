@@ -1814,7 +1814,7 @@ var Entitlement = {
             var result = this.ValidationResult();
             for (var k = 0; k < validators.length; k++) {
                 // Set up the context to work like an individual validation
-                context.quality = pool.requestedQuantity;
+                context.quantity = pool.quantityRequested;
                 context.pool = pool;
                 validators[k](context, result);
             }

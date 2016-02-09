@@ -15,6 +15,7 @@
 package org.candlepin.policy;
 
 import static org.junit.Assert.*;
+import static org.mockito.AdditionalAnswers.*;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -44,6 +45,7 @@ import org.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -166,6 +168,7 @@ public class PoolRulesStackDerivedTest {
         entitlements.put(pool2.getId(), stackedEnts.get(0));
         Map<String, Map<String, String>> attributes = new HashMap<String, Map<String, String>>();
         attributes.put(pool2.getId(), PoolHelper.getFlattenedAttributes(pool2));
+        when(poolManagerMock.createPools(Matchers.anyListOf(Pool.class))).then(returnsFirstArg());
         List<Pool> resPools = PoolHelper.createHostRestrictedPools(poolManagerMock, consumer, reqPools,
                 entitlements, attributes);
         stackDerivedPool = resPools.get(0);

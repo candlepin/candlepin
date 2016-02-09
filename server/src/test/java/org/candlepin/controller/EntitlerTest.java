@@ -107,11 +107,11 @@ public class EntitlerTest {
     @Test
     public void bindByPoolString() throws EntitlementRefusedException {
         String poolid = "pool10";
-        Pool pool = mock(Pool.class);
         Entitlement ent = mock(Entitlement.class);
         List<Entitlement> eList = new ArrayList<Entitlement>();
+        eList.add(ent);
         when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
-        when(pm.find(eq(poolid))).thenReturn(pool);
+
         Map<String, Integer> pQs = new HashMap<String, Integer>();
         pQs.put(poolid, 1);
 
@@ -160,12 +160,12 @@ public class EntitlerTest {
     @Test(expected = BadRequestException.class)
     public void nullPool() throws EntitlementRefusedException {
         String poolid = "foo";
-        Consumer c = null; // keeps me from casting null
-        when(pm.find(eq(poolid))).thenReturn(null);
-
+        Consumer c = TestUtil.createConsumer(); // keeps me from casting null
         Map<String, Integer> pQs = new HashMap<String, Integer>();
         pQs.put(poolid, 1);
-        entitler.bindByPoolQuantities("blah", pQs);
+        when(cc.findByUuid(eq(c.getUuid()))).thenReturn(c);
+        when(pm.entitleByPools(eq(c), eq(pQs))).thenThrow(new IllegalArgumentException());
+        entitler.bindByPoolQuantities(c.getUuid(), pQs);
     }
 
     @Test(expected = ForbiddenException.class)
@@ -249,11 +249,11 @@ public class EntitlerTest {
             EntitlementRefusedException ere = new EntitlementRefusedException(fakeResult);
 
             when(pool.getId()).thenReturn(poolid);
-            when(pm.find(eq(poolid))).thenReturn(pool);
+            when(poolCurator.find(eq(poolid))).thenReturn(pool);
             Map<String, Integer> pQs = new HashMap<String, Integer>();
             pQs.put(poolid, 1);
             when(pm.entitleByPools(eq(consumer), eq(pQs))).thenThrow(ere);
-            entitler.bindByPoolQuantities(consumer, pQs);
+            entitler.bindByPoolQuantity(consumer, poolid, 1);
         }
         catch (EntitlementRefusedException e) {
             fail(msg + ": threw unexpected error");

@@ -87,6 +87,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
         poolQuantities.put(consumerPool.getId(), 1);
         anotherEntitler.entitleByPools(consumer, poolQuantities);
+        poolQuantities.put(consumerPool.getId(), 1);
         anotherEntitler.entitleByPools(consumer, poolQuantities);
 
         assertFalse(poolCurator.find(consumerPool.getId())
@@ -112,7 +113,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         poolQuantities.put(consumerPool.getId(), 1);
         List<Entitlement> e1 = poolManager.entitleByPools(consumer, poolQuantities);
         assertEquals(1, e1.size());
-
+        poolQuantities.put(consumerPool.getId(), 1);
         anotherEntitler.entitleByPools(consumer, poolQuantities);
     }
 
