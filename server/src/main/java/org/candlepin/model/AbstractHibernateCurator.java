@@ -379,13 +379,22 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         flush();
     }
 
-    public final void flush() {
+    public void flush() {
         try {
             getEntityManager().flush();
         }
         catch (OptimisticLockException e) {
             throw new ConcurrentModificationException(getConcurrentModificationMessage(),
                 e);
+        }
+    }
+
+    public void clear() {
+        try {
+            getEntityManager().clear();
+        }
+        catch (OptimisticLockException e) {
+            throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
         }
     }
 
@@ -398,7 +407,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return entityManager.get();
     }
 
-    public Collection<E> saveOrUpdateAll(Collection<E> entries) {
+    public Collection<E> saveOrUpdateAll(Collection<E> entries, boolean flush) {
 
         if (entries != null && !entries.isEmpty()) {
             try {
@@ -407,14 +416,16 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                 Iterator<E> iter = entries.iterator();
                 while (iter.hasNext()) {
                     session.saveOrUpdate(iter.next());
-                    if (i % batchSize == 0) {
+                    if (i % batchSize == 0 && flush) {
                         session.flush();
                         session.clear();
                     }
                     i++;
                 }
-                session.flush();
-                session.clear();
+                if (flush) {
+                    session.flush();
+                    session.clear();
+                }
             }
             catch (OptimisticLockException e) {
                 throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
@@ -423,7 +434,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return entries;
     }
 
-    public Collection<E> mergeAll(Collection<E> entries) {
+    public Collection<E> mergeAll(Collection<E> entries, boolean flush) {
 
         if (entries != null && !entries.isEmpty()) {
             try {
@@ -432,14 +443,16 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                 Iterator<E> iter = entries.iterator();
                 while (iter.hasNext()) {
                     session.merge(iter.next());
-                    if (i % batchSize == 0) {
+                    if (i % batchSize == 0 && flush) {
                         session.flush();
                         session.clear();
                     }
                     i++;
                 }
-                session.flush();
-                session.clear();
+                if (flush) {
+                    session.flush();
+                    session.clear();
+                }
             }
             catch (OptimisticLockException e) {
                 throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);

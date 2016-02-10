@@ -20,6 +20,7 @@ import org.candlepin.audit.Event.Type;
 import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
@@ -38,7 +39,6 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
@@ -49,6 +49,9 @@ import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.pinsetter.core.PinsetterException;
+import org.candlepin.pinsetter.core.PinsetterJobListener;
+import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.tasks.ConsumerComplianceJob;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationResult;
@@ -58,7 +61,6 @@ import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
-import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
@@ -120,6 +122,9 @@ public class CandlepinPoolManager implements PoolManager {
     private ProductCurator prodCurator;
     private ContentCurator contentCurator;
     private OwnerCurator ownerCurator;
+
+    @Inject
+    private PinsetterKernel pinsetterKernel;
 
     /**
      * @param poolCurator
@@ -840,7 +845,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public List<Pool> createPools(List<Pool> pools) {
         if (pools != null && !pools.isEmpty()) {
-            poolCurator.saveOrUpdateAll(pools);
+            poolCurator.saveOrUpdateAll(pools, false);
 
             for (Pool pool : pools) {
                 log.debug("   new pool: {}", pool);
@@ -1060,7 +1065,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // now make the entitlements
-        return entitleByPools(guest, convertToMap(bestPools));
+        return entitleByPools(host, convertToMap(bestPools));
     }
 
     /**
@@ -1500,8 +1505,19 @@ public class CandlepinPoolManager implements PoolManager {
         handler.handleBonusPools(poolQuantities, entitlements);
 
         JobDetail detail = ConsumerComplianceJob.scheduleStatusCheck(consumer, null, false, false);
-        log.info("Triggered ConsumerComplianceJob: {} for consumer: {}", detail.getKey(),
+        detail.getJobDataMap().put(PinsetterJobListener.PRINCIPAL_KEY, new SystemPrincipal());
+
+        log.info("Triggering ConsumerComplianceJob: {} for consumer: {}", detail.getKey(),
                 consumer.getUuid());
+        try {
+            pinsetterKernel.scheduleSingleJob(detail);
+        }
+        catch (PinsetterException e) {
+            log.error("ConsumerComplianceJob schedule failed", e.getMessage());
+        }
+
+        poolCurator.flush();
+        // poolCurator.clear();
 
         return new ArrayList<Entitlement>(entitlements.values());
     }
@@ -1979,7 +1995,7 @@ public class CandlepinPoolManager implements PoolManager {
                 subPoolsForStackIds = poolCurator.getSubPoolForStackIds(consumer, stackIds);
                 if (subPoolsForStackIds != null && !subPoolsForStackIds.isEmpty()) {
                     poolRules.updatePoolsFromStack(consumer, subPoolsForStackIds);
-                    poolCurator.mergeAll(subPoolsForStackIds);
+                    poolCurator.mergeAll(subPoolsForStackIds, false);
                 }
             }
             else {
@@ -1991,7 +2007,7 @@ public class CandlepinPoolManager implements PoolManager {
         @Override
         public void handleEntitlementPersist(Map<String, Entitlement> entitlements) {
             List<Entitlement> entitlementsList = new ArrayList<Entitlement>(entitlements.values());
-            entitlementCurator.saveOrUpdateAll(entitlementsList);
+            entitlementCurator.saveOrUpdateAll(entitlementsList, false);
         }
         @Override
         public void handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> poolQuantities,
@@ -2032,7 +2048,7 @@ public class CandlepinPoolManager implements PoolManager {
         @Override
         public void handleEntitlementPersist(Map<String, Entitlement> entitlements) {
             List<Entitlement> entitlementsList = new ArrayList<Entitlement>(entitlements.values());
-            entitlementCurator.mergeAll(entitlementsList);
+            entitlementCurator.mergeAll(entitlementsList, false);
         }
         @Override
         public void handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> poolQuantities,

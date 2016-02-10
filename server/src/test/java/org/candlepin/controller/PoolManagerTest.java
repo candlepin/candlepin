@@ -738,6 +738,9 @@ public class PoolManagerTest {
 
         AutobindData data = AutobindData.create(TestUtil.createConsumer(o))
                 .forProducts(new String[] { product.getUuid() }).on(now);
+
+        doNothing().when(mockPoolCurator).flush();
+        doNothing().when(mockPoolCurator).clear();
         List<Entitlement> e = manager.entitleByProducts(data);
 
         assertNotNull(e);

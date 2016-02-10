@@ -371,7 +371,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             if (consumerFactExpression && (isStandalone || hostLimited)) {
                 String virtLimit = attributes.get("virt_limit");
                 String stackId = attributes.get("stacking_id");
-                boolean createSubPool = stackId == null || stackIdsThathaveSubPools.contains(stackId);
+                boolean createSubPool = stackId == null || !stackIdsThathaveSubPools.contains(stackId);
                 if (createSubPool) {
                     log.debug("Creating a new sub-pool for {}", pool);
                     try {

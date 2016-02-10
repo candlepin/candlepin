@@ -349,21 +349,26 @@ public class PoolRules {
         Map<String, List<Entitlement>> entitlementMap = new HashMap<String, List<Entitlement>>();
         Map<String, Pool> poolMap = new HashMap<String, Pool>();
         Set<String> sourceStackIds = new HashSet<String>();
+
+
         for (Pool pool : pools) {
             sourceStackIds.add(pool.getSourceStackId());
             poolMap.put(pool.getId(), pool);
         }
         List<Entitlement> stackedEnts = this.entCurator.findByStackIds(consumer, sourceStackIds);
         for (Entitlement entitlement : stackedEnts) {
-            if (!entitlementMap.containsKey(entitlement.getPool().getId())) {
-                entitlementMap.put(entitlement.getPool().getId(), new ArrayList<Entitlement>());
+            if (!entitlementMap.containsKey(entitlement.getPool().getStackId())) {
+                entitlementMap.put(entitlement.getPool().getStackId(), new ArrayList<Entitlement>());
             }
-            entitlementMap.get(entitlement.getPool().getId()).add(entitlement);
+
+            entitlementMap.get(entitlement.getPool().getStackId()).add(entitlement);
         }
 
-        for (Entry<String, Pool> entry : poolMap.entrySet()) {
-            this.updatePoolFromStackedEntitlements(entry.getValue(), entitlementMap.get(entry.getKey()),
-                    new HashSet<Product>());
+        for (Pool pool : poolMap.values()) {
+            List<Entitlement> entitlements = entitlementMap.get(pool.getSourceStackId());
+            if (entitlements != null && !entitlements.isEmpty()) {
+                this.updatePoolFromStackedEntitlements(pool, entitlements, new HashSet<Product>());
+            }
         }
     }
 
@@ -373,7 +378,7 @@ public class PoolRules {
         PoolUpdate update = new PoolUpdate(pool);
 
         // Nothing to do if there were no entitlements found.
-        if (stackedEnts.isEmpty()) {
+        if (stackedEnts == null || stackedEnts.isEmpty()) {
             return update;
         }
 
