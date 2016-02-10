@@ -314,7 +314,7 @@ public class CrlFileUtil {
             this.updateCRLFile(file, revoke, unrevoke);
 
             // Store the state of the newly-revoked serials as "collected"
-            this.certificateSerialCurator.saveOrUpdateAll(serials);
+            this.certificateSerialCurator.saveOrUpdateAll(serials, true);
         }
 
         return true;

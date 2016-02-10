@@ -127,6 +127,6 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
      * unit test.
      */
     public Collection<CertificateSerial> saveOrUpdateAll(Map<String, CertificateSerial> serialMap) {
-        return this.saveOrUpdateAll(serialMap.values());
+        return this.saveOrUpdateAll(serialMap.values(), false);
     }
 }
