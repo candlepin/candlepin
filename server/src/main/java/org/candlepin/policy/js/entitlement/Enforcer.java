@@ -20,8 +20,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
-import org.candlepin.policy.js.pool.PoolHelper;
 
 import java.util.Collection;
 import java.util.List;
@@ -148,9 +146,9 @@ public interface Enforcer {
     /**
      * Run post-entitlement actions.
      *
+     * @param c the consumer to unbind on
      * @param poolManager
-     * @param ent The entitlement that was just granted.
-     * @return post-entitlement processor
+     * @param ent The entitlement that needs to be revoked
      */
     void postUnbind(Consumer c, PoolManager poolManager, Entitlement ent);
 

@@ -33,7 +33,6 @@ import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.ValidationWarning;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
-import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Test;

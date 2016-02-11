@@ -31,7 +31,6 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Test;

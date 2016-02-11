@@ -29,7 +29,6 @@ import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
-import org.candlepin.model.dto.PoolIdAndQuantity;
 import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.policy.js.quantity.SuggestedQuantity;
 import org.candlepin.resource.dto.AutobindData;

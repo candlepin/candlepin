@@ -32,7 +32,6 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Pool;
 import org.candlepin.model.SubscriptionsCertificate;
-import org.candlepin.model.dto.PoolIdAndQuantity;
 import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.Enforcer;

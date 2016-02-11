@@ -28,7 +28,6 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import com.google.inject.persist.Transactional;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;

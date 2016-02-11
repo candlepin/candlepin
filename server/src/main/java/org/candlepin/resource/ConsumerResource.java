@@ -69,7 +69,6 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -1454,10 +1453,10 @@ public class ConsumerResource {
         }
 
         if (hasPoolQuantities) {
-            if(quantity != null) {
+            if (quantity != null) {
                 throw new BadRequestException(
-                        i18n.tr("Cannot specify a single quantity when binding a batch of exact pools."
-                                + " Please specify a quantity for each pool"));
+                        i18n.tr("Cannot specify a single quantity when binding a batch of exact pools." +
+                                " Please specify a quantity for each pool"));
             }
             else if (!async) {
                 throw new BadRequestException(

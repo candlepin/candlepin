@@ -236,7 +236,7 @@ public interface PoolManager {
 
     /**
      * Updates the pools based on the entitlements in the specified stack.
-     * 
+     *
      * @param consumer
      * @param pools
      */
