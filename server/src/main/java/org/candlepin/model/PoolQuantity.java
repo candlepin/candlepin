@@ -16,8 +16,6 @@ package org.candlepin.model;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-import java.util.Comparator;
-import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
