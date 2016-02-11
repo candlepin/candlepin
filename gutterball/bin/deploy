@@ -37,7 +37,7 @@ build() {
     if [ -n "$LOGDRIVER" ]; then
       info_msg "Building with logdriver."
     fi
-    buildr -s clean package test=no $LOGDRIVER
+    buildr -s clean package test=no app_db_name=$APP_DB_NAME $LOGDRIVER
 }
 
 autoconf() {
@@ -51,7 +51,7 @@ autoconf() {
         buildr_env="mysql"
     fi
 
-    buildr -s -e $buildr_env erb $use_logdriver
+    buildr -s -e $buildr_env app_db_name=$APP_DB_NAME erb $use_logdriver
 
     if [ "$?" -ne "0" ]; then
         err_msg "ERROR: gutterball.conf generation failed!"
@@ -187,7 +187,7 @@ stop_container
 deploy
 generate_db
 if [ -n "$AUTOCONF" ]; then
-   autoconf $LOGDRIVER
+   autoconf app_db_name=$APP_DB_NAME $LOGDRIVER
 fi
 start_container
 notify

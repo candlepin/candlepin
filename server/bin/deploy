@@ -108,7 +108,7 @@ create_var_cache_candlepin() {
 }
 
 autoconf() {
-  buildr -s -e $1 erb $2 $3
+  buildr -s -e $1 app_db_name=$APP_DB_NAME erb $2 $3
 
   if [ "$?" -ne "0" ]; then
     err_msg "ERROR: candlepin.conf generation failed!"
@@ -292,7 +292,7 @@ else
     ENV_BUILDR="development"
 fi
 
-buildr -s -e $ENV_BUILDR clean package test=no $LOGDRIVER $HOSTEDTEST
+buildr -s -e $ENV_BUILDR clean package test=no app_db_name=$APP_DB_NAME $LOGDRIVER $HOSTEDTEST
 
 if [ "$?" -ne "0" ]; then
   err_msg "ERROR: Compile failed."

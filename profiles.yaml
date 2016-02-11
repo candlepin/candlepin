@@ -22,11 +22,11 @@ postgresql: &default
   server:
     <<: *common_server
     <<: *postgresql_static
-    jdbc_url: "jdbc:postgresql:candlepin"
+    jdbc_url: "jdbc:postgresql:$DB_NAME"
   gutterball:
     <<: *common_gutterball
     <<: *postgresql_static
-    jdbc_url: "jdbc:postgresql:gutterball"
+    jdbc_url: "jdbc:postgresql:$DB_NAME"
 
 # Buildr's default environment is "development" so
 # by default, go against postgresql.
@@ -57,8 +57,8 @@ mysql:
   server:
     <<: *common_server
     <<: *mysql_static
-    jdbc_url: "jdbc:mysql:///candlepin"
+    jdbc_url: "jdbc:mysql:///$DB_NAME"
   gutterball:
     <<: *common_server
     <<: *mysql_static
-    jdbc_url: "jdbc:mysql:///gutterball"
+    jdbc_url: "jdbc:mysql:///$DB_NAME"
