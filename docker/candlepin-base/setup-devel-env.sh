@@ -53,10 +53,13 @@ cd /candlepin
 
 # Allow for grabbing specific pull requests
 git config --add remote.origin.fetch "+refs/pull/*:refs/remotes/origin/pr/*"
+git pull
 
 # Install all ruby deps:
 gem install bundler
 bundle install
 
-# Installs all Java deps into the image, big time saver:
+# Installs all Java deps into the image, big time saver
+# We run checkstyle explicitly here so it'll pull down its deps as well
 buildr artifacts
+buildr checkstyle || true

@@ -77,6 +77,9 @@ cleanup() {
         # additional artifact collection up to the user
         collect_artifacts
 
+        # Remove our tee output stream, if it exists
+        rm -f teeout
+
         # Errors in the script should still launch the shell, as they're likely CP config errors, not
         # actual errors with the script
         if [ "$1" == "" ] || [ "$1" == "ERR" ] || [ "$1" == "EXIT" ]; then
@@ -165,10 +168,15 @@ fi
 bundle install
 mkdir -p /var/log/candlepin
 
+# Setup our tee pipe
+mkfifo teeout
+
 if [ "$LINTER" == "1" ]; then
     cd $CP_HOME
     echo "Running linter..."
-    buildr checkstyle | tee /var/log/candlepin/checkstyle.log
+
+    tee /var/log/candlepin/checkstyle.log < teeout &
+    buildr checkstyle > teeout 2>&1
 fi
 
 # TODO: keep track of return code?
@@ -176,7 +184,9 @@ cd $CP_HOME/$PROJECT
 
 if [ "$UNITTEST" == "1" ]; then
     echo "Running unit tests."
-    buildr test | tee /var/log/candlepin/unit_tests.log
+
+    tee /var/log/candlepin/unit_tests.log < teeout &
+    buildr test > teeout 2>&1
 fi
 
 if [ "$DEPLOY" == "1" ]; then
@@ -202,7 +212,9 @@ fi
 
 if [ "$RSPEC" == "1" ]; then
     echo "Running rspec tests."
-    buildr rspec | tee /var/log/candlepin/rspec.log
+
+    tee /var/log/candlepin/rspec.log < teeout &
+    buildr rspec > teeout 2>&1
 fi
 
 cleanup
