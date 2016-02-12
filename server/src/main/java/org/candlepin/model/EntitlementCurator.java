@@ -280,14 +280,14 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
         criteria = criteria.createCriteria("pool")
                 .add(Restrictions.or(
-                    // Dates overlap if the start or end date is in our range
-                    Restrictions.or(
-                        Restrictions.between("startDate", startDate, endDate),
-                        Restrictions.between("endDate", startDate, endDate)),
-                    Restrictions.and(
+                        // Dates overlap if the start or end date is in our range
+                        Restrictions.or(
+                            Restrictions.between("startDate", startDate, endDate),
+                            Restrictions.between("endDate", startDate, endDate)),
                         // The dates overlap if our range is completely encapsulated
-                        Restrictions.le("startDate", startDate),
-                        Restrictions.ge("endDate", endDate))));
+                        Restrictions.and(
+                            Restrictions.le("startDate", startDate),
+                            Restrictions.ge("endDate", endDate))));
         return criteria;
     }
 

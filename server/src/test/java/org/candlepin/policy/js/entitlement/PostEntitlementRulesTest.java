@@ -67,6 +67,32 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
     }
 
     @Test
+    public void virtLimitSubPoolBatch() {
+        Pool pool = setupVirtLimitPool();
+        pool.setAttribute("virt_limit", "10");
+        Entitlement e = new Entitlement(pool, consumer, 5);
+
+        Pool pool2 = setupVirtLimitPool();
+        pool2.setAttribute("virt_limit", "10");
+        Entitlement e2 = new Entitlement(pool2, consumer, 5);
+
+        Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
+        entitlements.put(pool.getId(), e);
+        entitlements.put(pool2.getId(), e2);
+        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
+        // Pool quantity should be virt_limit:
+        Class<List<Pool>> listClass = (Class<List<Pool>>) (Class) ArrayList.class;
+        ArgumentCaptor<List<Pool>> poolsArg = ArgumentCaptor.forClass(listClass);
+        when(poolManagerMock.createPools(poolsArg.capture())).thenReturn(new LinkedList<Pool>());
+        enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null);
+
+        List<Pool> pools = poolsArg.getValue();
+        assertEquals(2, pools.size());
+        assertEquals(10L, pools.get(0).getQuantity().longValue());
+        assertEquals(10L, pools.get(1).getQuantity().longValue());
+    }
+
+    @Test
     public void unlimitedVirtLimitSubPool() {
         Pool pool = setupVirtLimitPool();
         pool.setAttribute("virt_limit", "unlimited");
@@ -84,6 +110,32 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         List<Pool> pools = poolsArg.getValue();
         assertEquals(1, pools.size());
         assertEquals(-1L, pools.get(0).getQuantity().longValue());
+    }
+
+    @Test
+    public void unlimitedVirtLimitSubPoolBatch() {
+        Pool pool = setupVirtLimitPool();
+        pool.setAttribute("virt_limit", "unlimited");
+        Entitlement e = new Entitlement(pool, consumer, 5);
+
+        Pool pool2 = setupVirtLimitPool();
+        pool2.setAttribute("virt_limit", "unlimited");
+        Entitlement e2 = new Entitlement(pool2, consumer, 5);
+
+        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
+        Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
+        entitlements.put(pool.getId(), e);
+        entitlements.put(pool2.getId(), e2);
+        Class<List<Pool>> listClass = (Class<List<Pool>>) (Class) ArrayList.class;
+        ArgumentCaptor<List<Pool>> poolsArg = ArgumentCaptor.forClass(listClass);
+        when(poolManagerMock.createPools(poolsArg.capture())).thenReturn(new LinkedList<Pool>());
+        enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null);
+
+        // Pool quantity should be virt_limit:
+        List<Pool> pools = poolsArg.getValue();
+        assertEquals(2, pools.size());
+        assertEquals(-1L, pools.get(0).getQuantity().longValue());
+        assertEquals(-1L, pools.get(1).getQuantity().longValue());
     }
 
     // Sub-pools should not be created when distributors bind:

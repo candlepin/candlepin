@@ -342,13 +342,14 @@ public class PoolRules {
      *
      * @param pools
      * @param consumer
+     * @return updates
      */
-    public void updatePoolsFromStack(Consumer consumer, List<Pool> pools) {
+    public List<PoolUpdate> updatePoolsFromStack(Consumer consumer, List<Pool> pools) {
 
         Map<String, List<Entitlement>> entitlementMap = new HashMap<String, List<Entitlement>>();
         Map<String, Pool> poolMap = new HashMap<String, Pool>();
         Set<String> sourceStackIds = new HashSet<String>();
-
+        List<PoolUpdate> result = new ArrayList<PoolUpdate>();
 
         for (Pool pool : pools) {
             sourceStackIds.add(pool.getSourceStackId());
@@ -366,9 +367,11 @@ public class PoolRules {
         for (Pool pool : poolMap.values()) {
             List<Entitlement> entitlements = entitlementMap.get(pool.getSourceStackId());
             if (entitlements != null && !entitlements.isEmpty()) {
-                this.updatePoolFromStackedEntitlements(pool, entitlements, new HashSet<Product>());
+                result.add(this.updatePoolFromStackedEntitlements(pool, entitlements,
+                        new HashSet<Product>()));
             }
         }
+        return result;
     }
 
     public PoolUpdate updatePoolFromStackedEntitlements(Pool pool, List<Entitlement> stackedEnts,

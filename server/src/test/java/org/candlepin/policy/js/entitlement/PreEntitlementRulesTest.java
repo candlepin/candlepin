@@ -24,6 +24,7 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.policy.ValidationResult;
@@ -32,10 +33,12 @@ import org.candlepin.test.TestUtil;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
@@ -194,6 +197,32 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertEquals(1, result.getErrors().size());
         assertTrue(result.getErrors().get(0).getResourceKey().contains(
             "multi-entitlement"));
+    }
+
+    @Test
+    public void bindWithQuantityNoMultiEntitleBatch() {
+        Product product = new Product(productId, "A product for testing", owner);
+        Pool pool = createPool(owner, product);
+        pool.setId("TaylorSwift");
+        pool.setQuantity(new Long(100));
+
+        Pool pool2 = createPool(owner, product);
+        pool2.setId("SwiftTaylor");
+        pool2.setQuantity(new Long(100));
+
+        when(this.prodAdapter.getProductById(product.getOwner(), product.getId())).thenReturn(product);
+
+        Map<String, ValidationResult> results = enforcer.preEntitlement(consumer,
+                createPoolQuantities(100, pool, pool2),
+                CallerType.UNKNOWN);
+
+        assertEquals(2, results.size());
+        for (ValidationResult result : results.values()) {
+            assertFalse(result.isSuccessful());
+            assertTrue(result.hasErrors());
+            assertEquals(1, result.getErrors().size());
+            assertTrue(result.getErrors().get(0).getResourceKey().contains("multi-entitlement"));
+        }
     }
 
     @Test
@@ -409,6 +438,28 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertFalse(result.hasWarnings());
     }
 
+    @Test
+    public void matchingNumberOfSocketsShouldNotGenerateWarningBatch() {
+        Pool pool = setupArchTest("sockets", "2", "cpu.cpu_socket(s)", "2");
+        Pool pool2 = setupArchTest("sockets", "2", "cpu.cpu_socket(s)", "2");
+
+        Map<String, ValidationResult> results = enforcer.preEntitlement(consumer,
+                createPoolQuantities(1, pool, pool2),
+                CallerType.UNKNOWN);
+        assertEquals(2, results.size());
+        for (ValidationResult result : results.values()) {
+            assertFalse(result.hasErrors());
+            assertFalse(result.hasWarnings());
+        }
+    }
+
+    private List<PoolQuantity> createPoolQuantities(Integer quantity, Pool... pools) {
+        List<PoolQuantity> poolQuantities = new ArrayList<PoolQuantity>();
+        for (Pool pool : pools) {
+            poolQuantities.add(new PoolQuantity(pool, quantity));
+        }
+        return poolQuantities;
+    }
     @Test
     public void missingConsumerSocketsShouldNotGenerateWarning() {
         // non-system consumers do not have socket counts, no warning

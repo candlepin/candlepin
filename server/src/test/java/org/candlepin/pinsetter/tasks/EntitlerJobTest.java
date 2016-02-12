@@ -24,9 +24,13 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
+import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
+import org.candlepin.model.dto.PoolIdAndErrors;
 import org.candlepin.model.dto.PoolIdAndQuantity;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.policy.EntitlementRefusedException;
+import org.candlepin.policy.ValidationResult;
 
 import org.hibernate.mapping.Map;
 import org.junit.After;
@@ -36,6 +40,8 @@ import org.mockito.ArgumentCaptor;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -43,8 +49,10 @@ import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * EntitlerJobTest
@@ -54,6 +62,8 @@ public class EntitlerJobTest {
     private String consumerUuid;
     private Consumer consumer;
     private Entitler e;
+    private PoolCurator pC;
+    private I18n i18n;
 
     @Before
     public void init() {
@@ -62,6 +72,8 @@ public class EntitlerJobTest {
             new ConsumerType("system"));
         consumer.setUuid(consumerUuid);
         e = mock(Entitler.class);
+        pC = mock(PoolCurator.class);
+        i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
     }
 
     @Test
@@ -82,6 +94,7 @@ public class EntitlerJobTest {
 
     @Test
     public void bindByPoolExec() throws JobExecutionException, EntitlementRefusedException {
+
         String pool = "pool10";
 
         PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
@@ -89,8 +102,14 @@ public class EntitlerJobTest {
         JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        List<Entitlement> ents = new ArrayList<Entitlement>();
 
+        List<Entitlement> ents = new ArrayList<Entitlement>();
+        Pool p = new Pool();
+        p.setId(pool);
+        Entitlement ent = new Entitlement();
+        ent.setPool(p);
+        ent.setQuantity(100);
+        ents.add(ent);
         when(e.bindByPoolQuantities(eq(consumerUuid), anyMapOf(String.class, Integer.class))).thenReturn(
                 ents);
 
@@ -98,6 +117,13 @@ public class EntitlerJobTest {
         job.execute(ctx);
         verify(e).bindByPoolQuantities(eq(consumerUuid), anyMapOf(String.class, Integer.class));
         verify(e).sendEvents(eq(ents));
+        ArgumentCaptor<Object> argumentCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(ctx).setResult(argumentCaptor.capture());
+        PoolIdAndQuantity[] result = (PoolIdAndQuantity[]) argumentCaptor.getValue();
+        assertEquals(1, result.length);
+        assertEquals(pool, result[0].getPoolId());
+        assertEquals(100, result[0].getQuantity().intValue());
+
     }
 
     /**
@@ -145,6 +171,36 @@ public class EntitlerJobTest {
 
         EntitlerJob job = new EntitlerJob(e, null, null, null);
         job.execute(ctx);
+    }
+
+    @Test
+    public void respondWithValidationErrors() throws JobExecutionException, EntitlementRefusedException {
+        PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
+        pQs[0] = new PoolIdAndQuantity("pool10", 1);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
+        JobExecutionContext ctx = mock(JobExecutionContext.class);
+        when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
+
+        HashMap<String, ValidationResult> mapResult = new HashMap<String, ValidationResult>();
+        ValidationResult result = new ValidationResult();
+        result.addError("rulefailed.no.entitlements.available");
+        mapResult.put("hello", result);
+        when(e.bindByPoolQuantities(eq(consumerUuid), anyMapOf(String.class, Integer.class))).thenThrow(
+                new EntitlementRefusedException(mapResult));
+
+        EntitlerJob job = new EntitlerJob(e, null, pC, i18n);
+        Pool p = new Pool();
+        p.setId("hello");
+        when(pC.listAllByIds(anyListOf(String.class))).thenReturn(Arrays.asList(p));
+        job.execute(ctx);
+        ArgumentCaptor<Object> argumentCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(ctx).setResult(argumentCaptor.capture());
+        List<PoolIdAndErrors> resultErrors = (List<PoolIdAndErrors>) argumentCaptor.getValue();
+        assertEquals(1, resultErrors.size());
+        assertEquals("hello", resultErrors.get(0).getPoolId());
+        assertEquals(1, resultErrors.get(0).getErrors().size());
+        assertEquals("No subscriptions are available from the pool with ID 'hello'.", resultErrors.get(0)
+                .getErrors().get(0));
     }
 
     @After

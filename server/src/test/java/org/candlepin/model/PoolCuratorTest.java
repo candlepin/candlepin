@@ -28,7 +28,6 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -512,6 +511,38 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testlookupBySubscriptionIds() {
+        Product product = new Product("someProduct", "An Extremely Great Product", owner, 10L);
+        productCurator.create(product);
+
+        Pool p = new Pool(owner, product, new HashSet<Product>(), 1L, new Date(), new Date(), "contract",
+                "account", "order");
+
+        String subId1 = Util.generateDbUUID();
+        p.setSourceSubscription(new SourceSubscription(subId1, "master"));
+        poolCurator.create(p);
+
+        Pool p2 = new Pool(owner, product, new HashSet<Product>(), 1L, new Date(), new Date(), "contract",
+                "account", "order");
+        String subId2 = Util.generateDbUUID();
+        p2.setSourceSubscription(new SourceSubscription(subId2, "master"));
+        poolCurator.create(p2);
+
+        Pool p3 = new Pool(owner, product, new HashSet<Product>(), 1L, new Date(), new Date(), "contract",
+                "account", "order");
+        String subId3 = Util.generateDbUUID();
+        p3.setSourceSubscription(new SourceSubscription(subId3, "master"));
+        poolCurator.create(p3);
+
+        List<Pool> pools = poolCurator.lookupBySubscriptionIds(Arrays.asList(subId1, subId2));
+        assertEquals(2, pools.size());
+        assertTrue(pools.contains(p));
+        assertTrue(pools.contains(p2));
+        assertTrue(!pools.contains(p3));
+
+    }
+
+    @Test
     public void testListBySourceEntitlement() {
 
         Pool sourcePool = TestUtil.createPool(owner, product);
@@ -529,6 +560,38 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         assertEquals(2, poolCurator.listBySourceEntitlement(e).size());
 
+    }
+
+    @Test
+    public void retrieveFreeEntitlementsOfPools() {
+
+        Pool pool1 = TestUtil.createPool(owner, product);
+        poolCurator.create(pool1);
+        Entitlement ent11 = new Entitlement(pool1, consumer, 1);
+        entitlementCurator.create(ent11);
+        Entitlement ent12 = new Entitlement(pool1, consumer, 1);
+        entitlementCurator.create(ent12);
+        Entitlement ent13 = new Entitlement(pool1, consumer, 1);
+        entitlementCurator.create(ent13);
+
+        Pool pool2 = TestUtil.createPool(owner, product);
+        poolCurator.create(pool2);
+        Entitlement ent21 = new Entitlement(pool2, consumer, 1);
+        entitlementCurator.create(ent21);
+
+        Pool pool3 = TestUtil.createPool(owner, product);
+        poolCurator.create(pool3);
+        Entitlement ent31 = new Entitlement(pool3, consumer, 1);
+        entitlementCurator.create(ent31);
+
+        List<Entitlement> ents = poolCurator.retrieveFreeEntitlementsOfPools(Arrays.asList(pool1, pool2),
+                true);
+        assertEquals(4, ents.size());
+        assertTrue(ents.contains(ent11));
+        assertTrue(ents.contains(ent12));
+        assertTrue(ents.contains(ent13));
+        assertTrue(ents.contains(ent21));
+        assertTrue(!ents.contains(ent31));
     }
 
     @Test

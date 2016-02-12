@@ -25,6 +25,7 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -135,7 +136,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Content c = new Content(this.owner, "fakecontent", "fakecontent", "facecontent",
                 "yum", "RH", "http://", "http://", "x86_64");
         Set<String> modifiedIds = new HashSet<String>();
-        modifiedIds.add(providedProduct1.getUuid());
+        modifiedIds.add(providedProduct1.getId());
         c.setModifiedProductIds(modifiedIds);
         contentCurator.create(c);
         providedProduct2.addContent(c);
@@ -150,9 +151,163 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Entitlement ent = createEntitlement(owner, consumer, testPool, cert);
         entitlementCurator.create(ent);
 
+        EntitlementCertificate cert1 = createEntitlementCertificate("key", "certificate");
+
+        Entitlement ent1 = createEntitlement(owner, consumer, testPool, cert);
+        entitlementCurator.create(ent1);
+
         // The ent we just created should *not* be returned as modifying itself:
         Set<Entitlement> ents = entitlementCurator.listModifying(ent);
-        assertEquals(0, ents.size());
+        assertEquals(1, ents.size());
+        assertNotEquals(ent.getId(), ents.iterator().next().getId());
+        assertEquals(ent1.getId(), ents.iterator().next().getId());
+    }
+
+    @Test
+    public void listModifying() {
+        Date startDate = createDate(2010, 1, 1);
+        Date endDate = createDate(2050, 1, 1);
+        Entitlement ent = setUpModifyingEntitlements(startDate, endDate, 4, "1");
+
+        // The ent we just created should *not* be returned as modifying itself:
+        Set<Entitlement> ents = entitlementCurator.listModifying(ent);
+        assertEquals(4, ents.size());
+        assertTrue(!ents.contains(ent));
+    }
+
+    @Test
+    public void listModifyingBatch() {
+        Date startDate = createDate(2010, 1, 1);
+        Date endDate = createDate(2020, 1, 1);
+        Entitlement ent = setUpModifyingEntitlements(startDate, endDate, 4, "1");
+
+        Date startDate1 = createDate(2030, 1, 1);
+        Date endDate1 = createDate(2040, 1, 1);
+        Entitlement ent1 = setUpModifyingEntitlements(startDate1, endDate1, 2, "2");
+
+        // The ent we just created should *not* be returned as modifying itself:
+        Set<Entitlement> ents = entitlementCurator.listModifying(Arrays.asList(ent, ent1));
+        assertEquals(6, ents.size());
+
+        assertTrue(!ents.contains(ent));
+        assertTrue(!ents.contains(ent1));
+
+    }
+
+    @Test
+    public void listOverlapModifyingBatch() {
+        Date startDate = createDate(2010, 1, 1);
+        Date endDate = createDate(2050, 1, 1);
+        Entitlement ent = setUpModifyingEntitlements(startDate, endDate, 3, "1");
+
+        Date startDate1 = createDate(2030, 1, 1);
+        Date endDate1 = createDate(2040, 1, 1);
+        Entitlement ent1 = setUpModifyingEntitlements(startDate1, endDate1, 2, "2");
+
+        // The ent we just created should *not* be returned as modifying itself:
+        Set<Entitlement> ents = entitlementCurator.listModifying(Arrays.asList(ent, ent1));
+        assertEquals(5, ents.size());
+        assertTrue(!ents.contains(ent));
+        assertTrue(!ents.contains(ent1));
+
+    }
+
+    @Test
+    public void listModifyingBatchEnsureOnlyModifying() {
+        Date startDate = createDate(2010, 1, 1);
+        Date endDate = createDate(2050, 1, 1);
+        Entitlement ent = setUpModifyingEntitlements(startDate, endDate, 3, "1");
+
+        Date startDate1 = createDate(2010, 1, 1);
+        Date endDate1 = createDate(2050, 1, 1);
+        Entitlement ent1 = setUpModifyingEntitlements(startDate1, endDate1, 2, "2");
+
+        Date startDate2 = createDate(2030, 1, 1);
+        Date endDate2 = createDate(2040, 1, 1);
+        Entitlement ent2 = setUpModifyingEntitlements(startDate2, endDate2, 2, "3");
+
+        // The ent we just created should *not* be returned as modifying itself:
+        Set<Entitlement> ents = entitlementCurator.listModifying(Arrays.asList(ent, ent1));
+        assertEquals(5, ents.size());
+        assertTrue(!ents.contains(ent));
+        assertTrue(!ents.contains(ent1));
+        assertTrue(!ents.contains(ent2));
+
+    }
+
+    @Test
+    public void listModifyingBatchEnsureOnlyOverLapping() {
+        Date startDate = createDate(2010, 1, 1);
+        Date endDate = createDate(2050, 1, 1);
+        Entitlement ent = setUpModifyingEntitlements(startDate, endDate, 3, "1");
+
+        Pool pool = createPool(owner, ent.getPool().getProduct(), 100L, startDate, endDate);
+        pool.setProvidedProducts(ent.getPool().getProvidedProducts());
+        pool.setStartDate(createDate(2020, 1, 1));
+        pool.setEndDate(createDate(2021, 1, 1));
+        poolCurator.create(pool);
+        EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
+        Entitlement ent1 = createEntitlement(owner, consumer, pool, cert);
+        entitlementCurator.create(ent1);
+
+        Pool pool2 = createPool(owner, ent.getPool().getProduct(), 100L, startDate, endDate);
+        pool2.setProvidedProducts(ent.getPool().getProvidedProducts());
+        pool2.setStartDate(createDate(2090, 1, 1));
+        pool2.setEndDate(createDate(2091, 1, 1));
+        poolCurator.create(pool2);
+        EntitlementCertificate cert2 = createEntitlementCertificate("key", "certificate");
+        Entitlement ent2 = createEntitlement(owner, consumer, pool2, cert);
+        entitlementCurator.create(ent2);
+
+        // The ent we just created should *not* be returned as modifying itself:
+        Set<Entitlement> ents = entitlementCurator.listModifying(Arrays.asList(ent));
+        assertEquals(4, ents.size());
+        assertTrue(!ents.contains(ent));
+        assertTrue(ents.contains(ent1));
+        assertTrue(!ents.contains(ent2));
+
+    }
+
+    private Entitlement setUpModifyingEntitlements(Date startDate, Date endDate, Integer howMany,
+            String contentId) {
+
+        Product parentProductForTest = TestUtil.createProduct(owner);
+        Product providedProduct1ForTest = TestUtil.createProduct(owner);
+        Product providedProduct2ForTest = TestUtil.createProduct(owner);
+        productCurator.create(parentProductForTest);
+        productCurator.create(providedProduct1ForTest);
+        productCurator.create(providedProduct2ForTest);
+
+        Pool testPool = createPool(owner, parentProductForTest, 100L, startDate, endDate);
+
+        // Provided product 2 will modify 1, both will be on the pool:
+        Content c = new Content(this.owner, "fakecontent", contentId, contentId, "yum", "RH",
+                "http://", "http://", "x86_64");
+        Set<String> modifiedIds = new HashSet<String>();
+        modifiedIds.add(providedProduct1ForTest.getId());
+        c.setModifiedProductIds(modifiedIds);
+        contentCurator.create(c);
+        providedProduct2ForTest.addContent(c);
+
+        assertTrue(providedProduct2ForTest.modifies(providedProduct1ForTest.getId()));
+
+        // Add some provided products to this pool:
+        testPool.addProvidedProduct(providedProduct1ForTest);
+        testPool.addProvidedProduct(providedProduct2ForTest);
+        poolCurator.create(testPool);
+
+        EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
+
+        Entitlement ent = createEntitlement(owner, consumer, testPool, cert);
+        entitlementCurator.create(ent);
+
+        for (Integer i = 0; i < howMany; i++) {
+            EntitlementCertificate cert1 = createEntitlementCertificate("key", "certificate");
+            Entitlement ent1 = createEntitlement(owner, consumer, testPool, cert);
+            entitlementCurator.create(ent1);
+        }
+
+        return ent;
     }
 
     private Entitlement setupListProvidingEntitlement() {
