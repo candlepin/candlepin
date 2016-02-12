@@ -362,6 +362,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void unbindBySerialWithExistingCertificateShouldPass() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null, null, null, null);
+        // TODO fix me.This should not be necessary
+        poolCurator.clear();
         List<EntitlementCertificate> serials = consumerResource
             .getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
