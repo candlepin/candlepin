@@ -14,7 +14,7 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyLong;
@@ -110,6 +110,81 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
 
         enforcer.postUnbind(consumer, poolManagerMock, e);
         verify(poolManagerMock).updatePoolQuantity(eq(virtBonusPool), eq(10L));
+    }
+
+    @Test
+    public void batchHostedVirtLimitAltersBonusPoolQuantity() {
+        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
+
+        consumer.setType(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+        Subscription s = createVirtLimitSub("virtLimitProduct", 10, "10");
+        List<Pool> pools = poolRules.createAndEnrichPools(TestUtil.copyFromSub(s), new LinkedList<Pool>());
+        assertEquals(2, pools.size());
+
+        Pool physicalPool = pools.get(0);
+        physicalPool.setId("physical");
+        Pool virtBonusPool = pools.get(1);
+        virtBonusPool.setId("virt");
+
+        assertEquals(new Long(10), physicalPool.getQuantity());
+        assertEquals(0, physicalPool.getAttributes().size());
+
+        // Quantity on bonus pool should be virt limit * sub quantity:
+        assertEquals(new Long(100), virtBonusPool.getQuantity());
+        assertEquals("true", virtBonusPool.getAttributeValue("virt_only"));
+        assertEquals("10", virtBonusPool.getProduct().getAttributeValue("virt_limit"));
+        Entitlement e = new Entitlement(physicalPool, consumer, 1);
+
+        Subscription s2 = createVirtLimitSub("virtLimitProduct2", 10, "10");
+        s2.setId("subId2");
+        List<Pool> pools2 = poolRules
+                .createAndEnrichPools(TestUtil.copyFromSub(s2), new LinkedList<Pool>());
+        assertEquals(2, pools.size());
+
+        Pool physicalPool2 = pools2.get(0);
+        physicalPool2.setId("physical2");
+        Pool virtBonusPool2 = pools2.get(1);
+        virtBonusPool2.setId("virt2");
+
+        assertEquals(new Long(10), physicalPool2.getQuantity());
+        assertEquals(0, physicalPool2.getAttributes().size());
+
+        // Quantity on bonus pool should be virt limit * sub quantity:
+        assertEquals(new Long(100), virtBonusPool2.getQuantity());
+        assertEquals("true", virtBonusPool2.getAttributeValue("virt_only"));
+        assertEquals("10", virtBonusPool2.getProduct().getAttributeValue("virt_limit"));
+        Entitlement e2 = new Entitlement(physicalPool2, consumer, 1);
+
+        List<Pool> poolList = new ArrayList<Pool>();
+        poolList.add(virtBonusPool);
+
+        List<Pool> poolList2 = new ArrayList<Pool>();
+        poolList.add(virtBonusPool2);
+
+        ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
+        when(poolManagerMock.lookupBySubscriptionIds(captor.capture())).thenReturn(poolList);
+        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId()))).thenReturn(
+                poolList);
+        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool2.getSubscriptionId()))).thenReturn(
+                poolList2);
+
+        Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
+        entitlements.put(physicalPool.getId(), e);
+        entitlements.put(physicalPool2.getId(), e2);
+
+        enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null);
+        @SuppressWarnings("unchecked")
+        Set<String> subscriptionIds = captor.getValue();
+        assertEquals(2, subscriptionIds.size());
+        assertTrue(subscriptionIds.contains("subId"));
+        assertTrue(subscriptionIds.contains("subId2"));
+        verify(poolManagerMock).updatePoolQuantity(eq(virtBonusPool), eq(-10L));
+        verify(poolManagerMock).updatePoolQuantity(eq(virtBonusPool2), eq(-10L));
+
+        enforcer.postUnbind(consumer, poolManagerMock, e);
+        verify(poolManagerMock).updatePoolQuantity(eq(virtBonusPool), eq(10L));
+        enforcer.postUnbind(consumer, poolManagerMock, e2);
+        verify(poolManagerMock).updatePoolQuantity(eq(virtBonusPool2), eq(10L));
     }
 
     /*

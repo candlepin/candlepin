@@ -54,6 +54,8 @@ import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pinsetter.core.PinsetterKernel;
+import org.candlepin.policy.EntitlementRefusedException;
+import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.autobind.AutobindRules;
@@ -748,6 +750,65 @@ public class PoolManagerTest {
 
         assertNotNull(e);
         assertEquals(e.size(), 1);
+    }
+
+    @Test
+    public void testEntitlebyProductRetry() throws Exception {
+        Product product = TestUtil.createProduct(o);
+        List<Pool> pools = Util.newList();
+        Pool pool1 = TestUtil.createPool(product);
+        pool1.setId("poolId1");
+        pools.add(pool1);
+        Pool pool2 = TestUtil.createPool(product);
+        pool2.setId("poolId2");
+        pools.add(pool2);
+        Date now = new Date();
+
+        Map<String, ValidationResult> resultMap = new HashMap<String, ValidationResult>();
+        ValidationResult result = mock(ValidationResult.class);
+        resultMap.put("poolId1", result);
+        resultMap.put("poolId2", result);
+        Page page = mock(Page.class);
+
+        when(page.getPageData()).thenReturn(pools);
+        when(
+                mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class), any(Owner.class),
+                        any(String.class), any(String.class), eq(now), anyBoolean(),
+                        any(PoolFilterBuilder.class), any(PageRequest.class), anyBoolean())).thenReturn(
+                page);
+
+        when(mockPoolCurator.lockAndLoad(any(List.class))).thenReturn(Arrays.asList(pool1));
+        when(
+                enforcerMock.preEntitlement(any(Consumer.class), anyCollectionOf(PoolQuantity.class),
+                        any(CallerType.class))).thenReturn(resultMap);
+
+        when(result.isSuccessful()).thenReturn(false);
+        List<ValidationError> errors = new ArrayList<ValidationError>();
+        errors.add(new ValidationError("rulefailed.no.entitlements.available"));
+        when(result.getErrors()).thenReturn(errors);
+        List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
+        bestPools.add(new PoolQuantity(pool1, 1));
+        when(
+                autobindRules.selectBestPools(any(Consumer.class), any(String[].class), any(List.class),
+                        any(ComplianceStatus.class), any(String.class), any(Set.class), eq(false)))
+                .thenReturn(bestPools);
+
+        AutobindData data = AutobindData.create(TestUtil.createConsumer(o))
+                .forProducts(new String[] { product.getUuid() }).on(now);
+
+        doNothing().when(mockPoolCurator).flush();
+
+        try {
+            List<Entitlement> e = manager.entitleByProducts(data);
+            fail();
+        }
+        catch (EntitlementRefusedException e) {
+            assertNotNull(e);
+            verify(autobindRules, times(4)).selectBestPools(any(Consumer.class), any(String[].class),
+                    any(List.class), any(ComplianceStatus.class), any(String.class), any(Set.class),
+                    eq(false));
+        }
+
     }
 
     @Test
@@ -1832,4 +1893,184 @@ public class PoolManagerTest {
         assertEquals(message,
                 i18n.tr("Unmapped guest entitlement expired without establishing a host/guest mapping."));
     }
+
+    @Test
+    public void testDeleteExcessEntitlements() throws EntitlementRefusedException {
+
+        Consumer consumer = TestUtil.createConsumer(o);
+        Subscription sub = TestUtil.createSubscription(o, product);
+        sub.setId("testing-subid");
+        pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
+
+        Pool derivedPool = TestUtil.createPool(o, product, 1);
+        derivedPool.setAttribute(Pool.DERIVED_POOL_ATTRIBUTE, "true");
+        derivedPool.setSourceSubscription(new SourceSubscription(sub.getId(), "der"));
+        derivedPool.setConsumed(3L);
+        derivedPool.setId("derivedPool");
+        Entitlement masterEnt = new Entitlement(pool, consumer, 5);
+        Entitlement derivedEnt = new Entitlement(derivedPool, consumer, 1);
+        derivedEnt.setId("1");
+
+        Set<Entitlement> ents = new HashSet<Entitlement>();
+        ents.add(derivedEnt);
+        derivedPool.setEntitlements(ents);
+
+
+        // before
+        assertEquals(3, derivedPool.getConsumed().intValue());
+        assertEquals(1, derivedPool.getEntitlements().size());
+
+        when(mockPoolCurator.lockAndLoad(anyCollection())).thenReturn(Arrays.asList(pool));
+
+        when(mockPoolCurator.lookupOversubscribedBySubscriptionIds(anyMap())).thenReturn(
+                Arrays.asList(derivedPool));
+        when(mockPoolCurator.retrieveFreeEntitlementsOfPools(anyListOf(Pool.class), eq(true))).thenReturn(
+                Arrays.asList(derivedEnt));
+        when(mockPoolCurator.lockAndLoad(eq(derivedPool))).thenReturn(derivedPool);
+        pool.setId("masterpool");
+
+        manager.adjustEntitlementQuantity(consumer, masterEnt, 3);
+
+        verify(entitlementCurator).delete(derivedEnt);
+        assertEquals(2, derivedPool.getConsumed().intValue());
+        assertEquals(0, derivedPool.getEntitlements().size());
+    }
+
+    @Test
+    public void testDeleteExcessEntitlementsBatch() throws EntitlementRefusedException {
+
+        Consumer consumer = TestUtil.createConsumer(o);
+        Subscription sub = TestUtil.createSubscription(o, product);
+        sub.setId("testing-subid");
+        pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
+
+        Pool derivedPool = TestUtil.createPool(o, product, 1);
+        derivedPool.setAttribute(Pool.DERIVED_POOL_ATTRIBUTE, "true");
+        derivedPool.setSourceSubscription(new SourceSubscription(sub.getId(), "der"));
+        derivedPool.setConsumed(3L);
+        derivedPool.setId("derivedPool");
+        Entitlement masterEnt = new Entitlement(pool, consumer, 5);
+        Entitlement derivedEnt = new Entitlement(derivedPool, consumer, 1);
+        derivedEnt.setId("1");
+        Entitlement derivedEnt2 = new Entitlement(derivedPool, consumer, 1);
+        derivedEnt2.setId("2");
+
+        Pool derivedPool2 = TestUtil.createPool(o, product, 1);
+        derivedPool2.setAttribute(Pool.DERIVED_POOL_ATTRIBUTE, "true");
+        derivedPool2.setSourceSubscription(new SourceSubscription(sub.getId(), "der"));
+        derivedPool2.setConsumed(2L);
+        derivedPool2.setId("derivedPool2");
+        Entitlement derivedEnt3 = new Entitlement(derivedPool2, consumer, 1);
+        derivedEnt3.setId("3");
+
+        Set<Entitlement> ents = new HashSet<Entitlement>();
+        ents.add(derivedEnt);
+        ents.add(derivedEnt2);
+        derivedPool.setEntitlements(ents);
+
+        Set<Entitlement> ents2 = new HashSet<Entitlement>();
+        ents2.add(derivedEnt3);
+        derivedPool2.setEntitlements(ents2);
+
+        Pool derivedPool3 = TestUtil.createPool(o, product, 1);
+        derivedPool3.setAttribute(Pool.DERIVED_POOL_ATTRIBUTE, "true");
+        derivedPool3.setSourceSubscription(new SourceSubscription(sub.getId(), "der"));
+        derivedPool3.setConsumed(2L);
+        derivedPool3.setId("derivedPool3");
+
+        // before
+        assertEquals(3, derivedPool.getConsumed().intValue());
+        assertEquals(2, derivedPool.getEntitlements().size());
+        assertEquals(2, derivedPool2.getConsumed().intValue());
+        assertEquals(1, derivedPool2.getEntitlements().size());
+        assertEquals(2, derivedPool2.getConsumed().intValue());
+
+        when(mockPoolCurator.lockAndLoad(anyCollection())).thenReturn(Arrays.asList(pool));
+
+        when(mockPoolCurator.lookupOversubscribedBySubscriptionIds(anyMap())).thenReturn(
+                Arrays.asList(derivedPool, derivedPool2, derivedPool3));
+        when(mockPoolCurator.retrieveFreeEntitlementsOfPools(anyListOf(Pool.class), eq(true))).thenReturn(
+                Arrays.asList(derivedEnt, derivedEnt2, derivedEnt3));
+        when(mockPoolCurator.lockAndLoad(eq(derivedPool))).thenReturn(derivedPool);
+        when(mockPoolCurator.lockAndLoad(eq(derivedPool2))).thenReturn(derivedPool2);
+        pool.setId("masterpool");
+
+        manager.adjustEntitlementQuantity(consumer, masterEnt, 3);
+
+        verify(entitlementCurator).delete(derivedEnt);
+        verify(entitlementCurator).delete(derivedEnt2);
+        verify(entitlementCurator).delete(derivedEnt3);
+        assertEquals(1, derivedPool.getConsumed().intValue());
+        assertEquals(0, derivedPool.getEntitlements().size());
+        assertEquals(1, derivedPool2.getConsumed().intValue());
+        assertEquals(0, derivedPool2.getEntitlements().size());
+        assertEquals(2, derivedPool3.getConsumed().intValue());
+    }
+
+    @Test
+    public void testCreatePools() {
+        List<Pool> pools = new ArrayList<Pool>();
+        for (int i = 0; i < 5; i++) {
+            pools.add(TestUtil.createPool(o, product));
+        }
+
+        Class<List<Pool>> listClass = (Class<List<Pool>>) (Class) ArrayList.class;
+        ArgumentCaptor<List<Pool>> poolsArg = ArgumentCaptor.forClass(listClass);
+        when(mockPoolCurator.saveOrUpdateAll(poolsArg.capture(), eq(false))).thenReturn(pools);
+        manager.createPools(pools);
+        List<Pool> saved = poolsArg.getValue();
+        assertEquals(saved.size(), pools.size());
+        for (Pool pool : pools) {
+            assertTrue(saved.contains(pool));
+        }
+    }
+
+    @Test
+    public void testFind() {
+        List<Pool> pools = new ArrayList<Pool>();
+        List<String> ids = new ArrayList<String>();
+        for (int i = 0; i < 5; i++) {
+            pools.add(TestUtil.createPool(o, product));
+            pools.get(i).setId("id" + i);
+            ids.add("id" + i);
+        }
+
+        Class<List<String>> listClass = (Class<List<String>>) (Class) ArrayList.class;
+        ArgumentCaptor<List<String>> poolsArg = ArgumentCaptor.forClass(listClass);
+        when(mockPoolCurator.listAllByIds(poolsArg.capture())).thenReturn(pools);
+        List<Pool> found = manager.find(ids);
+        List<String> argument = poolsArg.getValue();
+        assertEquals(pools, found);
+        assertEquals(argument, ids);
+    }
+
+    @Test
+    public void testNullArgumentsDontBreakStuff() {
+        manager.lookupBySubscriptionIds(null);
+        manager.lookupBySubscriptionIds(new ArrayList<String>());
+        manager.createPools(null);
+        manager.createPools(new ArrayList<Pool>());
+        manager.find(new ArrayList<String>());
+    }
+
+    @Test
+    public void testlookupBySubscriptionIds() {
+        List<Pool> pools = new ArrayList<Pool>();
+        List<String> subids = new ArrayList<String>();
+        for (int i = 0; i < 5; i++) {
+            pools.add(TestUtil.createPool(o, product));
+            pools.get(i).setId("id" + i);
+            subids.add("subid" + i);
+        }
+
+
+        Class<List<String>> listClass = (Class<List<String>>) (Class) ArrayList.class;
+        ArgumentCaptor<List<String>> poolsArg = ArgumentCaptor.forClass(listClass);
+        when(mockPoolCurator.lookupBySubscriptionIds(poolsArg.capture())).thenReturn(pools);
+        List<Pool> found = manager.lookupBySubscriptionIds(subids);
+        List<String> argument = poolsArg.getValue();
+        assertEquals(pools, found);
+        assertEquals(argument, subids);
+    }
+
 }

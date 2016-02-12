@@ -619,5 +619,122 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertNull(poolCurator.find(pool1.getId()));
         assertNotNull(poolCurator.find(pool2.getId()));
     }
+
+    @Test
+    public void testDevPoolBatchBind() throws EntitlementRefusedException {
+        Owner owner = createOwner();
+        Product p = new Product("test-product", "Test Product", owner);
+        productCurator.create(p);
+
+        Consumer devSystem = new Consumer("dev", "user", owner, systemType);
+        devSystem.setFact("dev_sku", p.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        consumerCurator.create(devSystem);
+
+        Pool pool1 = createPool(owner, p, 10L, TestUtil.createDate(2000, 3, 2),
+                TestUtil.createDate(2050, 3, 2));
+        pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
+        pool1.addAttribute(new PoolAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, devSystem.getUuid()));
+        poolCurator.create(pool1);
+        Pool pool2 = createPool(owner, p, 10L, TestUtil.createDate(2000, 3, 2),
+                TestUtil.createDate(2050, 3, 2));
+        poolCurator.create(pool2);
+
+        Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
+        poolQuantities.put(pool1.getId(), 1);
+        poolQuantities.put(pool2.getId(), 1);
+
+        List<Entitlement> results = poolManager.entitleByPools(devSystem, poolQuantities);
+        // TODO fix me.This should not be necessary
+        poolCurator.clear();
+        assertEquals(2, results.size());
+        assertTrue(results.get(0).getPool() == pool1 || results.get(0).getPool() == pool2);
+        assertTrue(results.get(1).getPool() == pool1 || results.get(1).getPool() == pool2);
+
+        pool1 = poolCurator.find(pool1.getId());
+        pool2 = poolCurator.find(pool2.getId());
+
+        assertEquals(1, pool1.getConsumed().intValue());
+        assertEquals(1, pool2.getConsumed().intValue());
+
+    }
+
+    @Test
+    public void testBatchBindError() throws EntitlementRefusedException {
+        Owner owner = createOwner();
+        Product p = new Product("test-product", "Test Product", owner);
+        productCurator.create(p);
+
+        Consumer devSystem = new Consumer("dev", "user", owner, systemType);
+        devSystem.setFact("dev_sku", p.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        consumerCurator.create(devSystem);
+
+        Pool pool1 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),
+                TestUtil.createDate(2050, 3, 2));
+        pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
+        pool1.addAttribute(new PoolAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, devSystem.getUuid()));
+        pool1.setConsumed(1L);
+        poolCurator.create(pool1);
+
+        assertEquals(1, poolCurator.find(pool1.getId()).getConsumed().intValue());
+        Pool pool2 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),
+                TestUtil.createDate(2050, 3, 2));
+        pool2.setConsumed(1L);
+        poolCurator.create(pool2);
+
+        Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
+        poolQuantities.put(pool1.getId(), 1);
+        poolQuantities.put(pool2.getId(), 1);
+
+        try {
+            List<Entitlement> results = poolManager.entitleByPools(devSystem, poolQuantities);
+            fail();
+        }
+        catch (EntitlementRefusedException e) {
+            assertNotNull(e.getResults());
+            assertEquals(2, e.getResults().entrySet().size());
+            assertEquals("rulefailed.no.entitlements.available", e.getResults().get(pool1.getId())
+                    .getErrors().get(0).getResourceKey());
+            assertEquals("rulefailed.no.entitlements.available", e.getResults().get(pool2.getId())
+                    .getErrors().get(0).getResourceKey());
+        }
+
+    }
+
+    @Test
+    public void testBatchBindZeroQuantity() throws EntitlementRefusedException {
+        Owner owner = createOwner();
+        Product p = new Product("test-product", "Test Product", owner);
+        productCurator.create(p);
+
+        Consumer devSystem = new Consumer("dev", "user", owner, systemType);
+        devSystem.setFact("dev_sku", p.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        consumerCurator.create(devSystem);
+
+        Pool pool1 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),
+                TestUtil.createDate(2050, 3, 2));
+        pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
+        pool1.addAttribute(new PoolAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, devSystem.getUuid()));
+        pool1.setConsumed(1L);
+        poolCurator.create(pool1);
+
+        assertEquals(1, poolCurator.find(pool1.getId()).getConsumed().intValue());
+        Pool pool2 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),
+                TestUtil.createDate(2050, 3, 2));
+        pool2.setConsumed(1L);
+        poolCurator.create(pool2);
+
+        Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
+        poolQuantities.put(pool1.getId(), 0);
+        poolQuantities.put(pool2.getId(), 0);
+
+        List<Entitlement> results = poolManager.entitleByPools(devSystem, poolQuantities);
+        assertEquals(2, results.size());
+        assertEquals(1, results.get(0).getQuantity().intValue());
+        assertEquals(1, results.get(1).getQuantity().intValue());
+    }
+
 }
 

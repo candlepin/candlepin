@@ -45,17 +45,21 @@ import org.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -79,23 +83,28 @@ public class PoolRulesStackDerivedTest {
     private Subscription sub1;
     private Subscription sub2;
     private Subscription sub3;
+    private Subscription sub4;
 
     private Pool pool1;
     private Pool pool2;
     private Pool pool3;
+    private Pool pool4;
 
     // Marketing products:
     private Product prod1;
     private Product prod2;
+    private Product prod3;
 
     // Engineering (provided) products:
     private Product provided1;
     private Product provided2;
     private Product provided3;
+    private Product provided4;
 
     private List<Entitlement> stackedEnts = new LinkedList<Entitlement>();
 
     private Pool stackDerivedPool;
+    private Pool stackDerivedPool2;
 
     private static final String STACK = "a-stack";
 
@@ -133,9 +142,16 @@ public class PoolRulesStackDerivedTest {
         prod2.addAttribute(new ProductAttribute("testattr2", "2"));
         when(productCuratorMock.find(prod2.getUuid())).thenReturn(prod2);
 
+        prod3 = TestUtil.createProduct("prod3", "prod3", owner);
+        prod3.addAttribute(new ProductAttribute("virt_limit", "9"));
+        prod3.addAttribute(new ProductAttribute("stacking_id", STACK + "3"));
+        prod3.addAttribute(new ProductAttribute("testattr2", "2"));
+        when(productCuratorMock.find(prod3.getUuid())).thenReturn(prod3);
+
         provided1 = TestUtil.createProduct(owner);
         provided2 = TestUtil.createProduct(owner);
         provided3 = TestUtil.createProduct(owner);
+        provided4 = TestUtil.createProduct(owner);
 
         // Create three subscriptions with various start/end dates:
         sub1 = createStackedVirtSub(owner, prod1,
@@ -156,11 +172,18 @@ public class PoolRulesStackDerivedTest {
         sub3.getProvidedProducts().add(provided3);
         pool3 = TestUtil.copyFromSub(sub3);
 
-        // Initial entitlement from one of the pools:
+        sub4 = createStackedVirtSub(owner, prod3,
+                TestUtil.createDate(2012, 1, 1),
+                TestUtil.createDate(2020, 1, 1));
+        sub4.getProvidedProducts().add(provided4);
+        pool4 = TestUtil.copyFromSub(sub4);
+
+            // Initial entitlement from one of the pools:
         stackedEnts.add(createEntFromPool(pool2));
         when(entCurMock.findByStackId(consumer, STACK)).thenReturn(stackedEnts);
 
-        pool2.setAttribute("virt_limit", "6");
+        pool2.setAttribute("virt_limit", "60");
+        pool4.setAttribute("virt_limit", "80");
 
         List<Pool> reqPools = new ArrayList<Pool>();
         reqPools.add(pool2);
@@ -172,6 +195,15 @@ public class PoolRulesStackDerivedTest {
         List<Pool> resPools = PoolHelper.createHostRestrictedPools(poolManagerMock, consumer, reqPools,
                 entitlements, attributes);
         stackDerivedPool = resPools.get(0);
+
+        reqPools.clear();
+        reqPools.add(pool4);
+        entitlements.clear();
+        entitlements.put(pool4.getId(), createEntFromPool(pool4));
+        attributes.clear();
+        attributes.put(pool4.getId(), PoolHelper.getFlattenedAttributes(pool4));
+        stackDerivedPool2 = PoolHelper.createHostRestrictedPools(poolManagerMock, consumer, reqPools,
+                entitlements, attributes).get(0);
     }
 
     private Subscription createStackedVirtSub(Owner owner, Product product,
@@ -324,6 +356,35 @@ public class PoolRulesStackDerivedTest {
         assertTrue(update.changed());
         assertTrue(update.getQuantityChanged());
         assertEquals((Long) 2L, stackDerivedPool.getQuantity());
+    }
+
+    @Test
+    public void virtLimitFromFirstVirtLimitEntBatch() {
+
+        stackedEnts.clear();
+        Entitlement e1 = createEntFromPool(pool1);
+        e1.setQuantity(4);
+        stackedEnts.add(e1);
+        Entitlement e2 = createEntFromPool(pool4);
+        e2.setQuantity(16);
+        stackedEnts.add(e2);
+        Class<Set<String>> listClass = (Class<Set<String>>) (Class) HashSet.class;
+        ArgumentCaptor<Set<String>> arg = ArgumentCaptor.forClass(listClass);
+        when(entCurMock.findByStackIds(eq(consumer), arg.capture())).thenReturn(stackedEnts);
+
+        List<PoolUpdate> updates = poolRules.updatePoolsFromStack(consumer,
+                Arrays.asList(stackDerivedPool, stackDerivedPool2));
+        Set<String> stackIds = arg.getValue();
+        assertEquals(2, stackIds.size());
+        assertTrue(stackIds.contains(STACK));
+        assertTrue(stackIds.contains(STACK + "3"));
+
+        for (PoolUpdate update : updates) {
+            assertTrue(update.changed());
+            assertTrue(update.getQuantityChanged());
+        }
+        assertEquals((Long) 60L, stackDerivedPool.getQuantity());
+        assertEquals((Long) 9L, stackDerivedPool2.getQuantity());
     }
 
     @Test

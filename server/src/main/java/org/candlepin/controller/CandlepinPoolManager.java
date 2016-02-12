@@ -593,7 +593,6 @@ public class CandlepinPoolManager implements PoolManager {
     private void deleteExcessEntitlements(List<Pool> existingPools) {
         boolean lifo = !config
             .getBoolean(ConfigProperties.REVOKE_ENTITLEMENT_IN_FIFO_ORDER);
-
         if (existingPools != null && !existingPools.isEmpty()) {
             List<Pool> overFlowingPools = new ArrayList<Pool>();
             for (Pool pool : existingPools) {
@@ -622,7 +621,7 @@ public class CandlepinPoolManager implements PoolManager {
                     if (freeEntitlementsForPool != null && !freeEntitlementsForPool.isEmpty()) {
                         long consumed = pool.getConsumed();
                         long existing = pool.getQuantity();
-                        Iterator<Entitlement> iter = freeEntitlements.iterator();
+                        Iterator<Entitlement> iter = freeEntitlementsForPool.iterator();
                         while (consumed > existing && iter.hasNext()) {
                             Entitlement e = iter.next();
                             entitlementsToDelete.add(e);

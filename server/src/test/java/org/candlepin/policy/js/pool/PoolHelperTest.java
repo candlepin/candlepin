@@ -148,28 +148,48 @@ public class PoolHelperTest {
         targetPool.setId("jso_speedwagon");
         targetPool.setAttribute("virt_limit", "unlimited");
 
+        Product targetProduct2 = TestUtil.createProduct(owner);
+        targetProduct2.getAttributes().clear();
+        targetProduct2.setAttribute("B1", "V1");
+        targetProduct2.setAttribute("B2", "V2");
+        Pool targetPool2 = TestUtil.createPool(targetProduct2);
+        targetPool2.setId("jso_speedwagon2");
+        targetPool2.setAttribute("virt_limit", "unlimited");
+
         // when(psa.getProductById(targetProduct.getUuid())).thenReturn(targetProduct);
         when(ent.getConsumer()).thenReturn(cons);
 
         List<Pool> targetPools = new ArrayList<Pool>();
         targetPools.add(targetPool);
+        targetPools.add(targetPool2);
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put(targetPool.getId(), ent);
+        entitlements.put(targetPool2.getId(), ent);
 
         Map<String, Map<String, String>> attributes = new HashMap<String, Map<String, String>>();
         attributes.put(targetPool.getId(), PoolHelper.getFlattenedAttributes(targetPool));
+        attributes.put(targetPool2.getId(), PoolHelper.getFlattenedAttributes(targetPool2));
 
         when(pm.createPools(anyListOf(Pool.class))).then(returnsFirstArg());
         List<Pool> pools = PoolHelper.createHostRestrictedPools(pm, cons, targetPools, entitlements,
                 attributes);
 
-        assertEquals(1, pools.size());
-        Pool hostRestrictedPool = pools.get(0);
-        assertEquals(targetPool.getId(),
-            hostRestrictedPool.getAttributeValue("source_pool_id"));
-        assertEquals(2, hostRestrictedPool.getProduct().getAttributes().size());
-        assertTrue(hostRestrictedPool.getProduct().hasAttribute("A1"));
-        assertTrue(hostRestrictedPool.getProduct().hasAttribute("A2"));
+        assertEquals(2, pools.size());
+        Pool first = null, second = null;
+        for (Pool pool : pools) {
+            if (pool.getAttributeValue("source_pool_id").contentEquals("jso_speedwagon")) {
+                first = pool;
+            }
+            else {
+                second = pool;
+            }
+            assertEquals(2, pool.getProduct().getAttributes().size());
+        }
+        assertTrue(first.getProduct().hasAttribute("A1"));
+        assertTrue(first.getProduct().hasAttribute("A1"));
+        assertTrue(second.getProduct().hasAttribute("B1"));
+        assertTrue(second.getProduct().hasAttribute("B1"));
+        assertTrue(second.getAttributeValue("source_pool_id").contentEquals("jso_speedwagon2"));
     }
 
     @Test
