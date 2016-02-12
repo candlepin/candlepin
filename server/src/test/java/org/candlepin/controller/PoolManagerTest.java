@@ -48,6 +48,7 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
@@ -1434,6 +1435,65 @@ public class PoolManagerTest {
         assertEquals(endDate, fabricated.getEndDate());
         assertEquals(updated, fabricated.getModified());
         assertEquals(subscriptionId, fabricated.getId());
+    }
+
+
+    /**
+     * See BZ1292283
+     */
+    @Test
+    public void testFabricateSubWithMultiplier() {
+        Product product = TestUtil.createProduct("product", "Product", o);
+
+        Pool pool = mock(Pool.class);
+
+        Long quantity = new Long(22);
+        Long multiplier = new Long(2);
+        product.setMultiplier(multiplier);
+
+        when(pool.getQuantity()).thenReturn(quantity);
+        when(pool.getProduct()).thenReturn(product);
+        Subscription fabricated = manager.fabricateSubscriptionFromPool(pool);
+
+        assertEquals((Long) (quantity / multiplier), fabricated.getQuantity());
+    }
+
+    @Test
+    public void testFabricateSubWithZeroInstanceMultiplier() {
+        Product product = TestUtil.createProduct("product", "Product", o);
+
+        Pool pool = mock(Pool.class);
+
+        Long quantity = new Long(64);
+        Long multiplier = new Long(2);
+
+        product.setMultiplier(multiplier);
+        product.addAttribute(new ProductAttribute("instance_multiplier", "0"));
+
+        when(pool.getQuantity()).thenReturn(quantity);
+        when(pool.getProduct()).thenReturn(product);
+        Subscription fabricated = manager.fabricateSubscriptionFromPool(pool);
+
+        assertEquals((Long) 32L, fabricated.getQuantity());
+    }
+
+    @Test
+    public void testFabricateSubWithMultiplierAndInstanceMultiplier() {
+        Product product = TestUtil.createProduct("product", "Product", o);
+
+        Pool pool = mock(Pool.class);
+
+        Long quantity = new Long(64);
+        Long multiplier = new Long(2);
+
+        product.setMultiplier(multiplier);
+        product.addAttribute(new ProductAttribute("instance_multiplier", "4"));
+
+        when(pool.getQuantity()).thenReturn(quantity);
+        when(pool.getProduct()).thenReturn(product);
+        Subscription fabricated = manager.fabricateSubscriptionFromPool(pool);
+
+        assertEquals((Long) 8L, fabricated.getQuantity());
     }
 
     private Content buildContent(Owner owner) {

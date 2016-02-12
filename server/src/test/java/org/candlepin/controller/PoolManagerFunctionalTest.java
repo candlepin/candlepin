@@ -24,6 +24,7 @@ import org.candlepin.audit.Event;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -59,11 +60,13 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
 import org.apache.commons.collections.Transformer;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -99,6 +102,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     private Product provisioning;
     private Product socketLimitedProduct;
 
+    private Subscription sub4;
+
     private ConsumerType systemType;
 
     private Owner o;
@@ -111,6 +116,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void setUp() throws Exception {
         o = createOwner();
         ownerCurator.create(o);
+
         virtHost = new Product(PRODUCT_VIRT_HOST, PRODUCT_VIRT_HOST, o);
         virtHostPlatform = new Product(PRODUCT_VIRT_HOST_PLATFORM, PRODUCT_VIRT_HOST_PLATFORM, o);
         virtGuest = new Product(PRODUCT_VIRT_GUEST, PRODUCT_VIRT_GUEST, o);
@@ -119,6 +125,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         provisioning = new Product(PRODUCT_PROVISIONING, PRODUCT_PROVISIONING, o);
         provisioning.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
+        provisioning.setMultiplier(2L);
+        provisioning.addAttribute(new ProductAttribute("instance-multiplier", "4"));
 
         virtHost.addAttribute(new ProductAttribute(PRODUCT_VIRT_HOST, ""));
         virtHostPlatform.addAttribute(new ProductAttribute(PRODUCT_VIRT_HOST_PLATFORM,
@@ -138,6 +146,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         productCurator.create(provisioning);
 
         List<Subscription> subscriptions = new LinkedList<Subscription>();
+
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
@@ -148,9 +157,10 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         Subscription sub3 = new Subscription(o, monitoring, new HashSet<Product>(),
             5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
-        Subscription sub4 = new Subscription(o, provisioning, new HashSet<Product>(),
+        sub4 = new Subscription(o, provisioning, new HashSet<Product>(),
             5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
-
+        sub4.getBranding().add(new Branding("product1", "type1", "branding1"));
+        sub4.getBranding().add(new Branding("product2", "type2", "branding2"));
         sub1.setId(Util.generateDbUUID());
         sub2.setId(Util.generateDbUUID());
         sub3.setId(Util.generateDbUUID());
@@ -233,6 +243,32 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
                 .forProducts(new String [] {provisioning.getId()});
         this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
         regenerateECAndAssertNotSameCertificates();
+    }
+
+    @Test
+    public void testFabricateWithBranding()
+        throws Exception {
+        Pool masterPool = poolManager.getMasterPoolBySubscriptionId(sub4.getId());
+        Set<Branding> brandingSet = poolManager.fabricateSubscriptionFromPool(masterPool).getBranding();
+
+        Assert.assertNotNull(brandingSet);
+        Assert.assertEquals(2, brandingSet.size());
+        ArrayList<Branding> list = new ArrayList<Branding>();
+        list.addAll(brandingSet);
+        list.sort(new Comparator<Branding>() {
+
+            @Override
+            public int compare(Branding o1, Branding o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
+
+        Assert.assertEquals("branding1", list.get(0).getName());
+        Assert.assertEquals("product1", list.get(0).getProductId());
+        Assert.assertEquals("type1", list.get(0).getType());
+        Assert.assertEquals("branding2", list.get(1).getName());
+        Assert.assertEquals("product2", list.get(1).getProductId());
+        Assert.assertEquals("type2", list.get(1).getType());
     }
 
     @Test
@@ -571,3 +607,4 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertNotNull(poolCurator.find(pool2.getId()));
     }
 }
+
