@@ -88,6 +88,12 @@ public class PinsetterKernel {
         this.config = conf;
         this.jobCurator = jobCurator;
 
+        /*
+         * Did your unit test get an NPE here?
+         * this will help:
+         * when(config.subset(eq("org.quartz"))).thenReturn(
+         * new MapConfiguration(ConfigProperties.DEFAULT_PROPERTIES));
+         */
         Properties props = config.subset("org.quartz").toProperties();
 
         // create a schedulerFactory

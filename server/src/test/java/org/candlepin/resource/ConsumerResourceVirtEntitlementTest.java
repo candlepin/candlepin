@@ -19,6 +19,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
@@ -224,6 +225,8 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         // Incomplete consumption of physical pool leaves unlimited pool unchanged.
         consumerResource.bind(manifestConsumer.getUuid(), parentPool.getId(), null, 7, null,
             null, false, null, null, null, null);
+        // TODO fix me.This should not be necessary
+        poolCurator.clear();
         for (Pool p : subscribedTo) {
             assertTrue(p.getConsumed() == 20);
             assertTrue(p.getQuantity() == -1);
@@ -232,6 +235,8 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         //   and quantity change to 0
         consumerResource.bind(manifestConsumer.getUuid(), parentPool.getId(), null, 3, null,
             null, false, null, null, null, null);
+        // TODO fix me.This should not be necessary
+        poolCurator.clear();
         for (Pool p : subscribedTo) {
             p = poolManager.find(p.getId());
             assertEquals(new Long(0), p.getConsumed());
@@ -250,6 +255,8 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
                 .thenReturn("[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
             when(config.getString(eq(ConfigProperties.CONSUMER_PERSON_NAME_PATTERN)))
                 .thenReturn("[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
+            when(config.subset(eq("org.quartz"))).thenReturn(
+                    new MapConfiguration(ConfigProperties.DEFAULT_PROPERTIES));
             bind(Configuration.class).toInstance(config);
             bind(Enforcer.class).to(EntitlementRules.class);
         }

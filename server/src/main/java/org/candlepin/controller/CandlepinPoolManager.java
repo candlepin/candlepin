@@ -122,8 +122,6 @@ public class CandlepinPoolManager implements PoolManager {
     private ProductCurator prodCurator;
     private ContentCurator contentCurator;
     private OwnerCurator ownerCurator;
-
-    @Inject
     private PinsetterKernel pinsetterKernel;
 
     /**
@@ -142,7 +140,7 @@ public class CandlepinPoolManager implements PoolManager {
         EntitlementCertificateCurator ecC, ComplianceRules complianceRules,
         AutobindRules autobindRules, ActivationKeyRules activationKeyRules,
         ProductCurator prodCurator, ContentCurator contentCurator, OwnerCurator ownerCurator,
-        I18n i18n) {
+        PinsetterKernel pinsetterKernel, I18n i18n) {
 
         this.poolCurator = poolCurator;
         this.sink = sink;
@@ -161,6 +159,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.prodCurator = prodCurator;
         this.contentCurator = contentCurator;
         this.ownerCurator = ownerCurator;
+        this.pinsetterKernel = pinsetterKernel;
         this.i18n = i18n;
     }
 

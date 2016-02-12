@@ -53,6 +53,7 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.autobind.AutobindRules;
@@ -147,7 +148,8 @@ public class PoolManagerTest {
     private ContentCurator contentCuratorMock;
     @Mock
     private OwnerCurator ownerCuratorMock;
-
+    @Mock
+    private PinsetterKernel pinsetterKernel;
     @Captor
     private ArgumentCaptor<Map<String, Entitlement>> entMapCaptor;
 
@@ -182,7 +184,8 @@ public class PoolManagerTest {
             mockPoolCurator, mockProductCurator, entCertAdapterMock, mockEventSink,
             eventFactory, mockConfig, enforcerMock, poolRulesMock, entitlementCurator,
             consumerCuratorMock, certCuratorMock, complianceRules, autobindRules,
-            activationKeyRules, productCuratorMock, contentCuratorMock, ownerCuratorMock, i18n)
+            activationKeyRules, productCuratorMock, contentCuratorMock, ownerCuratorMock,
+            pinsetterKernel, i18n)
         );
 
         Map<String, EntitlementCertificate> entCerts = new HashMap<String, EntitlementCertificate>();

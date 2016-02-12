@@ -218,6 +218,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         AutobindData data = AutobindData.create(parentSystem).on(new Date())
                 .forProducts(new String [] {monitoring.getId()});
         Entitlement e = poolManager.entitleByProducts(data).get(0);
+        // TODO fix me.This should not be necessary
+        poolCurator.clear();
         e = entitlementCurator.find(e.getId());
         poolManager.revokeEntitlement(e);
 
@@ -607,6 +609,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         AutobindData ad = new AutobindData(devSystem);
         ad.setPossiblePools(possPools);
         List<Entitlement> results = poolManager.entitleByProducts(ad);
+        // TODO fix me.This should not be necessary
+        poolCurator.clear();
         assertEquals(1, results.size());
         assertEquals(results.get(0).getPool(), pool1);
 
