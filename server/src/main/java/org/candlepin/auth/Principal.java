@@ -73,9 +73,10 @@ public abstract class Principal implements Serializable, java.security.Principal
 
     public boolean canAccessAll(Collection targets, SubResource subResource, Access access) {
 
-        if (targets == null) {
+        if (targets == null || targets.isEmpty()) {
             log.debug(
-                    "{} principal checking for {} access to sub-resource: {}. Access to null resource denied",
+                    "{} principal checking for {} access to sub-resource: {}." +
+                    " Access to null or resource tried",
                     this.getClass().getName(), access, subResource);
             return canAccess(null, subResource, access);
         }

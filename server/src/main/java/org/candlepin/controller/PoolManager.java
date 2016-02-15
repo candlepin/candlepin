@@ -124,7 +124,7 @@ public interface PoolManager {
 
     Pool find(String poolId);
 
-    List<Pool> find(Collection<String> poolId);
+    List<Pool> secureFind(Collection<String> poolId);
 
     List<Pool> lookupBySubscriptionId(String id);
 

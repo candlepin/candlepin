@@ -2038,7 +2038,7 @@ public class PoolManagerTest {
         Class<List<String>> listClass = (Class<List<String>>) (Class) ArrayList.class;
         ArgumentCaptor<List<String>> poolsArg = ArgumentCaptor.forClass(listClass);
         when(mockPoolCurator.listAllByIds(poolsArg.capture())).thenReturn(pools);
-        List<Pool> found = manager.find(ids);
+        List<Pool> found = manager.secureFind(ids);
         List<String> argument = poolsArg.getValue();
         assertEquals(pools, found);
         assertEquals(argument, ids);
@@ -2050,7 +2050,7 @@ public class PoolManagerTest {
         manager.lookupBySubscriptionIds(new ArrayList<String>());
         manager.createPools(null);
         manager.createPools(new ArrayList<Pool>());
-        manager.find(new ArrayList<String>());
+        manager.secureFind(new ArrayList<String>());
     }
 
     @Test

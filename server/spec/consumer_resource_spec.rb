@@ -63,10 +63,19 @@ describe 'Consumer Resource' do
   it "should block consumers from using other org's pools" do
     product_id = random_string('prod')
     product = create_product(product_id, product_id, {:owner => @owner1['key']})
-    create_pool_and_subscription(@owner1['key'], product.id)
-    pool = @consumer1.list_pools({:owner => @owner1['id']}).first
+    pool = create_pool_and_subscription(@owner1['key'], product.id)
     lambda {
       @consumer2.consume_pool(pool.id, {:quantity => 1}).size.should == 1
+    }.should raise_exception(RestClient::ResourceNotFound)
+
+    another_pool = create_pool_and_subscription(@owner1['key'], product.id)
+    poolAndQuantities = []
+    poolAndQuantity = { 'poolId' => pool.id, 'quantity' => 1}
+    poolAndQuantities.push(poolAndQuantity)
+    poolAndQuantity = { 'poolId' => another_pool.id, 'quantity' => 1}
+    poolAndQuantities.push(poolAndQuantity)
+    lambda {
+      status = @consumer2.consume_pools(poolAndQuantities)
     }.should raise_exception(RestClient::ResourceNotFound)
   end
 
@@ -386,7 +395,20 @@ describe 'Consumer Resource' do
     sleep 1
 
     consumer_client.consume_pool(pool['id'], {:quantity => 1})
-    @cp.get_consumer(consumer['uuid'])['updated'].should_not == old_updated
+    new_updated = @cp.get_consumer(consumer['uuid'])['updated']
+    new_updated.should_not == old_updated
+
+    sleep 1
+
+    pool1 = create_pool_and_subscription(@owner1['key'], prod.id)
+    pool2 = create_pool_and_subscription(@owner1['key'], prod.id)
+    poolAndQuantities = []
+    poolAndQuantity = { 'poolId' => pool1.id, 'quantity' => 1}
+    poolAndQuantities.push(poolAndQuantity)
+    poolAndQuantity = { 'poolId' => pool2.id, 'quantity' => 1}
+    poolAndQuantities.push(poolAndQuantity)
+    consumer_client.consume_pools(poolAndQuantities)
+    @cp.get_consumer(consumer['uuid'])['updated'].should_not == new_updated
   end
 
   it 'should allow consumer to bind to products based on product socket quantity across pools' do
@@ -792,6 +814,42 @@ describe 'Consumer Resource' do
     @cp.get_pool(pool.id).consumed.should == 1
     consumer.unregister(consumer.uuid)
     @cp.get_pool(pool.id).consumed.should == 0
+  end
+
+  it 'should allow a consumer to unregister and free up the pools consumed in a batch' do
+    owner = create_owner(random_string('zowner'))
+    user = user_client(owner, random_string('cukebuster'))
+    # performs the register for us
+    consumer = consumer_client(user, random_string('machine1'))
+    product = create_product(nil, nil, {:owner => owner['key']})
+    create_pool_and_subscription(owner['key'], product.id, 2)
+    create_pool_and_subscription(owner['key'], product.id, 2)
+    create_pool_and_subscription(owner['key'], product.id, 2)
+    pools = consumer.list_pools(:consumer => consumer.uuid)
+    pools.length.should == 3
+    poolAndQuantities = []
+    pools.each do |pool|
+      pool.consumed.should == 0
+      poolAndQuantity = {}
+      poolAndQuantity.poolId = pool.id
+      poolAndQuantity.quantity = 1
+      poolAndQuantities.push(poolAndQuantity)
+    end
+    status = consumer.consume_pools(poolAndQuantities)
+    wait_for_job(status.id, 10)
+    status = @cp.get_job(status.id, true)
+    status.resultData.length.should == 3
+    status.resultData.each do |consumed|
+      consumed.quantity.should == 1
+    end
+
+    pools.each do |pool|
+      @cp.get_pool(pool.id).consumed.should == 1
+    end
+    consumer.unregister(consumer.uuid)
+    pools.each do |pool|
+      @cp.get_pool(pool.id).consumed.should == 0
+    end
   end
 
   it 'should allow a consumer fact to be removed when updated badly' do
