@@ -113,7 +113,7 @@ public class EntitlerJobTest {
         when(e.bindByPoolQuantities(eq(consumerUuid), anyMapOf(String.class, Integer.class))).thenReturn(
                 ents);
 
-        EntitlerJob job = new EntitlerJob(e, null, null, null);
+        EntitlerJob job = new EntitlerJob(e, null, pC, null);
         job.execute(ctx);
         verify(e).bindByPoolQuantities(eq(consumerUuid), anyMapOf(String.class, Integer.class));
         verify(e).sendEvents(eq(ents));
