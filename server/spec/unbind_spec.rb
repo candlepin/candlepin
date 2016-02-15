@@ -41,7 +41,11 @@ describe 'Unbind' do
     ent2 = consumer.consume_pool(pool2.id, {:quantity => 1}).first
 
     consumer.unbind_entitlements_by_pool(consumer.uuid, pool1.id)
-    expect(consumer.list_entitlements).to(match_array([ent2]))
+    # updated date is off by one second some times.
+    ent2.updated = nil
+    entitlements = consumer.list_entitlements
+    entitlements[0].updated = nil
+    expect(entitlements).to(match_array([ent2]))
   end
 
   it 'should add unbound entitlements back to the pool' do
