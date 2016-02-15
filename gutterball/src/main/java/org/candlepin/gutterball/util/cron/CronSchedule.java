@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 
 
 
-/**
+ /**
  * The CronSchedule class represents a cron-like schedule parser and matcher. It accepts schedules
  * in a simplified cron format and can find dates matching the given schedule relative to other
  * dates.
@@ -36,13 +36,13 @@ import java.util.regex.Pattern;
  *
  * The schedule format accepted by this class is as follows:
  * <pre>
- *           ┌───────────── minutes (0 - 59)
- *           │ ┌────────────── hour (0 - 23)
- *           │ │ ┌─────────────── day of month (1 - 31)
- *           │ │ │ ┌──────────────── month (1 - 12)
- *           │ │ │ │ ┌───────────────── day of week (0 - 6, representing Sunday to Saturday)
- *           │ │ │ │ │
- *           │ │ │ │ │
+ *           +------------- minutes (0 - 59)
+ *           | +-------------- hour (0 - 23)
+ *           | | +--------------- day of month (1 - 31)
+ *           | | | +---------------- month (1 - 12)
+ *           | | | | +----------------- day of week (0 - 6, representing Sunday to Saturday)
+ *           | | | | |
+ *           | | | | |
  * schedule: * * * * *
  * </pre>
  *
