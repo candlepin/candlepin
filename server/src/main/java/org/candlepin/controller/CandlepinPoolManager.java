@@ -605,19 +605,19 @@ public class CandlepinPoolManager implements PoolManager {
                 List<Entitlement> freeEntitlements = this.poolCurator.retrieveFreeEntitlementsOfPools(
                         overFlowingPools, lifo);
                 List<Entitlement> entitlementsToDelete = new ArrayList<Entitlement>();
-                Map<String, Set<Entitlement>> poolSortedEntitlements
-                  = new HashMap<String, Set<Entitlement>>();
+                Map<String, List<Entitlement>> poolSortedEntitlements
+                  = new HashMap<String, List<Entitlement>>();
 
                 for (Entitlement entitlement : freeEntitlements) {
                     Pool pool = entitlement.getPool();
                     if (!poolSortedEntitlements.containsKey(pool.getId())) {
-                        poolSortedEntitlements.put(pool.getId(), new HashSet<Entitlement>());
+                        poolSortedEntitlements.put(pool.getId(), new ArrayList<Entitlement>());
                     }
                     poolSortedEntitlements.get(pool.getId()).add(entitlement);
                 }
 
                 for (Pool pool : overFlowingPools) {
-                    Set<Entitlement> freeEntitlementsForPool = poolSortedEntitlements.get(pool.getId());
+                    List<Entitlement> freeEntitlementsForPool = poolSortedEntitlements.get(pool.getId());
                     if (freeEntitlementsForPool != null && !freeEntitlementsForPool.isEmpty()) {
                         long consumed = pool.getConsumed();
                         long existing = pool.getQuantity();
