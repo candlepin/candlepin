@@ -72,7 +72,7 @@ module Gettext
             java_files << Dir[File.join(src, '**', '*.java')]
           end
 
-          args = %w[-k -F -ktrc:1c,2 -ktrnc:1c,2,3 -ktr -kmarktr -ktrn:1,2]
+          args = %w[-k -F -ktrc:1c,2 -ktrnc:1c,2,3 -ktr -kmarktr -ktrn:1,2 --from-code=utf-8]
           args << gettext.xgettext_args
           args << ['-o', gettext.keys_destination]
 
