@@ -1515,7 +1515,6 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         poolCurator.flush();
-        // poolCurator.clear();
 
         return new ArrayList<Entitlement>(entitlements.values());
     }
