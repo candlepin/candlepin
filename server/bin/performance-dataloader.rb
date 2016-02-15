@@ -12,6 +12,8 @@
 # products, and then an autobind is performed for each.
 
 require  "../client/ruby/candlepin_api"
+require  "../client/ruby/hostedtest_api"
+include HostedTest
 require 'pp'
 require 'benchmark'
 require 'optparse'
@@ -49,7 +51,7 @@ def random_provided_products
   return INSTALLED_PRODUCTS.slice(0, rand(INSTALLED_PRODUCTS.size + 1))
 end
 
-def create_systems(cp, owner_key, count, facts)
+def create_systems(owner_key, count, facts)
   installed_products = []
   (1..count).each do |i|
     installed_pids = []
@@ -57,11 +59,11 @@ def create_systems(cp, owner_key, count, facts)
       installed_pids << pid
       installed_products << {'productId' => pid, 'productName' => pid}
     end
-    sys = cp.register(random_string("sys-#{i}"), :system, nil, facts, nil, owner_key, [], installed_products)
+    sys = @cp.register(random_string("sys-#{i}"), :system, nil, facts, nil, owner_key, [], installed_products)
     # Do an autobind:
     ents = nil
     time = Benchmark.realtime do
-      ents = cp.consume_product(nil, {:uuid => sys['uuid']})
+      ents = @cp.consume_product(nil, {:uuid => sys['uuid']})
     end
     quantity = 0
     if ! ents.nil?
@@ -75,15 +77,15 @@ def create_systems(cp, owner_key, count, facts)
   end
 end
 
-def create_pools(cp, owner_key, count, attributes, quantity)
+def create_pools(owner_key, count, attributes, quantity)
   end_date = Date.new(2025, 5, 29)
   time = Benchmark.realtime do
     (1..(count)).each do |i|
       mkt_prod_id = random_string('mkt-prod')
-      mkt_prod = cp.create_product(owner_key, mkt_prod_id, mkt_prod_id, {
+      mkt_prod = @cp.create_product(owner_key, mkt_prod_id, mkt_prod_id, {
         :attributes => attributes,
       })
-      sub1 = cp.create_subscription(owner_key, mkt_prod['id'], quantity,
+      create_pool_and_subscription(owner_key, mkt_prod['id'], quantity,
         random_provided_products(), rand(10000), rand(10000), rand(10000), nil, end_date)
     end
   end
@@ -122,15 +124,15 @@ if options[:pool_count] == 0 and options[:system_count] == 0
   exit
 end
 
-cp = Candlepin.new(ADMIN_USERNAME, ADMIN_PASSWORD, nil, nil, HOST, PORT)
+@cp = Candlepin.new(ADMIN_USERNAME, ADMIN_PASSWORD, nil, nil, HOST, PORT)
 
 # Create the owner we will load up with data:
 
 begin
-  owner = cp.get_owner options[:org]
+  owner = @cp.get_owner options[:org]
   puts "Re-using owner: #{owner['key']}"
 rescue RestClient::ResourceNotFound
-  owner = cp.create_owner options[:org]
+  owner = @cp.create_owner options[:org]
   puts "Created owner: #{owner['key']}"
 end
 
@@ -148,11 +150,11 @@ if options[:pool_count] > 0
   }
   # To enable stacking, uncomment the attributes above and adjust the quantity
   # here:
-  create_pools(cp, owner['key'], options[:pool_count], attributes, 500)
+  create_pools(owner['key'], options[:pool_count], attributes, 500)
 
   puts "Refreshing pools..."
   time = Benchmark.realtime do
-    cp.refresh_pools(owner['key'])
+    @cp.refresh_pools(owner['key'])
   end
   puts "   #{time} seconds"
 else
@@ -161,7 +163,7 @@ end
 
 if options[:system_count] > 0
   puts "Creating #{options[:system_count]} systems:"
-  create_systems(cp, owner['key'], options[:system_count], {"cpu.cpu_socket(s)" => 8, "uname.machine" => ARCH})
+  create_systems(owner['key'], options[:system_count], {"cpu.cpu_socket(s)" => 8, "uname.machine" => ARCH})
 else
   puts "Skipping system registration and autobinds. (use --system-count)"
 end

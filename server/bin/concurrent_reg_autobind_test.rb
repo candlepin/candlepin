@@ -10,11 +10,14 @@
 require 'thread'
 
 require File.expand_path('candlepin_api', File.dirname(__FILE__) + '/../client/ruby')
+require File.expand_path('hostedtest_api', File.dirname(__FILE__) + '/../client/ruby')
+include HostedTest
 
 
 # Stolen from import_products
 # Originally from http://burgestrand.se/articles/quick-and-simple-ruby-thread-pool.html
 class Pool
+
   def initialize(size)
     @size = size
     @jobs = Queue.new
@@ -67,10 +70,9 @@ end
 owner = @cp.create_owner(random_string('owner'))
 prod1 = @cp.create_product(owner['key'], random_string('product1'), random_string('product1'), {})
 prod2 = @cp.create_product(owner['key'], random_string('product2'), random_string('product2'), {})
-subs1 = @cp.create_subscription(owner['key'], prod1["id"], 10)
-subs2 = @cp.create_subscription(owner['key'], prod2["id"], 1)
-subs3 = @cp.create_subscription(owner['key'], prod2["id"], 1)
-@cp.refresh_pools(owner['key'])
+create_pool_and_subscription(owner['key'], prod1["id"], 10, [], '', '', '', nil, nil, true)
+create_pool_and_subscription(owner['key'], prod2["id"], 1, [], '', '', '', nil, nil, true)
+create_pool_and_subscription(owner['key'], prod2["id"], 1)
 pools = @cp.list_pools(:owner => owner['id'])
 
 key1 = @cp.create_activation_key(owner['key'], 'key1')

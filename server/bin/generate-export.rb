@@ -7,6 +7,8 @@
 # None of the above will be cleaned up.
 
 require  "../client/ruby/candlepin_api"
+require  "../client/ruby/hostedtest_api"
+include HostedTest
 require 'pp'
 
 ADMIN_USERNAME = "admin"
@@ -19,24 +21,23 @@ def random_string prefix=nil
   return "#{prefix}-#{rand(100000)}"
 end
 
-cp = Candlepin.new(ADMIN_USERNAME, ADMIN_PASSWORD, nil, nil, HOST, PORT)
+@cp = Candlepin.new(ADMIN_USERNAME, ADMIN_PASSWORD, nil, nil, HOST, PORT)
 
-owner = cp.create_owner random_string("export_me")
+owner = @cp.create_owner random_string("export_me")
 
-product1 = cp.create_product(owner['key'], random_string(), random_string())
-product2 = cp.create_product(owner['key'], random_string(), random_string())
+product1 = @cp.create_product(owner['key'], random_string(), random_string())
+product2 = @cp.create_product(owner['key'], random_string(), random_string())
 
 end_date = Date.new(2025, 5, 29)
-sub1 = cp.create_subscription(owner['key'], product1['id'], 20, [], '', '12345', nil, nil, end_date)
-sub2 = cp.create_subscription(owner['key'], product2['id'], 30, [], '', '76534', nil, nil, end_date)
-cp.refresh_pools(owner['key'])
+create_pool_and_subscription(owner['key'], product1['id'], 20, [], '', '12345', '', nil, end_date, true)
+create_pool_and_subscription(owner['key'], product2['id'], 30, [], '', '76534', '', nil, end_date)
 
-pool1 = cp.list_pools(:owner => owner['id'], :product => product1['id'])[0]
-pool2 = cp.list_pools(:owner => owner['id'], :product => product2['id'])[0]
+pool1 = @cp.list_pools(:owner => owner['id'], :product => product1['id'])[0]
+pool2 = @cp.list_pools(:owner => owner['id'], :product => product2['id'])[0]
 
 org_admin_username = random_string("orgadmin")
 org_admin_password = 'password'
-cp.create_user(org_admin_username, org_admin_password, true)
+@cp.create_user(org_admin_username, org_admin_password, true)
 org_admin_cp = Candlepin.new(org_admin_username, org_admin_password)
 consumer = org_admin_cp.register(random_string('dummyconsumer'), "candlepin",
   nil, {}, nil, owner['key'])

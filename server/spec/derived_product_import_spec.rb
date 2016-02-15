@@ -49,7 +49,6 @@ describe 'Import', :serial => true do
       {
         :derived_product_id => derived_product.id
       })
-    @cp.refresh_pools(@owner['key'])
     pool = @cp.list_owner_pools(@owner['key'], {:product => stacked_datacenter_product.id})[0]
 
     # create the distributor consumer
@@ -113,8 +112,10 @@ describe 'Import', :serial => true do
     upstream_cert[0..26].should == "-----BEGIN CERTIFICATE-----"
 
     # remove created subs
-    @cp.list_subscriptions(@dist_owner['key']).each do |s|
-        @cp.delete_subscription(s.id)
+    @cp.list_owner_pools(@dist_owner['key']).each do |p|
+        if p.type == 'NORMAL' then
+          delete_pool_and_subscription(p)
+        end
     end
   end
 end
