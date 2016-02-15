@@ -98,10 +98,10 @@ describe 'Owner Resource' do
     owner = create_owner random_string("test_owner1")
     product = create_product(nil, nil, :owner => owner['key'])
     pool = create_pool_and_subscription(owner['key'], product.id, 10)
-    sub = @cp.get_subscription(pool.subscriptionId)
+    poolOrSub = get_pool_or_subscription(pool)
     tomorrow = (Time.now + 24 * 60 * 60).utc.iso8601
-    sub.startDate = tomorrow
-    @cp.update_subscription(sub)
+    poolOrSub.startDate = tomorrow
+    update_pool_or_subscription(poolOrSub)
     updatedSub = @cp.get_subscription(pool.subscriptionId)
     Time.parse(updatedSub.startDate) == Time.parse(tomorrow)
   end
