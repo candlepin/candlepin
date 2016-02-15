@@ -34,9 +34,9 @@ describe 'Subscription Resource' do
         :type => 'type1', :name => 'branding1'}
       b2 = {:productId => 'prodid2',
         :type => 'type2', :name => 'branding2'}
-      created = @cp.create_subscription(@owner['key'], @some_product.id, 11,
-        [], '','','',nil,nil, :branding => [b1,b2])
-      sub = @cp.get_subscription(created['id'])
+      created = create_pool_and_subscription(@owner['key'], @some_product.id, 11,
+        [], '', '', '', nil, nil, false, :branding => [b1,b2])
+      sub = @cp.get_subscription(created['subscriptionId'])
       sub.quantity.should == 11
       sub.branding.size.should == 2
   end
