@@ -195,7 +195,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
         List<Pool> pools = poolCurator.listByOwner(o);
-        assertEquals(5, poolCurator.listByOwner(o).size());
+        assertEquals(5, pools.size());
         poolManager.deletePools(Arrays.asList(pool, pools.get(0)));
         pools = poolCurator.listByOwner(o);
         assertEquals(3, pools.size());
