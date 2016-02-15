@@ -925,7 +925,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public List<Pool> find(Collection<String> poolIds) {
+    public List<Pool> secureFind(Collection<String> poolIds) {
         if (poolIds != null && !poolIds.isEmpty()) {
             return this.poolCurator.listAllByIds(poolIds);
         }

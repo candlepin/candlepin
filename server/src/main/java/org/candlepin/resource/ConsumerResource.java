@@ -1478,6 +1478,25 @@ public class ConsumerResource {
 
         log.debug("Consumer (post verify): {}", consumer);
 
+        if (hasPoolQuantities) {
+            Map<String, PoolIdAndQuantity> pqMap = new HashMap<String, PoolIdAndQuantity>();
+            for (PoolIdAndQuantity poolQuantity : poolQuantities) {
+                if (pqMap.containsKey(poolQuantity.getPoolId())) {
+                    pqMap.get(poolQuantity.getPoolId()).addQuantity(poolQuantity.getQuantity());
+                }
+                else {
+                    pqMap.put(poolQuantity.getPoolId(), poolQuantity);
+                }
+            }
+
+            List<Pool> pools = poolManager.secureFind(pqMap.keySet());
+
+            if (!principal.canAccessAll(pools, SubResource.ENTITLEMENTS, Access.CREATE)) {
+                throw new NotFoundException(i18n.tr("Pools with ids {0} could not be found.",
+                        pqMap.keySet()));
+            }
+        }
+
         try {
             // I hate double negatives, but if they have accepted all
             // terms, we want comeToTerms to be true.
@@ -1500,25 +1519,6 @@ public class ConsumerResource {
             }
             else {
                 quantity = 1;
-            }
-        }
-
-        if (hasPoolQuantities) {
-            Map<String, PoolIdAndQuantity> pqMap = new HashMap<String, PoolIdAndQuantity>();
-            for (PoolIdAndQuantity poolQuantity : poolQuantities) {
-                if (pqMap.containsKey(poolQuantity.getPoolId())) {
-                    pqMap.get(poolQuantity.getPoolId()).addQuantity(poolQuantity.getQuantity());
-                }
-                else {
-                    pqMap.put(poolQuantity.getPoolId(), poolQuantity);
-                }
-            }
-
-            List<Pool> pools = poolManager.find(pqMap.keySet());
-
-            if (!principal.canAccessAll(pools, SubResource.ENTITLEMENTS, Access.CREATE)) {
-                throw new ForbiddenException(i18n.tr("User {0} cannot access all pools.",
-                        principal.getName()));
             }
         }
 
