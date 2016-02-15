@@ -88,6 +88,17 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     @Deprecated
     @Transactional
     public Product lookupById(String id) {
+        // This provides an interesting problem in that we don't have a way to reference a specific
+        // version of the product. Since we're using a timestamp for the version, we can use the
+        // max value as our tiebreaker
+
+        // return (Product) this.createSecureCriteria()
+        //     .add(Restrictions.and("id", id)).uniqueResult();
+
+
+
+
+
         return (Product) this.createSecureCriteria()
             .add(Restrictions.eq("id", id)).uniqueResult();
     }
