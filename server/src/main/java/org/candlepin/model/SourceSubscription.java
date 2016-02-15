@@ -39,7 +39,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cpo_pool_source_sub")
+@Table(name = "cp2_pool_source_sub")
 public class SourceSubscription extends AbstractHibernateObject {
 
     @Id

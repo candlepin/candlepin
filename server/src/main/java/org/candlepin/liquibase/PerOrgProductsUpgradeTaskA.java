@@ -28,7 +28,7 @@ import java.util.Map;
 
 
 /**
- * The PerOrgProductsUpgradeTaskA performs the post-db upgrade data migration to the cpo_* tables.
+ * The PerOrgProductsUpgradeTaskA performs the post-db upgrade data migration to the cp2_* tables.
  * This task does not perform any actions that would modify the cp_* tables.
  */
 public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
@@ -208,7 +208,7 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
             attrQuery.close();
             product.put("attributes", attributes);
             product.put("attributes_statement", this.generateBulkInsertStatement(
-                "cpo_product_attributes", attributes.size(),
+                "cp2_product_attributes", attributes.size(),
                 "id", "created", "updated", "name", "value", "product_uuid"
             ));
 
@@ -231,7 +231,7 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
             certQuery.close();
             product.put("certificates", certificates);
             product.put("certificates_statement", this.generateBulkInsertStatement(
-                "cpo_product_certificates", certificates.size(),
+                "cp2_product_certificates", certificates.size(),
                 "id", "created", "updated", "cert", "privatekey", "product_uuid"
             ));
 
@@ -256,7 +256,7 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
             contentQuery.close();
             product.put("content", content);
             product.put("content_statement", this.generateBulkInsertStatement(
-                "cpo_product_content", content.size(),
+                "cp2_product_content", content.size(),
                 "product_uuid", "content_uuid", "enabled", "created", "updated"
             ));
 
@@ -273,7 +273,7 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
             dprodQuery.close();
             product.put("dependents", dependents);
             product.put("dependents_statement", this.generateBulkInsertStatement(
-                "cpo_dependent_products", dependents.size(),
+                "cp2_dependent_products", dependents.size(),
                 "product_uuid", "element"
             ));
 
@@ -319,7 +319,7 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
             prodQuery.close();
             content.put("products", products);
             content.put("products_statement", this.generateBulkInsertStatement(
-                "cpo_content_modified_products", products.size(),
+                "cp2_content_modified_products", products.size(),
                 "content_uuid", "element"
             ));
 
@@ -342,7 +342,7 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
             ecQuery.close();
             content.put("envcontent", envcontent);
             content.put("envcontent_statement", this.generateBulkInsertStatement(
-                "cpo_environment_content", envcontent.size(),
+                "cp2_environment_content", envcontent.size(),
                 "id", "created", "updated", "content_uuid", "environment_id", "enabled"
             ));
 
@@ -380,7 +380,7 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
         info[4] = orgid;
 
         this.executeUpdate(
-            "INSERT INTO cpo_content " +
+            "INSERT INTO cp2_content " +
             "  (uuid, content_id, created, updated, owner_id, contenturl, gpgurl, label, " +
             "  metadataexpire, name, releasever, requiredtags, type, vendor, arches) " +
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -507,7 +507,7 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
             info[4] = orgid;
 
             this.executeUpdate(
-                "INSERT INTO cpo_products " +
+                "INSERT INTO cp2_products " +
                 "  (uuid, created, updated, multiplier, owner_id, product_id, name) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
                 info
@@ -602,21 +602,21 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
         this.logger.info("Migrating global product data...");
 
         this.executeUpdate(
-            "INSERT INTO cpo_pool_provided_products " +
+            "INSERT INTO cp2_pool_provided_products " +
             "SELECT pool.id, prod.uuid " +
             "FROM cp_pool pool " +
             "INNER JOIN cp_pool_products pp ON pool.id = pp.pool_id " +
-            "INNER JOIN cpo_products prod ON " +
+            "INNER JOIN cp2_products prod ON " +
             "  (pp.product_id = prod.product_id AND pool.owner_id = prod.owner_id) " +
             "WHERE pp.dtype = 'provided'"
         );
 
         this.executeUpdate(
-            "INSERT INTO cpo_pool_derived_products " +
+            "INSERT INTO cp2_pool_derived_products " +
             "SELECT pool.id, prod.uuid " +
             "FROM cp_pool pool " +
             "INNER JOIN cp_pool_products pp ON pool.id = pp.pool_id " +
-            "INNER JOIN cpo_products prod ON " +
+            "INNER JOIN cp2_products prod ON " +
             "  (pp.product_id = prod.product_id AND pool.owner_id = prod.owner_id) " +
             "WHERE pp.dtype = 'derived'"
         );
@@ -632,8 +632,8 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
         this.logger.info("  Migrating activation key data...");
 
         this.executeUpdate(
-            "INSERT INTO cpo_activation_key_products(key_id, product_uuid) " +
-            "SELECT AK.id, (SELECT uuid FROM cpo_products " +
+            "INSERT INTO cp2_activation_key_products(key_id, product_uuid) " +
+            "SELECT AK.id, (SELECT uuid FROM cp2_products " +
             "  WHERE owner_id = ? AND product_id = AKP.product_id) " +
             "FROM cp_activation_key AK " +
             "  JOIN cp_activationkey_product AKP ON AKP.key_id = AK.id " +
@@ -665,7 +665,7 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
 
             while (sourcesub.next()) {
                 this.executeUpdate(
-                    "INSERT INTO cpo_pool_source_sub " +
+                    "INSERT INTO cp2_pool_source_sub " +
                     "  (id, subscription_id, subscription_sub_key, pool_id, created, updated)" +
                     "VALUES(?, ?, ?, ?, ?, ?)",
                     this.generateUUID(), sourcesub.getString(2), sourcesub.getString(3), poolid,

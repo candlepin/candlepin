@@ -45,7 +45,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cpo_content")
+@Table(name = "cp2_content")
 public class Content extends AbstractHibernateObject {
 
     public static final  String UEBER_CONTENT_NAME = "ueber_content";
@@ -112,7 +112,7 @@ public class Content extends AbstractHibernateObject {
     private Long metadataExpire;
 
     @ElementCollection
-    @CollectionTable(name = "cpo_content_modified_products",
+    @CollectionTable(name = "cp2_content_modified_products",
                      joinColumns = @JoinColumn(name = "content_uuid"))
     @Column(name = "element")
     @Size(max = 255)

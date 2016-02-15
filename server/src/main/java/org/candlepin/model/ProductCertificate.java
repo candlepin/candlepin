@@ -34,7 +34,7 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @XmlRootElement(name = "cert")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@Table(name = "cpo_product_certificates")
+@Table(name = "cp2_product_certificates")
 @Entity
 public class ProductCertificate extends AbstractCertificate {
 

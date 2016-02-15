@@ -8,7 +8,7 @@
 
     <changeSet id="20150616090156-1" author="crog">
         <comment>Fix for bad column definition in the original per-org products changeset</comment>
-        <modifyDataType tableName="cpo_products" columnName="multiplier" newDataType="bigint"/>
+        <modifyDataType tableName="cp2_products" columnName="multiplier" newDataType="bigint"/>
     </changeSet>
 
 </databaseChangeLog>

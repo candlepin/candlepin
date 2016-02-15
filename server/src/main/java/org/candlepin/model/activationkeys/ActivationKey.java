@@ -88,7 +88,7 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
 
     @ManyToMany
     @JoinTable(
-        name = "cpo_activation_key_products",
+        name = "cp2_activation_key_products",
         joinColumns = {@JoinColumn(name = "key_id")},
         inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
     )

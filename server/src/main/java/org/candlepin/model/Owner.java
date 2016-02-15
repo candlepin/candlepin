@@ -22,6 +22,8 @@ import org.candlepin.resteasy.InfoProperty;
 import com.fasterxml.jackson.annotation.JsonFilter;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -104,6 +106,17 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     @Column(nullable = true)
     @Size(max = 32)
     private String logLevel;
+
+    @OneToMany
+    @Cascade({ org.hibernate.annotations.CascadeType.ALL })
+    @JoinTable(
+        name = "cp2_owner_products",
+        joinColumns = {@JoinColumn(name = "owner_id", insertable = true, updatable = true)},
+        inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
+    )
+    @LazyCollection(LazyCollectionOption.FALSE)
+    @XmlTransient
+    private Set<Product> products;
 
     /**
      * Default constructor
@@ -394,5 +407,80 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     @XmlTransient
     public String getName() {
         return getDisplayName();
+    }
+
+    /**
+     * Retrieves the set of products currently associated with this owner. If this owner does not
+     * yet have any associated products, this method returns an empty set.
+     *
+     * Modifications made to the returned set will be reflected and stored
+     *
+     * @return
+     *  The set of products associated with this owner
+     */
+    @XmlTransient
+    public Set<Product> getProducts() {
+        return this.products;
+    }
+
+    /**
+     * Retrieves the products with which this owner is associated. If this owner is not associated
+     * with any products, this method returns an empty set.
+     * <p/>
+     * Note that changes made to the set returned by this method will be reflected by this object
+     * and its backing data store.
+     *
+     * @return
+     *  The set of products with which this owner is associated
+     */
+    @XmlTransient
+    public Set<Product> getProducts() {
+        return this.products;
+    }
+
+    /**
+     * Associates this owner with the specified product. If the given product is already associated
+     * with this owner, the request is silently ignored.
+     *
+     * @param product
+     *  An product to be associated with this owner
+     *
+     * @return
+     *  True if this owner was successfully associated with the given product; false otherwise
+     */
+    public boolean addProduct(Product product) {
+        return product != null ? this.products.add(product) : false;
+    }
+
+    /**
+     * Disassociates this owner with the specified product. If the given product is not associated
+     * with this owner, the request is silently ignored.
+     *
+     * @param product
+     *  The product to disassociate from this owner
+     *
+     * @return
+     *  True if the owner was disassociated successfully; false otherwise
+     */
+    public boolean removeProduct(Product product) {
+        return product != null ? this.products.remove(product) : false;
+    }
+
+    /**
+     * Sets the products with which this owner is associated.
+     *
+     * @param products
+     *  A collection of products to be associated with this owner
+     *
+     * @return
+     *  A reference to this owner
+     */
+    public Owner setProducts(Collection<Product> products) {
+        this.products.clear();
+        if (products != null) {
+            this.products.addAll(products);
+        }
+
+        return this;
     }
 }

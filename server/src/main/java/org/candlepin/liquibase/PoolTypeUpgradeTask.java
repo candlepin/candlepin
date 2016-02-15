@@ -25,7 +25,7 @@ import java.util.ArrayList;
 
 
 /**
- * The PoolTypeUpgradeTask performs the post-db upgrade data migration to the cpo_* tables.
+ * The PoolTypeUpgradeTask performs the post-db upgrade data migration to the cp2_* tables.
  */
 public class PoolTypeUpgradeTask extends LiquibaseCustomTask {
 

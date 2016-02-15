@@ -37,7 +37,9 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -246,13 +248,27 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @NotNull
     private Product product;
 
+    @ElementCollection
+    @CollectionTable(name = "cp2_product_attributes",
+                     joinColumns = @JoinColumn(name = "product_uuid"))
+    @Column(name = "productAttributes")
+    @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
+    private Set<ProductAttribute> productAttributes;
+
     @ManyToOne
     @JoinColumn(name = "derived_product_uuid")
     private Product derivedProduct;
 
+    @ElementCollection
+    @CollectionTable(name = "cp2_product_attributes",
+                     joinColumns = @JoinColumn(name = "derived_product_uuid"))
+    @Column(name = "derivedProductAttributes")
+    @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
+    private Set<ProductAttribute> derivedProductAttributes;
+
     @ManyToMany
     @JoinTable(
-        name = "cpo_pool_provided_products",
+        name = "cp2_pool_provided_products",
         joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
         inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
     )
@@ -261,7 +277,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     @ManyToMany
     @JoinTable(
-        name = "cpo_pool_derived_products",
+        name = "cp2_pool_derived_products",
         joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
         inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
     )
@@ -500,6 +516,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     public String getDerivedProductName() {
         return (this.getDerivedProduct() != null ? this.getDerivedProduct().getName() : null);
     }
+
     /**
      * Return the contract for this pool's subscription.
      *
@@ -966,20 +983,32 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         else if (getDerivedImportedProductId() != null) {
             return getDerivedImportedProductId();
         }
+
         return null;
-
     }
 
+    /**
+     * Retrieves the product attributes for this pool. The product attributes will be identical to
+     * those retrieved from getProduct().getAttributes(), except the set returned by this method is
+     * not modifiable.
+     *
+     * @return
+     *  The attributes associated with the marketing product (SKU) for this pool
+     */
     public Set<ProductAttribute> getProductAttributes() {
-        return this.getProduct() != null ?
-            this.getProduct().getAttributes() :
-            new HashSet<ProductAttribute>();
+        return this.productAttributes;
     }
 
+    /**
+     * Retrieves the derived product attributes for this pool. The derived product attributes will
+     * be identical to those retrieved from getDerivedProduct().getAttributes(), except the set
+     * returned by this method is not modifiable.
+     *
+     * @return
+     *  The attributes associated with the derived product (???) for this pool
+     */
     public Set<ProductAttribute> getDerivedProductAttributes() {
-        return this.getDerivedProduct() != null ?
-            this.getDerivedProduct().getAttributes() :
-            new HashSet<ProductAttribute>();
+        return this.derivedProductAttributes;
     }
 
     @XmlTransient

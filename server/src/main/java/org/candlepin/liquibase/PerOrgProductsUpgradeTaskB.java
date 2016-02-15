@@ -125,7 +125,7 @@ public class PerOrgProductsUpgradeTaskB extends PerOrgProductsUpgradeTaskA {
                         "SELECT ?, S.created, S.updated, ?, " +
                         "  S.accountnumber, S.contractnumber, S.enddate, S.quantity, S.startdate, " +
                         "  S.owner_id, S.ordernumber, 'NORMAL', " +
-                        "  (SELECT uuid FROM cpo_products " +
+                        "  (SELECT uuid FROM cp2_products " +
                         "    WHERE owner_id = S.owner_id AND product_id = S.product_id), " +
                         "  S.cdn_id, S.certificate_id, 0 " +
                         "FROM cp_subscription S WHERE id = ?",
@@ -166,9 +166,9 @@ public class PerOrgProductsUpgradeTaskB extends PerOrgProductsUpgradeTaskA {
 
         int updated = this.executeUpdate(
             "UPDATE cp_pool p " +
-            "SET product_uuid = (SELECT uuid FROM cpo_products prod " +
+            "SET product_uuid = (SELECT uuid FROM cp2_products prod " +
             "  WHERE prod.product_id = p.product_id_old AND prod.owner_id = p.owner_id), " +
-            "derived_product_uuid = (SELECT uuid FROM cpo_products prod " +
+            "derived_product_uuid = (SELECT uuid FROM cp2_products prod " +
             "  WHERE prod.product_id = p.derived_product_id_old AND prod.owner_id = p.owner_id)"
         );
 

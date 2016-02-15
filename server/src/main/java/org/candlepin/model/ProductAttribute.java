@@ -37,7 +37,7 @@ import javax.xml.bind.annotation.XmlTransient;
  * See Attributes interface for documentation.f
  */
 @Entity
-@Table(name = "cpo_product_attributes")
+@Table(name = "cp2_product_attributes")
 @Embeddable
 @JsonFilter("ProductAttributeFilter")
 public class ProductAttribute extends AbstractHibernateObject implements Attribute {

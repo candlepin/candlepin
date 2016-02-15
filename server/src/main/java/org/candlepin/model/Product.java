@@ -17,6 +17,7 @@ package org.candlepin.model;
 import org.candlepin.service.UniqueIdGenerator;
 
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -56,7 +57,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cpo_products")
+@Table(name = "cp2_products")
 public class Product extends AbstractHibernateObject implements Linkable, Cloneable {
 
     public static final  String UEBER_PRODUCT_POSTFIX = "_ueber_product";
@@ -78,10 +79,16 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     @NotNull
     private String name;
 
-    @ManyToOne
-    @JoinColumn(nullable = false)
-    @NotNull
-    private Owner owner;
+    @OneToMany
+    @Cascade({ CascadeType.ALL })
+    @JoinTable(
+        name = "cp2_owner_products",
+        joinColumns = {@JoinColumn(name = "product_uuid", insertable = true, updatable = true)},
+        inverseJoinColumns = {@JoinColumn(name = "owner_id")}
+    )
+    @LazyCollection(LazyCollectionOption.FALSE)
+    @XmlTransient
+    private Set<Owner> owners;
 
     /**
      * How many entitlements per quantity
@@ -89,16 +96,15 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     @Column
     private Long multiplier;
 
-    // NOTE: we need a product "type" so we can tell what class of
-    // product we are...
+    // TODO: we need a product "type" so we can tell what class of
+    // product we are... (02/15/16: is this still true?)
 
     @OneToMany(mappedBy = "product")
-    @Cascade({ org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN })
+    @Cascade({ CascadeType.ALL, CascadeType.DELETE_ORPHAN })
     private Set<ProductAttribute> attributes;
 
     @ElementCollection
-    @CollectionTable(name = "cpo_product_content",
+    @CollectionTable(name = "cp2_product_content",
                      joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
@@ -110,7 +116,7 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
      * fetch.
      */
     @ElementCollection
-    @CollectionTable(name = "cpo_product_dependent_products",
+    @CollectionTable(name = "cp2_product_dependent_products",
                      joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
     @LazyCollection(LazyCollectionOption.FALSE)
@@ -258,22 +264,65 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
         this.name = name;
     }
 
-
     /**
-     * @return The product's owner/organization
+     * Retrieves the owners with which this product is associated. If this product is not associated
+     * with any owners, this method returns an empty set.
+     * <p/>
+     * Note that changes made to the set returned by this method will be reflected by this object
+     * and its backing data store.
+     *
+     * @return
+     *  The set of owners with which this product is associated
      */
-    public Owner getOwner() {
-        return this.owner;
+    @XmlTransient
+    public Set<Owner> getOwners() {
+        return this.owners;
     }
 
     /**
-     * Sets the product's owner.
+     * Associates this product with the specified owner. If the given owner is already associated
+     * with this product, the request is silently ignored.
      *
      * @param owner
-     * The new owner/organization for this product.
+     *  An owner to be associated with this product
+     *
+     * @return
+     *  True if this product was successfully associated with the given owner; false otherwise
      */
-    public void setOwner(Owner owner) {
-        this.owner = owner;
+    public boolean addOwner(Owner owner) {
+        return owner != null ? this.owners.add(owner) : false;
+    }
+
+    /**
+     * Disassociates this product with the specified owner. If the given owner is not associated
+     * with this product, the request is silently ignored.
+     *
+     * @param owner
+     *  The owner to disassociate from this product
+     *
+     * @return
+     *  True if the product was disassociated successfully; false otherwise
+     */
+    public boolean removeOwner(Owner owner) {
+        return owner != null ? this.owners.remove(owner) : false;
+    }
+
+    /**
+     * Sets the owners with which this product is associated.
+     *
+     * @param owners
+     *  A collection of owners to be associated with this product
+     *
+     * @return
+     *  A reference to this product
+     */
+    public Product setOwners(Collection<Owner> owners) {
+        this.owners.clear();
+        if (owners != null) {
+            this.owners.addAll(owners);
+        }
+
+        return this;
     }
 
     /**
