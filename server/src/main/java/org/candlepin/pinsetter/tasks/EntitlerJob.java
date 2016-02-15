@@ -93,6 +93,7 @@ public class EntitlerJob extends KingpinJob {
                         .getQuantity());
             }
             ctx.setResult(consumed);
+            poolCurator.clear();
         }
         catch (EntitlementRefusedException e) {
             log.error("EntitlerJob encountered a problem, translating errors", e);
