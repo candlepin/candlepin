@@ -29,6 +29,7 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -86,8 +87,6 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         return this.prodCertCurator.getCertForProduct(product);
     }
 
-
-
     @Override
     public void purgeCache(Collection<String> cachedKeys) {
         // noop
@@ -97,16 +96,20 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     public void removeContent(Owner owner, String productId, String contentId) {
         Product product = prodCurator.lookupById(owner, productId);
         Content content = contentCurator.lookupById(owner, contentId);
-        prodCurator.removeProductContent(product, content);
+
+        prodCurator.removeProductContent(product, Arrays.asList(content), owner);
     }
 
     @Override
-    public Product mergeProduct(Product prod) {
-        return prodCurator.merge(prod);
+    public Product mergeProduct(Product product, Owner owner) {
+        // This is bad, as it has a strong possibility of clobbering shared data.
+        log.warn("Product merged directly through the service adapter: {}/{}", product, owner);
+
+        return prodCurator.updateProduct(product, owner);
     }
 
-    public boolean productHasSubscriptions(Product prod) {
-        return prodCurator.productHasSubscriptions(prod);
+    public boolean productHasSubscriptions(Product product, Owner owner) {
+        return prodCurator.productHasSubscriptions(product, owner);
     }
 
     @Override

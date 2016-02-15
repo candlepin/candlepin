@@ -15,12 +15,20 @@
 package org.candlepin.model;
 
 import org.candlepin.service.UniqueIdGenerator;
+import org.candlepin.util.Util;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.Type;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,14 +38,20 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinTable;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+
 
 /**
  * ProductContent
@@ -45,8 +59,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cpo_content")
-public class Content extends AbstractHibernateObject {
+@Table(name = "cp2_content")
+public class Content extends AbstractHibernateObject implements SharedEntity, Cloneable {
 
     public static final  String UEBER_CONTENT_NAME = "ueber_content";
 
@@ -73,10 +87,15 @@ public class Content extends AbstractHibernateObject {
     @NotNull
     private String label;
 
-    @ManyToOne
-    @JoinColumn(nullable = false)
-    @NotNull
-    private Owner owner;
+    @OneToMany
+    @JoinTable(
+        name = "cp2_owner_content",
+        joinColumns = {@JoinColumn(name = "content_uuid", insertable = true, updatable = true)},
+        inverseJoinColumns = {@JoinColumn(name = "owner_id")}
+    )
+    @LazyCollection(LazyCollectionOption.FALSE)
+    @XmlTransient
+    private Set<Owner> owners;
 
     @Column(nullable = false)
     @Size(max = 255)
@@ -89,7 +108,6 @@ public class Content extends AbstractHibernateObject {
     private String vendor;
 
     @Column(nullable = true)
-    @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
     @Size(max = 255)
     private String contentUrl;
 
@@ -104,7 +122,6 @@ public class Content extends AbstractHibernateObject {
 
     // attribute?
     @Column(nullable = true)
-    @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
     @Size(max = 255)
     private String gpgUrl;
 
@@ -112,7 +129,7 @@ public class Content extends AbstractHibernateObject {
     private Long metadataExpire;
 
     @ElementCollection
-    @CollectionTable(name = "cpo_content_modified_products",
+    @CollectionTable(name = "cp2_content_modified_products",
                      joinColumns = @JoinColumn(name = "content_uuid"))
     @Column(name = "element")
     @Size(max = 255)
@@ -122,9 +139,19 @@ public class Content extends AbstractHibernateObject {
     @Size(max = 255)
     private String arches;
 
+    @XmlTransient
+    @Column(name = "entity_version")
+    private Integer entityVersion;
+
+    @XmlTransient
+    @Column
+    @Type(type = "org.hibernate.type.NumericBooleanType")
+    private Boolean locked;
+
+
     public Content(Owner owner, String name, String id, String label, String type,
         String vendor, String contentUrl, String gpgUrl, String arches) {
-        setOwner(owner);
+        addOwner(owner);
         setName(name);
         setId(id);
         setLabel(label);
@@ -146,6 +173,143 @@ public class Content extends AbstractHibernateObject {
      */
     public Content(String id) {
         this.setId(id);
+    }
+
+    /**
+     * Creates a shallow copy of the specified source content. Owners, attributes and content are
+     * not duplicated, but the joining objects are (ContentAttribute, ContentContent, etc.).
+     * <p/>
+     * Unlike the merge method, all properties from the source content are copied, including the
+     * state of any null collections and any identifier fields.
+     *
+     * @param source
+     *  The Content instance to copy
+     */
+    protected Content(Content source) {
+        this.setUuid(source.getUuid());
+        this.setId(source.getId());
+
+        this.setCreated(source.getCreated() != null ? (Date) source.getCreated().clone() : null);
+        this.setUpdated(source.getUpdated() != null ? (Date) source.getUpdated().clone() : null);
+
+        // Impl note:
+        // In most cases, our collection setters copy the contents of the input collections to their
+        // own internal collections, so we don't need to worry about our two instances sharing a
+        // collection. The exception here is the modifiedProductIds, which uses the collection
+        // directly, so we'll need to make a defensive copy.
+
+        this.setType(source.getType());
+        this.setLabel(source.getLabel());
+        this.setOwners(source.getOwners());
+        this.setName(source.getName());
+        this.setVendor(source.getVendor());
+        this.setContentUrl(source.getContentUrl());
+        this.setRequiredTags(source.getRequiredTags());
+        this.setReleaseVer(source.getReleaseVer());
+        this.setGpgUrl(source.getGpgUrl());
+        this.setMetadataExpire(source.getMetadataExpire());
+        this.setArches(source.getArches());
+
+        this.setModifiedProductIds(source.getModifiedProductIds() != null ?
+            new HashSet<String>(source.getModifiedProductIds()) : null);
+    }
+
+    /**
+     * Copies several properties from the given content on to this content instance. Properties that
+     * are not copied over include any identifiying fields (UUID, ID), the creation date and locking
+     * states. Values on the source content which are null will be ignored.
+     *
+     * @param source
+     *  The source content instance from which to pull content information
+     *
+     * @return
+     *  this content instance
+     */
+    public Content merge(Content source) {
+        this.setUpdated(source.getUpdated() != null ? (Date) source.getUpdated().clone() : null);
+
+        if (source.getType() != null) {
+            this.setType(source.getType());
+        }
+
+        if (source.getLabel() != null) {
+            this.setLabel(source.getLabel());
+        }
+
+        if (source.getName() != null) {
+            this.setName(source.getName());
+        }
+
+        if (source.getVendor() != null) {
+            this.setVendor(source.getVendor());
+        }
+
+        if (source.getContentUrl() != null) {
+            this.setContentUrl(source.getContentUrl());
+        }
+
+        if (source.getRequiredTags() != null) {
+            this.setRequiredTags(source.getRequiredTags());
+        }
+
+        if (source.getReleaseVer() != null) {
+            this.setReleaseVer(source.getReleaseVer());
+        }
+
+        if (source.getGpgUrl() != null) {
+            this.setGpgUrl(source.getGpgUrl());
+        }
+
+        if (source.getMetadataExpire() != null) {
+            this.setMetadataExpire(source.getMetadataExpire());
+        }
+
+        if (source.getArches() != null) {
+            this.setArches(source.getArches());
+        }
+
+        if (source.getModifiedProductIds() != null) {
+            // We need to make a copy of the modified products collection to ensure we don't link
+            // the two instances
+            this.setModifiedProductIds(new HashSet<String>(source.getModifiedProductIds()));
+        }
+
+        return this;
+    }
+
+    @Override
+    public Content clone() {
+        Content copy;
+
+        try {
+            copy = (Content) super.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            // This should never happen.
+            throw new RuntimeException("Clone not supported", e);
+        }
+
+        // Clear any existing collections to ensure we don't end up with shared collections
+        copy.owners = null;
+        copy.modifiedProductIds = null;
+
+        // Impl note:
+        // In most cases, our collection setters copy the contents of the input collections to their
+        // own internal collections, so we don't need to worry about our two instances sharing a
+        // collection.
+
+        if (this.getOwners() != null) {
+            copy.setOwners(this.getOwners());
+        }
+
+        if (this.getModifiedProductIds() != null) {
+            copy.setModifiedProductIds(new HashSet<String>(this.getModifiedProductIds()));
+        }
+
+        copy.setCreated(this.getCreated() != null ? (Date) this.getCreated().clone() : null);
+        copy.setUpdated(this.getUpdated() != null ? (Date) this.getUpdated().clone() : null);
+
+        return copy;
     }
 
     public static Content createUeberContent(UniqueIdGenerator idGenerator, Owner o, Product p) {
@@ -200,12 +364,79 @@ public class Content extends AbstractHibernateObject {
         this.id = id;
     }
 
-    public void setOwner(Owner owner) {
-        this.owner = owner;
+    /**
+     * Retrieves the owners with which this content is associated. If this content is not associated
+     * with any owners, this method returns an empty set.
+     * <p/>
+     * Note that changes made to the set returned by this method will be reflected by this object
+     * and its backing data store.
+     *
+     * @return
+     *  The set of owners with which this content is associated
+     */
+    @XmlTransient
+    @Override
+    public Collection<Owner> getOwners() {
+        return this.owners;
     }
 
-    public Owner getOwner() {
-        return this.owner;
+    /**
+     * Associates this content with the specified owner. If the given owner is already associated
+     * with this content, the request is silently ignored.
+     *
+     * @param owner
+     *  An owner to be associated with this content
+     *
+     * @return
+     *  True if this content was successfully associated with the given owner; false otherwise
+     */
+    public boolean addOwner(Owner owner) {
+        if (owner != null) {
+            if (this.owners == null) {
+                this.owners = new HashSet<Owner>();
+            }
+
+            return this.owners.add(owner);
+        }
+
+        return false;
+    }
+
+    /**
+     * Disassociates this content with the specified owner. If the given owner is not associated
+     * with this content, the request is silently ignored.
+     *
+     * @param owner
+     *  The owner to disassociate from this content
+     *
+     * @return
+     *  True if the content was disassociated successfully; false otherwise
+     */
+    public boolean removeOwner(Owner owner) {
+        return (this.owners != null && owner != null) ? this.owners.remove(owner) : false;
+    }
+
+    /**
+     * Sets the owners with which this content is associated.
+     *
+     * @param owners
+     *  A collection of owners to be associated with this content
+     *
+     * @return
+     *  A reference to this content
+     */
+    public Content setOwners(Collection<Owner> owners) {
+        if (this.owners == null) {
+            this.owners = new HashSet<Owner>();
+        }
+
+        this.owners.clear();
+
+        if (owners != null) {
+            this.owners.addAll(owners);
+        }
+
+        return this;
     }
 
     public String getLabel() {
@@ -278,20 +509,32 @@ public class Content extends AbstractHibernateObject {
 
         if (other instanceof Content) {
             Content that = (Content) other;
-            return new EqualsBuilder()
-                .append(this.contentUrl, that.contentUrl)
-                .append(this.gpgUrl, that.gpgUrl)
-                .append(this.label, that.label)
-                .append(this.metadataExpire, that.metadataExpire)
-                .append(this.name, that.name)
-                .append(this.releaseVer, that.releaseVer)
-                .append(this.requiredTags, that.requiredTags)
+
+            boolean equals = new EqualsBuilder()
+                .append(this.id, that.id)
                 .append(this.type, that.type)
+                .append(this.label, that.label)
+                .append(this.name, that.name)
                 .append(this.vendor, that.vendor)
+                .append(this.contentUrl, that.contentUrl)
+                .append(this.requiredTags, that.requiredTags)
+                .append(this.releaseVer, that.releaseVer)
+                .append(this.gpgUrl, that.gpgUrl)
+                .append(this.metadataExpire, that.metadataExpire)
                 .append(this.arches, that.arches)
-                .append(this.modifiedProductIds, that.modifiedProductIds)
-                .append(this.owner, that.owner)
                 .isEquals();
+
+            if (equals) {
+                if (!Util.collectionsAreEqual(this.modifiedProductIds, that.modifiedProductIds)) {
+                    if (!(this.modifiedProductIds == null && that.modifiedProductIds.size() == 0) &&
+                        !(that.modifiedProductIds == null && this.modifiedProductIds.size() == 0)) {
+
+                        return false;
+                    }
+                }
+            }
+
+            return equals;
         }
 
         return false;
@@ -300,19 +543,29 @@ public class Content extends AbstractHibernateObject {
     @Override
     public int hashCode() {
         // This must always be a subset of equals
-        return new HashCodeBuilder(37, 7)
-            .append(this.contentUrl)
-            .append(this.gpgUrl)
-            .append(this.label)
-            .append(this.metadataExpire)
-            .append(this.name)
-            .append(this.releaseVer)
-            .append(this.requiredTags)
+        HashCodeBuilder builder = new HashCodeBuilder(37, 7)
+            .append(this.id)
             .append(this.type)
+            .append(this.label)
+            .append(this.name)
             .append(this.vendor)
-            .append(this.arches)
-            .append(this.modifiedProductIds)
-            .toHashCode();
+            .append(this.contentUrl)
+            .append(this.requiredTags)
+            .append(this.releaseVer)
+            .append(this.gpgUrl)
+            .append(this.metadataExpire)
+            .append(this.arches);
+
+        // Impl note:
+        // Because we handle the collections specially in .equals, we have to do the same special
+        // treatment here to ensure our output doesn't give us wonky results when compared to the
+        // output of .equals
+
+        if (this.modifiedProductIds != null && this.modifiedProductIds.size() > 0) {
+            builder.append(this.modifiedProductIds);
+        }
+
+        return builder.toHashCode();
     }
 
 
@@ -366,33 +619,26 @@ public class Content extends AbstractHibernateObject {
         return arches;
     }
 
-    /**
-     * @param from Content object to copy properties from.
-     * @return current Content object with updated properties
-     */
-    public Content copyProperties(Content from) {
-        setContentUrl(from.getContentUrl());
-        setGpgUrl(from.getGpgUrl());
-        setLabel(from.getLabel());
-        setMetadataExpire(from.getMetadataExpire());
-        setName(from.getName());
-        setReleaseVer(from.getReleaseVer());
-        setRequiredTags(from.getRequiredTags());
-        setType(from.getType());
-        setVendor(from.getVendor());
-        setArches(from.getArches());
-        setModifiedProductIds(defaultIfNull(from.getModifiedProductIds(), new HashSet<String>()));
-
-        return this;
-    }
-
-    private <T> T defaultIfNull(T val, T dflt) {
-        return val == null ? dflt : val;
-    }
-
     @Override
     public String toString() {
         return "Content [id: " + getId() + ", label: " + getLabel() + "]";
     }
 
+    @XmlTransient
+    @JsonIgnore
+    public Content setLocked(boolean locked) {
+        this.locked = locked;
+        return this;
+    }
+
+    @XmlTransient
+    public boolean isLocked() {
+        return this.locked != null && this.locked;
+    }
+
+    @PrePersist
+    @PreUpdate
+    public void updateEntityVersion() {
+        this.entityVersion = this.hashCode();
+    }
 }

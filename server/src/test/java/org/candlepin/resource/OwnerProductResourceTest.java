@@ -31,6 +31,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.util.Util;
 
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
@@ -103,12 +104,12 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
 
         when(oc.lookupByKey(eq("owner"))).thenReturn(o);
         when(pc.lookupById(eq(o), eq("10"))).thenReturn(p);
-        when(p.getOwner()).thenReturn(o);
+        when(p.getOwners()).thenReturn(Util.asSet(o));
 
         Set<Subscription> subs = new HashSet<Subscription>();
         Subscription s = mock(Subscription.class);
         subs.add(s);
-        when(pc.productHasSubscriptions(eq(p))).thenReturn(true);
+        when(pc.productHasSubscriptions(eq(p), eq(o))).thenReturn(true);
 
         pr.deleteProduct("owner", "10");
     }

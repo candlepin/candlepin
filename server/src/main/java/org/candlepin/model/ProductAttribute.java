@@ -37,7 +37,7 @@ import javax.xml.bind.annotation.XmlTransient;
  * See Attributes interface for documentation.f
  */
 @Entity
-@Table(name = "cpo_product_attributes")
+@Table(name = "cp2_product_attributes")
 @Embeddable
 @JsonFilter("ProductAttributeFilter")
 public class ProductAttribute extends AbstractHibernateObject implements Attribute {
@@ -73,7 +73,7 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
 
     public String toString() {
         return "ProductAttribute [id=" + id + ", name=" + name + ", value=" + value +
-            ", product=" + product + "]";
+            ", product=" + (product != null ? product.getId() : null) + "]";
     }
 
     @XmlTransient
@@ -115,19 +115,24 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
         if (this == anObject) {
             return true;
         }
+
         if (anObject instanceof Attribute) {
             Attribute that = (Attribute) anObject;
-            return new EqualsBuilder().append(this.name, that.getName())
+
+            return new EqualsBuilder()
+                .append(this.name, that.getName())
                 .append(this.value, that.getValue())
                 .isEquals();
         }
+
         return false;
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(31, 73)
-            .append(this.name).append(this.value)
+            .append(this.name)
+            .append(this.value)
             .toHashCode();
     }
 }

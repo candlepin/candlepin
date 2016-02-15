@@ -294,7 +294,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public Consumer lockAndLoad(Consumer c) {
         getEntityManager().lock(c, LockModeType.PESSIMISTIC_WRITE);
         return c;
-
     }
 
     @Transactional

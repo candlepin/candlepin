@@ -50,7 +50,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Entitlement e = new Entitlement(pool, consumer, 1);
         consumer.addEntitlement(e);
 
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))
+        when(this.prodAdapter.getProductById(owner, product.getId()))
             .thenReturn(product);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -69,7 +69,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         consumer.setFact("cpu.cpu_socket(s)", "1");
         consumer.setFact("cpu.core(s)_per_socket", "10");
 
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))
+        when(this.prodAdapter.getProductById(owner, product.getId()))
             .thenReturn(product);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -89,7 +89,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         consumer.setFact("cpu.cpu_socket(s)", "2");
         consumer.setFact("cpu.core(s)_per_socket", "10");
 
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))
+        when(this.prodAdapter.getProductById(owner, product.getId()))
             .thenReturn(product);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -110,7 +110,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         consumer.setFacts(new HashMap<String, String>());
         consumer.setFact("memory.memtotal", "16777216");
 
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))
+        when(this.prodAdapter.getProductById(owner, product.getId()))
             .thenReturn(product);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -129,7 +129,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         consumer.setFacts(new HashMap<String, String>());
         consumer.setFact("memory.memtotal", "16777216");
 
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))
+        when(this.prodAdapter.getProductById(owner, product.getId()))
             .thenReturn(product);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -150,7 +150,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         consumer.setFacts(new HashMap<String, String>());
         consumer.setFact("cpu.cpu_socket(s)", "1");
 
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))
+        when(this.prodAdapter.getProductById(owner, product.getId()))
             .thenReturn(product);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -169,7 +169,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         consumer.setFacts(new HashMap<String, String>());
         consumer.setFact("cpu.cpu_socket(s)", "4");
 
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))
+        when(this.prodAdapter.getProductById(owner, product.getId()))
             .thenReturn(product);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -187,7 +187,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         pool.setId("TaylorSwift");
         pool.setQuantity(new Long(100));
 
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))
+        when(this.prodAdapter.getProductById(owner, product.getId()))
             .thenReturn(product);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 10);
@@ -210,7 +210,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         pool2.setId("SwiftTaylor");
         pool2.setQuantity(new Long(100));
 
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId())).thenReturn(product);
+        when(this.prodAdapter.getProductById(owner, product.getId())).thenReturn(product);
 
         Map<String, ValidationResult> results = enforcer.preEntitlement(consumer,
                 createPoolQuantities(100, pool, pool2),
@@ -234,7 +234,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Entitlement e = new Entitlement(pool, consumer, 1);
         consumer.addEntitlement(e);
 
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))
+        when(this.prodAdapter.getProductById(owner, product.getId()))
             .thenReturn(product);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -252,7 +252,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Entitlement e = new Entitlement(pool, consumer, 1);
         consumer.addEntitlement(e);
 
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))
+        when(this.prodAdapter.getProductById(owner, product.getId()))
             .thenReturn(product);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -303,7 +303,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         pool.setId("fakeid" + TestUtil.randomInt());
         consumer.setType(new ConsumerType(nonSystemType));
 
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))
+        when(this.prodAdapter.getProductById(owner, product.getId()))
             .thenReturn(product);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -504,7 +504,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
             }
         });
 
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))
+        when(this.prodAdapter.getProductById(owner, product.getId()))
             .thenReturn(product);
         return pool;
     }
@@ -772,7 +772,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Pool pool = TestUtil.createPool(owner, product);
         pool.setRestrictedToUsername("bob");
         pool.setId("fakeid" + TestUtil.randomInt());
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))
+        when(this.prodAdapter.getProductById(owner, product.getId()))
             .thenReturn(product);
         return pool;
     }
@@ -788,7 +788,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Pool pool = TestUtil.createPool(owner, product);
         pool.addAttribute(new PoolAttribute("dev_pool", "true"));
         pool.setId("fakeid" + TestUtil.randomInt());
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))
+        when(this.prodAdapter.getProductById(owner, product.getId()))
             .thenReturn(product);
         pool.addAttribute(new PoolAttribute("requires_consumer", consumer.getUuid()));
         return pool;
@@ -805,7 +805,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Pool pool = TestUtil.createPool(owner, product);
         pool.addAttribute(new PoolAttribute("virt_only", "true"));
         pool.setId("fakeid" + TestUtil.randomInt());
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))
+        when(this.prodAdapter.getProductById(owner, product.getId()))
             .thenReturn(product);
         return pool;
     }
@@ -815,7 +815,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Pool pool = TestUtil.createPool(owner, product);
         pool.addAttribute(new PoolAttribute("physical_only", "true"));
         pool.setId("fakeid" + TestUtil.randomInt());
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))
+        when(this.prodAdapter.getProductById(owner, product.getId()))
             .thenReturn(product);
         return pool;
     }
@@ -845,7 +845,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         product.setAttribute("requires_consumer_type",
             consumerType.toString());
         Pool pool = createPool(owner, product);
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))
+        when(this.prodAdapter.getProductById(owner, product.getId()))
             .thenReturn(product);
         return pool;
     }
@@ -860,7 +860,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Entitlement e = new Entitlement(pool, consumer, 1);
         consumer.addEntitlement(e);
 
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))
+        when(this.prodAdapter.getProductById(owner, product.getId()))
             .thenReturn(product);
 
         List<Pool> filtered = enforcer.filterPools(consumer, pools, true);
@@ -878,7 +878,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         consumer.setFact("cpu.cpu_socket(s)", "1");
         consumer.setFact("cpu.core(s)_per_socket", "10");
 
-        when(this.prodAdapter.getProductById(product.getOwner(), product.getId()))
+        when(this.prodAdapter.getProductById(owner, product.getId()))
             .thenReturn(product);
 
         List<Pool> pools = new LinkedList<Pool>();

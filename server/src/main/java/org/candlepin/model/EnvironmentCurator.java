@@ -48,8 +48,4 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
             .add(Restrictions.in("id", contentIds))
             .list();
     }
-
-    public void evict(Environment e) {
-        this.currentSession().evict(e);
-    }
 }

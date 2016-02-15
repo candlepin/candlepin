@@ -80,9 +80,42 @@ public interface ProductServiceAdapter {
      */
     void removeContent(Owner owner, String productId, String contentId);
 
-    boolean productHasSubscriptions(Product prod);
+    /**
+     * Checks if the specified product has any existing subscriptions for the given owner.
+     * <p/>
+     * Implementations which do not provide owner-specific product instancing may ignore the owner
+     * parameter, but may need to take extra steps to ensure the results pertain to the correct
+     * product.
+     *
+     * @param product
+     *  The product for which to check for subscriptions
+     *
+     * @param owner
+     *  The owner to which subscriptions should be restricted
+     *
+     * @return
+     *  true if there are any subscriptions for the given product; false otherwise
+     */
+    boolean productHasSubscriptions(Product product, Owner owner);
 
-    Product mergeProduct(Product prod);
+    /**
+     * Merges the changes provided by the specified product instance into the backing data store for
+     * the given owner.
+     * <p/>
+     * Implementations which do not provide owner-specific product instancing may ignore the owner
+     * parameter, but may need to take extra steps to ensure the results pertain to the correct
+     * product.
+     *
+     * @param product
+     *  The product instance containing the updates to merge
+     *
+     * @owner owner
+     *  The owner for which the changes are to be applied
+     *
+     * @return
+     *  the updated/merged product instance
+     */
+    Product mergeProduct(Product product, Owner owner);
 
     Set<String> getProductsWithContent(Owner owner, Collection<String> contentId);
 }

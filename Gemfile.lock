@@ -121,6 +121,3 @@ DEPENDENCIES
   rubocop (= 0.36.0)
   stringex
   webrick
-
-BUNDLED WITH
-   1.11.2

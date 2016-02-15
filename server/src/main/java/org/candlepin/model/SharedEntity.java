@@ -12,19 +12,22 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.liquibase;
+package org.candlepin.model;
+
+import java.util.Collection;
 
 
 
 /**
- * Liquibase wrapper class for the per-org products upgrade task
+ * Interface representing an entity which is used by multiple owners
  */
-public class PerOrgProductsUpgradeLiquibaseWrapperA
-    extends LiquibaseCustomTaskWrapper<PerOrgProductsUpgradeTaskA> {
+public interface SharedEntity {
 
-    public PerOrgProductsUpgradeLiquibaseWrapperA() {
-        super(PerOrgProductsUpgradeTaskA.class);
-    }
-
-    // Nothing else to do here
+    /**
+     * Retrieves all known owners which use this entity.
+     *
+     * @return
+     *  a collection of all known owners for this entity
+     */
+    Collection<Owner> getOwners();
 }

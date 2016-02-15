@@ -112,12 +112,14 @@ public abstract class X509Util {
     public String createFullContentPath(String contentPrefix, ProductContent pc) {
         String prefix = "/";
         String contentPath = pc.getContent().getContentUrl();
+
         // Allow for the case where the content URL is a true URL.
         // If that is true, then return it as is.
-        if (contentPath.startsWith("http://") ||
+        if (contentPath != null && (contentPath.startsWith("http://") ||
             contentPath.startsWith("file://") ||
             contentPath.startsWith("https://") ||
-            contentPath.startsWith("ftp://")) {
+            contentPath.startsWith("ftp://"))) {
+
             return contentPath;
         }
 
@@ -126,6 +128,7 @@ public abstract class X509Util {
             // remove them all except one.
             prefix = StringUtils.stripEnd(contentPrefix, "/") + prefix;
         }
+
         contentPath = StringUtils.stripStart(contentPath, "/");
         return prefix + contentPath;
     }

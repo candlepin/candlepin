@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
@@ -37,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -109,6 +111,62 @@ public class OwnerProductResource {
     }
 
     /**
+     * Retrieves a Product instance for the product with the specified id. If no matching product
+     * could be found, this method throws an exception.
+     *
+     * @param owner
+     *  The organization
+     *
+     * @param productId
+     *  The ID of the product to retrieve
+     *
+     * @throws NotFoundException
+     *  if no matching product could be found with the specified id
+     *
+     * @return
+     *  the Product instance for the product with the specified id
+     */
+    protected Product fetchProduct(Owner owner, String productId) {
+        Product product = productCurator.lookupById(owner, productId);
+
+        if (product == null) {
+            throw new NotFoundException(
+                i18n.tr("Product with ID ''{0}'' could not be found.", productId)
+            );
+        }
+
+        return product;
+    }
+
+    /**
+     * Retrieves a Content instance for the content with the specified id. If no matching content
+     * could be found, this method throws an exception.
+     *
+     * @param owner
+     *  The organization
+     *
+     * @param contentId
+     *  The ID of the content to retrieve
+     *
+     * @throws NotFoundException
+     *  if no matching content could be found with the specified id.
+     *
+     * @return
+     *  the Content instance for the content with the specified id
+     */
+    protected Content fetchContent(Owner owner, String contentId) {
+        Content content = this.contentCurator.lookupById(owner, contentId);
+
+        if (content == null) {
+            throw new NotFoundException(
+                i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
+            );
+        }
+
+        return content;
+    }
+
+    /**
      * Retrieves a list of Products
      *
      * @param productIds if specified, the list of product IDs to return product info for
@@ -164,15 +222,7 @@ public class OwnerProductResource {
         @Verify(Product.class) @PathParam("product_id") String productId) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = productCurator.lookupById(owner, productId);
-
-        if (product == null) {
-            throw new NotFoundException(
-                i18n.tr("Product with ID ''{0}'' could not be found.", productId)
-            );
-        }
-
-        return product;
+        return this.fetchProduct(owner, productId);
     }
 
     /**
@@ -213,9 +263,7 @@ public class OwnerProductResource {
 
         Owner owner = this.getOwnerByKey(ownerKey);
 
-        product.setOwner(owner);
-
-        return productCurator.create(product);
+        return productCurator.createProduct(product, owner);
     }
 
     /**
@@ -234,92 +282,14 @@ public class OwnerProductResource {
         @PathParam("product_id") String productId,
         Product product) {
 
-        Product toUpdate = this.getProduct(ownerKey, productId);
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product existing = this.getProduct(ownerKey, productId);
 
-        if (performProductUpdates(toUpdate, product)) {
-            this.productCurator.merge(toUpdate);
+        if (existing.isLocked()) {
+            throw new ForbiddenException(i18n.tr("product \"{1}\" is locked", product.getId()));
         }
 
-        return toUpdate;
-    }
-
-    protected boolean performProductUpdates(Product existing, Product incoming) {
-        boolean changesMade = false;
-
-        if (incoming.getName() != null && !existing.getName().equals(incoming.getName()) &&
-            !incoming.getName().isEmpty()) {
-
-            log.debug("Updating product name");
-            changesMade = true;
-            existing.setName(incoming.getName());
-        }
-
-        if (incoming.getAttributes() != null &&
-            !existing.getAttributes().equals(incoming.getAttributes())) {
-
-            log.debug("Updating product attributes");
-
-            // clear and addall here instead of replacing instance so there are no
-            // dangling memory references
-            existing.getAttributes().clear();
-            existing.getAttributes().addAll(incoming.getAttributes());
-            changesMade = true;
-        }
-
-        if (incoming.getDependentProductIds() != null &&
-            !existing.getDependentProductIds().equals(incoming.getDependentProductIds())) {
-
-            log.debug("Updating dependent product ids");
-
-            // clear and addall here instead of replacing instance so there are no
-            // dangling memory references
-            existing.getDependentProductIds().clear();
-            existing.getDependentProductIds().addAll(incoming.getDependentProductIds());
-            changesMade = true;
-        }
-
-        if (incoming.getMultiplier() != null &&
-            existing.getMultiplier().longValue() != incoming.getMultiplier().longValue()) {
-
-            log.debug("Updating product multiplier");
-            changesMade = true;
-            existing.setMultiplier(incoming.getMultiplier());
-        }
-
-        // not calling setHref() it's a no op and pointless to call.
-
-        return changesMade;
-    }
-
-    /**
-     * Retrieves a Content instance for the content with the specified id. If no matching content
-     * could be found, this method throws an exception.
-     *
-     * @param owner
-     *  The organization
-     *
-     * @param contentId
-     *  The ID of the content to retrieve
-     *
-     * @throws NotFoundException
-     *  if no matching content could be found with the specified id.
-     *
-     * @return
-     *  the Owner instance for the owner with the specified key.
-     *
-     * @httpcode 200
-     * @httpcode 404
-     */
-    protected Content getContent(Owner owner, String contentId) {
-        Content content = this.contentCurator.lookupById(owner, contentId);
-
-        if (content == null) {
-            throw new NotFoundException(
-                i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
-            );
-        }
-
-        return content;
+        return this.productCurator.updateProduct(((Product) existing.clone()).merge(product), owner);
     }
 
     /**
@@ -340,22 +310,23 @@ public class OwnerProductResource {
         @PathParam("product_id") String productId,
         Map<String, Boolean> contentMap) {
 
-        Product product = this.getProduct(ownerKey, productId);
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product product = this.fetchProduct(owner, productId);
         List<ProductContent> productContent = new LinkedList<ProductContent>();
 
-        this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
-
-        for (Entry<String, Boolean> entry : contentMap.entrySet()) {
-            Content content = this.getContent(product.getOwner(), entry.getKey());
-            productContent.add(new ProductContent(product, content, entry.getValue()));
+        if (product.isLocked()) {
+            throw new ForbiddenException(i18n.tr("product \"{1}\" is locked", product.getId()));
         }
 
-        product.getProductContent().addAll(productContent);
+        this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
+        product = (Product) product.clone();
 
-        this.productCurator.merge(product);
-        this.productCurator.flush();
+        for (Entry<String, Boolean> entry : contentMap.entrySet()) {
+            Content content = this.fetchContent(owner, entry.getKey());
+            product.addContent(content, entry.getValue());
+        }
 
-        return product;
+        return this.productCurator.updateProduct(product, owner);
     }
 
     /**
@@ -376,18 +347,20 @@ public class OwnerProductResource {
         @PathParam("content_id") String contentId,
         @QueryParam("enabled") Boolean enabled) {
 
-        Product product = this.getProduct(ownerKey, productId);
-        Content content = this.getContent(product.getOwner(), contentId);
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product product = this.fetchProduct(owner, productId);
+        Content content = this.fetchContent(owner, contentId);
+
+        if (product.isLocked()) {
+            throw new ForbiddenException(i18n.tr("product \"{1}\" is locked", product.getId()));
+        }
 
         this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
 
-        ProductContent productContent = new ProductContent(product, content, enabled);
-        product.addProductContent(productContent);
+        product = (Product) product.clone();
+        product.addContent(content, enabled);
 
-        this.productCurator.merge(product);
-        this.productCurator.flush();
-
-        return product;
+        return this.productCurator.updateProduct(product, owner);
     }
 
     /**
@@ -404,10 +377,16 @@ public class OwnerProductResource {
         @PathParam("product_id") String productId,
         @PathParam("content_id") String contentId) {
 
-        Product product = this.getProduct(ownerKey, productId);
-        Content content = this.getContent(product.getOwner(), contentId);
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product product = this.fetchProduct(owner, productId);
+        Content content = this.fetchContent(owner, contentId);
 
-        productCurator.removeProductContent(product, content);
+        if (product.isLocked()) {
+            throw new ForbiddenException(i18n.tr("product \"{1}\" is locked", product.getId()));
+        }
+
+        // Remove content
+        this.productCurator.removeProductContent(product, Arrays.asList(content), owner);
     }
 
     /**
@@ -425,9 +404,14 @@ public class OwnerProductResource {
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId) {
 
-        Product product = this.getProduct(ownerKey, productId);
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product product = this.fetchProduct(owner, productId);
 
-        if (productCurator.productHasSubscriptions(product)) {
+        if (product.isLocked()) {
+            throw new ForbiddenException(i18n.tr("product \"{1}\" is locked", product.getId()));
+        }
+
+        if (productCurator.productHasSubscriptions(product, owner)) {
             throw new BadRequestException(
                 i18n.tr(
                     "Product with ID ''{0}'' cannot be deleted while subscriptions exist.",
@@ -436,7 +420,7 @@ public class OwnerProductResource {
             );
         }
 
-        productCurator.delete(product);
+        this.productCurator.removeProduct(product, owner);
     }
 
     /**

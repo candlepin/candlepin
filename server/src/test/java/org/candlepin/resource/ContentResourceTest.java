@@ -30,6 +30,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
+import org.candlepin.util.Util;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -143,19 +144,19 @@ public class ContentResourceTest {
         Content content = mock(Content.class);
 
         when(product.getId()).thenReturn(productId);
-        when(product.getOwner()).thenReturn(owner);
+        when(product.getOwners()).thenReturn(Util.asSet(owner));
 
         when(content.getId()).thenReturn(contentId);
 
         when(cc.find(any(String.class))).thenReturn(content);
-        when(cc.createOrUpdate(any(Content.class))).thenReturn(content);
+        when(cc.updateContent(any(Content.class), eq(owner))).thenReturn(content);
         when(productCurator.getProductsWithContent(eq(owner), eq(Arrays.asList(contentId))))
             .thenReturn(Arrays.asList(product));
 
         cr.updateContent(contentId, content);
 
         verify(cc, never()).find(eq(contentId));
-        verify(cc, never()).createOrUpdate(eq(content));
+        verify(cc, never()).updateContent(eq(content), eq(owner));
         verify(productCurator, never()).getProductsWithContent(owner, Arrays.asList(contentId));
     }
 

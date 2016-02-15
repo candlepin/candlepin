@@ -40,6 +40,7 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -151,14 +152,16 @@ public class DefaultProductServiceAdapterTest {
 
         dpsa.removeContent(o, someid, "cid");
 
-        verify(pc, atLeastOnce()).removeProductContent(eq(p), eq(c));
+        verify(pc, atLeastOnce()).removeProductContent(eq(p), eq(Arrays.asList(c)), eq(o));
     }
 
     @Test
     public void hasSubscriptions() {
+        Owner o = mock(Owner.class);
         Product p = mock(Product.class);
-        dpsa.productHasSubscriptions(p);
-        verify(pc).productHasSubscriptions(eq(p));
+
+        dpsa.productHasSubscriptions(p, o);
+        verify(pc).productHasSubscriptions(eq(p), eq(o));
     }
 
     // can't mock a final class, so create a dummy one

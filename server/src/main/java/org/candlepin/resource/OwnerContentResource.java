@@ -14,11 +14,11 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
-import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -28,6 +28,8 @@ import org.candlepin.service.UniqueIdGenerator;
 
 import com.google.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
@@ -43,6 +45,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+
+
 /**
  * OwnerContentResource
  *
@@ -50,6 +54,7 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("/owners/{owner_key}/content")
 public class OwnerContentResource {
+    private static Logger log = LoggerFactory.getLogger(OwnerContentResource.class);
 
     private ContentCurator contentCurator;
     private I18n i18n;
@@ -167,21 +172,20 @@ public class OwnerContentResource {
     private Content createContentImpl(Owner owner, Content content) {
         // TODO: check if arches have changed ??
 
-        content.setOwner(owner);
+        content.addOwner(owner);
 
         if (content.getId() == null || content.getId().trim().length() == 0) {
             content.setId(this.idGenerator.generateId());
-            content = this.contentCurator.create(content);
+            content = this.contentCurator.createContent(content, owner);
         }
         else {
             Content lookedUp = this.contentCurator.lookupById(owner, content.getId());
 
             if (lookedUp != null) {
-                content.setId(lookedUp.getId());
-                content = this.contentCurator.merge(content);
+                content = this.contentCurator.updateContent(content, owner);
             }
             else {
-                content = this.contentCurator.create(content);
+                content = this.contentCurator.createContent(content, owner);
             }
         }
 
@@ -237,21 +241,21 @@ public class OwnerContentResource {
                                  @PathParam("content_id") String contentId,
                                  Content content) {
 
-        Content lookedUp  = this.getContent(ownerKey, contentId);
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Content existing  = this.getContent(ownerKey, contentId);
 
-        // FIXME: needs arches handled as well?
-        content.setId(contentId);
-        content.setOwner(lookedUp.getOwner());
-        content = this.contentCurator.createOrUpdate(content);
+        if (existing.isLocked()) {
+            throw new ForbiddenException(i18n.tr("content \"{1}\" is locked", content.getId()));
+        }
+
+        content = this.contentCurator.updateContent(((Content) existing.clone()).merge(content), owner);
 
         // require regeneration of entitlement certificates of affected consumers
         List<Product> affectedProducts =
-            this.productCurator.getProductsWithContent(content.getOwner(), Arrays.asList(contentId));
+            this.productCurator.getProductsWithContent(owner, Arrays.asList(contentId));
 
         for (Product product : affectedProducts) {
-            poolManager.regenerateCertificatesOf(
-                product.getOwner(), product.getId(), true
-            );
+            poolManager.regenerateCertificatesOf(owner, product.getId(), true);
         }
 
         return content;
@@ -268,24 +272,18 @@ public class OwnerContentResource {
     public void remove(@PathParam("owner_key") String ownerKey,
                        @PathParam("content_id") String contentId) {
 
-        Content nuke = this.getContent(ownerKey, contentId);
-        Owner owner = nuke.getOwner();
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Content content = this.getContent(ownerKey, contentId);
 
-        List<Product> affectedProducts =
-            this.productCurator.getProductsWithContent(owner, Arrays.asList(contentId));
-
-        this.contentCurator.delete(nuke);
-
-        // Clean up any dangling environment content:
-        for (EnvironmentContent ec : envContentCurator.lookupByContent(owner, contentId)) {
-            envContentCurator.delete(ec);
+        if (content.isLocked()) {
+            throw new ForbiddenException(i18n.tr("content \"{1}\" is locked", content.getId()));
         }
 
-        // Regenerate affected products
+        List<Product> affectedProducts = this.contentCurator.removeContent(content, owner);
+
+        // Regenerate affected product certs as dirty...
         for (Product product : affectedProducts) {
-            poolManager.regenerateCertificatesOf(
-                product.getOwner(), product.getId(), true
-            );
+            poolManager.regenerateCertificatesOf(owner, product.getId(), true);
         }
     }
 }

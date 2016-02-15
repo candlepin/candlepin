@@ -1396,10 +1396,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         inheritedArchProduct.setContent(Collections.singleton(noArchContent));
         products.add(inheritedArchProduct);
 
-        when(productAdapter.getProductById(
-            eq(inheritedArchProduct.getOwner()),
-            eq(inheritedArchProduct.getId()))
-        ).thenReturn(inheritedArchProduct);
+        when(productAdapter.getProductById(eq(owner), eq(inheritedArchProduct.getId())))
+            .thenReturn(inheritedArchProduct);
 
         setupEntitlements(ARCH_LABEL, "3.2");
 
@@ -1776,7 +1774,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         consumer.setFact("system.certificate_version", "3.2");
         consumer.setFact("uname.machine", "x86_64");
 
-        when(productAdapter.getProductById(eq(extremeProduct.getOwner()), eq(extremeProduct.getId())))
+        when(productAdapter.getProductById(eq(owner), eq(extremeProduct.getId())))
             .thenReturn(extremeProduct);
 
         certServiceAdapter.prepareV3Extensions(entitlement, "prefix", null);

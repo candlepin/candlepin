@@ -43,6 +43,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+
+
 /**
  * Represents the owner of entitlements. This is akin to an organization,
  * whereas a User is an individual account within that organization.

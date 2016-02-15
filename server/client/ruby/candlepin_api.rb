@@ -542,24 +542,26 @@ class Candlepin
   def create_content(owner_key, name, id, label, type, vendor, params={}, post=true)
     metadata_expire = params[:metadata_expire] || nil
     required_tags = params[:required_tags] || nil
-    content_url = params[:content_url] || ""
-    arches = params[:arches] || ""
-    gpg_url = params[:gpg_url] || ""
-    modified_product_ids = params[:modified_products] || []
+    content_url = params[:content_url] || nil
+    arches = params[:arches] || nil
+    gpg_url = params[:gpg_url] || nil
+    modified_product_ids = params[:modified_products] || nil
 
     content = {
-      'name' => name,
       'id' => id,
-      'label' => label,
       'type' => type,
-      'vendor' => vendor,
-      'contentUrl' => content_url,
-      'arches' => arches,
-      'gpgUrl' => gpg_url,
-      'modifiedProductIds' => modified_product_ids
+      'label' => label,
+      'name' => name,
+      'vendor' => vendor
     }
+
+    content['contentUrl'] = content_url if not content_url.nil?
+    content['arches'] = arches if not arches.nil?
+    content['gpgUrl'] = gpg_url if not gpg_url.nil?
+    content['modifiedProductIds'] = modified_product_ids if not modified_product_ids.nil?
     content['metadataExpire'] = metadata_expire if not metadata_expire.nil?
     content['requiredTags'] = required_tags if not required_tags.nil?
+
     if post
       post("/owners/#{owner_key}/content", content)
     else
@@ -681,6 +683,7 @@ class Candlepin
     attributes = params[:attributes] || {}
     dependentProductIds = params[:dependentProductIds] || []
     relies_on = params[:relies_on] || []
+
     #if product don't have type attributes, create_product will fail on server
     #side.
     attributes['type'] = 'SVC' if attributes['type'].nil?

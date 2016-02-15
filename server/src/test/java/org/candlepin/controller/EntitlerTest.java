@@ -451,8 +451,8 @@ public class EntitlerTest {
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
-        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
-        when(productCurator.createOrUpdate(eq(p))).thenReturn(p);
+        when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProds);
+        when(productCurator.updateProduct(eq(p), eq(owner))).thenReturn(p);
         when(pm.createPool(any(Pool.class))).thenReturn(devPool);
         when(devPool.getId()).thenReturn("test_pool_id");
 
@@ -520,6 +520,10 @@ public class EntitlerTest {
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
         when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
+
+        when(productCurator.updateProduct(eq(p), any(Owner.class))).thenReturn(p);
+        when(productCurator.updateProduct(eq(ip), any(Owner.class))).thenReturn(ip);
+
         AutobindData ad = new AutobindData(devSystem);
         try {
             entitler.bindByProducts(ad);
@@ -552,6 +556,11 @@ public class EntitlerTest {
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
         when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
+
+        when(productCurator.updateProduct(eq(p), any(Owner.class))).thenReturn(p);
+        when(productCurator.updateProduct(eq(ip1), any(Owner.class))).thenReturn(ip1);
+        when(productCurator.updateProduct(eq(ip2), any(Owner.class))).thenReturn(ip2);
+
         Pool expectedPool = entitler.assembleDevPool(devSystem, p.getId());
         when(pm.createPool(any(Pool.class))).thenReturn(expectedPool);
         AutobindData ad = new AutobindData(devSystem);
@@ -574,10 +583,10 @@ public class EntitlerTest {
         devSystem.setFact("dev_sku", p1.getId());
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
-        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
-        when(productCurator.createOrUpdate(eq(p1))).thenReturn(p1);
-        when(productCurator.createOrUpdate(eq(p2))).thenReturn(p2);
-        when(productCurator.createOrUpdate(eq(p3))).thenReturn(p3);
+        when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProds);
+        when(productCurator.updateProduct(eq(p1), eq(owner))).thenReturn(p1);
+        when(productCurator.updateProduct(eq(p2), eq(owner))).thenReturn(p2);
+        when(productCurator.updateProduct(eq(p3), eq(owner))).thenReturn(p3);
 
         Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
         Calendar cal = Calendar.getInstance();
@@ -600,8 +609,8 @@ public class EntitlerTest {
         devProds.add(p1);
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p1.getId());
-        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
-        when(productCurator.createOrUpdate(eq(p1))).thenReturn(p1);
+        when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProds);
+        when(productCurator.updateProduct(eq(p1), eq(owner))).thenReturn(p1);
 
         Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
         assertEquals(entitler.DEFAULT_DEV_SLA, created.getProduct().getAttributeValue("support_level"));
@@ -623,15 +632,15 @@ public class EntitlerTest {
         devSystem.setFact("dev_sku", p1.getId());
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
 
-        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
-        when(productCurator.createOrUpdate(eq(p1))).thenReturn(p1);
-        when(productCurator.createOrUpdate(eq(p2))).thenReturn(p2);
+        when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProds);
+        when(productCurator.updateProduct(eq(p1), eq(owner))).thenReturn(p1);
+        when(productCurator.updateProduct(eq(p2), eq(owner))).thenReturn(p2);
 
         Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
 
-        assertEquals(owner, created.getProduct().getOwner());
+        assertTrue(created.getProduct().getOwners().contains(owner));
         for (Product p : created.getProvidedProducts()) {
-            assertEquals(owner, p.getOwner());
+            assertTrue(p.getOwners().contains(owner));
         }
     }
 }

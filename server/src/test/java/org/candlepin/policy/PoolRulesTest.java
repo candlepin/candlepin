@@ -98,7 +98,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Product product = TestUtil.createProduct(owner);
 
-        when(this.prodCuratorMock.lookupById(product.getOwner(), product.getId())).thenReturn(product);
+        when(this.prodCuratorMock.lookupById(owner, product.getId())).thenReturn(product);
         Pool p = TestUtil.createPool(owner, product);
         p.getProduct().addAttribute(new ProductAttribute("virt_limit", "badvalue"));
         p.setQuantity(10L);
@@ -249,7 +249,7 @@ public class PoolRulesTest {
         p.getBranding().add(b1);
         p.getBranding().add(b2);
 
-        when(productAdapterMock.getProductById(p.getProduct().getOwner(), p.getProduct().getId()))
+        when(productAdapterMock.getProductById(owner, p.getProduct().getId()))
                 .thenReturn(p.getProduct());
 
         // Copy the pool with the branding to begin with:
@@ -268,7 +268,7 @@ public class PoolRulesTest {
         p.getProduct().addAttribute(new ProductAttribute("virt_limit", "5"));
         p.setQuantity(10L);
 
-        when(productAdapterMock.getProductById(p.getProduct().getOwner(), p.getProduct().getId()))
+        when(productAdapterMock.getProductById(owner, p.getProduct().getId()))
                 .thenReturn(p.getProduct());
 
         // Setup a pool with a single (different) provided product:
@@ -572,29 +572,29 @@ public class PoolRulesTest {
 
         Product product = new Product(productId, productId, owner);
         product.setAttribute("virt_limit", Integer.toString(virtLimit));
-        when(prodCuratorMock.lookupById(product.getOwner(), product.getId()))
+        when(prodCuratorMock.lookupById(owner, product.getId()))
             .thenReturn(product);
 
         Product derivedProd = new Product(derivedProductId, derivedProductId, owner);
         // We'll look for this to make sure it makes it to correct pools:
         derivedProd.setAttribute(DERIVED_ATTR, "nobodycares");
-        when(prodCuratorMock.lookupById(derivedProd.getOwner(), derivedProd.getId()))
+        when(prodCuratorMock.lookupById(owner, derivedProd.getId()))
             .thenReturn(derivedProd);
 
         // Create some provided products:
         Product provided1 = TestUtil.createProduct(owner);
-        when(prodCuratorMock.lookupById(provided1.getOwner(), provided1.getId()))
+        when(prodCuratorMock.lookupById(owner, provided1.getId()))
             .thenReturn(provided1);
         Product provided2 = TestUtil.createProduct(owner);
-        when(prodCuratorMock.lookupById(provided2.getOwner(), provided2.getId()))
+        when(prodCuratorMock.lookupById(owner, provided2.getId()))
             .thenReturn(provided2);
 
         // Create some derived provided products:
         Product derivedProvided1 = TestUtil.createProduct(owner);
-        when(prodCuratorMock.lookupById(derivedProvided1.getOwner(), derivedProvided1.getId()))
+        when(prodCuratorMock.lookupById(owner, derivedProvided1.getId()))
             .thenReturn(derivedProvided1);
         Product derivedProvided2 = TestUtil.createProduct(owner);
-        when(prodCuratorMock.lookupById(derivedProvided2.getOwner(), derivedProvided2.getId()))
+        when(prodCuratorMock.lookupById(owner, derivedProvided2.getId()))
             .thenReturn(derivedProvided2);
 
 
@@ -739,7 +739,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = TestUtil.createPool(owner, TestUtil.createProduct(owner));
         p.setQuantity(10L);
-        when(productAdapterMock.getProductById(p.getProduct().getOwner(), p.getProduct().getId()))
+        when(productAdapterMock.getProductById(owner, p.getProduct().getId()))
                 .thenReturn(p.getProduct());
 
         // Setup a pool with a single (different) provided product:
