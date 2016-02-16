@@ -20,6 +20,7 @@ import liquibase.exception.DatabaseException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,14 +33,14 @@ import java.util.Map;
  */
 public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
 
-    private Map<String, Map<String, Object>> productCache;
-    private Map<String, Map<String, Object>> contentCache;
+    protected Map<String, String> migratedProducts;
+    private Date migrationTime;
 
     public PerOrgProductsMigrationTask(Database database, CustomTaskLogger logger) {
         super(database, logger);
 
-        this.productCache = new HashMap<String, Map<String, Object>>();
-        this.contentCache = new HashMap<String, Map<String, Object>>();
+        this.migratedProducts = new HashMap<String, String>();
+        this.migrationTime = new Date();
     }
 
     /**
@@ -133,15 +134,11 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
         try {
             this.connection.setAutoCommit(false);
 
-            // Prefetch products and content...
-            this.prefetchProducts();
-            this.prefetchContent();
-
             // Migrate content
-            this.migrateContent();
+            // this.migrateContent();
 
             // Migrate product data
-            this.migrateProductData();
+            // this.migrateProductData();
 
             // Migrate orgs
             ResultSet result = this.executeQuery("SELECT count(id) FROM cp_owner");
@@ -431,9 +428,6 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
      */
     @SuppressWarnings("checkstyle:methodlength")
     protected void migrateProductData(String orgid) throws DatabaseException, SQLException {
-        Map<String, String> productsMigrated = new HashMap<String, String>();
-        Map<String, String> contentMigrated = new HashMap<String, String>();
-
         this.logger.info("  Migrating product data...");
 
         ResultSet productids = this.executeQuery(
@@ -483,38 +477,39 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
         while (productids.next()) {
             String productid = productids.getString(1);
 
-            if (productsMigrated.get(productid) != null) {
+            if (this.productsMigrated.get(productid) != null) {
                 this.logger.warn(String.format(
                     "    Skipping migration for already-migrated product: %s", productid
                 ));
 
                 continue;
             }
+            else {
+                this.logger.info(String.format("    Migrating product: %s", productid));
 
-            // this.logger.info(String.format("    Migrating product: %s", productid));
+                String productuuid = this.generateUUID();
 
-            Map<String, Object> product = this.productCache.get(productid);
-            String productuuid = this.generateUUID();
+                int count = this.executeUpdate(
+                    "INSERT INTO cp2_products " +
+                    "  (uuid, created, updated, updated_upstream, multiplier, product_id, name) " +
+                    "SELECT ?, created, updated, ?, multiplier, ?, name " +
+                    "FROM cp_product " +
+                    "WHERE product_id = ?",
+                    productuuid, this.migrationDate, productid
+                );
 
-            if (product == null) {
-                this.logger.error(String.format(
-                    "    Product referenced by org which does not exist: %s", productid
-                ));
+                if (count < 1) {
+                    this.logger.error(String.format(
+                        "    Product referenced by org which does not exist: %s", productid
+                    ));
 
-                continue;
-            }
-
-            // Insert product info
-            Object[] info = (Object[]) product.get("info");
-            info[0] = productuuid;
-            info[4] = orgid;
-
-            this.executeUpdate(
-                "INSERT INTO cp2_products " +
-                "  (uuid, created, updated, multiplier, owner_id, product_id, name) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                info
-            );
+                    continue;
+                }
+                else if (count > 1) {
+                    this.logger.error(String.format(
+                        "    Product migration query resulted in multiple products for id: %s", productid
+                    ));
+                }
 
             // Migrate product attributes
             PreparedStatement statement = (PreparedStatement) product.get("attributes_statement");

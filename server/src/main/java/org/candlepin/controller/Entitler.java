@@ -316,7 +316,9 @@ public class Entitler {
 
         // Update the owner references on the retrieved Product and content.
         for (Product prod : devProducts.getAll()) {
-            prod.setOwner(devConsumer.getOwner());
+            // PER-ORG PRODUCT VERSIONING TODO:
+            // Check if adding the owner here is correct. This may be wrong.
+            prod.addOwner(devConsumer.getOwner());
             for (ProductContent pc : prod.getProductContent()) {
                 pc.getContent().setOwner(devConsumer.getOwner());
             }

@@ -58,7 +58,7 @@ public class ProductImporter {
         }
 
         // Update the owner for the product
-        importedProduct.setOwner(owner);
+        importedProduct.addOwner(owner);
 
         // Multiplication has already happened on the upstream candlepin. set this to 1
         // so we can use multipliers on local products if necessary.
@@ -70,7 +70,7 @@ public class ProductImporter {
 
             // Clear the UUID and update the owner
             content.setUuid(null);
-            content.setOwner(owner);
+            // content.setOwner(owner);
 
             // Fix the vendor string if it is/was cleared (BZ 990113)
             if (StringUtils.isBlank(content.getVendor())) {

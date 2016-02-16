@@ -23,6 +23,7 @@ import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,6 +37,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -139,7 +141,7 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     public Product(String productId, String name, Owner owner, Long multiplier) {
         setId(productId);
         setName(name);
-        setOwner(owner);
+        // setOwner(owner);
         setMultiplier(multiplier);
         setAttributes(new HashSet<ProductAttribute>());
         setProductContent(new LinkedList<ProductContent>());
@@ -167,7 +169,7 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
         this.setUuid(source.getUuid());
         this.setId(source.getId());
         this.setName(source.getName());
-        this.setOwner(source.getOwner());
+        // this.setOwner(source.getOwner());
         this.setMultiplier(source.getMultiplier());
 
         // Copy attributes
@@ -446,8 +448,7 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
 
     @Override
     public String toString() {
-        String ownerKey = (owner != null ? owner.getKey() : null);
-        return "Product [owner = " + ownerKey + ", id = " + id + ", name = " + name + "]";
+        return "Product [id = " + id + ", name = " + name + "]";
     }
 
     @Override
@@ -462,8 +463,8 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
         Product another = (Product) anObject;
 
         // TODO: Maybe checking the UUID would be better here...?
-        return (this.getOwner() != null ? this.getOwner().equals(another.getOwner()) :
-            another.getOwner() == null) && getId().equals(another.getId()) &&
+        return (this.getUuid() != null ? this.getUuid().equals(another.getUuid()) :
+            another.getUuid() == null) && getId().equals(another.getId()) &&
             name.equals(another.getName());
     }
 
@@ -568,9 +569,16 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     @Override
     public String getHref() {
         // If we don't have an owner here, we're in a bit of trouble.
-        return (this.getOwner() != null && this.getOwner().getKey() != null && this.getId() != null) ?
-            "/owners/" + this.getOwner().getKey() + "/products/" + this.getId() :
-            "";
+        // PER-ORG PRODUCT VERSIONING TODO:
+        // Do we have a way to determine the current owner from context? We need a way to reference
+        // a specific product (uuid) but with owner permissions...? Should this just change to UUIDs
+        // everywhere? This is messy.
+
+        return "/products/" + this.getUuid();
+
+        // return (this.getOwner() != null && this.getOwner().getKey() != null && this.getId() != null) ?
+        //     "/owners/" + this.getOwner().getKey() + "/products/" + this.getId() :
+        //     "";
     }
 
     @Override

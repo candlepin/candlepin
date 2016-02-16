@@ -30,5 +30,4 @@ interface EntityStore<E extends Persisted> {
     E lookup(String key);
     E lookup(String key, Owner owner);
     List<E> lookup(Collection<String> keys);
-    Owner getOwner(Persisted entity);
 }

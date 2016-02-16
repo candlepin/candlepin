@@ -442,9 +442,10 @@ public class CandlepinPoolManager implements PoolManager {
             Product existing = productMap.get(product.getId());
 
             if (existing != null && !this.hasProductChanged(existing, product)) {
+                // PER-ORG PRODUCT VERSIONING TODO: Fix this error message.
                 log.warn(
-                    "Multiple versions of the same product found on a single subscription: {}.{}",
-                    (product.getOwner() != null ? product.getOwner().getId() : null), product.getId()
+                    "Multiple versions of the same product found on a single subscription: {}",
+                    /*(product.getOwner() != null ? product.getOwner().getId() : null),*/ product.getId()
                 );
             }
 
@@ -482,7 +483,8 @@ public class CandlepinPoolManager implements PoolManager {
             Product existing = prodCurator.lookupById(owner, incoming.getId());
 
             // We always want to ensure the owner is the one we've refreshed
-            incoming.setOwner(owner);
+            // PER-ORG PRODUCT VERSIONING TODO: This may not be necessary now
+            // incoming.setOwner(owner);
 
             if (existing == null) {
                 log.info("Creating new product for org {}: {}", owner.getKey(), incoming.getId());

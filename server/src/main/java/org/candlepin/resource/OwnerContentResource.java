@@ -238,19 +238,20 @@ public class OwnerContentResource {
                                  Content content) {
 
         Content lookedUp  = this.getContent(ownerKey, contentId);
+        Owner owner = lookedUp.getOwner();
 
         // FIXME: needs arches handled as well?
         content.setId(contentId);
-        content.setOwner(lookedUp.getOwner());
+        content.setOwner(owner);
         content = this.contentCurator.createOrUpdate(content);
 
         // require regeneration of entitlement certificates of affected consumers
         List<Product> affectedProducts =
-            this.productCurator.getProductsWithContent(content.getOwner(), Arrays.asList(contentId));
+            this.productCurator.getProductsWithContent(owner, Arrays.asList(contentId));
 
         for (Product product : affectedProducts) {
             poolManager.regenerateCertificatesOf(
-                product.getOwner(), product.getId(), true
+                owner, product.getId(), true
             );
         }
 
@@ -283,8 +284,12 @@ public class OwnerContentResource {
 
         // Regenerate affected products
         for (Product product : affectedProducts) {
+
+            // PER-ORG PRODUCT VERSIONING TODO:
+            // This should cause a new product version for the specified owner, rather than patching
+            // the existing owner.
             poolManager.regenerateCertificatesOf(
-                product.getOwner(), product.getId(), true
+                owner, product.getId(), true
             );
         }
     }

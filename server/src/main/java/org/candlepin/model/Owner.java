@@ -21,11 +21,13 @@ import org.candlepin.resteasy.InfoProperty;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -35,6 +37,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
@@ -407,20 +410,6 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     @XmlTransient
     public String getName() {
         return getDisplayName();
-    }
-
-    /**
-     * Retrieves the set of products currently associated with this owner. If this owner does not
-     * yet have any associated products, this method returns an empty set.
-     *
-     * Modifications made to the returned set will be reflected and stored
-     *
-     * @return
-     *  The set of products associated with this owner
-     */
-    @XmlTransient
-    public Set<Product> getProducts() {
-        return this.products;
     }
 
     /**

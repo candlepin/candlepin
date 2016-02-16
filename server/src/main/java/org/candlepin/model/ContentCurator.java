@@ -44,6 +44,18 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
     }
 
     /**
+     * @param ownerId The ID of the owner for which to lookup a product
+     * @param contentId The ID of the content to lookup. (note: not the database ID)
+     * @return the content which matches the given id.
+     */
+    @Transactional
+    public Content lookupById(String ownerId, String contentId) {
+        return (Content) this.createSecureCriteria()
+            .add(Restrictions.eq("owner.id", ownerId))
+            .add(Restrictions.eq("id", contentId)).uniqueResult();
+    }
+
+    /**
      * Retrieves a Content instance for the specified content UUID. If no matching content could be
      * be found, this method returns null.
      *

@@ -118,14 +118,14 @@
             <column name="arches" type="varchar(255)"/>
         </createTable>
     </changeSet>
-
+<!--
     <changeSet id="20150210094558-08" author="crog">
         <addUniqueConstraint tableName="cp2_content"
             columnNames="owner_id, content_id, updated_upstream"
             constraintName="cp2_content_unq1"
         />
     </changeSet>
-
+ -->
 
     <!-- cp2_content_modified_products -->
     <changeSet id="20150210094558-09" author="crog">
@@ -480,7 +480,7 @@
 
     <changeSet id="20150210094558-34" author="crog">
         <addUniqueConstraint tableName="cp2_pool_source_sub"
-            columnNames="subscription_id, subscription_sub_key"
+            columnNames="pool_id, subscription_id, subscription_sub_key"
             constraintName="cp2_pool_source_sub_unq1"
         />
     </changeSet>

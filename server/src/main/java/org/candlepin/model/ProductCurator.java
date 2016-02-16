@@ -36,6 +36,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+
+
+// PER-ORG PRODUCT VERSIONING TODO: All of this class.
+
 /**
  * interact with Products.
  */
@@ -91,13 +95,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         // This provides an interesting problem in that we don't have a way to reference a specific
         // version of the product. Since we're using a timestamp for the version, we can use the
         // max value as our tiebreaker
-
-        // return (Product) this.createSecureCriteria()
-        //     .add(Restrictions.and("id", id)).uniqueResult();
-
-
-
-
 
         return (Product) this.createSecureCriteria()
             .add(Restrictions.eq("id", id)).uniqueResult();
@@ -196,15 +193,16 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         // TODO: Should we also verify that the UUID isn't in use?
         log.debug("Creating or updating product: {}", p);
 
-        Product existing = this.lookupById(p.getOwner(), p.getId());
+        Product existing = this.lookupByUuid(p.getUuid());
+        // Product existing = this.lookupById(p.getOwner(), p.getId());
 
         if (existing == null) {
-            log.debug("Could not find product by owner/id: {}, {}", p.getOwner(), p.getId());
+            // log.debug("Could not find product by owner/id: {}, {}", p.getOwner(), p.getId());
             create(p);
             return p;
         }
 
-        log.debug("Updating product by owner/id: {}, {}", p.getOwner(), p.getId());
+        // log.debug("Updating product by owner/id: {}, {}", p.getOwner(), p.getId());
 
         copy(p, existing);
         return merge(existing);
