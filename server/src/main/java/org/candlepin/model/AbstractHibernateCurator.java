@@ -59,7 +59,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Inject protected Provider<EntityManager> entityManager;
     @Inject protected I18n i18n;
     private final Class<E> entityType;
-    private int batchSize = 30;
+    private int batchSize = 500;
     @Inject private PrincipalProvider principalProvider;
     private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
 
