@@ -479,36 +479,13 @@ public class X509CRLStreamWriter {
             }
         }
 
-        ASN1InputStream asn1In = null;
-        byte[] extensions = null;
-        try {
-            asn1In = new ASN1InputStream(crlIn);
-
-            DERObject o;
-            while ((o = asn1In.readObject()) != null) {
-                if (o instanceof DERSequence) {
-                    // Don't care about the old signatureAlorithm or signatureValue at this point
-                    break;
-                }
-                else {
-                    if (extensions != null) {
-                        throw new IllegalStateException("Already read in CRL extensions.");
-                    }
-                    extensions = o.getDEREncoded();
-                }
-            }
-        }
-        finally {
-            IOUtils.closeQuietly(asn1In);
-        }
-
         // Write the new entries into the new CRL
         for (DERSequence entry : newEntries) {
             writeBytes(out, entry.getDEREncoded(), signer);
         }
 
         // Copy the old extensions over
-        if (extensions != null) {
+        if (newExtensions != null) {
             out.write(newExtensions);
             signer.update(newExtensions, 0, newExtensions.length);
         }

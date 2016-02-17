@@ -51,6 +51,7 @@ import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PublicKey;
+import java.security.Security;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509CRL;
 import java.security.cert.X509CRLEntry;
@@ -92,6 +93,7 @@ public class X509CRLStreamWriterTest {
             .build(keyPair.getPrivate());
 
         outfile = new File(folder.getRoot(), "new.crl");
+        Security.addProvider(BC);
     }
 
     private X509v2CRLBuilder createCRLBuilder() throws Exception {
