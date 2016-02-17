@@ -89,10 +89,10 @@ product1 = @cp.create_product(owner['key'], random_string(), random_string(),
 
 ent_count = ARGV.shift.to_i
 thread_count = ARGV.shift.to_i
-if ent_count.nil?
+if ent_count == 0
   ent_count = 50
 end
-if thread_count.nil?
+if thread_count == 0
   thread_count = 5
 end
 
