@@ -1385,6 +1385,42 @@ public class ConsumerResource {
         return allCerts;
     }
 
+    private void validateBindArguments(boolean hasPoolQuantities, String poolIdString, Integer quantity,
+            String[] productIds, List<String> fromPools, Date entitleDate, boolean async) {
+
+        short parameters = 0;
+
+        if (hasPoolQuantities) {
+            parameters++;
+        }
+        if (poolIdString != null) {
+            parameters++;
+        }
+        if ((productIds != null && productIds.length > 0) || (fromPools != null && !fromPools.isEmpty()) ||
+                entitleDate != null) {
+            parameters++;
+        }
+        if (parameters > 1) {
+            throw new BadRequestException(i18n.tr("Cannot bind by multiple parameters."));
+        }
+
+        if (hasPoolQuantities) {
+            if (quantity != null) {
+                throw new BadRequestException(
+                        i18n.tr("Cannot specify a single quantity when binding a batch of " +
+                                " exact pools. Please specify a quantity for each pool"));
+            }
+            else if (!async) {
+                throw new BadRequestException(i18n.tr("Batch bind can only be performed asynchronously"));
+            }
+        }
+
+        if (poolIdString == null && quantity != null) {
+            throw new BadRequestException(i18n.tr("Cannot specify a quantity when auto-binding."));
+        }
+
+    }
+
     /**
      * Binds Entitlements
      * <p>
@@ -1433,45 +1469,14 @@ public class ConsumerResource {
         PoolIdAndQuantity[] poolQuantities,
         @Context Principal principal) {
 
-        short parameters = 0;
-
-        // Check that only one query param was set:
         boolean hasPoolQuantities = (poolQuantities != null && poolQuantities.length > 0);
-        if (hasPoolQuantities) {
-            parameters++;
-        }
-        if (poolIdString != null) {
-            parameters++;
-        }
-        if ((productIds != null && productIds.length > 0) || (fromPools != null && !fromPools.isEmpty()) ||
-                entitleDateStr != null) {
-            parameters++;
-        }
-        if (parameters > 1) {
-            throw new BadRequestException(
-                i18n.tr("Cannot bind by multiple parameters."));
-        }
-
-        if (hasPoolQuantities) {
-            if (quantity != null) {
-                throw new BadRequestException(
-                        i18n.tr("Cannot specify a single quantity when binding a batch of exact pools." +
-                                " Please specify a quantity for each pool"));
-            }
-            else if (!async) {
-                throw new BadRequestException(
-                        i18n.tr("Batch bind can only be performed asynchronously"));
-            }
-        }
-
-        if (poolIdString == null && quantity != null) {
-            throw new BadRequestException(
-                i18n.tr("Cannot specify a quantity when auto-binding."));
-        }
-
         // TODO: really should do this in a before we get to this call
         // so the method takes in a real Date object and not just a String.
         Date entitleDate = ResourceDateParser.parseDateString(entitleDateStr);
+
+        // Check that only one query param was set, and some other validations
+        validateBindArguments(hasPoolQuantities, poolIdString, quantity, productIds, fromPools,
+                entitleDate, async);
 
         // Verify consumer exists:
         Consumer consumer = consumerCurator.verifyAndLookupConsumerWithEntitlements(consumerUuid);
@@ -1488,9 +1493,13 @@ public class ConsumerResource {
                     pqMap.put(poolQuantity.getPoolId(), poolQuantity);
                 }
             }
-
+            int batchBindLimit = config.getInt(ConfigProperties.BATCH_BIND_MAX_SIZE);
+            if (pqMap.keySet().size() > batchBindLimit) {
+                throw new BadRequestException(i18n.tr(
+                        "Cannot bind more than {0} pools per request, found: {1}", batchBindLimit,
+                        pqMap.keySet().size()));
+            }
             List<Pool> pools = poolManager.secureFind(pqMap.keySet());
-
             if (!principal.canAccessAll(pools, SubResource.ENTITLEMENTS, Access.CREATE)) {
                 throw new NotFoundException(i18n.tr("Pools with ids {0} could not be found.",
                         pqMap.keySet()));
