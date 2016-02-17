@@ -1,0 +1,42 @@
+- selinux: state=disabled
+- yum: name=epel-release
+- name: base packages
+  yum: name={{item}}
+  with_items:
+    - make
+    - gcc
+    - tomcat
+    - ruby
+    - rubygems
+    - ruby-devel
+    - java-1.8.0-openjdk-devel
+    - postgresql-jdbc
+    - postgresql-server
+    - postgresql
+    - zlib
+    - zlib-devel
+    - liquibase
+    - python-psycopg2
+    - libxml2-python
+    - wget
+- name: Add remote debugging config to tomcat
+  lineinfile: dest=/etc/tomcat/tomcat.conf line="JAVA_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n"
+- name: Initiate database
+  command: service postgresql initdb
+           creates=/var/lib/pgsql/data/postgresql.conf
+- replace: dest=/var/lib/pgsql/data/pg_hba.conf regexp='(ident|peer)' replace='trust' backup=yes
+- name: Start PostgreSQL and enable at boot
+  service: name=postgresql
+           enabled=yes
+           state=started
+  with_items:
+  - 22
+  - 5432
+  - 443
+  - 8443
+- name: Gem refreshing
+  command: gem update --system
+- gem: name=json_pure user_install=False
+- gem: name=bundler user_install=False
+- postgresql_user: name=candlepin role_attr_flags=CREATEDB
+- postgresql_db: name=candlepin owner=candlepin

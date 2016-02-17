@@ -1,0 +1,22 @@
+- name: Run Bundle install
+  command: /usr/local/bin/bundle install
+  args:
+      chdir: /vagrant
+# The bundle install should be updated to use the following line once the packaged ansible 
+# includes the bundler module
+# - bundler: state=latest user_install=True chdir=/vagrant
+- lineinfile: dest=/home/vagrant/.bashrc line="export JAVA_HOME=/usr/lib/jvm/java-1.8.0/"
+- name: Perform a clean build of the source tree
+  command: ~/bin/buildr clean test=no package
+  args:
+      chdir: /vagrant
+      creates: /vagrant/server/target/*.zip
+- name: Deploy the server 
+  shell: ./server/bin/deploy -g -a
+  args:
+    chdir: /vagrant
+    creates: /etc/candlepin/candlepin.conf
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/home/{{ ansible_ssh_user }}/bin"
+    JAVA_HOME: "/usr/lib/jvm/java-1.8.0/"
+    

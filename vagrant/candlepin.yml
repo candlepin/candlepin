@@ -1,0 +1,14 @@
+
+---
+- hosts: dev
+  remote_user: vagrant
+  environment:
+    JAVA_HOME: /usr/lib/jvm/java-1.8.0/
+  roles:
+    - role: candlepin-root
+      become: yes
+      become_user: root
+    - role: candlepin-user
+      become: yes
+      become_user: vagrant
+  tasks:
