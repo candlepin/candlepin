@@ -50,14 +50,17 @@ describe 'Consumer Resource' do
     end.should raise_exception(RestClient::ResourceNotFound)
   end
 
-  it 'should not re-calculate attributes when fetching entitlements' do
+  it 'should not re-calculate quantity attributes when fetching entitlements' do
+    # should allow compliance type but not quantity
     prod = create_product(nil, nil, { :owner => @owner1['key'] })
     create_pool_and_subscription(@owner1['key'], prod.id, 6)
     @consumer1.consume_product(prod.id)
 
     entitlements = @consumer1.list_entitlements()
     entitlements.length.should == 1
-    entitlements[0].pool.calculatedAttributes.should be_nil
+    entitlements[0].pool.calculatedAttributes['suggested_quantity'].should be_nil
+    entitlements[0].pool.calculatedAttributes['quantity_increment'].should be_nil
+    entitlements[0].pool.calculatedAttributes['compliance_type'].should == 'Standard'
   end
 
   it "should block consumers from using other org's pools" do

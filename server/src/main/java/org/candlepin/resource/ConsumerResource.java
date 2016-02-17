@@ -1521,6 +1521,13 @@ public class ConsumerResource {
             entitlements = entitler.bindByProducts(autobindData);
         }
 
+        // we need to supply the compliance type for the pools
+        // the method in this class does not do quantity
+        if (entitlements != null) {
+            for (Entitlement ent : entitlements) {
+                addCalculatedAttributes(ent);
+            }
+        }
         // Trigger events:
         entitler.sendEvents(entitlements);
 
@@ -1631,6 +1638,13 @@ public class ConsumerResource {
         }
         else {
             log.debug("Skipping certificate regeneration.");
+        }
+        // we need to supply the compliance type for the pools
+        // the method in this class does not do quantity
+        if (entitlementsPage.getPageData() != null) {
+            for (Entitlement ent : entitlementsPage.getPageData()) {
+                addCalculatedAttributes(ent);
+            }
         }
 
         return entitlementsPage.getPageData();
