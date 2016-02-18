@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-07 01:33-0500\n"
+"POT-Creation-Date: 2016-02-15 12:33-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -521,24 +521,24 @@ msgstr ""
 msgid "Unit {0} has been deleted"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:220
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:222
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:52
 msgid "No owner specified, or owner lacks identifying information"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:228
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:230
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:60
 #, java-format
 msgid "Unable to find an owner with the key \"{0}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:237
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:239
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:68
 #, java-format
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1532
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1598
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
 msgstr ""
@@ -549,32 +549,34 @@ msgid "Subscription pool {0} does not exist."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:222
+#: server/src/main/java/org/candlepin/controller/Entitler.java:390
 msgid ""
 "Development units may only be used on hosted servers and with orgs that have "
 "active subscriptions."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:336
+#: server/src/main/java/org/candlepin/controller/Entitler.java:360
 #, java-format
 msgid "SKU product not available to this development unit: ''{0}''"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:345
+#: server/src/main/java/org/candlepin/controller/Entitler.java:366
 #, java-format
-msgid "Installed product(s) not available to this development unit: {0}"
+msgid "Installed product not available to this development unit: {0}"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:446
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:492
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:512
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:627
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1677
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:647
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:657
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1678
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:163
 #, java-format
 msgid "Unit with ID ''{0}'' could not be found."
@@ -633,13 +635,13 @@ msgid "No such unit type: {0}"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/model/activationkeys/ActivationKeyCurator.java:59
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:787
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:798
 #, java-format
 msgid "ActivationKey with id {0} could not be found."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/pinsetter/tasks/UndoImportsJob.java:172
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1517
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1558
 #, java-format
 msgid "Subscriptions deleted by {0}"
 msgstr ""
@@ -872,14 +874,14 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:267
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:742
 #: server/src/main/java/org/candlepin/resource/HypervisorResource.java:245
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:857
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1035
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1272
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1306
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1339
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1366
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1408
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1442
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:868
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1047
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1290
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1324
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1357
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1384
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1426
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1460
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr ""
@@ -987,8 +989,8 @@ msgstr ""
 msgid "Cannot specify a quantity when auto-binding."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1589
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1718
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1590
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1719
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:211
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:248
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:277
@@ -998,43 +1000,43 @@ msgstr ""
 msgid "Entitlement with ID ''{0}'' could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1747
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1748
 #, java-format
 msgid "Entitlement Certificate with serial number ''{0}'' could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1776
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1777
 #, java-format
 msgid "No entitlements for consumer ''{0}'' with pool id ''{1}''"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1868
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1869
 #, java-format
 msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "''{1}''."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1876
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1877
 #, java-format
 msgid "A CDN with label {0} does not exist on this system."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1891
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1892
 msgid "Unable to create export archive"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1965
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1966
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2005
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2006
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2123
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2124
 #, java-format
 msgid "Deletion record for hypervisor ''{0}'' not found."
 msgstr ""
@@ -1212,90 +1214,103 @@ msgstr ""
 msgid "Product with ID ''{0}'' cannot be deleted while subscriptions exist."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:322
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:323
 #, java-format
 msgid "Could not create the Owner: {0}. Parent {1} does not exist."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:334
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:335
 #, java-format
 msgid "Could not create the Owner: {0}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:564
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:574
 msgid "Must provide a name for activation key."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:571
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:581
 #, java-format
 msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters ''-'' or ''_''"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:577
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:587
 #, java-format
 msgid "The activation key name ''{0}'' is already in use for owner {1}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:661
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:671
 #, java-format
 msgid "{0} is not a valid log level"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:767
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:778
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:143
 #, java-format
 msgid "Unit: {0} not found"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:777
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:788
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:233
 #, java-format
 msgid "User {0} cannot access consumer {1}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:867
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:878
 #: server/src/main/java/org/candlepin/resource/SubscriptionResource.java:253
 #, java-format
 msgid "No such unit: {0}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:995
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1007
 #, java-format
 msgid "Unable to find a subscription with the ID \"{0}\"."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1092
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1106
+#, java-format
+msgid "Unable to find a pool with the ID \"{0}\"."
+msgstr ""
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1112
 msgid "Cannot update bonus pools, as they are auto generated"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1182
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1200
 msgid "Unknown conflict to force"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1211
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1229
 msgid "Error reading export archive"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1388
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1406
 #, java-format
 msgid "Problem generating uber cert for owner {0}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1416
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1434
 #, java-format
 msgid "uber certificate for owner {0} was not found. Please generate one."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1486
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1516
 #, java-format
 msgid "{0} file imported successfully."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1488
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1518
 #, java-format
-msgid "{0} file imported forcibly"
+msgid "{0} file imported forcibly."
+msgstr ""
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1522
+msgid "No active subscriptions found in the file."
+msgstr ""
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1526
+msgid "One or more inactive subscriptions found in the file."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:126
@@ -1556,7 +1571,7 @@ msgstr ""
 msgid "The archive does not contain the required entitlements directory"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:636
+#: server/src/main/java/org/candlepin/sync/Importer.java:635
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr ""
