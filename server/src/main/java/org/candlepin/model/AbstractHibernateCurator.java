@@ -359,7 +359,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         flush();
     }
 
-    public final void flush() {
+    public void flush() {
         try {
             getEntityManager().flush();
         }

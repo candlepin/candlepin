@@ -1929,7 +1929,7 @@ public class ComplianceRulesTest {
         ComplianceStatus originalStatus = compliance.getStatus(c);
         assertEquals("valid", originalStatus.getStatus());
 
-        verify(consumerCurator).update(eq(c));
+        verify(consumerCurator).updateNoFlush(eq(c));
         c.addInstalledProduct(new ConsumerInstalledProduct("tip", "Test Installed Procuct"));
         ComplianceStatus updated = compliance.getStatus(c);
         assertNotEquals(originalStatus.getStatus(), updated.getStatus());
@@ -1946,7 +1946,7 @@ public class ComplianceRulesTest {
         assertNotNull(initialHash);
         assertFalse(initialHash.isEmpty());
 
-        verify(consumerCurator).update(eq(c));
+        verify(consumerCurator).updateNoFlush(eq(c));
         c.addInstalledProduct(new ConsumerInstalledProduct("tip", "Test Installed Procuct"));
         ComplianceStatus updated = compliance.getStatus(c);
         assertNotEquals(originalStatus.getStatus(), updated.getStatus());
