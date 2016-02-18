@@ -20,7 +20,7 @@ import liquibase.exception.DatabaseException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Date;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,13 +34,15 @@ import java.util.Map;
 public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
 
     protected Map<String, String> migratedProducts;
-    private Date migrationTime;
+    protected Map<String, String> migratedContent;
+    private Timestamp migrationTime;
 
     public PerOrgProductsMigrationTask(Database database, CustomTaskLogger logger) {
         super(database, logger);
 
         this.migratedProducts = new HashMap<String, String>();
-        this.migrationTime = new Date();
+        this.migratedContent = new HashMap<String, String>();
+        this.migrationTime = new Timestamp(System.currentTimeMillis());
     }
 
     /**
@@ -86,7 +88,6 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
                     builder.append(rowbuilder).append(',');
                 }
                 builder.deleteCharAt(builder.length() - 1);
-
             }
             else {
                 rowbuilder = new StringBuilder(20 * cols.length + table.length());
@@ -134,12 +135,6 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
         try {
             this.connection.setAutoCommit(false);
 
-            // Migrate content
-            // this.migrateContent();
-
-            // Migrate product data
-            // this.migrateProductData();
-
             // Migrate orgs
             ResultSet result = this.executeQuery("SELECT count(id) FROM cp_owner");
             result.next();
@@ -155,12 +150,11 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
                     "Migrating data for org %s (%s) (%d of %d)", account, orgid, index, count
                 );
 
-
-                this.migrateActivationKeyData(orgid);
-                this.migratePoolData(orgid);
+                this.migrateProductData(orgid);
+                this.migrateContentData(orgid);
             }
 
-            this.migrateGlobalProductData();
+            this.migrateRelatedData();
 
             orgids.close();
             this.connection.commit();
@@ -169,255 +163,6 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
             // Restore original autocommit state
             this.connection.setAutoCommit(autocommit);
         }
-    }
-
-    /**
-     * Retrieves the products from the DB and stores them to be used later
-     */
-    protected void prefetchProducts() throws DatabaseException, SQLException {
-        ResultSet prodQuery = this.executeQuery(
-            "SELECT created, updated, multiplier, id, name FROM cp_product"
-        );
-
-        while (prodQuery.next()) {
-            Map<String, Object> product = new HashMap<String, Object>();
-            String productid = prodQuery.getString(4);
-
-            product.put("info", new Object[] {
-                "uuid_placeholder", prodQuery.getTimestamp(1), prodQuery.getTimestamp(2),
-                prodQuery.getObject(3), "ownerid placeholder", prodQuery.getString(4),
-                prodQuery.getString(5)
-            });
-
-            // Fetch attributes
-            ResultSet attrQuery = this.executeQuery(
-                "SELECT created, updated, name, value " +
-                "FROM cp_product_attribute " +
-                "WHERE product_id = ?",
-                productid
-            );
-
-            List<Object[]> attributes = new LinkedList<Object[]>();
-            while (attrQuery.next()) {
-                attributes.add(new Object[] {
-                    "id placeholder", attrQuery.getTimestamp(1), attrQuery.getTimestamp(2),
-                    attrQuery.getString(3), attrQuery.getString(4), "product uuid placeholder"
-                });
-            }
-
-            attrQuery.close();
-            product.put("attributes", attributes);
-            product.put("attributes_statement", this.generateBulkInsertStatement(
-                "cp2_product_attributes", attributes.size(),
-                "id", "created", "updated", "name", "value", "product_uuid"
-            ));
-
-            // Fetch certificates
-            ResultSet certQuery = this.executeQuery(
-                "SELECT created, updated, cert, privatekey " +
-                "FROM cp_product_certificate " +
-                "WHERE product_id = ?",
-                productid
-            );
-
-            List<Object[]> certificates = new LinkedList<Object[]>();
-            while (certQuery.next()) {
-                certificates.add(new Object[] {
-                    "id placeholder", certQuery.getTimestamp(1), certQuery.getTimestamp(2),
-                    certQuery.getBytes(3), certQuery.getBytes(4), "product uuid placeholder"
-                });
-            }
-
-            certQuery.close();
-            product.put("certificates", certificates);
-            product.put("certificates_statement", this.generateBulkInsertStatement(
-                "cp2_product_certificates", certificates.size(),
-                "id", "created", "updated", "cert", "privatekey", "product_uuid"
-            ));
-
-            // Fetch linked content
-            ResultSet contentQuery = this.executeQuery(
-                "SELECT " +
-                "  content_id, enabled, created, updated " +
-                "FROM cp_product_content " +
-                "WHERE product_id = ?",
-                productid
-            );
-
-            List<Object[]> content = new LinkedList<Object[]>();
-            while (contentQuery.next()) {
-                content.add(new Object[] {
-                    "product uuid placeholder", contentQuery.getString(1),
-                    contentQuery.getBoolean(2), contentQuery.getTimestamp(3),
-                    contentQuery.getTimestamp(4)
-                });
-            }
-
-            contentQuery.close();
-            product.put("content", content);
-            product.put("content_statement", this.generateBulkInsertStatement(
-                "cp2_product_content", content.size(),
-                "product_uuid", "content_uuid", "enabled", "created", "updated"
-            ));
-
-            // Fetch dependent products
-            ResultSet dprodQuery = this.executeQuery(
-                "SELECT element FROM cp_product_dependent_products WHERE cp_product_id = ?", productid
-            );
-
-            List<Object[]> dependents = new LinkedList<Object[]>();
-            while (dprodQuery.next()) {
-                dependents.add(new Object[] { "product uuid placeholder", dprodQuery.getString(1) });
-            }
-
-            dprodQuery.close();
-            product.put("dependents", dependents);
-            product.put("dependents_statement", this.generateBulkInsertStatement(
-                "cp2_dependent_products", dependents.size(),
-                "product_uuid", "element"
-            ));
-
-            this.productCache.put(productid, product);
-        }
-
-        prodQuery.close();
-    }
-
-    /**
-     * Retrieves the content from the DB and stores them to be used later
-     */
-    protected void prefetchContent() throws DatabaseException, SQLException {
-        ResultSet contentQuery = this.executeQuery(
-            "SELECT " +
-            "  id, created, updated, contenturl, gpgurl, label, metadataexpire, name, " +
-            "  releasever, requiredtags, type, vendor, arches " +
-            "FROM cp_content"
-        );
-
-        while (contentQuery.next()) {
-            Map<String, Object> content = new HashMap<String, Object>();
-            String contentid = contentQuery.getString(1);
-
-            content.put("info", new Object[] {
-                "content uuid placeholder", contentid, contentQuery.getTimestamp(2),
-                contentQuery.getTimestamp(3), "owner id placeholder", contentQuery.getString(4),
-                contentQuery.getString(5), contentQuery.getString(6), contentQuery.getObject(7),
-                contentQuery.getString(8), contentQuery.getString(9), contentQuery.getString(10),
-                contentQuery.getString(11), contentQuery.getString(12), contentQuery.getString(13)
-            });
-
-            // Fetch modified products...
-            ResultSet prodQuery = this.executeQuery(
-                "SELECT element FROM cp_content_modified_products WHERE cp_content_id = ?", contentid
-            );
-
-            List<Object[]> products = new LinkedList<Object[]>();
-            while (prodQuery.next()) {
-                products.add(new Object[] { "content uuid placeholder", prodQuery.getString(1) });
-            }
-
-            prodQuery.close();
-            content.put("products", products);
-            content.put("products_statement", this.generateBulkInsertStatement(
-                "cp2_content_modified_products", products.size(),
-                "content_uuid", "element"
-            ));
-
-            // Fetch environment content...
-            ResultSet ecQuery = this.executeQuery(
-                "SELECT created, updated, enabled, environment_id " +
-                "FROM cp_env_content " +
-                "WHERE contentid = ?",
-                contentid
-            );
-
-            List<Object[]> envcontent = new LinkedList<Object[]>();
-            while (ecQuery.next()) {
-                envcontent.add(new Object[] {
-                    "id placeholder", ecQuery.getTimestamp(1), ecQuery.getTimestamp(2),
-                    "content uuid placeholder", ecQuery.getString(3), ecQuery.getBoolean(4)
-                });
-            }
-
-            ecQuery.close();
-            content.put("envcontent", envcontent);
-            content.put("envcontent_statement", this.generateBulkInsertStatement(
-                "cp2_environment_content", envcontent.size(),
-                "id", "created", "updated", "content_uuid", "environment_id", "enabled"
-            ));
-
-            this.contentCache.put(contentid, content);
-        }
-
-        contentQuery.close();
-    }
-
-    /**
-     * Migrates content data.
-     *
-     * @param contentid
-     *  The id of the content to migrate
-     *
-     * @param orgid
-     *  The id of the owner/organization for which to migrate product data
-     *
-     * @return
-     *  The UUID for the newly migrated content
-     */
-    @SuppressWarnings("checkstyle:methodlength")
-    protected String migrateContentData(String contentid, String orgid)
-        throws DatabaseException, SQLException {
-
-        String contentuuid = this.generateUUID();
-        Map<String, Object> content = this.contentCache.get(contentid);
-
-        if (content == null) {
-            return null;
-        }
-
-        Object[] info = (Object[]) content.get("info");
-        info[0] = contentuuid;
-        info[4] = orgid;
-
-        this.executeUpdate(
-            "INSERT INTO cp2_content " +
-            "  (uuid, content_id, created, updated, owner_id, contenturl, gpgurl, label, " +
-            "  metadataexpire, name, releasever, requiredtags, type, vendor, arches) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            info
-        );
-
-        // Migrate environment content...
-        PreparedStatement statement = (PreparedStatement) content.get("envcontent_statement");
-        int index = 0;
-
-        if (statement != null) {
-            statement.clearParameters();
-            for (Object[] params : (List<Object[]>) content.get("envcontent")) {
-                this.setParameter(statement, ++index, this.generateUUID());
-                this.setParameter(statement, ++index, params[1]);
-                this.setParameter(statement, ++index, params[2]);
-                this.setParameter(statement, ++index, contentuuid);
-                this.setParameter(statement, ++index, params[4]);
-                this.setParameter(statement, ++index, params[5]);
-            }
-            statement.executeUpdate();
-        }
-
-        // Migrate modified products
-        statement = (PreparedStatement) content.get("products_statement");
-        index = 0;
-
-        if (statement != null) {
-            statement.clearParameters();
-            for (Object[] params : (List<Object[]>) content.get("products")) {
-                this.setParameter(statement, ++index, contentuuid);
-                this.setParameter(statement, ++index, params[1]);
-            }
-            statement.executeUpdate();
-        }
-
-        return contentuuid;
     }
 
     /**
@@ -430,16 +175,17 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
     protected void migrateProductData(String orgid) throws DatabaseException, SQLException {
         this.logger.info("  Migrating product data...");
 
+        List<String> pidCache = new LinkedList<String>();
         ResultSet productids = this.executeQuery(
-            "SELECT p.productid AS product_id " +
+            "SELECT p.product_id_old AS product_id " +
             "  FROM cp_pool p " +
             "  WHERE p.owner_id = ? " +
-            "    AND NOT NULLIF(p.productid, '') IS NULL " +
+            "    AND NOT NULLIF(p.product_id_old, '') IS NULL " +
             "UNION " +
-            "SELECT p.derivedproductid " +
+            "SELECT p.derived_product_id_old " +
             "  FROM cp_pool p " +
             "  WHERE p.owner_id = ? " +
-            "    AND NOT NULLIF(p.derivedproductid, '') IS NULL " +
+            "    AND NOT NULLIF(p.derived_product_id_old, '') IS NULL " +
             "UNION " +
             "SELECT pp.product_id " +
             "  FROM cp_pool p " +
@@ -476,10 +222,12 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
 
         while (productids.next()) {
             String productid = productids.getString(1);
+            String productuuid = this.migratedProducts.get(productid);
 
-            if (this.productsMigrated.get(productid) != null) {
+            if (productuuid != null) {
+                // TODO: This likely isn't a warn condition anymore
                 this.logger.warn(String.format(
-                    "    Skipping migration for already-migrated product: %s", productid
+                    "Skipping migration for already-migrated product: %s", productid
                 ));
 
                 continue;
@@ -487,15 +235,15 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
             else {
                 this.logger.info(String.format("    Migrating product: %s", productid));
 
-                String productuuid = this.generateUUID();
+                productuuid = this.generateUUID();
 
                 int count = this.executeUpdate(
                     "INSERT INTO cp2_products " +
                     "  (uuid, created, updated, updated_upstream, multiplier, product_id, name) " +
                     "SELECT ?, created, updated, ?, multiplier, ?, name " +
-                    "FROM cp_product " +
-                    "WHERE product_id = ?",
-                    productuuid, this.migrationDate, productid
+                    "FROM cp_product p " +
+                    "WHERE p.id = ?",
+                    productuuid, this.migrationTime, productid, productid
                 );
 
                 if (count < 1) {
@@ -511,170 +259,209 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
                     ));
                 }
 
-            // Migrate product attributes
-            PreparedStatement statement = (PreparedStatement) product.get("attributes_statement");
-            int index = 0;
+                // The rest of the product information will be migrated in one large batch operation
+                // in the migrateRelatedData method.
 
-            if (statement != null) {
-                statement.clearParameters();
-                for (Object[] params : (List<Object[]>) product.get("attributes")) {
-                    this.setParameter(statement, ++index, this.generateUUID());
-                    this.setParameter(statement, ++index, params[1]);
-                    this.setParameter(statement, ++index, params[2]);
-                    this.setParameter(statement, ++index, params[3]);
-                    this.setParameter(statement, ++index, params[4]);
-                    this.setParameter(statement, ++index, productuuid);
-                }
-                statement.executeUpdate();
+                this.migratedProducts.put(productid, productuuid);
             }
 
-            // Migrate product certificates
-            statement = (PreparedStatement) product.get("certificates_statement");
-            index = 0;
-
-            if (statement != null) {
-                statement.clearParameters();
-                for (Object[] params : (List<Object[]>) product.get("certificates")) {
-                    this.setParameter(statement, ++index, this.generateUUID());
-                    this.setParameter(statement, ++index, params[1]);
-                    this.setParameter(statement, ++index, params[2]);
-                    this.setParameter(statement, ++index, params[3]);
-                    this.setParameter(statement, ++index, params[4]);
-                    this.setParameter(statement, ++index, productuuid);
-                }
-                statement.executeUpdate();
-            }
-
-            // Migrate content used by product
-            statement = (PreparedStatement) product.get("content_statement");
-            index = 0;
-
-            if (statement != null) {
-                statement.clearParameters();
-                for (Object[] params : (List<Object[]>) product.get("content")) {
-                    String contentuuid = contentMigrated.get((String) params[1]);
-
-                    if (contentuuid == null) {
-                        contentuuid = this.migrateContentData((String) params[1], orgid);
-
-                        if (contentuuid == null) {
-                            this.logger.error(
-                                "      Content referenced by product which does not exist " +
-                                "(product: %s, content: %s)",
-                                productid, params[1]
-                            );
-
-                            continue;
-                        }
-                    }
-
-                    this.setParameter(statement, ++index, productuuid);
-                    this.setParameter(statement, ++index, contentuuid);
-                    this.setParameter(statement, ++index, params[2]);
-                    this.setParameter(statement, ++index, params[3]);
-                    this.setParameter(statement, ++index, params[4]);
-
-                    contentMigrated.put((String) params[1], contentuuid);
-                }
-                statement.executeUpdate();
-            }
-
-            // Migrate dependent products
-            statement = (PreparedStatement) product.get("dependents_statement");
-            index = 0;
-
-            if (statement != null) {
-                statement.clearParameters();
-                for (Object[] params : (List<Object[]>) product.get("dependents")) {
-                    this.setParameter(statement, ++index, productuuid);
-                    this.setParameter(statement, ++index, params[1]);
-                }
-                statement.executeUpdate();
-            }
+            pidCache.add(productuuid);
         }
 
         productids.close();
+
+        // Do a bulk insert for all the products for this orgs...
+        if (pidCache.size() > 0) {
+            PreparedStatement statement = this.generateBulkInsertStatement(
+                "cp2_owner_products", pidCache.size(), "owner_id", "product_uuid"
+            );
+            int index = 0;
+
+            for (String pid : pidCache) {
+                this.setParameter(statement, ++index, orgid);
+                this.setParameter(statement, ++index, pid);
+            }
+
+            statement.executeUpdate();
+        }
     }
 
-    private void migrateGlobalProductData() throws DatabaseException, SQLException {
-        this.logger.info("Migrating global product data...");
+    /**
+     * Migrates content data.
+     */
+    @SuppressWarnings("checkstyle:methodlength")
+    protected void migrateContentData(String orgid)
+        throws DatabaseException, SQLException {
+
+        // Impl note: This query is only safe because in the 09x era, content and product IDs are
+        // expected to be unique.
+
+        List<String> cidCache = new LinkedList<String>();
+        ResultSet contentids = this.executeQuery(
+            "SELECT c.id, c.created, c.updated, c.contenturl, c.gpgurl, c.label, " +
+            "  c.metadataexpire, c.name, c.releasever, c.requiredtags, c.type, c.vendor, c.arches " +
+            "FROM cp_content c " +
+            "JOIN cp_product_content pc ON pc.content_id = c.id " +
+            "JOIN cp2_products p ON pc.product_id = p.product_id " +
+            "JOIN cp2_owner_products op ON p.uuid = op.product_uuid " +
+            "WHERE op.owner_id = ?",
+            orgid
+        );
+
+        while (contentids.next()) {
+            String contentid = contentids.getString(1);
+            String contentuuid = this.migratedContent.get(contentid);
+
+            if (contentuuid != null) {
+                // TODO: This likely isn't a warn condition anymore
+                this.logger.warn(String.format(
+                    "Skipping migration for already-migrated content: %s", contentid
+                ));
+
+                continue;
+            }
+            else {
+                this.logger.info(String.format("    Migrating content: %s", contentid));
+
+                contentuuid = this.generateUUID();
+
+                // Fetch current row...
+                Object[] row = new Object[13];
+
+                for (int i = 0; i < row.length; ++i) {
+                    row[i] = contentids.getObject(i + 1);
+                }
+
+                int count = this.executeUpdate(
+                    "INSERT INTO cp2_content " +
+                    "  (uuid, content_id, created, updated, updated_upstream, contenturl, gpgurl, " +
+                    "   label, metadataexpire, name, releasever, requiredtags, type, vendor, arches) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    contentuuid, row[0], row[1], row[2], this.migrationTime, row[3], row[4], row[5],
+                    row[6], row[7], row[8], row[9], row[10], row[11], row[12]
+                );
+
+                if (count < 1) {
+                    this.logger.error(String.format(
+                        "    Content referenced by product which does not exist: %s", contentid
+                    ));
+
+                    continue;
+                }
+                else if (count > 1) {
+                    this.logger.error(String.format(
+                        "    Content migration query resulted in multiple contents for id: %s", contentid
+                    ));
+                }
+
+                // The rest of the content information will be migrated in one large batch operation
+                // in the migrateRelatedData method.
+
+                this.migratedContent.put(contentid, contentuuid);
+            }
+
+            cidCache.add(contentuuid);
+        }
+
+        contentids.close();
+
+        // Do a bulk insert for all the content for this orgs...
+        if (cidCache.size() > 0) {
+            PreparedStatement statement = this.generateBulkInsertStatement(
+                "cp2_owner_content", cidCache.size(), "owner_id", "content_uuid"
+            );
+            int index = 0;
+
+            for (String cid : cidCache) {
+                this.setParameter(statement, ++index, orgid);
+                this.setParameter(statement, ++index, cid);
+            }
+
+            statement.executeUpdate();
+        }
+    }
+
+    /**
+     * Migrates data linked to objects we have already migrated
+     */
+    protected void migrateRelatedData() throws DatabaseException, SQLException {
+        this.logger.info("Migrating activation keys...");
 
         this.executeUpdate(
-            "INSERT INTO cp2_pool_provided_products " +
+            "INSERT INTO cp2_activation_key_products(key_id, product_uuid) " +
+            "SELECT akp.id, p.uuid " +
+            "FROM cp_activationkey_product akp " +
+            "JOIN cp2_products p ON akp.product_id = p.product_id"
+        );
+
+
+        this.logger.info("Migrating linked product data...");
+
+        this.executeUpdate(
+            "INSERT INTO cp2_product_attributes (id, created, updated, name, value, product_uuid) " +
+            "SELECT pa.id, pa.created, pa.updated, pa.name, pa.value, p.uuid " +
+            "FROM cp_product_attribute pa " +
+            "JOIN cp2_products p ON pa.product_id = p.product_id"
+        );
+
+        this.executeUpdate(
+            "INSERT INTO cp2_product_certificates (id, created, updated, cert, privatekey, product_uuid) " +
+            "SELECT pc.id, pc.created, pc.updated, pc.cert, pc.privatekey, p.uuid " +
+            "FROM cp_product_certificate pc " +
+            "JOIN cp2_products p ON pc.product_id = p.product_id"
+        );
+
+        this.executeUpdate(
+            "INSERT INTO cp2_product_dependent_products (product_uuid, element) " +
+            "SELECT p.uuid, pdp.element " +
+            "FROM cp_product_dependent_products pdp " +
+            "JOIN cp2_products p ON pdp.cp_product_id = p.product_id"
+        );
+
+        this.executeUpdate(
+            "INSERT INTO cp2_pool_provided_products (pool_id, product_uuid) " +
             "SELECT pool.id, prod.uuid " +
             "FROM cp_pool pool " +
-            "INNER JOIN cp_pool_products pp ON pool.id = pp.pool_id " +
-            "INNER JOIN cp2_products prod ON " +
-            "  (pp.product_id = prod.product_id AND pool.owner_id = prod.owner_id) " +
+            "JOIN cp_pool_products pp ON pool.id = pp.pool_id " +
+            "JOIN cp2_products prod ON pp.product_id = prod.product_id " +
             "WHERE pp.dtype = 'provided'"
         );
 
         this.executeUpdate(
-            "INSERT INTO cp2_pool_derived_products " +
+            "INSERT INTO cp2_pool_dprovided_products " +
             "SELECT pool.id, prod.uuid " +
             "FROM cp_pool pool " +
-            "INNER JOIN cp_pool_products pp ON pool.id = pp.pool_id " +
-            "INNER JOIN cp2_products prod ON " +
-            "  (pp.product_id = prod.product_id AND pool.owner_id = prod.owner_id) " +
+            "JOIN cp_pool_products pp ON pool.id = pp.pool_id " +
+            "JOIN cp2_products prod ON pp.product_id = prod.product_id " +
             "WHERE pp.dtype = 'derived'"
         );
-    }
 
-    /**
-     * Migrates activation key data. Must be called per-org.
-     *
-     * @param orgid
-     *  The id of the owner/organization for which to migrate activation key data
-     */
-    private void migrateActivationKeyData(String orgid) throws DatabaseException, SQLException {
-        this.logger.info("  Migrating activation key data...");
+
+        this.logger.info("Migrating linked content data...");
 
         this.executeUpdate(
-            "INSERT INTO cp2_activation_key_products(key_id, product_uuid) " +
-            "SELECT AK.id, (SELECT uuid FROM cp2_products " +
-            "  WHERE owner_id = ? AND product_id = AKP.product_id) " +
-            "FROM cp_activation_key AK " +
-            "  JOIN cp_activationkey_product AKP ON AKP.key_id = AK.id " +
-            "WHERE AK.owner_id = ?",
-            orgid, orgid
+            "INSERT INTO cp2_environment_content " +
+            "  (id, created, updated, content_uuid, enabled, environment_id) " +
+            "SELECT ec.id, ec.created, ec.updated, c.uuid, ec.enabled, ec.environment_id " +
+            "FROM cp_env_content ec " +
+            "JOIN cp2_content c ON ec.contentid = c.content_id"
+        );
+
+        this.executeUpdate(
+            "INSERT INTO cp2_content_modified_products (content_uuid, element) " +
+            "SELECT c.uuid, cmp.element " +
+            "FROM cp_content_modified_products cmp " +
+            "JOIN cp2_content c ON cmp.cp_content_id = c.content_id"
+        );
+
+
+        this.logger.info("Migrating global pool data...");
+
+        this.executeUpdate(
+            "INSERT INTO cp2_pool_source_sub " +
+            "  (id, subscription_id, subscription_sub_key, pool_id, created, updated) " +
+            "SELECT id, subscriptionid, subscriptionsubkey, pool_id, created, updated " +
+            "FROM cp_pool_source_sub "
         );
     }
-
-    /**
-     * Migrates pool data. Must be called per-org.
-     *
-     * @param orgid
-     *  The id of the owner/organization for which to migrate pool data
-     */
-    private void migratePoolData(String orgid) throws DatabaseException, SQLException {
-        this.logger.info("  Migrating pool data...");
-
-        ResultSet pools = this.executeQuery("SELECT id FROM cp_pool WHERE owner_id = ?", orgid);
-
-        while (pools.next()) {
-            String poolid = pools.getString(1);
-
-            // Migrate pool source subscription info
-            ResultSet sourcesub = this.executeQuery(
-                "SELECT id, subscriptionid, subscriptionsubkey, pool_id, created, updated " +
-                "FROM cp_pool_source_sub WHERE pool_id = ?",
-                poolid
-            );
-
-            while (sourcesub.next()) {
-                this.executeUpdate(
-                    "INSERT INTO cp2_pool_source_sub " +
-                    "  (id, subscription_id, subscription_sub_key, pool_id, created, updated)" +
-                    "VALUES(?, ?, ?, ?, ?, ?)",
-                    this.generateUUID(), sourcesub.getString(2), sourcesub.getString(3), poolid,
-                    sourcesub.getTimestamp(5), sourcesub.getTimestamp(6)
-                );
-            }
-
-            sourcesub.close();
-        }
-
-        pools.close();
-    }
-
 }

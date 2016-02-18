@@ -263,7 +263,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     @ManyToMany
     @JoinTable(
-        name = "cp2_pool_derived_products",
+        name = "cp2_pool_dprovided_products",
         joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
         inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
     )
@@ -983,7 +983,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      */
     public Set<ProductAttribute> getProductAttributes() {
         return this.getProduct() != null
-            ? this.getProduct().getProductAttributes()
+            ? this.getProduct().getAttributes()
             : new HashSet<ProductAttribute>();
     }
 
@@ -997,7 +997,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      */
     public Set<ProductAttribute> getDerivedProductAttributes() {
         return this.getDerivedProduct() != null
-            ? this.getDerivedProduct().getProductAttributes()
+            ? this.getDerivedProduct().getAttributes()
             : new HashSet<ProductAttribute>();
     }
 

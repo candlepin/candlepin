@@ -612,7 +612,7 @@ public class PerOrgProductsUpgradeTaskA extends LiquibaseCustomTask {
         );
 
         this.executeUpdate(
-            "INSERT INTO cp2_pool_derived_products " +
+            "INSERT INTO cp2_pool_dprovided_products " +
             "SELECT pool.id, prod.uuid " +
             "FROM cp_pool pool " +
             "INNER JOIN cp_pool_products pp ON pool.id = pp.pool_id " +

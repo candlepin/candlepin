@@ -34,18 +34,19 @@
 
 
     <!-- cp2_owner_products -->
-    <changeSet id="20150210094558-03" author="crog">
+    <changeSet id="20150210094558-02" author="crog">
         <createTable tableName="cp2_owner_products">
-            <column name="owner_id" type="varchar(32)"/>
-            <column name="product_uuid" type="varchar(32)"
-                remarks="RH product ID; not to be confused with the uuid">
+            <column name="owner_id" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_uuid" type="varchar(32)">
                 <constraints nullable="false"/>
             </column>
             <!-- Maybe add date added or some such? -->
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-04" author="crog">
+    <changeSet id="20150210094558-03" author="crog">
         <addPrimaryKey tableName="cp2_owner_products"
             columnNames="owner_id, product_uuid"
             constraintName="cp2_owner_products_pk"
@@ -55,7 +56,7 @@
 
 
     <!-- cp2_activation_key_products -->
-    <changeSet id="20150210094558-05" author="crog">
+    <changeSet id="20150210094558-04" author="crog">
         <createTable tableName="cp2_activation_key_products">
             <column name="key_id" type="varchar(32)">
                 <constraints
@@ -76,7 +77,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-06" author="crog">
+    <changeSet id="20150210094558-05" author="crog">
         <addPrimaryKey tableName="cp2_activation_key_products"
             columnNames="key_id,product_uuid"
             constraintName="cp2_actkeyprod_pk"
@@ -86,7 +87,7 @@
 
 
     <!-- cp2_content -->
-    <changeSet id="20150210094558-07" author="crog">
+    <changeSet id="20150210094558-06" author="crog">
         <createTable tableName="cp2_content">
             <column name="uuid" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cp2_content_pk"/>
@@ -118,14 +119,27 @@
             <column name="arches" type="varchar(255)"/>
         </createTable>
     </changeSet>
-<!--
+
+    <changeSet id="20150210094558-07" author="crog">
+        <createTable tableName="cp2_owner_content">
+            <column name="owner_id" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content_uuid" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Maybe add date added or some such? -->
+        </createTable>
+    </changeSet>
+
     <changeSet id="20150210094558-08" author="crog">
-        <addUniqueConstraint tableName="cp2_content"
-            columnNames="owner_id, content_id, updated_upstream"
-            constraintName="cp2_content_unq1"
+        <addPrimaryKey tableName="cp2_owner_content"
+            columnNames="owner_id, content_uuid"
+            constraintName="cp2_owner_content_pk"
         />
     </changeSet>
- -->
+
+
 
     <!-- cp2_content_modified_products -->
     <changeSet id="20150210094558-09" author="crog">
@@ -235,20 +249,20 @@
 
 
 
-    <!-- cp2_pool_derived_products -->
+    <!-- cp2_pool_dprovided_products -->
     <changeSet id="20150210094558-16" author="crog">
-        <createTable tableName="cp2_pool_derived_products">
+        <createTable tableName="cp2_pool_dprovided_products">
             <column name="pool_id" type="varchar(32)">
                 <constraints
                     nullable="false"
-                    foreignKeyName="cp2_pool_derived_products_fk1"
+                    foreignKeyName="cp2_pool_dprovided_products_fk1"
                     references="cp_pool(id)"
                 />
             </column>
             <column name="product_uuid" type="varchar(32)">
                 <constraints
                     nullable="false"
-                    foreignKeyName="cp2_pool_derived_products_fk2"
+                    foreignKeyName="cp2_pool_dprovided_products_fk2"
                     references="cp2_products(uuid)"
                 />
             </column>
@@ -256,9 +270,9 @@
     </changeSet>
 
     <changeSet id="20150210094558-17" author="crog">
-        <addPrimaryKey tableName="cp2_pool_derived_products"
+        <addPrimaryKey tableName="cp2_pool_dprovided_products"
             columnNames="pool_id, product_uuid"
-            constraintName="cp2_pool_derived_products_pk"
+            constraintName="cp2_pool_dprovided_products_pk"
         />
     </changeSet>
 
@@ -488,14 +502,14 @@
 
 
     <!-- migration task -->
-<!--     <changeSet id="20150210094558-35" author="crog">
+    <changeSet id="20150210094558-35" author="crog">
         <preConditions onSqlOutput="FAIL" onFail="CONTINUE">
             <changeLogPropertyDefined property="project.name"/>
         </preConditions>
 
         <comment>Migrate data from obsoleted tables to new org-specific tables.</comment>
 
-        <customChange class="org.candlepin.liquibase.PerOrgProductsUpgradeLiquibaseWrapper"/>
-    </changeSet> -->
+        <customChange class="org.candlepin.liquibase.PerOrgProductsMigrationLiquibaseWrapper"/>
+    </changeSet>
 
 </databaseChangeLog>
