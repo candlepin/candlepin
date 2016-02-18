@@ -183,6 +183,8 @@ PROVIDED = [SERVLET]
 # Buildr to include it in the Eclipse .classpath file.
 JAVA_TOOLS = file(Java.tools_jar)
 
+SCANNOTATION = 'org.scannotation:scannotation:jar:1.0.3'
+
 # Make Util available in all projects.  See http://buildr.apache.org/extending.html#extensions
 class Project
   include Candlepin::Util
@@ -280,6 +282,7 @@ define "candlepin" do
       GUICE,
       LOGGING,
       JAVA_TOOLS,
+      SCANNOTATION,
     ]
 
     compile.with(compile_classpath)
@@ -546,10 +549,10 @@ define "candlepin" do
 
       combined = Hash[api.collect { |a| [a['method'], a] }]
       comments.each do |c|
-        if combined.has_key? c['method']
+        if combined.key?(c['method'])
           combined[c['method']].merge!(c)
         else
-          combined[c['method']] = c
+          warn "Ignoring #{c['method']} as only its comments were found"
         end
       end
 

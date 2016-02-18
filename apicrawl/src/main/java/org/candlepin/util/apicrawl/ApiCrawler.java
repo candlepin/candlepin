@@ -23,6 +23,7 @@ import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
 import com.google.inject.matcher.Matcher;
 
+import org.scannotation.AnnotationDB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,10 +31,13 @@ import java.io.FileWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -50,7 +54,6 @@ import javax.ws.rs.core.MediaType;
  * namespace looking for exposed API calls.
  */
 public class ApiCrawler {
-
     public static final Logger log = LoggerFactory.getLogger(ApiCrawler.class);
 
     // Let's just set it to pretty_print the output instead of having
@@ -86,21 +89,49 @@ public class ApiCrawler {
         mapper.registerModule(dontRecurse);
     }
 
-    @SuppressWarnings("unchecked")
     public void run(String apiFile) throws Exception {
         List<RestApiCall> allApiCalls = new LinkedList<RestApiCall>();
 
-        Class<?> rootResourceClazz = this.getClass().getClassLoader().loadClass(
-            "org.candlepin.resource.RootResource");
-        Map<Object, String> resourceClasses = (Map<Object, String>)
-            rootResourceClazz.getDeclaredField("RESOURCE_CLASSES").get(null);
+        ClassLoader loader = this.getClass().getClassLoader();
+        URL[] urls = ((URLClassLoader) loader).getURLs();
 
-        log.info("Examining resources: {}", resourceClasses.keySet());
-        for (Object o : resourceClasses.keySet()) {
-            if (o instanceof Class) {
-                Class<?> c = (Class<?>) o;
-                allApiCalls.addAll(processClass(c));
-            }
+        AnnotationDB db = new AnnotationDB();
+        db.setScanClassAnnotations(true);
+        db.setScanFieldAnnotations(false);
+        db.setScanMethodAnnotations(false);
+        db.setScanParameterAnnotations(false);
+
+        String[] ignoredPackages = {
+            "org.jboss.resteasy.plugins", "org.jboss.resteasy.annotations",
+            "org.jboss.resteasy.client", "org.jboss.resteasy.specimpl",
+            "org.jboss.resteasy.core", "org.jboss.resteasy.spi",
+            "org.jboss.resteasy.util", "org.jboss.resteasy.mock", "javax.ws.rs"
+        };
+        db.setIgnoredPackages(ignoredPackages);
+
+        db.scanArchives(urls);
+        try {
+            db.crossReferenceImplementedInterfaces();
+            db.crossReferenceMetaAnnotations();
+        }
+        catch (AnnotationDB.CrossReferenceException e) {
+            /* A cross-reference error is when one of our scanned classes
+             * references an unscanned class.  But the error message is hopelessly
+             * vague and we want to continue on anyway.
+             */
+            log.info("Cross reference error (likely harmless)", e);
+        }
+
+        Set<String> paths = db.getAnnotationIndex().get(Path.class.getName());
+
+        if (paths == null) {
+            throw new IllegalStateException("No classes annotated with @Path were found");
+        }
+
+        for (String className : paths) {
+            log.info("Scanning {}", className);
+            Class<?> clazz = loader.loadClass(className);
+            allApiCalls.addAll(processClass(clazz));
         }
 
         // we need a different mapper to write the output, one without our
