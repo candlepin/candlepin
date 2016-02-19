@@ -631,8 +631,7 @@ public class X509CRLStreamWriter {
         int newTbsLength = oldTbsLength + tbsCertListLengthDelta;
         int tbsHeaderBytesDelta = findHeaderBytesDelta(oldTbsLength, newTbsLength);
 
-        // Since the signature is in the top level sequence, we don't need to
-        // calculate the header bytes delta.
+        // newSigLength represents a DER encoded signature so it already contains the header bytes delta.
         int sigLengthDelta = newSigLength - oldSigLength;
 
         int totalLengthDelta = tbsCertListLengthDelta + tbsHeaderBytesDelta + sigLengthDelta;
