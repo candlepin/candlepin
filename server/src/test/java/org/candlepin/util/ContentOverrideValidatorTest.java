@@ -83,7 +83,7 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
         }
         catch (BadRequestException bre) {
             assertEquals("Not allowed to override values for:" +
-                " name, baseurl", bre.getMessage());
+                " baseurl, name", bre.getMessage());
             gotException = true;
         }
         assertTrue(gotException);
