@@ -38,9 +38,7 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
      */
     @Transactional
     public Content lookupById(Owner owner, String id) {
-        return (Content) currentSession().createCriteria(Content.class)
-            .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("id", id)).uniqueResult();
+        return this.lookupById(owner.getId(), id);
     }
 
     /**
@@ -50,9 +48,13 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
      */
     @Transactional
     public Content lookupById(String ownerId, String contentId) {
-        return (Content) this.createSecureCriteria()
-            .add(Restrictions.eq("owner.id", ownerId))
-            .add(Restrictions.eq("id", contentId)).uniqueResult();
+        AbstractHibernateCurator.log.debug("Looking up content for owner/cid: {}.{}", ownerId, contentId);
+
+        return (Content) this.createSecureCriteria("c")
+            .createCriteria("owners", "o")
+            .add(Restrictions.eq("o.id", ownerId))
+            .add(Restrictions.eq("c.id", contentId))
+            .uniqueResult();
     }
 
     /**
@@ -81,7 +83,7 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
 
     @Transactional
     public Content createOrUpdate(Content c) {
-        Content existing = this.lookupById(c.getOwner(), c.getId());
+        Content existing = this.lookupByUuid(c.getUuid());
 
         if (existing == null) {
             create(c);

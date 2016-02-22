@@ -121,6 +121,17 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     @XmlTransient
     private Set<Product> products;
 
+    @OneToMany
+    @Cascade({ org.hibernate.annotations.CascadeType.ALL })
+    @JoinTable(
+        name = "cp2_owner_content",
+        joinColumns = {@JoinColumn(name = "owner_id", insertable = true, updatable = true)},
+        inverseJoinColumns = {@JoinColumn(name = "content_uuid")}
+    )
+    @LazyCollection(LazyCollectionOption.FALSE)
+    @XmlTransient
+    private Set<Content> content;
+
     /**
      * Default constructor
      */
@@ -468,6 +479,67 @@ public class Owner extends AbstractHibernateObject implements Serializable,
         this.products.clear();
         if (products != null) {
             this.products.addAll(products);
+        }
+
+        return this;
+    }
+
+    /**
+     * Retrieves the content with which this owner is associated. If this owner is not associated
+     * with any content, this method returns an empty set.
+     * <p/>
+     * Note that changes made to the set returned by this method will be reflected by this object
+     * and its backing data store.
+     *
+     * @return
+     *  The set of content with which this owner is associated
+     */
+    @XmlTransient
+    public Set<Content> getContent() {
+        return this.content;
+    }
+
+    /**
+     * Associates this owner with the specified content. If the given content is already associated
+     * with this owner, the request is silently ignored.
+     *
+     * @param content
+     *  An content to be associated with this owner
+     *
+     * @return
+     *  True if this owner was successfully associated with the given content; false otherwise
+     */
+    public boolean addContent(Content content) {
+        return content != null ? this.content.add(content) : false;
+    }
+
+    /**
+     * Disassociates this owner with the specified content. If the given content is not associated
+     * with this owner, the request is silently ignored.
+     *
+     * @param content
+     *  The content to disassociate from this owner
+     *
+     * @return
+     *  True if the owner was disassociated successfully; false otherwise
+     */
+    public boolean removeContent(Content content) {
+        return content != null ? this.content.remove(content) : false;
+    }
+
+    /**
+     * Sets the content with which this owner is associated.
+     *
+     * @param content
+     *  A collection of content to be associated with this owner
+     *
+     * @return
+     *  A reference to this owner
+     */
+    public Owner setContent(Collection<Content> content) {
+        this.content.clear();
+        if (content != null) {
+            this.content.addAll(content);
         }
 
         return this;

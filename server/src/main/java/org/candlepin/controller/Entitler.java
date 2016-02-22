@@ -320,7 +320,7 @@ public class Entitler {
             // Check if adding the owner here is correct. This may be wrong.
             prod.addOwner(devConsumer.getOwner());
             for (ProductContent pc : prod.getProductContent()) {
-                pc.getContent().setOwner(devConsumer.getOwner());
+                pc.getContent().addOwner(devConsumer.getOwner());
             }
             productCurator.createOrUpdate(prod);
         }

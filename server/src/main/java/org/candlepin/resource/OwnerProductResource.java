@@ -112,6 +112,62 @@ public class OwnerProductResource {
     }
 
     /**
+     * Retrieves a Product instance for the product with the specified id. If no matching product
+     * could be found, this method throws an exception.
+     *
+     * @param owner
+     *  The organization
+     *
+     * @param productId
+     *  The ID of the product to retrieve
+     *
+     * @throws NotFoundException
+     *  if no matching product could be found with the specified id
+     *
+     * @return
+     *  the Product instance for the product with the specified id
+     */
+    protected Product fetchProduct(Owner owner, String productId) {
+        Product product = productCurator.lookupById(owner, productId);
+
+        if (product == null) {
+            throw new NotFoundException(
+                i18n.tr("Product with ID ''{0}'' could not be found.", productId)
+            );
+        }
+
+        return product;
+    }
+
+    /**
+     * Retrieves a Content instance for the content with the specified id. If no matching content
+     * could be found, this method throws an exception.
+     *
+     * @param owner
+     *  The organization
+     *
+     * @param contentId
+     *  The ID of the content to retrieve
+     *
+     * @throws NotFoundException
+     *  if no matching content could be found with the specified id.
+     *
+     * @return
+     *  the Content instance for the content with the specified id
+     */
+    protected Content fetchContent(Owner owner, String contentId) {
+        Content content = this.contentCurator.lookupById(owner, contentId);
+
+        if (content == null) {
+            throw new NotFoundException(
+                i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
+            );
+        }
+
+        return content;
+    }
+
+    /**
      * Retrieves a list of Products
      *
      * @param productIds if specified, the list of product IDs to return product info for
@@ -167,15 +223,7 @@ public class OwnerProductResource {
         @Verify(Product.class) @PathParam("product_id") String productId) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = productCurator.lookupById(owner, productId);
-
-        if (product == null) {
-            throw new NotFoundException(
-                i18n.tr("Product with ID ''{0}'' could not be found.", productId)
-            );
-        }
-
-        return product;
+        return this.fetchProduct(owner, productId);
     }
 
     /**
@@ -294,34 +342,6 @@ public class OwnerProductResource {
     }
 
     /**
-     * Retrieves a Content instance for the content with the specified id. If no matching content
-     * could be found, this method throws an exception.
-     *
-     * @param ownerKey
-     *  The organization
-     *
-     * @param contentId
-     *  The ID of the content to retrieve
-     *
-     * @throws NotFoundException
-     *  if no matching content could be found with the specified id.
-     *
-     * @return
-     *  the Owner instance for the owner with the specified key.
-     */
-    protected Content getContent(String ownerKey, String contentId) {
-        Content content = this.contentCurator.lookupById(ownerKey, contentId);
-
-        if (content == null) {
-            throw new NotFoundException(
-                i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
-            );
-        }
-
-        return content;
-    }
-
-    /**
      * Adds Content to a Product
      * <p>
      * Batch mode
@@ -339,13 +359,14 @@ public class OwnerProductResource {
         @PathParam("product_id") String productId,
         Map<String, Boolean> contentMap) {
 
-        Product product = this.getProduct(ownerKey, productId);
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product product = this.fetchProduct(owner, productId);
         List<ProductContent> productContent = new LinkedList<ProductContent>();
 
         this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
 
         for (Entry<String, Boolean> entry : contentMap.entrySet()) {
-            Content content = this.getContent(ownerKey, entry.getKey());
+            Content content = this.fetchContent(owner, entry.getKey());
             productContent.add(new ProductContent(product, content, entry.getValue()));
         }
 
@@ -375,8 +396,9 @@ public class OwnerProductResource {
         @PathParam("content_id") String contentId,
         @QueryParam("enabled") Boolean enabled) {
 
-        Product product = this.getProduct(ownerKey, productId);
-        Content content = this.getContent(ownerKey, contentId);
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product product = this.fetchProduct(owner, productId);
+        Content content = this.fetchContent(owner, contentId);
 
         this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
 
@@ -403,8 +425,9 @@ public class OwnerProductResource {
         @PathParam("product_id") String productId,
         @PathParam("content_id") String contentId) {
 
-        Product product = this.getProduct(ownerKey, productId);
-        Content content = this.getContent(ownerKey, contentId);
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product product = this.fetchProduct(owner, productId);
+        Content content = this.fetchContent(owner, contentId);
 
         productCurator.removeProductContent(product, content);
     }

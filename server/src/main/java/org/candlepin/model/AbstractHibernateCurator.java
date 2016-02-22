@@ -60,7 +60,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     private final Class<E> entityType;
     private int batchSize = 30;
     @Inject private PrincipalProvider principalProvider;
-    private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
+    public static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
 
     public AbstractHibernateCurator(Class<E> entityType) {
         //entityType = (Class<E>) ((ParameterizedType)

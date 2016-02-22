@@ -326,8 +326,8 @@ public class CandlepinPoolManager implements PoolManager {
 
             if (existing != null && !content.equals(existing)) {
                 log.warn(
-                    "Multiple versions of the same content found on a single subscription: {}.{}",
-                    (content.getOwner() != null ? content.getOwner().getId() : null), content.getId()
+                    "Multiple versions of the same content found on a single subscription: {}",
+                    /*(content.getOwner() != null ? content.getOwner().getId() : null),*/ content.getId()
                 );
             }
 
@@ -368,7 +368,7 @@ public class CandlepinPoolManager implements PoolManager {
             Content existing = this.contentCurator.lookupById(owner, inbound.getId());
 
             // We always want to ensure it contains the proper owner reference
-            inbound.setOwner(owner);
+            inbound.addOwner(owner);
 
             if (existing == null) {
                 log.info("Creating new content for org {}: {}", owner.getKey(), inbound.getId());

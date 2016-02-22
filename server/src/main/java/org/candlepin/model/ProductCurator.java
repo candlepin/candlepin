@@ -107,9 +107,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      */
     @Transactional
     public Product lookupById(Owner owner, String id) {
-        return (Product) this.createSecureCriteria()
-            .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("id", id)).uniqueResult();
+        return this.lookupById(owner.getId(), id);
     }
 
     /**
@@ -120,8 +118,10 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     @Transactional
     public Product lookupById(String ownerId, String productId) {
         return (Product) this.createSecureCriteria()
+            .createAlias("owners", "owner")
             .add(Restrictions.eq("owner.id", ownerId))
-            .add(Restrictions.eq("id", productId)).uniqueResult();
+            .add(Restrictions.eq("id", productId))
+            .uniqueResult();
     }
 
     /**

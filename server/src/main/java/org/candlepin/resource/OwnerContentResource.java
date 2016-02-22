@@ -167,7 +167,7 @@ public class OwnerContentResource {
     private Content createContentImpl(Owner owner, Content content) {
         // TODO: check if arches have changed ??
 
-        content.setOwner(owner);
+        content.addOwner(owner);
 
         if (content.getId() == null || content.getId().trim().length() == 0) {
             content.setId(this.idGenerator.generateId());
@@ -237,12 +237,12 @@ public class OwnerContentResource {
                                  @PathParam("content_id") String contentId,
                                  Content content) {
 
+        Owner owner = this.getOwnerByKey(ownerKey);
         Content lookedUp  = this.getContent(ownerKey, contentId);
-        Owner owner = lookedUp.getOwner();
 
         // FIXME: needs arches handled as well?
         content.setId(contentId);
-        content.setOwner(owner);
+        content.addOwner(owner);
         content = this.contentCurator.createOrUpdate(content);
 
         // require regeneration of entitlement certificates of affected consumers
@@ -250,9 +250,7 @@ public class OwnerContentResource {
             this.productCurator.getProductsWithContent(owner, Arrays.asList(contentId));
 
         for (Product product : affectedProducts) {
-            poolManager.regenerateCertificatesOf(
-                owner, product.getId(), true
-            );
+            poolManager.regenerateCertificatesOf(owner, product.getId(), true);
         }
 
         return content;
@@ -269,8 +267,8 @@ public class OwnerContentResource {
     public void remove(@PathParam("owner_key") String ownerKey,
                        @PathParam("content_id") String contentId) {
 
+        Owner owner = this.getOwnerByKey(ownerKey);
         Content nuke = this.getContent(ownerKey, contentId);
-        Owner owner = nuke.getOwner();
 
         List<Product> affectedProducts =
             this.productCurator.getProductsWithContent(owner, Arrays.asList(contentId));
@@ -284,13 +282,10 @@ public class OwnerContentResource {
 
         // Regenerate affected products
         for (Product product : affectedProducts) {
-
             // PER-ORG PRODUCT VERSIONING TODO:
             // This should cause a new product version for the specified owner, rather than patching
             // the existing owner.
-            poolManager.regenerateCertificatesOf(
-                owner, product.getId(), true
-            );
+            poolManager.regenerateCertificatesOf(owner, product.getId(), true);
         }
     }
 }
