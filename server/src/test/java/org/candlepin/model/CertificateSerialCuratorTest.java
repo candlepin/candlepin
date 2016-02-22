@@ -29,6 +29,7 @@ import org.candlepin.test.TestUtil;
 
 import org.junit.Test;
 
+import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.HashMap;
@@ -36,7 +37,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.inject.Inject;
 
 /**
@@ -185,6 +185,39 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         createCS().withExpDate(addDaysToDt(-2)).revoked(true).save();
         createCS().withExpDate(addDaysToDt(-10)).revoked(true).save();
         assertEquals(2, this.certSerialCurator.deleteExpiredSerials());
+    }
+
+    /**
+     * This tests the batching logic for IN clause limit
+     */
+    @Test
+    public void testDelete50ExpiredSerials() {
+        setPrivateField(CertificateSerialCurator.class, "inClauseLimit", 50);
+        for (int i = 0; i < 50; i++) {
+            createCS().withExpDate(addDaysToDt(-10)).revoked(true).save();
+        }
+        assertEquals(50, this.certSerialCurator.deleteExpiredSerials());
+    }
+
+    @Test
+    public void testDelete55ExpiredSerials() {
+        setPrivateField(CertificateSerialCurator.class, "inClauseLimit", 55);
+        for (int i = 0; i < 55; i++) {
+            createCS().withExpDate(addDaysToDt(-10)).revoked(true).save();
+        }
+        assertEquals(55, this.certSerialCurator.deleteExpiredSerials());
+    }
+
+    private void setPrivateField(Class<CertificateSerialCurator> clazz, String intField, int val) {
+        Field f;
+        try {
+            f = clazz.getDeclaredField(intField);
+            f.setAccessible(true);
+            f.setInt(clazz, val);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
