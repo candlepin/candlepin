@@ -65,6 +65,7 @@ public class Subscription implements Owned, Named, Eventful {
     private String accountNumber;
     private Date modified;
     private String orderNumber;
+    private String subscriptionNumber;
     private String upstreamPoolId;
     private String upstreamEntitlementId;
     private String upstreamConsumerId;
@@ -239,6 +240,21 @@ public class Subscription implements Owned, Named, Eventful {
      */
     public String getOrderNumber() {
         return orderNumber;
+    }
+
+    /**
+     * set the subsctiption number
+     * @param subscriptionNumber
+     */
+    public void setSubscriptionNumber(String subscriptionNumber) {
+        this.subscriptionNumber = subscriptionNumber;
+    }
+
+    /**
+     * @return the order number
+     */
+    public String getSubscriptionNumber() {
+        return subscriptionNumber;
     }
 
     /**

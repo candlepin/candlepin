@@ -31,6 +31,7 @@ public class Order {
     private String end;
     private String contract;
     private String account;
+    private String subscription;
 
     /**
      * @param number
@@ -72,5 +73,12 @@ public class Order {
      */
     public void setAccount(String account) {
         this.account = account;
+    }
+
+    /**
+     * @param subscriptionNumber
+     */
+    public void setSubscription(String subscription) {
+        this.subscription = subscription;
     }
 }

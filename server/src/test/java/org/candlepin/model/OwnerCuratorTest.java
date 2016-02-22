@@ -158,7 +158,8 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2010, 11, 30),
             "SUB234598S",
             "ACC123",
-            "ORD222"
+            "ORD222",
+            "SUB333"
         );
 
         poolCurator.create(pool);

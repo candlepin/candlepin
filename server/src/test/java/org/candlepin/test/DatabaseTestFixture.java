@@ -90,6 +90,7 @@ public class DatabaseTestFixture {
     private static final String DEFAULT_CONTRACT = "SUB349923";
     private static final String DEFAULT_ACCOUNT = "ACC123";
     private static final String DEFAULT_ORDER = "ORD222";
+    private static final String DEFAULT_SUBSCRIPTION = "SUB333";
 
     @SuppressWarnings("checkstyle:visibilitymodifier")
     @ClassRule
@@ -224,7 +225,8 @@ public class DatabaseTestFixture {
             endDate,
             DEFAULT_CONTRACT,
             DEFAULT_ACCOUNT,
-            DEFAULT_ORDER
+            DEFAULT_ORDER,
+            DEFAULT_SUBSCRIPTION
         );
 
         p.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));

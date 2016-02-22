@@ -130,6 +130,7 @@ public class PoolFilterBuilder extends FilterBuilder {
         textOr.add(new FilterLikeExpression("product.id", matches, true));
         textOr.add(new FilterLikeExpression(alias + "contractNumber", matches, true));
         textOr.add(new FilterLikeExpression(alias + "orderNumber", matches, true));
+        textOr.add(new FilterLikeExpression(alias + "subscriptionNumber", matches, true));
 
         DetachedCriteria ppCriteria = DetachedCriteria.forClass(Pool.class, "Pool2")
                 .createAlias("providedProducts", "provided", JoinType.INNER_JOIN)

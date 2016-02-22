@@ -161,6 +161,7 @@ public class SubscriptionResource {
      *   "accountNumber" : "12331131231",
      *   "modified" : null,
      *   "orderNumber" : "order-8675309",
+     *   "subscriptionNumber" : "34567777",
      *   "upstreamPoolId" : null,
      *   "upstreamEntitlementId" : null,
      *   "upstreamConsumerId" : null,

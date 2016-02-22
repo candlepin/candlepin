@@ -219,7 +219,8 @@ public class TestUtil {
             TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 10, 11, 30),
             "SUB234598S" + random,
             "ACC123" + random,
-            "ORD222" + random
+            "ORD222" + random,
+            "SUB333" + random
         );
 
         pool.setSourceSubscription(new SourceSubscription("SUB234598S" + random, "master" + random));
@@ -356,7 +357,8 @@ public class TestUtil {
             sub.getEndDate(),
             sub.getContractNumber(),
             sub.getAccountNumber(),
-            sub.getOrderNumber()
+            sub.getOrderNumber(),
+            sub.getSubscriptionNumber()
         );
         p.setUpstreamPoolId(sub.getUpstreamPoolId());
         p.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
@@ -385,7 +387,8 @@ public class TestUtil {
             pool.getEndDate(),
             pool.getContractNumber(),
             pool.getAccountNumber(),
-            pool.getOrderNumber()
+            pool.getOrderNumber(),
+            pool.getSubscriptionNumber()
         );
 
         p.setSourceSubscription(new SourceSubscription(pool.getSubscriptionId(),

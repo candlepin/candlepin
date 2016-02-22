@@ -2028,7 +2028,7 @@
     </changeSet>
     <changeSet author="awood" id="1413225753032-290">
         <comment>
-             Add the default quartz lock columns.
+             Add the default quartz lock columns. 
         </comment>
         <insert tableName="QRTZ_LOCKS">
             <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>
@@ -2275,4 +2275,6 @@
     <include file="db/changelog/20150818110722-upgrade-to-quartz-2-dot-2.xml"/>
     <include file="db/changelog/20150820140403-revert-to-lastcheckin-column.xml"/>
     <include file="db/changelog/20150915094638-add-reporter-id-to-hypervisor-id.xml"/>
+    <include file="db/changelog/20160219102101-subscription-number-to-pool.xml"/>
+    <include file="db/changelog/20160219105949-subscription-number-to-subscription.xml"/>
 </databaseChangeLog>

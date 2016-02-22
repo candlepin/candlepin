@@ -108,7 +108,8 @@ public class ProductCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2020, 1, 1),
             "1",
             "2",
-            "3"
+            "3",
+            "4"
         );
 
         pool.setDerivedProduct(derivedProduct);

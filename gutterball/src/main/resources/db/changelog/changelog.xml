@@ -11,4 +11,5 @@
     <include file="db/changelog/2015-10-20-12-31-rename-compliance-reason-key-column.xml"/>
     <include file="db/changelog/2015-10-20-13-20-change-event-entity-json-column-types.xml"/>
     <include file="db/changelog/2015-10-22-15-44-delete-current-event-records.xml"/>
+    <include file="db/changelog/2016-02-24-14-21-add-subscription-number-to-entitlement.xml"/>
 </databaseChangeLog>

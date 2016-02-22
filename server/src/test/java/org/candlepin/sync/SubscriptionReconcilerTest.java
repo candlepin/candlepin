@@ -89,7 +89,8 @@ public class SubscriptionReconcilerTest {
         for (Subscription sub : subs) {
             Pool p = new Pool(sub.getOwner(), sub.getProduct(), sub.getProvidedProducts(),
                     sub.getQuantity(), sub.getStartDate(), sub.getEndDate(),
-                    sub.getContractNumber(), sub.getAccountNumber(), sub.getOrderNumber());
+                    sub.getContractNumber(), sub.getAccountNumber(), sub.getOrderNumber(),
+                    sub.getSubscriptionNumber());
             p.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
             p.setUpstreamPoolId(sub.getUpstreamPoolId());
             p.setUpstreamConsumerId(sub.getUpstreamConsumerId());

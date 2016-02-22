@@ -798,6 +798,7 @@ public class InstalledProductStatusCalculatorTest {
             range.getEndDate(),
             "1000",
             "1000",
+            "1000",
             "1000"
         );
         Entitlement e = new Entitlement(p, consumer, 1);

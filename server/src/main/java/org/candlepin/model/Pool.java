@@ -306,6 +306,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @Size(max = 255)
     private String orderNumber;
 
+    @Size(max = 255)
+    private String subscriptionNumber;
+
     @Formula("(select sum(ent.quantity) from cp_entitlement ent " +
              "where ent.pool_id = id)")
     private Long consumed;
@@ -367,7 +370,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     public Pool(Owner ownerIn, Product product, Set<Product> providedProducts,
         Long quantityIn, Date startDateIn, Date endDateIn, String contractNumber,
-        String accountNumber, String orderNumber) {
+        String accountNumber, String orderNumber, String subscriptionNumber) {
 
         this.product = product;
         this.owner = ownerIn;
@@ -377,6 +380,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.contractNumber = contractNumber;
         this.accountNumber = accountNumber;
         this.orderNumber = orderNumber;
+        this.subscriptionNumber = subscriptionNumber;
 
         if (providedProducts != null) {
             this.setProvidedProducts(providedProducts);
@@ -532,6 +536,14 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     public void setOrderNumber(String orderNumber) {
         this.orderNumber = orderNumber;
+    }
+
+    public String getSubscriptionNumber() {
+        return subscriptionNumber;
+    }
+
+    public void setSubscriptionNumber(String subscriptionNumber) {
+        this.subscriptionNumber = subscriptionNumber;
     }
 
     public boolean hasAttribute(String key) {

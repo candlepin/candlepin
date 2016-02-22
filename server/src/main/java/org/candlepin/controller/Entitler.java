@@ -286,7 +286,7 @@ public class Entitler {
         Date startDate = consumer.getCreated();
         Date endDate = getEndDate(skuProduct, startDate);
         Pool p = new Pool(consumer.getOwner(), skuProduct, devProducts.getProvided(), 1L, startDate,
-                endDate, "", "", "");
+                endDate, "", "", "", "");
         log.info("Created development pool with SKU " + skuProduct.getId());
         p.setAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
         p.setAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());

@@ -22,6 +22,7 @@ end
 
 data = {}
 @sourceSubId = 0
+@subscriptionNumber = 1000;
 
 filenames.each do |filename|
   puts filename
@@ -245,6 +246,7 @@ def create_mkt_product_and_pools(cp, owner, product)
   end
 
   params[:contract_number] = 0
+  params[:subscription_number] = @subscriptionNumber
   params[:account_number] = '12331131231'
   params[:order_number] = 'order-8675309'
 
@@ -259,6 +261,8 @@ def create_mkt_product_and_pools(cp, owner, product)
   )
 
   params[:contract_number] += 1
+  @subscriptionNumber += 1
+  params[:subscription_number] = @subscriptionNumber
   params[:quantity] = large_quantity
   @sourceSubId += 1
   params[:source_subscription] = { 'id' => "#{@sourceSubId}" }
@@ -273,6 +277,8 @@ def create_mkt_product_and_pools(cp, owner, product)
   params[:quantity] = 15
   params[:start_date] =  params[:end_date] - 10
   params[:end_date] =  params[:start_date] + 365
+  @subscriptionNumber += 1
+  params[:subscription_number] = @subscriptionNumber
   @sourceSubId += 1
   params[:source_subscription] = { 'id' => "#{@sourceSubId}" }
 

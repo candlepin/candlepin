@@ -65,7 +65,7 @@ describe 'Entitlement Certificate V3' do
     @cp.add_content_to_product(@owner['key'], @product.id, @arch_content.id, false)
 
 
-    @pool = create_pool_and_subscription(@owner['key'], @product.id, 10, [], '12345', '6789', 'order1')
+    @pool = create_pool_and_subscription(@owner['key'], @product.id, 10, [], '12345', '6789', 'order1', start_date=nil, end_date=nil, skip_refresh=false, params={}, '9999')
     @pool_30 = create_pool_and_subscription(@owner['key'], @product_30.id, 10, [], '123456', '67890', 'order2')
 
     @user = user_client(@owner, random_string('billy'))
@@ -118,6 +118,7 @@ describe 'Entitlement Certificate V3' do
     json_body['order']['end'].should_not be_nil
     json_body['order']['contract'].should == '12345'
     json_body['order']['account'].should == '6789'
+    json_body['order']['subscription'] == '9999'
     json_body['products'][0]['id'].should == @product.id
     json_body['products'][0]['name'].should == @product.name
     json_body['products'][0]['version'].should == '6.4'
