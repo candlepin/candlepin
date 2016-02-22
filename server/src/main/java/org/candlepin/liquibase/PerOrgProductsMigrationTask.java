@@ -239,8 +239,9 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
 
                 int count = this.executeUpdate(
                     "INSERT INTO cp2_products " +
-                    "  (uuid, created, updated, updated_upstream, multiplier, product_id, name) " +
-                    "SELECT ?, created, updated, ?, multiplier, ?, name " +
+                    "  (uuid, created, updated, updated_upstream, previous_version, multiplier, " +
+                    "  product_id, name, locked) " +
+                    "SELECT ?, created, updated, ?, null, multiplier, ?, name, 0 " +
                     "FROM cp_product p " +
                     "WHERE p.id = ?",
                     productuuid, this.migrationTime, productid, productid
@@ -334,11 +335,12 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
 
                 int count = this.executeUpdate(
                     "INSERT INTO cp2_content " +
-                    "  (uuid, content_id, created, updated, updated_upstream, contenturl, gpgurl, " +
-                    "   label, metadataexpire, name, releasever, requiredtags, type, vendor, arches) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    contentuuid, row[0], row[1], row[2], this.migrationTime, row[3], row[4], row[5],
-                    row[6], row[7], row[8], row[9], row[10], row[11], row[12]
+                    "  (uuid, content_id, created, updated, updated_upstream, previous_version, " +
+                    "  contenturl, gpgurl, label, metadataexpire, name, releasever, requiredtags, " +
+                    "  type, vendor, arches) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    contentuuid, row[0], row[1], row[2], this.migrationTime, null, row[3], row[4],
+                    row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12]
                 );
 
                 if (count < 1) {
