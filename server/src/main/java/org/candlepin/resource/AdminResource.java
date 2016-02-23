@@ -23,7 +23,6 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.User;
 import org.candlepin.model.UserCurator;
-import org.candlepin.pinsetter.tasks.PopulateHostedDBTask;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
 
@@ -116,21 +115,6 @@ public class AdminResource {
     @Path("queues")
     public List<QueueStatus> getQueueStats() {
         return sink.getQueueInfo();
-    }
-
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("pophosteddb")
-    public JobDetail populatedHostedDB() {
-        // TODO: Remove this method once we no longer need the task.
-
-        // Impl note: We don't need to bother doing this
-        if (config.getBoolean(ConfigProperties.STANDALONE)) {
-            log.warn("Ignoring populate DB request in standalone environment");
-            return null;
-        }
-
-        return PopulateHostedDBTask.createAsyncTask();
     }
 
 }
