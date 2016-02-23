@@ -31,7 +31,7 @@
             <column name="name" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="locked" type="int"/>
+            <column name="locked" type="boolean"/>
         </createTable>
     </changeSet>
 

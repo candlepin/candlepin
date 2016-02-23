@@ -24,8 +24,12 @@ import org.hibernate.annotations.LazyCollectionOption;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -77,6 +81,9 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     @Column(name = "product_id")
     @NotNull
     private String id;
+
+    @Column(name = "updated_upstream")
+    private Date updatedUpstream;
 
     @Column(nullable = false)
     @Size(max = 255)
@@ -133,6 +140,10 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     @Column(name = "previous_version")
     private String previousVersion;
 
+    @XmlTransient
+    @Column
+    private Boolean locked;
+
     protected Product() {
     }
 
@@ -177,7 +188,7 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
         this.setUuid(source.getUuid());
         this.setId(source.getId());
         this.setName(source.getName());
-        // this.setOwner(source.getOwner());
+        this.setOwners(source.getOwners());
         this.setMultiplier(source.getMultiplier());
 
         // Copy attributes
@@ -207,6 +218,9 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
 
         this.setCreated(source.getCreated());
         this.setUpdated(source.getUpdated());
+        this.setUpdatedUpstream(source.getUpdatedUpstream());
+        this.setPreviousVersion(source.getPreviousVersion());
+        this.setLocked(source.isLocked());
     }
 
     public static Product createUeberProductForOwner(UniqueIdGenerator idGenerator, Owner owner) {
@@ -256,6 +270,18 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
      */
     public void setId(String productId) {
         this.id = productId;
+    }
+
+    /**
+     * Retrieves the time this product was last updated upstream
+     *
+     */
+    public Date getUpdatedUpstream() {
+        return updatedUpstream;
+    }
+
+    public void setUpdatedUpstream(Date updated) {
+        this.updatedUpstream = updated;
     }
 
     /**
@@ -460,20 +486,31 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     }
 
     @Override
-    public boolean equals(Object anObject) {
-        if (this == anObject) {
+    public boolean equals(Object comp) {
+        if (this == comp) {
             return true;
         }
-        if (!(anObject instanceof Product)) {
-            return false;
+
+        if (comp instanceof Product) {
+            // TODO:
+            // Maybe it would be better to check the UUID field and only check the following if
+            // both products have null UUIDs? By not doing this check, we run the risk of two
+            // different products being considered equal if they happen to have the same values at
+            // the time they're checked.
+
+            Product that = (Product) comp;
+
+            return new EqualsBuilder()
+                .append(this.id, that.id)
+                .append(this.name, that.name)
+                .append(this.multiplier, that.multiplier)
+                .append(this.attributes, that.attributes)
+                .append(this.productContent, that.productContent)
+                .append(this.dependentProductIds, that.dependentProductIds)
+                .isEquals();
         }
 
-        Product another = (Product) anObject;
-
-        // TODO: Maybe checking the UUID would be better here...?
-        return (this.getUuid() != null ? this.getUuid().equals(another.getUuid()) :
-            another.getUuid() == null) && getId().equals(another.getId()) &&
-            name.equals(another.getName());
+        return false;
     }
 
     @Override
@@ -483,10 +520,15 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
 
     @Override
     public int hashCode() {
-        if (id != null) {
-            return id.hashCode() * 31;
-        }
-        return 31;
+        // This must always be a subset of equals
+        return new HashCodeBuilder(37, 7)
+            .append(this.id)
+            .append(this.name)
+            .append(this.multiplier)
+            .append(this.attributes)
+            .append(this.productContent)
+            .append(this.dependentProductIds)
+            .toHashCode();
     }
 
     /**
@@ -692,4 +734,17 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     public String getPreviousVersion() {
         return this.previousVersion;
     }
+
+    @XmlTransient
+    @JsonIgnore
+    public Product setLocked(boolean locked) {
+        this.locked = locked;
+        return this;
+    }
+
+    @XmlTransient
+    public boolean isLocked() {
+        return this.locked != null && this.locked;
+    }
+
 }

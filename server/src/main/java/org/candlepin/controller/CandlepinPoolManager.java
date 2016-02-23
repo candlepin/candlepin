@@ -441,7 +441,7 @@ public class CandlepinPoolManager implements PoolManager {
             // Check that the product hasn't changed if we've already seen it.
             Product existing = productMap.get(product.getId());
 
-            if (existing != null && !this.hasProductChanged(existing, product)) {
+            if (existing != null && existing.equals(product)) {
                 // PER-ORG PRODUCT VERSIONING TODO: Fix this error message.
                 log.warn(
                     "Multiple versions of the same product found on a single subscription: {}",
@@ -477,6 +477,7 @@ public class CandlepinPoolManager implements PoolManager {
         Set<Product> changedProducts = Util.newSet();
 
         HashMap<String, Content> cmap = new HashMap<String, Content>();
+        List<Owner> owners = Arrays.asList(owner);
 
         log.debug("Syncing {} incoming products.", allProducts.size());
         for (Product incoming : allProducts) {
@@ -491,48 +492,15 @@ public class CandlepinPoolManager implements PoolManager {
 
                 prodCurator.create(incoming);
             }
-            // TODO: Eventually change this to use Product.equals so we're not maintaining two
-            // ways of checking for equality
-            else if (hasProductChanged(existing, incoming)) {
+            else if (!existing.equals(incoming)) {
                 log.info("Product changed for org {}: {}", owner.getKey(), incoming.getId());
 
-                prodCurator.createOrUpdate(incoming);
+                incoming = prodCurator.createOrUpdate(incoming, owners);
                 changedProducts.add(incoming);
             }
         }
 
         return changedProducts;
-    }
-
-    // TODO: move to comparator? Perhaps updating Product.equals and using that would be better?
-    protected final boolean hasProductChanged(Product existingProd, Product importedProd) {
-        // trying to go in order from least to most work.
-        if (!existingProd.getName().equals(importedProd.getName())) {
-            return true;
-        }
-
-        if (!existingProd.getMultiplier().equals(importedProd.getMultiplier())) {
-            return true;
-        }
-
-        if (existingProd.getAttributes().size() != importedProd.getAttributes().size()) {
-            return true;
-        }
-        if (Sets.intersection(existingProd.getAttributes(),
-            importedProd.getAttributes()).size() != existingProd.getAttributes().size()) {
-            return true;
-        }
-
-        if (existingProd.getProductContent().size() != importedProd.getProductContent().size()) {
-            return true;
-        }
-        if (Sets.intersection(new HashSet<ProductContent>(existingProd.getProductContent()),
-                new HashSet<ProductContent>(importedProd.getProductContent())).size() !=
-                existingProd.getProductContent().size()) {
-            return true;
-        }
-
-        return false;
     }
 
     @Transactional

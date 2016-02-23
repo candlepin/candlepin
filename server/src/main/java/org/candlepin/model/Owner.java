@@ -34,6 +34,7 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -110,27 +111,30 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     @Size(max = 32)
     private String logLevel;
 
-    @OneToMany
-    @Cascade({ org.hibernate.annotations.CascadeType.ALL })
-    @JoinTable(
-        name = "cp2_owner_products",
-        joinColumns = {@JoinColumn(name = "owner_id", insertable = true, updatable = true)},
-        inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
-    )
-    @LazyCollection(LazyCollectionOption.FALSE)
-    @XmlTransient
-    private Set<Product> products;
+    // TODO:
+    // Figure out why the presence of these causes massive slowdowns
 
-    @OneToMany
-    @Cascade({ org.hibernate.annotations.CascadeType.ALL })
-    @JoinTable(
-        name = "cp2_owner_content",
-        joinColumns = {@JoinColumn(name = "owner_id", insertable = true, updatable = true)},
-        inverseJoinColumns = {@JoinColumn(name = "content_uuid")}
-    )
-    @LazyCollection(LazyCollectionOption.FALSE)
-    @XmlTransient
-    private Set<Content> content;
+    // @OneToMany(fetch = FetchType.LAZY)
+    // @Cascade({ org.hibernate.annotations.CascadeType.ALL })
+    // @JoinTable(
+    //     name = "cp2_owner_products",
+    //     joinColumns = {@JoinColumn(name = "owner_id", insertable = true, updatable = true)},
+    //     inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
+    // )
+    // @LazyCollection(LazyCollectionOption.FALSE)
+    // @XmlTransient
+    // private Set<Product> products;
+
+    // @OneToMany(fetch = FetchType.LAZY)
+    // @Cascade({ org.hibernate.annotations.CascadeType.ALL })
+    // @JoinTable(
+    //     name = "cp2_owner_content",
+    //     joinColumns = {@JoinColumn(name = "owner_id", insertable = true, updatable = true)},
+    //     inverseJoinColumns = {@JoinColumn(name = "content_uuid")}
+    // )
+    // @LazyCollection(LazyCollectionOption.FALSE)
+    // @XmlTransient
+    // private Set<Content> content;
 
     /**
      * Default constructor
@@ -423,125 +427,125 @@ public class Owner extends AbstractHibernateObject implements Serializable,
         return getDisplayName();
     }
 
-    /**
-     * Retrieves the products with which this owner is associated. If this owner is not associated
-     * with any products, this method returns an empty set.
-     * <p/>
-     * Note that changes made to the set returned by this method will be reflected by this object
-     * and its backing data store.
-     *
-     * @return
-     *  The set of products with which this owner is associated
-     */
-    @XmlTransient
-    public Set<Product> getProducts() {
-        return this.products;
-    }
+    // /**
+    //  * Retrieves the products with which this owner is associated. If this owner is not associated
+    //  * with any products, this method returns an empty set.
+    //  * <p/>
+    //  * Note that changes made to the set returned by this method will be reflected by this object
+    //  * and its backing data store.
+    //  *
+    //  * @return
+    //  *  The set of products with which this owner is associated
+    //  */
+    // @XmlTransient
+    // public Set<Product> getProducts() {
+    //     return this.products;
+    // }
 
-    /**
-     * Associates this owner with the specified product. If the given product is already associated
-     * with this owner, the request is silently ignored.
-     *
-     * @param product
-     *  An product to be associated with this owner
-     *
-     * @return
-     *  True if this owner was successfully associated with the given product; false otherwise
-     */
-    public boolean addProduct(Product product) {
-        return product != null ? this.products.add(product) : false;
-    }
+    // /**
+    //  * Associates this owner with the specified product. If the given product is already associated
+    //  * with this owner, the request is silently ignored.
+    //  *
+    //  * @param product
+    //  *  An product to be associated with this owner
+    //  *
+    //  * @return
+    //  *  True if this owner was successfully associated with the given product; false otherwise
+    //  */
+    // public boolean addProduct(Product product) {
+    //     return product != null ? this.products.add(product) : false;
+    // }
 
-    /**
-     * Disassociates this owner with the specified product. If the given product is not associated
-     * with this owner, the request is silently ignored.
-     *
-     * @param product
-     *  The product to disassociate from this owner
-     *
-     * @return
-     *  True if the owner was disassociated successfully; false otherwise
-     */
-    public boolean removeProduct(Product product) {
-        return product != null ? this.products.remove(product) : false;
-    }
+    // /**
+    //  * Disassociates this owner with the specified product. If the given product is not associated
+    //  * with this owner, the request is silently ignored.
+    //  *
+    //  * @param product
+    //  *  The product to disassociate from this owner
+    //  *
+    //  * @return
+    //  *  True if the owner was disassociated successfully; false otherwise
+    //  */
+    // public boolean removeProduct(Product product) {
+    //     return product != null ? this.products.remove(product) : false;
+    // }
 
-    /**
-     * Sets the products with which this owner is associated.
-     *
-     * @param products
-     *  A collection of products to be associated with this owner
-     *
-     * @return
-     *  A reference to this owner
-     */
-    public Owner setProducts(Collection<Product> products) {
-        this.products.clear();
-        if (products != null) {
-            this.products.addAll(products);
-        }
+    // /**
+    //  * Sets the products with which this owner is associated.
+    //  *
+    //  * @param products
+    //  *  A collection of products to be associated with this owner
+    //  *
+    //  * @return
+    //  *  A reference to this owner
+    //  */
+    // public Owner setProducts(Collection<Product> products) {
+    //     this.products.clear();
+    //     if (products != null) {
+    //         this.products.addAll(products);
+    //     }
 
-        return this;
-    }
+    //     return this;
+    // }
 
-    /**
-     * Retrieves the content with which this owner is associated. If this owner is not associated
-     * with any content, this method returns an empty set.
-     * <p/>
-     * Note that changes made to the set returned by this method will be reflected by this object
-     * and its backing data store.
-     *
-     * @return
-     *  The set of content with which this owner is associated
-     */
-    @XmlTransient
-    public Set<Content> getContent() {
-        return this.content;
-    }
+    // /**
+    //  * Retrieves the content with which this owner is associated. If this owner is not associated
+    //  * with any content, this method returns an empty set.
+    //  * <p/>
+    //  * Note that changes made to the set returned by this method will be reflected by this object
+    //  * and its backing data store.
+    //  *
+    //  * @return
+    //  *  The set of content with which this owner is associated
+    //  */
+    // @XmlTransient
+    // public Set<Content> getContent() {
+    //     return this.content;
+    // }
 
-    /**
-     * Associates this owner with the specified content. If the given content is already associated
-     * with this owner, the request is silently ignored.
-     *
-     * @param content
-     *  An content to be associated with this owner
-     *
-     * @return
-     *  True if this owner was successfully associated with the given content; false otherwise
-     */
-    public boolean addContent(Content content) {
-        return content != null ? this.content.add(content) : false;
-    }
+    // /**
+    //  * Associates this owner with the specified content. If the given content is already associated
+    //  * with this owner, the request is silently ignored.
+    //  *
+    //  * @param content
+    //  *  An content to be associated with this owner
+    //  *
+    //  * @return
+    //  *  True if this owner was successfully associated with the given content; false otherwise
+    //  */
+    // public boolean addContent(Content content) {
+    //     return content != null ? this.content.add(content) : false;
+    // }
 
-    /**
-     * Disassociates this owner with the specified content. If the given content is not associated
-     * with this owner, the request is silently ignored.
-     *
-     * @param content
-     *  The content to disassociate from this owner
-     *
-     * @return
-     *  True if the owner was disassociated successfully; false otherwise
-     */
-    public boolean removeContent(Content content) {
-        return content != null ? this.content.remove(content) : false;
-    }
+    // /**
+    //  * Disassociates this owner with the specified content. If the given content is not associated
+    //  * with this owner, the request is silently ignored.
+    //  *
+    //  * @param content
+    //  *  The content to disassociate from this owner
+    //  *
+    //  * @return
+    //  *  True if the owner was disassociated successfully; false otherwise
+    //  */
+    // public boolean removeContent(Content content) {
+    //     return content != null ? this.content.remove(content) : false;
+    // }
 
-    /**
-     * Sets the content with which this owner is associated.
-     *
-     * @param content
-     *  A collection of content to be associated with this owner
-     *
-     * @return
-     *  A reference to this owner
-     */
-    public Owner setContent(Collection<Content> content) {
-        this.content.clear();
-        if (content != null) {
-            this.content.addAll(content);
-        }
+    // /**
+    //  * Sets the content with which this owner is associated.
+    //  *
+    //  * @param content
+    //  *  A collection of content to be associated with this owner
+    //  *
+    //  * @return
+    //  *  A reference to this owner
+    //  */
+    // public Owner setContent(Collection<Content> content) {
+    //     this.content.clear();
+    //     if (content != null) {
+    //         this.content.addAll(content);
+    //     }
 
-        return this;
-    }
+    //     return this;
+    // }
 }

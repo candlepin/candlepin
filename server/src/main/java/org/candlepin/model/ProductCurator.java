@@ -180,64 +180,74 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         );
     }
 
+
     /**
-     * Create the given product if it does not already exist, otherwise update
-     * existing product.
+     * Updates the specified product instance, creating a new version of the product as necessary.
+     * The product instance returned by this method is not guaranteed to be the same instance passed
+     * in. As such, once this method has been called, callers should only use the instance output by
+     * this method.
      *
-     * @param p Product to create or update.
+     * @param entity
+     *  The product entity to update
+     *
+     * @param owners
+     *  The owners for which to update the product
      *
      * @return
-     *  The updated or created Product instance
+     *  the updated product entity, or a new product entity
      */
-    public Product createOrUpdate(Product p) {
-        // TODO: Should we also verify that the UUID isn't in use?
-        log.debug("Creating or updating product: {}", p);
+    public Product createOrUpdate(Product entity, Collection<Owner> owners) {
+        // TODO: Should we also verify that the UUID is either null or not in use?
+        log.debug("Creating or updating product: {}", entity);
 
-        Product existing = this.lookupByUuid(p.getUuid());
-        // Product existing = this.lookupById(p.getOwner(), p.getId());
+        if (entity == null || entity.getUuid() == null) {
+            throw new IllegalArgumentException("entity is null or is not a managed entity");
+        }
+
+        Product existing = this.lookupByUuid(entity.getUuid());
 
         if (existing == null) {
-            // log.debug("Could not find product by owner/id: {}, {}", p.getOwner(), p.getId());
-            create(p);
-            return p;
+            return this.create(entity);
         }
 
-        // log.debug("Updating product by owner/id: {}, {}", p.getOwner(), p.getId());
+        // TODO:
+        // Check if the product is locked. If so, throw an exception or something
 
-        copy(p, existing);
-        return merge(existing);
-    }
+        // TODO:
+        // Check for newer versions of the same product. We want to try to dedupe as much data as we
+        // can, and if we have a newer version of the product (which matches the version provided by
+        // the caller), we can just point the given orgs to the new product instead of giving them
+        // their own version.
 
-    public void copy(Product src, Product dest) {
-        if (src.getId() == null ? dest.getId() != null : !src.getId().equals(dest.getId())) {
-            throw new RuntimeException(i18n.tr(
-                "Products do not have matching IDs: {0} != {1}", src.getId(), dest.getId()
-            ));
-        }
+        // Make sure we actually have something to update.
+        if (!existing.equals(entity)) {
+            // TODO: Maybe we should avoid versioning in some situations (like when only one owner
+            // is referencing the product)
 
-        dest.setName(src.getName());
-        dest.setMultiplier(src.getMultiplier());
+            Product copy = (Product) entity.clone();
 
-        if (!dest.getAttributes().equals(src.getAttributes())) {
-            dest.getAttributes().clear();
-            for (ProductAttribute attr : src.getAttributes()) {
-                ProductAttribute newAttr = new ProductAttribute(attr.getName(), attr.getValue());
-                dest.addAttribute(newAttr);
+            // Clear the UUID so we get a new one on persist.
+            copy.setUuid(null);
+            copy.setPreviousVersion(existing);
+
+            // Update owner references on both...
+            copy.setOwners(owners);
+            for (Owner owner : owners) {
+                existing.removeOwner(owner);
             }
+
+            // TODO:
+            // Update all other things that point at the old product for the orgs. This includes
+            // things like activation keys, product certs, dependent products (??), provided
+            // products, etc.
+
+            // We won't be touching the updated upstream value here, as it's kinda messy.
+            this.merge(existing);
+            this.merge(copy);
+            return copy;
         }
 
-        if (!dest.getProductContent().equals(src.getProductContent())) {
-            dest.getProductContent().clear();
-            for (ProductContent pc : src.getProductContent()) {
-                dest.addProductContent(new ProductContent(dest, pc.getContent(), pc.getEnabled()));
-            }
-        }
-
-        if (!dest.getDependentProductIds().equals(src.getDependentProductIds())) {
-            dest.getDependentProductIds().clear();
-            dest.setDependentProductIds(src.getDependentProductIds());
-        }
-
+        return entity;
     }
 
     @Transactional

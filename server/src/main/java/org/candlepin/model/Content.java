@@ -349,6 +349,7 @@ public class Content extends AbstractHibernateObject {
         if (other instanceof Content) {
             Content that = (Content) other;
             return new EqualsBuilder()
+                .append(this.id, that.id)
                 .append(this.contentUrl, that.contentUrl)
                 .append(this.gpgUrl, that.gpgUrl)
                 .append(this.label, that.label)
@@ -371,6 +372,7 @@ public class Content extends AbstractHibernateObject {
     public int hashCode() {
         // This must always be a subset of equals
         return new HashCodeBuilder(37, 7)
+            .append(this.id)
             .append(this.contentUrl)
             .append(this.gpgUrl)
             .append(this.label)

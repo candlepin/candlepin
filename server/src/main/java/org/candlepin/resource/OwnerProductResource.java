@@ -286,6 +286,14 @@ public class OwnerProductResource {
 
         Product toUpdate = this.getProduct(ownerKey, productId);
 
+        // TODO:
+        // We may not always want to update here.
+
+
+
+
+
+
         if (performProductUpdates(toUpdate, product)) {
             this.productCurator.merge(toUpdate);
         }

@@ -436,7 +436,7 @@ public class EntitlerTest {
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
         when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
-        when(productCurator.createOrUpdate(eq(p))).thenReturn(p);
+        when(productCurator.createOrUpdate(eq(p)), any(List.class)).thenReturn(p);
         when(pm.createPool(any(Pool.class))).thenReturn(devPool);
         when(devPool.getId()).thenReturn("test_pool_id");
 
@@ -559,9 +559,9 @@ public class EntitlerTest {
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
         when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
-        when(productCurator.createOrUpdate(eq(p1))).thenReturn(p1);
-        when(productCurator.createOrUpdate(eq(p2))).thenReturn(p2);
-        when(productCurator.createOrUpdate(eq(p3))).thenReturn(p3);
+        when(productCurator.createOrUpdate(eq(p1)), any(List.class)).thenReturn(p1);
+        when(productCurator.createOrUpdate(eq(p2)), any(List.class)).thenReturn(p2);
+        when(productCurator.createOrUpdate(eq(p3)), any(List.class)).thenReturn(p3);
 
         Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
         Calendar cal = Calendar.getInstance();
@@ -585,7 +585,7 @@ public class EntitlerTest {
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p1.getId());
         when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
-        when(productCurator.createOrUpdate(eq(p1))).thenReturn(p1);
+        when(productCurator.createOrUpdate(eq(p1)), any(List.class)).thenReturn(p1);
 
         Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
         assertEquals(entitler.DEFAULT_DEV_SLA, created.getProduct().getAttributeValue("support_level"));
@@ -608,8 +608,8 @@ public class EntitlerTest {
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
 
         when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
-        when(productCurator.createOrUpdate(eq(p1))).thenReturn(p1);
-        when(productCurator.createOrUpdate(eq(p2))).thenReturn(p2);
+        when(productCurator.createOrUpdate(eq(p1)), any(List.class)).thenReturn(p1);
+        when(productCurator.createOrUpdate(eq(p2)), any(List.class)).thenReturn(p2);
 
         Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
 

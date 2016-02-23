@@ -315,14 +315,17 @@ public class Entitler {
         }
 
         // Update the owner references on the retrieved Product and content.
+        List<Owner> owners = Arrays.asList(devConsumer.getOwner());
+
         for (Product prod : devProducts.getAll()) {
-            // PER-ORG PRODUCT VERSIONING TODO:
-            // Check if adding the owner here is correct. This may be wrong.
-            prod.addOwner(devConsumer.getOwner());
             for (ProductContent pc : prod.getProductContent()) {
                 pc.getContent().addOwner(devConsumer.getOwner());
             }
-            productCurator.createOrUpdate(prod);
+
+            // PER-ORG PRODUCTS TODO:
+            // This is likely only half correct. We'll probably need to go back through and replace
+            // the instances in the collection with the new ones from this method.
+            productCurator.createOrUpdate(prod, owners);
         }
     }
 
