@@ -20,9 +20,6 @@
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
             <column name="updated_upstream" type="${timestamp.type}"/>
-            <column name="previous_version" type="varchar(32)">
-                <constraints foreignKeyName="cp2_products_fk1" references="cp2_products(uuid)"/>
-            </column>
             <column name="multiplier" type="int"/>
             <column name="product_id" type="varchar(32)"
                 remarks="RH product ID; not to be confused with the uuid">
@@ -31,7 +28,7 @@
             <column name="name" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="locked" type="boolean"/>
+            <column name="locked" type="smallint"/>
         </createTable>
     </changeSet>
 
@@ -103,9 +100,6 @@
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
             <column name="updated_upstream" type="${timestamp.type}"/>
-            <column name="previous_version" type="varchar(32)">
-                <constraints foreignKeyName="cp2_content_fk1" references="cp2_content(uuid)"/>
-            </column>
             <column name="contenturl" type="varchar(255)"/>
             <column name="gpgurl" type="varchar(255)"/>
             <column name="label" type="varchar(255)">

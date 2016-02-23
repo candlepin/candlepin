@@ -196,12 +196,12 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @return
      *  the updated product entity, or a new product entity
      */
-    public Product createOrUpdate(Product entity, Collection<Owner> owners) {
+    public Product persist(Product entity, Collection<Owner> owners) {
         // TODO: Should we also verify that the UUID is either null or not in use?
         log.debug("Creating or updating product: {}", entity);
 
-        if (entity == null || entity.getUuid() == null) {
-            throw new IllegalArgumentException("entity is null or is not a managed entity");
+        if (entity == null) {
+            throw new NullPointerException("entity");
         }
 
         Product existing = this.lookupByUuid(entity.getUuid());
@@ -228,7 +228,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
             // Clear the UUID so we get a new one on persist.
             copy.setUuid(null);
-            copy.setPreviousVersion(existing);
 
             // Update owner references on both...
             copy.setOwners(owners);
@@ -282,10 +281,10 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             attr.setProduct(entity);
             validateAttributeValue(attr);
         }
+
         /*
          * Ensure that no circular reference exists
          */
-
         log.debug("Merging product entity: {}", entity);
 
         return super.merge(entity);

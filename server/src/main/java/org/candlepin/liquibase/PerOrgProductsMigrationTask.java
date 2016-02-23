@@ -22,9 +22,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 
 
@@ -175,7 +175,7 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
     protected void migrateProductData(String orgid) throws DatabaseException, SQLException {
         this.logger.info("  Migrating product data...");
 
-        List<String> pidCache = new LinkedList<String>();
+        Set<String> pidCache = new HashSet<String>();
         ResultSet productids = this.executeQuery(
             "SELECT p.product_id_old AS product_id " +
             "  FROM cp_pool p " +
@@ -224,40 +224,33 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
             String productid = productids.getString(1);
             String productuuid = this.migratedProducts.get(productid);
 
-            if (productuuid != null) {
-                // TODO: This likely isn't a warn condition anymore
-                this.logger.warn(String.format(
-                    "Skipping migration for already-migrated product: %s", productid
-                ));
-
-                continue;
-            }
-            else {
-                this.logger.info(String.format("    Migrating product: %s", productid));
+            if (productuuid == null) {
+                this.logger.info("    Migrating product: %s", productid);
 
                 productuuid = this.generateUUID();
 
                 int count = this.executeUpdate(
                     "INSERT INTO cp2_products " +
-                    "  (uuid, created, updated, updated_upstream, previous_version, multiplier, " +
-                    "  product_id, name, locked) " +
-                    "SELECT ?, created, updated, ?, null, multiplier, ?, name, 0 " +
+                    "  (uuid, created, updated, updated_upstream, multiplier, product_id, name, " +
+                    "  locked) " +
+                    "SELECT ?, created, updated, ?, multiplier, ?, name, 0 " +
                     "FROM cp_product p " +
                     "WHERE p.id = ?",
                     productuuid, this.migrationTime, productid, productid
                 );
 
                 if (count < 1) {
-                    this.logger.error(String.format(
+                    this.logger.error(
                         "    Product referenced by org which does not exist: %s", productid
-                    ));
+                    );
 
                     continue;
                 }
                 else if (count > 1) {
-                    this.logger.error(String.format(
+                    // This should never happen
+                    this.logger.error(
                         "    Product migration query resulted in multiple products for id: %s", productid
-                    ));
+                    );
                 }
 
                 // The rest of the product information will be migrated in one large batch operation
@@ -283,7 +276,8 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
                 this.setParameter(statement, ++index, pid);
             }
 
-            statement.executeUpdate();
+            int count = statement.executeUpdate();
+            this.logger.info("  Assigned %d products to org", count);
         }
     }
 
@@ -294,10 +288,9 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
     protected void migrateContentData(String orgid)
         throws DatabaseException, SQLException {
 
-        // Impl note: This query is only safe because in the 09x era, content and product IDs are
-        // expected to be unique.
+        this.logger.info("  Migrating content data...");
 
-        List<String> cidCache = new LinkedList<String>();
+        Set<String> cidCache = new HashSet<String>();
         ResultSet contentids = this.executeQuery(
             "SELECT c.id, c.created, c.updated, c.contenturl, c.gpgurl, c.label, " +
             "  c.metadataexpire, c.name, c.releasever, c.requiredtags, c.type, c.vendor, c.arches " +
@@ -313,16 +306,8 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
             String contentid = contentids.getString(1);
             String contentuuid = this.migratedContent.get(contentid);
 
-            if (contentuuid != null) {
-                // TODO: This likely isn't a warn condition anymore
-                this.logger.warn(String.format(
-                    "Skipping migration for already-migrated content: %s", contentid
-                ));
-
-                continue;
-            }
-            else {
-                this.logger.info(String.format("    Migrating content: %s", contentid));
+            if (contentuuid == null) {
+                this.logger.info("    Migrating content: %s", contentid);
 
                 contentuuid = this.generateUUID();
 
@@ -335,25 +320,25 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
 
                 int count = this.executeUpdate(
                     "INSERT INTO cp2_content " +
-                    "  (uuid, content_id, created, updated, updated_upstream, previous_version, " +
-                    "  contenturl, gpgurl, label, metadataexpire, name, releasever, requiredtags, " +
-                    "  type, vendor, arches) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    contentuuid, row[0], row[1], row[2], this.migrationTime, null, row[3], row[4],
-                    row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12]
+                    "  (uuid, content_id, created, updated, updated_upstream, contenturl, gpgurl, " +
+                    "  label, metadataexpire, name, releasever, requiredtags, type, vendor, arches) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    contentuuid, row[0], row[1], row[2], this.migrationTime, row[3], row[4], row[5],
+                    row[6], row[7], row[8], row[9], row[10], row[11], row[12]
                 );
 
                 if (count < 1) {
-                    this.logger.error(String.format(
+                    this.logger.error(
                         "    Content referenced by product which does not exist: %s", contentid
-                    ));
+                    );
 
                     continue;
                 }
                 else if (count > 1) {
-                    this.logger.error(String.format(
+                    // This should never happen
+                    this.logger.error(
                         "    Content migration query resulted in multiple contents for id: %s", contentid
-                    ));
+                    );
                 }
 
                 // The rest of the content information will be migrated in one large batch operation
@@ -379,7 +364,8 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
                 this.setParameter(statement, ++index, cid);
             }
 
-            statement.executeUpdate();
+            int count = statement.executeUpdate();
+            this.logger.info("  Assigned %d contents to org", count);
         }
     }
 

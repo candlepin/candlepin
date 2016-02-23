@@ -284,6 +284,30 @@ public class OwnerProductResource {
         @PathParam("product_id") String productId,
         Product product) {
 
+        // Steps we need to do here:
+        // 1. Resolve the product provided by the user. This is a multi-step process consisting of:
+        //    A. Lookup the product using the owner/pid combo. If a matching product does not exist,
+        //      throw a not found exception
+        //    B. Update the user's disconnected product instance with the unchanged info from the
+        //      actual product. UUID, RHID, etc. should always be overwritten with known good
+        //      values, but the others should only be updated if the value from the user's instance
+        //      is null.
+        // 2. Call the update part of the create or update in the product curator. This should
+        //    trigger a new version creation, or merging into an existing instance as necessary.
+
+
+
+        // Product curator needs four methods:
+        //  - createOrUpdate (legacy method, really)
+        //  - update
+        //  - directUpdate (name subject to change)
+        //
+        //
+
+
+
+
+
         Product toUpdate = this.getProduct(ownerKey, productId);
 
         // TODO:

@@ -133,16 +133,9 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     @LazyCollection(LazyCollectionOption.FALSE)
     private Set<String> dependentProductIds; // Should these be product references?
 
-    /**
-     * The UUID of the previous version of this product (if any)
-     */
-    @XmlTransient
-    @Column(name = "previous_version")
-    private String previousVersion;
-
     @XmlTransient
     @Column
-    private Boolean locked;
+    private Integer locked;
 
     protected Product() {
     }
@@ -219,7 +212,6 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
         this.setCreated(source.getCreated());
         this.setUpdated(source.getUpdated());
         this.setUpdatedUpstream(source.getUpdatedUpstream());
-        this.setPreviousVersion(source.getPreviousVersion());
         this.setLocked(source.isLocked());
     }
 
@@ -689,62 +681,16 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
         return skuEnabled;
     }
 
-    /**
-     * Sets the previous version of this product to specified product UUID. If the given product
-     * UUID is null, the previous version will be cleared.
-     *
-     * @param product
-     *  The product to set as the previous version of this product
-     *
-     * @return
-     *  this product instance
-     */
-    @JsonIgnore
-    public Product setPreviousVersion(String productUuid) {
-        this.previousVersion = productUuid;
-        return this;
-    }
-
-    /**
-     * Sets the previous version of this product to UUID of the specified product. If the given
-     * product is null, the previous version will be cleared.
-     *
-     * @param product
-     *  The product to set as the previous version of this product, or null to clear the previous
-     *  version
-     *
-     * @return
-     *  this product instance
-     */
-    @JsonIgnore
-    public Product setPreviousVersion(Product product) {
-        return this.setPreviousVersion(product != null ? product.getUuid() : null);
-    }
-
-    /**
-     * Retrieves the UUID of the previous version of this product. If there is no known previous
-     * version, this method returns null.
-     *
-     * @return
-     *  the UUID of the previous version of this product, or null if the previous version is not
-     *  known
-     */
-    @XmlTransient
-    @JsonIgnore
-    public String getPreviousVersion() {
-        return this.previousVersion;
-    }
-
     @XmlTransient
     @JsonIgnore
     public Product setLocked(boolean locked) {
-        this.locked = locked;
+        this.locked = locked ? 1 : 0;
         return this;
     }
 
     @XmlTransient
     public boolean isLocked() {
-        return this.locked != null && this.locked;
+        return this.locked != null && this.locked != 0;
     }
 
 }
