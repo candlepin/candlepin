@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.23.1
+Version: 0.9.23.2
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -390,6 +390,16 @@ fi
 
 
 %changelog
+* Tue Feb 23 2016 Michael Stead <mstead@redhat.com> 0.9.23.2-1
+- Verify locking same object twice is okay (vrjain@redhat.com)
+- Lock pools during batch revoke (vrjain@redhat.com)
+- Introducing batching to CRL job toworkaround Postgres IN clause limit
+  (fnguyen@redhat.com)
+- Implementation of revokeEntitlements(List) to improve speed of Manifest
+  Import in Standlone Mode. (fnguyen@redhat.com)
+- Ignoring SSL unit test due to old cert (fnguyen@redhat.com)
+- Fixing unpredictable unit test (fnguyen@redhat.com)
+
 * Wed Oct 29 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.23.1-1
 - Workaround EL6 build failures. (dgoodwin@redhat.com)
 
