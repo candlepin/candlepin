@@ -31,6 +31,8 @@ import java.util.List;
  */
 public class CertificateSerialCurator extends AbstractHibernateCurator<CertificateSerial> {
 
+    private static int inClauseLimit = 1000;
+
     @SuppressWarnings("rawtypes")
     private static final Class[] CERTCLASSES = {IdentityCertificate.class,
         EntitlementCertificate.class, SubscriptionsCertificate.class, CdnCertificate.class};
@@ -77,12 +79,24 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
         if (ids.isEmpty()) {
             return 0;
         }
+
         String hql = "DELETE from CertificateSerial " +
             "WHERE id IN (:expiredids)";
-        return this.currentSession()
-            .createQuery(hql)
-            .setParameterList("expiredids", ids)
-            .executeUpdate();
+
+        int batchStart = 0;
+        int batchEnd = inClauseLimit;
+        int removed = 0;
+        while (batchStart < ids.size()) {
+            removed += this.currentSession()
+                    .createQuery(hql)
+                    .setParameterList("expiredids",
+                            ids.subList(batchStart, Math.min(batchEnd, ids.size())))
+                    .executeUpdate();
+            batchStart += inClauseLimit;
+            batchEnd += inClauseLimit;
+        }
+
+        return removed;
     }
 
     @SuppressWarnings("unchecked")

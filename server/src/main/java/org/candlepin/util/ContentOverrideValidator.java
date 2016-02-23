@@ -15,10 +15,10 @@
 package org.candlepin.util;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.candlepin.exceptions.BadRequestException;
@@ -48,7 +48,7 @@ public class ContentOverrideValidator {
     }
 
     public void validate(Collection<? extends ContentOverride> overrides) {
-        Set<String> invalidOverrides = new HashSet<String>();
+        Set<String> invalidOverrides = new TreeSet<String>();
         for (ContentOverride override : overrides) {
             if (!overrideRules.canOverrideForConsumer(override.getName())) {
                 invalidOverrides.add(override.getName());

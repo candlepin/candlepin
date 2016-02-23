@@ -181,9 +181,10 @@ public class TestUtil {
 
         Pool pool = new Pool(owner, product.getId(), product.getName(),
             providedProducts, Long.valueOf(quantity), TestUtil.createDate(2009,
-                11, 30), TestUtil.createDate(2015, 11, 30), "SUB234598S",
+                11, 30), TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR), 11, 30), "SUB234598S",
             "ACC123", "ORD222");
         pool.setSourceSubscription(new SourceSubscription("SUB234598S", "master"));
+
 
         // Simulate copying product attributes to the pool.
         if (product != null) {

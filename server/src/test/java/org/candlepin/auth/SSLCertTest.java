@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -71,6 +72,7 @@ public class SSLCertTest {
 
     @SuppressWarnings("serial")
     @Test
+    @Ignore
     public void validCertificateShouldPassVerification() throws Exception {
         CertPathValidator cpv = CertPathValidator.getInstance("PKIX");
         CertPath cp = certificateFactory
