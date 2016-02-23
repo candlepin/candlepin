@@ -46,6 +46,9 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -582,6 +585,36 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         // Passing the derived entitlement should not see any oversubscribed pool:
         assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(
             subid, derivedEnt).size());
+    }
+
+    @Test
+    public void testRentrantLock() {
+        Pool pool1 = createPoolAndSub(owner, product, -1L, TestUtil.createDate(2050, 3, 2),
+                TestUtil.createDate(2055, 3, 2));
+        Pool pool2 = createPoolAndSub(owner, product, -1L, TestUtil.createDate(2050, 3, 2),
+                TestUtil.createDate(2055, 3, 2));
+        Pool pool3 = createPoolAndSub(owner, product, -1L, TestUtil.createDate(2050, 3, 2),
+                TestUtil.createDate(2055, 3, 2));
+        pool1 = poolCurator.create(pool1);
+        pool2 = poolCurator.create(pool2);
+        pool3 = poolCurator.create(pool3);
+        poolCurator.create(pool3);
+        List<Pool> pools = new ArrayList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+        pools.add(pool3);
+        pools.add(pool1);
+        pools.add(pool2);
+        pools.add(pool3);
+        pools.add(pool1);
+        pools.add(pool2);
+        pools.add(pool3);
+        Session session = (Session) entityManager().getDelegate();
+        Transaction t = session.beginTransaction();
+        poolCurator.lock(pools);
+        session.flush();
+        t.commit();
+        session.close();
     }
 
     @Test

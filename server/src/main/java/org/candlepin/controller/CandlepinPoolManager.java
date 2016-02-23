@@ -1300,11 +1300,15 @@ public class CandlepinPoolManager implements PoolManager {
         entsToRevoke =  new ArrayList<Entitlement>(entsToRevoke);
 
         List<Pool> poolsToDelete = poolCurator.listBySourceEntitlements(entsToRevoke);
+        List<Pool> poolsToLock = new ArrayList<Pool>(poolsToDelete);
 
         for (Pool pool : poolsToDelete) {
             entsToRevoke.addAll(pool.getEntitlements());
         }
-
+        for (Entitlement ent : entsToRevoke) {
+            poolsToLock.add(ent.getPool());
+        }
+        poolCurator.lock(poolsToLock);
         for (Entitlement ent : entsToRevoke) {
             //We need to trigger lazy load of provided products
             //to have access to those products later in this method.
