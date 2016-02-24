@@ -1949,26 +1949,6 @@ module Candlepin
         end.to raise_error(ArgumentError)
       end
 
-      it 'can select a subset of a hash' do
-        original = {
-          :x => 1,
-          :y => nil,
-          :z => 3,
-        }
-        expected_keys = [:x, :y]
-        selected = UtilTest.new.select_from(original, :x, :y)
-        expect(selected.keys).to match_array(expected_keys)
-      end
-
-      it 'raises an error if not a proper subset' do
-        original = {
-          :x => 1,
-        }
-        expect do
-          UtilTest.new.select_from(original, :x, :y)
-        end.to raise_error(ArgumentError, /Missing keys.*:y/)
-      end
-
       it 'raises an exception on invalid option keys' do
         hash = {
           :good => 'Clint Eastwood',

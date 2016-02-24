@@ -109,40 +109,27 @@ class JSONClient < HTTPClient
 
   def post(uri, *args, &block)
     opts = argument_to_hash(args, :body, :query, :header, :follow_redirect)
-    # If the caller is setting their own Content-Type, respect it.
-    unless opts && opts[:header] && opts[:header]['Content-Type']
-      jsonify(opts)
-      @header_filter.replace = true
-    end
+    set_filter(opts)
     request(:post, uri, opts, &block)
   end
 
   # See documentation for post
   def put(uri, *args, &block)
     opts = argument_to_hash(args, :body, :query, :header)
-    unless opts && opts[:header] && opts[:header]['Content-Type']
-      jsonify(opts)
-      @header_filter.replace = true
-    end
+    set_filter(opts)
     request(:put, uri, opts, &block)
   end
 
   def delete(uri, *args, &block)
     opts = argument_to_hash(args, :body, :query, :header)
-    unless opts && opts[:header] && opts[:header]['Content-Type']
-      jsonify(opts)
-      @header_filter.replace = true
-    end
+    set_filter(opts)
     request(:delete, uri, opts, &block)
   end
 
   def request(method, uri, *args, &block)
     # Hack to address https://github.com/nahi/httpclient/issues/285
     # We need to strip off any leading slash on a relative URL
-    u = HTTPClient::Util.urify(uri)
-    if @base_url && u.scheme.nil? && u.host.nil?
-      uri = uri[1..-1] if uri[0] == "/"
-    end
+    uri = strip_slash(uri)
     res = super
     if !res.ok? && @fail_fast
       raise BadResponseError.new("Failed request: #{res.inspect}")
@@ -153,34 +140,37 @@ class JSONClient < HTTPClient
   # TODO: probably need to override post_async, put_async, delete_async
   # to allow for custom setting on Content-Type header.
   def request_async2(method, uri, *args, &block)
-    # Hack to address https://github.com/nahi/httpclient/issues/285
-    # We need to strip off any leading slash on a relative URL
-    u = HTTPClient::Util.urify(uri)
-    if @base_url && u.scheme.nil? && u.host.nil?
-      uri = uri[1..-1] if uri[0] == "/"
-    end
+    uri = strip_slash(uri)
     super
   end
 
   # This method appears to be deprecated in HTTPClient but I am
   # overriding it here in case other HTTPClient internals use it.
   def request_async(method, uri, query = nil, body = nil, header = {})
-    # Hack to address https://github.com/nahi/httpclient/issues/285
-    # We need to strip off any leading slash on a relative URL
-    u = HTTPClient::Util.urify(uri)
-    if @base_url && u.scheme.nil? && u.host.nil?
-      uri = uri[1..-1] if uri[0] == "/"
-    end
+    uri = strip_slash(uri)
     super
   end
 
   private
 
-  def jsonify(hash)
-    if !hash.nil? && hash.key?(:body) && !hash[:body].nil?
-      hash[:body] = JSON.generate(hash[:body])
+  # Hack to address https://github.com/nahi/httpclient/issues/285
+  # We need to strip off any leading slash on a relative URL
+  def strip_slash(uri)
+    u = HTTPClient::Util.urify(uri)
+    if @base_url && u.scheme.nil? && u.host.nil?
+      uri = uri[1..-1] if uri[0] == "/"
     end
-    hash
+    uri
+  end
+
+  def set_filter(opts)
+    # If the caller is setting their own Content-Type, respect it.
+    unless opts && opts[:header] && opts[:header]['Content-Type']
+      if !opts.nil? && opts.key?(:body) && !opts[:body].nil?
+        opts[:body] = JSON.generate(opts[:body])
+      end
+      @header_filter.replace = true
+    end
   end
 end
 
@@ -208,27 +198,6 @@ module Candlepin
       Hash[camelized]
     end
 
-    # Create a subset of key-value pairs.  This method yields the subset and the
-    # original hash to a block so that developers can easily add or
-    # tweak the resultant hash.  For example:
-    #     h = {:hello => 'world', :goodbye => 'bye' }
-    #     select_from(h, :hello) do |subset, original|
-    #       h[:send_off] = original[:goodbye].upcase
-    #     end
-    def select_from(hash, *args)
-      missing = args.flatten.reject { |key| hash.key?(key) }
-      unless missing.empty?
-        raise ArgumentError.new("Missing keys: #{missing}")
-      end
-
-      pairs = args.map do |key|
-        hash.assoc(key)
-      end
-      h = Hash[pairs]
-      yield h, hash if block_given?
-      h
-    end
-
     # Validate the value associated with a hash key.  By default, the method validates
     # the key is not nil, but if a block is passed then the block will be evaluated and
     # if the block returns a false value the value will be considered invalid.
@@ -247,6 +216,7 @@ module Candlepin
       end
 
       unless invalid.empty?
+        #FIXME better error message
         raise RuntimeError.new("Hash #{hash} cannot have nil for keys #{invalid}")
       end
     end
