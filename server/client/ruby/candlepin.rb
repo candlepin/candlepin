@@ -209,15 +209,20 @@ module Candlepin
       invalid = []
       check_keys.each do |k|
         if block_given?
-          invalid << k unless yield hash[k]
+          invalid << [k, "failed block test"] unless yield hash[k]
         elsif hash[k].nil?
-          invalid << k
+          invalid << [k, "is nil"]
         end
       end
 
       unless invalid.empty?
-        #FIXME better error message
-        raise RuntimeError.new("Hash #{hash} cannot have nil for keys #{invalid}")
+        msg = "Hash #{hash} has invalid values"
+        failures = []
+        invalid.each do |failed|
+          val, fail_type = failed
+          failures << "#{val} #{fail_type}"
+        end
+        raise RuntimeError.new("#{msg}: #{failures.join('; ')}")
       end
     end
 

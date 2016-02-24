@@ -2021,7 +2021,7 @@ module Candlepin
         }
         expect do
           UtilTest.new.validate_keys(h)
-        end.to raise_error
+        end.to raise_error(/is nil/)
       end
 
       it 'validates specific keys' do
@@ -2054,7 +2054,7 @@ module Candlepin
           UtilTest.new.validate_keys(h) do |k|
             k > 5
           end
-        end.to raise_error
+        end.to raise_error(/failed block test/)
       end
     end
   end
