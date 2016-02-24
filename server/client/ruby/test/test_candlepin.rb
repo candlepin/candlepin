@@ -13,9 +13,23 @@ RSpec.configure do |config|
   end
 end
 
+def status_match_failure_message(res, code)
+  method = res.header.request_method
+  uri = res.header.request_uri
+  id = res.headers['x-candlepin-request-uuid']
+  msg = "#{method} #{uri} was #{res.status_code} but expected #{code}"
+  msg << " [Candlepin request #{id}]" if id
+  msg << ":\n#{res.body}" if res.status_code == 500
+  msg
+end
+
 RSpec::Matchers.define :be_success do
   match do |res|
     (200..206).cover?(res.status_code)
+  end
+
+  failure_message_for_should do |res|
+    status_match_failure_message(res, "200 through 206")
   end
 end
 
@@ -23,17 +37,29 @@ RSpec::Matchers.define :be_unauthorized do
   match do |res|
     res.status_code == 401
   end
+
+  failure_message_for_should do |res|
+    status_match_failure_message(res, "401")
+  end
 end
 
 RSpec::Matchers.define :be_forbidden do
   match do |res|
     res.status_code == 403
   end
+
+  failure_message_for_should do |res|
+    status_match_failure_message(res, "403")
+  end
 end
 
 RSpec::Matchers.define :be_missing do
   match do |res|
     res.status_code == 404
+  end
+
+  failure_message_for_should do |res|
+    status_match_failure_message(res, "404")
   end
 end
 
