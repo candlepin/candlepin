@@ -881,7 +881,7 @@ public class PoolManagerTest {
         manager.cleanupExpiredPools();
 
         // And the pool should be deleted:
-        verify(mockPoolCurator).delete(p);
+        verify(mockPoolCurator).batchDelete(pools);
     }
 
     @Test
@@ -906,7 +906,7 @@ public class PoolManagerTest {
         manager.cleanupExpiredPools();
 
         // And the pool should be deleted:
-        verify(mockPoolCurator).delete(p);
+        verify(mockPoolCurator).batchDelete(pools);
         verify(mockSubAdapter, never()).getSubscription(any(String.class));
         verify(mockSubAdapter, never()).deleteSubscription(any(Subscription.class));
     }
