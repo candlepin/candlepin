@@ -145,13 +145,16 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     @Transactional
     public List<Product> listByOwner(Owner owner) {
         return this.createSecureCriteria()
-            .add(Restrictions.eq("owner", owner)).list();
+            .createAlias("owners", "owner")
+            .add(Restrictions.eq("owner.id", owner.getId()))
+            .list();
     }
 
     public List<Product> listAllByIds(Owner owner, Collection<? extends Serializable> ids) {
         return this.listByCriteria(
             this.createSecureCriteria()
-                .add(Restrictions.eq("owner", owner))
+                .createAlias("owners", "owner")
+                .add(Restrictions.eq("owner.id", owner.getId()))
                 .add(Restrictions.in("id", ids))
         );
     }
@@ -180,117 +183,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         );
     }
 
-
-    /**
-     * Updates the specified product instance, creating a new version of the product as necessary.
-     * The product instance returned by this method is not guaranteed to be the same instance passed
-     * in. As such, once this method has been called, callers should only use the instance output by
-     * this method.
-     *
-     * @param entity
-     *  The product entity to update
-     *
-     * @param owners
-     *  The owners for which to update the product
-     *
-     * @return
-     *  the updated product entity, or a new product entity
-     */
-    public Product persist(Product entity, Collection<Owner> owners) {
-        // TODO: Should we also verify that the UUID is either null or not in use?
-        log.debug("Creating or updating product: {}", entity);
-
-        if (entity == null) {
-            throw new NullPointerException("entity");
-        }
-
-        Product existing = this.lookupByUuid(entity.getUuid());
-
-        if (existing == null) {
-            return this.create(entity);
-        }
-
-        // TODO:
-        // Check if the product is locked. If so, throw an exception or something
-
-        // TODO:
-        // Check for newer versions of the same product. We want to try to dedupe as much data as we
-        // can, and if we have a newer version of the product (which matches the version provided by
-        // the caller), we can just point the given orgs to the new product instead of giving them
-        // their own version.
-
-        // Make sure we actually have something to update.
-        if (!existing.equals(entity)) {
-            // TODO: Maybe we should avoid versioning in some situations (like when only one owner
-            // is referencing the product)
-
-            Product copy = (Product) entity.clone();
-
-            // Clear the UUID so we get a new one on persist.
-            copy.setUuid(null);
-
-            // Update owner references on both...
-            copy.setOwners(owners);
-            for (Owner owner : owners) {
-                existing.removeOwner(owner);
-            }
-
-            // TODO:
-            // Update all other things that point at the old product for the orgs. This includes
-            // things like activation keys, product certs, dependent products (??), provided
-            // products, etc.
-
-            // We won't be touching the updated upstream value here, as it's kinda messy.
-            this.merge(existing);
-            this.merge(copy);
-            return copy;
-        }
-
-        return entity;
-    }
-
-    @Transactional
-    public Product create(Product entity) {
-        /*
-         * Ensure all referenced ProductAttributes are correctly pointing to
-         * this product. This is useful for products being created from incoming
-         * json.
-         */
-        for (ProductAttribute attr : entity.getAttributes()) {
-            attr.setProduct(entity);
-            validateAttributeValue(attr);
-        }
-
-        log.debug("Persisting new product entity: {}", entity);
-
-        /*
-         * Ensure that no circular reference exists
-         */
-        return super.create(entity);
-    }
-
-    @Transactional
-    public Product merge(Product entity) {
-
-        /*
-         * Ensure all referenced ProductAttributes are correctly pointing to
-         * this product. This is useful for products being created from incoming
-         * json.
-         */
-        for (ProductAttribute attr : entity.getAttributes()) {
-            attr.setProduct(entity);
-            validateAttributeValue(attr);
-        }
-
-        /*
-         * Ensure that no circular reference exists
-         */
-        log.debug("Merging product entity: {}", entity);
-
-        return super.merge(entity);
-    }
-
-    private void validateAttributeValue(ProductAttribute attr) {
+    protected void validateAttributeValue(ProductAttribute attr) {
         Set<String> intAttrs = config.getSet(ConfigProperties.INTEGER_ATTRIBUTES);
         Set<String> posIntAttrs = config.getSet(
             ConfigProperties.NON_NEG_INTEGER_ATTRIBUTES);
@@ -350,6 +243,132 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                     attr.getName()));
             }
         }
+    }
+
+    /**
+     * Validates and corrects the object references maintained by the given product instance.
+     *
+     * @param entity
+     *  The product entity to validate
+     *
+     * @return
+     *  The provided product reference
+     */
+    protected Product validateProductReferences(Product entity) {
+        for (ProductAttribute pa : entity.getAttributes()) {
+            pa.setProduct(entity);
+            this.validateAttributeValue(pa);
+        }
+
+        // TODO: Add more reference checks here.
+
+        return entity;
+    }
+
+    @Transactional
+    public Product create(Product entity) {
+        log.debug("Persisting new product entity: {}", entity);
+
+        this.validateProductReferences(entity);
+
+        /*
+         * Ensure that no circular reference exists
+         */
+        return super.create(entity);
+    }
+
+    /**
+     * Updates the specified product instance, creating a new version of the product as necessary.
+     * The product instance returned by this method is not guaranteed to be the same instance passed
+     * in. As such, once this method has been called, callers should only use the instance output by
+     * this method.
+     *
+     * @param entity
+     *  The product entity to update
+     *
+     * @param owners
+     *  The owners for which to update the product
+     *
+     * @return
+     *  the updated product entity, or a new product entity
+     */
+    public Product update(Product entity, Collection<Owner> owners) {
+        // TODO: Should we also verify that the UUID is either null or not in use?
+        log.debug("Creating or updating product: {}", entity);
+
+        if (entity == null) {
+            throw new NullPointerException("entity");
+        }
+
+        Product existing = this.lookupByUuid(entity.getUuid());
+
+        if (existing == null) {
+            // If we're doing an exclusive update, this should be an error condition
+            throw new RuntimeException("Uh oh");
+        }
+
+        // TODO:
+        // Check for newer versions of the same product. We want to try to dedupe as much data as we
+        // can, and if we have a newer version of the product (which matches the version provided by
+        // the caller), we can just point the given orgs to the new product instead of giving them
+        // their own version.
+        // This is probably going to be a very expensive operation, though.
+
+        // Make sure we actually have something to update.
+        if (!existing.equals(entity)) {
+            // TODO: Maybe we should avoid versioning in some situations (like when only one owner
+            // is referencing the product)
+
+            // If we're making the update for every owner using the product, don't bother creating
+            // a new version -- just do a raw update.
+            if (owners.size() != existing.getOwners().size() || !existing.getOwners().containsAll(owners)) {
+                Product copy = (Product) entity.clone();
+
+                // Clear the UUID so we get a new one on persist.
+                copy.setUuid(null);
+
+                // Update owner references on both...
+                copy.setOwners(owners);
+                for (Owner owner : owners) {
+                    existing.removeOwner(owner);
+                }
+
+                // TODO:
+                // Update all other things that point at the old product for the orgs. This includes
+                // things like activation keys, product certs, dependent products (??), provided
+                // products, etc.
+
+                // We won't be touching the updated upstream value here -- we're relying on the
+                // caller knowing what they're going to do with that.
+
+                this.merge(existing);
+                this.merge(copy);
+
+                entity = copy;
+            }
+            else {
+                // Copy the details over to the existing product here
+                existing.merge(entity);
+
+                this.merge(existing);
+
+                entity = existing;
+            }
+        }
+
+        return entity;
+    }
+
+    @Transactional
+    public Product merge(Product entity) {
+        log.debug("Merging product entity: {}", entity);
+
+        this.validateProductReferences(entity);
+
+        /*
+         * Ensure that no circular reference exists
+         */
+        return super.merge(entity);
     }
 
     @Transactional

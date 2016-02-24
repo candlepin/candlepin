@@ -85,7 +85,6 @@ public class Content extends AbstractHibernateObject {
     private String label;
 
     @OneToMany
-    @Cascade({ CascadeType.ALL })
     @JoinTable(
         name = "cp2_owner_content",
         joinColumns = {@JoinColumn(name = "content_uuid", insertable = true, updatable = true)},

@@ -78,7 +78,9 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
     @Transactional
     public List<Content> listByOwner(Owner owner) {
         return currentSession().createCriteria(Content.class)
-            .add(Restrictions.eq("owner", owner)).list();
+            .createAlias("owners", "owner")
+            .add(Restrictions.eq("owner.id", owner.getId()))
+            .list();
     }
 
     @Transactional

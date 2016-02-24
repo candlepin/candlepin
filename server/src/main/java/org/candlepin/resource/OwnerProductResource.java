@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
@@ -40,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -285,92 +287,25 @@ public class OwnerProductResource {
         Product product) {
 
         // Steps we need to do here:
-        // 1. Resolve the product provided by the user. This is a multi-step process consisting of:
-        //    A. Lookup the product using the owner/pid combo. If a matching product does not exist,
-        //      throw a not found exception
-        //    B. Update the user's disconnected product instance with the unchanged info from the
-        //      actual product. UUID, RHID, etc. should always be overwritten with known good
-        //      values, but the others should only be updated if the value from the user's instance
-        //      is null.
-        // 2. Call the update part of the create or update in the product curator. This should
+        // 1. Resolve the product provided by the user. Lookup the product using the owner/pid
+        //    combo. If a matching product does not exist, throw a not found exception
+        // 2. Check if the product is locked. If it's locked, we're not changing it via API.
+        // 3. Update the user's disconnected product instance with the unchanged info from the
+        //    actual product. UUID, RHID, etc. should always be overwritten with known good
+        //    values, but the others should only be updated if the value from the user's instance
+        //    is null.
+        // 4. Call the update part of the create or update in the product curator. This should
         //    trigger a new version creation, or merging into an existing instance as necessary.
+        // 5. We may need some way to inform the user that UUIDs changed.
 
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product existing = this.getProduct(ownerKey, productId);
 
-
-        // Product curator needs four methods:
-        //  - createOrUpdate (legacy method, really)
-        //  - update
-        //  - directUpdate (name subject to change)
-        //
-        //
-
-
-
-
-
-        Product toUpdate = this.getProduct(ownerKey, productId);
-
-        // TODO:
-        // We may not always want to update here.
-
-
-
-
-
-
-        if (performProductUpdates(toUpdate, product)) {
-            this.productCurator.merge(toUpdate);
+        if (existing.isLocked()) {
+            throw new ForbiddenException("product is locked");
         }
 
-        return toUpdate;
-    }
-
-    protected boolean performProductUpdates(Product existing, Product incoming) {
-        boolean changesMade = false;
-
-        if (incoming.getName() != null && !existing.getName().equals(incoming.getName()) &&
-            !incoming.getName().isEmpty()) {
-
-            log.debug("Updating product name");
-            changesMade = true;
-            existing.setName(incoming.getName());
-        }
-
-        if (incoming.getAttributes() != null &&
-            !existing.getAttributes().equals(incoming.getAttributes())) {
-
-            log.debug("Updating product attributes");
-
-            // clear and addall here instead of replacing instance so there are no
-            // dangling memory references
-            existing.getAttributes().clear();
-            existing.getAttributes().addAll(incoming.getAttributes());
-            changesMade = true;
-        }
-
-        if (incoming.getDependentProductIds() != null &&
-            !existing.getDependentProductIds().equals(incoming.getDependentProductIds())) {
-
-            log.debug("Updating dependent product ids");
-
-            // clear and addall here instead of replacing instance so there are no
-            // dangling memory references
-            existing.getDependentProductIds().clear();
-            existing.getDependentProductIds().addAll(incoming.getDependentProductIds());
-            changesMade = true;
-        }
-
-        if (incoming.getMultiplier() != null &&
-            existing.getMultiplier().longValue() != incoming.getMultiplier().longValue()) {
-
-            log.debug("Updating product multiplier");
-            changesMade = true;
-            existing.setMultiplier(incoming.getMultiplier());
-        }
-
-        // not calling setHref() it's a no op and pointless to call.
-
-        return changesMade;
+        return this.productCurator.update(existing.merge(product), Arrays.asList(owner));
     }
 
     /**

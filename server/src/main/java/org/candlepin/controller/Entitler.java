@@ -325,7 +325,7 @@ public class Entitler {
             // PER-ORG PRODUCTS TODO:
             // This is likely only half correct. We'll probably need to go back through and replace
             // the instances in the collection with the new ones from this method.
-            productCurator.createOrUpdate(prod, owners);
+            productCurator.update(prod, owners);
         }
     }
 

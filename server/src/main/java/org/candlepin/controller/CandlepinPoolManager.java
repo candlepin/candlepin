@@ -495,7 +495,7 @@ public class CandlepinPoolManager implements PoolManager {
             else if (!existing.equals(incoming)) {
                 log.info("Product changed for org {}: {}", owner.getKey(), incoming.getId());
 
-                incoming = prodCurator.createOrUpdate(incoming, owners);
+                incoming = prodCurator.update(incoming, owners);
                 changedProducts.add(incoming);
             }
         }
