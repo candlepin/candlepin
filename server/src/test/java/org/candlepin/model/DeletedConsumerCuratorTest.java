@@ -117,9 +117,10 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void findByDate() {
+    public void findByDate() throws InterruptedException {
         assertEquals(2, dcc.findByDate(twoResultsDate).size());
         assertEquals(1, dcc.findByDate(oneResultDate).size());
+        Thread.sleep(2000);
         assertEquals(0, dcc.findByDate(new Date()).size());
     }
 
