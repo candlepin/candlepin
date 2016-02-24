@@ -1552,15 +1552,21 @@ public class CandlepinPoolManager implements PoolManager {
         }
     }
 
+    @Override
+    public void revokeEntitlements(List<Entitlement> entsToRevoke) {
+        revokeEntitlements(entsToRevoke, true);
+    }
 
     /**
      * Revokes the given set of entitlements.
      *
      * @param entsToRevoke entitlements to revoke
+     * @param regenCertsAndStatuses if this revocation should also trigger regeneration of certificates
+     * and recomputation of statuses. For performance reasons some callers might
+     * choose to set this to false.
      */
-    @Override
     @Transactional
-    public void revokeEntitlements(List<Entitlement> entsToRevoke) {
+    public void revokeEntitlements(List<Entitlement> entsToRevoke, boolean regenCertsAndStatuses) {
         if (log.isDebugEnabled()) {
             log.debug("Starting batch revoke of entitlements: {}", getEntIds(entsToRevoke));
         }
@@ -1623,33 +1629,20 @@ public class CandlepinPoolManager implements PoolManager {
             log.debug("Found stacking entitlements to delete {}", getEntIds(stackingEntitlements));
         }
 
-        for (Entitlement ent : stackingEntitlements) {
-            Pool pool = ent.getPool();
-            Consumer consumer = ent.getConsumer();
-            String stackId = pool.getProductAttributeValue("stacking_id");
-            Pool stackedSubPool = poolCurator.getSubPoolForStackId(consumer, stackId);
-            if (stackedSubPool != null) {
-                List<Entitlement> stackedEnts =
-                    this.entitlementCurator.findByStackId(consumer, stackId);
-
-                // If there are no stacked entitlements, we need to delete the
-                // stacked sub pool, else we update it based on the entitlements
-                // currently in the stack.
-                if (stackedEnts.isEmpty()) {
-                    log.info("Revoke Entitlements: deleting single stacked sub-pool");
-                    deletePool(stackedSubPool);
-                }
-                else {
-                    updatePoolFromStackedEntitlements(stackedSubPool, stackedEnts);
-                    poolCurator.merge(stackedSubPool);
-                }
-            }
-        }
+        updateStackingEntitlements(stackingEntitlements);
 
         // post unbind actions
         for (Entitlement ent : entsToRevoke) {
             PoolHelper poolHelper = new PoolHelper(this,  ent);
             enforcer.postUnbind(ent.getConsumer(), poolHelper, ent);
+        }
+
+        if (!regenCertsAndStatuses) {
+            log.info("Regeneration and status computation was not requested " +
+                    "finishing batch revoke");
+
+            sendDeletedEvents(entsToRevoke);
+            return;
         }
 
         List<Entitlement> batch = new ArrayList<Entitlement>();
@@ -1691,6 +1684,31 @@ public class CandlepinPoolManager implements PoolManager {
         log.info("All statuses recomputed.");
 
         sendDeletedEvents(entsToRevoke);
+    }
+
+    private void updateStackingEntitlements(List<Entitlement> stackingEntitlements) {
+        for (Entitlement ent : stackingEntitlements) {
+            Pool pool = ent.getPool();
+            Consumer consumer = ent.getConsumer();
+            String stackId = pool.getProductAttributeValue("stacking_id");
+            Pool stackedSubPool = poolCurator.getSubPoolForStackId(consumer, stackId);
+            if (stackedSubPool != null) {
+                List<Entitlement> stackedEnts =
+                    this.entitlementCurator.findByStackId(consumer, stackId);
+
+                // If there are no stacked entitlements, we need to delete the
+                // stacked sub pool, else we update it based on the entitlements
+                // currently in the stack.
+                if (stackedEnts.isEmpty()) {
+                    log.info("Revoke Entitlements: deleting single stacked sub-pool");
+                    deletePool(stackedSubPool);
+                }
+                else {
+                    updatePoolFromStackedEntitlements(stackedSubPool, stackedEnts);
+                    poolCurator.merge(stackedSubPool);
+                }
+            }
+        }
     }
 
     private void sendDeletedEvents(List<Entitlement> entsToRevoke) {
@@ -1764,8 +1782,14 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     @Transactional
     public int revokeAllEntitlements(Consumer consumer) {
+        return revokeAllEntitlements(consumer, true);
+    }
+
+    @Override
+    @Transactional
+    public int revokeAllEntitlements(Consumer consumer, boolean regenCertsAndStatuses) {
         List<Entitlement> entsToDelete = entitlementCurator.listByConsumer(consumer);
-        revokeEntitlements(entsToDelete);
+        revokeEntitlements(entsToDelete, regenCertsAndStatuses);
         return entsToDelete.size();
     }
 
