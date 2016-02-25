@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-02-15 12:33-0500\n"
+"POT-Creation-Date: 2016-02-23 15:15-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -576,7 +576,7 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/model/ConsumerCurator.java:647
 #: server/src/main/java/org/candlepin/model/ConsumerCurator.java:657
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1678
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1692
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:163
 #, java-format
 msgid "Unit with ID ''{0}'' could not be found."
@@ -989,8 +989,8 @@ msgstr ""
 msgid "Cannot specify a quantity when auto-binding."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1590
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1719
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1597
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1733
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:211
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:248
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:277
@@ -1000,43 +1000,43 @@ msgstr ""
 msgid "Entitlement with ID ''{0}'' could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1748
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1762
 #, java-format
 msgid "Entitlement Certificate with serial number ''{0}'' could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1777
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1791
 #, java-format
 msgid "No entitlements for consumer ''{0}'' with pool id ''{1}''"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1869
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1883
 #, java-format
 msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "''{1}''."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1877
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1891
 #, java-format
 msgid "A CDN with label {0} does not exist on this system."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1892
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1906
 msgid "Unable to create export archive"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1966
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1980
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2006
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2020
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2124
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2138
 #, java-format
 msgid "Deletion record for hypervisor ''{0}'' not found."
 msgstr ""
