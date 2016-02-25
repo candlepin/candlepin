@@ -734,6 +734,13 @@ class Candlepin
     post(path)
   end
 
+  def consume_pools(poolAndQuantities, params={})
+    uuid = params[:uuid] || @uuid
+    path = "/consumers/#{uuid}/entitlements?async=true"
+
+    return post(path, poolAndQuantities)
+  end
+
   def consume_product(product=nil, params={})
     quantity = params[:quantity] || nil
     uuid = params[:uuid] || @uuid

@@ -26,6 +26,9 @@ import org.candlepin.model.Pool;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * ConsumerPrincipalTest
  */
@@ -49,6 +52,12 @@ public class ConsumerPrincipalTest {
     @Test
     public void noFullAccess() {
         assertFalse(new ConsumerPrincipal(consumer).hasFullAccess());
+    }
+
+    @Test
+    public void nullAccess() {
+        assertFalse(new ConsumerPrincipal(consumer).canAccess(null, null, null));
+        assertFalse(new ConsumerPrincipal(consumer).canAccessAll(null, null, null));
     }
 
     @Test
@@ -107,6 +116,41 @@ public class ConsumerPrincipalTest {
         when(e.getConsumer()).thenReturn(c);
 
         assertTrue(principal.canAccess(e, SubResource.NONE, Access.ALL));
+    }
+
+    @Test
+    public void accessToMultipleConsumerEntitlements() {
+        Consumer c = mock(Consumer.class);
+        when(c.getUuid()).thenReturn("consumer-uuid");
+        List<Entitlement> entitlements = new ArrayList<Entitlement>();
+        for (int i = 0; i < 5; i++) {
+            Entitlement e = mock(Entitlement.class);
+            when(e.getConsumer()).thenReturn(c);
+            entitlements.add(e);
+        }
+
+        assertTrue(principal.canAccessAll(entitlements, SubResource.NONE, Access.ALL));
+    }
+
+    @Test
+    public void denyAccessToOtherConsumerEntitlements() {
+        Consumer c = mock(Consumer.class);
+        Consumer c0 = mock(Consumer.class);
+        when(c.getUuid()).thenReturn("consumer-uuid");
+        when(c0.getUuid()).thenReturn("consumer-0-uuid");
+        List<Entitlement> entitlements = new ArrayList<Entitlement>();
+        for (int i = 0; i < 5; i++) {
+            Entitlement e = mock(Entitlement.class);
+            if (i == 3) {
+                when(e.getConsumer()).thenReturn(c0);
+            }
+            else {
+                when(e.getConsumer()).thenReturn(c);
+            }
+            entitlements.add(e);
+        }
+
+        assertFalse(principal.canAccessAll(entitlements, SubResource.NONE, Access.ALL));
     }
 
     @Test

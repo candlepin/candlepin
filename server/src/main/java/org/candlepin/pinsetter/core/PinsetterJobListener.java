@@ -18,7 +18,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
-import org.candlepin.pinsetter.tasks.UniqueByOwnerJob;
+import org.candlepin.pinsetter.tasks.UniqueByEntityJob;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -94,7 +94,7 @@ public class PinsetterJobListener implements JobListener {
             updateJob(context, exception);
         }
         catch (Exception e) {
-            if (UniqueByOwnerJob.class.isAssignableFrom(
+            if (UniqueByEntityJob.class.isAssignableFrom(
                     context.getJobDetail().getJobClass())) {
                 log.error("jobWasExecuted encountered a problem on a blocking job." +
                     " This can block other jobs.  Marking finished, if possible", e);

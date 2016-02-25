@@ -41,6 +41,7 @@ import org.xnap.commons.i18n.I18n;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -58,7 +59,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Inject protected Provider<EntityManager> entityManager;
     @Inject protected I18n i18n;
     private final Class<E> entityType;
-    private int batchSize = 30;
+    private int batchSize = 500;
     @Inject private PrincipalProvider principalProvider;
     private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
 
@@ -378,13 +379,22 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         flush();
     }
 
-    public final void flush() {
+    public void flush() {
         try {
             getEntityManager().flush();
         }
         catch (OptimisticLockException e) {
             throw new ConcurrentModificationException(getConcurrentModificationMessage(),
                 e);
+        }
+    }
+
+    public void clear() {
+        try {
+            getEntityManager().clear();
+        }
+        catch (OptimisticLockException e) {
+            throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
         }
     }
 
@@ -397,22 +407,58 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return entityManager.get();
     }
 
-    public void saveOrUpdateAll(List<E> entries) {
-        try {
-            Session session = currentSession();
-            for (int i = 0; i < entries.size(); i++) {
-                session.saveOrUpdate(entries.get(i));
-                if (i % batchSize == 0) {
+    public Collection<E> saveOrUpdateAll(Collection<E> entries, boolean flush) {
+
+        if (entries != null && !entries.isEmpty()) {
+            try {
+                Session session = currentSession();
+                int i = 0;
+                Iterator<E> iter = entries.iterator();
+                while (iter.hasNext()) {
+                    session.saveOrUpdate(iter.next());
+                    if (i % batchSize == 0 && flush) {
+                        session.flush();
+                        session.clear();
+                    }
+                    i++;
+                }
+                if (flush) {
                     session.flush();
                     session.clear();
                 }
             }
+            catch (OptimisticLockException e) {
+                throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
+            }
         }
-        catch (OptimisticLockException e) {
-            throw new ConcurrentModificationException(getConcurrentModificationMessage(),
-                e);
-        }
+        return entries;
+    }
 
+    public Collection<E> mergeAll(Collection<E> entries, boolean flush) {
+
+        if (entries != null && !entries.isEmpty()) {
+            try {
+                Session session = currentSession();
+                int i = 0;
+                Iterator<E> iter = entries.iterator();
+                while (iter.hasNext()) {
+                    session.merge(iter.next());
+                    if (i % batchSize == 0 && flush) {
+                        session.flush();
+                        session.clear();
+                    }
+                    i++;
+                }
+                if (flush) {
+                    session.flush();
+                    session.clear();
+                }
+            }
+            catch (OptimisticLockException e) {
+                throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
+            }
+        }
+        return entries;
     }
 
     public void refresh(E object) {

@@ -16,6 +16,7 @@ package org.candlepin.service.impl.stub;
 
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -29,6 +30,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * StubEntitlementCertServiceAdapter
@@ -85,6 +89,33 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
         Product product) throws GeneralSecurityException,
         IOException {
         return generateEntitlementCert(entitlement, product);
+    }
+
+    @Override
+    public Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer,
+            Map<String, Entitlement> entitlements, Map<String, Product> products)
+        throws GeneralSecurityException, IOException {
+
+        Map<String, EntitlementCertificate> result = new HashMap<String, EntitlementCertificate>();
+        for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
+            EntitlementCertificate cert = generateEntitlementCert(entry.getValue(),
+                    products.get(entry.getKey()));
+            result.put(entry.getKey(), cert);
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, EntitlementCertificate> generateUeberCerts(Consumer consumer,
+            Map<String, Entitlement> entitlements, Map<String, Product> products)
+        throws GeneralSecurityException, IOException {
+        Map<String, EntitlementCertificate> result = new HashMap<String, EntitlementCertificate>();
+        for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
+            EntitlementCertificate cert = generateUeberCert(entry.getValue(),
+                    products.get(entry.getKey()));
+            result.put(entry.getKey(), cert);
+        }
+        return result;
     }
 
 }
