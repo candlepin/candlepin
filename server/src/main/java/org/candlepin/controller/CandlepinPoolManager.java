@@ -1502,17 +1502,17 @@ public class CandlepinPoolManager implements PoolManager {
         // we might have changed the bonus pool quantities, lets find out.
         handler.handleBonusPools(poolQuantities, entitlements);
 
-        JobDetail detail = ConsumerComplianceJob.scheduleStatusCheck(consumer, null, false, false);
-        detail.getJobDataMap().put(PinsetterJobListener.PRINCIPAL_KEY, new SystemPrincipal());
-
-        log.info("Triggering ConsumerComplianceJob: {} for consumer: {}", detail.getKey(),
-                consumer.getUuid());
-        try {
-            pinsetterKernel.scheduleSingleJob(detail);
-        }
-        catch (PinsetterException e) {
-            log.error("ConsumerComplianceJob schedule failed", e.getMessage());
-        }
+//        JobDetail detail = ConsumerComplianceJob.scheduleStatusCheck(consumer, null, false, false);
+//        detail.getJobDataMap().put(PinsetterJobListener.PRINCIPAL_KEY, new SystemPrincipal());
+//
+//        log.info("Triggering ConsumerComplianceJob: {} for consumer: {}", detail.getKey(),
+//                consumer.getUuid());
+//        try {
+//            pinsetterKernel.scheduleSingleJob(detail);
+//        }
+//        catch (PinsetterException e) {
+//            log.error("ConsumerComplianceJob schedule failed", e.getMessage());
+//        }
 
         poolCurator.flush();
 

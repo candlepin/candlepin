@@ -63,6 +63,7 @@ public class ConsumerComplianceJob extends UniqueByEntityJob {
             Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
             consumerCurator.lockAndLoad(consumer);
             // Check consumer's new compliance status and save:
+//            Thread.sleep(5000);
             complianceRules.getStatus(consumer, onDate, calculateComplianceUntill, update);
             if (forceUpdate) {
                 consumerCurator.update(consumer);
