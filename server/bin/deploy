@@ -276,6 +276,7 @@ fi
 
 if [ "$HOSTEDTEST" == "hostedtest" ]; then
     info_msg "Including hostedtest resources"
+    info_msg "WARNING: DO NOT SPEC TEST IN PARALLEL MODE"
     HOSTEDTEST="hostedtest=yes"
 else
     HOSTEDTEST=""
