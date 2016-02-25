@@ -17,12 +17,14 @@ package org.candlepin.model;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
+import org.hibernate.Session;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
@@ -32,6 +34,8 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -183,6 +187,30 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         );
     }
 
+    /**
+     * Retrieves a list of products with the specified Red Hat product ID and upstream last-update
+     * timestamp. If no products were found matching the given criteria, this method returns an
+     * empty list.
+     *
+     * @param productId
+     *  The Red Hat product ID
+     *
+     * @param updatedUpstream
+     *  The timestamp for the last upstream update
+     *
+     * @return
+     *  a list of products matching the given product ID and upstream update timestamp
+     */
+    public List<Product> getProductsByVersion(String productId, Date updatedUpstream) {
+        return this.listByCriteria(
+            this.createSecureCriteria()
+                .add(Restrictions.eq("id", productId))
+                .add(Restrictions.eq("updatedUpstream", updatedUpstream))
+        );
+    }
+
+    // TODO:
+    // This seems like something that should happen at the resource level, not in the curator.
     protected void validateAttributeValue(ProductAttribute attr) {
         Set<String> intAttrs = config.getSet(ConfigProperties.INTEGER_ATTRIBUTES);
         Set<String> posIntAttrs = config.getSet(
@@ -265,6 +293,114 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         return entity;
     }
 
+    /**
+     * Updates the product references currently pointing to the original product to instead point to
+     * the updated product for the specified owners.
+     *
+     * @param current
+     *  The current product other objects are referencing
+     *
+     * @param updated
+     *  The product other objects should reference
+     *
+     * @param owners
+     *  A collection of owners for which to apply the reference changes
+     *
+     * @return
+     *  a reference to the updated product
+     */
+    protected Product updateOwnerProductReferences(Product current, Product updated,
+        Collection<Owner> owners) {
+        // Impl note:
+        // We're doing this in straight SQL because direct use of the ORM would require querying all
+        // of these objects and HQL refuses to do any joining (implicit or otherwise), which
+        // prevents it from updating collections backed by a join table.
+        // As an added bonus, it's quicker, but we'll have to be mindful of the memory vs backend
+        // state divergence.
+
+        Session session = this.currentSession();
+        Set<String> ownerIds = new HashSet<String>();
+
+        for (Owner owner : owners) {
+            ownerIds.add(owner.getId());
+        }
+
+        // Activation key products
+        String sql = "UPDATE cp2_activation_key_products SET product_uuid = ? " +
+            "WHERE product_uuid = ? AND key_id IN (SELECT id FROM cp_activation_key WHERE owner_id IN ?)";
+
+        int akCount = session.createSQLQuery(sql)
+            .setParameter("1", updated.getUuid())
+            .setParameter("2", current.getUuid())
+            .setParameterList("3", ownerIds)
+            .executeUpdate();
+
+        log.debug("{} activation keys updated", akCount);
+
+        // Installed products
+        sql = "UPDATE cp2_installed_products SET product_uuid = ? " +
+            "WHERE product_uuid = ? AND consumer_id IN (SELECT id FROM cp_consumer WHERE owner_id IN ?)";
+
+        int ipCount = session.createSQLQuery(sql)
+            .setParameter("1", updated.getUuid())
+            .setParameter("2", current.getUuid())
+            .setParameterList("3", ownerIds)
+            .executeUpdate();
+
+        log.debug("{} installed products updated", ipCount);
+
+        // pool provided and derived provided products
+        sql = "UPDATE cp_pool SET product_uuid = ? WHERE product_uuid = ? AND owner_id IN ?";
+
+        int ppCount = session.createSQLQuery(sql)
+            .setParameter("1", updated.getUuid())
+            .setParameter("2", current.getUuid())
+            .setParameterList("3", ownerIds)
+            .executeUpdate();
+
+        log.debug("{} pools updated", ppCount);
+
+        sql = "UPDATE cp_pool SET derived_product_uuid = ? WHERE derived_product_uuid = ? AND owner_id IN ?";
+
+        int pdpCount = session.createSQLQuery(sql)
+            .setParameter("1", updated.getUuid())
+            .setParameter("2", current.getUuid())
+            .setParameterList("3", ownerIds)
+            .executeUpdate();
+
+        log.debug("{} pools updated", pdpCount);
+
+        sql = "UPDATE cp2_pool_provided_products SET product_uuid = ? " +
+            "WHERE product_uuid = ? AND pool_id IN (SELECT id FROM cp_pool WHERE owner_id IN ?)";
+
+        int pppCount = session.createSQLQuery(sql)
+            .setParameter("1", updated.getUuid())
+            .setParameter("2", current.getUuid())
+            .setParameterList("3", ownerIds)
+            .executeUpdate();
+
+        log.debug("{} provided products updated", pppCount);
+
+        sql = "UPDATE cp2_pool_dprovided_products SET product_uuid = ? " +
+            "WHERE product_uuid = ? AND pool_id IN (SELECT id FROM cp_pool WHERE owner_id IN ?)";
+
+        int pdppCount = session.createSQLQuery(sql)
+            .setParameter("1", updated.getUuid())
+            .setParameter("2", current.getUuid())
+            .setParameterList("3", ownerIds)
+            .executeUpdate();
+
+        log.debug("{} derived provided products updated", pdppCount);
+
+        // product certificates
+        // Looks like we don't need to do anything here, since we generate them on request. By
+        // leaving them alone, they'll be generated as needed and we save some overhead here.
+
+        this.refresh(updated);
+
+        return updated;
+    }
+
     @Transactional
     public Product create(Product entity) {
         log.debug("Persisting new product entity: {}", entity);
@@ -304,7 +440,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
         if (existing == null) {
             // If we're doing an exclusive update, this should be an error condition
-            throw new RuntimeException("Uh oh");
+            throw new IllegalStateException("Product has not yet been created");
         }
 
         // TODO:
@@ -313,6 +449,16 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         // the caller), we can just point the given orgs to the new product instead of giving them
         // their own version.
         // This is probably going to be a very expensive operation, though.
+
+        List<Product> alternateVersions = this.getProductsByVersion(
+            entity.getId(), entity.getUpdatedUpstream()
+        );
+
+        for (Product alt : alternateVersions) {
+            if (alt.equals(entity)) {
+                return this.updateOwnerProductReferences(entity, alt, owners);
+            }
+        }
 
         // Make sure we actually have something to update.
         if (!existing.equals(entity)) {
@@ -324,8 +470,9 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             if (owners.size() != existing.getOwners().size() || !existing.getOwners().containsAll(owners)) {
                 Product copy = (Product) entity.clone();
 
-                // Clear the UUID so we get a new one on persist.
-                copy.setUuid(null);
+                // Generate a new UUID so we have something unique and something we can use without
+                // needing to flush and refresh.
+                copy.setUuid(Util.generateUUID());
 
                 // Update owner references on both...
                 copy.setOwners(owners);
@@ -333,27 +480,16 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                     existing.removeOwner(owner);
                 }
 
-                // TODO:
-                // Update all other things that point at the old product for the orgs. This includes
-                // things like activation keys, product certs, dependent products (??), provided
-                // products, etc.
-
-                // We won't be touching the updated upstream value here -- we're relying on the
-                // caller knowing what they're going to do with that.
-
+                entity = this.updateOwnerProductReferences(existing, copy, owners);
                 this.merge(existing);
-                this.merge(copy);
-
-                entity = copy;
             }
             else {
                 // Copy the details over to the existing product here
                 existing.merge(entity);
-
-                this.merge(existing);
-
                 entity = existing;
             }
+
+            this.merge(entity);
         }
 
         return entity;
