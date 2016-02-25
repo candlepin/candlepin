@@ -109,10 +109,13 @@ Benchmark.bm (10) do |x|
     i = i + 1
   end
 end
-
-Benchmark.bm(10) do |d|
-  i = 1
-  d.report("Unbinding all: ") {
-      consumer_cp.revoke_all_entitlements()
-  }
+time_start = Time.now
+i = 1
+while i < 1000 do
+  cp.get_owner(owner['key'])
+  i = i + 1
 end
+time_stop = Time.now
+
+puts time_start
+puts time_stop
