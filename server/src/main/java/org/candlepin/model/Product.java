@@ -17,11 +17,19 @@ package org.candlepin.model;
 import org.candlepin.service.UniqueIdGenerator;
 
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,6 +43,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -56,7 +65,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cpo_products")
+@Table(name = "cp2_products")
 public class Product extends AbstractHibernateObject implements Linkable, Cloneable {
 
     public static final  String UEBER_PRODUCT_POSTFIX = "_ueber_product";
@@ -73,15 +82,23 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     @NotNull
     private String id;
 
+    @Column(name = "updated_upstream")
+    private Date updatedUpstream;
+
     @Column(nullable = false)
     @Size(max = 255)
     @NotNull
     private String name;
 
-    @ManyToOne
-    @JoinColumn(nullable = false)
-    @NotNull
-    private Owner owner;
+    @OneToMany
+    @JoinTable(
+        name = "cp2_owner_products",
+        joinColumns = {@JoinColumn(name = "product_uuid", insertable = true, updatable = true)},
+        inverseJoinColumns = {@JoinColumn(name = "owner_id")}
+    )
+    @LazyCollection(LazyCollectionOption.FALSE)
+    @XmlTransient
+    private Set<Owner> owners;
 
     /**
      * How many entitlements per quantity
@@ -89,16 +106,15 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     @Column
     private Long multiplier;
 
-    // NOTE: we need a product "type" so we can tell what class of
-    // product we are...
+    // TODO: we need a product "type" so we can tell what class of
+    // product we are... (02/15/16: is this still true?)
 
     @OneToMany(mappedBy = "product")
-    @Cascade({ org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN })
+    @Cascade({ CascadeType.ALL, CascadeType.DELETE_ORPHAN })
     private Set<ProductAttribute> attributes;
 
     @ElementCollection
-    @CollectionTable(name = "cpo_product_content",
+    @CollectionTable(name = "cp2_product_content",
                      joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
@@ -110,14 +126,17 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
      * fetch.
      */
     @ElementCollection
-    @CollectionTable(name = "cpo_product_dependent_products",
+    @CollectionTable(name = "cp2_product_dependent_products",
                      joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
     @LazyCollection(LazyCollectionOption.FALSE)
     private Set<String> dependentProductIds; // Should these be product references?
 
-    protected Product() {
+    @XmlTransient
+    @Column
+    private Integer locked;
 
+    protected Product() {
     }
 
     /**
@@ -133,7 +152,7 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     public Product(String productId, String name, Owner owner, Long multiplier) {
         setId(productId);
         setName(name);
-        setOwner(owner);
+        setOwners(new HashSet<Owner>());
         setMultiplier(multiplier);
         setAttributes(new HashSet<ProductAttribute>());
         setProductContent(new LinkedList<ProductContent>());
@@ -153,6 +172,9 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     /**
      * Creates a shallow copy of the specified source product. Owners, attributes and content are
      * not duplicated, but the joining objects are (ProductAttribute, ProductContent, etc.).
+     * <p/>
+     * Unlike the merge method, all properties from the source product are copied, including the
+     * state of any null collections.
      *
      * @param source
      *  The Product instance to copy
@@ -160,38 +182,113 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     protected Product(Product source) {
         this.setUuid(source.getUuid());
         this.setId(source.getId());
+
         this.setName(source.getName());
-        this.setOwner(source.getOwner());
+        this.setOwners(source.getOwners());
         this.setMultiplier(source.getMultiplier());
 
         // Copy attributes
-        Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
-        for (ProductAttribute src : source.getAttributes()) {
-            ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
-            dest.setCreated(src.getCreated());
-            dest.setUpdated(src.getUpdated());
-            dest.setProduct(this);
+        if (source.getAttributes() != null) {
+            Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
+            for (ProductAttribute src : source.getAttributes()) {
+                ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
+                dest.setCreated(src.getCreated());
+                dest.setUpdated(src.getUpdated());
+                dest.setProduct(this);
 
-            attributes.add(dest);
+                attributes.add(dest);
+            }
+            this.setAttributes(attributes);
         }
-        this.setAttributes(attributes);
+        else {
+            this.setAttributes(null);
+        }
 
         // Copy content
-        List<ProductContent> content = new LinkedList<ProductContent>();
-        for (ProductContent src : source.getProductContent()) {
-            ProductContent dest = new ProductContent(this, src.getContent(), src.getEnabled());
-            dest.setCreated(src.getCreated());
-            dest.setUpdated(src.getUpdated());
+        if (source.getProductContent() != null) {
+            List<ProductContent> content = new LinkedList<ProductContent>();
+            for (ProductContent src : source.getProductContent()) {
+                ProductContent dest = new ProductContent(this, src.getContent(), src.getEnabled());
+                dest.setCreated(src.getCreated());
+                dest.setUpdated(src.getUpdated());
 
-            content.add(dest);
+                content.add(dest);
+            }
+            this.setProductContent(content);
         }
-        this.setProductContent(content);
+        else {
+            this.setProductContent(null);
+        }
 
         this.setDependentProductIds(source.getDependentProductIds());
 
         this.setCreated(source.getCreated());
         this.setUpdated(source.getUpdated());
+        this.setUpdatedUpstream(source.getUpdatedUpstream());
+        this.setLocked(source.isLocked());
     }
+
+    /**
+     * Copies several properties from the given product on to this product instance. Properties that
+     * are not copied over include any identifiying fields (UUID, ID), the creation date and locking
+     * states. Collections on the source product which are null will be ignored.
+     *
+     * @param source
+     *  The source product instance from which to pull product information
+     *
+     * @return
+     *  this product instance
+     */
+    public Product merge(Product source) {
+
+        if (source.getName() != null) {
+            this.setName(source.getName());
+        }
+
+        this.setMultiplier(source.getMultiplier());
+
+        // Copy owners
+        if (source.getOwners() != null) {
+            this.setOwners(source.getOwners());
+        }
+
+        // Copy attributes
+        if (source.getAttributes() != null) {
+            Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
+            for (ProductAttribute src : source.getAttributes()) {
+                ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
+                dest.setCreated(src.getCreated());
+                dest.setUpdated(src.getUpdated());
+                dest.setProduct(this);
+
+                attributes.add(dest);
+            }
+            this.setAttributes(attributes);
+        }
+
+        // Copy content
+        if (source.getProductContent() != null) {
+            List<ProductContent> content = new LinkedList<ProductContent>();
+            for (ProductContent src : source.getProductContent()) {
+                ProductContent dest = new ProductContent(this, src.getContent(), src.getEnabled());
+                dest.setCreated(src.getCreated());
+                dest.setUpdated(src.getUpdated());
+
+                content.add(dest);
+            }
+            this.setProductContent(content);
+        }
+
+        if (source.getDependentProductIds() != null) {
+            this.setDependentProductIds(source.getDependentProductIds());
+        }
+
+        this.setUpdated(source.getUpdated());
+        this.setUpdatedUpstream(source.getUpdatedUpstream());
+
+        return this;
+    }
+
 
     public static Product createUeberProductForOwner(UniqueIdGenerator idGenerator, Owner owner) {
         return new Product(idGenerator.generateId(), ueberProductNameForOwner(owner), owner, 1L);
@@ -243,6 +340,18 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     }
 
     /**
+     * Retrieves the time this product was last updated upstream
+     *
+     */
+    public Date getUpdatedUpstream() {
+        return updatedUpstream;
+    }
+
+    public void setUpdatedUpstream(Date updated) {
+        this.updatedUpstream = updated;
+    }
+
+    /**
      * @return the product name
      */
     public String getName() {
@@ -258,22 +367,77 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
         this.name = name;
     }
 
-
     /**
-     * @return The product's owner/organization
+     * Retrieves the owners with which this product is associated. If this product is not associated
+     * with any owners, this method may return an empty set, or null.
+     * <p/>
+     * Note that changes made to the set returned by this method will be reflected by this object
+     * and its backing data store.
+     *
+     * @return
+     *  The set of owners with which this product is associated
      */
-    public Owner getOwner() {
-        return this.owner;
+    @XmlTransient
+    public Set<Owner> getOwners() {
+        return this.owners;
     }
 
     /**
-     * Sets the product's owner.
+     * Associates this product with the specified owner. If the given owner is already associated
+     * with this product, the request is silently ignored.
      *
      * @param owner
-     * The new owner/organization for this product.
+     *  An owner to be associated with this product
+     *
+     * @return
+     *  True if this product was successfully associated with the given owner; false otherwise
      */
-    public void setOwner(Owner owner) {
-        this.owner = owner;
+    public boolean addOwner(Owner owner) {
+        if (owner != null) {
+            if (this.owners == null) {
+                this.owners = new HashSet<Owner>();
+            }
+
+            return this.owners.add(owner);
+        }
+
+        return false;
+    }
+
+    /**
+     * Disassociates this product with the specified owner. If the given owner is not associated
+     * with this product, the request is silently ignored.
+     *
+     * @param owner
+     *  The owner to disassociate from this product
+     *
+     * @return
+     *  True if the product was disassociated successfully; false otherwise
+     */
+    public boolean removeOwner(Owner owner) {
+        return (this.owners != null && owner != null) ? this.owners.remove(owner) : false;
+    }
+
+    /**
+     * Sets the owners with which this product is associated.
+     *
+     * @param owners
+     *  A collection of owners to be associated with this product
+     *
+     * @return
+     *  A reference to this product
+     */
+    public Product setOwners(Collection<Owner> owners) {
+        if (this.owners == null) {
+            this.owners = new HashSet<Owner>();
+        }
+
+        this.owners.clear();
+        if (owners != null) {
+            this.owners.addAll(owners);
+        }
+
+        return this;
     }
 
     /**
@@ -397,25 +561,35 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
 
     @Override
     public String toString() {
-        String ownerKey = (owner != null ? owner.getKey() : null);
-        return "Product [owner = " + ownerKey + ", id = " + id + ", name = " + name + "]";
+        return "Product [id = " + id + ", name = " + name + "]";
     }
 
     @Override
-    public boolean equals(Object anObject) {
-        if (this == anObject) {
+    public boolean equals(Object comp) {
+        if (this == comp) {
             return true;
         }
-        if (!(anObject instanceof Product)) {
-            return false;
+
+        if (comp instanceof Product) {
+            // TODO:
+            // Maybe it would be better to check the UUID field and only check the following if
+            // both products have null UUIDs? By not doing this check, we run the risk of two
+            // different products being considered equal if they happen to have the same values at
+            // the time they're checked.
+
+            Product that = (Product) comp;
+
+            return new EqualsBuilder()
+                .append(this.id, that.id)
+                .append(this.name, that.name)
+                .append(this.multiplier, that.multiplier)
+                .append(this.attributes, that.attributes)
+                .append(this.productContent, that.productContent)
+                .append(this.dependentProductIds, that.dependentProductIds)
+                .isEquals();
         }
 
-        Product another = (Product) anObject;
-
-        // TODO: Maybe checking the UUID would be better here...?
-        return (this.getOwner() != null ? this.getOwner().equals(another.getOwner()) :
-            another.getOwner() == null) && getId().equals(another.getId()) &&
-            name.equals(another.getName());
+        return false;
     }
 
     @Override
@@ -425,10 +599,15 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
 
     @Override
     public int hashCode() {
-        if (id != null) {
-            return id.hashCode() * 31;
-        }
-        return 31;
+        // This must always be a subset of equals
+        return new HashCodeBuilder(37, 7)
+            .append(this.id)
+            .append(this.name)
+            .append(this.multiplier)
+            .append(this.attributes)
+            .append(this.productContent)
+            .append(this.dependentProductIds)
+            .toHashCode();
     }
 
     /**
@@ -519,9 +698,16 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     @Override
     public String getHref() {
         // If we don't have an owner here, we're in a bit of trouble.
-        return (this.getOwner() != null && this.getOwner().getKey() != null && this.getId() != null) ?
-            "/owners/" + this.getOwner().getKey() + "/products/" + this.getId() :
-            "";
+        // PER-ORG PRODUCT VERSIONING TODO:
+        // Do we have a way to determine the current owner from context? We need a way to reference
+        // a specific product (uuid) but with owner permissions...? Should this just change to UUIDs
+        // everywhere? This is messy.
+
+        return "/products/" + this.getUuid();
+
+        // return (this.getOwner() != null && this.getOwner().getKey() != null && this.getId() != null) ?
+        //     "/owners/" + this.getOwner().getKey() + "/products/" + this.getId() :
+        //     "";
     }
 
     @Override
@@ -580,6 +766,18 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
             }
         }
         return skuEnabled;
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Product setLocked(boolean locked) {
+        this.locked = locked ? 1 : 0;
+        return this;
+    }
+
+    @XmlTransient
+    public boolean isLocked() {
+        return this.locked != null && this.locked != 0;
     }
 
 }

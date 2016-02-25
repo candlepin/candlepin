@@ -227,13 +227,14 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
                     hasAccess = false;
                     break;
                 }
-                else {
-                    Owner potential = storeFactory.getFor(verifyType).getOwner(entity);
-                    if (potential != null) {
-                        potentialOwners.add(potential);
-                    }
-                    hasAccess = true;
-                }
+
+                // TODO: Come back and fix this
+                // Owner potential = storeFactory.getFor(verifyType).getOwner(entity);
+                // if (potential != null) {
+                //     potentialOwners.add(potential);
+                // }
+
+                hasAccess = true;
             }
 
             // Stop all further checking with any authorization failure

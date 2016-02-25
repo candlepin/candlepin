@@ -17,12 +17,14 @@ package org.candlepin.model;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
+import org.hibernate.Session;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
@@ -32,9 +34,15 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+
+
+
+// PER-ORG PRODUCT VERSIONING TODO: All of this class.
 
 /**
  * interact with Products.
@@ -88,6 +96,10 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     @Deprecated
     @Transactional
     public Product lookupById(String id) {
+        // This provides an interesting problem in that we don't have a way to reference a specific
+        // version of the product. Since we're using a timestamp for the version, we can use the
+        // max value as our tiebreaker
+
         return (Product) this.createSecureCriteria()
             .add(Restrictions.eq("id", id)).uniqueResult();
     }
@@ -99,9 +111,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      */
     @Transactional
     public Product lookupById(Owner owner, String id) {
-        return (Product) this.createSecureCriteria()
-            .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("id", id)).uniqueResult();
+        return this.lookupById(owner.getId(), id);
     }
 
     /**
@@ -112,8 +122,10 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     @Transactional
     public Product lookupById(String ownerId, String productId) {
         return (Product) this.createSecureCriteria()
+            .createAlias("owners", "owner")
             .add(Restrictions.eq("owner.id", ownerId))
-            .add(Restrictions.eq("id", productId)).uniqueResult();
+            .add(Restrictions.eq("id", productId))
+            .uniqueResult();
     }
 
     /**
@@ -137,13 +149,16 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     @Transactional
     public List<Product> listByOwner(Owner owner) {
         return this.createSecureCriteria()
-            .add(Restrictions.eq("owner", owner)).list();
+            .createAlias("owners", "owner")
+            .add(Restrictions.eq("owner.id", owner.getId()))
+            .list();
     }
 
     public List<Product> listAllByIds(Owner owner, Collection<? extends Serializable> ids) {
         return this.listByCriteria(
             this.createSecureCriteria()
-                .add(Restrictions.eq("owner", owner))
+                .createAlias("owners", "owner")
+                .add(Restrictions.eq("owner.id", owner.getId()))
                 .add(Restrictions.in("id", ids))
         );
     }
@@ -173,106 +188,30 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
-     * Create the given product if it does not already exist, otherwise update
-     * existing product.
+     * Retrieves a list of products with the specified Red Hat product ID and upstream last-update
+     * timestamp. If no products were found matching the given criteria, this method returns an
+     * empty list.
      *
-     * @param p Product to create or update.
+     * @param productId
+     *  The Red Hat product ID
+     *
+     * @param updatedUpstream
+     *  The timestamp for the last upstream update
      *
      * @return
-     *  The updated or created Product instance
+     *  a list of products matching the given product ID and upstream update timestamp
      */
-    public Product createOrUpdate(Product p) {
-        // TODO: Should we also verify that the UUID isn't in use?
-        log.debug("Creating or updating product: {}", p);
-
-        Product existing = this.lookupById(p.getOwner(), p.getId());
-
-        if (existing == null) {
-            log.debug("Could not find product by owner/id: {}, {}", p.getOwner(), p.getId());
-            create(p);
-            return p;
-        }
-
-        log.debug("Updating product by owner/id: {}, {}", p.getOwner(), p.getId());
-
-        copy(p, existing);
-        return merge(existing);
+    public List<Product> getProductsByVersion(String productId, Date updatedUpstream) {
+        return this.listByCriteria(
+            this.createSecureCriteria()
+                .add(Restrictions.eq("id", productId))
+                .add(Restrictions.eq("updatedUpstream", updatedUpstream))
+        );
     }
 
-    public void copy(Product src, Product dest) {
-        if (src.getId() == null ? dest.getId() != null : !src.getId().equals(dest.getId())) {
-            throw new RuntimeException(i18n.tr(
-                "Products do not have matching IDs: {0} != {1}", src.getId(), dest.getId()
-            ));
-        }
-
-        dest.setName(src.getName());
-        dest.setMultiplier(src.getMultiplier());
-
-        if (!dest.getAttributes().equals(src.getAttributes())) {
-            dest.getAttributes().clear();
-            for (ProductAttribute attr : src.getAttributes()) {
-                ProductAttribute newAttr = new ProductAttribute(attr.getName(), attr.getValue());
-                dest.addAttribute(newAttr);
-            }
-        }
-
-        if (!dest.getProductContent().equals(src.getProductContent())) {
-            dest.getProductContent().clear();
-            for (ProductContent pc : src.getProductContent()) {
-                dest.addProductContent(new ProductContent(dest, pc.getContent(), pc.getEnabled()));
-            }
-        }
-
-        if (!dest.getDependentProductIds().equals(src.getDependentProductIds())) {
-            dest.getDependentProductIds().clear();
-            dest.setDependentProductIds(src.getDependentProductIds());
-        }
-
-    }
-
-    @Transactional
-    public Product create(Product entity) {
-        /*
-         * Ensure all referenced ProductAttributes are correctly pointing to
-         * this product. This is useful for products being created from incoming
-         * json.
-         */
-        for (ProductAttribute attr : entity.getAttributes()) {
-            attr.setProduct(entity);
-            validateAttributeValue(attr);
-        }
-
-        log.debug("Persisting new product entity: {}", entity);
-
-        /*
-         * Ensure that no circular reference exists
-         */
-        return super.create(entity);
-    }
-
-    @Transactional
-    public Product merge(Product entity) {
-
-        /*
-         * Ensure all referenced ProductAttributes are correctly pointing to
-         * this product. This is useful for products being created from incoming
-         * json.
-         */
-        for (ProductAttribute attr : entity.getAttributes()) {
-            attr.setProduct(entity);
-            validateAttributeValue(attr);
-        }
-        /*
-         * Ensure that no circular reference exists
-         */
-
-        log.debug("Merging product entity: {}", entity);
-
-        return super.merge(entity);
-    }
-
-    private void validateAttributeValue(ProductAttribute attr) {
+    // TODO:
+    // This seems like something that should happen at the resource level, not in the curator.
+    protected void validateAttributeValue(ProductAttribute attr) {
         Set<String> intAttrs = config.getSet(ConfigProperties.INTEGER_ATTRIBUTES);
         Set<String> posIntAttrs = config.getSet(
             ConfigProperties.NON_NEG_INTEGER_ATTRIBUTES);
@@ -332,6 +271,240 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                     attr.getName()));
             }
         }
+    }
+
+    /**
+     * Validates and corrects the object references maintained by the given product instance.
+     *
+     * @param entity
+     *  The product entity to validate
+     *
+     * @return
+     *  The provided product reference
+     */
+    protected Product validateProductReferences(Product entity) {
+        for (ProductAttribute pa : entity.getAttributes()) {
+            pa.setProduct(entity);
+            this.validateAttributeValue(pa);
+        }
+
+        // TODO: Add more reference checks here.
+
+        return entity;
+    }
+
+    /**
+     * Updates the product references currently pointing to the original product to instead point to
+     * the updated product for the specified owners.
+     *
+     * @param current
+     *  The current product other objects are referencing
+     *
+     * @param updated
+     *  The product other objects should reference
+     *
+     * @param owners
+     *  A collection of owners for which to apply the reference changes
+     *
+     * @return
+     *  a reference to the updated product
+     */
+    protected Product updateOwnerProductReferences(Product current, Product updated,
+        Collection<Owner> owners) {
+        // Impl note:
+        // We're doing this in straight SQL because direct use of the ORM would require querying all
+        // of these objects and HQL refuses to do any joining (implicit or otherwise), which
+        // prevents it from updating collections backed by a join table.
+        // As an added bonus, it's quicker, but we'll have to be mindful of the memory vs backend
+        // state divergence.
+
+        Session session = this.currentSession();
+        Set<String> ownerIds = new HashSet<String>();
+
+        for (Owner owner : owners) {
+            ownerIds.add(owner.getId());
+        }
+
+        // Activation key products
+        String sql = "UPDATE cp2_activation_key_products SET product_uuid = ? " +
+            "WHERE product_uuid = ? AND key_id IN (SELECT id FROM cp_activation_key WHERE owner_id IN ?)";
+
+        int akCount = session.createSQLQuery(sql)
+            .setParameter("1", updated.getUuid())
+            .setParameter("2", current.getUuid())
+            .setParameterList("3", ownerIds)
+            .executeUpdate();
+
+        log.debug("{} activation keys updated", akCount);
+
+        // Installed products
+        sql = "UPDATE cp2_installed_products SET product_uuid = ? " +
+            "WHERE product_uuid = ? AND consumer_id IN (SELECT id FROM cp_consumer WHERE owner_id IN ?)";
+
+        int ipCount = session.createSQLQuery(sql)
+            .setParameter("1", updated.getUuid())
+            .setParameter("2", current.getUuid())
+            .setParameterList("3", ownerIds)
+            .executeUpdate();
+
+        log.debug("{} installed products updated", ipCount);
+
+        // pool provided and derived provided products
+        sql = "UPDATE cp_pool SET product_uuid = ? WHERE product_uuid = ? AND owner_id IN ?";
+
+        int ppCount = session.createSQLQuery(sql)
+            .setParameter("1", updated.getUuid())
+            .setParameter("2", current.getUuid())
+            .setParameterList("3", ownerIds)
+            .executeUpdate();
+
+        log.debug("{} pools updated", ppCount);
+
+        sql = "UPDATE cp_pool SET derived_product_uuid = ? WHERE derived_product_uuid = ? AND owner_id IN ?";
+
+        int pdpCount = session.createSQLQuery(sql)
+            .setParameter("1", updated.getUuid())
+            .setParameter("2", current.getUuid())
+            .setParameterList("3", ownerIds)
+            .executeUpdate();
+
+        log.debug("{} pools updated", pdpCount);
+
+        sql = "UPDATE cp2_pool_provided_products SET product_uuid = ? " +
+            "WHERE product_uuid = ? AND pool_id IN (SELECT id FROM cp_pool WHERE owner_id IN ?)";
+
+        int pppCount = session.createSQLQuery(sql)
+            .setParameter("1", updated.getUuid())
+            .setParameter("2", current.getUuid())
+            .setParameterList("3", ownerIds)
+            .executeUpdate();
+
+        log.debug("{} provided products updated", pppCount);
+
+        sql = "UPDATE cp2_pool_dprovided_products SET product_uuid = ? " +
+            "WHERE product_uuid = ? AND pool_id IN (SELECT id FROM cp_pool WHERE owner_id IN ?)";
+
+        int pdppCount = session.createSQLQuery(sql)
+            .setParameter("1", updated.getUuid())
+            .setParameter("2", current.getUuid())
+            .setParameterList("3", ownerIds)
+            .executeUpdate();
+
+        log.debug("{} derived provided products updated", pdppCount);
+
+        // product certificates
+        // Looks like we don't need to do anything here, since we generate them on request. By
+        // leaving them alone, they'll be generated as needed and we save some overhead here.
+
+        this.refresh(updated);
+
+        return updated;
+    }
+
+    @Transactional
+    public Product create(Product entity) {
+        log.debug("Persisting new product entity: {}", entity);
+
+        this.validateProductReferences(entity);
+
+        /*
+         * Ensure that no circular reference exists
+         */
+        return super.create(entity);
+    }
+
+    /**
+     * Updates the specified product instance, creating a new version of the product as necessary.
+     * The product instance returned by this method is not guaranteed to be the same instance passed
+     * in. As such, once this method has been called, callers should only use the instance output by
+     * this method.
+     *
+     * @param entity
+     *  The product entity to update
+     *
+     * @param owners
+     *  The owners for which to update the product
+     *
+     * @return
+     *  the updated product entity, or a new product entity
+     */
+    public Product update(Product entity, Collection<Owner> owners) {
+        // TODO: Should we also verify that the UUID is either null or not in use?
+        log.debug("Creating or updating product: {}", entity);
+
+        if (entity == null) {
+            throw new NullPointerException("entity");
+        }
+
+        Product existing = this.lookupByUuid(entity.getUuid());
+
+        if (existing == null) {
+            // If we're doing an exclusive update, this should be an error condition
+            throw new IllegalStateException("Product has not yet been created");
+        }
+
+        // TODO:
+        // Check for newer versions of the same product. We want to try to dedupe as much data as we
+        // can, and if we have a newer version of the product (which matches the version provided by
+        // the caller), we can just point the given orgs to the new product instead of giving them
+        // their own version.
+        // This is probably going to be a very expensive operation, though.
+
+        List<Product> alternateVersions = this.getProductsByVersion(
+            entity.getId(), entity.getUpdatedUpstream()
+        );
+
+        for (Product alt : alternateVersions) {
+            if (alt.equals(entity)) {
+                return this.updateOwnerProductReferences(entity, alt, owners);
+            }
+        }
+
+        // Make sure we actually have something to update.
+        if (!existing.equals(entity)) {
+            // TODO: Maybe we should avoid versioning in some situations (like when only one owner
+            // is referencing the product)
+
+            // If we're making the update for every owner using the product, don't bother creating
+            // a new version -- just do a raw update.
+            if (owners.size() != existing.getOwners().size() || !existing.getOwners().containsAll(owners)) {
+                Product copy = (Product) entity.clone();
+
+                // Generate a new UUID so we have something unique and something we can use without
+                // needing to flush and refresh.
+                copy.setUuid(Util.generateUUID());
+
+                // Update owner references on both...
+                copy.setOwners(owners);
+                for (Owner owner : owners) {
+                    existing.removeOwner(owner);
+                }
+
+                entity = this.updateOwnerProductReferences(existing, copy, owners);
+                this.merge(existing);
+            }
+            else {
+                // Copy the details over to the existing product here
+                existing.merge(entity);
+                entity = existing;
+            }
+
+            this.merge(entity);
+        }
+
+        return entity;
+    }
+
+    @Transactional
+    public Product merge(Product entity) {
+        log.debug("Merging product entity: {}", entity);
+
+        this.validateProductReferences(entity);
+
+        /*
+         * Ensure that no circular reference exists
+         */
+        return super.merge(entity);
     }
 
     @Transactional

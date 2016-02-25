@@ -103,11 +103,6 @@ public class StoreFactory {
         public Owner lookup(String key, Owner owner) {
             throw new IllegalStateException("Cannot look up an owner with an owner");
         }
-
-        @Override
-        public Owner getOwner(Persisted entity) {
-            return (Owner) entity;
-        }
     }
 
     private class EnvironmentStore implements EntityStore<Environment> {
@@ -126,11 +121,6 @@ public class StoreFactory {
         @Override
         public Environment lookup(String key, Owner owner) {
             return lookup(key);
-        }
-
-        @Override
-        public Owner getOwner(Persisted entity) {
-            return ((Environment) entity).getOwner();
         }
     }
 
@@ -160,11 +150,6 @@ public class StoreFactory {
             // the requested items is deleted.
             return consumerCurator.findByUuids(keys);
         }
-
-        @Override
-        public Owner getOwner(Persisted entity) {
-            return ((Consumer) entity).getOwner();
-        }
     }
 
     private class EntitlementStore implements EntityStore<Entitlement> {
@@ -183,11 +168,6 @@ public class StoreFactory {
         @Override
         public List<Entitlement> lookup(Collection<String> keys) {
             return entitlementCurator.listAllByIds(keys);
-        }
-
-        @Override
-        public Owner getOwner(Persisted entity) {
-            return ((Entitlement) entity).getOwner();
         }
     }
 
@@ -208,11 +188,6 @@ public class StoreFactory {
         public List<Pool> lookup(Collection<String> keys) {
             return poolCurator.listAllByIds(keys);
         }
-
-        @Override
-        public Owner getOwner(Persisted entity) {
-            return ((Pool) entity).getOwner();
-        }
     }
 
     private class ActivationKeyStore implements EntityStore<ActivationKey> {
@@ -231,11 +206,6 @@ public class StoreFactory {
         @Override
         public List<ActivationKey> lookup(Collection<String> keys) {
             return activationKeyCurator.listAllByIds(keys);
-        }
-
-        @Override
-        public Owner getOwner(Persisted entity) {
-            return ((ActivationKey) entity).getOwner();
         }
     }
 
@@ -259,11 +229,6 @@ public class StoreFactory {
         public List<Product> lookup(Collection<String> keys, Owner owner) {
             return productCurator.listAllByIds(owner, keys);
         }
-
-        @Override
-        public Owner getOwner(Persisted entity) {
-            return ((Product) entity).getOwner();
-        }
     }
 
     private class JobStatusStore implements EntityStore<JobStatus> {
@@ -282,12 +247,6 @@ public class StoreFactory {
         @Override
         public List<JobStatus> lookup(Collection<String> jobIds) {
             return jobCurator.listAllByIds(jobIds);
-        }
-
-        @Override
-        public Owner getOwner(Persisted entity) {
-            // JobStatus does not necessarily belong to an owner.
-            return null;
         }
     }
 
@@ -313,12 +272,6 @@ public class StoreFactory {
             }
 
             return users;
-        }
-
-        @Override
-        public Owner getOwner(Persisted entity) {
-            // Users do not (necessarily) belong to a specific org:
-            return null;
         }
     }
 }

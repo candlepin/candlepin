@@ -18,9 +18,15 @@ import org.candlepin.service.UniqueIdGenerator;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.Type;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,14 +36,19 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinTable;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+
 
 /**
  * ProductContent
@@ -45,7 +56,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cpo_content")
+@Table(name = "cp2_content")
 public class Content extends AbstractHibernateObject {
 
     public static final  String UEBER_CONTENT_NAME = "ueber_content";
@@ -73,10 +84,15 @@ public class Content extends AbstractHibernateObject {
     @NotNull
     private String label;
 
-    @ManyToOne
-    @JoinColumn(nullable = false)
-    @NotNull
-    private Owner owner;
+    @OneToMany
+    @JoinTable(
+        name = "cp2_owner_content",
+        joinColumns = {@JoinColumn(name = "content_uuid", insertable = true, updatable = true)},
+        inverseJoinColumns = {@JoinColumn(name = "owner_id")}
+    )
+    @LazyCollection(LazyCollectionOption.FALSE)
+    @XmlTransient
+    private Set<Owner> owners = new HashSet<Owner>();
 
     @Column(nullable = false)
     @Size(max = 255)
@@ -112,7 +128,7 @@ public class Content extends AbstractHibernateObject {
     private Long metadataExpire;
 
     @ElementCollection
-    @CollectionTable(name = "cpo_content_modified_products",
+    @CollectionTable(name = "cp2_content_modified_products",
                      joinColumns = @JoinColumn(name = "content_uuid"))
     @Column(name = "element")
     @Size(max = 255)
@@ -124,7 +140,7 @@ public class Content extends AbstractHibernateObject {
 
     public Content(Owner owner, String name, String id, String label, String type,
         String vendor, String contentUrl, String gpgUrl, String arches) {
-        setOwner(owner);
+        addOwner(owner);
         setName(name);
         setId(id);
         setLabel(label);
@@ -200,12 +216,65 @@ public class Content extends AbstractHibernateObject {
         this.id = id;
     }
 
-    public void setOwner(Owner owner) {
-        this.owner = owner;
+    /**
+     * Retrieves the owners with which this content is associated. If this content is not associated
+     * with any owners, this method returns an empty set.
+     * <p/>
+     * Note that changes made to the set returned by this method will be reflected by this object
+     * and its backing data store.
+     *
+     * @return
+     *  The set of owners with which this content is associated
+     */
+    @XmlTransient
+    public Set<Owner> getOwners() {
+        return this.owners;
     }
 
-    public Owner getOwner() {
-        return this.owner;
+    /**
+     * Associates this content with the specified owner. If the given owner is already associated
+     * with this content, the request is silently ignored.
+     *
+     * @param owner
+     *  An owner to be associated with this content
+     *
+     * @return
+     *  True if this content was successfully associated with the given owner; false otherwise
+     */
+    public boolean addOwner(Owner owner) {
+        return owner != null ? this.owners.add(owner) : false;
+    }
+
+    /**
+     * Disassociates this content with the specified owner. If the given owner is not associated
+     * with this content, the request is silently ignored.
+     *
+     * @param owner
+     *  The owner to disassociate from this content
+     *
+     * @return
+     *  True if the content was disassociated successfully; false otherwise
+     */
+    public boolean removeOwner(Owner owner) {
+        return owner != null ? this.owners.remove(owner) : false;
+    }
+
+    /**
+     * Sets the owners with which this content is associated.
+     *
+     * @param owners
+     *  A collection of owners to be associated with this content
+     *
+     * @return
+     *  A reference to this content
+     */
+    public Content setOwners(Collection<Owner> owners) {
+        this.owners.clear();
+        if (owners != null) {
+            this.owners.addAll(owners);
+        }
+
+        return this;
     }
 
     public String getLabel() {
@@ -279,6 +348,7 @@ public class Content extends AbstractHibernateObject {
         if (other instanceof Content) {
             Content that = (Content) other;
             return new EqualsBuilder()
+                .append(this.id, that.id)
                 .append(this.contentUrl, that.contentUrl)
                 .append(this.gpgUrl, that.gpgUrl)
                 .append(this.label, that.label)
@@ -290,7 +360,7 @@ public class Content extends AbstractHibernateObject {
                 .append(this.vendor, that.vendor)
                 .append(this.arches, that.arches)
                 .append(this.modifiedProductIds, that.modifiedProductIds)
-                .append(this.owner, that.owner)
+                .append(this.owners, that.owners)
                 .isEquals();
         }
 
@@ -301,6 +371,7 @@ public class Content extends AbstractHibernateObject {
     public int hashCode() {
         // This must always be a subset of equals
         return new HashCodeBuilder(37, 7)
+            .append(this.id)
             .append(this.contentUrl)
             .append(this.gpgUrl)
             .append(this.label)
@@ -312,6 +383,7 @@ public class Content extends AbstractHibernateObject {
             .append(this.vendor)
             .append(this.arches)
             .append(this.modifiedProductIds)
+            .append(this.owners)
             .toHashCode();
     }
 

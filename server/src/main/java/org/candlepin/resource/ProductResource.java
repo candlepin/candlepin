@@ -145,14 +145,7 @@ public class ProductResource {
     @SecurityHole
     public Product getProduct(@PathParam("product_id") String productId) {
         Product product = this.findProduct(productId);
-
-        // Make sure the owner cannot be identified from the returned product
-        // TODO: It may be better/cleaner to evict the object (and its related objects) from
-        // Hibernate's session cache rather than creating a copy.
-        Product censored = (Product) product.clone();
-        censored.setOwner(null);
-
-        return censored;
+        return product;
     }
 
     /**
@@ -326,7 +319,8 @@ public class ProductResource {
 
         Product product = this.findProduct(productId);
 
-        List<Statistic> stats =  statisticCurator.getStatisticsByProduct(product.getOwner(),
+        // PER-ORG VERSIONING FIXME:
+        List<Statistic> stats = statisticCurator.getStatisticsByProduct(null,//product.getOwner(),
              productId, valueType, ResourceDateParser.getFromDate(from, to, days),
              ResourceDateParser.parseDateString(to)
         );
