@@ -94,6 +94,9 @@ public class OwnerProductResource {
      *
      * @return
      *  the Owner instance for the owner with the specified key.
+     *
+     * @httpcode 200
+     * @httpcode 404
      */
     protected Owner getOwnerByKey(String key) {
         Owner owner = this.ownerCurator.lookupByKey(key);
@@ -303,6 +306,9 @@ public class OwnerProductResource {
      *
      * @return
      *  the Owner instance for the owner with the specified key.
+     *
+     * @httpcode 200
+     * @httpcode 404
      */
     protected Content getContent(Owner owner, String contentId) {
         Content content = this.contentCurator.lookupById(owner, contentId);
@@ -439,6 +445,7 @@ public class OwnerProductResource {
      * @param productId
      * @param lazyRegen
      * @return a JobDetail object
+     * @httpcode 200
      */
     @PUT
     @Path("/{product_id}/subscriptions")

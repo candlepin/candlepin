@@ -14,6 +14,8 @@
  */
 package org.candlepin.util.apicrawl;
 
+import org.candlepin.util.apicrawl.ApiCrawler.DefaultHashMap;
+
 //import com.sun.javadoc.AnnotationDesc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.javadoc.AnnotationDesc;
@@ -25,17 +27,21 @@ import com.sun.javadoc.Tag;
 import com.sun.javadoc.Type;
 
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
  */
 public class ApiDoclet {
+    public static final Logger log = LoggerFactory.getLogger(ApiDoclet.class);
     private static final String RETURN_TAG = "return";
     private static final String RETURN_CODE_TAG = "httpcode";
     private static final String DEPRECATED_TAG = "deprecated";
@@ -108,6 +114,7 @@ public class ApiDoclet {
             }
 
             if (docClass) {
+                log.info("Examining doclets for {}", classDoc.name());
                 getAllMethods(classDoc, methods);
             }
         }
@@ -128,9 +135,40 @@ public class ApiDoclet {
         if (type != null && type.qualifiedTypeName().startsWith("org.candlepin")) {
             ClassDoc classDoc = type.asClassDoc();
             getAllMethods(classDoc.superclassType(), methods);
+
+            Map<String, Integer> occurenceMap = new DefaultHashMap<String, Integer>(new Integer(0));
             for (MethodDoc methodDoc : classDoc.methods()) {
                 if (methodDoc.isPublic()) {
-                    methods.add(new RestMethod(methodDoc));
+                    String name = methodDoc.name();
+                    occurenceMap.put(name, occurenceMap.get(name) + 1);
+                }
+            }
+
+            for (MethodDoc methodDoc : classDoc.methods()) {
+                boolean isRestful = false;
+                for (AnnotationDesc ann : methodDoc.annotations()) {
+                    String annType = ann.annotationType().qualifiedName();
+
+                    List<String> httpVerbs = Arrays.asList(
+                        "javax.ws.rs.DELETE",
+                        "javax.ws.rs.HEAD",
+                        "javax.ws.rs.OPTIONS",
+                        "javax.ws.rs.GET",
+                        "javax.ws.rs.POST",
+                        "javax.ws.rs.PUT"
+                    );
+
+                    if (httpVerbs.contains(annType)) {
+                        isRestful = true;
+                        break;
+                    }
+                }
+
+                if (methodDoc.isPublic() && isRestful) {
+                    log.debug("Going to document {}", methodDoc.name());
+
+                    boolean isOverloaded = occurenceMap.get(methodDoc.name()) > 1;
+                    methods.add(new RestMethod(methodDoc, isOverloaded));
                 }
             }
         }
@@ -147,7 +185,7 @@ public class ApiDoclet {
         private String returns;
         private List<HttpStatusCode> httpStatusCodes;
 
-        private RestMethod(MethodDoc doc) {
+        private RestMethod(MethodDoc doc, boolean isOverloaded) {
             this.httpStatusCodes = new ArrayList<HttpStatusCode>();
 
             for (Tag tag : doc.tags(RETURN_CODE_TAG)) {
@@ -163,6 +201,10 @@ public class ApiDoclet {
             }
 
             this.method = doc.qualifiedName();
+            if (isOverloaded) {
+                this.method = doc.qualifiedName() + doc.signature();
+            }
+
             this.description = doc.commentText();
         }
 
