@@ -30,8 +30,8 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.tasks.CancelJobJob;
+import org.candlepin.pinsetter.tasks.ImportRecordJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
-import org.candlepin.pinsetter.tasks.StatisticHistoryTask;
 import org.candlepin.util.Util;
 
 import org.junit.Before;
@@ -91,7 +91,7 @@ public class PinsetterKernelTest {
                     put("org.quartz.threadPool.threadCount", "25");
                     put("org.quartz.threadPool.threadPriority", "5");
                     put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());
-                    put(ConfigProperties.TASKS, StatisticHistoryTask.class.getName());
+                    put(ConfigProperties.TASKS, ImportRecordJob.class.getName());
                 }
             });
         when(sfactory.getScheduler()).thenReturn(sched);
@@ -133,7 +133,7 @@ public class PinsetterKernelTest {
             new HashMap<String, String>() {
                 {
                     put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());
-                    put(ConfigProperties.TASKS, StatisticHistoryTask.class.getName());
+                    put(ConfigProperties.TASKS, ImportRecordJob.class.getName());
                     put(ConfigProperties.ENABLE_PINSETTER, "false");
                 }
             });
@@ -381,7 +381,7 @@ public class PinsetterKernelTest {
             new HashMap<String, String>() {
                 {
                     put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());
-                    put(ConfigProperties.TASKS, StatisticHistoryTask.class.getName());
+                    put(ConfigProperties.TASKS, ImportRecordJob.class.getName());
                     put("org.quartz.jobStore.isClustered", "true");
                 }
             });
@@ -411,14 +411,14 @@ public class PinsetterKernelTest {
             new HashMap<String, String>() {
                 {
                     put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());
-                    put(ConfigProperties.TASKS, StatisticHistoryTask.class.getName());
+                    put(ConfigProperties.TASKS, ImportRecordJob.class.getName());
                     put("org.quartz.jobStore.isClustered", "true");
                 }
             });
 
         Set<JobKey> jobs = new HashSet<JobKey>();
         jobs.add(jobKey(JobCleaner.class.getName()));
-        jobs.add(jobKey(StatisticHistoryTask.class.getName()));
+        jobs.add(jobKey(ImportRecordJob.class.getName()));
         when(sched.getJobKeys(eq(jobGroupEquals("cron group")))).thenReturn(jobs);
         pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.startup();
@@ -433,7 +433,7 @@ public class PinsetterKernelTest {
             new HashMap<String, String>() {
                 {
                     put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());
-                    put(ConfigProperties.TASKS, StatisticHistoryTask.class.getName());
+                    put(ConfigProperties.TASKS, ImportRecordJob.class.getName());
                     put("org.quartz.jobStore.isClustered", "true");
                 }
             });

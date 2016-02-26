@@ -71,7 +71,6 @@ public class RootResource {
         addResource(PoolResource.class);
         addResource(ProductResource.class);
         addResource(RulesResource.class);
-        addResource(StatisticResource.class, "statistics/generate");
         addResource(StatusResource.class);
         addResource(SubscriptionResource.class);
         addResource(ActivationKeyResource.class);
@@ -173,11 +172,7 @@ public class RootResource {
         return links;
     }
 
-    private static void addResource(Object resource, String rel) {
-        RESOURCE_CLASSES.put(resource, rel);
-    }
-
     private static void addResource(Object resource) {
-        addResource(resource, null);
+        RESOURCE_CLASSES.put(resource, null);
     }
 }

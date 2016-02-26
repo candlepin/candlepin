@@ -33,8 +33,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolFilterBuilder;
-import org.candlepin.model.Statistic;
-import org.candlepin.model.StatisticCurator;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
 
@@ -67,20 +65,17 @@ public class PoolResource {
 
     private ConsumerCurator consumerCurator;
     private OwnerCurator ownerCurator;
-    private StatisticCurator statisticCurator;
     private I18n i18n;
     private PoolManager poolManager;
     private CalculatedAttributesUtil calculatedAttributesUtil;
 
     @Inject
     public PoolResource(ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
-        StatisticCurator statisticCurator, I18n i18n,
-        PoolManager poolManager,
+        I18n i18n, PoolManager poolManager,
         CalculatedAttributesUtil calculatedAttributesUtil) {
 
         this.consumerCurator = consumerCurator;
         this.ownerCurator = ownerCurator;
-        this.statisticCurator = statisticCurator;
         this.i18n = i18n;
         this.poolManager = poolManager;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
@@ -272,27 +267,6 @@ public class PoolResource {
     }
 
     /**
-     * Retrieve a list of Statistics for a Pool
-     *
-     * @return a list of Statistic objects
-     * @httpcode 400
-     * @httpcode 200
-     */
-    @GET
-    @Path("{pool_id}/statistics")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getPoolStats(@PathParam("pool_id")
-                            @Verify(Pool.class) String id,
-                            @QueryParam("from") String from,
-                            @QueryParam("to") String to,
-                            @QueryParam("days") String days) {
-
-        return statisticCurator.getStatisticsByPool(id, null,
-                                ResourceDateParser.getFromDate(from, to, days),
-                                ResourceDateParser.parseDateString(to));
-    }
-
-    /**
      * Retrieve a list of Entitlements for a Pool
      *
      * @return a list of Entitlement objects
@@ -317,29 +291,6 @@ public class PoolResource {
         List<Entitlement> entitlements = new ArrayList<Entitlement>();
         entitlements.addAll(pool.getEntitlements());
         return entitlements;
-    }
-
-    /**
-     * Retrieve a list of Statistics for a Pool
-     * <p>
-     * By Type
-     *
-     * @return a list of Statistic objects
-     * @httpcode 200
-     */
-    @GET
-    @Path("{pool_id}/statistics/{vtype}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getPoolStats(@PathParam("pool_id")
-                            @Verify(Pool.class) String id,
-                            @PathParam("vtype") String valueType,
-                            @QueryParam("from") String from,
-                            @QueryParam("to") String to,
-                            @QueryParam("days") String days) {
-
-        return statisticCurator.getStatisticsByPool(id, valueType,
-                                ResourceDateParser.getFromDate(from, to, days),
-                                ResourceDateParser.parseDateString(to));
     }
 
 }
