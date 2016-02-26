@@ -994,7 +994,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             oc,
             akc,
             null,
-            null,
             i18n,
             null,
             null,
@@ -1166,7 +1165,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Importer importer = mock(Importer.class);
         OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null,
-            null, null, i18n, es, null, null, null, importer, null, null,
+            null, i18n, es, null, null, null, importer, null, null,
             null, importRecordCurator, null, null, null, null,
             null, null, null, contentOverrideValidator,
             serviceLevelValidator, null, null, null, null, null);
@@ -1195,7 +1194,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Importer importer = mock(Importer.class);
         EventSink es = mock(EventSink.class);
         OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null,
-            null, null, i18n, es, null, null, null, importer, null, null,
+            null, i18n, es, null, null, null, importer, null, null,
             null, importRecordCurator, null, null, null, null,
             null, null, null, contentOverrideValidator,
             serviceLevelValidator, null, null, null, null, null);
@@ -1237,7 +1236,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         UpstreamConsumer upstream = mock(UpstreamConsumer.class);
         Owner owner = mock(Owner.class);
         OwnerResource ownerres = new OwnerResource(oc, null,
-            null, null, i18n, null, null, null, null, null, null, null,
+            null, i18n, null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, null, null,
             contentOverrideValidator, serviceLevelValidator, null, null, null, null, null);
 
@@ -1433,7 +1432,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerCurator oc = mock(OwnerCurator.class);
         EntitlementCurator ec = mock(EntitlementCurator.class);
         OwnerResource ownerres = new OwnerResource(oc, null,
-                null, null, i18n, null, null, null, null, null, null, null,
+                null, i18n, null, null, null, null, null, null, null,
                 null, null, null, null, null, ec, null, null, null,
                 null, null, null, null, null, null, null);
 
@@ -1456,7 +1455,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerCurator oc = mock(OwnerCurator.class);
         OwnerResource ownerres = new OwnerResource(oc, null,
-                null, null, i18n, null, null, null, null, null, null, null,
+                null, i18n, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null);
 
@@ -1480,7 +1479,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
 
         OwnerResource resource = new OwnerResource(
-            oc, null, cc, null, i18n, null, null, null, null, null, cpm, null, null, null, null,
+            oc, null, cc, i18n, null, null, null, null, null, cpm, null, null, null, null,
             null, ecc, ec, ucg, null, null, null, null, null, null, null, null, null
         );
 
@@ -1516,7 +1515,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         UeberCertificateGenerator ucg = mock(UeberCertificateGenerator.class);
 
         OwnerResource resource = new OwnerResource(
-            oc, null, cc, null, i18n, null, null, null, null, null, cpm, null, null, null, null,
+            oc, null, cc, i18n, null, null, null, null, null, cpm, null, null, null, null,
             null, ecc, ec, ucg, null, null, null, null, null, null, null, null, null
         );
 
@@ -1548,7 +1547,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         UeberCertificateGenerator ucg = mock(UeberCertificateGenerator.class);
 
         OwnerResource resource = new OwnerResource(
-            oc, null, cc, null, i18n, null, null, null, null, null, cpm, null, null, null, null,
+            oc, null, cc, i18n, null, null, null, null, null, cpm, null, null, null, null,
             null, ecc, ec, ucg, null, null, null, null, null, null, null, null, null
         );
 
@@ -1579,7 +1578,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         UeberCertificateGenerator ucg = mock(UeberCertificateGenerator.class);
 
         OwnerResource resource = new OwnerResource(
-            oc, null, cc, null, i18n, null, null, null, null, null, cpm, null, null, null, null,
+            oc, null, cc, i18n, null, null, null, null, null, cpm, null, null, null, null,
             null, ecc, ec, ucg, null, null, null, null, null, null, null, null, null
         );
 
@@ -1607,7 +1606,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(pm.retrieveServiceLevelsForOwner(eq(o), eq(false))).thenReturn(levels);
 
         OwnerResource resource = new OwnerResource(
-                oc, null, cc, null, i18n, null, null, null, null, null, pm, null, null, null, null,
+                oc, null, cc, i18n, null, null, null, null, null, pm, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null
             );
         Set<String> returnLevels = resource.ownerServiceLevels("owner-A", p, "false");

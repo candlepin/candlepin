@@ -35,7 +35,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.StatisticCurator;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -62,7 +61,6 @@ public class PoolResourceTest extends DatabaseTestFixture {
     @Inject private PoolCurator poolCurator;
     @Inject private ConsumerCurator consumerCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private StatisticCurator statisticCurator;
     @Inject private I18n i18n;
     @Inject private CandlepinPoolManager poolManager;
 
@@ -111,9 +109,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
         poolCurator.create(pool3);
 
-        poolResource = new PoolResource(
-            consumerCurator, ownerCurator, statisticCurator, i18n, poolManager, attrUtil
-        );
+        poolResource = new PoolResource(consumerCurator, ownerCurator, i18n, poolManager, attrUtil);
 
         // Consumer system with too many cpu cores:
 

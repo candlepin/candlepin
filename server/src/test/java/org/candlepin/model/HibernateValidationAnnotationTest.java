@@ -390,17 +390,6 @@ public class HibernateValidationAnnotationTest {
     }
 
     @Test
-    public void statisticTest() throws Exception {
-        Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<Field, Matcher<AnnotatedElement>>();
-        fm.put(Statistic.class.getDeclaredField("id"), notNull);
-        fm.put(Statistic.class.getDeclaredField("entryType"), notNull);
-        fm.put(Statistic.class.getDeclaredField("valueReference"), size);
-        fm.put(Statistic.class.getDeclaredField("value"), notNull);
-        fm.put(Statistic.class.getDeclaredField("ownerId"), size);
-        runMap(fm);
-    }
-
-    @Test
     public void subscriptionsCertificateTest() throws Exception {
         Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<Field, Matcher<AnnotatedElement>>();
         fm.put(SubscriptionsCertificate.class.getDeclaredField("id"), notNull);

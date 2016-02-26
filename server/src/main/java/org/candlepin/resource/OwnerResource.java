@@ -67,8 +67,6 @@ import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
-import org.candlepin.model.Statistic;
-import org.candlepin.model.StatisticCurator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -149,7 +147,6 @@ public class OwnerResource {
     private OwnerCurator ownerCurator;
     private OwnerInfoCurator ownerInfoCurator;
     private ActivationKeyCurator activationKeyCurator;
-    private StatisticCurator statisticCurator;
     private OwnerServiceAdapter ownerService;
     private ConsumerCurator consumerCurator;
     private I18n i18n;
@@ -179,7 +176,6 @@ public class OwnerResource {
     public OwnerResource(OwnerCurator ownerCurator,
         ActivationKeyCurator activationKeyCurator,
         ConsumerCurator consumerCurator,
-        StatisticCurator statisticCurator,
         I18n i18n,
         EventSink sink,
         EventFactory eventFactory,
@@ -209,7 +205,6 @@ public class OwnerResource {
         this.ownerInfoCurator = ownerInfoCurator;
         this.activationKeyCurator = activationKeyCurator;
         this.consumerCurator = consumerCurator;
-        this.statisticCurator = statisticCurator;
         this.i18n = i18n;
         this.sink = sink;
         this.eventFactory = eventFactory;
@@ -1264,103 +1259,6 @@ public class OwnerResource {
         Owner owner = findOwner(ownerKey);
 
         return this.importRecordCurator.findRecords(owner);
-    }
-
-    /**
-     * Retrieves a list of Statistics for an Owner
-     *
-     * @return a list of Statistic objects
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/statistics")
-    public List<Statistic> getStatistics(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @QueryParam("from") String from,
-        @QueryParam("to") String to,
-        @QueryParam("days") String days) {
-        Owner o = findOwner(ownerKey);
-
-        if (o == null) {
-            throw new NotFoundException(i18n.tr(
-                "owner with key: {0} was not found.", ownerKey));
-        }
-
-
-        return statisticCurator.getStatisticsByOwner(o, "", "", "",
-                                ResourceDateParser.getFromDate(from, to, days),
-                                ResourceDateParser.parseDateString(to));
-    }
-
-    /**
-     * Retrieves a list of Statistics for an Owner
-     * <p>
-     * By Type
-     *
-     * @return a list of Statistic objects
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/statistics/{type}")
-    public List<Statistic> getStatistics(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @PathParam("type") String qType,
-        @QueryParam("reference") String reference,
-        @QueryParam("from") String from,
-        @QueryParam("to") String to,
-        @QueryParam("days") String days) {
-        Owner o = findOwner(ownerKey);
-
-        if (o == null) {
-            throw new NotFoundException(i18n.tr(
-                "owner with key: {0} was not found.", ownerKey));
-        }
-
-        return statisticCurator.getStatisticsByOwner(o, qType, reference, "",
-                                ResourceDateParser.getFromDate(from, to, days),
-                                ResourceDateParser.parseDateString(to));
-    }
-
-    /**
-     * Retrieves a list of Statistics for an Owner
-     * <p>
-     * By Types
-     *
-     * @return a list of Statistic objects
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/statistics/{qtype}/{vtype}")
-    public List<Statistic> getStatistics(
-        @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
-        @PathParam("qtype") String qType,
-        @PathParam("vtype") String vType,
-        @QueryParam("reference") String reference,
-        @QueryParam("from") String from,
-        @QueryParam("to") String to,
-        @QueryParam("days") String days) {
-        Owner o = findOwner(ownerKey);
-
-        if (o == null) {
-            throw new NotFoundException(i18n.tr(
-                "owner with key: {0} was not found.", ownerKey));
-        }
-
-
-        return statisticCurator.getStatisticsByOwner(o, qType, reference, vType,
-                                ResourceDateParser.getFromDate(from, to, days),
-                                ResourceDateParser.parseDateString(to));
     }
 
     /**

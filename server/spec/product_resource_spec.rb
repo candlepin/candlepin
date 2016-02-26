@@ -236,17 +236,5 @@ describe 'Product Resource' do
     result["owner"].should be_nil
   end
 
-  it "censors owner information for owner-agnostic statistics" do
-    @cp.generate_statistics()
-
-    result = @cp.get("/products/#{@product.id}/statistics")
-    result.should_not be_nil
-    result.length.should == 3
-
-    result.each do |stats|
-      stats['ownerId'].should be_nil
-    end
-  end
-
 end
 

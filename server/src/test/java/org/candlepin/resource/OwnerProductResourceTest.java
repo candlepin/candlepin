@@ -96,7 +96,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         ProductCurator pc = mock(ProductCurator.class);
         OwnerCurator oc = mock(OwnerCurator.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        OwnerProductResource pr = new OwnerProductResource(pc, null, oc, null, null, i18n);
+        OwnerProductResource pr = new OwnerProductResource(pc, null, oc, null, i18n);
 
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);

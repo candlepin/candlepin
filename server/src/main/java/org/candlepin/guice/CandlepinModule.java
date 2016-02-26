@@ -99,7 +99,6 @@ import org.candlepin.resource.ProductResource;
 import org.candlepin.resource.RoleResource;
 import org.candlepin.resource.RootResource;
 import org.candlepin.resource.RulesResource;
-import org.candlepin.resource.StatisticResource;
 import org.candlepin.resource.StatusResource;
 import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.resource.UserResource;
@@ -211,7 +210,6 @@ public class CandlepinModule extends AbstractModule {
         bind(AdminResource.class);
         bind(StatusResource.class);
         bind(EnvironmentResource.class);
-        bind(StatisticResource.class);
         bind(NotSupportedExceptionMapper.class);
         bind(NotAuthorizedExceptionMapper.class);
         bind(NotFoundExceptionMapper.class);

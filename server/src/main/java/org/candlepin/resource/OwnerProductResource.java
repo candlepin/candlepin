@@ -27,10 +27,7 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.Statistic;
-import org.candlepin.model.StatisticCurator;
 import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
-import org.candlepin.resource.util.ResourceDateParser;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -71,19 +68,16 @@ public class OwnerProductResource {
     private ContentCurator contentCurator;
     private OwnerCurator ownerCurator;
     private ProductCertificateCurator productCertCurator;
-    private StatisticCurator statisticCurator;
     private I18n i18n;
 
 
     @Inject
     public OwnerProductResource(ProductCurator productCurator, ContentCurator contentCurator,
-        OwnerCurator ownerCurator, ProductCertificateCurator productCertCurator,
-        StatisticCurator statisticCurator, I18n i18n) {
+            OwnerCurator ownerCurator, ProductCertificateCurator productCertCurator, I18n i18n) {
 
         this.productCurator = productCurator;
         this.contentCurator = contentCurator;
         this.productCertCurator = productCertCurator;
-        this.statisticCurator = statisticCurator;
         this.ownerCurator = ownerCurator;
         this.i18n = i18n;
     }
@@ -437,53 +431,6 @@ public class OwnerProductResource {
         }
 
         productCurator.delete(product);
-    }
-
-    /**
-     * Retrieves a list of Statistics for a Product
-     *
-     * @return a list of Statistic objects
-     * @httpcode 400
-     * @httpcode 200
-     */
-    @GET
-    @Path("/{product_id}/statistics")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getProductStats(
-        @PathParam("owner_key") String ownerKey,
-        @PathParam("product_id") String productId,
-        @QueryParam("from") String from,
-        @QueryParam("to") String to,
-        @QueryParam("days") String days) {
-
-        return this.getProductStats(ownerKey, productId, null, from, to, days);
-    }
-
-    /**
-     * Retrieves a list of Statistics for a Product
-     * <p>
-     * By Statistic type
-     *
-     * @return a list of Statistic objects
-     * @httpcode 400
-     * @httpcode 200
-     */
-    @GET
-    @Path("/{product_id}/statistics/{vtype}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getProductStats(
-        @PathParam("owner_key") String ownerKey,
-        @PathParam("product_id") String productId,
-        @PathParam("vtype") String valueType,
-        @QueryParam("from") String from,
-        @QueryParam("to") String to,
-        @QueryParam("days") String days) {
-
-        Owner owner = this.getOwnerByKey(ownerKey);
-
-        return statisticCurator.getStatisticsByProduct(owner, productId, valueType,
-                                ResourceDateParser.getFromDate(from, to, days),
-                                ResourceDateParser.parseDateString(to));
     }
 
     /**
