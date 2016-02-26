@@ -452,6 +452,10 @@ module Candlepin
           opts[:installed_products] = [opts[:installed_products]]
         end
 
+        unless opts[:activation_keys].is_a?(Array)
+          opts[:activation_keys] = [opts[:activation_keys]]
+        end
+
         consumer_json = opts.slice(:name, :facts, :uuid)
 
         if opts[:hypervisor_id]
@@ -485,7 +489,7 @@ module Candlepin
           path = "/environments/#{opts[:environment]}/consumers"
         end
 
-        query_args = opts.slice(:username, :owner)
+        query_args = opts.slice(:username, :owner).compact
         keys = opts[:activation_keys].join(",")
         query_args[:activation_keys] = keys unless keys.empty?
 
