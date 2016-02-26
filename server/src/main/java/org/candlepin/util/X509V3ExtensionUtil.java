@@ -39,6 +39,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -258,14 +259,16 @@ public class X509V3ExtensionUtil extends X509Util {
         toReturn.setStart(iso8601DateFormat.format(pool.getStartDate()));
         toReturn.setEnd(iso8601DateFormat.format(pool.getEndDate()));
 
-        if (pool.getContractNumber() != null &&
-            !pool.getContractNumber().trim().equals("")) {
+        if (!StringUtils.isEmpty(pool.getContractNumber())) {
             toReturn.setContract(pool.getContractNumber());
         }
 
-        if (pool.getAccountNumber() != null &&
-            !pool.getAccountNumber().trim().equals("")) {
+        if (!StringUtils.isEmpty(pool.getAccountNumber())) {
             toReturn.setAccount(pool.getAccountNumber());
+        }
+
+        if (!StringUtils.isEmpty(pool.getSubscriptionNumber())) {
+            toReturn.setSubscription(pool.getSubscriptionNumber());
         }
 
         return toReturn;

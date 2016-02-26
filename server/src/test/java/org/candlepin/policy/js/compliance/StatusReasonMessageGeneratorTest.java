@@ -205,6 +205,7 @@ public class StatusReasonMessageGeneratorTest {
             TestUtil.createDate(2050, 1, 1),
             "1000",
             "1000",
+            "1000",
             "1000"
         );
         Entitlement e = new Entitlement(p, consumer, 1);

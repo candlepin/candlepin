@@ -965,6 +965,10 @@ class Candlepin
       pool['orderNumber'] = params[:order_number]
     end
 
+    if params[:subscription_number]
+      pool['subscriptionNumber'] = params[:subscription_number]
+    end
+
     if params[:derived_product_id]
       pool['derivedProduct'] = { 'id' => params[:derived_product_id] }
     end

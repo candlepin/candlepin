@@ -45,6 +45,10 @@ module HostedTest
       subscription['orderNumber'] = params[:order_number]
     end
 
+    if params[:subscription_number]
+      subscription['subscriptionNumber'] = params[:subscription_number]
+    end
+
     if params[:branding]
       subscription['branding'] = params[:branding]
     end
@@ -109,13 +113,15 @@ module HostedTest
   def create_pool_and_subscription(owner_key, product_id, quantity=1,
                           provided_products=[], contract_number='',
                           account_number='', order_number='',
-                          start_date=nil, end_date=nil, skip_refresh=false, params={})
+                          start_date=nil, end_date=nil, skip_refresh=false, params={},
+                          subscription_number='')
 
     params[:start_date] = start_date
     params[:end_date] = end_date
     params[:contract_number] = contract_number
     params[:account_number] = account_number
     params[:order_number] = order_number
+    params[:subscription_number] = subscription_number
     params[:quantity] = quantity
     params[:provided_products] = provided_products
     pool = nil

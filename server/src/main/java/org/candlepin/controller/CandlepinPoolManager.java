@@ -842,7 +842,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
         Pool pool = new Pool(sub.getOwner(), sub.getProduct(), sub.getProvidedProducts(),
                 sub.getQuantity(), sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
-                sub.getAccountNumber(), sub.getOrderNumber());
+                sub.getAccountNumber(), sub.getOrderNumber(), sub.getSubscriptionNumber());
 
         // Add all product references
         pool.setDerivedProduct(sub.getDerivedProduct());

@@ -72,6 +72,7 @@ public class PoolHelper extends AttributeHelper {
                 pool.getContractNumber(),
                 pool.getAccountNumber(),
                 pool.getOrderNumber(),
+                pool.getSubscriptionNumber(),
                 pool.getProvidedProducts()
             );
         }
@@ -88,6 +89,7 @@ public class PoolHelper extends AttributeHelper {
                 pool.getContractNumber(),
                 pool.getAccountNumber(),
                 pool.getOrderNumber(),
+                pool.getSubscriptionNumber(),
                 pool.getDerivedProvidedProducts()
             );
         }
@@ -186,7 +188,8 @@ public class PoolHelper extends AttributeHelper {
         Pool pool = createPool(product, sourcePool.getOwner(), quantity,
                 sourcePool.getStartDate(), sourcePool.getEndDate(),
                 sourcePool.getContractNumber(), sourcePool.getAccountNumber(),
-                sourcePool.getOrderNumber(), new HashSet<Product>());
+                sourcePool.getOrderNumber(), sourcePool.getSubscriptionNumber(),
+                new HashSet<Product>());
 
         pool.setSourceSubscription(
                     new SourceSubscription(sourcePool.getSubscriptionId(), subKey));
@@ -207,7 +210,7 @@ public class PoolHelper extends AttributeHelper {
 
     private Pool createPool(Product product, Owner owner, String quantity, Date startDate,
         Date endDate, String contractNumber, String accountNumber, String orderNumber,
-        Set<Product> providedProducts) {
+        String subscriptionNumber, Set<Product> providedProducts) {
 
         Long q = null;
         if (quantity.equalsIgnoreCase("unlimited")) {
@@ -231,7 +234,8 @@ public class PoolHelper extends AttributeHelper {
             endDate,
             contractNumber,
             accountNumber,
-            orderNumber
+            orderNumber,
+            subscriptionNumber
         );
 
         // Must be sure to copy the provided products, not try to re-use them directly:

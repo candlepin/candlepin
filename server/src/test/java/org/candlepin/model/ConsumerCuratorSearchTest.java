@@ -476,7 +476,8 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
             TestDateUtil.date(2030, 1, 1),
             "CONTRACT_123",
             "ACCOUNT_456",
-            "ORDER_789"
+            "ORDER_789",
+            "SUBSCRIPTION_012"
         );
 
         Pool pool2 = new Pool(
@@ -488,7 +489,8 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
             TestDateUtil.date(2030, 1, 1),
             "CONTRACT_123",
             "ACCOUNT_456",
-            "ORDER_789"
+            "ORDER_789",
+            "SUBSCRIPTION_012"
         );
 
         String source1 = Util.generateDbUUID();
@@ -536,7 +538,8 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
             TestDateUtil.date(2030, 1, 1),
             "CONTRACT_123",
             "ACCOUNT_456",
-            "ORDER_789"
+            "ORDER_789",
+            "SUBSCRIPTION_012"
         );
 
         Pool pool2 = new Pool(
@@ -548,7 +551,8 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
             TestDateUtil.date(2030, 1, 1),
             "CONTRACT_XXX",
             "ACCOUNT_456",
-            "ORDER_789"
+            "ORDER_789",
+            "SUBSCRIPTION_012"
         );
 
         pool.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
@@ -600,7 +604,8 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
             TestDateUtil.date(2030, 1, 1),
             "CONTRACT_123",
             "ACCOUNT_456",
-            "ORDER_789"
+            "ORDER_789",
+            "SUBSCRIPTION_012"
         );
 
         Pool pool2 = new Pool(
@@ -612,7 +617,8 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
             TestDateUtil.date(2030, 1, 1),
             "CONTRACT_XXX",
             "ACCOUNT_456",
-            "ORDER_789"
+            "ORDER_789",
+            "SUBSCRIPTION_012"
         );
 
         pool.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
@@ -671,7 +677,8 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
             TestDateUtil.date(2030, 1, 1),
             "CONTRACT_123",
             "ACCOUNT_456",
-            "ORDER_789"
+            "ORDER_789",
+            "SUBSCRIPTION_012"
         );
 
         Pool pool2 = new Pool(
@@ -683,7 +690,8 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
             TestDateUtil.date(2030, 1, 1),
             "CONTRACT_XXX",
             "ACCOUNT_456",
-            "ORDER_789"
+            "ORDER_789",
+            "SUBSCRIPTION_012"
         );
 
         pool.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
@@ -756,7 +764,8 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
             TestDateUtil.date(2030, 1, 1),
             "CONTRACT_123",
             "ACCOUNT_456",
-            "ORDER_789"
+            "ORDER_789",
+            "SUBSCRIPTION_012"
         );
 
         Pool pool2 = new Pool(
@@ -768,7 +777,8 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
             TestDateUtil.date(2030, 1, 1),
             "CONTRACT_123",
             "ACCOUNT_456",
-            "ORDER_789"
+            "ORDER_789",
+            "SUBSCRIPTION_012"
         );
 
         pool.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
@@ -828,7 +838,8 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
             TestDateUtil.date(2030, 1, 1),
             "CONTRACT_123",
             "ACCOUNT_456",
-            "ORDER_789"
+            "ORDER_789",
+            "SUBSCRIPTION_012"
         );
 
         Pool pool2 = new Pool(
@@ -840,7 +851,8 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
             TestDateUtil.date(2030, 1, 1),
             "CONTRACT_XXX",
             "ACCOUNT_456",
-            "ORDER_789"
+            "ORDER_789",
+            "SUBSCRIPTION_012"
         );
 
         pool.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
@@ -913,7 +925,8 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
             TestDateUtil.date(2030, 1, 1),
             "CONTRACT_123",
             "ACCOUNT_456",
-            "ORDER_789"
+            "ORDER_789",
+            "SUBSCRIPTION_012"
         );
 
         Pool pool2 = new Pool(
@@ -925,7 +938,8 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
             TestDateUtil.date(2030, 1, 1),
             "CONTRACT_XXX",
             "ACCOUNT_456",
-            "ORDER_789"
+            "ORDER_789",
+            "SUBSCRIPTION_012"
         );
 
         // Same contract as 1 but different SKU
@@ -938,7 +952,8 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
             TestDateUtil.date(2030, 1, 1),
             "CONTRACT_123",
             "ACCOUNT_456",
-            "ORDER_789"
+            "ORDER_789",
+            "SUBSCRIPTION_012"
         );
 
         for (Pool x : new Pool[] { pool, pool2, pool3 }) {

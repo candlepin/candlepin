@@ -115,6 +115,10 @@ public class Entitlement {
     @Column(name = "order_number")
     private String orderNumber;
 
+    @Size(max = 255)
+    @Column(name = "subscription_number")
+    private String subscriptionNumber;
+
     @ElementCollection(fetch = FetchType.LAZY)
     @BatchSize(size = 100)
     @CollectionTable(name = "gb_ent_attr_snap",
@@ -269,6 +273,14 @@ public class Entitlement {
 
     public void setOrderNumber(String orderNumber) {
         this.orderNumber = orderNumber;
+    }
+
+    public String getSubscriptionNumber() {
+        return subscriptionNumber;
+    }
+
+    public void setSubscriptionNumber(String subscriptionNumber) {
+        this.subscriptionNumber = subscriptionNumber;
     }
 
     public Map<String, String> getAttributes() {
