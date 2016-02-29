@@ -430,9 +430,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
                 Arrays.asList(ent1modif, ent2modif));
 
         assertTrue(!pents.isEmpty());
-        assertEquals(9, pents.getAllProductIds().size());
-        for (String id : Arrays.asList("prod-p1", "prod-p2", "prod-p3", "prod-p4", "prod-p5", "ppent1",
-                "ppent2", "ppent3", "ppent4")) {
+        assertEquals(5, pents.getAllProductIds().size());
+        for (String id : Arrays.asList("prod-p3", "prod-p4", "prod-p5", "ppent3", "ppent4")) {
             assertTrue("Overlapping entitlements [" + pents + "] " +
                      "doesn't contain product id [" + id + "]", pents.getAllProductIds().contains(id));
         }

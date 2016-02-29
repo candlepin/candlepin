@@ -344,16 +344,15 @@ public class PoolRules {
      * @param consumer
      * @return updates
      */
-    public List<PoolUpdate> updatePoolsFromStack(Consumer consumer, List<Pool> pools) {
+    public List<PoolUpdate> updatePoolsFromStack(Consumer consumer, List<Pool> pools,
+            boolean deleteIfNoStackedEnts) {
 
         Map<String, List<Entitlement>> entitlementMap = new HashMap<String, List<Entitlement>>();
-        Map<String, Pool> poolMap = new HashMap<String, Pool>();
         Set<String> sourceStackIds = new HashSet<String>();
         List<PoolUpdate> result = new ArrayList<PoolUpdate>();
 
         for (Pool pool : pools) {
             sourceStackIds.add(pool.getSourceStackId());
-            poolMap.put(pool.getId(), pool);
         }
         List<Entitlement> stackedEnts = this.entCurator.findByStackIds(consumer, sourceStackIds);
         for (Entitlement entitlement : stackedEnts) {
@@ -364,13 +363,22 @@ public class PoolRules {
             entitlementMap.get(entitlement.getPool().getStackId()).add(entitlement);
         }
 
-        for (Pool pool : poolMap.values()) {
+        List<Pool> poolsToDelete = new ArrayList<Pool>();
+        for (Pool pool : pools) {
             List<Entitlement> entitlements = entitlementMap.get(pool.getSourceStackId());
             if (entitlements != null && !entitlements.isEmpty()) {
                 result.add(this.updatePoolFromStackedEntitlements(pool, entitlements,
                         new HashSet<Product>()));
             }
+            else if (deleteIfNoStackedEnts) {
+                poolsToDelete.add(pool);
+            }
         }
+
+        if (!poolsToDelete.isEmpty()) {
+            this.poolManager.deletePools(poolsToDelete);
+        }
+
         return result;
     }
 

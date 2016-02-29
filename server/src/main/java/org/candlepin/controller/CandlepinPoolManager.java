@@ -1782,29 +1782,23 @@ public class CandlepinPoolManager implements PoolManager {
         entitlementCurator.flush();
         log.info("All deletes flushed successfully");
 
-        List<Entitlement> stackingEntitlements = filterStackingEntitlements(entsToRevoke);
+        Map<Consumer, List<Entitlement>> consumerSortedEntitlements = entitlementCurator
+                .getDistinctConsumers(entsToRevoke);
 
-        for (Entitlement ent : stackingEntitlements) {
-            Pool pool = ent.getPool();
-            Consumer consumer = ent.getConsumer();
-            String stackId = pool.getProductAttributeValue("stacking_id");
-            Pool stackedSubPool = poolCurator.getSubPoolForStackId(consumer, stackId);
-            if (stackedSubPool != null) {
-                List<Entitlement> stackedEnts =
-                    this.entitlementCurator.findByStackId(consumer, stackId);
+        Map<Consumer, List<Entitlement>> stackingEntitlements
+          = filterStackingEntitlements(consumerSortedEntitlements);
 
-                // If there are no stacked entitlements, we need to delete the
-                // stacked sub pool, else we update it based on the entitlements
-                // currently in the stack.
-                if (stackedEnts.isEmpty()) {
-                    log.info("Revoke Entitlements: deleting single stacked sub-pool");
-                    deletePool(stackedSubPool);
-                }
-                else {
-                    updatePoolFromStackedEntitlements(stackedSubPool, stackedEnts);
-                    poolCurator.merge(stackedSubPool);
-                }
+        for (Entry<Consumer, List<Entitlement>> entry : stackingEntitlements.entrySet()) {
+
+            Set<String> stackIds = new HashSet<String>();
+            for (Entitlement ent : entry.getValue()) {
+                stackIds.add(ent.getPool().getStackId());
             }
+            List<Pool> subPools = poolCurator.getSubPoolForStackIds(entry.getKey(), stackIds);
+            if (subPools != null && !subPools.isEmpty()) {
+                poolRules.updatePoolsFromStack(entry.getKey(), subPools, true);
+            }
+
         }
 
         // post unbind actions
@@ -1831,11 +1825,9 @@ public class CandlepinPoolManager implements PoolManager {
 
         log.info("Modifier entitlements done.");
 
-        Set<Consumer> distinctConsumers = entitlementCurator.getDistinctConsumers(entsToRevoke);
-
-        log.info("Recomputing status for {} consumers.", distinctConsumers.size());
+        log.info("Recomputing status for {} consumers.", consumerSortedEntitlements.size());
         int i = 1;
-        for (Consumer consumer : distinctConsumers) {
+        for (Consumer consumer : consumerSortedEntitlements.keySet()) {
             if (i++ % 1000 == 0) {
                 consumerCurator.flush();
             }
@@ -1863,18 +1855,27 @@ public class CandlepinPoolManager implements PoolManager {
     /**
      * Filter the given entitlements so that this method returns only
      * the entitlements that are part of some stack.
-     * @param entitlements Entitlements to be filtered
+     * @param consumerSortedEntitlements Entitlements to be filtered
      * @return Entitlements that are stacked
      */
-    private List<Entitlement> filterStackingEntitlements(List<Entitlement> entitlements) {
-        List<Entitlement> stackingEntitlements = new ArrayList<Entitlement>();
+    private Map<Consumer, List<Entitlement>> filterStackingEntitlements(
+            Map<Consumer, List<Entitlement>> consumerSortedEntitlements) {
+        Map<Consumer, List<Entitlement>> stackingEntitlements = new HashMap<Consumer, List<Entitlement>>();
 
-        for (Entitlement ent : entitlements) {
-            Pool pool = ent.getPool();
+        for (Consumer consumer : consumerSortedEntitlements.keySet()) {
+            List<Entitlement> ents = consumerSortedEntitlements.get(consumer);
+            if (ents != null && !ents.isEmpty()) {
+                for (Entitlement ent : ents) {
+                    Pool pool = ent.getPool();
 
-            if (!"true".equals(pool.getAttributeValue("pool_derived")) &&
-                    pool.getProduct().hasAttribute("stacking_id")) {
-                stackingEntitlements.add(ent);
+                    if (!"true".equals(pool.getAttributeValue("pool_derived")) &&
+                            pool.getProduct().hasAttribute("stacking_id")) {
+                        if (!stackingEntitlements.containsKey(consumer)) {
+                            stackingEntitlements.put(consumer, new ArrayList<Entitlement>());
+                        }
+                        stackingEntitlements.get(consumer).add(ent);
+                    }
+                }
             }
         }
         return stackingEntitlements;
@@ -2047,7 +2048,7 @@ public class CandlepinPoolManager implements PoolManager {
             if (!stackIds.isEmpty()) {
                 subPoolsForStackIds = poolCurator.getSubPoolForStackIds(consumer, stackIds);
                 if (subPoolsForStackIds != null && !subPoolsForStackIds.isEmpty()) {
-                    poolRules.updatePoolsFromStack(consumer, subPoolsForStackIds);
+                    poolRules.updatePoolsFromStack(consumer, subPoolsForStackIds, false);
                     poolCurator.mergeAll(subPoolsForStackIds, false);
                 }
             }
@@ -2320,13 +2321,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public void updatePoolsFromStack(Consumer consumer, List<Pool> pools) {
-        poolRules.updatePoolsFromStack(consumer, pools);
-    }
-
-    private PoolUpdate updatePoolFromStackedEntitlements(Pool pool,
-        List<Entitlement> stackedEntitlements) {
-        return poolRules.updatePoolFromStackedEntitlements(pool, stackedEntitlements,
-                null);
+        poolRules.updatePoolsFromStack(consumer, pools, false);
     }
 
     public List<Pool> getOwnerSubPoolsForStackId(Owner owner, String stackId) {

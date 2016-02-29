@@ -373,7 +373,7 @@ public class PoolRulesStackDerivedTest {
         when(entCurMock.findByStackIds(eq(consumer), arg.capture())).thenReturn(stackedEnts);
 
         List<PoolUpdate> updates = poolRules.updatePoolsFromStack(consumer,
-                Arrays.asList(stackDerivedPool, stackDerivedPool2));
+                Arrays.asList(stackDerivedPool, stackDerivedPool2), false);
         Set<String> stackIds = arg.getValue();
         assertEquals(2, stackIds.size());
         assertTrue(stackIds.contains(STACK));
@@ -383,7 +383,7 @@ public class PoolRulesStackDerivedTest {
             assertTrue(update.changed());
             assertTrue(update.getQuantityChanged());
         }
-        assertEquals((Long) 60L, stackDerivedPool.getQuantity());
+        assertEquals((Long) 2L, stackDerivedPool.getQuantity());
         assertEquals((Long) 9L, stackDerivedPool2.getQuantity());
     }
 

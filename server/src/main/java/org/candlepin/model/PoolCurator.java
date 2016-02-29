@@ -553,6 +553,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @SuppressWarnings("unchecked")
     public List<Pool> lockAndLoad(Collection<String> ids) {
 
+        if (ids == null || ids.isEmpty()) {
+            log.debug("Nothing to lock");
+            return new ArrayList<Pool>();
+        }
         List<String> idsList = new ArrayList<String>(ids);
         Collections.sort(idsList);
         log.debug("Locking pools");
@@ -561,6 +565,19 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .setParameter("ids", idsList)
                 .setLockMode(LockModeType.PESSIMISTIC_WRITE)
                 .getResultList();
+    }
+
+    public void lock(List<Pool> poolsToLock) {
+        if (poolsToLock.isEmpty()) {
+            log.debug("Nothing to lock");
+            return;
+        }
+        List<String> ids = new ArrayList<String>();
+        for (Pool p : poolsToLock) {
+            ids.add(p.getId());
+        }
+        lockAndLoad(ids);
+        log.debug("Done locking pools");
     }
 
     public List<ActivationKey> getActivationKeysForPool(Pool p) {
@@ -677,20 +694,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             Hibernate.initialize(pool.getEntitlements());
             pool.getEntitlements().clear();
         }
-    }
-
-    /**
-     * @param consumer
-     * @param stackId
-     * @return Number of derived pools which exist for the given consumer and stack
-     */
-    public Pool getSubPoolForStackId(Consumer consumer, String stackId) {
-        Criteria getCount = createSecureCriteria()
-            .createAlias("sourceStack", "ss")
-            .add(Restrictions.eq("ss.sourceConsumer", consumer))
-            .add(Restrictions.and(Restrictions.isNotNull("ss.sourceStackId"),
-                                  Restrictions.eq("ss.sourceStackId", stackId)));
-        return (Pool) getCount.uniqueResult();
     }
 
     /**
@@ -902,16 +905,4 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return (Pool) criteria.uniqueResult();
     }
 
-    public void lock(List<Pool> poolsToLock) {
-        if (poolsToLock.isEmpty()) {
-            log.debug("Nothing to lock");
-            return;
-        }
-
-        log.debug("Locking pools");
-        getEntityManager().createQuery("SELECT p FROM Pool p WHERE p in :pools")
-        .setParameter("pools", poolsToLock)
-                .setLockMode(LockModeType.PESSIMISTIC_WRITE).getResultList();
-        log.debug("Done locking pools");
-    }
 }

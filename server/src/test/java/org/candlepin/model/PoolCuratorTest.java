@@ -1047,7 +1047,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         poolCurator.create(derivedPool);
 
-        Pool pool = poolCurator.getSubPoolForStackId(consumer, expectedStackId);
+        Pool pool = poolCurator.getSubPoolForStackIds(consumer, Arrays.asList(expectedStackId)).get(0);
         assertNotNull(pool);
     }
 
