@@ -178,6 +178,7 @@ public class PoolManagerTest {
 
         when(mockConfig.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
         when(eventFactory.getEventBuilder(any(Target.class), any(Type.class))).thenReturn(eventBuilder);
+
         when(eventBuilder.setNewEntity(any(Eventful.class))).thenReturn(eventBuilder);
         when(eventBuilder.setOldEntity(any(Eventful.class))).thenReturn(eventBuilder);
 
@@ -208,6 +209,15 @@ public class PoolManagerTest {
                 return (Consumer) args[0];
             }
         });
+    }
+
+    @Test
+    public void deletePoolsTest() {
+        List<Pool> pools = new ArrayList<Pool>();
+        pools.add(TestUtil.createPool(TestUtil.createProduct(o)));
+        doNothing().when(mockPoolCurator).batchDelete(pools);
+        manager.deletePools(pools);
+        verify(mockPoolCurator).batchDelete(eq(pools));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -409,10 +419,12 @@ public class PoolManagerTest {
         mockSubsList(subscriptions);
 
         mockPoolsList(pools);
+
         Owner owner = getOwner();
         when(ownerCuratorMock.lookupByKey(owner.getKey())).thenReturn(owner);
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
-        verify(this.manager).deletePool(same(p));
+        List<Pool> poolsToDelete = Arrays.asList(p);
+        verify(this.manager).deletePools(eq(poolsToDelete));
     }
 
     @Test
@@ -431,10 +443,12 @@ public class PoolManagerTest {
         mockSubsList(subscriptions);
 
         mockPoolsList(pools);
+
         Owner owner = getOwner();
         when(ownerCuratorMock.lookupByKey(owner.getKey())).thenReturn(owner);
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
-        verify(this.manager).deletePool(same(p));
+        List<Pool> delPools = Arrays.asList(p);
+        verify(this.manager).deletePools(eq(delPools));
     }
 
     @Test
@@ -688,6 +702,7 @@ public class PoolManagerTest {
 
         assertEquals(2, total);
         verify(entitlementCurator, never()).listModifying(any(Entitlement.class));
+        //TODO assert batch revokes have been called
     }
 
     @Test
@@ -704,8 +719,40 @@ public class PoolManagerTest {
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool);
 
         manager.revokeEntitlement(e);
+        List<Entitlement> entsToDelete = Arrays.asList(e);
+        verify(entitlementCurator).batchDelete(eq(entsToDelete));
+    }
 
-        verify(entitlementCurator).delete(e);
+    @Test
+    public void testBatchRevokeCleansUpCorrectPoolsWithSourceEnt() throws Exception {
+        Consumer c = TestUtil.createConsumer(o);
+        Pool pool2 = TestUtil.createPool(o, product);
+
+        Entitlement e = new Entitlement(pool, c, 1);
+        Entitlement e2 = new Entitlement(pool2, c, 1);
+        Entitlement e3 = new Entitlement(pool2, c, 1);
+
+        List<Entitlement> entsToDelete = Util.newList();
+        entsToDelete.add(e);
+        entsToDelete.add(e2);
+
+        List<Pool> poolsWithSource = createPoolsWithSourceEntitlement(e, product);
+        poolsWithSource.get(0).getEntitlements().add(e3);
+        when(mockPoolCurator.listBySourceEntitlements(entsToDelete)).thenReturn(poolsWithSource);
+
+        PreUnbindHelper preHelper = mock(PreUnbindHelper.class);
+        ValidationResult result = new ValidationResult();
+        when(preHelper.getResult()).thenReturn(result);
+
+        when(mockConfig.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
+
+        when(mockPoolCurator.lockAndLoad(eq(pool))).thenReturn(pool);
+        when(mockPoolCurator.lockAndLoad(eq(pool2))).thenReturn(pool2);
+
+        manager.revokeEntitlements(entsToDelete);
+        entsToDelete.add(e3);
+        verify(entitlementCurator).batchDelete(eq(entsToDelete));
+        verify(mockPoolCurator).batchDelete(eq(poolsWithSource));
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -848,8 +895,7 @@ public class PoolManagerTest {
         ent.setPool(p);
         ent.setQuantity(1);
         poolEntitlements.add(ent);
-
-        when(mockPoolCurator.entitlementsIn(eq(p))).thenReturn(poolEntitlements);
+        p.getEntitlements().addAll(poolEntitlements);
 
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
@@ -858,9 +904,10 @@ public class PoolManagerTest {
 
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
 
-        verify(mockPoolCurator).delete(eq(p));
-
-        verify(entitlementCurator).delete(eq(ent));
+        List<Entitlement> entsToDelete = Arrays.asList(ent);
+        List<Pool> poolsToDelete = Arrays.asList(p);
+        verify(mockPoolCurator).batchDelete(eq(poolsToDelete));
+        verify(entitlementCurator).batchDelete(eq(entsToDelete));
     }
 
     private List<Pool> createPoolsWithSourceEntitlement(Entitlement e, Product p) {
@@ -1053,8 +1100,10 @@ public class PoolManagerTest {
 
         // The pool left over from the pre-migrated subscription should be deleted
         // and granted entitlements should be revoked
+        List<Entitlement> entsToDelete = Arrays.asList(ent);
+
         verify(mockPoolCurator).delete(eq(p));
-        verify(entitlementCurator).delete(eq(ent));
+        verify(entitlementCurator).batchDelete(eq(entsToDelete));
         // Make sure pools that don't match the owner were removed from the list
         // They shouldn't cause us to attempt to update existing pools when we
         // haven't created them in the first place
@@ -1886,7 +1935,7 @@ public class PoolManagerTest {
         event.setType(Type.EXPIRED);
         when(eventFactory.entitlementExpired(eq(ent))).thenReturn(event);
         when(mockPoolCurator.lockAndLoad(eq(pool))).thenReturn(pool);
-        manager.removeEntitlement(ent, false);
+        manager.revokeEntitlement(ent);
         String message = event.getMessageText();
         assertNotNull(message);
         message = message.split(": ")[1];
@@ -1931,7 +1980,12 @@ public class PoolManagerTest {
 
         manager.adjustEntitlementQuantity(consumer, masterEnt, 3);
 
-        verify(entitlementCurator).delete(derivedEnt);
+        Class<List<Entitlement>> listClass = (Class<List<Entitlement>>) (Class) ArrayList.class;
+        ArgumentCaptor<List<Entitlement>> arg = ArgumentCaptor.forClass(listClass);
+        verify(entitlementCurator).batchDelete(arg.capture());
+
+        List<Entitlement> entsDeleted = arg.getValue();
+        assertTrue(entsDeleted.contains(derivedEnt));
         assertEquals(2, derivedPool.getConsumed().intValue());
         assertEquals(0, derivedPool.getEntitlements().size());
     }
@@ -1997,9 +2051,15 @@ public class PoolManagerTest {
 
         manager.adjustEntitlementQuantity(consumer, masterEnt, 3);
 
-        verify(entitlementCurator).delete(derivedEnt);
-        verify(entitlementCurator).delete(derivedEnt2);
-        verify(entitlementCurator).delete(derivedEnt3);
+        Class<List<Entitlement>> listClass = (Class<List<Entitlement>>) (Class) ArrayList.class;
+        ArgumentCaptor<List<Entitlement>> arg = ArgumentCaptor.forClass(listClass);
+        verify(entitlementCurator).batchDelete(arg.capture());
+
+        List<Entitlement> entsDeleted = arg.getValue();
+        assertTrue(entsDeleted.contains(derivedEnt));
+        assertTrue(entsDeleted.contains(derivedEnt2));
+        assertTrue(entsDeleted.contains(derivedEnt3));
+
         assertEquals(1, derivedPool.getConsumed().intValue());
         assertEquals(0, derivedPool.getEntitlements().size());
         assertEquals(1, derivedPool2.getConsumed().intValue());

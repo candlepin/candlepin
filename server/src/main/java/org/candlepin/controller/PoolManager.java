@@ -147,7 +147,7 @@ public interface PoolManager {
 
     int revokeAllEntitlements(Consumer consumer);
 
-    int removeAllEntitlements(Consumer consumer);
+    void revokeEntitlements(List<Entitlement> ents);
 
     void revokeEntitlement(Entitlement entitlement);
 
@@ -268,6 +268,7 @@ public interface PoolManager {
             Date entitleDate, Collection<String> possiblePools)
         throws EntitlementRefusedException;
 
+
     /**
      * Creates a Subscription object using information derived from the specified pool. Used to
      * support deprecated API calls that still require a subscription.
@@ -311,4 +312,6 @@ public interface PoolManager {
      *  a list of known master pools
      */
     List<Pool> listMasterPools();
+
+    void deletePools(List<Pool> pools);
 }
