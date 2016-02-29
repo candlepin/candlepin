@@ -539,10 +539,18 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/activation_keys")
     public List<ActivationKey> ownerActivationKeys(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        @QueryParam("name") String keyName) {
         Owner owner = findOwner(ownerKey);
 
-        return this.activationKeyCurator.listByOwner(owner);
+        if (keyName == null) {
+            return this.activationKeyCurator.listByOwner(owner);
+        }
+        else {
+            List<ActivationKey> results = new ArrayList<ActivationKey>();
+            results.add(activationKeyCurator.lookupForOwner(keyName, owner));
+            return results;
+        }
     }
 
     /**
