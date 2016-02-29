@@ -37,6 +37,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DistributorVersion;
+import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.ExporterMetadata;
@@ -60,7 +61,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -76,10 +79,12 @@ import java.net.URISyntaxException;
 import java.security.Security;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -88,11 +93,14 @@ import java.util.zip.ZipOutputStream;
  */
 public class ImporterTest {
 
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
+
     private ObjectMapper mapper;
     private I18n i18n;
-    private static final String MOCK_JS_PATH = "/tmp/empty.js";
+    private String mockJsPath;
     private CandlepinCommonTestConfig config;
-    private File tempDir;
+    private ClassLoader classLoader = getClass().getClassLoader();
 
     @Before
     public void init() throws URISyntaxException, IOException {
@@ -106,22 +114,12 @@ public class ImporterTest {
                 }));
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         config = new CandlepinCommonTestConfig();
-        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp");
-        tempDir = new SyncUtils(config).makeTempDir("ImporterTest");
-
         PrintStream ps = new PrintStream(new File(this.getClass()
             .getClassLoader().getResource("version.properties").toURI()));
         ps.println("version=0.0.3");
         ps.println("release=1");
         ps.close();
-    }
-
-    @After
-    public void cleanup() {
-        for (File f : tempDir.listFiles()) {
-            f.delete();
-        }
-        tempDir.delete();
+        mockJsPath = new File(folder.getRoot(), "empty.js").getPath();
     }
 
     @Test
@@ -311,7 +309,7 @@ public class ImporterTest {
             null, null, config, null, null, null, i18n, null, null);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
-        File archive = new File("/tmp/non_zip_file.zip");
+        File archive = new File(folder.getRoot(), "non_zip_file.zip");
         FileWriter fw = new FileWriter(archive);
         fw.write("Just a flat file");
         fw.close();
@@ -335,7 +333,7 @@ public class ImporterTest {
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
 
-        File archive = new File("/tmp/file.zip");
+        File archive = new File(folder.getRoot(), "file.zip");
         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(archive));
         out.putNextEntry(new ZipEntry("no_content"));
         out.close();
@@ -360,11 +358,11 @@ public class ImporterTest {
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
 
-        File archive = new File("/tmp/file.zip");
+        File archive = new File(folder.getRoot(), "file.zip");
         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(archive));
         out.putNextEntry(new ZipEntry("signature"));
         out.write("This is the placeholder for the signature file".getBytes());
-        File ceArchive = new File("/tmp/consumer_export.zip");
+        File ceArchive = new File(folder.getRoot(), "consumer_export.zip");
         FileOutputStream fos = new FileOutputStream(ceArchive);
         fos.write("This is just a flat file".getBytes());
         fos.close();
@@ -386,11 +384,11 @@ public class ImporterTest {
         when(pki.verifySHA256WithRSAHashAgainstCACerts(any(File.class),
             any(byte [].class))).thenReturn(true);
 
-        File archive = new File("/tmp/file.zip");
+        File archive = new File(folder.getRoot(), "file.zip");
         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(archive));
         out.putNextEntry(new ZipEntry("signature"));
         out.write("This is the placeholder for the signature file".getBytes());
-        File ceArchive = new File("/tmp/consumer_export.zip");
+        File ceArchive = new File(folder.getRoot(), "consumer_export.zip");
         FileOutputStream fos = new FileOutputStream(ceArchive);
         fos.write("This is just a flat file".getBytes());
         fos.close();
@@ -401,7 +399,6 @@ public class ImporterTest {
             i.loadExport(owner, archive, co);
         }
         catch (ImportExtractionException e) {
-            System.out.println(e.getMessage());
             assertTrue(e.getMessage().contains(
                 "not a properly compressed file or is empty"));
             return;
@@ -422,11 +419,11 @@ public class ImporterTest {
         when(pki.verifySHA256WithRSAHashAgainstCACerts(any(File.class),
             any(byte [].class))).thenReturn(true);
 
-        File archive = new File("/tmp/file.zip");
+        File archive = new File(folder.getRoot(), "file.zip");
         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(archive));
         out.putNextEntry(new ZipEntry("signature"));
         out.write("This is the placeholder for the signature file".getBytes());
-        File ceArchive = new File("/tmp/consumer_export.zip");
+        File ceArchive = new File(folder.getRoot(), "consumer_export.zip");
         ZipOutputStream cezip = new ZipOutputStream(new FileOutputStream(ceArchive));
         cezip.putNextEntry(new ZipEntry("no_content"));
         cezip.close();
@@ -528,7 +525,7 @@ public class ImporterTest {
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = getTestImportFiles();
         File ruleDir = mock(File.class);
-        File[] rulesFiles = createMockJsFile(MOCK_JS_PATH);
+        File[] rulesFiles = createMockJsFile(mockJsPath);
         when(ruleDir.listFiles()).thenReturn(rulesFiles);
         File actualmeta = createFile("meta.json", "0.0.3", new Date(),
             "test_user", "prefix");
@@ -558,7 +555,7 @@ public class ImporterTest {
     @Test
     public void testReturnsSubscriptionsFromManifest() throws IOException, ImporterException {
 
-        Owner owner = mock(Owner.class);
+        Owner owner = new Owner("admin", "Admin Owner");
 
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         when(emc.lookupByTypeAndOwner("per_user", owner)).thenReturn(null);
@@ -576,14 +573,18 @@ public class ImporterTest {
 
         Map<String, File> importFiles = new HashMap<String, File>();
         File ruleDir = mock(File.class);
-        File[] rulesFiles = createMockJsFile(MOCK_JS_PATH);
+        File[] rulesFiles = createMockJsFile(mockJsPath);
         when(ruleDir.listFiles()).thenReturn(rulesFiles);
 
         File actualmeta = createFile("meta.json", "0.0.3", new Date(),
             "test_user", "prefix");
         importFiles.put(ImportFile.META.fileName(), actualmeta);
 
-        File consumerFile = new File("target/test/resources/upstream/consumer.json");
+        ConsumerDto consumer = new ConsumerDto("eb5e04bf-be27-44cf-abe3-0c0b1edd523e", "mymachine",
+                new ConsumerType(ConsumerTypeEnum.CANDLEPIN), owner, "foo.example.com/subscription",
+                "/candlepin");
+        File consumerFile = new File(folder.getRoot(), "consumer.json");
+        mapper.writeValue(consumerFile, consumer);
         importFiles.put(ImportFile.CONSUMER.fileName(), consumerFile);
 
         File cTypes = mock(File.class);
@@ -592,7 +593,7 @@ public class ImporterTest {
 
         Product prod = new Product("prodId", "prodTest", null);
         prod.setDependentProductIds(null);
-        File prodFile = new File("product.json");
+        File prodFile = new File(folder.getRoot(), "product.json");
         mapper.writeValue(prodFile, prod);
         File products = mock(File.class);
         when(products.listFiles()).thenReturn(new File[]{prodFile});
@@ -603,7 +604,7 @@ public class ImporterTest {
         pool.setProduct(prod);
         ent.setPool(pool);
         ent.setQuantity(2);
-        File entFile = new File("entitlement.json");
+        File entFile = new File(folder.getRoot(), "entitlement.json");
         mapper.writeValue(entFile, ent);
         File entitlements = mock(File.class);
         when(entitlements.listFiles()).thenReturn(new File[]{entFile});
@@ -652,25 +653,16 @@ public class ImporterTest {
         ps.println("version=${version}");
         ps.println("release=${release}");
         ps.close();
-        File mockJs = new File(MOCK_JS_PATH);
-        mockJs.delete();
     }
 
     private File createFile(String filename, String version, Date date,
-                 String username, String prefix, String cdnUrl)
+                 String username, String prefix)
         throws JsonGenerationException, JsonMappingException, IOException {
 
-        File f = new File(tempDir, filename);
-        Meta meta = new Meta(version, date, username, prefix, cdnUrl);
+        File f = new File(folder.getRoot(), filename);
+        Meta meta = new Meta(version, date, username, prefix, null);
         mapper.writeValue(f, meta);
         return f;
-    }
-
-    private File createFile(String filename, String version, Date date,
-                String username, String prefix)
-        throws JsonGenerationException, JsonMappingException, IOException {
-
-        return createFile(filename, version, date, username, prefix, null);
     }
 
     private File[] createMockJsFile(String filename)
@@ -723,13 +715,17 @@ public class ImporterTest {
             pki, null, null, mock(CertificateSerialCurator.class), null, i18n, null,
             null);
         File[] upstream = new File[2];
-        File idcertfile = new File("target/test/resources/upstream/testidcert.json");
-        File kpfile = new File("target/test/resources/upstream/keypair.pem");
+        File idcertfile = new File(classLoader.getResource("upstream/testidcert.json")
+                .toURI());
+        File kpfile = new File(classLoader.getResource("upstream/keypair.pem").toURI());
         upstream[0] = idcertfile;
         upstream[1] = kpfile;
-        File consumerfile = new File("target/test/resources/upstream/consumer.json");
-
-        Owner owner = mock(Owner.class);
+        Owner owner = new Owner("admin", "Admin Owner");
+        ConsumerDto consumer = new ConsumerDto("eb5e04bf-be27-44cf-abe3-0c0b1edd523e",
+                "mymachine", new ConsumerType(ConsumerTypeEnum.CANDLEPIN), owner,
+                "foo.example.com/subscription", "/candlepin");
+        File consumerfile = new File(folder.getRoot(), "consumer.json");
+        mapper.writeValue(consumerfile, consumer);
         ConflictOverrides forcedConflicts = mock(ConflictOverrides.class);
         when(forcedConflicts.isForced(any(Importer.Conflict.class))).thenReturn(false);
 
@@ -737,7 +733,17 @@ public class ImporterTest {
 
         i.importConsumer(owner, consumerfile, upstream, forcedConflicts, meta);
 
-        verify(oc).merge(any(Owner.class));
+        verify(oc).merge(eq(owner));
+    }
+
+    private DistributorVersion createTestDistributerVersion() {
+        DistributorVersion dVersion = new DistributorVersion("test-dist-ver");
+        Set<DistributorVersionCapability> capabilities = new HashSet<DistributorVersionCapability>();
+        capabilities.add(new DistributorVersionCapability(null, "capability-1"));
+        capabilities.add(new DistributorVersionCapability(null, "capability-2"));
+        capabilities.add(new DistributorVersionCapability(null, "capability-3"));
+        dVersion.setCapabilities(capabilities);
+        return dVersion;
     }
 
     @Test
@@ -746,7 +752,8 @@ public class ImporterTest {
         Importer i = new Importer(null, null, null, null, null, null,
             null, null, null, null, null, null, i18n, dvc, null);
         File[] distVer = new File[1];
-        distVer[0] = new File("target/test/resources/upstream/dist-ver.json");
+        distVer[0] = new File(folder.getRoot(), "dist-ver.json");
+        mapper.writeValue(distVer[0], createTestDistributerVersion());
 
         i.importDistributorVersions(distVer);
 
@@ -762,7 +769,8 @@ public class ImporterTest {
         when(dvc.findByName("test-dist-ver")).thenReturn(
             new DistributorVersion("test-dist-ver"));
         File[] distVer = new File[1];
-        distVer[0] = new File("target/test/resources/upstream/dist-ver.json");
+        distVer[0] = new File(folder.getRoot(), "dist-ver.json");
+        mapper.writeValue(distVer[0], createTestDistributerVersion());
 
         i.importDistributorVersions(distVer);
 
@@ -781,7 +789,7 @@ public class ImporterTest {
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = getTestImportFiles();
         File ruleDir = mock(File.class);
-        File[] rulesFiles = createMockJsFile(MOCK_JS_PATH);
+        File[] rulesFiles = createMockJsFile(mockJsPath);
         when(ruleDir.listFiles()).thenReturn(rulesFiles);
         File actualmeta = createFile("meta.json", "0.0.3", new Date(),
             "test_user", "prefix");
