@@ -1473,12 +1473,10 @@ public class CandlepinPoolManager implements PoolManager {
             handler = new UpdateHandler();
         }
 
-        log.info("Processing entitlements.");
-        entitlements = handler.handleEntitlement(consumer, poolQuantities, entitlements);
         // Persist the entitlement after it has been created.  It requires an ID in order to
         // create an entitlement-derived subpool
-        log.info("Persisting entitlements.");
-        handler.handleEntitlementPersist(entitlements);
+        log.info("Processing entitlements and persisting.");
+        entitlements = handler.handleEntitlement(consumer, poolQuantities, entitlements);
 
         // The quantity is calculated at fetch time. We update it here
         // To reflect what we just added to the db.
@@ -2014,7 +2012,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         void handlePostEntitlement(PoolManager manager, Consumer consumer,
                 Map<String, Entitlement> entitlements);
-        void handleEntitlementPersist(Map<String, Entitlement> entitlements);
+
 
         void handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> pools,
                 Map<String, Entitlement> entitlements, boolean generateUeberCert);
@@ -2030,16 +2028,31 @@ public class CandlepinPoolManager implements PoolManager {
         public Map<String, Entitlement> handleEntitlement(Consumer consumer,
                 Map<String, PoolQuantity> poolQuantities,
                 Map<String, Entitlement> entitlements) {
+
+            List<Entitlement> entsToPersist = new ArrayList<Entitlement>();
             Map<String, Entitlement> result = new HashMap<String, Entitlement>();
             for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
                 Entitlement newEntitlement = new Entitlement(entry.getValue().getPool(), consumer, entry
                         .getValue().getQuantity());
+                entsToPersist.add(newEntitlement);
                 result.put(entry.getKey(), newEntitlement);
-                consumer.addEntitlement(newEntitlement);
-                entry.getValue().getPool().getEntitlements().add(newEntitlement);
+            }
+
+            entitlementCurator.saveOrUpdateAll(entsToPersist, false);
+
+            /*
+             * Why iterate twice? to persist the entitlement before we associate
+             * it with the pool or consumer. This is important because we use Id
+             * to compare Entitlements in the equals method.
+             */
+            for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
+                Entitlement e = result.get(entry.getKey());
+                consumer.addEntitlement(e);
+                entry.getValue().getPool().getEntitlements().add(e);
             }
             return result;
         }
+
         @Override
         public void handlePostEntitlement(PoolManager manager, Consumer consumer,
                 Map<String, Entitlement> entitlements) {
@@ -2064,11 +2077,7 @@ public class CandlepinPoolManager implements PoolManager {
 
             enforcer.postEntitlement(manager, consumer, entitlements, subPoolsForStackIds);
         }
-        @Override
-        public void handleEntitlementPersist(Map<String, Entitlement> entitlements) {
-            List<Entitlement> entitlementsList = new ArrayList<Entitlement>(entitlements.values());
-            entitlementCurator.saveOrUpdateAll(entitlementsList, false);
-        }
+
         @Override
         public void handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> poolQuantities,
                 Map<String, Entitlement> entitlements, boolean generateUeberCert) {
@@ -2099,17 +2108,16 @@ public class CandlepinPoolManager implements PoolManager {
                 entitlement.setQuantity(entitlement.getQuantity() +
                         poolQuantities.get(entry.getKey()).getQuantity());
             }
+            List<Entitlement> entitlementsList = new ArrayList<Entitlement>(entitlements.values());
+            entitlementCurator.mergeAll(entitlementsList, false);
             return entitlements;
         }
+
         @Override
         public void handlePostEntitlement(PoolManager manager, Consumer consumer,
                 Map<String, Entitlement> entitlements) {
         }
-        @Override
-        public void handleEntitlementPersist(Map<String, Entitlement> entitlements) {
-            List<Entitlement> entitlementsList = new ArrayList<Entitlement>(entitlements.values());
-            entitlementCurator.mergeAll(entitlementsList, false);
-        }
+
         @Override
         public void handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> poolQuantities,
                 Map<String, Entitlement> entitlements, boolean generateUeberCert) {
