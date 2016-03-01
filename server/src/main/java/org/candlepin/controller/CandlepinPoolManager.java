@@ -1503,7 +1503,7 @@ public class CandlepinPoolManager implements PoolManager {
         // we might have changed the bonus pool quantities, lets find out.
         handler.handleBonusPools(poolQuantities, entitlements);
 
-        JobDetail detail = ConsumerComplianceJob.scheduleStatusCheck(consumer, null, false, false);
+        JobDetail detail = ConsumerComplianceJob.scheduleWithForceUpdate(consumer);
         detail.getJobDataMap().put(PinsetterJobListener.PRINCIPAL_KEY, new SystemPrincipal());
 
         log.info("Triggering ConsumerComplianceJob: {} for consumer: {}", detail.getKey(),
@@ -1825,17 +1825,23 @@ public class CandlepinPoolManager implements PoolManager {
 
         log.info("Modifier entitlements done.");
 
-        log.info("Recomputing status for {} consumers.", consumerSortedEntitlements.size());
+        log.info("Scheduling Compliance status for {} consumers.", consumerSortedEntitlements.size());
         int i = 1;
         for (Consumer consumer : consumerSortedEntitlements.keySet()) {
-            if (i++ % 1000 == 0) {
-                consumerCurator.flush();
-            }
-            complianceRules.getStatus(consumer);
-        }
-        consumerCurator.flush();
+            JobDetail detail = ConsumerComplianceJob.scheduleStatusCheck(consumer, null, false, true);
+            detail.getJobDataMap().put(PinsetterJobListener.PRINCIPAL_KEY, new SystemPrincipal());
 
-        log.info("All statuses recomputed.");
+            log.info("Triggering ConsumerComplianceJob: {} for consumer: {}", detail.getKey(),
+                    consumer.getUuid());
+            try {
+                pinsetterKernel.scheduleSingleJob(detail);
+            }
+            catch (PinsetterException e) {
+                log.error("ConsumerComplianceJob schedule failed", e.getMessage());
+            }
+        }
+
+        log.info("All statuses recomputation scheduled.");
 
         // for each deleted entitlement, create an event
         for (Entitlement entitlement : entsToRevoke) {
