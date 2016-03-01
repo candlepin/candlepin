@@ -709,16 +709,17 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                     }
 
                     Product p = productMap.get(sku);
-                    boolean isMkt = true;
+                    int isMkt = 1;
                     if (!p.getAttributeValue("type").equals("MKT")) {
-                        isMkt = false;
+                        log.info("Attempted to search for consumers with SKU " + sku + " which is not an MKT product");
+                        isMkt = 0;
                     }
 
                     // This is pretty ugly but it's not until Candlepin 2.x that we have a direct
                     // association to the Product object.
                     subCrit.createCriteria("entitlements").createCriteria("pool")
                         .add(Restrictions.eq("productId", sku))
-                        .add(Restrictions.sqlRestriction(String.valueOf(isMkt) + "='true'"));
+                        .add(Restrictions.sqlRestriction(String.valueOf(isMkt) + "=1"));
 
                     subCrit.add(Restrictions.eqProperty("this.id", "subquery_consumer.id"));
 
