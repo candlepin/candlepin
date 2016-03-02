@@ -132,6 +132,7 @@ public class ConfigProperties {
 
     // AMQP stuff
     public static final String AMQP_INTEGRATION_ENABLED = "candlepin.amqp.enable";
+    public static final String FULL_AMQP_CONNECT_STRING = "candlepin.amqp.full.connect";
     public static final String AMQP_CONNECT_STRING = "candlepin.amqp.connect";
     public static final String AMQP_KEYSTORE = "candlepin.amqp.keystore";
     public static final String AMQP_KEYSTORE_PASSWORD = "candlepin.amqp.keystore_password";
@@ -365,6 +366,8 @@ public class ConfigProperties {
      * Identity certificate expiry threshold in days
      */
     public static final String IDENTITY_CERT_EXPIRY_THRESHOLD = "candlepin.identityCert.expiry.threshold";
+
+    
 
 
 
