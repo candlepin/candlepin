@@ -14,8 +14,10 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
@@ -67,6 +69,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     private CriteriaRules poolCriteria;
     @Inject
     protected Injector injector;
+
+    @Inject
+    private Configuration config;
 
     @Inject
     public PoolCurator(CriteriaRules poolCriteria) {
@@ -149,7 +154,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
 
         List<Pool> results = createSecureCriteria()
-            .add(Restrictions.in("sourceEntitlement", ents))
+            .add(unboundedInCriterion("sourceEntitlement", ents))
             .setFetchMode("entitlements", FetchMode.JOIN)
             .list();
 
@@ -386,7 +391,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     private Criteria criteriaToSelectEntitlementForPools(List<Pool> entitlementPools) {
         return this.currentSession().createCriteria(Entitlement.class)
-                .add(Restrictions.in("pool", entitlementPools));
+                .add(unboundedInCriterion("pool", entitlementPools));
     }
 
     /**
@@ -420,7 +425,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> lookupBySubscriptionIds(Collection<String> subIds) {
         return createSecureCriteria()
                 .createAlias("sourceSubscription", "sourceSub")
-                .add(Restrictions.in("sourceSub.subscriptionId", subIds))
+                .add(unboundedInCriterion("sourceSub.subscriptionId", subIds))
                 .addOrder(Order.asc("id"))
                 .list();
     }
@@ -550,19 +555,40 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return pool;
     }
 
-    @SuppressWarnings("unchecked")
     public List<Pool> lockAndLoad(Collection<String> ids) {
 
-        if (ids == null || ids.isEmpty()) {
-            log.debug("Nothing to lock");
-            return new ArrayList<Pool>();
+        int inClauseLimit = config.getInt(ConfigProperties.BATCH_QUERY_IN_CLAUSE_SIZE);
+
+        List<Pool> result = new ArrayList<Pool>();
+        if (ids != null && !ids.isEmpty()) {
+            List<String> idsList = new ArrayList<String>(ids);
+            Collections.sort(idsList);
+
+            log.debug("Locking pools");
+            int listSize = idsList.size();
+            for (int i = 0; i < listSize; i += inClauseLimit) {
+                if (listSize > i + inClauseLimit) {
+                    result.addAll(lockAndLoad(idsList.subList(i, (i + inClauseLimit))));
+                }
+                else {
+                    result.addAll(lockAndLoad(idsList.subList(i, listSize)));
+                }
+            }
         }
-        List<String> idsList = new ArrayList<String>(ids);
-        Collections.sort(idsList);
-        log.debug("Locking pools");
+        return result;
+    }
+
+    /*
+     * Because does not sort, so could lead to dead locks.
+     * also this allows unlimited ids in the inclause which is not safe.
+     * Hence, Not for external use, meant only for supporting the above method.
+     */
+    @SuppressWarnings("unchecked")
+    private List<Pool> lockAndLoad(List<String> ids) {
+
         return getEntityManager()
                 .createQuery("SELECT p FROM Pool p WHERE id in :ids")
-                .setParameter("ids", idsList)
+                .setParameter("ids", ids)
                 .setLockMode(LockModeType.PESSIMISTIC_WRITE)
                 .getResultList();
     }
@@ -706,7 +732,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .createAlias("sourceStack", "ss")
                 .add(Restrictions.eq("ss.sourceConsumer", consumer))
                 .add(Restrictions.and(Restrictions.isNotNull("ss.sourceStackId"),
-                        Restrictions.in("ss.sourceStackId", stackIds)));
+                        unboundedInCriterion("ss.sourceStackId", stackIds)));
         return (List<Pool>) getPools.list();
     }
 

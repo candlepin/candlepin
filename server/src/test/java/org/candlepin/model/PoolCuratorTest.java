@@ -29,6 +29,9 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.hamcrest.Matchers;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.InExpression;
+import org.hibernate.criterion.LogicalExpression;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -540,6 +543,79 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertTrue(pools.contains(p2));
         assertTrue(!pools.contains(p3));
 
+    }
+
+    @Test
+    public void buildInCriteriaTestBulk() {
+        List<String> subIds = new ArrayList<String>();
+        Product product = new Product("someProduct", "An Extremely Great Product", owner, 10L);
+        productCurator.create(product);
+        for (int i = 0; i < 3000; i++) {
+            subIds.add(createPoolForCriteriaTest(product));
+        }
+
+        List<Pool> pools = poolCurator.lookupBySubscriptionIds(subIds);
+        assertEquals(3000, pools.size());
+
+        for (Pool pool : pools) {
+            assertTrue(subIds.contains(pool.getSubscriptionId()));
+        }
+    }
+
+    private String createPoolForCriteriaTest(Product product) {
+
+        String subId1 = Util.generateDbUUID();
+
+        Pool p = new Pool(owner, product, new HashSet<Product>(), 1L, new Date(), new Date(), "contract",
+                "account", "order");
+
+        p.setSourceSubscription(new SourceSubscription(subId1, "master"));
+        poolCurator.create(p);
+        return subId1;
+    }
+
+    @Test
+    public void buildInCriteriaTestBatch() {
+        List<String> items = new ArrayList<String>();
+        String expected = "taylor in (";
+        int i = 0;
+        boolean first = false;
+        for (; i < 998; i++) {
+            expected += i + ", ";
+        }
+        expected += i++ + ") or taylor in (";
+        for (; i < 1997; i++) {
+            expected += i + ", ";
+        }
+        expected += i++ + ") or taylor in (";
+        for (; i < 2000; i++) {
+            expected += i + ", ";
+        }
+        expected += i + ")";
+        for (i = 0; i < 2001; i++) {
+            items.add("" + i);
+        }
+        Criterion crit = poolCurator.unboundedInCriterion("taylor", items);
+        LogicalExpression le = (LogicalExpression) crit;
+        assertEquals("or", le.getOp());
+        assertEquals(expected, le.toString());
+    }
+
+    @Test
+    public void buildInCriteriaTestSimple() {
+        List<String> items = new ArrayList<String>();
+        String expected = "swift in (";
+        int i = 0;
+        boolean first = false;
+        for (; i < 998; i++) {
+            expected += i + ", ";
+            items.add("" + i);
+        }
+        expected += i + ")";
+        items.add("" + i);
+        Criterion crit = poolCurator.unboundedInCriterion("swift", items);
+        InExpression ie = (InExpression) crit;
+        assertEquals(expected, ie.toString());
     }
 
     @Test

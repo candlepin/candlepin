@@ -270,14 +270,14 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     private Criteria createModifiesDateFilteringCriteria(Set<Consumer> consumers, Date startDate,
             Date endDate, List<Entitlement> excludeEnts) {
         Criteria criteria = currentSession().createCriteria(Entitlement.class)
-            .add(Restrictions.in("consumer", consumers));
+            .add(unboundedInCriterion("consumer", consumers));
 
         if (excludeEnts != null && !excludeEnts.isEmpty()) {
             Set<String> ids = new HashSet<String>();
             for (Entitlement entitlement : excludeEnts) {
                 ids.add(entitlement.getId());
             }
-            criteria = criteria.add(Restrictions.not(Restrictions.in("id", ids)));
+            criteria = criteria.add(Restrictions.not(unboundedInCriterion("id", ids)));
         }
 
         criteria = criteria.createCriteria("pool")
@@ -478,7 +478,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 .createAlias("ent_pool.product", "product")
                 .createAlias("product.attributes", "attrs")
                 .add(Restrictions.eq("attrs.name", "stacking_id"))
-                .add(Restrictions.in("attrs.value", stackIds))
+                .add(unboundedInCriterion("attrs.value", stackIds))
                 .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
                 .createAlias("ent_pool.sourceStack", "ss", JoinType.LEFT_OUTER_JOIN)
                 .add(Restrictions.isNull("ss.id"));

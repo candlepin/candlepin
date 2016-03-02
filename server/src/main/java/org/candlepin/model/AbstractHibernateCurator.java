@@ -16,9 +16,11 @@ package org.candlepin.model;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.permissions.Permission;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.ConcurrentModificationException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.PrincipalProvider;
 
 import com.google.inject.Inject;
@@ -58,8 +60,8 @@ import javax.persistence.OptimisticLockException;
 public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Inject protected Provider<EntityManager> entityManager;
     @Inject protected I18n i18n;
+    @Inject private Configuration config;
     private final Class<E> entityType;
-    private int batchSize = 500;
     @Inject private PrincipalProvider principalProvider;
     private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
 
@@ -124,7 +126,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     public List<E> listAllByIds(Collection<? extends Serializable> ids) {
         return listByCriteria(
-            createSecureCriteria().add(Restrictions.in("id", ids)));
+            createSecureCriteria().add(unboundedInCriterion("id", ids)));
     }
 
     @SuppressWarnings("unchecked")
@@ -410,6 +412,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public Collection<E> saveOrUpdateAll(Collection<E> entries, boolean flush) {
 
         if (entries != null && !entries.isEmpty()) {
+            int batchSize = config.getInt(ConfigProperties.BATCH_QUERY_BATCH_SIZE);
+
             try {
                 Session session = currentSession();
                 int i = 0;
@@ -437,6 +441,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public Collection<E> mergeAll(Collection<E> entries, boolean flush) {
 
         if (entries != null && !entries.isEmpty()) {
+            int batchSize = config.getInt(ConfigProperties.BATCH_QUERY_BATCH_SIZE);
+
             try {
                 Session session = currentSession();
                 int i = 0;
@@ -490,6 +496,36 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     private String getConcurrentModificationMessage() {
         return i18n.tr("Request failed due to concurrent modification, please re-try.");
+    }
+
+    public <T extends Object> Criterion unboundedInCriterion(String expression, Collection<T> values) {
+        List<T> list = new ArrayList<T>();
+        list.addAll(values);
+        return unboundedInCriterion(expression, list);
+    }
+
+    /**
+     * While hibernate does not have limits over how many values can be used in an in clause,
+     * the underlying databases sometimes do. This method builds an unbounded in clause
+     * by building logical or expressions out of batches of in-clauses.
+     *
+     * @param expression the string expression against which we are searching values
+     * @param values the values being searched for the expression
+     * @return the unbounded in criterion as described above
+     */
+    public <T extends Object> Criterion unboundedInCriterion(String expression, List<T> values) {
+        Criterion criterion = null;
+        int inClauseLimit = config.getInt(ConfigProperties.BATCH_QUERY_IN_CLAUSE_SIZE);
+
+        int listSize = values.size();
+        for (int i = 0; i < listSize; i += inClauseLimit) {
+            // consume at most inClauseLimit values
+            List<T> subList = values.subList(i, Math.min(listSize, i + inClauseLimit));
+            criterion = (criterion == null) ?
+                    Restrictions.in(expression, subList) :
+                    Restrictions.or(criterion, Restrictions.in(expression, subList));
+        }
+        return criterion;
     }
 
 }
