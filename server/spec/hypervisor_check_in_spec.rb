@@ -486,6 +486,59 @@ describe 'Hypervisor Resource', :type => :virt do
     json['managerCapabilities'].should include("hypervisors_async")
   end
 
+  it 'should ignore hypervisorIds equal to the empty string' do
+    virtwho = create_virtwho_client(@user)
+    host_hyp_id = ""
+    guests = ['g1', 'g2']
+    hostguestmapping = get_host_guest_mapping(host_hyp_id, guests)
+    result = virtwho.hypervisor_check_in(@owner['key'], hostguestmapping)
+    result.should_not be_nil
+    result.each do |k,v|
+      v.should be_empty
+    end
+  end
+
+  it 'should ignore hypervisorIds equal to the empty string - async' do
+    virtwho = create_virtwho_client(@user)
+    name = random_string("host")
+    host_hyp_id = ""
+    guests = ['g1', 'g2']
+    result = async_update_hypervisor(@owner, virtwho, name, host_hyp_id, guests)
+    result.should_not be_nil
+    ['updated', 'created', 'unchanged', 'failedUpdate'].each do |key|
+      result['resultData'][key].should be_empty
+    end
+  end
+
+  it 'should ignore guestIds equal to the empty string' do
+    virtwho = create_virtwho_client(@user)
+    expected_guest_id = random_string('guest')
+    guests = [expected_guest_id, '']
+    hostguestmapping = get_host_guest_mapping(@expected_host_hyp_id, guests)
+    result = virtwho.hypervisor_check_in(@owner['key'], hostguestmapping)
+    result.should_not be_nil
+    expect(result['updated'].length).to eq(1)
+    updated_consumer = result['updated'][0]
+    expect(updated_consumer['guestIds'].length).to eq(1)
+    guest_id = updated_consumer['guestIds'][0]['guestId']
+    expect(guest_id).to eq(expected_guest_id)
+  end
+
+  it 'should ignore guestIds equal to the empty string - async' do
+    name = random_string("host")
+    virtwho = create_virtwho_client(@user)
+    expected_guest_id = random_string('guest')
+    guests = [expected_guest_id, '']
+    hostguestmapping = get_host_guest_mapping(@expected_host_hyp_id, guests)
+    result = async_update_hypervisor(@owner, virtwho, name, @expected_host_hyp_id, guests)
+    result.should_not be_nil
+    expect(result['resultData']['updated'].length).to eq(1)
+    updated_consumer = result['resultData']['updated'][0]
+    expect(updated_consumer['guestIds'].length).to eq(1)
+    guest_id = updated_consumer['guestIds'][0]['guestId']
+    expect(guest_id).to eq(expected_guest_id)
+  end
+
   def get_host_guest_mapping(host_hyp_id, guest_id_list)
     return { host_hyp_id => guest_id_list }
   end

@@ -35,13 +35,16 @@ import org.candlepin.resource.dto.HypervisorCheckInResult;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.lang.StringUtils;
 import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -123,16 +126,36 @@ public class HypervisorResource {
 
         Owner owner = this.getOwner(ownerKey);
 
+        if (hostGuestMap.remove("") != null) {
+            log.warn("Ignoring empty hypervisor id");
+        }
+
         // Maps virt hypervisor ID to registered consumer for that hypervisor, should one exist:
         VirtConsumerMap hypervisorConsumersMap =
                 consumerCurator.getHostConsumersMap(owner, hostGuestMap.keySet());
 
+        int emptyGuestIdCount = 0;
         Set<String> allGuestIds = new HashSet<String>();
-        for (Entry<String, List<GuestId>> hostEntry : hostGuestMap.entrySet()) {
-            for (GuestId gid : hostEntry.getValue()) {
-                allGuestIds.add(gid.getGuestId());
+
+        Collection<List<GuestId>> idsLists = hostGuestMap.values();
+        for (List<GuestId> guestIds : idsLists) {
+            for (Iterator<GuestId> guestIdsItr = guestIds.iterator(); guestIdsItr.hasNext();) {
+                String id = guestIdsItr.next().getGuestId();
+
+                if (StringUtils.isEmpty(id)) {
+                    emptyGuestIdCount++;
+                    guestIdsItr.remove();
+                }
+                else {
+                    allGuestIds.add(id);
+                }
             }
         }
+
+        if (emptyGuestIdCount > 0) {
+            log.warn("Ignoring {} empty/null guest id(s).", emptyGuestIdCount);
+        }
+
         // Maps virt guest ID to registered consumer for guest, if one exists:
         VirtConsumerMap guestConsumersMap = consumerCurator.getGuestConsumersMap(
                 owner, allGuestIds);
@@ -141,23 +164,19 @@ public class HypervisorResource {
         for (Entry<String, List<GuestId>> hostEntry : hostGuestMap.entrySet()) {
             String hypervisorId = hostEntry.getKey();
             try {
-                log.info("Syncing virt host: " + hypervisorId +
-                        " (" + hostEntry.getValue().size() + " guest IDs)");
+                log.info("Syncing virt host: {} ({} guest IDs)", hypervisorId, hostEntry.getValue().size());
 
                 boolean hostConsumerCreated = false;
                 // Attempt to find a consumer for the given hypervisorId
                 Consumer consumer = null;
                 if (hypervisorConsumersMap.get(hypervisorId) == null) {
                     if (!createMissing) {
-                        log.info("Unable to find hypervisor with id " +
-                            hypervisorId + " in org " + ownerKey);
+                        log.info("Unable to find hypervisor with id {} in org {}", hypervisorId, ownerKey);
                         result.failed(hypervisorId, i18n.tr(
                             "Unable to find hypervisor in org ''{0}''", ownerKey));
                         continue;
                     }
-                    log.info("Registering new host consumer for hypervisor ID: {}",
-                            hypervisorId);
-                    // Create new consumer
+                    log.info("Registering new host consumer for hypervisor ID: {}", hypervisorId);
                     consumer = createConsumerForHypervisorId(hypervisorId, owner, principal);
                     hostConsumerCreated = true;
                 }
@@ -165,8 +184,7 @@ public class HypervisorResource {
                     consumer = hypervisorConsumersMap.get(hypervisorId);
                 }
 
-                boolean guestIdsUpdated = addGuestIds(consumer, hostEntry.getValue(),
-                        guestConsumersMap);
+                boolean guestIdsUpdated = addGuestIds(consumer, hostEntry.getValue(), guestConsumersMap);
 
                 // Populate the result with the processed consumer.
                 if (hostConsumerCreated) {
