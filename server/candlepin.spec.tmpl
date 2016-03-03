@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.51.15
+Version: 0.9.51.16
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -213,6 +213,13 @@ fi
 
 #raw
 %changelog
+* Thu Mar 03 2016 Alex Wood <awood@redhat.com> 0.9.51.16-1
+- 1310173: Backport logrotate config entry (wpoteat@redhat.com)
+- Correct error in SKU search SQL seen in MySQL. (awood@redhat.com)
+- Mass Pool lock (fnguyen@redhat.com)
+- Implementation of revokeEntitlements(List) to improve speed of Manifest
+  Import in Standlone Mode. (fnguyen@redhat.com)
+
 * Thu Jan 21 2016 Alex Wood <awood@redhat.com> 0.9.51.15-1
 - 1300705: Fix perf issue finding dev pools (mstead@redhat.com)
 - Reverted required Guice version to 3.0 (crog@redhat.com)
