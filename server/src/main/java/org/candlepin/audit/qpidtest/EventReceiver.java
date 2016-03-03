@@ -83,6 +83,7 @@ public class EventReceiver {
 
         sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         dest = new AMQAnyDestination("event");
+        
         consumer = sess.createDurableSubscriber(dest, "event");
         consumer.setMessageListener(eventMessageListener);
         log.info("Receiver init complete");
@@ -171,7 +172,7 @@ public class EventReceiver {
                 //
                 // NOTE: This is a hacky solution to wait for hibernate to fully
                 // load before events start flowing.
-                sleep(1000);
+                sleep(50);
                 EventReceiver.this.init(config);
             }
             catch (Exception e) {

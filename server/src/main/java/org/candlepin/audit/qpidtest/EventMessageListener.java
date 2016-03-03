@@ -14,6 +14,8 @@
  */
 package org.candlepin.audit.qpidtest;
 
+import java.util.Random;
+
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
@@ -31,12 +33,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class EventMessageListener implements MessageListener {
 
     private static Logger log = LoggerFactory.getLogger(EventMessageListener.class);
-
+    private Random rand = new Random(); 
     private ObjectMapper mapper;
+    private String name;
 
+    public EventMessageListener(String name){
+        this.name = name;
+    }
     @Override
     public void onMessage(Message message) {
-        System.out.println(message);
+        try {
+            Thread.sleep(rand.nextInt(2000));
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        try {
+            System.out.println(name + ": receiving message! "+message.getJMSMessageID());
+        } catch (JMSException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
     
     private String getMessageBody(Message message) {
