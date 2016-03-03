@@ -18,17 +18,17 @@ public class AMQPBusPubProviderFunctionalTest {
         QueueEventReceiver queueReceiver = new QueueEventReceiver(new AMQPDummyConfig());
 //        QueueEventReceiver queueReceiver2 = new QueueEventReceiver(new AMQPDummyConfig());
         
-        Thread.sleep(2000);
+//        Thread.sleep(2000);
         
-        AMQPBusPubProvider provider = new  AMQPBusPubProvider(new AMQPDummyConfig(), new ObjectMapper());
-        
-        AMQPBusPublisher publisher = provider.get();
-        Event e = new Event();
-        e.setPrincipal(new PrincipalData("tprinc", "tprinc"));
-        e.setTarget(Target.ACTIVATIONKEY);
-        e.setType(Type.CREATED);
-        
-        publisher.onEvent(e);
-        publisher.onEvent(e);
+//        AMQPBusPubProvider provider = new  AMQPBusPubProvider(new AMQPDummyConfig(), new ObjectMapper());
+//        
+//        AMQPBusPublisher publisher = provider.get();
+//        Event e = new Event();
+//        e.setPrincipal(new PrincipalData("tprinc", "tprinc"));
+//        e.setTarget(Target.ACTIVATIONKEY);
+//        e.setType(Type.CREATED);
+//        
+//        publisher.onEvent(e);
+//        publisher.onEvent(e);
     }
 }

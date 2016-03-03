@@ -62,4 +62,6 @@ public interface EventSink {
     void emitCompliance(Consumer consumer, Set<Entitlement> entitlements, ComplianceStatus compliance);
 
     List<QueueStatus> getQueueInfo();
+
+    void registerListener(EventListener instance);
 }
