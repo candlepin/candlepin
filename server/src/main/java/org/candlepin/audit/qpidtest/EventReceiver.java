@@ -19,12 +19,12 @@ import java.net.URISyntaxException;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
+import javax.jms.Queue;
 import javax.jms.Session;
-import javax.jms.Topic;
-import javax.jms.TopicSubscriber;
 
-import org.apache.qpid.client.AMQAnyDestination;
 import org.apache.qpid.client.AMQConnectionFactory;
+import org.apache.qpid.client.AMQQueue;
 import org.apache.qpid.jms.BrokerDetails;
 import org.apache.qpid.url.URLSyntaxException;
 import org.candlepin.common.config.Configuration;
@@ -45,9 +45,7 @@ import com.google.inject.Inject;
 public class EventReceiver {
     private static Logger log = LoggerFactory.getLogger(EventReceiver.class);
 
-    private TopicSubscriber consumer;
     private Session sess;
-    private Topic dest;
 
     private EventMessageListener eventMessageListener;
 
@@ -82,9 +80,14 @@ public class EventReceiver {
         conn.start();
 
         sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        dest = new AMQAnyDestination("event");
         
-        consumer = sess.createDurableSubscriber(dest, "event");
+        Queue dest = new AMQQueue("localhost:event");
+        
+        
+//        Queue dest = sess.createQueue("event/localhost:e");
+        
+        
+        MessageConsumer consumer = sess.createConsumer(dest);
         consumer.setMessageListener(eventMessageListener);
         log.info("Receiver init complete");
     }
@@ -123,31 +126,7 @@ public class EventReceiver {
     }
 
     public void finish() {
-        log.info("Closing QPID connection");
-        try {
-            consumer.close();
-        }
-        catch (JMSException e) {
-            // Ok - just log the exception
-            log.debug("Unable to close consumer connection", e);
-        }
-
-        try {
-            sess.close();
-        }
-        catch (JMSException e) {
-            // Ok - just log the exception
-            log.debug("Unable to close session", e);
-        }
-
-        try {
-            conn.close();
-        }
-        catch (JMSException e) {
-            // Ok - just log the exception
-            log.debug("Unable to close connection", e);
-        }
-        log.info("Finished closing QPID connection");
+    
     }
 
     /**

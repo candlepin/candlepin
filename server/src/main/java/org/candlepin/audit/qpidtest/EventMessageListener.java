@@ -49,7 +49,7 @@ public class EventMessageListener implements MessageListener {
             e.printStackTrace();
         }
         try {
-            System.out.println(name + ": receiving message! "+message.getJMSMessageID());
+            System.out.println(name + ": receiving message! "+((TextMessage)message).getText().substring(0, 10));
         } catch (JMSException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

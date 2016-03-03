@@ -40,6 +40,7 @@ public class AMQPBusPublisher implements EventListener {
     private TopicSession session;
     private Map<Target, Map<Type, TopicPublisher>> producerMap;
     private ObjectMapper mapper;
+    private String name;
 
     @Inject
     public AMQPBusPublisher(TopicSession session,
@@ -57,7 +58,8 @@ public class AMQPBusPublisher implements EventListener {
                 TopicPublisher tp = m.get(e.getType());
                 if (tp != null) {
                     log.debug("Sending event to topic publisher: {}", e);
-                    tp.send(session.createTextMessage(this.apply(e)));
+                    
+                    tp.send(session.createTextMessage(name+":"+this.apply(e)));
                 }
                 else {
                     log.warn("TopicPublisher is NULL!");
@@ -88,5 +90,9 @@ public class AMQPBusPublisher implements EventListener {
 
     public String apply(Event event) throws JsonProcessingException {
         return mapper.writeValueAsString(event);
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }
