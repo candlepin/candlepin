@@ -846,8 +846,33 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNotNull(key.getId());
         assertEquals(key.getOwner().getId(), owner.getId());
         assertEquals(key.getReleaseVer().getReleaseVer(), "release1");
-        List<ActivationKey> keys = ownerResource.ownerActivationKeys(owner.getKey());
+        List<ActivationKey> keys = ownerResource.ownerActivationKeys(owner.getKey(), null);
         assertEquals(1, keys.size());
+    }
+
+    @Test
+    public void testSearchActivationsKeysByName() {
+        ActivationKey key = new ActivationKey();
+        key.setName("dd");
+        key.setReleaseVer(new Release("release1"));
+        key = ownerResource.createActivationKey(owner.getKey(), key);
+        assertNotNull(key.getId());
+        assertEquals(key.getOwner().getId(), owner.getId());
+        assertEquals(key.getReleaseVer().getReleaseVer(), "release1");
+
+        key = new ActivationKey();
+        key.setName("blah");
+        key.setReleaseVer(new Release("release2"));
+        key = ownerResource.createActivationKey(owner.getKey(), key);
+        assertNotNull(key.getId());
+        assertEquals(key.getOwner().getId(), owner.getId());
+        assertEquals(key.getReleaseVer().getReleaseVer(), "release2");
+
+        List<ActivationKey> keys = ownerResource.ownerActivationKeys(owner.getKey(), "dd");
+        assertEquals(1, keys.size());
+
+        keys = ownerResource.ownerActivationKeys(owner.getKey(), null);
+        assertEquals(2, keys.size());
     }
 
     @Test(expected = BadRequestException.class)
