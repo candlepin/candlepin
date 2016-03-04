@@ -16,11 +16,9 @@ package org.candlepin.model;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.permissions.Permission;
-import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.ConcurrentModificationException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.PrincipalProvider;
 
 import com.google.inject.Inject;
@@ -60,8 +58,9 @@ import javax.persistence.OptimisticLockException;
 public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Inject protected Provider<EntityManager> entityManager;
     @Inject protected I18n i18n;
-    @Inject private Configuration config;
     private final Class<E> entityType;
+    protected int batchSize = 500;
+    protected int inClauseLimit = 999;
     @Inject private PrincipalProvider principalProvider;
     private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
 
@@ -82,6 +81,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public void enableFilterList(String filterName, String parameterName,
         Collection value) {
         currentSession().enableFilter(filterName).setParameterList(parameterName, value);
+    }
+
+    /*
+     * helps to speed up unit tests
+     */
+    public void overrideInClauseLimit(int limit) {
+        inClauseLimit = limit;
     }
 
     /**
@@ -412,8 +418,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public Collection<E> saveOrUpdateAll(Collection<E> entries, boolean flush) {
 
         if (entries != null && !entries.isEmpty()) {
-            int batchSize = config.getInt(ConfigProperties.BATCH_QUERY_BATCH_SIZE);
-
             try {
                 Session session = currentSession();
                 int i = 0;
@@ -441,8 +445,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public Collection<E> mergeAll(Collection<E> entries, boolean flush) {
 
         if (entries != null && !entries.isEmpty()) {
-            int batchSize = config.getInt(ConfigProperties.BATCH_QUERY_BATCH_SIZE);
-
             try {
                 Session session = currentSession();
                 int i = 0;
@@ -515,7 +517,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      */
     public <T extends Object> Criterion unboundedInCriterion(String expression, List<T> values) {
         Criterion criterion = null;
-        int inClauseLimit = config.getInt(ConfigProperties.BATCH_QUERY_IN_CLAUSE_SIZE);
 
         int listSize = values.size();
         for (int i = 0; i < listSize; i += inClauseLimit) {

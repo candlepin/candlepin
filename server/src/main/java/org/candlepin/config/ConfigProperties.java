@@ -170,8 +170,6 @@ public class ConfigProperties {
         "pinsetter." + EntitlerJob.class.getName() + ".throttle";
 
     public static final String BATCH_BIND_MAX_SIZE = "candlepin.batch.bind.max.size";
-    public static final String BATCH_QUERY_BATCH_SIZE = "candlepin.batch.query.batch.size";
-    public static final String BATCH_QUERY_IN_CLAUSE_SIZE = "candlepin.batch.query.in.clause.size";
 
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
     public static final String CONSUMER_FACTS_MATCHER = "candlepin.consumer.facts.match_regex";
@@ -303,8 +301,6 @@ public class ConfigProperties {
                 this.put(DEFAULT_TASKS, StringUtils.join(DEFAULT_TASK_LIST, ","));
                 this.put(ENTITLER_JOB_THROTTLE, "7");
                 this.put(BATCH_BIND_MAX_SIZE, "100");
-                this.put(BATCH_QUERY_BATCH_SIZE, "500");
-                this.put(BATCH_QUERY_IN_CLAUSE_SIZE, "999");
 
                 // AMQP (Qpid) configuration used by events
                 this.put(AMQP_INTEGRATION_ENABLED, String.valueOf(false));

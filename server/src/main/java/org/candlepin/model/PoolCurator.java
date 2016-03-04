@@ -14,10 +14,8 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.common.config.Configuration;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
@@ -69,9 +67,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     private CriteriaRules poolCriteria;
     @Inject
     protected Injector injector;
-
-    @Inject
-    private Configuration config;
 
     @Inject
     public PoolCurator(CriteriaRules poolCriteria) {
@@ -557,8 +552,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     public List<Pool> lockAndLoad(Collection<String> ids) {
 
-        int inClauseLimit = config.getInt(ConfigProperties.BATCH_QUERY_IN_CLAUSE_SIZE);
-
         List<Pool> result = new ArrayList<Pool>();
         if (ids != null && !ids.isEmpty()) {
             List<String> idsList = new ArrayList<String>(ids);
@@ -567,12 +560,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             log.debug("Locking pools");
             int listSize = idsList.size();
             for (int i = 0; i < listSize; i += inClauseLimit) {
-                if (listSize > i + inClauseLimit) {
-                    result.addAll(lockAndLoad(idsList.subList(i, (i + inClauseLimit))));
-                }
-                else {
-                    result.addAll(lockAndLoad(idsList.subList(i, listSize)));
-                }
+                result.addAll(lockAndLoadInternalOnly(
+                        idsList.subList(i, Math.min(listSize, i + inClauseLimit))));
             }
         }
         return result;
@@ -584,8 +573,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * Hence, Not for external use, meant only for supporting the above method.
      */
     @SuppressWarnings("unchecked")
-    private List<Pool> lockAndLoad(List<String> ids) {
+    private List<Pool> lockAndLoadInternalOnly(List<String> ids) {
 
+        if (ids == null || ids.isEmpty()) {
+            return new ArrayList<Pool>();
+        }
         return getEntityManager()
                 .createQuery("SELECT p FROM Pool p WHERE id in :ids")
                 .setParameter("ids", ids)
@@ -602,7 +594,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         for (Pool p : poolsToLock) {
             ids.add(p.getId());
         }
-        lockAndLoad(ids);
+        lockAndLoadInternalOnly(ids);
         log.debug("Done locking pools");
     }
 

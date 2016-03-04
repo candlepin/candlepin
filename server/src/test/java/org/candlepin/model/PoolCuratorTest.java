@@ -550,12 +550,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         List<String> subIds = new ArrayList<String>();
         Product product = new Product("someProduct", "An Extremely Great Product", owner, 10L);
         productCurator.create(product);
-        for (int i = 0; i < 3000; i++) {
+        for (int i = 0; i < 30; i++) {
             subIds.add(createPoolForCriteriaTest(product));
         }
 
+        poolCurator.overrideInClauseLimit(5);
         List<Pool> pools = poolCurator.lookupBySubscriptionIds(subIds);
-        assertEquals(3000, pools.size());
+        assertEquals(30, pools.size());
 
         for (Pool pool : pools) {
             assertTrue(subIds.contains(pool.getSubscriptionId()));
@@ -576,23 +577,14 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void buildInCriteriaTestBatch() {
+        poolCurator.overrideInClauseLimit(5);
         List<String> items = new ArrayList<String>();
-        String expected = "taylor in (";
-        int i = 0;
+        String expected = "taylor in (0, 1, 2, 3, 4)" +
+                " or taylor in (5, 6, 7, 8, 9)" +
+                " or taylor in (10, 11, 12, 13, 14)" +
+                " or taylor in (15)";
         boolean first = false;
-        for (; i < 998; i++) {
-            expected += i + ", ";
-        }
-        expected += i++ + ") or taylor in (";
-        for (; i < 1997; i++) {
-            expected += i + ", ";
-        }
-        expected += i++ + ") or taylor in (";
-        for (; i < 2000; i++) {
-            expected += i + ", ";
-        }
-        expected += i + ")";
-        for (i = 0; i < 2001; i++) {
+        for (int i = 0; i < 16; i++) {
             items.add("" + i);
         }
         Criterion crit = poolCurator.unboundedInCriterion("taylor", items);
