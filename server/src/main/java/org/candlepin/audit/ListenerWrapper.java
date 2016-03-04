@@ -14,22 +14,23 @@
  */
 package org.candlepin.audit;
 
+import java.io.IOException;
+
+import javax.jms.Message;
+import javax.jms.MessageListener;
+import javax.jms.TextMessage;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.hornetq.api.core.HornetQException;
-import org.hornetq.api.core.client.ClientMessage;
-import org.hornetq.api.core.client.MessageHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-
 /**
  * ListnerWrapper
  */
-public class ListenerWrapper implements MessageHandler {
+public class ListenerWrapper implements MessageListener {
 
     private EventListener listener;
     private static Logger log = LoggerFactory.getLogger(ListenerWrapper.class);
@@ -40,10 +41,16 @@ public class ListenerWrapper implements MessageHandler {
     }
 
     @Override
-    public void onMessage(ClientMessage msg) {
-        String body = msg.getBodyBuffer().readString();
-        if (log.isDebugEnabled()) {
-            log.debug("Got event: {}", body);
+    public void onMessage(Message msg) {
+        String body = "";
+        try {
+            body = ((TextMessage) msg).getText();
+            if (log.isDebugEnabled()) {
+                log.debug("Got event: {}", body);
+            }
+        }
+        catch (Exception ex){
+            throw new RuntimeException("Couldn't read text from the JMS message");
         }
 
         // Exceptions thrown here will cause the event to remain in hornetq:
@@ -68,9 +75,10 @@ public class ListenerWrapper implements MessageHandler {
             msg.acknowledge();
             log.debug("Hornetq message acknowledged for listener: " + listener);
         }
-        catch (HornetQException e) {
+        catch (Exception e) {
             log.error("Unable to acknowledge hornetq msg", e);
         }
     }
+
 
 }
