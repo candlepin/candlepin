@@ -29,8 +29,7 @@ import org.xnap.commons.i18n.I18n;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
-
-
+import java.util.TimeZone;
 
 /**
  * UeberCertificateGenerator
@@ -104,7 +103,7 @@ public class UeberCertificateGenerator {
         Date now = now();
 
         Subscription subscription = new Subscription(o, ueberProduct,
-            new HashSet<Product>(), 1L, now, hundredYearsFromNow(), now);
+            new HashSet<Product>(), 1L, now, lateIn2049(), now);
 
         // We need to fake a subscription ID here so our generated pool's source subscription ends
         // up with a valid ID.
@@ -148,10 +147,32 @@ public class UeberCertificateGenerator {
         return currentTime;
     }
 
-    private Date hundredYearsFromNow() {
-        Calendar now = Calendar.getInstance();
-        now.add(Calendar.YEAR, 100);
-        Date hunderedYearsFromNow = now.getTime();
-        return hunderedYearsFromNow;
+    /*
+     * RFC 5280 states in section 4.1.2.5:
+     *
+     *     CAs conforming to this profile MUST always encode certificate
+     *     validity dates through the year 2049 as UTCTime; certificate validity
+     *     dates in 2050 or later MUST be encoded as GeneralizedTime.
+     *     Conforming applications MUST be able to process validity dates that
+     *     are encoded in either UTCTime or GeneralizedTime.
+     *
+     * But currently, python-rhsm is parsing certificates with either M2Crypto
+     * or a custom C binding (certificate.c) to OpenSSL's x509v3 (so that we can access
+     * the raw octets in the custom X509 extensions used in version 3 entitlement
+     * certificates).  Both M2Crypto and our binding contain code that automatically
+     * converts the Not After time into a UTCTime.  The conversion "succeeds" but the
+     * value of the resultant object is something like "Bad time value" which, when
+     * fed into Python's datetime, causes an exception.
+     *
+     * The quick fix is to not issue certificates that expire after January 1, 2050.
+     *
+     * See https://bugzilla.redhat.com/show_bug.cgi?id=1242310
+     */
+    private Date lateIn2049() {
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        // December 1, 2049 at 13:00 GMT
+        cal.set(1900 + 149, Calendar.DECEMBER, 1, 13, 0, 0);
+        Date late2049 = cal.getTime();
+        return late2049;
     }
 }
