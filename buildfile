@@ -580,4 +580,4 @@ define "candlepin" do
 end
 
 desc 'Make sure eventhing is working as it should'
-task :check_all => [:clean, :checkstyle, :validate_translation, :rpmlint, :test]
+task :check_all => [:clean, :checkstyle, :validate_translation, :rubocop, :rpmlint, :test]
