@@ -802,6 +802,7 @@ def safeParseInt(value, err_msg)
     if value < 1 then
       raise ArgumentError
     end
+    return value
   rescue ArgumentError
     $stderr.puts err_msg
     exit
