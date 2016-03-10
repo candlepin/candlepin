@@ -81,6 +81,9 @@ describe 'Uebercert' do
     ueber_entitlement["certificates"].length.should == 1
 
     x509 = OpenSSL::X509::Certificate.new(ueber_entitlement["certificates"][0]["cert"])
+
+    # See BZ 1242310
+    x509.not_after.should eq(Time.new(2049, 12, 1, 13, 0, 0, "+00:00"))
     extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.to_der()] }]
 
     cert_product = nil
