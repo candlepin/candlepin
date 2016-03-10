@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.49.11
+Version: 0.9.49.12
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,13 @@ fi
 
 
 %changelog
+* Thu Mar 10 2016 Alex Wood <awood@redhat.com> 0.9.49.12-1
+- removing initialization of pool.entitlements (fnguyen@redhat.com)
+- Introducing batching to CRL job to workaround Postgres IN clause limit
+  (fnguyen@redhat.com)
+- 1310173: Backport logrotate config entry (wpoteat@redhat.com)
+- Mass Pool lock (fnguyen@redhat.com)
+
 * Mon Feb 01 2016 Alex Wood <awood@redhat.com> 0.9.49.11-1
 - Implementation of revokeEntitlements(List) to improve speed of Manifest
   Import in Standlone Mode. (fnguyen@redhat.com)
