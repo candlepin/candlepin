@@ -1732,9 +1732,7 @@ module Candlepin
           include Util
         end
         Candlepin.const_set("UtilTest", util_test_class)
-      end
 
-      before(:each) do
         key = OpenSSL::PKey::RSA.new(File.read('certs/server.key'))
         cert = OpenSSL::X509::Certificate.new(File.read('certs/server.crt'))
 
@@ -1782,7 +1780,7 @@ module Candlepin
         end
       end
 
-      after(:each) do
+      after(:all) do
         server.shutdown unless server.nil?
         @server_thread.join unless @server_thread.nil?
 
