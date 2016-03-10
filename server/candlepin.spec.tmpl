@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.1
+Version: 0.9.54.2
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -215,6 +215,13 @@ fi
 
 #raw
 %changelog
+* Thu Mar 10 2016 Alex Wood <awood@redhat.com> 0.9.54.2-1
+- Introducing batching to CRL job to workaround Postgres IN clause limit
+  (fnguyen@redhat.com)
+- removing initialization of pool.entitlements (fnguyen@redhat.com)
+- 1310173: Backport logrotate config entry (wpoteat@redhat.com)
+- Correct error in SKU search SQL seen in MySQL. (awood@redhat.com)
+
 * Thu Feb 18 2016 Alex Wood <awood@redhat.com> 0.9.54.1-1
 - Enable configurable paging settings for HornetQ. (awood@redhat.com)
 - Configuration of paging for HornetQ (fnguyen@redhat.com)
