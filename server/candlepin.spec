@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.23.2
+Version: 0.9.23.3
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -390,6 +390,9 @@ fi
 
 
 %changelog
+* Fri Mar 11 2016 Alex Wood <awood@redhat.com> 0.9.23.3-1
+- removing initialization of pool.entitlements (fnguyen@redhat.com)
+
 * Tue Feb 23 2016 Michael Stead <mstead@redhat.com> 0.9.23.2-1
 - Verify locking same object twice is okay (vrjain@redhat.com)
 - Lock pools during batch revoke (vrjain@redhat.com)
