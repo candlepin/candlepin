@@ -206,6 +206,7 @@ define "candlepin" do
   checkstyle_config_directory = path_to(:project_conf)
   checkstyle_eclipse_xml = path_to(:project_conf, 'eclipse-checkstyle.xml')
   rpmlint_conf = path_to("rpmlint.config")
+  rubocop.patterns = ['*.rb']
 
   use_logdriver = ENV['logdriver']
   if use_logdriver
@@ -400,6 +401,10 @@ define "candlepin" do
     liquibase.file_time_prefix_format = "%Y%m%d%H%M%S"
 
     gettext.keys_destination = project("common").gettext.keys_destination
+
+    rubocop.patterns = ['server/client/ruby/candlepin.rb',
+			#'server/spec/*.rb',
+                        'server/client/ruby/test/*.rb']
 
     # eclipse settings
     # http://buildr.apache.org/more_stuff.html#eclipse

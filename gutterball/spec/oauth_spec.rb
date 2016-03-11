@@ -2,8 +2,6 @@ require 'rubygems'
 require 'rest_client'
 require 'oauth'
 
-
-
 describe 'OAuth' do
   # include CandlepinMethods
 
@@ -14,14 +12,13 @@ describe 'OAuth' do
   before(:each) do
     @site = "https://localhost:8443"
     @oauth_params = {
-     :site => @site,
-     :http_method => :get,
-     :request_token_path => "",
-     :authorize_path => "",
-     :access_token_path => "",
+      :site => @site,
+      :http_method => :get,
+      :request_token_path => "",
+      :authorize_path => "",
+      :access_token_path => "",
     }
   end
-
 
   def make_anon_request(uri, headers = {})
     url = URI.parse("#{@site}#{uri}")
@@ -54,7 +51,6 @@ describe 'OAuth' do
     req.verify_mode = OpenSSL::SSL::VERIFY_NONE
     req.request(request)
   end
-
 
   it 'returns a 200 if an anon user accesses an unprotected function' do
     res = make_anon_request('/gutterball/status')
