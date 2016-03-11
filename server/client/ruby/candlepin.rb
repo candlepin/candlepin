@@ -520,10 +520,6 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :uuid)
 
-        if !opts[:product].nil? && !opts[:pool_id].nil?
-          raise ArgumentError.new("Bind by pool or by product but not by both")
-        end
-
         query_args = opts.slice(
           :product,
           :quantity,
