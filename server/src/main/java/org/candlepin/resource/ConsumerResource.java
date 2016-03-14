@@ -792,7 +792,7 @@ public class ConsumerResource {
 
         VirtConsumerMap guestConsumerMap = new VirtConsumerMap();
         if (consumer.getGuestIds() != null) {
-            List<String> allGuestIds = new LinkedList<String>();
+            Set<String> allGuestIds = new HashSet<String>();
             for (GuestId gid : consumer.getGuestIds()) {
                 allGuestIds.add(gid.getGuestId());
             }
