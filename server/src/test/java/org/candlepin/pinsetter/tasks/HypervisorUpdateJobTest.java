@@ -40,6 +40,7 @@ import org.quartz.ListenerManager;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -190,6 +191,35 @@ public class HypervisorUpdateJobTest {
                                         anyString(),
                                         anyString(),
                                         eq(false));
+    }
+
+    @Test
+    public void hypervisorUpdateIgnoresEmptyGuestIds() throws Exception {
+        when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
+
+        hypervisorJson =
+                "{\"hypervisors\":" +
+                "[{" +
+                "\"hypervisorId\" : {\"hypervisorId\" : \"hypervisor_999\"}," +
+                "\"name\" : \"hypervisor_999\"," +
+                "\"guestIds\" : [{\"guestId\" : \"guestId_1_999\"}, {\"guestId\" : \"\"}]" +
+                "}]}";
+
+        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
+        JobExecutionContext ctx = mock(JobExecutionContext.class);
+        when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
+
+        when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class)))
+            .thenReturn(new VirtConsumerMap());
+        when(consumerCurator.getGuestConsumersMap(eq(owner), any(Set.class)))
+            .thenReturn(new VirtConsumerMap());
+
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
+        job.execute(ctx);
+
+        Set<String> expectedSet = new HashSet<String>();
+        expectedSet.add("guestId_1_999");
+        verify(consumerCurator, times(1)).getGuestConsumersMap(eq(owner), eq(expectedSet));
     }
 
     /*
