@@ -356,13 +356,7 @@ public class OwnerResource {
         for (Consumer c : consumers) {
             log.info("Removing all entitlements for consumer: " + c);
 
-            if (revokeCerts) {
-                poolManager.revokeAllEntitlements(c);
-            }
-            else {
-                // otherwise just remove them without touching the CRL
-                poolManager.removeAllEntitlements(c);
-            }
+            poolManager.revokeAllEntitlements(c, revokeCerts);
         }
 
         // Actual consumer deletion had to be moved out of
