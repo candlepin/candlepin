@@ -322,7 +322,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     private Entitlement setUpModifyingEntitlements(Date startDate, Date endDate, Integer howMany,
             String contentId) {
-
         Product parentProductForTest = TestUtil.createProduct(owner);
         Product providedProduct1ForTest = TestUtil.createProduct(owner);
         Product providedProduct2ForTest = TestUtil.createProduct(owner);
@@ -801,7 +800,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void findByStackIdsTest() {
-
         Set<String> stackingIds = new HashSet<String>();
         for (Integer i = 0; i < 4; i++) {
             String stackingId = "test_stack_id" + i.toString();

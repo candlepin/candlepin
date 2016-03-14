@@ -1625,7 +1625,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         pool.setId("poolId");
         doAnswer(new Answer<Map<String, CertificateSerial>>() {
-
             @Override
             public Map<String, CertificateSerial> answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();

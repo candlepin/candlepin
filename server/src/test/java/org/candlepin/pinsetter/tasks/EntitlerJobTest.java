@@ -94,7 +94,6 @@ public class EntitlerJobTest {
 
     @Test
     public void bindByPoolExec() throws JobExecutionException, EntitlementRefusedException {
-
         String pool = "pool10";
 
         PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];

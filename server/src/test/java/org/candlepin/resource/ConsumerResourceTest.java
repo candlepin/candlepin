@@ -380,7 +380,6 @@ public class ConsumerResourceTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testBindByPools() throws Exception {
-
         PoolIdAndQuantity[] pools = new PoolIdAndQuantity[2];
         pools[0] = new PoolIdAndQuantity("first", 1);
         pools[1] = new PoolIdAndQuantity("second", 2);

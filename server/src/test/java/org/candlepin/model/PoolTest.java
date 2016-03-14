@@ -315,7 +315,6 @@ public class PoolTest extends DatabaseTestFixture {
     // Will use spec tests to see if quantity rules are followed in this scenario.
     @Test
     public void testEntitlementQuantityChange() throws EntitlementRefusedException {
-
         Map<String, Integer> pQs = new HashMap<String, Integer>();
         pQs.put(pool.getId(), 3);
         List<Entitlement> entitlements = poolManager.entitleByPools(consumer, pQs);

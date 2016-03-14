@@ -1945,7 +1945,6 @@ public class PoolManagerTest {
 
     @Test
     public void testDeleteExcessEntitlements() throws EntitlementRefusedException {
-
         Consumer consumer = TestUtil.createConsumer(o);
         Subscription sub = TestUtil.createSubscription(o, product);
         sub.setId("testing-subid");
@@ -1991,7 +1990,6 @@ public class PoolManagerTest {
 
     @Test
     public void testDeleteExcessEntitlementsBatch() throws EntitlementRefusedException {
-
         Consumer consumer = TestUtil.createConsumer(o);
         Subscription sub = TestUtil.createSubscription(o, product);
         sub.setId("testing-subid");

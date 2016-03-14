@@ -72,13 +72,11 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     @Override
     public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
         Integer quantity, CallerType caller) {
-
         return preEntitlement(consumer, getHost(consumer), entitlementPool, quantity, caller);
     }
 
     public ValidationResult preEntitlement(Consumer consumer, Consumer host,
         Pool entitlementPool, Integer quantity, CallerType caller) {
-
         List<PoolQuantity> poolQuantities = new ArrayList<PoolQuantity>();
         poolQuantities.add(new PoolQuantity(entitlementPool, quantity));
         return preEntitlement(consumer, host, poolQuantities, caller).get(entitlementPool.getId());

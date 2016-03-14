@@ -416,7 +416,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     public Collection<E> saveOrUpdateAll(Collection<E> entries, boolean flush) {
-
         if (entries != null && !entries.isEmpty()) {
             try {
                 Session session = currentSession();
@@ -443,7 +442,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     public Collection<E> mergeAll(Collection<E> entries, boolean flush) {
-
         if (entries != null && !entries.isEmpty()) {
             try {
                 Session session = currentSession();

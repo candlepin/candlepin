@@ -366,7 +366,6 @@ public class DefaultEntitlementCertServiceAdapter extends
     private Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer,
             Map<String, Entitlement> entitlements, Map<String, Product> productMap, boolean thisIsUeberCert)
         throws GeneralSecurityException, IOException {
-
         log.info("Generating entitlement cert for entitlements");
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
         byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
@@ -383,7 +382,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         Map<String, EntitlementCertificate> entitlementCerts = new HashMap<String, EntitlementCertificate>();
 
         for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
-
             Entitlement entitlement = entry.getValue();
             CertificateSerial serial = serialMap.get(entry.getKey());
             Product product = productMap.get(entry.getKey());

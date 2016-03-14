@@ -95,7 +95,6 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
     public Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer,
             Map<String, Entitlement> entitlements, Map<String, Product> products)
         throws GeneralSecurityException, IOException {
-
         Map<String, EntitlementCertificate> result = new HashMap<String, EntitlementCertificate>();
         for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
             EntitlementCertificate cert = generateEntitlementCert(entry.getValue(),

@@ -267,7 +267,6 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
     protected void runPostEntitlement(PoolManager poolManager, Consumer consumer,
             Map<String, Entitlement> entitlementMap, List<Pool> subPoolsForStackIds) {
-
         Map<String, Map<String, String>> flatAttributeMaps = new HashMap<String, Map<String, String>>();
         Map<String, Entitlement> virtLimitEntitlements = new HashMap<String, Entitlement>();
         for (Entry<String, Entitlement> entry : entitlementMap.entrySet()) {
@@ -342,7 +341,6 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     private void postBindVirtLimit(PoolManager poolManager, Consumer c,
             Map<String, Entitlement> entitlementMap, Map<String, Map<String, String>> attributeMaps,
             List<Pool> subPoolsForStackIds) {
-
         Set<String> stackIdsThathaveSubPools = new HashSet<String>();
         if (subPoolsForStackIds != null && !subPoolsForStackIds.isEmpty()) {
             for (Pool pool : subPoolsForStackIds) {
@@ -361,7 +359,6 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         List<Entitlement> decrementHostedBonusPoolQuantityFor = new ArrayList<Entitlement>();
 
         for (Entitlement entitlement : entitlementMap.values()) {
-
             Pool pool = entitlement.getPool();
             Map<String, String> attributes = attributeMaps.get(pool.getId());
             boolean hostLimited = attributes.containsKey("host_limited") &&
@@ -413,7 +410,6 @@ public abstract class AbstractEntitlementRules implements Enforcer {
      */
     private void decrementHostedBonusPoolQuantity(PoolManager poolManager, Consumer c,
             List<Entitlement> entitlements, Map<String, Map<String, String>> attributesMaps) {
-
         boolean consumerFactExpression = c.getType().isManifest() &&
                 !config.getBoolean(ConfigProperties.STANDALONE);
 
@@ -432,7 +428,6 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
 
         for (Entitlement entitlement : entitlements) {
-
             Pool pool = entitlement.getPool();
             Map<String, String> attributes = attributesMaps.get(pool.getId());
 

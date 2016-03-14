@@ -122,7 +122,6 @@ public class Entitler {
 
     public List<Entitlement> bindByPoolQuantities(Consumer consumer,
             Map<String, Integer> poolIdAndQuantities) throws EntitlementRefusedException {
-
         // Attempt to create entitlements:
         try {
             List<Entitlement> entitlementList = poolManager.entitleByPools(consumer, poolIdAndQuantities);
@@ -409,7 +408,6 @@ public class Entitler {
             // We will debug log the message, but returning does not seem to add
             // to the process
             if (log.isDebugEnabled()) {
-
                 log.debug("consumer dry-run " + consumer.getUuid() + ": errors:");
                 for (Entry<String, ValidationResult> entry : e.getResults().entrySet()) {
                     log.debug("errors for pool id: " + entry.getKey());

@@ -87,7 +87,6 @@ public class PoolHelper {
     public static List<Pool> createHostRestrictedPools(PoolManager poolManager, Consumer consumer,
             List<Pool> pools, Map<String, Entitlement> sourceEntitlements,
             Map<String, Map<String, String>> attributeMaps) {
-
         List<Pool> poolsToCreate = new ArrayList<Pool>();
         List<Pool> poolsToUpdateFromStack = new ArrayList<Pool>();
         for (Pool pool : pools) {
@@ -162,7 +161,6 @@ public class PoolHelper {
      */
     private static void copyProvidedProducts(Pool source, Pool destination,
         ProductCurator prodCurator) {
-
         Set<Product> products;
 
         if (source.getDerivedProduct() != null) {
@@ -188,7 +186,6 @@ public class PoolHelper {
     public static Pool clonePool(Pool sourcePool, Product product, String quantity,
             Map<String, String> attributes, String subKey, ProductCurator prodCurator,
             Entitlement sourceEntitlement) {
-
         Pool pool = createPool(product, sourcePool.getOwner(), quantity,
                 sourcePool.getStartDate(), sourcePool.getEndDate(),
                 sourcePool.getContractNumber(), sourcePool.getAccountNumber(),
@@ -214,7 +211,6 @@ public class PoolHelper {
     private static Pool createPool(Product product, Owner owner, String quantity, Date startDate,
         Date endDate, String contractNumber, String accountNumber, String orderNumber,
             Set<Product> providedProducts, Entitlement sourceEntitlement) {
-
         Long q = null;
         if (quantity.equalsIgnoreCase("unlimited")) {
             q = -1L;

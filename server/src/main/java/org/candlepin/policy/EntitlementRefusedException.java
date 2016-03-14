@@ -28,7 +28,6 @@ public class EntitlementRefusedException extends Exception {
     private Map<String, ValidationResult> results;
 
     public EntitlementRefusedException(Map<String, ValidationResult> results) {
-
         super("Entitlement refused");
         this.results = results;
     }

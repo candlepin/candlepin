@@ -1387,7 +1387,6 @@ public class ConsumerResource {
 
     private void validateBindArguments(boolean hasPoolQuantities, String poolIdString, Integer quantity,
             String[] productIds, List<String> fromPools, Date entitleDate, boolean async) {
-
         short parameters = 0;
 
         if (hasPoolQuantities) {
@@ -1468,7 +1467,6 @@ public class ConsumerResource {
         @QueryParam("from_pool") List<String> fromPools,
         PoolIdAndQuantity[] poolQuantities,
         @Context Principal principal) {
-
         boolean hasPoolQuantities = (poolQuantities != null && poolQuantities.length > 0);
         // TODO: really should do this in a before we get to this call
         // so the method takes in a real Date object and not just a String.

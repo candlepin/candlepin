@@ -259,7 +259,6 @@ public class PoolRules {
 
     public List<PoolUpdate> updatePools(Pool masterPool, List<Pool> existingPools, Long originalQuantity,
             Set<Product> changedProducts) {
-
         //local.setCertificate(subscription.getCertificate());
 
         log.debug("Refreshing pools for existing master pool: " + masterPool);
@@ -346,7 +345,6 @@ public class PoolRules {
      */
     public List<PoolUpdate> updatePoolsFromStack(Consumer consumer, List<Pool> pools,
             boolean deleteIfNoStackedEnts) {
-
         Map<String, List<Entitlement>> entitlementMap = new HashMap<String, List<Entitlement>>();
         Set<String> sourceStackIds = new HashSet<String>();
         List<PoolUpdate> result = new ArrayList<PoolUpdate>();
@@ -384,7 +382,6 @@ public class PoolRules {
 
     public PoolUpdate updatePoolFromStackedEntitlements(Pool pool, List<Entitlement> stackedEnts,
         Set<Product> changedProducts) {
-
         PoolUpdate update = new PoolUpdate(pool);
 
         // Nothing to do if there were no entitlements found.
@@ -437,7 +434,6 @@ public class PoolRules {
         if (!StringUtils.equals(eldestEntPool.getContractNumber(), pool.getContractNumber()) ||
             !StringUtils.equals(eldestEntPool.getOrderNumber(), pool.getOrderNumber()) ||
             !StringUtils.equals(eldestEntPool.getAccountNumber(), pool.getAccountNumber())) {
-
             pool.setContractNumber(eldestEntPool.getContractNumber());
             pool.setAccountNumber(eldestEntPool.getAccountNumber());
             pool.setOrderNumber(eldestEntPool.getOrderNumber());

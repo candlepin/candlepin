@@ -52,7 +52,6 @@ public class UniqueByEntityJobTest {
      */
     @Test
     public void skipIfExistsTest() throws JobExecutionException, SchedulerException {
-
         JobDataMap map = new JobDataMap();
         map.put(JobStatus.TARGET_ID, "TaylorSwift");
         JobKey jobKey = new JobKey("name", "group");

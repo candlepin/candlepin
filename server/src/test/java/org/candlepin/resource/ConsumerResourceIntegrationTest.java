@@ -166,7 +166,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Test
     public void testGetCerts() {
-
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null, null, null, null);
         List<EntitlementCertificate> serials = consumerResource
@@ -308,7 +307,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @SuppressWarnings("unchecked")
     @Test
     public void testBindByPool() throws Exception {
-
         Response rsp = consumerResource.bind(
             consumer.getUuid(), pool.getId().toString(), null, 1, null,
             null, false, null, null, null, null);

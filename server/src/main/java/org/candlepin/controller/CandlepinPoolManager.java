@@ -998,7 +998,6 @@ public class CandlepinPoolManager implements PoolManager {
                 return entitleByPools(consumer, convertToMap(bestPools));
             }
             catch (EntitlementRefusedException e) {
-
                 // if there are any pools that had only one error, and that was
                 // an availability error, try again
                 boolean retry = false;
@@ -1085,7 +1084,6 @@ public class CandlepinPoolManager implements PoolManager {
         Consumer host, Date entitleDate, Owner owner,
         String serviceLevelOverride, Collection<String> fromPools)
         throws EntitlementRefusedException {
-
         Map<String, ValidationResult> failedResults = new HashMap<String, ValidationResult>();
         log.debug("Looking up best pools for host: {}", host);
 
@@ -1346,7 +1344,6 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public Entitlement ueberCertEntitlement(Consumer consumer, Pool pool)
         throws EntitlementRefusedException {
-
         Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
         poolQuantities.put(pool.getId(), 1);
         List<Entitlement> result = addOrUpdateEntitlements(consumer, poolQuantities, null, true,
@@ -1481,7 +1478,6 @@ public class CandlepinPoolManager implements PoolManager {
         // The quantity is calculated at fetch time. We update it here
         // To reflect what we just added to the db.
         for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
-
             Pool pool = entry.getValue().getPool();
             Integer quantity = entry.getValue().getQuantity();
             pool.setConsumed(pool.getConsumed() + quantity);
@@ -1527,7 +1523,6 @@ public class CandlepinPoolManager implements PoolManager {
      */
     private void checkBonusPoolQuantities(Map<String, PoolQuantity> poolQuantities,
             Map<String, Entitlement> entitlements) {
-
         Set<String> excludePoolIds = new HashSet<String>();
         Map<String, Entitlement> subEntitlementMap = new HashMap<String, Entitlement>();
         for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
@@ -1558,7 +1553,6 @@ public class CandlepinPoolManager implements PoolManager {
      */
     private EntitlementCertificate generateEntitlementCertificate(
         Pool pool, Entitlement e, boolean generateUeberCert) {
-
         Map<String, Product> products = new HashMap<String, Product>();
         products.put(pool.getId(), pool.getProduct());
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
@@ -1579,7 +1573,6 @@ public class CandlepinPoolManager implements PoolManager {
             Map<String, Product> products,
             Map<String, Entitlement> entitlements,
             boolean generateUeberCert) {
-
         try {
             return generateUeberCert ? entCertAdapter.generateUeberCerts(consumer, entitlements, products) :
                 entCertAdapter.generateEntitlementCerts(consumer, entitlements, products);
@@ -2075,7 +2068,6 @@ public class CandlepinPoolManager implements PoolManager {
      * EntitlementHandler
      */
     private interface EntitlementHandler {
-
         Map<String, Entitlement> handleEntitlement(Consumer consumer,
                 Map<String, PoolQuantity> poolQuantities,
                 Map<String, Entitlement> entitlements);
@@ -2097,7 +2089,6 @@ public class CandlepinPoolManager implements PoolManager {
         public Map<String, Entitlement> handleEntitlement(Consumer consumer,
                 Map<String, PoolQuantity> poolQuantities,
                 Map<String, Entitlement> entitlements) {
-
             List<Entitlement> entsToPersist = new ArrayList<Entitlement>();
             Map<String, Entitlement> result = new HashMap<String, Entitlement>();
             for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
@@ -2125,7 +2116,6 @@ public class CandlepinPoolManager implements PoolManager {
         @Override
         public void handlePostEntitlement(PoolManager manager, Consumer consumer,
                 Map<String, Entitlement> entitlements) {
-
             Set<String> stackIds = new HashSet<String>();
             for (Entitlement entitlement : entitlements.values()) {
                 if (entitlement.getPool().isStacked()) {
@@ -2150,7 +2140,6 @@ public class CandlepinPoolManager implements PoolManager {
         @Override
         public void handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> poolQuantities,
                 Map<String, Entitlement> entitlements, boolean generateUeberCert) {
-
             Map<String, Product> products = new HashMap<String, Product>();
             for (PoolQuantity poolQuantity : poolQuantities.values()) {
                 Pool pool = poolQuantity.getPool();
@@ -2171,7 +2160,6 @@ public class CandlepinPoolManager implements PoolManager {
         @Override
         public Map<String, Entitlement> handleEntitlement(Consumer consumer,
                 Map<String, PoolQuantity> poolQuantities, Map<String, Entitlement> entitlements) {
-
             for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
                 Entitlement entitlement = entry.getValue();
                 entitlement.setQuantity(entitlement.getQuantity() +

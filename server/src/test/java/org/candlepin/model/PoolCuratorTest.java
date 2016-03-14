@@ -564,7 +564,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     private String createPoolForCriteriaTest(Product product) {
-
         String subId1 = Util.generateDbUUID();
 
         Pool p = new Pool(owner, product, new HashSet<Product>(), 1L, new Date(), new Date(), "contract",
@@ -666,7 +665,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void retrieveFreeEntitlementsOfPools() {
-
         Pool pool1 = TestUtil.createPool(owner, product);
         poolCurator.create(pool1);
         Entitlement ent11 = new Entitlement(pool1, consumer, 1);
@@ -719,11 +717,9 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testBatchLoookupOverconsumedBySubscriptionId() {
-
         Map<String, Entitlement> subIdMap = new HashMap<String, Entitlement>();
         List<Pool> expectedPools = new ArrayList<Pool>();
         for (Integer i = 0; i < 5; i++) {
-
             Pool pool = createPool(owner, product, 1L, TestUtil.createDate(2050, 3, 2),
                     TestUtil.createDate(2055, 3, 2));
             poolCurator.create(pool);
@@ -1119,7 +1115,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void getSubPoolsForStackIds() {
-
         Set stackIds = new HashSet<String>();
         for (Integer i = 0; i < 5; i++) {
             String stackId = "12345" + i.toString();

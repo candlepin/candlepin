@@ -359,7 +359,6 @@ public class PoolRulesStackDerivedTest {
 
     @Test
     public void virtLimitFromFirstVirtLimitEntBatch() {
-
         stackedEnts.clear();
         Entitlement e1 = createEntFromPool(pool1);
         e1.setQuantity(4);

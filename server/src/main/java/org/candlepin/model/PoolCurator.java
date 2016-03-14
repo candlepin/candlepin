@@ -448,7 +448,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @SuppressWarnings("unchecked")
     public List<Pool> lookupOversubscribedBySubscriptionIds(Map<String, Entitlement> subIdMap) {
-
         List<Criterion> subIdMapCriteria = new ArrayList<Criterion>();
         Criterion[] exampleCriteria = new Criterion[0];
         for (Entry<String, Entitlement> entry : subIdMap.entrySet()) {
@@ -551,7 +550,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     public List<Pool> lockAndLoad(Collection<String> ids) {
-
         List<Pool> result = new ArrayList<Pool>();
         if (ids != null && !ids.isEmpty()) {
             List<String> idsList = new ArrayList<String>(ids);
@@ -574,7 +572,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @SuppressWarnings("unchecked")
     private List<Pool> lockAndLoadInternalOnly(List<String> ids) {
-
         if (ids == null || ids.isEmpty()) {
             return new ArrayList<Pool>();
         }
