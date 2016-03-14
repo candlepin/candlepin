@@ -1493,7 +1493,7 @@ public class ConsumerResource {
                     pqMap.put(poolQuantity.getPoolId(), poolQuantity);
                 }
             }
-            int batchBindLimit = config.getInt(ConfigProperties.BATCH_BIND_MAX_SIZE);
+            int batchBindLimit = config.getInt(ConfigProperties.BATCH_BIND_NUMBER_OF_POOLS_LIMIT);
             if (pqMap.keySet().size() > batchBindLimit) {
                 throw new BadRequestException(i18n.tr(
                         "Cannot bind more than {0} pools per request, found: {1}", batchBindLimit,
