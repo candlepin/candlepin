@@ -34,15 +34,19 @@ import org.candlepin.resource.dto.HypervisorCheckInResult;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -117,16 +121,36 @@ public class HypervisorResource {
 
         Owner owner = this.getOwner(ownerKey);
 
+        if (hostGuestMap.remove("") != null) {
+            log.warn("Ignoring empty hypervisor id");
+        }
+
         // Maps virt hypervisor ID to registered consumer for that hypervisor, should one exist:
         VirtConsumerMap hypervisorConsumersMap =
                 consumerCurator.getHostConsumersMap(owner, hostGuestMap.keySet());
 
-        List<String> allGuestIds = new LinkedList<String>();
-        for (Entry<String, List<GuestId>> hostEntry : hostGuestMap.entrySet()) {
-            for (GuestId gid : hostEntry.getValue()) {
-                allGuestIds.add(gid.getGuestId());
+        int emptyGuestIdCount = 0;
+        Set<String> allGuestIds = new HashSet<String>();
+
+        Collection<List<GuestId>> idsLists = hostGuestMap.values();
+        for (List<GuestId> guestIds : idsLists) {
+            for (Iterator<GuestId> guestIdsItr = guestIds.iterator(); guestIdsItr.hasNext();) {
+                String id = guestIdsItr.next().getGuestId();
+
+                if (StringUtils.isEmpty(id)) {
+                    emptyGuestIdCount++;
+                    guestIdsItr.remove();
+                }
+                else {
+                    allGuestIds.add(id);
+                }
             }
         }
+
+        if (emptyGuestIdCount > 0) {
+            log.warn("Ignoring {} empty/null guest id(s).", emptyGuestIdCount);
+        }
+
         // Maps virt guest ID to registered consumer for guest, if one exists:
         VirtConsumerMap guestConsumersMap = consumerCurator.getGuestConsumersMap(
                 owner, allGuestIds);

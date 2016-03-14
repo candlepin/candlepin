@@ -35,6 +35,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -330,7 +331,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         addGuestIdsTo(host2, virtUuid1, virtUuid3);
         addGuestIdsTo(host1, virtUuid1, virtUuid2);
 
-        List<String> guestIds = new LinkedList<String>();
+        Set<String> guestIds = new HashSet<String>();
         guestIds.add(virtUuid1);
         guestIds.add(virtUuid2);
         guestIds.add(virtUuid3);
@@ -537,7 +538,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         gConsumer2.getFacts().put("virt.uuid", guestId2);
         consumerCurator.create(gConsumer2);
 
-        List<String> guestIds = new LinkedList<String>();
+        Set<String> guestIds = new HashSet<String>();
         guestIds.add(guestId1ReverseEndian); // reversed endian match
         guestIds.add(guestId2); // direct match
         VirtConsumerMap guestMap = consumerCurator.getGuestConsumersMap(

@@ -184,7 +184,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @Transactional
     public VirtConsumerMap getGuestConsumersMap(Owner owner,
-            List<String> guestIds) {
+            Set<String> guestIds) {
         VirtConsumerMap guestConsumersMap = new VirtConsumerMap();
         if (guestIds.size() == 0) {
             return guestConsumersMap;
@@ -490,7 +490,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return host consumers who most recently reported the given guestIds (if any)
      */
     @Transactional
-    public VirtConsumerMap getGuestsHostMap(Owner owner, List<String> guestIds) {
+    public VirtConsumerMap getGuestsHostMap(Owner owner, Set<String> guestIds) {
         Disjunction guestIdCrit = Restrictions.disjunction();
         for (String possibleId : Util.getPossibleUuids(guestIds.toArray(
                 new String [guestIds.size()]))) {
