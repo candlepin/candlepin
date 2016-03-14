@@ -34,7 +34,6 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.policy.js.AttributeHelper;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -79,7 +78,6 @@ public class EntitlementRulesTestFixture {
     protected Consumer consumer;
     protected String productId = "a-product";
     protected PoolRules poolRules;
-    protected AttributeHelper attrHelper;
 
     @Before
     public void createEnforcer() throws Exception {
@@ -108,8 +106,6 @@ public class EntitlementRulesTestFixture {
         owner = new Owner();
         consumer = new Consumer("test consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
-
-        attrHelper = new AttributeHelper();
 
         poolRules = new PoolRules(poolManagerMock, config, entCurMock, prodCuratorMock);
     }

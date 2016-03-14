@@ -77,6 +77,7 @@ import org.candlepin.model.User;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.model.dto.PoolIdAndQuantity;
 import org.candlepin.pinsetter.tasks.EntitleByProductsJob;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -1384,6 +1385,42 @@ public class ConsumerResource {
         return allCerts;
     }
 
+    private void validateBindArguments(boolean hasPoolQuantities, String poolIdString, Integer quantity,
+            String[] productIds, List<String> fromPools, Date entitleDate, boolean async) {
+
+        short parameters = 0;
+
+        if (hasPoolQuantities) {
+            parameters++;
+        }
+        if (poolIdString != null) {
+            parameters++;
+        }
+        if ((productIds != null && productIds.length > 0) || (fromPools != null && !fromPools.isEmpty()) ||
+                entitleDate != null) {
+            parameters++;
+        }
+        if (parameters > 1) {
+            throw new BadRequestException(i18n.tr("Cannot bind by multiple parameters."));
+        }
+
+        if (hasPoolQuantities) {
+            if (quantity != null) {
+                throw new BadRequestException(
+                        i18n.tr("Cannot specify a single quantity when binding a batch of " +
+                                " exact pools. Please specify a quantity for each pool"));
+            }
+            else if (!async) {
+                throw new BadRequestException(i18n.tr("Batch bind can only be performed asynchronously"));
+            }
+        }
+
+        if (poolIdString == null && quantity != null) {
+            throw new BadRequestException(i18n.tr("Cannot specify a quantity when auto-binding."));
+        }
+
+    }
+
     /**
      * Binds Entitlements
      * <p>
@@ -1405,8 +1442,6 @@ public class ConsumerResource {
      *
      * @param consumerUuid Consumer identifier to be entitled
      * @param poolIdString Entitlement pool id.
-     * @param email email address.
-     * @param emailLocale locale for email address.
      * @param async True if bind should be asynchronous, defaults to false.
      * @param entitleDateStr specific date to entitle by.
      * @return a Response object
@@ -1430,38 +1465,46 @@ public class ConsumerResource {
         @QueryParam("email_locale") String emailLocale,
         @QueryParam("async") @DefaultValue("false") boolean async,
         @QueryParam("entitle_date") String entitleDateStr,
-        @QueryParam("from_pool") List<String> fromPools) {
+        @QueryParam("from_pool") List<String> fromPools,
+        PoolIdAndQuantity[] poolQuantities,
+        @Context Principal principal) {
 
-        // Check that only one query param was set:
-        if (poolIdString != null && productIds != null && productIds.length > 0) {
-            throw new BadRequestException(
-                i18n.tr("Cannot bind by multiple parameters."));
-        }
-
-        if (poolIdString == null && quantity != null) {
-            throw new BadRequestException(
-                i18n.tr("Cannot specify a quantity when auto-binding."));
-        }
-
-        // doesn't make sense to bind by pool and a date.
-        if (poolIdString != null && entitleDateStr != null) {
-            throw new BadRequestException(
-                i18n.tr("Cannot bind by multiple parameters."));
-        }
-
-        if (fromPools != null && !fromPools.isEmpty() && poolIdString != null) {
-            throw new BadRequestException(
-                    i18n.tr("Cannot bind by multiple parameters."));
-        }
-
+        boolean hasPoolQuantities = (poolQuantities != null && poolQuantities.length > 0);
         // TODO: really should do this in a before we get to this call
         // so the method takes in a real Date object and not just a String.
         Date entitleDate = ResourceDateParser.parseDateString(entitleDateStr);
+
+        // Check that only one query param was set, and some other validations
+        validateBindArguments(hasPoolQuantities, poolIdString, quantity, productIds, fromPools,
+                entitleDate, async);
 
         // Verify consumer exists:
         Consumer consumer = consumerCurator.verifyAndLookupConsumerWithEntitlements(consumerUuid);
 
         log.debug("Consumer (post verify): {}", consumer);
+
+        if (hasPoolQuantities) {
+            Map<String, PoolIdAndQuantity> pqMap = new HashMap<String, PoolIdAndQuantity>();
+            for (PoolIdAndQuantity poolQuantity : poolQuantities) {
+                if (pqMap.containsKey(poolQuantity.getPoolId())) {
+                    pqMap.get(poolQuantity.getPoolId()).addQuantity(poolQuantity.getQuantity());
+                }
+                else {
+                    pqMap.put(poolQuantity.getPoolId(), poolQuantity);
+                }
+            }
+            int batchBindLimit = config.getInt(ConfigProperties.BATCH_BIND_MAX_SIZE);
+            if (pqMap.keySet().size() > batchBindLimit) {
+                throw new BadRequestException(i18n.tr(
+                        "Cannot bind more than {0} pools per request, found: {1}", batchBindLimit,
+                        pqMap.keySet().size()));
+            }
+            List<Pool> pools = poolManager.secureFind(pqMap.keySet());
+            if (!principal.canAccessAll(pools, SubResource.ENTITLEMENTS, Access.CREATE)) {
+                throw new NotFoundException(i18n.tr("Pools with ids {0} could not be found.",
+                        pqMap.keySet()));
+            }
+        }
 
         try {
             // I hate double negatives, but if they have accepted all
@@ -1497,6 +1540,9 @@ public class ConsumerResource {
             if (poolIdString != null) {
                 detail = EntitlerJob.bindByPool(poolIdString, consumer, quantity);
             }
+            else if (hasPoolQuantities) {
+                detail = EntitlerJob.bindByPoolAndQuantities(consumer, poolQuantities);
+            }
             else {
                 detail = EntitleByProductsJob.bindByProducts(productIds,
                         consumer, entitleDate, fromPools);
@@ -1513,7 +1559,7 @@ public class ConsumerResource {
         List<Entitlement> entitlements = null;
 
         if (poolIdString != null) {
-            entitlements = entitler.bindByPool(poolIdString, consumer, quantity);
+            entitlements = entitler.bindByPoolQuantity(consumer, poolIdString, quantity);
         }
         else {
             AutobindData autobindData = AutobindData.create(consumer).on(entitleDate)
@@ -2063,7 +2109,7 @@ public class ConsumerResource {
     }
 
     /**
-     * Retrieves a Compliance Status list for a Consumer
+     * Retrieves a Compliance Status list for a list of Consumers
      *
      * @param uuids
      * @return a list of ComplianceStatus objects

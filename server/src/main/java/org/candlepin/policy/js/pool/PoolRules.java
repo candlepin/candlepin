@@ -35,6 +35,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -144,8 +145,7 @@ public class PoolRules {
      * virt_limit)
      */
     private Pool createBonusPool(Pool masterPool, List<Pool> existingPools) {
-        PoolHelper helper = new PoolHelper(this.poolManager, null);
-        Map<String, String> attributes = helper.getFlattenedAttributes(masterPool.getProduct());
+        Map<String, String> attributes = PoolHelper.getFlattenedAttributes(masterPool.getProduct());
         String virtQuantity = getVirtQuantity(attributes.get("virt_limit"), masterPool.getQuantity());
 
         log.info("Checking if bonus pools need to be created for pool: {}", masterPool);
@@ -171,8 +171,8 @@ public class PoolRules {
 
             // Using derived here because only one derived pool is created for
             // this subscription
-            Pool bonusPool = helper.clonePool(masterPool, sku, virtQuantity, virtAttributes, "derived",
-                    prodCurator);
+            Pool bonusPool = PoolHelper.clonePool(masterPool, sku, virtQuantity, virtAttributes, "derived",
+                    prodCurator, null);
 
             log.info("Creating new derived pool: {}", bonusPool);
             return bonusPool;
@@ -264,10 +264,9 @@ public class PoolRules {
 
         log.debug("Refreshing pools for existing master pool: " + masterPool);
         log.debug("  existing pools: " + existingPools.size());
-        PoolHelper helper = new PoolHelper(this.poolManager, null);
 
         List<PoolUpdate> poolsUpdated = new LinkedList<PoolUpdate>();
-        Map<String, String> attributes = helper.getFlattenedAttributes(masterPool.getProduct());
+        Map<String, String> attributes = PoolHelper.getFlattenedAttributes(masterPool.getProduct());
         for (Pool existingPool : existingPools) {
             log.debug("Checking pool: " + existingPool.getId());
 
@@ -307,8 +306,7 @@ public class PoolRules {
                         checkForChangedDerivedProducts(masterPool, existingPool, changedProducts));
                 }
 
-                update.setOrderChanged(checkForOrderDataChanges(masterPool, helper,
-                    existingPool));
+                update.setOrderChanged(checkForOrderDataChanges(masterPool, existingPool));
 
                 update.setBrandingChanged(checkForBrandingChanges(masterPool, existingPool));
             }
@@ -326,10 +324,9 @@ public class PoolRules {
 
     /**
      * Updates the pool based on the entitlements in the specified stack.
-     * @param pool
-     * @param consumer
-     * @param stackId
      *
+     * @param pool
+     * @param changedProducts
      * @return pool update specifics
      */
     public PoolUpdate updatePoolFromStack(Pool pool, Set<Product> changedProducts) {
@@ -340,13 +337,50 @@ public class PoolRules {
         return this.updatePoolFromStackedEntitlements(pool, stackedEnts, changedProducts);
     }
 
+    /**
+     * Updates the pool based on the entitlements in the specified stack.
+     *
+     * @param pools
+     * @param consumer
+     * @return updates
+     */
+    public List<PoolUpdate> updatePoolsFromStack(Consumer consumer, List<Pool> pools) {
+
+        Map<String, List<Entitlement>> entitlementMap = new HashMap<String, List<Entitlement>>();
+        Map<String, Pool> poolMap = new HashMap<String, Pool>();
+        Set<String> sourceStackIds = new HashSet<String>();
+        List<PoolUpdate> result = new ArrayList<PoolUpdate>();
+
+        for (Pool pool : pools) {
+            sourceStackIds.add(pool.getSourceStackId());
+            poolMap.put(pool.getId(), pool);
+        }
+        List<Entitlement> stackedEnts = this.entCurator.findByStackIds(consumer, sourceStackIds);
+        for (Entitlement entitlement : stackedEnts) {
+            if (!entitlementMap.containsKey(entitlement.getPool().getStackId())) {
+                entitlementMap.put(entitlement.getPool().getStackId(), new ArrayList<Entitlement>());
+            }
+
+            entitlementMap.get(entitlement.getPool().getStackId()).add(entitlement);
+        }
+
+        for (Pool pool : poolMap.values()) {
+            List<Entitlement> entitlements = entitlementMap.get(pool.getSourceStackId());
+            if (entitlements != null && !entitlements.isEmpty()) {
+                result.add(this.updatePoolFromStackedEntitlements(pool, entitlements,
+                        new HashSet<Product>()));
+            }
+        }
+        return result;
+    }
+
     public PoolUpdate updatePoolFromStackedEntitlements(Pool pool, List<Entitlement> stackedEnts,
         Set<Product> changedProducts) {
 
         PoolUpdate update = new PoolUpdate(pool);
 
         // Nothing to do if there were no entitlements found.
-        if (stackedEnts.isEmpty()) {
+        if (stackedEnts == null || stackedEnts.isEmpty()) {
             return update;
         }
 
@@ -412,9 +446,8 @@ public class PoolRules {
         return update;
     }
 
-    private boolean checkForOrderDataChanges(Pool pool,
-        PoolHelper helper, Pool existingPool) {
-        boolean orderDataChanged = helper.checkForOrderChanges(existingPool, pool);
+    private boolean checkForOrderDataChanges(Pool pool, Pool existingPool) {
+        boolean orderDataChanged = PoolHelper.checkForOrderChanges(existingPool, pool);
         if (orderDataChanged) {
             existingPool.setAccountNumber(pool.getAccountNumber());
             existingPool.setOrderNumber(pool.getOrderNumber());

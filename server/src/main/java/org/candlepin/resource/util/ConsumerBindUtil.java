@@ -117,8 +117,7 @@ public class ConsumerBindUtil {
                 getQuantityToBind(akp.getPool(), consumer) :
                     akp.getQuantity().intValue();
             try {
-                entitler.sendEvents(entitler.bindByPool(
-                    akp.getPool().getId(), consumer, quantity));
+                entitler.sendEvents(entitler.bindByPoolQuantity(consumer, akp.getPool().getId(), quantity));
                 onePassed = true;
             }
             catch (ForbiddenException e) {
