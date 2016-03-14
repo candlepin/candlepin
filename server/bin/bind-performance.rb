@@ -20,12 +20,12 @@ ADMIN_PASSWORD = "admin"
 HOST = "localhost"
 PORT = 8443
 
-def random_string prefix=nil
+def random_string(prefix=nil)
   prefix ||= "rand"
   return "#{prefix}-#{rand(100000)}"
 end
 
-def time_rand from = 0.0, to = Time.now
+def time_rand(from = 0.0, to = Time.now)
   Time.at(from + rand * (to.to_f - from.to_f))
 end
 
@@ -35,7 +35,7 @@ owner = @cp.create_owner random_string("consumertest")
 puts "Created owner: #{owner['key']}"
 
 prod_attrs = {}
-(0..20).each do |i|
+20.times do |i|
   prod_attrs[random_string("attr")] = random_string("val")
 end
 prod_attrs['multi-entitlement'] = "yes"
@@ -44,24 +44,7 @@ product1 = @cp.create_product(owner['key'], random_string(), random_string(),
 
 ent_count = 50
 
-all_provided_products = [random_string(),
-  random_string(),
-  random_string(),
-  random_string(),
-  random_string(),
-  random_string(),
-  random_string(),
-  random_string(),
-  random_string(),
-  random_string(),
-  random_string(),
-  random_string(),
-  random_string(),
-  random_string(),
-  random_string(),
-  random_string(),
-  random_string(),
-  random_string()]
+all_provided_products = Array.new(18) { |idx| random_string }
 all_provided_products.each do |pid|
   @cp.create_product(owner['key'], pid, pid, {})
 end
