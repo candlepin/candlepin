@@ -630,7 +630,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     }
 
-
     @Test
     public void testListBySourceEntitlements() {
         Pool sourcePool = TestUtil.createPool(owner, product);
@@ -659,7 +658,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool3);
         poolCurator.create(pool4);
         poolCurator.create(pool5);
-
 
         List<Pool> pools = poolCurator.listBySourceEntitlements(Arrays.asList(e, e2));
         assertEquals(3, pools.size());

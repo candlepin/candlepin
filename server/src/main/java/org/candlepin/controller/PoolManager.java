@@ -268,7 +268,6 @@ public interface PoolManager {
             Date entitleDate, Collection<String> possiblePools)
         throws EntitlementRefusedException;
 
-
     /**
      * Creates a Subscription object using information derived from the specified pool. Used to
      * support deprecated API calls that still require a subscription.

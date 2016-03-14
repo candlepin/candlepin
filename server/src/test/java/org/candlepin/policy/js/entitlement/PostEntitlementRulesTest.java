@@ -146,7 +146,6 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         Pool pool = setupVirtLimitPool();
         Entitlement e = new Entitlement(pool, consumer, 1);
 
-
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put(pool.getId(), e);
         enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null);

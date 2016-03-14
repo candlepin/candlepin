@@ -1964,7 +1964,6 @@ public class PoolManagerTest {
         ents.add(derivedEnt);
         derivedPool.setEntitlements(ents);
 
-
         // before
         assertEquals(3, derivedPool.getConsumed().intValue());
         assertEquals(1, derivedPool.getEntitlements().size());
@@ -2122,7 +2121,6 @@ public class PoolManagerTest {
             pools.get(i).setId("id" + i);
             subids.add("subid" + i);
         }
-
 
         Class<List<String>> listClass = (Class<List<String>>) (Class) ArrayList.class;
         ArgumentCaptor<List<String>> poolsArg = ArgumentCaptor.forClass(listClass);

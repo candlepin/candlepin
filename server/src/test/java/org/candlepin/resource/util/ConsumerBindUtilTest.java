@@ -268,5 +268,4 @@ public class ConsumerBindUtilTest {
         consumerBindUtil.handleActivationKeys(consumer, keys);
     }
 
-
 }

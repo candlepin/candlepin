@@ -253,7 +253,6 @@ public class HypervisorResourceTest {
         when(idCertService.generateIdentityCert(any(Consumer.class)))
                 .thenReturn(new IdentityCertificate());
 
-
         String expectedMessage = "Forced Exception.";
         RuntimeException exception = new RuntimeException(expectedMessage);
         // Simulate failure  when checking the owner

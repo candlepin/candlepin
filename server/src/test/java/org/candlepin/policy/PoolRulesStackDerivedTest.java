@@ -61,7 +61,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
 /**
  * JsPoolRulesTest: Tests for the default rules.
  */

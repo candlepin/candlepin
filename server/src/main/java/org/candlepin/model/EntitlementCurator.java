@@ -262,7 +262,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return false;
     }
 
-
     /*
      * Creates date filtering criteria to for checking if an entitlement has any overlap
      * with a "modifying" entitlement that has just been granted.

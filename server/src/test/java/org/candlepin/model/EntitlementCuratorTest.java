@@ -47,7 +47,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Inject private EntitlementCurator entitlementCurator;
     @Inject private EnvironmentCurator envCurator;
 
-
     private Entitlement ent1modif;
     private Entitlement ent2modif;
     private Entitlement secondEntitlement;
@@ -469,7 +468,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         }
     }
 
-
     private Entitlement setupListProvidingEntitlement() {
         Date startDate = createDate(2000, 1, 1);
         Date endDate = createDate(2005, 1, 1);
@@ -508,7 +506,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertEquals(3, results.size());
         assertTrue(results.contains(ent.getPool().getProductId()));
     }
-
 
     @Test
     public void listEntitledProductIdsEndDateOverlap() {

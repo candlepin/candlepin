@@ -220,7 +220,6 @@ public class CandlepinPoolManager implements PoolManager {
 
         deletePools(poolsToDelete);
 
-
         // TODO: break this call into smaller pieces.  There may be lots of floating pools
         List<Pool> floatingPools = poolCurator.getOwnersFloatingPools(owner);
         updateFloatingPools(floatingPools, lazy, changedProducts);
@@ -1766,7 +1765,6 @@ public class CandlepinPoolManager implements PoolManager {
         log.info("Batch revoking {} entitlements ", entsToRevoke.size());
         entsToRevoke =  new ArrayList<Entitlement>(entsToRevoke);
 
-
         for (Pool pool : poolsToDelete) {
             entsToRevoke.addAll(pool.getEntitlements());
         }
@@ -1964,7 +1962,6 @@ public class CandlepinPoolManager implements PoolManager {
         return entsToDelete.size();
     }
 
-
     /**
      * Cleanup entitlements and safely delete the given pool.
      *
@@ -2085,7 +2082,6 @@ public class CandlepinPoolManager implements PoolManager {
 
         void handlePostEntitlement(PoolManager manager, Consumer consumer,
                 Map<String, Entitlement> entitlements);
-
 
         void handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> pools,
                 Map<String, Entitlement> entitlements, boolean generateUeberCert);

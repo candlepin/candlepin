@@ -47,7 +47,6 @@ public class ConsumerComplianceJobTest {
     @Mock private ComplianceRules rules;
     @Mock private JobExecutionContext ctx;
 
-
     @Before
     public void init() {
         MockitoAnnotations.initMocks(this);

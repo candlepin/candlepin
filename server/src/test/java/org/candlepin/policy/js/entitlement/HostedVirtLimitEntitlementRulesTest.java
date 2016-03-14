@@ -58,7 +58,6 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put(pool.getId(), new Entitlement(pool, consumer, 1));
 
-
         PoolManager poolManager = mock(PoolManager.class);
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         enforcer.postEntitlement(poolManager, consumer, entitlements, null);
