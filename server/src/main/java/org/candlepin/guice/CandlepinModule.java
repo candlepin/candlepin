@@ -14,6 +14,13 @@
  */
 package org.candlepin.guice;
 
+import java.util.Properties;
+
+import javax.inject.Provider;
+import javax.validation.MessageInterpolator;
+import javax.validation.Validation;
+import javax.validation.ValidatorFactory;
+
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
@@ -125,6 +132,12 @@ import org.candlepin.util.DateSource;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.X509ExtensionUtil;
+import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
+import org.hibernate.validator.HibernateValidator;
+import org.hibernate.validator.HibernateValidatorConfiguration;
+import org.quartz.JobListener;
+import org.quartz.spi.JobFactory;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
@@ -133,20 +146,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.persist.jpa.JpaPersistModule;
-
-import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
-import org.hibernate.validator.HibernateValidator;
-import org.hibernate.validator.HibernateValidatorConfiguration;
-import org.quartz.JobListener;
-import org.quartz.spi.JobFactory;
-import org.xnap.commons.i18n.I18n;
-
-import java.util.Properties;
-
-import javax.inject.Provider;
-import javax.validation.MessageInterpolator;
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
 
 /**
  * CandlepinModule

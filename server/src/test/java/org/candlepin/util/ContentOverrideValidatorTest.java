@@ -25,12 +25,16 @@ import org.candlepin.model.ContentOverride;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.policy.js.JsRunnerRequestCache;
 import org.candlepin.policy.js.override.OverrideRules;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.xnap.commons.i18n.I18n;
+
+import com.google.inject.Provider;
 
 import java.io.InputStream;
 import java.util.Date;
@@ -45,6 +49,10 @@ import javax.inject.Inject;
 public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
     @Inject  private I18n i18n;
     private RulesCurator rulesCuratorMock;
+    @Mock
+    private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock
+    private JsRunnerRequestCache cache;
     private Configuration config;
 
     private ContentOverrideValidator validator;
@@ -57,11 +65,13 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
             RulesCurator.DEFAULT_RULES_FILE);
         rulesCuratorMock = mock(RulesCurator.class);
         config = mock(Configuration.class);
+        cacheProvider = mock(Provider.class);
+        cache = mock(JsRunnerRequestCache.class);
         Rules rules = new Rules(Util.readFile(is));
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
-
-        provider = new JsRunnerProvider(rulesCuratorMock);
+        when(cacheProvider.get()).thenReturn(cache);
+        provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
         overrideRules = new OverrideRules(provider.get(), config);
         validator = new ContentOverrideValidator(i18n, overrideRules);
     }

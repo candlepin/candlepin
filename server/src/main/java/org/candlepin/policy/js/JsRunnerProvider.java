@@ -42,10 +42,17 @@ public class JsRunnerProvider implements Provider<JsRunner> {
     private static Logger log = LoggerFactory.getLogger(JsRunnerProvider.class);
 
     private RulesCurator rulesCurator;
-
+    private Provider<JsRunnerRequestCache> cacheProvider;
     private Script script;
     private Scriptable scope;
-    private volatile Date updated;
+    /**
+     * This date is basically a version of the rules that this
+     * JSRunnerProvider compiled. Note that in clustered environment,
+     * multiple nodes must compile same version of rules. Thats why
+     * this JsRunnerProvider uses database to make sure it compiles and
+     * uses the database dictated version.
+     */
+    private volatile Date currentRulesUpdated;
 
     // Store the version and source of the compiled rules:
     private String rulesVersion;
@@ -75,8 +82,9 @@ public class JsRunnerProvider implements Provider<JsRunner> {
     }
 
     @Inject
-    public JsRunnerProvider(RulesCurator rulesCurator) {
+    public JsRunnerProvider(RulesCurator rulesCurator, Provider<JsRunnerRequestCache> cacheProvider) {
         this.rulesCurator = rulesCurator;
+        this.cacheProvider = cacheProvider;
 
         log.debug("Compiling rules for initial load");
         this.rulesCurator.updateDbRules();
@@ -100,7 +108,7 @@ public class JsRunnerProvider implements Provider<JsRunner> {
             // Check to see if we need to recompile. we do this inside the write lock
             // just to avoid race conditions where we might double compile
             Date newUpdated = rulesCurator.getUpdated();
-            if (!forceRefresh && newUpdated.equals(this.updated)) {
+            if (!forceRefresh && newUpdated.equals(this.currentRulesUpdated)) {
                 return;
             }
 
@@ -117,7 +125,7 @@ public class JsRunnerProvider implements Provider<JsRunner> {
                     rules.getRules(), "rules", 1, null);
                 script.exec(context, scope);
                 ((ScriptableObject) scope).sealObject();
-                this.updated = newUpdated;
+                this.currentRulesUpdated = newUpdated;
             }
             finally {
                 Context.exit();
@@ -129,12 +137,23 @@ public class JsRunnerProvider implements Provider<JsRunner> {
     }
 
     public JsRunner get() {
+        /**
+         * Even though JsRunnerProvider is singleton, the
+         * following cache is being retrieved fresh for
+         * every new HTTP Request
+         */
+        JsRunnerRequestCache cache = cacheProvider.get();
+        Date updated = cache.getUpdated();
+        if (updated == null) {
+            updated = rulesCurator.getUpdated();
+            cache.setUpdated(updated);
+        }
         /*
          * Create a new thread/request local javascript scope for the JsRules,
          * based on the preinitialized global one (which contains our js rules).
          */
         // Avoid a write lock if we can
-        if (!rulesCurator.getUpdated().equals(this.updated)) {
+        if (!updated.equals(this.currentRulesUpdated)) {
             compileRules();
         }
         Scriptable rulesScope;

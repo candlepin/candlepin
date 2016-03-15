@@ -22,6 +22,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.policy.js.JsRunnerRequestCache;
 import org.candlepin.util.Util;
 
 import org.junit.Before;
@@ -29,6 +30,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import com.google.inject.Provider;
 
 import java.io.InputStream;
 import java.util.Date;
@@ -45,6 +48,10 @@ public class OverrideRulesTests {
     private OverrideRules overrideRules;
     @Mock
     private Configuration config;
+    @Mock
+    private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock
+    private JsRunnerRequestCache cache;
 
     @Before
     public void setupTest() {
@@ -53,8 +60,9 @@ public class OverrideRulesTests {
         Rules rules = new Rules(Util.readFile(is));
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
+        when(cacheProvider.get()).thenReturn(cache);
 
-        provider = new JsRunnerProvider(rulesCuratorMock);
+        provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
         overrideRules = new OverrideRules(provider.get(), config);
     }
 

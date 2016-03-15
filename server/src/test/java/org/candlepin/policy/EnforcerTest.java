@@ -38,6 +38,7 @@ import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.policy.js.JsRunnerRequestCache;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
@@ -52,6 +53,8 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
+
+import com.google.inject.Provider;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -78,6 +81,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Mock private ProductServiceAdapter productAdapter;
     @Mock private RulesCurator rulesCurator;
     @Mock private Configuration config;
+    @Mock private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock private JsRunnerRequestCache cache;
 
     private Enforcer enforcer;
     private Owner owner;
@@ -112,8 +117,9 @@ public class EnforcerTest extends DatabaseTestFixture {
         when(rules.getRules()).thenReturn(builder.toString());
         when(rulesCurator.getRules()).thenReturn(rules);
         when(rulesCurator.getUpdated()).thenReturn(TestDateUtil.date(2010, 1, 1));
+        when(cacheProvider.get()).thenReturn(cache);
 
-        JsRunner jsRules = new JsRunnerProvider(rulesCurator).get();
+        JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
 
         enforcer = new EntitlementRules(
             new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator, poolCurator

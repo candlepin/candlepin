@@ -32,6 +32,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.policy.js.JsRunnerRequestCache;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.compliance.StatusReasonMessageGenerator;
@@ -46,6 +47,8 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import com.google.inject.Provider;
 
 import java.io.InputStream;
 import java.util.Calendar;
@@ -75,6 +78,9 @@ public class InstalledProductStatusCalculatorTest {
     @Mock private EntitlementCurator entCurator;
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private EventSink eventSink;
+    @Mock private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock private JsRunnerRequestCache cache;
+
     private JsRunnerProvider provider;
     private I18n i18n;
 
@@ -88,7 +94,8 @@ public class InstalledProductStatusCalculatorTest {
         Rules rules = new Rules(Util.readFile(is));
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
-        provider = new JsRunnerProvider(rulesCuratorMock);
+        when(cacheProvider.get()).thenReturn(cache);
+        provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
         Locale locale = new Locale("en_US");
         i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale,
             I18nFactory.FALLBACK);

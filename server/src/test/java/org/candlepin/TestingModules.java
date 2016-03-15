@@ -33,6 +33,7 @@ import org.candlepin.guice.I18nProvider;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.guice.ScriptEngineProvider;
 import org.candlepin.guice.TestPrincipalProvider;
+import org.candlepin.guice.TestingRequestScope;
 import org.candlepin.guice.ValidationListenerProvider;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
@@ -92,6 +93,7 @@ import com.google.inject.name.Names;
 import com.google.inject.persist.PersistService;
 import com.google.inject.persist.UnitOfWork;
 import com.google.inject.persist.jpa.JpaPersistModule;
+import com.google.inject.servlet.RequestScoped;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
@@ -238,6 +240,9 @@ public class TestingModules {
 
             CandlepinSingletonScope singletonScope = new CandlepinSingletonScope();
             bindScope(CandlepinSingletonScoped.class, singletonScope);
+            //RequestScoped doesn't exist in unit tests, so we must
+            //define test alternative for it.
+            bindScope(RequestScoped.class, new TestingRequestScope());
             bind(CandlepinSingletonScope.class).toInstance(singletonScope);
 
             bind(X509ExtensionUtil.class);
