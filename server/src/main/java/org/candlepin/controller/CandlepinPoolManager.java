@@ -622,10 +622,12 @@ public class CandlepinPoolManager implements PoolManager {
 
         for (Entitlement entitlement : freeEntitlements) {
             Pool pool = entitlement.getPool();
-            if (!poolSortedEntitlements.containsKey(pool.getId())) {
-                poolSortedEntitlements.put(pool.getId(), new ArrayList<Entitlement>());
+            List<Entitlement> ents = poolSortedEntitlements.get(pool.getId());
+            if (ents == null) {
+                ents = new ArrayList<Entitlement>();
+                poolSortedEntitlements.put(pool.getId(), ents);
             }
-            poolSortedEntitlements.get(pool.getId()).add(entitlement);
+            ents.add(entitlement);
         }
 
         for (Pool pool : overFlowingPools) {
