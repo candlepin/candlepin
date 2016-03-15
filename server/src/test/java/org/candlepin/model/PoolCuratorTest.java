@@ -15,6 +15,8 @@
 package org.candlepin.model;
 
 import static org.junit.Assert.*;
+import static org.hamcrest.core.IsCollectionContaining.*;
+import static org.hamcrest.core.IsNot.*;
 
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.common.paging.Page;
@@ -539,9 +541,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         List<Pool> pools = poolCurator.lookupBySubscriptionIds(Arrays.asList(subId1, subId2));
         assertEquals(2, pools.size());
-        assertTrue(pools.contains(p));
-        assertTrue(pools.contains(p2));
-        assertTrue(!pools.contains(p3));
+        assertThat(pools, hasItems(p, p2));
+        assertThat(pools, not(hasItem(p3)));
     }
 
     @Test
@@ -558,7 +559,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(30, pools.size());
 
         for (Pool pool : pools) {
-            assertTrue(subIds.contains(pool.getSubscriptionId()));
+            assertThat(subIds, hasItem(pool.getSubscriptionId()));
         }
     }
 
@@ -685,11 +686,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         List<Entitlement> ents = poolCurator.retrieveFreeEntitlementsOfPools(Arrays.asList(pool1, pool2),
                 true);
         assertEquals(4, ents.size());
-        assertTrue(ents.contains(ent11));
-        assertTrue(ents.contains(ent12));
-        assertTrue(ents.contains(ent13));
-        assertTrue(ents.contains(ent21));
-        assertTrue(!ents.contains(ent31));
+        assertThat(ents, hasItems(ent11, ent12, ent13, ent21));
+        assertThat(ents, not(hasItems(ent31)));
     }
 
     @Test
@@ -738,15 +736,18 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(notOverConsumedPool);
         entitlementCurator.create(new Entitlement(notOverConsumedPool, consumer, 1));
 
+        Pool overConsumedPool = createPool(owner, product, 1L, TestUtil.createDate(2050, 3, 2),
+                TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(overConsumedPool);
+        entitlementCurator.create(new Entitlement(overConsumedPool, consumer, 2));
+
         List<Pool> gotPools = poolCurator.lookupOversubscribedBySubscriptionIds(subIdMap);
         assertEquals(5, gotPools.size());
 
-        for (Pool expectedPool : gotPools) {
-            assertTrue(gotPools.contains(expectedPool));
-        }
-
-        assertFalse(gotPools.contains(unconsumedPool));
-        assertFalse(gotPools.contains(notOverConsumedPool));
+        assertThat(expectedPools, hasItems(gotPools.toArray(new Pool[0])));
+        assertThat(gotPools, not(hasItem(unconsumedPool)));
+        assertThat(gotPools, not(hasItem(notOverConsumedPool)));
+        assertThat(gotPools, not(hasItem(overConsumedPool)));
     }
 
     @Test

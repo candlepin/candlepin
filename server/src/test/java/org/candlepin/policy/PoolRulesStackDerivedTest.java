@@ -14,6 +14,7 @@
  */
 package org.candlepin.policy;
 
+import static org.hamcrest.collection.IsCollectionContaining.*;
 import static org.junit.Assert.*;
 import static org.mockito.AdditionalAnswers.*;
 import static org.mockito.Matchers.eq;
@@ -374,8 +375,7 @@ public class PoolRulesStackDerivedTest {
                 Arrays.asList(stackDerivedPool, stackDerivedPool2), false);
         Set<String> stackIds = arg.getValue();
         assertEquals(2, stackIds.size());
-        assertTrue(stackIds.contains(STACK));
-        assertTrue(stackIds.contains(STACK + "3"));
+        assertThat(stackIds, hasItems(STACK, STACK + "3"));
 
         for (PoolUpdate update : updates) {
             assertTrue(update.changed());

@@ -15,6 +15,8 @@
 package org.candlepin.model;
 
 import static org.junit.Assert.*;
+import static org.hamcrest.core.IsCollectionContaining.*;
+import static org.hamcrest.core.IsNot.*;
 
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
@@ -224,7 +226,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         // The ent we just created should *not* be returned as modifying itself:
         Set<Entitlement> ents = entitlementCurator.listModifying(ent);
         assertEquals(4, ents.size());
-        assertTrue(!ents.contains(ent));
+        assertThat(ents, not(hasItem(ent)));
     }
 
     @Test
@@ -241,8 +243,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Set<Entitlement> ents = entitlementCurator.listModifying(Arrays.asList(ent, ent1));
         assertEquals(6, ents.size());
 
-        assertTrue(!ents.contains(ent));
-        assertTrue(!ents.contains(ent1));
+        assertThat(ents, not(hasItem(ent)));
+        assertThat(ents, not(hasItem(ent1)));
     }
 
     @Test
@@ -258,8 +260,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         // The ent we just created should *not* be returned as modifying itself:
         Set<Entitlement> ents = entitlementCurator.listModifying(Arrays.asList(ent, ent1));
         assertEquals(5, ents.size());
-        assertTrue(!ents.contains(ent));
-        assertTrue(!ents.contains(ent1));
+        assertThat(ents, not(hasItems(ent)));
+        assertThat(ents, not(hasItems(ent1)));
     }
 
     @Test
@@ -279,9 +281,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         // The ent we just created should *not* be returned as modifying itself:
         Set<Entitlement> ents = entitlementCurator.listModifying(Arrays.asList(ent, ent1));
         assertEquals(5, ents.size());
-        assertTrue(!ents.contains(ent));
-        assertTrue(!ents.contains(ent1));
-        assertTrue(!ents.contains(ent2));
+        assertThat(ents, not(hasItems(ent)));
+        assertThat(ents, not(hasItems(ent1)));
+        assertThat(ents, not(hasItems(ent2)));
     }
 
     @Test
@@ -311,9 +313,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         // The ent we just created should *not* be returned as modifying itself:
         Set<Entitlement> ents = entitlementCurator.listModifying(Arrays.asList(ent));
         assertEquals(4, ents.size());
-        assertTrue(!ents.contains(ent));
-        assertTrue(ents.contains(ent1));
-        assertTrue(!ents.contains(ent2));
+        assertThat(ents, not(hasItems(ent)));
+        assertThat(ents, hasItems(ent1));
+        assertThat(ents, not(hasItems(ent2)));
     }
 
     private Entitlement setUpModifyingEntitlements(Date startDate, Date endDate, Integer howMany,

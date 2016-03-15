@@ -14,9 +14,11 @@
  */
 package org.candlepin.controller;
 
+import static org.hamcrest.collection.IsCollectionContaining.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
+
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
@@ -1983,7 +1985,7 @@ public class PoolManagerTest {
         verify(entitlementCurator).batchDelete(arg.capture());
 
         List<Entitlement> entsDeleted = arg.getValue();
-        assertTrue(entsDeleted.contains(derivedEnt));
+        assertThat(entsDeleted, hasItem(derivedEnt));
         assertEquals(2, derivedPool.getConsumed().intValue());
         assertEquals(0, derivedPool.getEntitlements().size());
     }
@@ -2053,9 +2055,7 @@ public class PoolManagerTest {
         verify(entitlementCurator).batchDelete(arg.capture());
 
         List<Entitlement> entsDeleted = arg.getValue();
-        assertTrue(entsDeleted.contains(derivedEnt));
-        assertTrue(entsDeleted.contains(derivedEnt2));
-        assertTrue(entsDeleted.contains(derivedEnt3));
+        assertThat(entsDeleted, hasItems(derivedEnt, derivedEnt2, derivedEnt3));
 
         assertEquals(1, derivedPool.getConsumed().intValue());
         assertEquals(0, derivedPool.getEntitlements().size());
@@ -2077,9 +2077,7 @@ public class PoolManagerTest {
         manager.createPools(pools);
         List<Pool> saved = poolsArg.getValue();
         assertEquals(saved.size(), pools.size());
-        for (Pool pool : pools) {
-            assertTrue(saved.contains(pool));
-        }
+        assertThat(saved, hasItems(pools.toArray(new Pool[0])));
     }
 
     @Test

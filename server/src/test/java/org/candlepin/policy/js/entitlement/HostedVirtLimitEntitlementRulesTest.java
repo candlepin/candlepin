@@ -14,6 +14,7 @@
  */
 package org.candlepin.policy.js.entitlement;
 
+import static org.hamcrest.collection.IsCollectionContaining.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -175,8 +176,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         @SuppressWarnings("unchecked")
         Set<String> subscriptionIds = captor.getValue();
         assertEquals(2, subscriptionIds.size());
-        assertTrue(subscriptionIds.contains("subId"));
-        assertTrue(subscriptionIds.contains("subId2"));
+        assertThat(subscriptionIds, hasItems("subId", "subId2"));
         verify(poolManagerMock).updatePoolQuantity(eq(virtBonusPool), eq(-10L));
         verify(poolManagerMock).updatePoolQuantity(eq(virtBonusPool2), eq(-10L));
 
