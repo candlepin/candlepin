@@ -26,6 +26,7 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
@@ -147,7 +148,7 @@ public class PoolHelper {
             poolsToCreate.add(consumerSpecificPool);
         }
 
-        if (poolsToUpdateFromStack != null && !poolsToUpdateFromStack.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(poolsToUpdateFromStack)) {
             poolManager.updatePoolsFromStack(consumer, poolsToUpdateFromStack);
         }
         return poolManager.createPools(poolsToCreate);

@@ -17,6 +17,7 @@ package org.candlepin.auth;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.util.Util;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +73,7 @@ public abstract class Principal implements Serializable, java.security.Principal
     }
 
     public boolean canAccessAll(Collection targets, SubResource subResource, Access access) {
-        if (targets == null || targets.isEmpty()) {
+        if (CollectionUtils.isEmpty(targets)) {
             log.debug(
                     "{} principal checking for {} access to sub-resource: {}." +
                     " Access to null or resource tried",

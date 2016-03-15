@@ -76,6 +76,8 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.quartz.JobDetail;
 import org.slf4j.Logger;
@@ -598,7 +600,7 @@ public class CandlepinPoolManager implements PoolManager {
     private void deleteExcessEntitlements(List<Pool> existingPools) {
         boolean lifo = !config
             .getBoolean(ConfigProperties.REVOKE_ENTITLEMENT_IN_FIFO_ORDER);
-        if (existingPools == null || existingPools.isEmpty()) {
+        if (CollectionUtils.isEmpty(existingPools)) {
             return;
         }
 
@@ -628,7 +630,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         for (Pool pool : overFlowingPools) {
             List<Entitlement> freeEntitlementsForPool = poolSortedEntitlements.get(pool.getId());
-            if (freeEntitlementsForPool == null || freeEntitlementsForPool.isEmpty()) {
+            if (CollectionUtils.isEmpty(freeEntitlementsForPool)) {
                 continue;
             }
             long consumed = pool.getConsumed();
@@ -677,7 +679,7 @@ public class CandlepinPoolManager implements PoolManager {
          * send out the events. Create an event for each pool that could change,
          * even if we won't use them all.
          */
-        if (existingPools == null || existingPools.isEmpty()) {
+        if (CollectionUtils.isEmpty(existingPools)) {
             return new HashSet<String>(0);
         }
 
@@ -849,7 +851,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public List<Pool> createPools(List<Pool> pools) {
-        if (pools != null && !pools.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(pools)) {
             poolCurator.saveOrUpdateAll(pools, false);
 
             for (Pool pool : pools) {
@@ -933,7 +935,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public List<Pool> secureFind(Collection<String> poolIds) {
-        if (poolIds != null && !poolIds.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(poolIds)) {
             return this.poolCurator.listAllByIds(poolIds);
         }
         return new ArrayList<Pool>();
@@ -946,7 +948,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public List<Pool> lookupBySubscriptionIds(Collection<String> subscriptionIds) {
-        if (subscriptionIds != null && !subscriptionIds.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(subscriptionIds)) {
             return this.poolCurator.lookupBySubscriptionIds(subscriptionIds);
         }
         return new ArrayList<Pool>();
@@ -1240,7 +1242,6 @@ public class CandlepinPoolManager implements PoolManager {
         String serviceLevelOverride, Collection<String> fromPools)
         throws EntitlementRefusedException {
 
-        boolean hasFromPools = fromPools != null && !fromPools.isEmpty();
         Map<String, ValidationResult> failedResults = new HashMap<String, ValidationResult>();
 
         Date activePoolDate = entitleDate;
@@ -1342,7 +1343,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Transactional
     public List<Entitlement> entitleByPools(Consumer consumer, Map<String, Integer> poolQuantities)
         throws EntitlementRefusedException {
-        if (poolQuantities != null && !poolQuantities.isEmpty()) {
+        if (MapUtils.isNotEmpty(poolQuantities)) {
             return addOrUpdateEntitlements(consumer, poolQuantities, null, false, CallerType.BIND);
         }
         return new ArrayList<Entitlement>();
@@ -1355,7 +1356,7 @@ public class CandlepinPoolManager implements PoolManager {
         poolQuantities.put(pool.getId(), 1);
         List<Entitlement> result = addOrUpdateEntitlements(consumer, poolQuantities, null, true,
                 CallerType.UNKNOWN);
-        if (result != null && !result.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(result)) {
             return result.get(0);
         }
         return null;
@@ -1377,7 +1378,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         List<Entitlement> result = addOrUpdateEntitlements(consumer, poolQuantities, entitlements, true,
                 CallerType.UNKNOWN);
-        if (result != null && !result.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(result)) {
             return result.get(0);
         }
         return null;
@@ -1910,7 +1911,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         for (Consumer consumer : consumerSortedEntitlements.keySet()) {
             List<Entitlement> ents = consumerSortedEntitlements.get(consumer);
-            if (ents != null && !ents.isEmpty()) {
+            if (CollectionUtils.isNotEmpty(ents)) {
                 for (Entitlement ent : ents) {
                     Pool pool = ent.getPool();
 
@@ -1936,7 +1937,7 @@ public class CandlepinPoolManager implements PoolManager {
                 stackIds.add(ent.getPool().getStackId());
             }
             List<Pool> subPools = poolCurator.getSubPoolForStackIds(entry.getKey(), stackIds);
-            if (subPools != null && !subPools.isEmpty()) {
+            if (CollectionUtils.isNotEmpty(subPools)) {
                 poolRules.updatePoolsFromStack(entry.getKey(), subPools, true);
             }
         }
@@ -2132,7 +2133,7 @@ public class CandlepinPoolManager implements PoolManager {
             List<Pool> subPoolsForStackIds = null;
             if (!stackIds.isEmpty()) {
                 subPoolsForStackIds = poolCurator.getSubPoolForStackIds(consumer, stackIds);
-                if (subPoolsForStackIds != null && !subPoolsForStackIds.isEmpty()) {
+                if (CollectionUtils.isNotEmpty(subPoolsForStackIds)) {
                     poolRules.updatePoolsFromStack(consumer, subPoolsForStackIds, false);
                     poolCurator.mergeAll(subPoolsForStackIds, false);
                 }

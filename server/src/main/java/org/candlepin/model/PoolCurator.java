@@ -25,6 +25,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
@@ -551,7 +552,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     public List<Pool> lockAndLoad(Collection<String> ids) {
         List<Pool> result = new ArrayList<Pool>();
-        if (ids != null && !ids.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(ids)) {
             List<String> idsList = new ArrayList<String>(ids);
             Collections.sort(idsList);
 
@@ -572,7 +573,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @SuppressWarnings("unchecked")
     private List<Pool> lockAndLoadInternalOnly(List<String> ids) {
-        if (ids == null || ids.isEmpty()) {
+        if (CollectionUtils.isEmpty(ids)) {
             return new ArrayList<Pool>();
         }
         return getEntityManager()

@@ -25,6 +25,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
@@ -416,7 +417,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     public Collection<E> saveOrUpdateAll(Collection<E> entries, boolean flush) {
-        if (entries != null && !entries.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(entries)) {
             try {
                 Session session = currentSession();
                 int i = 0;
@@ -442,7 +443,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     public Collection<E> mergeAll(Collection<E> entries, boolean flush) {
-        if (entries != null && !entries.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(entries)) {
             try {
                 Session session = currentSession();
                 int i = 0;

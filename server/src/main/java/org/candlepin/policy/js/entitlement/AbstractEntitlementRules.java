@@ -30,6 +30,7 @@ import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.util.DateSource;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.mozilla.javascript.RhinoException;
 import org.slf4j.Logger;
 import org.xnap.commons.i18n.I18n;
@@ -342,7 +343,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             Map<String, Entitlement> entitlementMap, Map<String, Map<String, String>> attributeMaps,
             List<Pool> subPoolsForStackIds) {
         Set<String> stackIdsThathaveSubPools = new HashSet<String>();
-        if (subPoolsForStackIds != null && !subPoolsForStackIds.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(subPoolsForStackIds)) {
             for (Pool pool : subPoolsForStackIds) {
                 stackIdsThathaveSubPools.add(pool.getSourceStackId());
             }
@@ -392,12 +393,12 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             }
         }
 
-        if (createHostRestrictedPoolFor != null && !createHostRestrictedPoolFor.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(createHostRestrictedPoolFor)) {
             log.debug("creating host restricted pools for: {}", createHostRestrictedPoolFor);
             PoolHelper.createHostRestrictedPools(poolManager, c, createHostRestrictedPoolFor,
                     entitlementMap, attributeMaps);
         }
-        if (decrementHostedBonusPoolQuantityFor != null && !decrementHostedBonusPoolQuantityFor.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(decrementHostedBonusPoolQuantityFor)) {
             log.debug("decrementHostedBonusPoolQuantity for: {}", decrementHostedBonusPoolQuantityFor);
             decrementHostedBonusPoolQuantity(poolManager, c, decrementHostedBonusPoolQuantityFor,
                     attributeMaps);

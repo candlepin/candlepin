@@ -30,6 +30,7 @@ import org.candlepin.model.dto.Subscription;
 
 import com.google.inject.Inject;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -364,7 +365,7 @@ public class PoolRules {
         List<Pool> poolsToDelete = new ArrayList<Pool>();
         for (Pool pool : pools) {
             List<Entitlement> entitlements = entitlementMap.get(pool.getSourceStackId());
-            if (entitlements != null && !entitlements.isEmpty()) {
+            if (CollectionUtils.isNotEmpty(entitlements)) {
                 result.add(this.updatePoolFromStackedEntitlements(pool, entitlements,
                         new HashSet<Product>()));
             }
@@ -385,7 +386,7 @@ public class PoolRules {
         PoolUpdate update = new PoolUpdate(pool);
 
         // Nothing to do if there were no entitlements found.
-        if (stackedEnts == null || stackedEnts.isEmpty()) {
+        if (CollectionUtils.isEmpty(stackedEnts)) {
             return update;
         }
 

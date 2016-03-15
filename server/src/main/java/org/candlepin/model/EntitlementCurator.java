@@ -21,6 +21,7 @@ import org.candlepin.common.paging.PageRequest;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaSpecification;
@@ -271,7 +272,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         Criteria criteria = currentSession().createCriteria(Entitlement.class)
             .add(unboundedInCriterion("consumer", consumers));
 
-        if (excludeEnts != null && !excludeEnts.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(excludeEnts)) {
             Set<String> ids = new HashSet<String>();
             for (Entitlement entitlement : excludeEnts) {
                 ids.add(entitlement.getId());

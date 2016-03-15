@@ -102,6 +102,8 @@ import org.candlepin.util.Util;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
@@ -1395,7 +1397,7 @@ public class ConsumerResource {
         if (poolIdString != null) {
             parameters++;
         }
-        if ((productIds != null && productIds.length > 0) || (fromPools != null && !fromPools.isEmpty()) ||
+        if (ArrayUtils.isNotEmpty(productIds) || CollectionUtils.isNotEmpty(fromPools) ||
                 entitleDate != null) {
             parameters++;
         }
