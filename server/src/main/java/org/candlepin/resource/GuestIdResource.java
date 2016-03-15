@@ -38,8 +38,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -143,7 +144,7 @@ public class GuestIdResource {
         Consumer consumer = new Consumer();
         consumer.setGuestIds(guestIds);
 
-        List<String> allGuestIds = new LinkedList<String>();
+        Set<String> allGuestIds = new HashSet<String>();
         for (GuestId gid : consumer.getGuestIds()) {
             allGuestIds.add(gid.getGuestId());
         }
