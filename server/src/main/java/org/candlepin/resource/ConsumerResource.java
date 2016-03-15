@@ -1070,7 +1070,7 @@ public class ConsumerResource {
             return false;
         }
 
-        log.info("Updating {} guest IDs.", incoming.getGuestIds().size());
+        log.debug("Updating {} guest IDs.", incoming.getGuestIds().size());
         List<GuestId> removedGuests = getRemovedGuestIds(existing, incoming);
         List<GuestId> addedGuests = getAddedGuestIds(existing, incoming);
 
@@ -1078,11 +1078,11 @@ public class ConsumerResource {
 
         // remove guests that are missing.
         if (existingGuests != null) {
-            log.info("removing IDs.");
+            log.debug("removing IDs.");
             for (GuestId guestId : removedGuests) {
                 existingGuests.remove(guestId);
                 if (log.isDebugEnabled()) {
-                    log.info("Guest ID removed: {}", guestId);
+                    log.debug("Guest ID removed: {}", guestId);
                 }
                 sink.queueEvent(eventFactory.guestIdDeleted(guestId));
             }
@@ -1094,7 +1094,7 @@ public class ConsumerResource {
                 // Add the guestId.
                 existing.addGuestId(guestId);
                 if (log.isDebugEnabled()) {
-                    log.info("New guest ID added: {}", guestId.getGuestId());
+                    log.debug("New guest ID added: {}", guestId.getGuestId());
                 }
                 sink.queueEvent(eventFactory.guestIdCreated(guestId));
             }

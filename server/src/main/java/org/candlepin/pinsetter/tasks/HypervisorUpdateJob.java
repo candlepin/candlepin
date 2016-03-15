@@ -195,8 +195,8 @@ public class HypervisorUpdateJob extends KingpinJob {
             byte[] data = (byte[]) map.get(DATA);
             String json = decompress(data);
             HypervisorList hypervisors = (HypervisorList) Util.fromJson(json, HypervisorList.class);
-            log.info("Hypervisor consumers for create/update: {}", hypervisors.getHypervisors().size());
-            log.info("Updating hypervisor consumers for org {0}", ownerKey);
+            log.debug("Hypervisor consumers for create/update: {}", hypervisors.getHypervisors().size());
+            log.debug("Updating hypervisor consumers for org {0}", ownerKey);
 
             Set<String> hosts = new HashSet<String>();
             Set<String> guests = new HashSet<String>();
@@ -219,7 +219,7 @@ public class HypervisorUpdateJob extends KingpinJob {
                             hypervisorId + " in org " + ownerKey);
                     }
                     else {
-                        log.info("Registering new host consumer for hypervisor ID: {}", hypervisorId);
+                        log.debug("Registering new host consumer for hypervisor ID: {}", hypervisorId);
                         Consumer newHost = createConsumerForHypervisorId(hypervisorId, owner, principal);
                         consumerResource.performConsumerUpdates(incoming, newHost, guestConsumersMap,
                             false);
@@ -262,6 +262,7 @@ public class HypervisorUpdateJob extends KingpinJob {
                             hypervisorId, ownerKey);
                 }
             }
+            log.info("Summary for report from {} by principal {}\n {}", jobReporterId, principal, result);
             context.setResult(result);
         }
         catch (Exception e) {

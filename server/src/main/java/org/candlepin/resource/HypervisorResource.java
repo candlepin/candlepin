@@ -116,7 +116,7 @@ public class HypervisorResource {
             require = Access.READ_ONLY,
             subResource = SubResource.HYPERVISOR) String ownerKey,
         @QueryParam("create_missing") @DefaultValue("true") boolean createMissing) {
-        log.info("Hypervisor check-in by principal: " + principal);
+        log.debug("Hypervisor check-in by principal: " + principal);
 
         if (hostGuestMap == null) {
             log.debug("Host/Guest mapping provided during hypervisor checkin was null.");
@@ -164,7 +164,7 @@ public class HypervisorResource {
         for (Entry<String, List<GuestId>> hostEntry : hostGuestMap.entrySet()) {
             String hypervisorId = hostEntry.getKey();
             try {
-                log.info("Syncing virt host: {} ({} guest IDs)", hypervisorId, hostEntry.getValue().size());
+                log.debug("Syncing virt host: {} ({} guest IDs)", hypervisorId, hostEntry.getValue().size());
 
                 boolean hostConsumerCreated = false;
                 // Attempt to find a consumer for the given hypervisorId
@@ -176,7 +176,7 @@ public class HypervisorResource {
                             "Unable to find hypervisor in org ''{0}''", ownerKey));
                         continue;
                     }
-                    log.info("Registering new host consumer for hypervisor ID: {}", hypervisorId);
+                    log.debug("Registering new host consumer for hypervisor ID: {}", hypervisorId);
                     consumer = createConsumerForHypervisorId(hypervisorId, owner, principal);
                     hostConsumerCreated = true;
                 }
@@ -202,6 +202,7 @@ public class HypervisorResource {
                 result.failed(hypervisorId, e.getMessage());
             }
         }
+        log.info("Summary of hypervisor checkin by principal \"{}\": {}", principal, result);
         return result;
     }
 
