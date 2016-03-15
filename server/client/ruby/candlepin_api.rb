@@ -993,11 +993,12 @@ class Candlepin
     put("/owners/#{owner_key}/pools", pool)
   end
 
-  def list_activation_keys(owner_key=nil)
-    if owner_key.nil?
-      return get("/activation_keys")
-    end
-    return get("/owner/#{owner_key}/activation_keys")
+  def list_activation_keys(owner_key=nil, key_name=nil)
+    return get("/activation_keys") if owner_key.nil?
+
+    path = "/owner/#{owner_key}/activation_keys"
+    path << "?name=#{key_name}" if key_name
+    return get(path)
   end
 
   def create_activation_key(owner_key, name, service_level=nil)

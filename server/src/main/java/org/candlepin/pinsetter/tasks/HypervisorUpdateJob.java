@@ -35,6 +35,7 @@ import org.candlepin.util.Util;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.lang.StringUtils;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -53,6 +54,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -106,6 +108,63 @@ public class HypervisorUpdateJob extends KingpinJob {
         return running == 0;  // We can start the job if there are 0 like it running
     }
 
+    private void parseHypervisorList(HypervisorList hypervisorList, Set<String> hosts,
+        Set<String> guests, Map<String, Consumer> incomingHosts) {
+        int emptyGuestIdCount = 0;
+        int emptyHypervisorIdCount = 0;
+
+        List<Consumer> l = hypervisorList.getHypervisors();
+        for (Iterator<Consumer> hypervisors = l.iterator(); hypervisors.hasNext();) {
+            Consumer hypervisor = hypervisors.next();
+
+            HypervisorId idWrapper = hypervisor.getHypervisorId();
+
+            if (idWrapper == null) {
+                continue;
+            }
+
+            String id = idWrapper.getHypervisorId();
+
+            if (id == null) {
+                continue;
+            }
+
+            if ("".equals(id)) {
+                hypervisors.remove();
+                emptyHypervisorIdCount++;
+                continue;
+            }
+
+            incomingHosts.put(id, hypervisor);
+            hosts.add(id);
+
+            List<GuestId> guestsIdList = hypervisor.getGuestIds();
+
+            if (guestsIdList == null || guestsIdList.isEmpty()) {
+                continue;
+            }
+
+            for (Iterator<GuestId> guestIds = guestsIdList.iterator(); guestIds.hasNext();) {
+                GuestId guestId = guestIds.next();
+                if (StringUtils.isEmpty(guestId.getGuestId())) {
+                    guestIds.remove();
+                    emptyGuestIdCount++;
+                }
+                else {
+                    guests.add(guestId.getGuestId());
+                }
+            }
+        }
+
+        if (emptyHypervisorIdCount > 0) {
+            log.warn("Ignoring {} hypervisors with empty hypervisor IDs", emptyHypervisorIdCount);
+        }
+
+        if (emptyGuestIdCount > 0) {
+            log.warn("Ignoring {} empty/null guestId(s)", emptyGuestIdCount);
+        }
+    }
+
     /**
      * {@inheritDoc}
      *
@@ -136,33 +195,19 @@ public class HypervisorUpdateJob extends KingpinJob {
             byte[] data = (byte[]) map.get(DATA);
             String json = decompress(data);
             HypervisorList hypervisors = (HypervisorList) Util.fromJson(json, HypervisorList.class);
-            log.info("Hypervisor consumers for create/update: " + hypervisors.getHypervisors().size());
-            log.info("Updating hypervisor consumers for org ''{0}''", ownerKey);
+            log.info("Hypervisor consumers for create/update: {}", hypervisors.getHypervisors().size());
+            log.info("Updating hypervisor consumers for org {0}", ownerKey);
 
             Set<String> hosts = new HashSet<String>();
             Set<String> guests = new HashSet<String>();
             Map<String, Consumer> incomingHosts = new HashMap<String, Consumer>();
-
-            for (Consumer hypervisor : hypervisors.getHypervisors()) {
-                if (hypervisor.getHypervisorId() != null &&
-                        hypervisor.getHypervisorId().getHypervisorId() != null) {
-                    incomingHosts.put(hypervisor.getHypervisorId().getHypervisorId(), hypervisor);
-                    hosts.add(hypervisor.getHypervisorId().getHypervisorId());
-                    if (hypervisor.getGuestIds() != null && !hypervisor.getGuestIds().isEmpty()) {
-                        for (GuestId guestId : hypervisor.getGuestIds()) {
-                            guests.add(guestId.getGuestId());
-                        }
-                    }
-                }
-            }
+            parseHypervisorList(hypervisors, hosts, guests, incomingHosts);
 
             // Maps virt hypervisor ID to registered consumer for that hypervisor, should one exist:
-            VirtConsumerMap hypervisorConsumersMap =
-                    consumerCurator.getHostConsumersMap(owner, hosts);
+            VirtConsumerMap hypervisorConsumersMap = consumerCurator.getHostConsumersMap(owner, hosts);
 
             // Maps virt guest ID to registered consumer for guest, if one exists:
-            VirtConsumerMap guestConsumersMap = consumerCurator.getGuestConsumersMap(
-                    owner, guests);
+            VirtConsumerMap guestConsumersMap = consumerCurator.getGuestConsumersMap(owner, guests);
 
             for (String hypervisorId : hosts) {
                 Consumer knownHost = hypervisorConsumersMap.get(hypervisorId);
@@ -171,13 +216,13 @@ public class HypervisorUpdateJob extends KingpinJob {
                 if (knownHost == null) {
                     if (!create) {
                         result.failed(hypervisorId, "Unable to find hypervisor with id " +
-                                            hypervisorId + " in org " + ownerKey);
+                            hypervisorId + " in org " + ownerKey);
                     }
                     else {
                         log.info("Registering new host consumer for hypervisor ID: {}", hypervisorId);
                         Consumer newHost = createConsumerForHypervisorId(hypervisorId, owner, principal);
                         consumerResource.performConsumerUpdates(incoming, newHost, guestConsumersMap,
-                                false);
+                            false);
                         consumerResource.create(newHost, principal, null, owner.getKey(), null, false);
                         hypervisorConsumersMap.add(hypervisorId, newHost);
                         result.created(newHost);
