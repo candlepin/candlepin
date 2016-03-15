@@ -16,16 +16,6 @@ package org.candlepin.model;
 
 import static org.junit.Assert.*;
 
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import javax.inject.Inject;
-
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
@@ -35,6 +25,16 @@ import org.hamcrest.Matchers;
 import org.hibernate.Hibernate;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import javax.inject.Inject;
 
 /**
  * EntitlementCuratorTest
