@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.49.12
+Version: 0.9.49.13
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,9 @@ fi
 
 
 %changelog
+* Tue Mar 15 2016 Alex Wood <awood@redhat.com> 0.9.49.13-1
+- 1311664: Ignore empty guest IDs and hypervisor IDs (csnyder@redhat.com)
+
 * Thu Mar 10 2016 Alex Wood <awood@redhat.com> 0.9.49.12-1
 - removing initialization of pool.entitlements (fnguyen@redhat.com)
 - Introducing batching to CRL job to workaround Postgres IN clause limit
