@@ -54,6 +54,7 @@ import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.tasks.ConsumerComplianceJob;
 import org.candlepin.policy.EntitlementRefusedException;
+import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.autobind.AutobindRules;
@@ -597,46 +598,51 @@ public class CandlepinPoolManager implements PoolManager {
     private void deleteExcessEntitlements(List<Pool> existingPools) {
         boolean lifo = !config
             .getBoolean(ConfigProperties.REVOKE_ENTITLEMENT_IN_FIFO_ORDER);
-        if (existingPools != null && !existingPools.isEmpty()) {
-            List<Pool> overFlowingPools = new ArrayList<Pool>();
-            for (Pool pool : existingPools) {
-                if (pool.isOverflowing()) {
-                    overFlowingPools.add(pool);
-                }
-            }
+        if (existingPools == null || existingPools.isEmpty()) {
+            return;
+        }
 
-            if (!overFlowingPools.isEmpty()) {
-                List<Entitlement> freeEntitlements = this.poolCurator.retrieveFreeEntitlementsOfPools(
-                        overFlowingPools, lifo);
-                List<Entitlement> entitlementsToDelete = new ArrayList<Entitlement>();
-                Map<String, List<Entitlement>> poolSortedEntitlements
-                  = new HashMap<String, List<Entitlement>>();
-
-                for (Entitlement entitlement : freeEntitlements) {
-                    Pool pool = entitlement.getPool();
-                    if (!poolSortedEntitlements.containsKey(pool.getId())) {
-                        poolSortedEntitlements.put(pool.getId(), new ArrayList<Entitlement>());
-                    }
-                    poolSortedEntitlements.get(pool.getId()).add(entitlement);
-                }
-
-                for (Pool pool : overFlowingPools) {
-                    List<Entitlement> freeEntitlementsForPool = poolSortedEntitlements.get(pool.getId());
-                    if (freeEntitlementsForPool != null && !freeEntitlementsForPool.isEmpty()) {
-                        long consumed = pool.getConsumed();
-                        long existing = pool.getQuantity();
-                        Iterator<Entitlement> iter = freeEntitlementsForPool.iterator();
-                        while (consumed > existing && iter.hasNext()) {
-                            Entitlement e = iter.next();
-                            entitlementsToDelete.add(e);
-                            consumed -= e.getQuantity();
-                        }
-                    }
-                }
-
-                revokeEntitlements(entitlementsToDelete);
+        List<Pool> overFlowingPools = new ArrayList<Pool>();
+        for (Pool pool : existingPools) {
+            if (pool.isOverflowing()) {
+                overFlowingPools.add(pool);
             }
         }
+
+        if (overFlowingPools.isEmpty()) {
+            return;
+        }
+
+        List<Entitlement> freeEntitlements = this.poolCurator.retrieveFreeEntitlementsOfPools(
+                overFlowingPools, lifo);
+        List<Entitlement> entitlementsToDelete = new ArrayList<Entitlement>();
+        Map<String, List<Entitlement>> poolSortedEntitlements = new HashMap<String, List<Entitlement>>();
+
+        for (Entitlement entitlement : freeEntitlements) {
+            Pool pool = entitlement.getPool();
+            if (!poolSortedEntitlements.containsKey(pool.getId())) {
+                poolSortedEntitlements.put(pool.getId(), new ArrayList<Entitlement>());
+            }
+            poolSortedEntitlements.get(pool.getId()).add(entitlement);
+        }
+
+        for (Pool pool : overFlowingPools) {
+            List<Entitlement> freeEntitlementsForPool = poolSortedEntitlements.get(pool.getId());
+            if (freeEntitlementsForPool == null || freeEntitlementsForPool.isEmpty()) {
+                continue;
+            }
+            long consumed = pool.getConsumed();
+            long existing = pool.getQuantity();
+            Iterator<Entitlement> iter = freeEntitlementsForPool.iterator();
+            while (consumed > existing && iter.hasNext()) {
+                Entitlement e = iter.next();
+                entitlementsToDelete.add(e);
+                consumed -= e.getQuantity();
+            }
+        }
+
+        revokeEntitlements(entitlementsToDelete);
+
     }
 
     void removeAndDeletePoolsOnOtherOwners(List<Pool> existingPools, Pool pool) {
@@ -1003,8 +1009,9 @@ public class CandlepinPoolManager implements PoolManager {
                 boolean retry = false;
                 if (retries > 0) {
                     for (String poolId : e.getResults().keySet()) {
-                        if (e.getResults().get(poolId).getErrors().size() == 1 &&
-                                e.getResults().get(poolId).getErrors().get(0).getResourceKey()
+
+                        List<ValidationError> errors = e.getResults().get(poolId).getErrors();
+                        if (errors.size() == 1 && errors.get(0).getResourceKey()
                                         .equals("rulefailed.no.entitlements.available")) {
                             retry = true;
                             break;
@@ -1419,8 +1426,10 @@ public class CandlepinPoolManager implements PoolManager {
 
         List<Pool> pools = poolCurator.lockAndLoad(poolQuantityMap.keySet());
 
-        for (Pool pool : pools) {
-            log.debug("Locked pool: {} consumed: {}", pool, pool.getConsumed());
+        if (log.isDebugEnabled()) {
+            for (Pool pool : pools) {
+                log.debug("Locked pool: {} consumed: {}", pool, pool.getConsumed());
+            }
         }
 
         Map<String, PoolQuantity> poolQuantities = new HashMap<String, PoolQuantity>();
@@ -1536,8 +1545,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         List<Pool> derivedPools = new ArrayList<Pool>();
         for (Pool pool : overConsumedPools) {
-            if (!excludePoolIds.contains(pool.getId()) && pool.getQuantity() != -1)
-            {
+            if (!excludePoolIds.contains(pool.getId()) && pool.getQuantity() != -1) {
                 derivedPools.add(pool);
             }
         }
