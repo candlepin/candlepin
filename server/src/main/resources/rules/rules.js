@@ -1336,7 +1336,6 @@ var Entitlement = {
         }
 
         if ("poolQuantities" in context) {
-
             context.pools = []
             for (var i = 0; i < context.poolQuantities.length; i++) {
                 context.pools[i] = createPool(context.poolQuantities[i].pool);

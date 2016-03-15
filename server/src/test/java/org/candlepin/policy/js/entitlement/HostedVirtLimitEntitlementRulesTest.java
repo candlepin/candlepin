@@ -66,6 +66,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void hostedVirtLimitAltersBonusPoolQuantity() {
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, "10");
@@ -101,7 +102,6 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         List<Pool> physicalPools = new ArrayList<Pool>();
         physicalPools.add(physicalPool);
         enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null);
-        @SuppressWarnings("unchecked")
         Set<String> subscriptionIds = captor.getValue();
         assertEquals(1, subscriptionIds.size());
         assertEquals("subId", subscriptionIds.iterator().next());

@@ -436,9 +436,9 @@ public class DefaultEntitlementCertServiceAdapter extends
             cert.setEntitlement(entitlement);
 
             if (log.isDebugEnabled()) {
-                log.debug("Generated cert serial number: " + serial.getId());
-                log.debug("Key: " + cert.getKey());
-                log.debug("Cert: " + cert.getCert());
+                log.debug("Generated cert serial number: {}", serial.getId());
+                log.debug("Key: {}", cert.getKey());
+                log.debug("Cert: {}", cert.getCert());
             }
 
             entitlement.getCertificates().add(cert);

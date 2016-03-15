@@ -542,7 +542,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertTrue(pools.contains(p));
         assertTrue(pools.contains(p2));
         assertTrue(!pools.contains(p3));
-
     }
 
     @Test
@@ -660,7 +659,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         List<Pool> pools = poolCurator.listBySourceEntitlements(Arrays.asList(e, e2));
         assertEquals(3, pools.size());
-
     }
 
     @Test

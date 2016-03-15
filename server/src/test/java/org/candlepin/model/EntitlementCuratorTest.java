@@ -243,7 +243,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         assertTrue(!ents.contains(ent));
         assertTrue(!ents.contains(ent1));
-
     }
 
     @Test
@@ -261,7 +260,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertEquals(5, ents.size());
         assertTrue(!ents.contains(ent));
         assertTrue(!ents.contains(ent1));
-
     }
 
     @Test
@@ -284,7 +282,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertTrue(!ents.contains(ent));
         assertTrue(!ents.contains(ent1));
         assertTrue(!ents.contains(ent2));
-
     }
 
     @Test
@@ -317,7 +314,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertTrue(!ents.contains(ent));
         assertTrue(ents.contains(ent1));
         assertTrue(!ents.contains(ent2));
-
     }
 
     private Entitlement setUpModifyingEntitlements(Date startDate, Date endDate, Integer howMany,

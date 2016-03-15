@@ -122,7 +122,6 @@ public class EntitlerJobTest {
         assertEquals(1, result.length);
         assertEquals(pool, result[0].getPoolId());
         assertEquals(100, result[0].getQuantity().intValue());
-
     }
 
     /**
