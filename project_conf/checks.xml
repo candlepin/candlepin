@@ -277,7 +277,7 @@
     <!-- <module name="FinalParameters"/> -->
     <!-- <module name="DescendantToken"/> -->
     <module name="Indentation">
-      <property name="lineWrappingIndentation" value="0" />
+      <property name="forceStrictCondition" value="true" />
     </module>
     <!-- <module name="TrailingComment"/> -->
     <!-- <module name="Regexp"/> -->
