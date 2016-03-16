@@ -37,6 +37,7 @@ import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.AttributeHelper;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.policy.js.JsRunnerRequestCache;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.service.ProductServiceAdapter;
@@ -49,6 +50,8 @@ import org.junit.Before;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18nFactory;
+
+import com.google.inject.Provider;
 
 import java.io.InputStream;
 import java.util.Locale;
@@ -71,6 +74,10 @@ public class EntitlementRulesTestFixture {
     protected EntitlementCurator entCurMock;
     @Mock
     protected ProductCurator prodCuratorMock;
+    @Mock
+    private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock
+    private JsRunnerRequestCache cache;
 
     @Mock
     protected PoolCurator poolCurator;
@@ -94,8 +101,9 @@ public class EntitlementRulesTestFixture {
         when(rulesCurator.getRules()).thenReturn(rules);
         when(rulesCurator.getUpdated()).thenReturn(
             TestDateUtil.date(2010, 1, 1));
+        when(cacheProvider.get()).thenReturn(cache);
 
-        JsRunner jsRules = new JsRunnerProvider(rulesCurator).get();
+        JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
         enforcer = new EntitlementRules(
             new DateSourceImpl(),
             jsRules,

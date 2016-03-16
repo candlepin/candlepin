@@ -35,6 +35,7 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.policy.js.JsRunnerRequestCache;
 import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.test.TestDateUtil;
@@ -46,6 +47,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import com.google.inject.Provider;
 
 import java.io.InputStream;
 import java.util.Arrays;
@@ -61,6 +64,8 @@ import java.util.Set;
  * AutobindRulesTest
  */
 public class AutobindRulesTest {
+    @Mock private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock private JsRunnerRequestCache cache;
     @Mock private Configuration config;
     @Mock private RulesCurator rulesCurator;
 
@@ -86,8 +91,8 @@ public class AutobindRulesTest {
         when(rulesCurator.getRules()).thenReturn(rules);
         when(rulesCurator.getUpdated()).thenReturn(
             TestDateUtil.date(2010, 1, 1));
-
-        JsRunner jsRules = new JsRunnerProvider(rulesCurator).get();
+        when(cacheProvider.get()).thenReturn(cache);
+        JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
         autobindRules = new AutobindRules(jsRules);
 
         owner = new Owner();

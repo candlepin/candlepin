@@ -25,19 +25,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * CandlepinSingletonScope
+ * CandlepinRequestScope
  *
- * A per-request / per-unit of work guice singleton scope.
+ * A per-request / per-unit of work scope. This implementation is
+ * more appropriate for Candlepin, because it works even in
+ * our Quartz jobs (standard Guice annotation RequestScoped doesn't).
  */
-public class CandlepinSingletonScope implements Scope {
+public class CandlepinRequestScope implements Scope {
 
     public void enter() {
-        ResteasyProviderFactory.pushContext(CandlepinSingletonScopeData.class,
-            new CandlepinSingletonScopeData());
+        ResteasyProviderFactory.pushContext(CandlepinRequestScopeData.class,
+            new CandlepinRequestScopeData());
     }
 
     public void exit() {
-        ResteasyProviderFactory.popContextData(CandlepinSingletonScopeData.class);
+        ResteasyProviderFactory.popContextData(CandlepinRequestScopeData.class);
     }
 
     public <T> Provider<T> scope(final Key<T> key, final Provider<T> unscoped) {
@@ -57,8 +59,8 @@ public class CandlepinSingletonScope implements Scope {
     }
 
     private <T> Map<Key<?>, Object> getScopedObjectMap(Key<T> key) {
-        CandlepinSingletonScopeData scopeData = ResteasyProviderFactory.getContextData(
-            CandlepinSingletonScopeData.class);
+        CandlepinRequestScopeData scopeData = ResteasyProviderFactory.getContextData(
+            CandlepinRequestScopeData.class);
         if (scopeData == null) {
             throw new OutOfScopeException("Cannot access " + key +
                 " outside of a scoping block");
@@ -67,11 +69,11 @@ public class CandlepinSingletonScope implements Scope {
     }
 
     /**
-     * CandlepinSingletonScopeData class to hold the local session scoped data map.
+     * CandlepinRequestScope class to hold the local session scoped data map.
      *
      * We really need single per resteasy session, so let resteasy handle scoping for us.
      */
-    private class CandlepinSingletonScopeData {
+    private class CandlepinRequestScopeData {
         private Map<Key<?>, Object> scopeData = new HashMap<Key<?>, Object>();
 
         public Map<Key<?>, Object> get() {

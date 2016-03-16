@@ -14,7 +14,7 @@
  */
 package org.candlepin.servlet.filter;
 
-import org.candlepin.guice.CandlepinSingletonScope;
+import org.candlepin.guice.CandlepinRequestScope;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -47,11 +47,11 @@ public class CandlepinScopeFilter implements Filter {
 
     private static Logger log = LoggerFactory.getLogger(CandlepinScopeFilter.class);
 
-    private final CandlepinSingletonScope singletonScope;
+    private final CandlepinRequestScope requestScope;
 
     @Inject
-    public CandlepinScopeFilter(CandlepinSingletonScope singletonScope) {
-        this.singletonScope = singletonScope;
+    public CandlepinScopeFilter(CandlepinRequestScope requestScope) {
+        this.requestScope = requestScope;
     }
 
     @Override
@@ -63,12 +63,12 @@ public class CandlepinScopeFilter implements Filter {
             return;
         }
 
-        singletonScope.enter();
+        requestScope.enter();
         try {
             chain.doFilter(request, response);
         }
         finally {
-            singletonScope.exit();
+            requestScope.exit();
         }
     }
 

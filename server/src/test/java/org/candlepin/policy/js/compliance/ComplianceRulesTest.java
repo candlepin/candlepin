@@ -14,9 +14,30 @@
  */
 package org.candlepin.policy.js.compliance;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
@@ -34,9 +55,9 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsContext;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.policy.js.JsRunnerRequestCache;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -44,18 +65,7 @@ import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import com.google.inject.Provider;
 
 
 
@@ -77,6 +87,9 @@ public class ComplianceRulesTest {
     @Mock private EntitlementCurator entCurator;
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private EventSink eventSink;
+    @Mock private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock private JsRunnerRequestCache cache;
+
     private I18n i18n;
     private JsRunnerProvider provider;
 
@@ -94,7 +107,8 @@ public class ComplianceRulesTest {
         Rules rules = new Rules(Util.readFile(is));
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
-        provider = new JsRunnerProvider(rulesCuratorMock);
+        when(cacheProvider.get()).thenReturn(cache);
+        provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
         compliance = new ComplianceRules(provider.get(),
             entCurator, new StatusReasonMessageGenerator(i18n), eventSink,
             consumerCurator);

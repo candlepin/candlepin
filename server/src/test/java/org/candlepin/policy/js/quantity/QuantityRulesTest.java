@@ -27,6 +27,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.policy.js.JsRunnerRequestCache;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
@@ -34,6 +35,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import com.google.inject.Provider;
 
 import java.io.InputStream;
 import java.util.Calendar;
@@ -67,6 +70,8 @@ public class QuantityRulesTest {
     private JsRunnerProvider provider;
 
     @Mock private RulesCurator rulesCuratorMock;
+    @Mock private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock private JsRunnerRequestCache cache;
 
     @Before
     public void setUp() {
@@ -78,7 +83,8 @@ public class QuantityRulesTest {
         Rules rules = new Rules(Util.readFile(is));
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
-        provider = new JsRunnerProvider(rulesCuratorMock);
+        when(cacheProvider.get()).thenReturn(cache);
+        provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
         quantityRules = new QuantityRules(provider.get());
 
         owner = new Owner("Test Owner " + TestUtil.randomInt());

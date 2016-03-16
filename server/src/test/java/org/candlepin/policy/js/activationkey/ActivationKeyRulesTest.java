@@ -24,6 +24,7 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.policy.js.JsRunnerRequestCache;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
@@ -33,6 +34,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import com.google.inject.Provider;
 
 import java.io.InputStream;
 import java.util.Date;
@@ -47,6 +50,8 @@ public class ActivationKeyRulesTest {
     private static int poolid = 0;
 
     @Mock private RulesCurator rulesCuratorMock;
+    @Mock private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock private JsRunnerRequestCache cache;
     private I18n i18n;
     private JsRunnerProvider provider;
     private Owner owner = TestUtil.createOwner();
@@ -63,7 +68,9 @@ public class ActivationKeyRulesTest {
         Rules rules = new Rules(Util.readFile(is));
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
-        provider = new JsRunnerProvider(rulesCuratorMock);
+        when(cacheProvider.get()).thenReturn(cache);
+
+        provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
         actKeyRules = new ActivationKeyRules(provider.get(), i18n);
     }
 

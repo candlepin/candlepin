@@ -14,20 +14,20 @@
  */
 package org.candlepin.guice;
 
-import static java.lang.annotation.ElementType.*;
-import static java.lang.annotation.RetentionPolicy.*;
-
-import com.google.inject.ScopeAnnotation;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
+import com.google.inject.Key;
+import com.google.inject.Provider;
+import com.google.inject.Scope;
 
 /**
- * CandlepinSingletonScoped
+ * Noop scope
+ * @author fnguyen
  *
- * Apply this to implementation classes when you want one instance per
- * either request or pinsetter job.
  */
-@Target({ TYPE, METHOD }) @Retention(RUNTIME) @ScopeAnnotation
-public @interface CandlepinSingletonScoped {}
+public class TestingRequestScope implements Scope {
+
+    @Override
+    public <T> Provider<T> scope(Key<T> key, Provider<T> unscoped) {
+        return unscoped;
+    }
+
+}

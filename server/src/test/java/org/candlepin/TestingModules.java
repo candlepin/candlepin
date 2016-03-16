@@ -27,12 +27,13 @@ import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.guice.CandlepinSingletonScope;
-import org.candlepin.guice.CandlepinSingletonScoped;
+import org.candlepin.guice.CandlepinRequestScope;
+import org.candlepin.guice.CandlepinRequestScoped;
 import org.candlepin.guice.I18nProvider;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.guice.ScriptEngineProvider;
 import org.candlepin.guice.TestPrincipalProvider;
+import org.candlepin.guice.TestingRequestScope;
 import org.candlepin.guice.ValidationListenerProvider;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
@@ -92,6 +93,7 @@ import com.google.inject.name.Names;
 import com.google.inject.persist.PersistService;
 import com.google.inject.persist.UnitOfWork;
 import com.google.inject.persist.jpa.JpaPersistModule;
+import com.google.inject.servlet.RequestScoped;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
@@ -236,9 +238,12 @@ public class TestingModules {
             // context listener
             bind(Configuration.class).toInstance(config);
 
-            CandlepinSingletonScope singletonScope = new CandlepinSingletonScope();
-            bindScope(CandlepinSingletonScoped.class, singletonScope);
-            bind(CandlepinSingletonScope.class).toInstance(singletonScope);
+            CandlepinRequestScope requestScope = new CandlepinRequestScope();
+            bindScope(CandlepinRequestScoped.class, requestScope);
+            //RequestScoped doesn't exist in unit tests, so we must
+            //define test alternative for it.
+            bindScope(RequestScoped.class, new TestingRequestScope());
+            bind(CandlepinRequestScope.class).toInstance(requestScope);
 
             bind(X509ExtensionUtil.class);
 
