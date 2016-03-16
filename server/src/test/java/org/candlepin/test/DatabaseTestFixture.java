@@ -25,7 +25,7 @@ import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.guice.CandlepinSingletonScope;
+import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
 import org.candlepin.junit.CandlepinLiquibaseResource;
 import org.candlepin.model.CertificateSerial;
@@ -108,7 +108,7 @@ public class DatabaseTestFixture {
 
     private static Injector parentInjector;
     private Injector injector;
-    private CandlepinSingletonScope cpSingletonScope;
+    private CandlepinRequestScope cpRequestScope;
 
     protected TestingInterceptor securityInterceptor;
     protected DateSourceForTesting dateSource;
@@ -131,13 +131,13 @@ public class DatabaseTestFixture {
         locatorMap.init();
         securityInterceptor = injector.getInstance(TestingInterceptor.class);
 
-        cpSingletonScope = injector.getInstance(CandlepinSingletonScope.class);
+        cpRequestScope = injector.getInstance(CandlepinRequestScope.class);
 
-        // Because all candlepin operations are running in the CandlepinSingletonScope
+        // Because all candlepin operations are running in the CandlepinRequestScope
         // we'll force the instance creations to be done inside the scope.
         // Exit the scope to make sure that it is clean before starting the test.
-        cpSingletonScope.exit();
-        cpSingletonScope.enter();
+        cpRequestScope.exit();
+        cpRequestScope.enter();
         injector.injectMembers(this);
 
         dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
@@ -149,7 +149,7 @@ public class DatabaseTestFixture {
 
     @After
     public void shutdown() {
-        cpSingletonScope.exit();
+        cpRequestScope.exit();
 
         // We are using a singleton for the principal in tests. Make sure we clear it out
         // after every test. TestPrincipalProvider controls the default behavior.

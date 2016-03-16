@@ -160,9 +160,9 @@ public class CandlepinModule extends AbstractModule {
     @Override
     public void configure() {
         // Bindings for our custom scope
-        CandlepinSingletonScope singletonScope = new CandlepinSingletonScope();
-        bindScope(CandlepinSingletonScoped.class, singletonScope);
-        bind(CandlepinSingletonScope.class).toInstance(singletonScope);
+        CandlepinRequestScope requestScope = new CandlepinRequestScope();
+        bindScope(CandlepinRequestScoped.class, requestScope);
+        bind(CandlepinRequestScope.class).toInstance(requestScope);
 
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(BeanValidationEventListener.class).toProvider(

@@ -16,7 +16,7 @@ package org.candlepin.policy.js;
 
 import java.util.Date;
 
-import org.candlepin.guice.CandlepinSingletonScoped;
+import org.candlepin.guice.CandlepinRequestScoped;
 
 /**
  * A request scoped cache that is used to mitigate repeated
@@ -24,7 +24,7 @@ import org.candlepin.guice.CandlepinSingletonScoped;
  * @author fnguyen
  *
  */
-@CandlepinSingletonScoped
+@CandlepinRequestScoped
 public class JsRunnerRequestCache {
 
     private Date updated = null;

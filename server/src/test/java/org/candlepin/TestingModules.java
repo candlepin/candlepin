@@ -27,8 +27,8 @@ import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.guice.CandlepinSingletonScope;
-import org.candlepin.guice.CandlepinSingletonScoped;
+import org.candlepin.guice.CandlepinRequestScope;
+import org.candlepin.guice.CandlepinRequestScoped;
 import org.candlepin.guice.I18nProvider;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.guice.ScriptEngineProvider;
@@ -238,12 +238,12 @@ public class TestingModules {
             // context listener
             bind(Configuration.class).toInstance(config);
 
-            CandlepinSingletonScope singletonScope = new CandlepinSingletonScope();
-            bindScope(CandlepinSingletonScoped.class, singletonScope);
+            CandlepinRequestScope requestScope = new CandlepinRequestScope();
+            bindScope(CandlepinRequestScoped.class, requestScope);
             //RequestScoped doesn't exist in unit tests, so we must
             //define test alternative for it.
             bindScope(RequestScoped.class, new TestingRequestScope());
-            bind(CandlepinSingletonScope.class).toInstance(singletonScope);
+            bind(CandlepinRequestScope.class).toInstance(requestScope);
 
             bind(X509ExtensionUtil.class);
 

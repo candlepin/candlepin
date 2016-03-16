@@ -24,10 +24,10 @@ import java.lang.annotation.Target;
 
 
 /**
- * CandlepinSingletonScoped
+ * CandlepinRequestScoped
  *
  * Apply this to implementation classes when you want one instance per
  * either request or pinsetter job.
  */
 @Target({ TYPE, METHOD }) @Retention(RUNTIME) @ScopeAnnotation
-public @interface CandlepinSingletonScoped {}
+public @interface CandlepinRequestScoped {}

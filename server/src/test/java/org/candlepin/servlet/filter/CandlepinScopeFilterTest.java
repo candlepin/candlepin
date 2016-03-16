@@ -17,7 +17,7 @@ package org.candlepin.servlet.filter;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.guice.CandlepinSingletonScope;
+import org.candlepin.guice.CandlepinRequestScope;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +35,7 @@ public class CandlepinScopeFilterTest {
 
     private HttpServletRequest request;
     private HttpServletResponse response;
-    private CandlepinSingletonScope scope;
+    private CandlepinRequestScope scope;
     private CandlepinScopeFilter filter;
     private FilterChain chain;
 
@@ -44,7 +44,7 @@ public class CandlepinScopeFilterTest {
         request = mock(HttpServletRequest.class);
         response = mock(HttpServletResponse.class);
         chain = mock(FilterChain.class);
-        scope = mock(CandlepinSingletonScope.class);
+        scope = mock(CandlepinRequestScope.class);
         filter = new CandlepinScopeFilter(scope);
     }
 

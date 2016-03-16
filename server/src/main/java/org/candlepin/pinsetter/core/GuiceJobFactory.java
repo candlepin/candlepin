@@ -14,7 +14,7 @@
  */
 package org.candlepin.pinsetter.core;
 
-import org.candlepin.guice.CandlepinSingletonScope;
+import org.candlepin.guice.CandlepinRequestScope;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -37,14 +37,14 @@ public class GuiceJobFactory implements JobFactory {
 
     private static Logger log = LoggerFactory.getLogger(GuiceJobFactory.class);
     private Injector injector;
-    private CandlepinSingletonScope candlepinSingletonScope;
+    private CandlepinRequestScope candlepinRequestScope;
     private UnitOfWork unitOfWork;
 
     @Inject
-    public GuiceJobFactory(Injector injector, CandlepinSingletonScope singletonScope,
+    public GuiceJobFactory(Injector injector, CandlepinRequestScope requestScope,
         UnitOfWork unitOfWork) {
         this.injector = injector;
-        this.candlepinSingletonScope = singletonScope;
+        this.candlepinRequestScope = requestScope;
         this.unitOfWork = unitOfWork;
     }
 
@@ -57,12 +57,12 @@ public class GuiceJobFactory implements JobFactory {
         Class<Job> jobClass = (Class<Job>) bundle.getJobDetail().getJobClass();
 
         boolean startedUow = startUnitOfWork();
-        candlepinSingletonScope.enter();
+        candlepinRequestScope.enter();
         try {
             return injector.getInstance(jobClass);
         }
         finally {
-            candlepinSingletonScope.exit();
+            candlepinRequestScope.exit();
             if (startedUow) {
                 endUnitOfWork();
             }
