@@ -306,11 +306,15 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @Size(max = 255)
     private String orderNumber;
 
-    @Formula("(select sum(ent.quantity) from cp_entitlement ent " +
+    // leave FROM capitalized until hibernate 5.0.3
+    // https://hibernate.atlassian.net/browse/HHH-1400
+    @Formula("(select sum(ent.quantity) FROM cp_entitlement ent " +
              "where ent.pool_id = id)")
     private Long consumed;
 
-    @Formula("(select sum(ent.quantity) from cp_entitlement ent, cp_consumer cons, " +
+    // leave FROM capitalized until hibernate 5.0.3
+    // https://hibernate.atlassian.net/browse/HHH-1400
+    @Formula("(select sum(ent.quantity) FROM cp_entitlement ent, cp_consumer cons, " +
         "cp_consumer_type ctype where ent.pool_id = id and ent.consumer_id = cons.id " +
         "and cons.type_id = ctype.id and ctype.manifest = 'Y')")
     private Long exported;
