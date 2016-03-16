@@ -110,7 +110,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
             for (PoolQuantity poolQuantity : entitlementPoolQuantities) {
                 if (!resultMap.containsKey(poolQuantity.getPool().getId())) {
                     resultMap.put(poolQuantity.getPool().getId(), new ValidationResult());
-                    log.info("no result returned for pool:" + poolQuantity.getPool());
+                    log.info("no result returned for pool: {}", poolQuantity.getPool());
                 }
                 finishValidation(resultMap.get(poolQuantity.getPool().getId()), poolQuantity.getPool(),
                         poolQuantity.getQuantity());

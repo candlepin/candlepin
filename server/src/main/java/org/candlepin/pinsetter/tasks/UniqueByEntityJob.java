@@ -46,10 +46,10 @@ public abstract class UniqueByEntityJob extends KingpinJob {
         if (result.getState() == JobStatus.JobState.PENDING ||
             result.getState() == JobStatus.JobState.CREATED ||
             result.getState() == JobStatus.JobState.WAITING) {
-            log.debug("Returning existing job id: " + result.getId());
+            log.debug("Returning existing job id: {}", result.getId());
             return result;
         }
-        log.debug("Scheduling job without a trigger: " + detail.getKey().getName());
+        log.debug("Scheduling job without a trigger: {}", detail.getKey().getName());
         JobStatus status = KingpinJob.scheduleJob(jobCurator, scheduler, detail, null);
         return status;
     }

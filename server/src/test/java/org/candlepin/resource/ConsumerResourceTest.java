@@ -401,7 +401,7 @@ public class ConsumerResourceTest {
                 null, pools, new TrustedUserPrincipal("TaylorSwift"));
 
         JobDetail detail = (JobDetail) rsp.getEntity();
-        PoolIdAndQuantity[] pQs = (PoolIdAndQuantity[]) detail.getJobDataMap().get("pool_and_quanities");
+        PoolIdAndQuantity[] pQs = (PoolIdAndQuantity[]) detail.getJobDataMap().get("pool_and_quantities");
         boolean firstFound = false;
         boolean secondFound = false;
         for (PoolIdAndQuantity pq : pQs) {

@@ -106,7 +106,6 @@ public class ConsumerComplianceJob extends UniqueByEntityJob {
     }
 
     private static JobDetail scheduleUsingMap(Consumer consumer, JobDataMap map) {
-
         map.put(JobStatus.OWNER_ID, consumer.getOwner().getKey());
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
         map.put(JobStatus.TARGET_ID, consumer.getUuid());

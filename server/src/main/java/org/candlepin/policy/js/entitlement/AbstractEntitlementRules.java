@@ -362,8 +362,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         for (Entitlement entitlement : entitlementMap.values()) {
             Pool pool = entitlement.getPool();
             Map<String, String> attributes = attributeMaps.get(pool.getId());
-            boolean hostLimited = attributes.containsKey("host_limited") &&
-                    attributes.get("host_limited").equals("true");
+            boolean hostLimited = "true".equals(attributes.get("host_limited"));
 
             if (consumerFactExpression && (isStandalone || hostLimited)) {
                 String virtLimit = attributes.get("virt_limit");
@@ -432,8 +431,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             Pool pool = entitlement.getPool();
             Map<String, String> attributes = attributesMaps.get(pool.getId());
 
-            boolean hostLimited = attributes.containsKey("host_limited") &&
-                    attributes.get("host_limited").equals("true");
+            boolean hostLimited = "true".equals(attributes.get("host_limited"));
 
             if (consumerFactExpression && !hostLimited) {
                 String virtLimit = attributes.get("virt_limit");

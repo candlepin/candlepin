@@ -408,9 +408,9 @@ public class Entitler {
             // We will debug log the message, but returning does not seem to add
             // to the process
             if (log.isDebugEnabled()) {
-                log.debug("consumer dry-run " + consumer.getUuid() + ": errors:");
+                log.debug("consumer {} dry-run errors:", consumer.getUuid());
                 for (Entry<String, ValidationResult> entry : e.getResults().entrySet()) {
-                    log.debug("errors for pool id: " + entry.getKey());
+                    log.debug("errors for pool id: {}", entry.getKey());
                     for (ValidationError error : entry.getValue().getErrors()) {
                         log.debug(error.getResourceKey());
                     }

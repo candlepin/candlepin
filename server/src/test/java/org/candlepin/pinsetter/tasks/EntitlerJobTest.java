@@ -85,7 +85,7 @@ public class EntitlerJobTest {
         JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
         assertNotNull(detail);
         PoolIdAndQuantity[] resultPools = (PoolIdAndQuantity[]) detail.getJobDataMap().get(
-                "pool_and_quanities");
+                "pool_and_quantities");
         assertEquals("pool10", resultPools[0].getPoolId());
         assertEquals(1, resultPools[0].getQuantity().intValue());
         assertEquals(consumerUuid, detail.getJobDataMap().get(JobStatus.TARGET_ID));

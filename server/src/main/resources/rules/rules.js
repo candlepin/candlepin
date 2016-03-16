@@ -1336,10 +1336,10 @@ var Entitlement = {
         }
 
         if ("poolQuantities" in context) {
-            context.pools = []
+            context.pools = [];
             for (var i = 0; i < context.poolQuantities.length; i++) {
                 context.pools[i] = createPool(context.poolQuantities[i].pool);
-                context.pools[i].quantityRequested = context.poolQuantities[i].quantity; 
+                context.pools[i].quantityRequested = context.poolQuantities[i].quantity;
             }
         }
 
@@ -1808,7 +1808,7 @@ var Entitlement = {
 
         var result_map = {};
         for (var i = 0; i < context.pools.length; i++) {
-            pool = context.pools[i]
+            pool = context.pools[i];
             validators = this.get_validators(pool);
             var result = this.ValidationResult();
             for (var k = 0; k < validators.length; k++) {

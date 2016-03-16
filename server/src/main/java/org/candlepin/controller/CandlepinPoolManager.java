@@ -489,8 +489,6 @@ public class CandlepinPoolManager implements PoolManager {
     public Set<Product> getChangedProducts(Owner owner, Collection<Product> allProducts) {
         Set<Product> changedProducts = Util.newSet();
 
-        HashMap<String, Content> cmap = new HashMap<String, Content>();
-
         log.debug("Syncing {} incoming products.", allProducts.size());
         for (Product incoming : allProducts) {
             Product existing = prodCurator.lookupById(owner, incoming.getId());
@@ -753,8 +751,7 @@ public class CandlepinPoolManager implements PoolManager {
 
             // quantity has changed. delete any excess entitlements from pool
             if (updatedPool.getQuantityChanged()) {
-                List<Pool> existingPools = new ArrayList<Pool>();
-                existingPools.add(existingPool);
+                List<Pool> existingPools = Arrays.asList(existingPool);
                 this.deleteExcessEntitlements(existingPools);
             }
 
@@ -982,8 +979,6 @@ public class CandlepinPoolManager implements PoolManager {
 
         while (true) {
             try {
-                List<Entitlement> entitlements = new LinkedList<Entitlement>();
-
                 List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
                 // fromPools will be empty if the dev pool was already created.
                 if (consumer != null && consumer.isDev() && !fromPools.isEmpty()) {
@@ -1359,6 +1354,7 @@ public class CandlepinPoolManager implements PoolManager {
         List<Entitlement> result = addOrUpdateEntitlements(consumer, poolQuantities, null, true,
                 CallerType.UNKNOWN);
         if (CollectionUtils.isNotEmpty(result)) {
+            // always going to be one entitlement for a single pool
             return result.get(0);
         }
         return null;
@@ -1381,6 +1377,7 @@ public class CandlepinPoolManager implements PoolManager {
         List<Entitlement> result = addOrUpdateEntitlements(consumer, poolQuantities, entitlements, true,
                 CallerType.UNKNOWN);
         if (CollectionUtils.isNotEmpty(result)) {
+            // always going to be one entitlement for a single pool
             return result.get(0);
         }
         return null;
@@ -1470,9 +1467,7 @@ public class CandlepinPoolManager implements PoolManager {
         if (entitlements == null) {
             handler = new NewHandler();
         }
-        else if (entitlements.keySet().size() != poolQuantities.keySet().size() ||
-                !entitlements.keySet().containsAll(poolQuantities.keySet()) ||
-                !poolQuantities.keySet().containsAll(entitlements.keySet())) {
+        else if (!poolQuantities.keySet().equals(entitlements.keySet())) {
             throw new IllegalArgumentException(
                             i18n.tr("Argument mismatch in entitlement update, number of pools: {}," +
                             " number of entitlements: {}",
@@ -1489,9 +1484,9 @@ public class CandlepinPoolManager implements PoolManager {
 
         // The quantity is calculated at fetch time. We update it here
         // To reflect what we just added to the db.
-        for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
-            Pool pool = entry.getValue().getPool();
-            Integer quantity = entry.getValue().getQuantity();
+        for (PoolQuantity poolQuantity : poolQuantities.values()) {
+            Pool pool = poolQuantity.getPool();
+            Integer quantity = poolQuantity.getQuantity();
             pool.setConsumed(pool.getConsumed() + quantity);
             if (consumer.getType().isManifest()) {
                 pool.setExported(pool.getExported() + quantity);
@@ -1838,7 +1833,6 @@ public class CandlepinPoolManager implements PoolManager {
         log.debug("Modifier entitlements done.");
 
         log.info("Scheduling Compliance status for {} consumers.", consumerSortedEntitlements.size());
-        int i = 1;
         for (Consumer consumer : consumerSortedEntitlements.keySet()) {
             JobDetail detail = ConsumerComplianceJob.scheduleStatusCheck(consumer, null, false, true);
             detail.getJobDataMap().put(PinsetterJobListener.PRINCIPAL_KEY, new SystemPrincipal());
@@ -2006,7 +2000,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         if (!pools.isEmpty()) {
             revokeEntitlements(entitlementsToRevoke);
-            log.debug("Batch deleting pools after successfull revocation");
+            log.debug("Batch deleting pools after successful revocation");
             poolCurator.batchDelete(pools);
         }
 

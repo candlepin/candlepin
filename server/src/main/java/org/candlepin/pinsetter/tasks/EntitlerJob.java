@@ -78,7 +78,7 @@ public class EntitlerJob extends KingpinJob {
         try {
             JobDataMap map = ctx.getMergedJobDataMap();
             String uuid = (String) map.get(JobStatus.TARGET_ID);
-            PoolIdAndQuantity[] poolQuantities = (PoolIdAndQuantity[]) map.get("pool_and_quanities");
+            PoolIdAndQuantity[] poolQuantities = (PoolIdAndQuantity[]) map.get("pool_and_quantities");
             Map<String, Integer> poolMap = new HashMap<String, Integer>();
             for (PoolIdAndQuantity poolIdAndQuantity : poolQuantities) {
                 poolMap.put(poolIdAndQuantity.getPoolId(), poolIdAndQuantity.getQuantity());
@@ -127,7 +127,7 @@ public class EntitlerJob extends KingpinJob {
     public static JobDetail bindByPoolAndQuantities(Consumer consumer, PoolIdAndQuantity... poolQuantities) {
         JobDataMap map = new JobDataMap();
         map.put(JobStatus.OWNER_ID, consumer.getOwner().getKey());
-        map.put("pool_and_quanities", poolQuantities);
+        map.put("pool_and_quantities", poolQuantities);
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
         map.put(JobStatus.TARGET_ID, consumer.getUuid());
 

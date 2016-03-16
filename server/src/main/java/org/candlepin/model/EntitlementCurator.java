@@ -350,10 +350,12 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             List<Entitlement> entsToRevoke) {
         Map<Consumer, List<Entitlement>> result = new HashMap<Consumer, List<Entitlement>>();
         for (Entitlement ent : entsToRevoke) {
-            if (!result.containsKey(ent.getConsumer())) {
-                result.put(ent.getConsumer(), new ArrayList<Entitlement>());
+            List<Entitlement> ents = result.get(ent.getConsumer());
+            if (ents == null) {
+                ents = new ArrayList<Entitlement>();
+                result.put(ent.getConsumer(), ents);
             }
-            result.get(ent.getConsumer()).add(ent);
+            ents.add(ent);
         }
         return result;
     }
@@ -419,8 +421,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     @Transactional
     public void delete(Entitlement entity) {
         Entitlement toDelete = find(entity.getId());
-        log.debug("Deleting entitlement: " + toDelete);
-        log.debug("certs.size = " + toDelete.getCertificates().size());
+        log.debug("Deleting entitlement: {}", toDelete);
+        log.debug("certs.size = {}", toDelete.getCertificates().size());
 
         for (EntitlementCertificate cert : toDelete.getCertificates()) {
             currentSession().delete(cert);
@@ -506,8 +508,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      */
     public void batchDelete(List<Entitlement> entitlements) {
         for (Entitlement ent : entitlements) {
-            log.debug("Deleting entitlement: " + ent);
-            log.debug("certs.size = " + ent.getCertificates().size());
+            log.debug("Deleting entitlement: {}", ent);
+            log.debug("certs.size = {}", ent.getCertificates().size());
 
             for (EntitlementCertificate cert : ent.getCertificates()) {
                 getEntityManager().remove(cert);

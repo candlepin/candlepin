@@ -354,7 +354,7 @@ public class OwnerResource {
         List<Consumer> consumers = consumerCurator.listByOwner(owner);
 
         for (Consumer c : consumers) {
-            log.info("Removing all entitlements for consumer: " + c);
+            log.info("Removing all entitlements for consumer: {}", c);
 
             poolManager.revokeAllEntitlements(c, revokeCerts);
         }

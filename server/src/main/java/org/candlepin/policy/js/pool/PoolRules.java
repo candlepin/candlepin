@@ -262,13 +262,13 @@ public class PoolRules {
             Set<Product> changedProducts) {
         //local.setCertificate(subscription.getCertificate());
 
-        log.debug("Refreshing pools for existing master pool: " + masterPool);
-        log.debug("  existing pools: " + existingPools.size());
+        log.debug("Refreshing pools for existing master pool: {}", masterPool);
+        log.debug("  existing pools: {}", existingPools.size());
 
         List<PoolUpdate> poolsUpdated = new LinkedList<PoolUpdate>();
         Map<String, String> attributes = PoolHelper.getFlattenedAttributes(masterPool.getProduct());
         for (Pool existingPool : existingPools) {
-            log.debug("Checking pool: " + existingPool.getId());
+            log.debug("Checking pool: {}", existingPool.getId());
 
             // Ensure subscription details are maintained on the master pool
             if ("master".equalsIgnoreCase(existingPool.getSubscriptionSubKey())) {
