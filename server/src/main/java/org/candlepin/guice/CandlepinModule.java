@@ -23,7 +23,7 @@ import javax.validation.ValidatorFactory;
 
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.EventSink;
-import org.candlepin.audit.EventSinkImpl;
+import org.candlepin.audit.EventSinkMemoryImpl;
 import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
@@ -337,7 +337,7 @@ public class CandlepinModule extends AbstractModule {
 
     private void configureEventSink() {
         if (config.getBoolean(ConfigProperties.HORNETQ_ENABLED)) {
-            bind(EventSink.class).to(EventSinkImpl.class);
+            bind(EventSink.class).to(EventSinkMemoryImpl.class);
         }
         else {
             bind(EventSink.class).to(NoopEventSinkImpl.class);
