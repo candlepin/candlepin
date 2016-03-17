@@ -17,6 +17,8 @@ package org.candlepin.model;
 import org.candlepin.service.UniqueIdGenerator;
 
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -95,6 +97,7 @@ public class Product extends AbstractHibernateObject implements Linkable, Clonea
     @OneToMany(mappedBy = "product")
     @Cascade({ org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN })
+    @Fetch(FetchMode.SUBSELECT)
     private Set<ProductAttribute> attributes;
 
     @ElementCollection
