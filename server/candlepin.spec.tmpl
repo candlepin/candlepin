@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.3
+Version: 0.9.54.4
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -215,6 +215,9 @@ fi
 
 #raw
 %changelog
+* Thu Mar 17 2016 Alex Wood <awood@redhat.com> 0.9.54.4-1
+- 1242310: Do not issue ueber certs that expire after 2050. (awood@redhat.com)
+
 * Tue Mar 15 2016 Alex Wood <awood@redhat.com> 0.9.54.3-1
 - 1311664: Ignore empty guest IDs and hypervisor IDs (csnyder@redhat.com)
 
