@@ -6,6 +6,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
+import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
@@ -15,7 +16,7 @@ public class ConsumingThread extends Thread implements MessageListener {
     private Session s;
     private String name;
 
-    public ConsumingThread(Session s, String name) throws JMSException, URISyntaxException {
+    public ConsumingThread(Queue queue, Session s, String name) throws JMSException, URISyntaxException {
         this.s = s;
         this.name = name;
 
@@ -26,7 +27,7 @@ public class ConsumingThread extends Thread implements MessageListener {
          * because the FANOUT will cause duplicates of all messages to that exchange to be 
          * delivered to this queue!
          */
-        MessageConsumer mc = s.createConsumer(new AMQQueue("qactivation"));
+        MessageConsumer mc = s.createConsumer(queue);
 
         mc.setMessageListener(this);
         ;

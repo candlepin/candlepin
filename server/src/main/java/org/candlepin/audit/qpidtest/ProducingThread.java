@@ -4,6 +4,7 @@ import java.net.URISyntaxException;
 
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
+import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
@@ -15,7 +16,7 @@ public class ProducingThread extends Thread{
     private String name;
     private MessageProducer mp = null;
     
-    public ProducingThread(Session s, String name) throws JMSException, URISyntaxException {
+    public ProducingThread(Queue queue, Session s, String name) throws JMSException, URISyntaxException {
         this.s = s;
         this.name = name;
         /**
@@ -24,7 +25,7 @@ public class ProducingThread extends Thread{
          * some weird undurable direct exchange with name '' (empty string)
          *  
          */
-        mp = s.createProducer(new AMQQueue("activation"));
+        mp = s.createProducer(queue);
     }
 
     @Override 

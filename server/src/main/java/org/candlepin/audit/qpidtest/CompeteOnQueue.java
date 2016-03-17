@@ -3,8 +3,8 @@ package org.candlepin.audit.qpidtest;
 import java.util.Properties;
 
 import javax.jms.Connection;
-import javax.jms.Destination;
 import javax.jms.MessageProducer;
+import javax.jms.Queue;
 import javax.jms.Session;
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -39,7 +39,10 @@ import org.candlepin.config.ConfigProperties;
 public class CompeteOnQueue {
 
     public static void main(String[] args) throws Exception {    
-        AMQConnectionFactory connectionFactory = createConnectionFactory();
+        Configuration config = new AMQPDummyConfig();
+        Context ctx = new InitialContext(buildConfigurationProperties(config));
+        
+        AMQConnectionFactory connectionFactory = createConnectionFactory(config,ctx);
         Connection qcon = connectionFactory.createConnection();
         qcon.start();
         
@@ -51,10 +54,10 @@ public class CompeteOnQueue {
         Session s3 = qcon.createSession(true, Session.AUTO_ACKNOWLEDGE);
         Session s4 = qcon.createSession(true, Session.AUTO_ACKNOWLEDGE);
         
-        ProducingThread pt1 = new ProducingThread(s1, "Producer A");
-        ProducingThread pt2 = new ProducingThread(s2, "Producer B");
-        ConsumingThread ct1 = new ConsumingThread(s3, "Consumer A");
-        ConsumingThread ct2 = new ConsumingThread(s4, "Consumer B");
+        ProducingThread pt1 = new ProducingThread((Queue)ctx.lookup("dactivation"), s1, "Producer A");
+        ProducingThread pt2 = new ProducingThread((Queue)ctx.lookup("dactivation"),s2, "Producer B");
+        ConsumingThread ct1 = new ConsumingThread((Queue)ctx.lookup("qactivation"),s3, "Consumer A");
+        ConsumingThread ct2 = new ConsumingThread((Queue)ctx.lookup("qactivation"),s4, "Consumer B");
         
         pt1.start();
         pt2.start();
@@ -77,9 +80,8 @@ public class CompeteOnQueue {
     }
 
     
-    private static AMQConnectionFactory createConnectionFactory() throws NamingException {
-        Configuration config = new AMQPDummyConfig();
-        Context ctx = new InitialContext(buildConfigurationProperties(config));
+    private static AMQConnectionFactory createConnectionFactory(Configuration config, Context ctx) throws NamingException {
+
         int maxRetries = config.getInt(ConfigProperties.AMQP_CONNECTION_RETRY_ATTEMPTS);
         long waitTimeInSeconds = config.getLong(ConfigProperties.AMQP_CONNECTION_RETRY_INTERVAL);
 
@@ -116,7 +118,8 @@ public class CompeteOnQueue {
         properties.put("connectionfactory.qpidConnectionfactory",
             "amqp://guest:guest@localhost/test?sync_publish='persistent'&brokerlist='" +
             config.getString(ConfigProperties.AMQP_CONNECT_STRING) + "'");
-
+        properties.put("destination.qactivation" , "qactivation");
+        properties.put("destination.dactivation" , "activation");
         return properties;
     }
 }
