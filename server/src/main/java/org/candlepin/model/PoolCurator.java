@@ -428,20 +428,16 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     /**
      * Attempts to find pools which are over subscribed after the creation or
-     * modification
-     * of the given entitlement.
-     * To do this we search for only the pools related to the subscription ID
-     * which
-     * could have changed, the two cases where this can happen are:
+     * modification of the given entitlement. To do this we search for only the
+     * pools related to the subscription ID which could have changed, the two
+     * cases where this can happen are:
      * 1. Bonus pool (not derived from any entitlement) after a bind. (in cases
-     * such as
-     * exporting to downstream)
+     * such as exporting to downstream)
      * 2. A derived pool whose source entitlement just had it's quantity
      * reduced.
      * This has to be done carefully to avoid potential performance problems
-     * with
-     * virt_bonus on-site subscriptions where one pool is created per physical
-     * entitlement.
+     * with virt_bonus on-site subscriptions where one pool is created per
+     * physical entitlement.
      *
      * @param subIdMap Map where key is Subscription ID of the pool, and value
      *        is the Entitlement just created or modified.

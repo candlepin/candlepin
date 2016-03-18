@@ -1543,7 +1543,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         List<Pool> derivedPools = new ArrayList<Pool>();
         for (Pool pool : overConsumedPools) {
-            if (!excludePoolIds.contains(pool.getId()) && pool.getQuantity() != -1) {
+            if (pool.getQuantity() != -1 && !excludePoolIds.contains(pool.getId())) {
                 derivedPools.add(pool);
             }
         }
@@ -1738,7 +1738,7 @@ public class CandlepinPoolManager implements PoolManager {
         if (log.isDebugEnabled()) {
             log.debug("Starting batch revoke of entitlements: {}", getEntIds(entsToRevoke));
         }
-        if (entsToRevoke.isEmpty()) {
+        if (CollectionUtils.isEmpty(entsToRevoke)) {
             return;
         }
         List<Pool> poolsToDelete = poolCurator.listBySourceEntitlements(entsToRevoke);
@@ -1872,7 +1872,7 @@ public class CandlepinPoolManager implements PoolManager {
      * @param entitlements
      * @return
      */
-    private  List<String> getEntIds(Collection<Entitlement> entitlements) {
+    private List<String> getEntIds(Collection<Entitlement> entitlements) {
         List<String> ids = new ArrayList<String>();
         for (Entitlement e : entitlements) {
             ids.add(e.getId());
@@ -1885,7 +1885,7 @@ public class CandlepinPoolManager implements PoolManager {
      * @param entitlements
      * @return
      */
-    private  List<String> getPoolIds(Collection<Pool> pools) {
+    private List<String> getPoolIds(Collection<Pool> pools) {
         List<String> ids = new ArrayList<String>();
         for (Pool e : pools) {
             ids.add(e.getId());
@@ -1913,10 +1913,12 @@ public class CandlepinPoolManager implements PoolManager {
 
                     if (!"true".equals(pool.getAttributeValue("pool_derived")) &&
                             pool.getProduct().hasAttribute("stacking_id")) {
-                        if (!stackingEntitlements.containsKey(consumer)) {
-                            stackingEntitlements.put(consumer, new ArrayList<Entitlement>());
+                        List<Entitlement> entList = stackingEntitlements.get(consumer);
+                        if (entList == null) {
+                            entList = new ArrayList<Entitlement>();
+                            stackingEntitlements.put(consumer, entList);
                         }
-                        stackingEntitlements.get(consumer).add(ent);
+                        entList.add(ent);
                     }
                 }
             }
@@ -2012,10 +2014,10 @@ public class CandlepinPoolManager implements PoolManager {
 
     /**
      * Adjust the count of a pool. The caller does not have knowledge
-     *   of the current quantity. It only determines how much to adjust.
+     * of the current quantity. It only determines how much to adjust.
      *
      * @param pool The pool.
-     * @param adjust the long amount to adjust ( + /-)
+     * @param adjust the long amount to adjust ( +/-)
      * @return pool
      */
     @Override

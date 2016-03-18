@@ -355,11 +355,12 @@ public class PoolRules {
         }
         List<Entitlement> stackedEnts = this.entCurator.findByStackIds(consumer, sourceStackIds);
         for (Entitlement entitlement : stackedEnts) {
-            if (!entitlementMap.containsKey(entitlement.getPool().getStackId())) {
-                entitlementMap.put(entitlement.getPool().getStackId(), new ArrayList<Entitlement>());
+            List<Entitlement> ents = entitlementMap.get(entitlement.getPool().getStackId());
+            if (ents == null) {
+                ents = new ArrayList<Entitlement>();
+                entitlementMap.put(entitlement.getPool().getStackId(), ents);
             }
-
-            entitlementMap.get(entitlement.getPool().getStackId()).add(entitlement);
+            ents.add(entitlement);
         }
 
         List<Pool> poolsToDelete = new ArrayList<Pool>();
