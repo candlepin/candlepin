@@ -20,6 +20,7 @@ import org.candlepin.util.DateSource;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.commons.lang.StringUtils;
@@ -244,10 +245,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @ManyToOne
     @JoinColumn(name = "product_uuid", nullable = false)
     @NotNull
+    @JsonIgnore
     private Product product;
 
     @ManyToOne
     @JoinColumn(name = "derived_product_uuid")
+    @JsonIgnore
     private Product derivedProduct;
 
     @ManyToMany
@@ -330,6 +333,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     @Version
     private int version;
+
+    @Transient
+    private Set<ProductAttribute> productAttributes = new HashSet<ProductAttribute>();
 
     @Transient
     private Map<String, String> calculatedAttributes;
@@ -878,6 +884,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * @return
      *  the top-level product for this pool.
      */
+    @JsonIgnore
     public Product getProduct() {
         return this.product;
     }
@@ -888,6 +895,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * @param product
      *  The Product to assign as the top-level product for this pool.
      */
+    @JsonProperty
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public void setProduct(Product product) {
         this.product = product;
     }
@@ -938,6 +947,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         return "/pools/" + getId();
     }
 
+    public void setProductAttributes(Set<ProductAttribute> attrs) {
+        this.productAttributes = attrs;
+    }
 
     /**
      * @return the subscriptionSubKey
@@ -959,6 +971,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.calculatedAttributes = calculatedAttributes;
     }
 
+    @JsonIgnore
     public Product getDerivedProduct() {
         return this.derivedProduct;
     }
@@ -977,7 +990,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     public Set<ProductAttribute> getProductAttributes() {
         return this.getProduct() != null ?
             this.getProduct().getAttributes() :
-            new HashSet<ProductAttribute>();
+            this.productAttributes;
     }
 
     public Set<ProductAttribute> getDerivedProductAttributes() {
@@ -1005,6 +1018,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         return attribute != null ? attribute.getValue() : null;
     }
 
+    @JsonProperty
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public void setDerivedProduct(Product derived) {
         this.derivedProduct = derived;
     }

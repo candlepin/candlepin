@@ -131,7 +131,7 @@ describe 'Entitlements' do
     entitlements.should have(1).things
 
     found_attr = false
-    entitlements[0].pool.product.name.should == @ram.name
+    entitlements[0].pool.productName.should == @ram.name
   end
 
   it 'should be removed after revoking all entitlements' do
