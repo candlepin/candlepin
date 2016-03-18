@@ -12,7 +12,8 @@
             <property name="hibernate.connection.url" value="jdbc:postgresql:candlepin"/>
             <property name="hibernate.connection.username" value="candlepin"/>
             <property name="hibernate.connection.password" value=""/>
-            <property name="hibernate.show_sql" value="false" />
+            <property name="hibernate.show_sql" value="true" />
+            <property name="hibernate.format_sql" value="true" />
             <property name="hibernate.ejb.interceptor" value="org.candlepin.hibernate.EmptyStringInterceptor"/>
             <property name="hibernate.connection.provider_class" value="org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider" />
             <!-- c3p0 connection manager settings -->

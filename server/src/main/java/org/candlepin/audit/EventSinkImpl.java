@@ -14,8 +14,17 @@
  */
 package org.candlepin.audit;
 
+import java.util.Set;
+
+import javax.inject.Inject;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+import javax.jms.Topic;
+import javax.jms.TopicConnection;
+import javax.jms.TopicPublisher;
+import javax.jms.TopicSession;
+
 import org.candlepin.common.config.Configuration;
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
@@ -24,28 +33,11 @@ import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Singleton;
-
-import org.hornetq.api.core.HornetQException;
-import org.hornetq.api.core.SimpleString;
-import org.hornetq.api.core.TransportConfiguration;
-import org.hornetq.api.core.client.ClientMessage;
-import org.hornetq.api.core.client.ClientProducer;
-import org.hornetq.api.core.client.ClientSession;
-import org.hornetq.api.core.client.ClientSessionFactory;
-import org.hornetq.api.core.client.HornetQClient;
-import org.hornetq.api.core.client.ServerLocator;
-import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import javax.inject.Inject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Singleton;
 
 /**
  * EventSink - Queues events to be sent after request/job completes, and handles actual
@@ -56,11 +48,10 @@ public class EventSinkImpl implements EventSink {
 
     private static Logger log = LoggerFactory.getLogger(EventSinkImpl.class);
     private EventFactory eventFactory;
-    private ClientSessionFactory factory;
-    private Configuration config;
+    private TopicConnection topicConnection;
     private ObjectMapper mapper;
     private EventFilter eventFilter;
-    private int largeMsgSize;
+    private Topic listenerEventTopic;
 
     /*
      * Important use of ThreadLocal here, each Tomcat/Quartz thread gets it's own session
@@ -68,19 +59,18 @@ public class EventSinkImpl implements EventSink {
      * on them per request/job. This is handled in EventFilter for the API, and KingpinJob
      * for quartz jobs.
      */
-    private ThreadLocal<ClientSession> sessions = new ThreadLocal<ClientSession>();
-    private ThreadLocal<ClientProducer> producers = new ThreadLocal<ClientProducer>();
+    private ThreadLocal<TopicSession> sessions = new ThreadLocal<TopicSession>();
+    private ThreadLocal<TopicPublisher> producers = new ThreadLocal<TopicPublisher>();
 
 
 
     @Inject
     public EventSinkImpl(EventFilter eventFilter, EventFactory eventFactory,
-            ObjectMapper mapper, Configuration config) {
+            ObjectMapper mapper) {
         this.eventFactory = eventFactory;
         this.mapper = mapper;
-        this.config = config;
         this.eventFilter = eventFilter;
-        largeMsgSize = config.getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
+        
     }
 
     /**
@@ -89,19 +79,14 @@ public class EventSinkImpl implements EventSink {
      */
     @Override
     public void initialize() throws Exception {
-        factory =  createClientSessionFactory();
+        topicConnection = null;//tbd; 
+        listenerEventTopic=null;//tbd
     }
 
-    protected ClientSessionFactory createClientSessionFactory() throws Exception {
-        ServerLocator locator = HornetQClient.createServerLocatorWithoutHA(
-            new TransportConfiguration(InVMConnectorFactory.class.getName()));
-        locator.setMinLargeMessageSize(largeMsgSize);
-        return locator.createSessionFactory();
-    }
 
-    protected ClientSession getClientSession() {
-        ClientSession session = sessions.get();
-        if (session == null || session.isClosed()) {
+    protected TopicSession getClientSession() {
+        TopicSession session = sessions.get();
+        if (session == null ) {
             try {
                 /*
                  * Use a transacted HornetQ session, events will not be dispatched until
@@ -109,9 +94,9 @@ public class EventSinkImpl implements EventSink {
                  * messages safely and the session is then ready to start over the next time
                  * the thread is used.
                  */
-                session = factory.createTransactedSession();
+                session = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
             }
-            catch (HornetQException e) {
+            catch (Exception e) {
                 throw new RuntimeException(e);
             }
             log.info("Created new HornetQ session.");
@@ -120,13 +105,13 @@ public class EventSinkImpl implements EventSink {
         return session;
     }
 
-    protected ClientProducer getClientProducer() {
-        ClientProducer producer = producers.get();
+    protected TopicPublisher getClientProducer() {
+        TopicPublisher producer = producers.get();
         if (producer == null) {
             try {
-                producer = getClientSession().createProducer(EventSource.QUEUE_ADDRESS);
+                producer = getClientSession().createPublisher(listenerEventTopic);
             }
-            catch (HornetQException e) {
+            catch (Exception e) {
                 throw new RuntimeException(e);
             }
             log.info("Created new HornetQ producer.");
@@ -135,26 +120,6 @@ public class EventSinkImpl implements EventSink {
         return producer;
     }
 
-    @Override
-    public List<QueueStatus> getQueueInfo() {
-        List<QueueStatus> results = new LinkedList<QueueStatus>();
-        try {
-
-            ClientSession session = getClientSession();
-            session.start();
-            for (String listenerClassName : HornetqContextListener.getHornetqListeners(
-                    config)) {
-                String queueName = "event." + listenerClassName;
-                long msgCount = session.queueQuery(new SimpleString(queueName))
-                        .getMessageCount();
-                results.add(new QueueStatus(queueName, msgCount));
-            }
-        }
-        catch (Exception e) {
-            log.error("Error looking up hornetq queue info: ", e);
-        }
-        return results;
-    }
 
     /**
      * Adds an event to the queue to be sent on successful completion of the request or job.
@@ -177,10 +142,10 @@ public class EventSinkImpl implements EventSink {
         log.debug("Queuing event: {}", event);
 
         try {
-            ClientSession session = getClientSession();
-            ClientMessage message = session.createMessage(true);
+            TopicSession session = getClientSession();
+            TextMessage message = session.createTextMessage();
             String eventString = mapper.writeValueAsString(event);
-            message.getBodyBuffer().writeString(eventString);
+            message.setText(eventString);
 
             // NOTE: not actually send until we commit the session.
             getClientProducer().send(message);
@@ -212,10 +177,10 @@ public class EventSinkImpl implements EventSink {
     public void rollback() {
         log.warn("Rolling back hornetq transaction.");
         try {
-            ClientSession session = getClientSession();
+            TopicSession session = getClientSession();
             session.rollback();
         }
-        catch (HornetQException e) {
+        catch (Exception e) {
             log.error("Error rolling back hornetq transaction", e);
         }
     }

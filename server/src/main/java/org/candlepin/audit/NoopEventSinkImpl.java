@@ -120,9 +120,4 @@ public class NoopEventSinkImpl implements EventSink {
 
     }
 
-    @Override
-    public List<QueueStatus> getQueueInfo() {
-        return null;
-    }
-
 }
