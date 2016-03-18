@@ -62,6 +62,7 @@ public class TrustedUserPrincipalTest {
         Pool p = mock(Pool.class);
         assertTrue(principal.canAccess(c, SubResource.NONE, Access.ALL));
         assertTrue(principal.canAccess(null, SubResource.NONE, Access.NONE));
+        assertTrue(principal.canAccessAll(null, SubResource.NONE, Access.NONE));
         assertTrue(principal.canAccess(p, SubResource.NONE, Access.ALL));
         assertTrue(principal.canAccess("always true", SubResource.NONE, Access.READ_ONLY));
     }

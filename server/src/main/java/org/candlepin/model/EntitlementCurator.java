@@ -21,6 +21,7 @@ import org.candlepin.common.paging.PageRequest;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaSpecification;
@@ -30,6 +31,9 @@ import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -263,13 +267,17 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * Creates date filtering criteria to for checking if an entitlement has any overlap
      * with a "modifying" entitlement that has just been granted.
      */
-    private Criteria createModifiesDateFilteringCriteria(Consumer consumer, Date startDate,
-        Date endDate, Entitlement excludeEnt) {
+    private Criteria createModifiesDateFilteringCriteria(Set<Consumer> consumers, Date startDate,
+            Date endDate, List<Entitlement> excludeEnts) {
         Criteria criteria = currentSession().createCriteria(Entitlement.class)
-            .add(Restrictions.eq("consumer", consumer));
+            .add(unboundedInCriterion("consumer", consumers));
 
-        if (excludeEnt != null) {
-            criteria = criteria.add(Restrictions.ne("id", excludeEnt.getId()));
+        if (CollectionUtils.isNotEmpty(excludeEnts)) {
+            Set<String> ids = new HashSet<String>();
+            for (Entitlement entitlement : excludeEnts) {
+                ids.add(entitlement.getId());
+            }
+            criteria = criteria.add(Restrictions.not(unboundedInCriterion("id", ids)));
         }
 
         criteria = criteria.createCriteria("pool")
@@ -285,67 +293,104 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return criteria;
     }
 
-    public Set<Entitlement> listModifying(Entitlement entitlement) {
+    /**
+     * A version of list Modifying that finds Entitlements that modify
+     * input entitlements.
+     * When dealing with large amount of entitlements for which it is necessary
+     * to determine their modifier products.
+     * @param entitlement
+     * @return Entitlements that are being modified by the input entitlements
+     */
+    public Set<Entitlement> batchListModifying(List<Entitlement> entitlements) {
         Set<Entitlement> modifying = new HashSet<Entitlement>();
-
         // Get the map of product Ids to the set of
         // overlapping entitlements that provide them
-        Map<String, Set<Entitlement>> pidEnts = getOverlappingForModifying(entitlement);
+        ProductEntitlements pidEnts = getOverlappingForModifying(entitlements);
         if (pidEnts.isEmpty()) {
             // Empty collections break hibernate queries
             return modifying;
         }
 
-        // Retrieve all products at once from the adapter
-        List<Product> products = productCurator.listAllByIds(entitlement.getOwner(), pidEnts.keySet());
+        List<Product> overlappingProducts =
+                productCurator.listAllByIds(pidEnts.getAllProductIds());
 
-        for (Product p : products) {
-            boolean modifies = p.modifies(entitlement.getPool().getProductId());
-            Iterator<Product> ppit = entitlement.getPool().getProvidedProducts().iterator();
+        Set<String> entitlementProducts = new HashSet<String>();
+        for (Entitlement entitlement : entitlements) {
+            entitlementProducts.add(entitlement.getPool().getProductId());
+            for (Product product : entitlement.getPool().getProvidedProducts()) {
+                entitlementProducts.add(product.getId());
+            }
+        }
+
+        for (Product overlappingProduct : overlappingProducts) {
+            boolean modifies = false;
+            Iterator<String> ppit = entitlementProducts.iterator();
             // No need to continue checking once we have found a modified product
             while (!modifies && ppit.hasNext()) {
-                modifies = p.modifies(ppit.next().getId());
+                modifies = overlappingProduct.modifies(ppit.next());
             }
             if (modifies) {
                 // Return all entitlements for the modified product
-                modifying.addAll(pidEnts.get(p.getId()));
+                modifying.addAll(pidEnts.getEntitlementsByProductId(overlappingProduct.getId()));
             }
         }
 
         return modifying;
     }
 
-    /*
-     * Add a productId to entitlement mapping, creating the collection if necessary
-     */
-    private void addProductIdToMap(Map<String, Set<Entitlement>> map,
-            String pid, Entitlement e) {
-        if (!map.containsKey(pid)) {
-            map.put(pid, new HashSet<Entitlement>());
-        }
-        map.get(pid).add(e);
+    public Set<Entitlement> listModifying(Entitlement entitlement) {
+        return batchListModifying(java.util.Arrays.asList(entitlement));
     }
 
-    /*
-     * Add an entitlement to the productId Entitlement map, using the entitlements
-     * productId as well as those if its provided products.
-     */
-    private void addToMap(Map<String, Set<Entitlement>> map, Entitlement e) {
-        addProductIdToMap(map, e.getPool().getProductId(), e);
-        for (Product pp : e.getPool().getProvidedProducts()) {
-            addProductIdToMap(map, pp.getId(), e);
-        }
+    public Set<Entitlement> listModifying(Collection entitlements) {
+        return batchListModifying(new ArrayList<Entitlement>(entitlements));
     }
 
+    public Map<Consumer, List<Entitlement>> getDistinctConsumers(
+            List<Entitlement> entsToRevoke) {
+        Map<Consumer, List<Entitlement>> result = new HashMap<Consumer, List<Entitlement>>();
+        for (Entitlement ent : entsToRevoke) {
+            List<Entitlement> ents = result.get(ent.getConsumer());
+            if (ents == null) {
+                ents = new ArrayList<Entitlement>();
+                result.put(ent.getConsumer(), ents);
+            }
+            ents.add(ent);
+        }
+        return result;
+    }
     @SuppressWarnings("unchecked")
-    public Map<String, Set<Entitlement>> getOverlappingForModifying(Entitlement e) {
+    public ProductEntitlements getOverlappingForModifying(List<Entitlement> e) {
+        Date earliestStartDate = findEarliestStartDate(e);
+        Date latestEndDate = findLatestEndDate(e);
+        Set<Consumer> consumers = getDistinctConsumers(e).keySet();
+
         List<Entitlement> overlapEnts = createModifiesDateFilteringCriteria(
-            e.getConsumer(), e.getStartDate(), e.getEndDate(), e).list();
-        Map<String, Set<Entitlement>> pidEnts = new HashMap<String, Set<Entitlement>>();
-        for (Entitlement ent : overlapEnts) {
-            addToMap(pidEnts, ent);
+                consumers, earliestStartDate, latestEndDate, e)
+                .list();
+
+        return new ProductEntitlements(overlapEnts);
+    }
+
+    private Date findLatestEndDate(List<Entitlement> entitlements) {
+        Date max = null;
+        for (Entitlement e : entitlements) {
+            if (max == null || max.before(e.getEndDate())) {
+                max = e.getEndDate();
+            }
         }
-        return pidEnts;
+
+        return max;
+    }
+
+    private Date findEarliestStartDate(List<Entitlement> entitlements) {
+        Date min = null;
+        for (Entitlement e : entitlements) {
+            if (min == null || min.after(e.getStartDate())) {
+                min = e.getStartDate();
+            }
+        }
+        return min;
     }
 
     public Page<List<Entitlement>> listByConsumerAndProduct(Consumer consumer,
@@ -376,8 +421,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     @Transactional
     public void delete(Entitlement entity) {
         Entitlement toDelete = find(entity.getId());
-        log.debug("Deleting entitlement: " + toDelete);
-        log.debug("certs.size = " + toDelete.getCertificates().size());
+        log.debug("Deleting entitlement: {}", toDelete);
+        log.debug("certs.size = {}", toDelete.getCertificates().size());
 
         for (EntitlementCertificate cert : toDelete.getCertificates()) {
             currentSession().delete(cert);
@@ -416,17 +461,29 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      */
     @SuppressWarnings("unchecked")
     public List<Entitlement> findByStackId(Consumer consumer, String stackId) {
+        return findByStackIds(consumer, Arrays.asList(stackId));
+    }
+
+    /**
+     * Find the entitlements for the given consumer that are part of the
+     * specified stacks.
+     *
+     * @param consumer the consumer
+     * @param stackIds the IDs of the stacks
+     * @return the list of entitlements for the consumer that are in the stack.
+     */
+    @SuppressWarnings("unchecked")
+    public List<Entitlement> findByStackIds(Consumer consumer, Collection stackIds) {
         Criteria activeNowQuery = currentSession().createCriteria(Entitlement.class)
-            .add(Restrictions.eq("consumer", consumer))
-            .createAlias("pool", "ent_pool")
-            .createAlias("ent_pool.product", "product")
-            .createAlias("product.attributes", "attrs")
-            .add(Restrictions.eq("attrs.name", "stacking_id"))
-            .add(Restrictions.eq("attrs.value", stackId))
-            .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
-            .createAlias("ent_pool.sourceStack", "ss",
-                JoinType.LEFT_OUTER_JOIN)
-            .add(Restrictions.isNull("ss.id"));
+                .add(Restrictions.eq("consumer", consumer))
+                .createAlias("pool", "ent_pool")
+                .createAlias("ent_pool.product", "product")
+                .createAlias("product.attributes", "attrs")
+                .add(Restrictions.eq("attrs.name", "stacking_id"))
+                .add(unboundedInCriterion("attrs.value", stackIds))
+                .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
+                .createAlias("ent_pool.sourceStack", "ss", JoinType.LEFT_OUTER_JOIN)
+                .add(Restrictions.isNull("ss.id"));
         return activeNowQuery.list();
     }
 
@@ -443,6 +500,29 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         }
 
         return criteria.list();
+    }
+
+    /**
+     * Batch deletes a list of entitlements.
+     * @param pools
+     */
+    public void batchDelete(List<Entitlement> entitlements) {
+        for (Entitlement ent : entitlements) {
+            log.debug("Deleting entitlement: {}", ent);
+            log.debug("certs.size = {}", ent.getCertificates().size());
+
+            for (EntitlementCertificate cert : ent.getCertificates()) {
+                getEntityManager().remove(cert);
+            }
+            ent.getCertificates().clear();
+            getEntityManager().remove(ent);
+        }
+
+        // Maintain runtime consistency.
+        for (Entitlement ent : entitlements) {
+            ent.getCertificates().clear();
+            ent.getConsumer().getEntitlements().remove(ent);
+        }
     }
 
     @SuppressWarnings("unchecked")

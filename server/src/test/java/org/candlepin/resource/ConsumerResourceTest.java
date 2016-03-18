@@ -28,6 +28,7 @@ import org.candlepin.audit.EventSinkImpl;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.SubResource;
+import org.candlepin.auth.TrustedUserPrincipal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -56,6 +57,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.model.dto.PoolIdAndQuantity;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -77,6 +79,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -186,7 +189,7 @@ public class ConsumerResourceTest {
             null, mockedEntitlementCertServiceAdapter, null, null,
             new CandlepinCommonTestConfig(), null, null,
             mockedEntitlementCurator, mockedConsumerCurator, null, null, null,
-            mockedActivationKeyRules, null, null, null, null);
+            mockedActivationKeyRules, null, null, null, null, null);
 
         ConsumerResource consumerResource = new ConsumerResource(
             mockedConsumerCurator, null, null, null, mockedEntitlementCurator, null,
@@ -369,8 +372,50 @@ public class ConsumerResourceTest {
             null, sa, null, null, null, i18n, null, null, null, null, null,
             null, null, null, null, null, e, null, null, null, null,
             new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
-        Response r = cr.bind("fakeConsumer", null, prodIds, null, null, null, false, null, null);
+        Response r = cr
+                .bind("fakeConsumer", null, prodIds, null, null, null, false, null, null, null, null);
         assertEquals(null, r.getEntity());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testBindByPools() throws Exception {
+        PoolIdAndQuantity[] pools = new PoolIdAndQuantity[2];
+        pools[0] = new PoolIdAndQuantity("first", 1);
+        pools[1] = new PoolIdAndQuantity("second", 2);
+        ConsumerCurator cc = mock(ConsumerCurator.class);
+        SubscriptionServiceAdapter sa = mock(SubscriptionServiceAdapter.class);
+        PoolManager pm = mock(PoolManager.class);
+        Owner owner = TestUtil.createOwner();
+        Consumer consumer = TestUtil.createConsumer(owner);
+
+        when(cc.verifyAndLookupConsumerWithEntitlements(eq("fakeConsumer"))).thenReturn(
+                consumer);
+        when(sa.hasUnacceptedSubscriptionTerms(any(Owner.class))).thenReturn(false);
+
+        ConsumerResource cr = new ConsumerResource(cc, null, null, sa, null, null, null, i18n, null,
+                null, null, null, null, null, pm, null, null, null, null, null, null, null, null,
+                new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+
+        Response rsp = cr.bind("fakeConsumer", null, null, null, null, null, true, null,
+                null, pools, new TrustedUserPrincipal("TaylorSwift"));
+
+        JobDetail detail = (JobDetail) rsp.getEntity();
+        PoolIdAndQuantity[] pQs = (PoolIdAndQuantity[]) detail.getJobDataMap().get("pool_and_quantities");
+        boolean firstFound = false;
+        boolean secondFound = false;
+        for (PoolIdAndQuantity pq : pQs) {
+            if (pq.getPoolId().contentEquals("first")) {
+                firstFound = true;
+                assertEquals(1, pq.getQuantity().intValue());
+            }
+            if (pq.getPoolId().contentEquals("second")) {
+                secondFound = true;
+                assertEquals(2, pq.getQuantity().intValue());
+            }
+        }
+        assertTrue(firstFound);
+        assertTrue(secondFound);
     }
 
     @Test
@@ -395,7 +440,7 @@ public class ConsumerResourceTest {
             new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
         String dtStr = "2011-09-26T18:10:50.184081+00:00";
         Date dt = ResourceDateParser.parseDateString(dtStr);
-        cr.bind("fakeConsumer", null, null, null, null, null, false, dtStr, null);
+        cr.bind("fakeConsumer", null, null, null, null, null, false, dtStr, null, null, null);
         AutobindData data = AutobindData.create(c).on(dt);
         verify(e).bindByProducts(eq(data));
     }
@@ -449,9 +494,72 @@ public class ConsumerResourceTest {
             null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
 
         consumerResource.bind("fake uuid", "fake pool uuid",
-            new String[]{"12232"}, 1, null, null, false, null, null);
+            new String[]{"12232"}, 1, null, null, false, null, null, null, null);
     }
 
+    @Test(expected = BadRequestException.class)
+    public void testBindMultipleParamsBodyAndProducts() throws Exception {
+        ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
+        ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
+            null, null, null, null, null, i18n, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null,
+            null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+
+        PoolIdAndQuantity[] pools = new PoolIdAndQuantity[2];
+        pools[0] = new PoolIdAndQuantity("first", 1);
+        pools[1] = new PoolIdAndQuantity("second", 2);
+
+        consumerResource.bind("fake uuid", null,
+            new String[]{"12232"}, null, null, null, false, null, null, pools, null);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testBindMultipleParamsBodyAndPoolString() throws Exception {
+        ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
+        ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
+            null, null, null, null, null, i18n, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null,
+            null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+
+        PoolIdAndQuantity[] pools = new PoolIdAndQuantity[2];
+        pools[0] = new PoolIdAndQuantity("first", 1);
+        pools[1] = new PoolIdAndQuantity("second", 2);
+
+        consumerResource.bind("fake uuid", "assad",
+            null, null, null, null, false, null, null, pools, null);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testBindMultipleParamsBodyAndAsync() throws Exception {
+        ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
+        ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
+            null, null, null, null, null, i18n, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null,
+            null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+
+        PoolIdAndQuantity[] pools = new PoolIdAndQuantity[2];
+        pools[0] = new PoolIdAndQuantity("first", 1);
+        pools[1] = new PoolIdAndQuantity("second", 2);
+
+        consumerResource.bind("fake uuid", null,
+            null, null, null, null, false, null, null, pools, null);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testBindMultipleParamsBodyAndQuantity() throws Exception {
+        ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
+        ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
+            null, null, null, null, null, i18n, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null,
+            null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+
+        PoolIdAndQuantity[] pools = new PoolIdAndQuantity[2];
+        pools[0] = new PoolIdAndQuantity("first", 1);
+        pools[1] = new PoolIdAndQuantity("second", 2);
+
+        consumerResource.bind("fake uuid", null,
+            null, 1, null, null, false, null, null, pools, null);
+    }
 
     @Test(expected = NotFoundException.class)
     public void testBindByPoolBadConsumerUuid() throws Exception {
@@ -464,7 +572,7 @@ public class ConsumerResourceTest {
             null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
 
         consumerResource.bind("notarealuuid", "fake pool uuid", null, null, null,
-            null, false, null, null);
+            null, false, null, null, null, null);
     }
 
     /**

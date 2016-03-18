@@ -24,14 +24,24 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
+import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
+import org.candlepin.model.dto.PoolIdAndErrors;
+import org.candlepin.model.dto.PoolIdAndQuantity;
 import org.candlepin.pinsetter.core.model.JobStatus;
+import org.candlepin.policy.EntitlementRefusedException;
+import org.candlepin.policy.ValidationResult;
 
+import org.hibernate.mapping.Map;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -39,7 +49,10 @@ import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * EntitlerJobTest
@@ -49,6 +62,8 @@ public class EntitlerJobTest {
     private String consumerUuid;
     private Consumer consumer;
     private Entitler e;
+    private PoolCurator pC;
+    private I18n i18n;
 
     @Before
     public void init() {
@@ -57,34 +72,56 @@ public class EntitlerJobTest {
             new ConsumerType("system"));
         consumer.setUuid(consumerUuid);
         e = mock(Entitler.class);
+        pC = mock(PoolCurator.class);
+        i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
     }
 
     @Test
     public void bindByPoolSetup() {
         String pool = "pool10";
 
-        JobDetail detail = EntitlerJob.bindByPool(pool, consumer, 1);
+        PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
+        pQs[0] = new PoolIdAndQuantity(pool, 1);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
         assertNotNull(detail);
-        String resultpool = (String) detail.getJobDataMap().get("pool_id");
-        assertEquals("pool10", resultpool);
+        PoolIdAndQuantity[] resultPools = (PoolIdAndQuantity[]) detail.getJobDataMap().get(
+                "pool_and_quantities");
+        assertEquals("pool10", resultPools[0].getPoolId());
+        assertEquals(1, resultPools[0].getQuantity().intValue());
         assertEquals(consumerUuid, detail.getJobDataMap().get(JobStatus.TARGET_ID));
         assertTrue(detail.getKey().getName().startsWith("bind_by_pool_"));
     }
 
     @Test
-    public void bindByPoolExec() throws JobExecutionException {
+    public void bindByPoolExec() throws JobExecutionException, EntitlementRefusedException {
         String pool = "pool10";
 
-        JobDetail detail = EntitlerJob.bindByPool(pool, consumer, 1);
+        PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
+        pQs[0] = new PoolIdAndQuantity(pool, 1);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        List<Entitlement> ents = new ArrayList<Entitlement>();
-        when(e.bindByPool(eq(pool), eq(consumerUuid), eq(1))).thenReturn(ents);
 
-        EntitlerJob job = new EntitlerJob(e, null);
+        List<Entitlement> ents = new ArrayList<Entitlement>();
+        Pool p = new Pool();
+        p.setId(pool);
+        Entitlement ent = new Entitlement();
+        ent.setPool(p);
+        ent.setQuantity(100);
+        ents.add(ent);
+        when(e.bindByPoolQuantities(eq(consumerUuid), anyMapOf(String.class, Integer.class))).thenReturn(
+                ents);
+
+        EntitlerJob job = new EntitlerJob(e, null, pC, null);
         job.execute(ctx);
-        verify(e).bindByPool(eq(pool), eq(consumerUuid), eq(1));
+        verify(e).bindByPoolQuantities(eq(consumerUuid), anyMapOf(String.class, Integer.class));
         verify(e).sendEvents(eq(ents));
+        ArgumentCaptor<Object> argumentCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(ctx).setResult(argumentCaptor.capture());
+        PoolIdAndQuantity[] result = (PoolIdAndQuantity[]) argumentCaptor.getValue();
+        assertEquals(1, result.length);
+        assertEquals(pool, result[0].getPoolId());
+        assertEquals(100, result[0].getQuantity().intValue());
     }
 
     /**
@@ -97,13 +134,17 @@ public class EntitlerJobTest {
      */
     @Test
     public void serializeJobDataMapForPool() throws IOException {
-        JobDetail detail = EntitlerJob.bindByPool("pool10", consumer, 1);
+        PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
+        pQs[0] = new PoolIdAndQuantity("pool10", 1);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
         serialize(detail.getJobDataMap());
     }
 
     @Test
     public void recoveryIsFalse() {
-        JobDetail detail = EntitlerJob.bindByPool("pool10", consumer, 1);
+        PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
+        pQs[0] = new PoolIdAndQuantity("pool10", 1);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
         assertFalse(detail.requestsRecovery());
         assertTrue(detail.isDurable());
     }
@@ -115,16 +156,49 @@ public class EntitlerJobTest {
     }
 
     @Test(expected = JobExecutionException.class)
-    public void handleException() throws JobExecutionException {
-        String pool = "pool10";
-        JobDetail detail = EntitlerJob.bindByPool(pool, consumer, 1);
+    public void handleException() throws JobExecutionException, EntitlementRefusedException {
+        PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
+        pQs[0] = new PoolIdAndQuantity("pool10", 1);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        when(e.bindByPool(eq(pool), eq(consumerUuid), eq(1))).thenThrow(
-            new ForbiddenException("job should fail"));
+        Class<HashMap<String, Integer>> className = (Class<HashMap<String, Integer>>) (Class) Map.class;
+        ArgumentCaptor<HashMap<String, Integer>> pqMapCaptor = ArgumentCaptor.forClass(className);
+        when(e.bindByPoolQuantities(eq(consumerUuid), pqMapCaptor.capture())).thenThrow(
+                new ForbiddenException("job should fail"));
 
-        EntitlerJob job = new EntitlerJob(e, null);
+        EntitlerJob job = new EntitlerJob(e, null, null, null);
         job.execute(ctx);
+    }
+
+    @Test
+    public void respondWithValidationErrors() throws JobExecutionException, EntitlementRefusedException {
+        PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
+        pQs[0] = new PoolIdAndQuantity("pool10", 1);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
+        JobExecutionContext ctx = mock(JobExecutionContext.class);
+        when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
+
+        HashMap<String, ValidationResult> mapResult = new HashMap<String, ValidationResult>();
+        ValidationResult result = new ValidationResult();
+        result.addError("rulefailed.no.entitlements.available");
+        mapResult.put("hello", result);
+        when(e.bindByPoolQuantities(eq(consumerUuid), anyMapOf(String.class, Integer.class))).thenThrow(
+                new EntitlementRefusedException(mapResult));
+
+        EntitlerJob job = new EntitlerJob(e, null, pC, i18n);
+        Pool p = new Pool();
+        p.setId("hello");
+        when(pC.listAllByIds(anyListOf(String.class))).thenReturn(Arrays.asList(p));
+        job.execute(ctx);
+        ArgumentCaptor<Object> argumentCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(ctx).setResult(argumentCaptor.capture());
+        List<PoolIdAndErrors> resultErrors = (List<PoolIdAndErrors>) argumentCaptor.getValue();
+        assertEquals(1, resultErrors.size());
+        assertEquals("hello", resultErrors.get(0).getPoolId());
+        assertEquals(1, resultErrors.get(0).getErrors().size());
+        assertEquals("No subscriptions are available from the pool with ID 'hello'.", resultErrors.get(0)
+                .getErrors().get(0));
     }
 
     @After

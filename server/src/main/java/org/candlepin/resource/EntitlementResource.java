@@ -409,7 +409,7 @@ public class EntitlementResource {
                             entitlement.getQuantity() - quantity);
                 }
                 Pool pool = entitlement.getPool();
-                entitlements.addAll(entitler.bindByPool(pool.getId(), destinationConsumer,
+                entitlements.addAll(entitler.bindByPoolQuantity(destinationConsumer, pool.getId(),
                         quantity));
 
                 // Trigger events:

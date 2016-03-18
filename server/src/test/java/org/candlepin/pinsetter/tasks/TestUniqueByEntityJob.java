@@ -17,8 +17,7 @@ package org.candlepin.pinsetter.tasks;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-
-public class TestUniqueByOwnerJob extends UniqueByOwnerJob {
+public class TestUniqueByEntityJob extends UniqueByEntityJob {
 
     @Override
     public void toExecute(JobExecutionContext context) throws JobExecutionException {

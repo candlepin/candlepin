@@ -169,6 +169,9 @@ public class ConfigProperties {
     public static final String ENTITLER_JOB_THROTTLE =
         "pinsetter." + EntitlerJob.class.getName() + ".throttle";
 
+    public static final String BATCH_BIND_NUMBER_OF_POOLS_LIMIT =
+        "candlepin.batch.bind.number_of_pools_limit";
+
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
     public static final String CONSUMER_FACTS_MATCHER = "candlepin.consumer.facts.match_regex";
 
@@ -298,6 +301,7 @@ public class ConfigProperties {
                 this.put("org.quartz.threadPool.threadPriority", "5");
                 this.put(DEFAULT_TASKS, StringUtils.join(DEFAULT_TASK_LIST, ","));
                 this.put(ENTITLER_JOB_THROTTLE, "7");
+                this.put(BATCH_BIND_NUMBER_OF_POOLS_LIMIT, "100");
 
                 // AMQP (Qpid) configuration used by events
                 this.put(AMQP_INTEGRATION_ENABLED, String.valueOf(false));

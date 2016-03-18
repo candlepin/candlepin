@@ -24,13 +24,17 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 
 /**
  * CertificateSerialCurator - Interface to request a unique certificate serial number.
  */
 public class CertificateSerialCurator extends AbstractHibernateCurator<CertificateSerial> {
+
+    private static int inClauseLimit = 1000;
 
     @SuppressWarnings("rawtypes")
     private static final Class[] CERTCLASSES = {IdentityCertificate.class,
@@ -78,12 +82,24 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
         if (ids.isEmpty()) {
             return 0;
         }
+
         String hql = "DELETE from CertificateSerial " +
             "WHERE id IN (:expiredids)";
-        return this.currentSession()
-            .createQuery(hql)
-            .setParameterList("expiredids", ids)
-            .executeUpdate();
+
+        int batchStart = 0;
+        int batchEnd = inClauseLimit;
+        int removed = 0;
+        while (batchStart < ids.size()) {
+            removed += this.currentSession()
+                    .createQuery(hql)
+                    .setParameterList("expiredids",
+                            ids.subList(batchStart, Math.min(batchEnd, ids.size())))
+                    .executeUpdate();
+            batchStart += inClauseLimit;
+            batchEnd += inClauseLimit;
+        }
+
+        return removed;
     }
 
     @SuppressWarnings("unchecked")
@@ -118,5 +134,13 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
             crit.add(Subqueries.propertyNotIn("id", certSerialQuery));
         }
         return crit;
+    }
+
+    /*
+     * This method is really not necessary, but is probably the cleanest way to
+     * unit test.
+     */
+    public Collection<CertificateSerial> saveOrUpdateAll(Map<String, CertificateSerial> serialMap) {
+        return this.saveOrUpdateAll(serialMap.values(), false);
     }
 }

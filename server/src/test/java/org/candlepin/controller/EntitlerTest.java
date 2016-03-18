@@ -57,9 +57,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -105,14 +107,17 @@ public class EntitlerTest {
     @Test
     public void bindByPoolString() throws EntitlementRefusedException {
         String poolid = "pool10";
-        Pool pool = mock(Pool.class);
         Entitlement ent = mock(Entitlement.class);
-
+        List<Entitlement> eList = new ArrayList<Entitlement>();
+        eList.add(ent);
         when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
-        when(pm.find(eq(poolid))).thenReturn(pool);
-        when(pm.entitleByPool(eq(consumer), eq(pool), eq(1))).thenReturn(ent);
 
-        List<Entitlement> ents = entitler.bindByPool(poolid, "abcd1234", 1);
+        Map<String, Integer> pQs = new HashMap<String, Integer>();
+        pQs.put(poolid, 1);
+
+        when(pm.entitleByPools(eq(consumer), eq(pQs))).thenReturn(eList);
+
+        List<Entitlement> ents = entitler.bindByPoolQuantities("abcd1234", pQs);
         assertNotNull(ents);
         assertEquals(ent, ents.get(0));
     }
@@ -122,11 +127,15 @@ public class EntitlerTest {
         String poolid = "pool10";
         Pool pool = mock(Pool.class);
         Entitlement ent = mock(Entitlement.class);
+        List<Entitlement> eList = new ArrayList<Entitlement>();
+        eList.add(ent);
 
         when(pm.find(eq(poolid))).thenReturn(pool);
-        when(pm.entitleByPool(eq(consumer), eq(pool), eq(1))).thenReturn(ent);
+        Map<String, Integer> pQs = new HashMap<String, Integer>();
+        pQs.put(poolid, 1);
+        when(pm.entitleByPools(eq(consumer), eq(pQs))).thenReturn(eList);
 
-        List<Entitlement> ents = entitler.bindByPool(poolid, consumer, 1);
+        List<Entitlement> ents = entitler.bindByPoolQuantity(consumer, poolid, 1);
         assertNotNull(ents);
         assertEquals(ent, ents.get(0));
     }
@@ -149,11 +158,14 @@ public class EntitlerTest {
     }
 
     @Test(expected = BadRequestException.class)
-    public void nullPool() {
+    public void nullPool() throws EntitlementRefusedException {
         String poolid = "foo";
-        Consumer c = null; // keeps me from casting null
-        when(pm.find(eq(poolid))).thenReturn(null);
-        entitler.bindByPool(poolid, c, 10);
+        Consumer c = TestUtil.createConsumer(); // keeps me from casting null
+        Map<String, Integer> pQs = new HashMap<String, Integer>();
+        pQs.put(poolid, 1);
+        when(cc.findByUuid(eq(c.getUuid()))).thenReturn(c);
+        when(pm.entitleByPools(eq(c), eq(pQs))).thenThrow(new IllegalArgumentException());
+        entitler.bindByPoolQuantities(c.getUuid(), pQs);
     }
 
     @Test(expected = ForbiddenException.class)
@@ -232,13 +244,16 @@ public class EntitlerTest {
         try {
             String poolid = "pool10";
             Pool pool = mock(Pool.class);
-            EntitlementRefusedException ere = new EntitlementRefusedException(
-                fakeOutResult(msg));
+            Map<String, ValidationResult> fakeResult = new HashMap<String, ValidationResult>();
+            fakeResult.put(poolid, fakeOutResult(msg));
+            EntitlementRefusedException ere = new EntitlementRefusedException(fakeResult);
 
             when(pool.getId()).thenReturn(poolid);
-            when(pm.find(eq(poolid))).thenReturn(pool);
-            when(pm.entitleByPool(eq(consumer), eq(pool), eq(1))).thenThrow(ere);
-            entitler.bindByPool(poolid, consumer, 1);
+            when(poolCurator.find(eq(poolid))).thenReturn(pool);
+            Map<String, Integer> pQs = new HashMap<String, Integer>();
+            pQs.put(poolid, 1);
+            when(pm.entitleByPools(eq(consumer), eq(pQs))).thenThrow(ere);
+            entitler.bindByPoolQuantity(consumer, poolid, 1);
         }
         catch (EntitlementRefusedException e) {
             fail(msg + ": threw unexpected error");
@@ -292,8 +307,9 @@ public class EntitlerTest {
     private void bindByProductErrorTest(String msg) {
         try {
             String[] pids = {"prod1", "prod2", "prod3"};
-            EntitlementRefusedException ere = new EntitlementRefusedException(
-                fakeOutResult(msg));
+            Map<String, ValidationResult> fakeResult = new HashMap<String, ValidationResult>();
+            fakeResult.put("blah", fakeOutResult(msg));
+            EntitlementRefusedException ere = new EntitlementRefusedException(fakeResult);
             AutobindData data = AutobindData.create(consumer).forProducts(pids);
             when(pm.entitleByProducts(data)).thenThrow(ere);
             entitler.bindByProducts(data);

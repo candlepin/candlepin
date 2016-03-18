@@ -362,6 +362,16 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @Transactional
     public Consumer update(Consumer updatedConsumer) {
+        return updateWithOptionalFlush(updatedConsumer, true);
+    }
+
+    /**
+     * @param updatedConsumer updated Consumer values.
+     * @param saveConsumer to flush or not to flush, that is the question.
+     * @return Updated consumers
+     */
+    @Transactional
+    public Consumer updateWithOptionalFlush(Consumer updatedConsumer, boolean saveConsumer) {
         Consumer existingConsumer = find(updatedConsumer.getId());
         if (existingConsumer == null) {
             return create(updatedConsumer);
@@ -379,11 +389,12 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         existingConsumer.setType(updatedConsumer.getType());
         existingConsumer.setUuid(updatedConsumer.getUuid());
 
-        save(existingConsumer);
+        if (saveConsumer) {
+            save(existingConsumer);
+        }
 
         return existingConsumer;
     }
-
     /**
      * Modifies the last check in and persists the entity. Make sure that the data
      * is refreshed before using this method.

@@ -25,6 +25,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
@@ -41,6 +42,7 @@ import org.xnap.commons.i18n.I18n;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -58,7 +60,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Inject protected Provider<EntityManager> entityManager;
     @Inject protected I18n i18n;
     private final Class<E> entityType;
-    private int batchSize = 30;
+    protected int batchSize = 500;
+    protected int inClauseLimit = 999;
     @Inject private PrincipalProvider principalProvider;
     private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
 
@@ -79,6 +82,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public void enableFilterList(String filterName, String parameterName,
         Collection value) {
         currentSession().enableFilter(filterName).setParameterList(parameterName, value);
+    }
+
+    /*
+     * helps to speed up unit tests
+     */
+    public void overrideInClauseLimit(int limit) {
+        inClauseLimit = limit;
     }
 
     /**
@@ -123,7 +133,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     public List<E> listAllByIds(Collection<? extends Serializable> ids) {
         return listByCriteria(
-            createSecureCriteria().add(Restrictions.in("id", ids)));
+            createSecureCriteria().add(unboundedInCriterion("id", ids)));
     }
 
     @SuppressWarnings("unchecked")
@@ -378,13 +388,22 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         flush();
     }
 
-    public final void flush() {
+    public void flush() {
         try {
             getEntityManager().flush();
         }
         catch (OptimisticLockException e) {
             throw new ConcurrentModificationException(getConcurrentModificationMessage(),
                 e);
+        }
+    }
+
+    public void clear() {
+        try {
+            getEntityManager().clear();
+        }
+        catch (OptimisticLockException e) {
+            throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
         }
     }
 
@@ -397,22 +416,56 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return entityManager.get();
     }
 
-    public void saveOrUpdateAll(List<E> entries) {
-        try {
-            Session session = currentSession();
-            for (int i = 0; i < entries.size(); i++) {
-                session.saveOrUpdate(entries.get(i));
-                if (i % batchSize == 0) {
+    public Collection<E> saveOrUpdateAll(Collection<E> entries, boolean flush) {
+        if (CollectionUtils.isNotEmpty(entries)) {
+            try {
+                Session session = currentSession();
+                int i = 0;
+                Iterator<E> iter = entries.iterator();
+                while (iter.hasNext()) {
+                    session.saveOrUpdate(iter.next());
+                    if (i % batchSize == 0 && flush) {
+                        session.flush();
+                        session.clear();
+                    }
+                    i++;
+                }
+                if (flush) {
                     session.flush();
                     session.clear();
                 }
             }
+            catch (OptimisticLockException e) {
+                throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
+            }
         }
-        catch (OptimisticLockException e) {
-            throw new ConcurrentModificationException(getConcurrentModificationMessage(),
-                e);
-        }
+        return entries;
+    }
 
+    public Collection<E> mergeAll(Collection<E> entries, boolean flush) {
+        if (CollectionUtils.isNotEmpty(entries)) {
+            try {
+                Session session = currentSession();
+                int i = 0;
+                Iterator<E> iter = entries.iterator();
+                while (iter.hasNext()) {
+                    session.merge(iter.next());
+                    if (i % batchSize == 0 && flush) {
+                        session.flush();
+                        session.clear();
+                    }
+                    i++;
+                }
+                if (flush) {
+                    session.flush();
+                    session.clear();
+                }
+            }
+            catch (OptimisticLockException e) {
+                throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
+            }
+        }
+        return entries;
     }
 
     public void refresh(E object) {
@@ -444,6 +497,35 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     private String getConcurrentModificationMessage() {
         return i18n.tr("Request failed due to concurrent modification, please re-try.");
+    }
+
+    public <T extends Object> Criterion unboundedInCriterion(String expression, Collection<T> values) {
+        List<T> list = new ArrayList<T>();
+        list.addAll(values);
+        return unboundedInCriterion(expression, list);
+    }
+
+    /**
+     * While hibernate does not have limits over how many values can be used in an in clause,
+     * the underlying databases sometimes do. This method builds an unbounded in clause
+     * by building logical or expressions out of batches of in-clauses.
+     *
+     * @param expression the string expression against which we are searching values
+     * @param values the values being searched for the expression
+     * @return the unbounded in criterion as described above
+     */
+    public <T extends Object> Criterion unboundedInCriterion(String expression, List<T> values) {
+        Criterion criterion = null;
+
+        int listSize = values.size();
+        for (int i = 0; i < listSize; i += inClauseLimit) {
+            // consume at most inClauseLimit values
+            List<T> subList = values.subList(i, Math.min(listSize, i + inClauseLimit));
+            criterion = (criterion == null) ?
+                    Restrictions.in(expression, subList) :
+                    Restrictions.or(criterion, Restrictions.in(expression, subList));
+        }
+        return criterion;
     }
 
 }

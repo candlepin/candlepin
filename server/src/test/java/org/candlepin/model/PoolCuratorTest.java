@@ -15,6 +15,8 @@
 package org.candlepin.model;
 
 import static org.junit.Assert.*;
+import static org.hamcrest.core.IsCollectionContaining.*;
+import static org.hamcrest.core.IsNot.*;
 
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.common.paging.Page;
@@ -29,6 +31,9 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.hamcrest.Matchers;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.InExpression;
+import org.hibernate.criterion.LogicalExpression;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,9 +41,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -509,6 +516,100 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testlookupBySubscriptionIds() {
+        Product product = new Product("someProduct", "An Extremely Great Product", owner, 10L);
+        productCurator.create(product);
+
+        Pool p = new Pool(owner, product, new HashSet<Product>(), 1L, new Date(), new Date(), "contract",
+                "account", "order");
+
+        String subId1 = Util.generateDbUUID();
+        p.setSourceSubscription(new SourceSubscription(subId1, "master"));
+        poolCurator.create(p);
+
+        Pool p2 = new Pool(owner, product, new HashSet<Product>(), 1L, new Date(), new Date(), "contract",
+                "account", "order");
+        String subId2 = Util.generateDbUUID();
+        p2.setSourceSubscription(new SourceSubscription(subId2, "master"));
+        poolCurator.create(p2);
+
+        Pool p3 = new Pool(owner, product, new HashSet<Product>(), 1L, new Date(), new Date(), "contract",
+                "account", "order");
+        String subId3 = Util.generateDbUUID();
+        p3.setSourceSubscription(new SourceSubscription(subId3, "master"));
+        poolCurator.create(p3);
+
+        List<Pool> pools = poolCurator.lookupBySubscriptionIds(Arrays.asList(subId1, subId2));
+        assertEquals(2, pools.size());
+        assertThat(pools, hasItems(p, p2));
+        assertThat(pools, not(hasItem(p3)));
+    }
+
+    @Test
+    public void buildInCriteriaTestBulk() {
+        List<String> subIds = new ArrayList<String>();
+        Product product = new Product("someProduct", "An Extremely Great Product", owner, 10L);
+        productCurator.create(product);
+        for (int i = 0; i < 30; i++) {
+            subIds.add(createPoolForCriteriaTest(product));
+        }
+
+        poolCurator.overrideInClauseLimit(5);
+        List<Pool> pools = poolCurator.lookupBySubscriptionIds(subIds);
+        assertEquals(30, pools.size());
+
+        for (Pool pool : pools) {
+            assertThat(subIds, hasItem(pool.getSubscriptionId()));
+        }
+    }
+
+    private String createPoolForCriteriaTest(Product product) {
+        String subId1 = Util.generateDbUUID();
+
+        Pool p = new Pool(owner, product, new HashSet<Product>(), 1L, new Date(), new Date(), "contract",
+                "account", "order");
+
+        p.setSourceSubscription(new SourceSubscription(subId1, "master"));
+        poolCurator.create(p);
+        return subId1;
+    }
+
+    @Test
+    public void buildInCriteriaTestBatch() {
+        poolCurator.overrideInClauseLimit(5);
+        List<String> items = new ArrayList<String>();
+        String expected = "taylor in (0, 1, 2, 3, 4)" +
+                " or taylor in (5, 6, 7, 8, 9)" +
+                " or taylor in (10, 11, 12, 13, 14)" +
+                " or taylor in (15)";
+        boolean first = false;
+        for (int i = 0; i < 16; i++) {
+            items.add("" + i);
+        }
+        Criterion crit = poolCurator.unboundedInCriterion("taylor", items);
+        LogicalExpression le = (LogicalExpression) crit;
+        assertEquals("or", le.getOp());
+        assertEquals(expected, le.toString());
+    }
+
+    @Test
+    public void buildInCriteriaTestSimple() {
+        List<String> items = new ArrayList<String>();
+        String expected = "swift in (";
+        int i = 0;
+        boolean first = false;
+        for (; i < 998; i++) {
+            expected += i + ", ";
+            items.add("" + i);
+        }
+        expected += i + ")";
+        items.add("" + i);
+        Criterion crit = poolCurator.unboundedInCriterion("swift", items);
+        InExpression ie = (InExpression) crit;
+        assertEquals(expected, ie.toString());
+    }
+
+    @Test
     public void testListBySourceEntitlement() {
 
         Pool sourcePool = TestUtil.createPool(owner, product);
@@ -529,6 +630,67 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testListBySourceEntitlements() {
+        Pool sourcePool = TestUtil.createPool(owner, product);
+        Pool sourcePool2 = TestUtil.createPool(owner, product);
+        Pool sourcePool3 = TestUtil.createPool(owner, product);
+        poolCurator.create(sourcePool);
+        poolCurator.create(sourcePool2);
+        poolCurator.create(sourcePool3);
+        Entitlement e = new Entitlement(sourcePool, consumer, 1);
+        Entitlement e2 = new Entitlement(sourcePool2, consumer, 1);
+        Entitlement e3 = new Entitlement(sourcePool3, consumer, 1);
+        entitlementCurator.create(e);
+        entitlementCurator.create(e2);
+        entitlementCurator.create(e3);
+
+        Pool pool2 = TestUtil.createPool(owner, product);
+        pool2.setSourceEntitlement(e);
+        Pool pool3 = TestUtil.createPool(owner, product);
+        pool3.setSourceEntitlement(e);
+        Pool pool4 = TestUtil.createPool(owner, product);
+        pool4.setSourceEntitlement(e2);
+        Pool pool5 = TestUtil.createPool(owner, product);
+        pool5.setSourceEntitlement(e3);
+
+        poolCurator.create(pool2);
+        poolCurator.create(pool3);
+        poolCurator.create(pool4);
+        poolCurator.create(pool5);
+
+        List<Pool> pools = poolCurator.listBySourceEntitlements(Arrays.asList(e, e2));
+        assertEquals(3, pools.size());
+    }
+
+    @Test
+    public void retrieveFreeEntitlementsOfPools() {
+        Pool pool1 = TestUtil.createPool(owner, product);
+        poolCurator.create(pool1);
+        Entitlement ent11 = new Entitlement(pool1, consumer, 1);
+        entitlementCurator.create(ent11);
+        Entitlement ent12 = new Entitlement(pool1, consumer, 1);
+        entitlementCurator.create(ent12);
+        Entitlement ent13 = new Entitlement(pool1, consumer, 1);
+        entitlementCurator.create(ent13);
+
+        Pool pool2 = TestUtil.createPool(owner, product);
+        poolCurator.create(pool2);
+        Entitlement ent21 = new Entitlement(pool2, consumer, 1);
+        entitlementCurator.create(ent21);
+
+        Pool pool3 = TestUtil.createPool(owner, product);
+        poolCurator.create(pool3);
+        Entitlement ent31 = new Entitlement(pool3, consumer, 1);
+        entitlementCurator.create(ent31);
+
+        List<Entitlement> ents = poolCurator.retrieveFreeEntitlementsOfPools(Arrays.asList(pool1, pool2),
+                true);
+        assertEquals(4, ents.size());
+        assertThat(ents, hasItems(ent11, ent12, ent13, ent21));
+        assertThat(ents, not(hasItems(ent31)));
+    }
+
+    @Test
     public void testLoookupOverconsumedBySubscriptionId() {
 
         Pool pool = createPool(owner, product, 1L,
@@ -540,13 +702,52 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Entitlement e = new Entitlement(pool, consumer, 1);
         entitlementCurator.create(e);
 
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(
-            subid, e).size());
+        Map<String, Entitlement> subMap = new HashMap<String, Entitlement>();
+        subMap.put(subid, e);
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(subMap).size());
 
         e = new Entitlement(pool, consumer, 1);
         entitlementCurator.create(e);
-        assertEquals(1, poolCurator.lookupOversubscribedBySubscriptionId(
-            subid, e).size());
+        assertEquals(1, poolCurator.lookupOversubscribedBySubscriptionIds(subMap).size());
+    }
+
+    @Test
+    public void testBatchLoookupOverconsumedBySubscriptionId() {
+        Map<String, Entitlement> subIdMap = new HashMap<String, Entitlement>();
+        List<Pool> expectedPools = new ArrayList<Pool>();
+        for (Integer i = 0; i < 5; i++) {
+            Pool pool = createPool(owner, product, 1L, TestUtil.createDate(2050, 3, 2),
+                    TestUtil.createDate(2055, 3, 2));
+            poolCurator.create(pool);
+            expectedPools.add(pool);
+            String subid = pool.getSubscriptionId();
+
+            Entitlement e = new Entitlement(pool, consumer, 2);
+            entitlementCurator.create(e);
+            subIdMap.put(subid, e);
+        }
+
+        Pool unconsumedPool = createPool(owner, product, 1L, TestUtil.createDate(2050, 3, 2),
+                TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(unconsumedPool);
+
+        Pool notOverConsumedPool = createPool(owner, product, 1L, TestUtil.createDate(2050, 3, 2),
+                TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(notOverConsumedPool);
+        entitlementCurator.create(new Entitlement(notOverConsumedPool, consumer, 1));
+
+        Pool overConsumedPool = createPool(owner, product, 1L, TestUtil.createDate(2050, 3, 2),
+                TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(overConsumedPool);
+        entitlementCurator.create(new Entitlement(overConsumedPool, consumer, 2));
+
+        List<Pool> gotPools = poolCurator.lookupOversubscribedBySubscriptionIds(subIdMap);
+        assertEquals(5, gotPools.size());
+
+        assertThat(expectedPools, hasItems(gotPools.toArray(new Pool[0])));
+        assertThat(gotPools, not(hasItem(unconsumedPool)));
+        assertThat(gotPools, not(hasItem(notOverConsumedPool)));
+        assertThat(gotPools, not(hasItem(overConsumedPool)));
     }
 
     @Test
@@ -577,8 +778,9 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         derivedPool.setSourceSubscription(new SourceSubscription(subid, "derived"));
         poolCurator.create(derivedPool);
 
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(
-            subid, sourceEnt).size());
+        Map<String, Entitlement> subMap = new HashMap<String, Entitlement>();
+        subMap.put(subid, sourceEnt);
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(subMap).size());
 
         // Oversubscribe to the derived pool:
         Entitlement derivedEnt = new Entitlement(derivedPool, consumer,
@@ -586,12 +788,12 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(derivedEnt);
 
         // Passing the source entitlement should find the oversubscribed derived pool:
-        assertEquals(1, poolCurator.lookupOversubscribedBySubscriptionId(
-            subid, sourceEnt).size());
+        assertEquals(1, poolCurator.lookupOversubscribedBySubscriptionIds(subMap).size());
 
+        subMap.clear();
+        subMap.put(subid, derivedEnt);
         // Passing the derived entitlement should not see any oversubscribed pool:
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(
-            subid, derivedEnt).size());
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(subMap).size());
     }
 
     @Test
@@ -607,13 +809,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Entitlement e = new Entitlement(pool, consumer, 1);
         entitlementCurator.create(e);
 
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(
-            subid, e).size());
+        Map<String, Entitlement> subMap = new HashMap<String, Entitlement>();
+        subMap.put(subid, e);
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(subMap).size());
 
         e = new Entitlement(pool, consumer, 1);
         entitlementCurator.create(e);
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(
-            subid, e).size());
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(subMap).size());
     }
 
     @Test
@@ -906,8 +1108,35 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         poolCurator.create(derivedPool);
 
-        Pool pool = poolCurator.getSubPoolForStackId(consumer, expectedStackId);
+        Pool pool = poolCurator.getSubPoolForStackIds(consumer, Arrays.asList(expectedStackId)).get(0);
         assertNotNull(pool);
+    }
+
+    @Test
+    public void getSubPoolsForStackIds() {
+        Set stackIds = new HashSet<String>();
+        for (Integer i = 0; i < 5; i++) {
+            String stackId = "12345" + i.toString();
+            stackIds.add(stackId);
+            Product product = TestUtil.createProduct(owner);
+            product.setAttribute("virt_limit", "3");
+            product.setAttribute("stacking_id", stackId);
+            productCurator.create(product);
+
+            // Create derived pool referencing the entitlement just made:
+            Pool derivedPool = new Pool(owner, product, new HashSet<Product>(), 1L, TestUtil.createDate(
+                    2011, 3, 2), TestUtil.createDate(2055, 3, 2), "", "", "");
+            derivedPool.setSourceStack(new SourceStack(consumer, stackId));
+            derivedPool.setAttribute("requires_host", consumer.getUuid());
+
+            poolCurator.create(derivedPool);
+        }
+
+        List<Pool> pools = poolCurator.getSubPoolForStackIds(consumer, stackIds);
+        assertEquals(5, pools.size());
+        for (Pool pool : pools) {
+            assertTrue(pool.getSourceStackId().startsWith("12345"));
+        }
     }
 
     @Test
