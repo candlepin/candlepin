@@ -81,10 +81,7 @@ public class EventReceiver {
 
         sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         
-        Queue dest = new AMQQueue("localhost:event");
-        
-        
-//        Queue dest = sess.createQueue("event/localhost:e");
+        Queue dest = new AMQQueue("qpoolcreated");
         
         
         MessageConsumer consumer = sess.createConsumer(dest);

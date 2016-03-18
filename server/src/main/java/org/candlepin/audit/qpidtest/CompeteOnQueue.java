@@ -49,6 +49,9 @@ public class CompeteOnQueue {
         //Lets create 4 lightweight sessions. s1 and s2 will be used
         //for two producing threads. s3 and s4 will be used for 
         //two consuming threads
+        // Also note that for TRANSACTED session it makes no sense to
+        // set acknowledge mode, because in transacted session, transactions
+        //demarcate acknowledgemenet during receive.
         Session s1 = qcon.createSession(true, Session.AUTO_ACKNOWLEDGE);
         Session s2 = qcon.createSession(true, Session.AUTO_ACKNOWLEDGE);
         Session s3 = qcon.createSession(true, Session.AUTO_ACKNOWLEDGE);
