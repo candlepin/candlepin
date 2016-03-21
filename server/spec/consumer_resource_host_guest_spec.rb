@@ -262,7 +262,7 @@ describe 'Consumer Resource Host/Guest' do
     host_ents = host_client.list_entitlements()
     host_ents.size.should == 1
     host_ent = host_ents[0]
-    support_level = host_ent.pool.product['attributes'].select {|i| i['name'] == 'support_level' }[0]
+    support_level = host_ent.pool['productAttributes'].select {|i| i['name'] == 'support_level' }[0]
     support_level['value'].should == 'VIP'
     host_consumer = host_client.get_consumer()
     host_consumer['serviceLevel'].should == ''
@@ -279,7 +279,7 @@ describe 'Consumer Resource Host/Guest' do
     host_ents = host_client.list_entitlements()
     host_ents.size.should == 1
     host_ent = host_ents[0]
-    support_level = host_ent.pool.product['attributes'].select {|i| i['name'] == 'support_level' }[0]
+    support_level = host_ent.pool['productAttributes'].select {|i| i['name'] == 'support_level' }[0]
     support_level['value'].should == 'VIP'
 
     host_consumer = host_client.get_consumer()
@@ -296,7 +296,7 @@ describe 'Consumer Resource Host/Guest' do
 
     req_host = guest_ent.pool['attributes'].select {|i| i['name'] == 'requires_host' }[0]
     req_host.should be_nil
-    support_level = guest_ent.pool.product['attributes'].select {|i| i['name'] == 'support_level' }[0]
+    support_level = guest_ent.pool['productAttributes'].select {|i| i['name'] == 'support_level' }[0]
     support_level['value'].should == 'Standard'
 
     host_consumer = host_client.get_consumer()

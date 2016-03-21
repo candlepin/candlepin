@@ -15,6 +15,8 @@
 package org.candlepin.model;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.annotations.GenericGenerator;
@@ -59,6 +61,10 @@ public class PoolAttribute extends AbstractHibernateObject implements Attribute 
     @Size(max = 255)
     protected String value;
 
+    /*
+     * After Jackson version is upgraded:
+     * @JsonProperty(access = Access.WRITE_ONLY)
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     @NotNull
@@ -81,10 +87,12 @@ public class PoolAttribute extends AbstractHibernateObject implements Attribute 
     }
 
     @XmlTransient
+    @JsonIgnore
     public Pool getPool() {
         return pool;
     }
 
+    @JsonProperty
     public void setPool(Pool pool) {
         this.pool = pool;
     }
