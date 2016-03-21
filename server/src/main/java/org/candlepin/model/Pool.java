@@ -242,15 +242,21 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @NotNull
     private Date endDate;
 
+    /*
+     * After Jackson version is upgraded:
+     * @JsonProperty(access = Access.WRITE_ONLY)
+     */
     @ManyToOne
     @JoinColumn(name = "product_uuid", nullable = false)
     @NotNull
-    @JsonIgnore
     private Product product;
 
+    /*
+     * After Jackson version is upgraded:
+     * @JsonProperty(access = Access.WRITE_ONLY)
+     */
     @ManyToOne
     @JoinColumn(name = "derived_product_uuid")
-    @JsonIgnore
     private Product derivedProduct;
 
     @ManyToMany

@@ -61,10 +61,13 @@ public class PoolAttribute extends AbstractHibernateObject implements Attribute 
     @Size(max = 255)
     protected String value;
 
+    /*
+     * After Jackson version is upgraded:
+     * @JsonProperty(access = Access.WRITE_ONLY)
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     @NotNull
-    @JsonIgnore
     protected Pool pool;
 
     public PoolAttribute() {

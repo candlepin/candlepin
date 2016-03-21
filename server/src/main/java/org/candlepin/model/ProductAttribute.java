@@ -59,10 +59,13 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
     @Size(max = 255)
     protected String value;
 
+    /*
+     * After Jackson version is upgraded:
+     * @JsonProperty(access = Access.WRITE_ONLY)
+     */
     @ManyToOne
     @JoinColumn(name = "product_uuid", nullable = false)
     @NotNull
-    @JsonIgnore
     private Product product;
 
 
