@@ -140,7 +140,6 @@ public class EntitlementRulesTestFixture {
         Pool pool = TestUtil.createPool(owner, product);
         pool.addAttribute(new PoolAttribute("virt_limit", "10"));
         pool.setId("fakeid" + TestUtil.randomInt());
-        when(this.prodAdapter.getProductById(owner, productId)).thenReturn(product);
         return pool;
     }
 }
