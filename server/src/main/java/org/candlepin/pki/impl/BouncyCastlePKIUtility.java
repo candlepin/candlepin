@@ -14,6 +14,8 @@
  */
 package org.candlepin.pki.impl;
 
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
@@ -94,8 +96,9 @@ public class BouncyCastlePKIUtility extends PKIUtility {
 
     @Inject
     public BouncyCastlePKIUtility(PKIReader reader,
-        SubjectKeyIdentifierWriter subjectKeyWriter) {
-        super(reader, subjectKeyWriter);
+        SubjectKeyIdentifierWriter subjectKeyWriter,
+        Configuration config) {
+        super(reader, subjectKeyWriter, config);
     }
 
     @Override
@@ -179,7 +182,8 @@ public class BouncyCastlePKIUtility extends PKIUtility {
             X509V2CRLGenerator generator = new X509V2CRLGenerator();
             generator.setIssuerDN(caCert.getIssuerX500Principal());
             generator.setThisUpdate(new Date());
-            generator.setNextUpdate(Util.tomorrow());
+            generator.setNextUpdate(
+                Util.addDaysToDt(config.getInt(ConfigProperties.CRL_NEXT_UPDATE_DELTA)));
             generator.setSignatureAlgorithm(SIGNATURE_ALGO);
             // add all the CRL entries.
             for (X509CRLEntryWrapper entry : entries) {
