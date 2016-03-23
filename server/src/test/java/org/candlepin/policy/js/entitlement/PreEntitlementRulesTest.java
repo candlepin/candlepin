@@ -187,8 +187,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         pool2.setQuantity(new Long(100));
 
         Map<String, ValidationResult> results = enforcer.preEntitlement(consumer,
-                createPoolQuantities(100, pool, pool2),
-                CallerType.UNKNOWN);
+            createPoolQuantities(100, pool, pool2), CallerType.UNKNOWN);
 
         assertEquals(2, results.size());
         for (ValidationResult result : results.values()) {
@@ -409,8 +408,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Pool pool2 = setupArchTest("sockets", "2", "cpu.cpu_socket(s)", "2");
 
         Map<String, ValidationResult> results = enforcer.preEntitlement(consumer,
-                createPoolQuantities(1, pool, pool2),
-                CallerType.UNKNOWN);
+            createPoolQuantities(1, pool, pool2), CallerType.UNKNOWN);
         assertEquals(2, results.size());
         for (ValidationResult result : results.values()) {
             assertFalse(result.hasErrors());
@@ -669,7 +667,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     public void unmappedGuestGoodDate() {
         Pool pool = setupUnmappedGuestPool();
         Consumer newborn = new Consumer("test newborn consumer", "test user", owner,
-                new ConsumerType(ConsumerTypeEnum.SYSTEM));
+            new ConsumerType(ConsumerTypeEnum.SYSTEM));
         newborn.setFact("virt.is_guest", "true");
         newborn.setCreated(new Date());
         ValidationResult result = enforcer.preEntitlement(newborn, pool, 1);
@@ -681,7 +679,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     public void unmappedGuestBadDate() {
         Pool pool = setupUnmappedGuestPool();
         Consumer tooOld = new Consumer("test newborn consumer", "test user", owner,
-                new ConsumerType(ConsumerTypeEnum.SYSTEM));
+            new ConsumerType(ConsumerTypeEnum.SYSTEM));
         tooOld.setFact("virt.is_guest", "true");
         Date twentyFiveHoursAgo = new Date(new Date().getTime() - 25L * 60L * 60L * 1000L);
         tooOld.setCreated(twentyFiveHoursAgo);
@@ -699,7 +697,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         pool.setStartDate(fourHoursFromNow);
 
         Consumer consumer = new Consumer("test newborn consumer", "test user", owner,
-                new ConsumerType(ConsumerTypeEnum.SYSTEM));
+            new ConsumerType(ConsumerTypeEnum.SYSTEM));
         consumer.setFact("virt.is_guest", "true");
         consumer.setCreated(new Date());
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1, CallerType.BIND);
@@ -712,9 +710,9 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void mappedGuest() {
         Consumer parent = new Consumer("test parent consumer", "test user", owner,
-                new ConsumerType(ConsumerTypeEnum.SYSTEM));
+            new ConsumerType(ConsumerTypeEnum.SYSTEM));
         Consumer newborn = new Consumer("test newborn consumer", "test user", owner,
-                new ConsumerType(ConsumerTypeEnum.SYSTEM));
+            new ConsumerType(ConsumerTypeEnum.SYSTEM));
         newborn.setCreated(new java.util.Date());
         Pool pool = setupUnmappedGuestPool();
 

@@ -122,8 +122,8 @@ public class PoolTest extends DatabaseTestFixture {
     @Test
     public void testMultiplePoolsForOwnerProductAllowed() {
         Pool duplicatePool = createPool(owner,
-                prod1, -1L, TestUtil.createDate(2009, 11, 30),
-                TestUtil.createDate(2050, 11, 30));
+            prod1, -1L, TestUtil.createDate(2009, 11, 30),
+            TestUtil.createDate(2050, 11, 30));
         // Just need to see no exception is thrown.
         poolCurator.create(duplicatePool);
     }
@@ -131,8 +131,8 @@ public class PoolTest extends DatabaseTestFixture {
     @Test
     public void testIsOverflowing() {
         Pool duplicatePool = createPool(owner,
-                prod1, -1L, TestUtil.createDate(2009, 11, 30),
-                TestUtil.createDate(2050, 11, 30));
+            prod1, -1L, TestUtil.createDate(2009, 11, 30),
+            TestUtil.createDate(2050, 11, 30));
         assertFalse(duplicatePool.isOverflowing());
     }
 
@@ -141,8 +141,8 @@ public class PoolTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct(owner);
         productCurator.create(newProduct);
         Pool unlimitedPool = createPool(owner, newProduct,
-                -1L, TestUtil.createDate(2009, 11, 30),
-                TestUtil.createDate(2050, 11, 30));
+            -1L, TestUtil.createDate(2009, 11, 30),
+            TestUtil.createDate(2050, 11, 30));
         poolCurator.create(unlimitedPool);
         assertTrue(unlimitedPool.entitlementsAvailable(1));
     }
@@ -154,8 +154,8 @@ public class PoolTest extends DatabaseTestFixture {
 
         productCurator.create(newProduct);
         Pool consumerPool = createPool(owner, newProduct,
-                numAvailEntitlements, TestUtil.createDate(2009, 11, 30),
-                TestUtil.createDate(2050, 11, 30));
+            numAvailEntitlements, TestUtil.createDate(2009, 11, 30),
+            TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
 
         Map<String, Integer> pQs = new HashMap<String, Integer>();

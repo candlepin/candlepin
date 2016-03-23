@@ -155,8 +155,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         User u = mock(User.class);
         UserCurator curator = mock(UserCurator.class);
         RoleCurator roleCurator = mock(RoleCurator.class);
-        UserServiceAdapter dusa = new DefaultUserServiceAdapter(curator,
-                roleCurator);
+        UserServiceAdapter dusa = new DefaultUserServiceAdapter(curator, roleCurator);
         when(curator.findByLogin(anyString())).thenReturn(u);
 
         User foo = dusa.findByLogin("foo");

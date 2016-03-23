@@ -193,6 +193,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  A Page instance containing an iterator over the compliance snapshots for the target date and
      *  the paging information for the query.
      */
+    @SuppressWarnings("checkstyle:indentation")
     public Page<Iterator<Compliance>> getSnapshotIterator(Date targetDate, List<String> consumerUuids,
         List<String> ownerFilters, List<String> statusFilters, List<String> productNameFilters,
         List<String> subscriptionSkuFilters, List<String> subscriptionNameFilters,
@@ -250,7 +251,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
             if (attributeFilters != null && attributeFilters.containsKey("management_enabled")) {
                 boolean managementEnabledFilter =
-                        PropertyConverter.toBoolean(attributeFilters.get("management_enabled"));
+                    PropertyConverter.toBoolean(attributeFilters.get("management_enabled"));
                 query.add(Restrictions.eq("stat.managementEnabled", managementEnabledFilter));
             }
 
@@ -371,6 +372,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  A Page instance containing an iterator over the snapshots for the specified consumer, and
      *  the paging information for the query.
      */
+    @SuppressWarnings("checkstyle:indentation")
     public Page<Iterator<Compliance>> getSnapshotIteratorForConsumer(String consumerUUID, Date startDate,
         Date endDate, PageRequest pageRequest) {
 
@@ -398,8 +400,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
             subquery.add(Restrictions.lt("comp2.date", startDate));
 
             subquery.setProjection(
-                Projections.projectionList()
-                    .add(Projections.max("comp2.date"))
+                Projections.projectionList().add(Projections.max("comp2.date"))
             );
 
             query.add(
@@ -853,7 +854,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      * @return
      *  A Query object to be used for retrieving compliance status counts.
      */
-    @SuppressWarnings("checkstyle:methodlength")
+    @SuppressWarnings({"checkstyle:methodlength", "checkstyle:indentation"})
     private Query buildComplianceStatusCountQuery(Session session, Date startDate, Date endDate,
         String ownerKey, List<String> consumerUuids, String sku, String subscriptionName,
         String productName, Map<String, String> attributes) {

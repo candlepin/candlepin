@@ -82,7 +82,7 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
 
     @ElementCollection
     @CollectionTable(name = "cp_consumer_guests_attributes",
-                     joinColumns = @JoinColumn(name = "cp_consumer_guest_id"))
+        joinColumns = @JoinColumn(name = "cp_consumer_guest_id"))
     @MapKeyColumn(name = "mapkey")
     @Column(name = "element")
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
@@ -103,8 +103,7 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
         this.consumer = consumer;
     }
 
-    public GuestId(String guestId, Consumer consumer,
-            Map<String, String> attributes) {
+    public GuestId(String guestId, Consumer consumer, Map<String, String> attributes) {
         this(guestId, consumer);
         this.setAttributes(attributes);
     }
@@ -152,7 +151,7 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
         }
         GuestId that = (GuestId) other;
         if (this.getGuestId().equalsIgnoreCase(that.getGuestId()) &&
-                this.getAttributes().equals(that.getAttributes())) {
+            this.getAttributes().equals(that.getAttributes())) {
             return true;
         }
         return false;

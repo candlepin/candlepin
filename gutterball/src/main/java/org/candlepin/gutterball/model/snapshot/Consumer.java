@@ -132,8 +132,7 @@ public class Consumer {
 
     @ElementCollection(fetch = FetchType.LAZY)
     @BatchSize(size = 100)
-    @CollectionTable(name = "gb_consumer_facts_snap",
-                     joinColumns = @JoinColumn(name = "consumer_snap_id"))
+    @CollectionTable(name = "gb_consumer_facts_snap", joinColumns = @JoinColumn(name = "consumer_snap_id"))
     @MapKeyColumn(name = "mapkey")
     @Column(name = "element")
     @Cascade({org.hibernate.annotations.CascadeType.ALL})

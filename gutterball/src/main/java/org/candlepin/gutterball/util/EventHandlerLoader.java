@@ -73,7 +73,7 @@ public class EventHandlerLoader {
         else if (resource.endsWith(CLASS_SUFFIX)) {
             try {
                 Class<?> tmpClass = Class.forName(
-                        resource.substring(0, resource.length() - CLASS_SUFFIX.length()));
+                    resource.substring(0, resource.length() - CLASS_SUFFIX.length()));
                 if (!tmpClass.isInterface() && EventHandler.class.isAssignableFrom(tmpClass)) {
                     classes.add((Class<? extends EventHandler>) tmpClass);
                 }

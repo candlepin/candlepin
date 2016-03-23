@@ -75,7 +75,7 @@ public class OwnerProductResource {
 
     @Inject
     public OwnerProductResource(ProductCurator productCurator, ContentCurator contentCurator,
-            OwnerCurator ownerCurator, ProductCertificateCurator productCertCurator, I18n i18n) {
+        OwnerCurator ownerCurator, ProductCertificateCurator productCertCurator, I18n i18n) {
 
         this.productCurator = productCurator;
         this.contentCurator = contentCurator;

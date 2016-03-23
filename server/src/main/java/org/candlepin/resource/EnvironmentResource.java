@@ -221,9 +221,9 @@ public class EnvironmentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{env_id}/content")
     public JobDetail promoteContent(
-            @PathParam("env_id") @Verify(Environment.class) String envId,
-            List<org.candlepin.model.dto.EnvironmentContent> contentToPromote,
-            @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
+        @PathParam("env_id") @Verify(Environment.class) String envId,
+        List<org.candlepin.model.dto.EnvironmentContent> contentToPromote,
+        @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
         Environment env = lookupEnvironment(envId);
 

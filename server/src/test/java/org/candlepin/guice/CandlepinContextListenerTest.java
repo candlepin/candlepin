@@ -71,7 +71,7 @@ public class CandlepinContextListenerTest {
         config = mock(Configuration.class);
 
         when(config.subset(eq("org.quartz"))).thenReturn(
-                new MapConfiguration(ConfigProperties.DEFAULT_PROPERTIES));
+            new MapConfiguration(ConfigProperties.DEFAULT_PROPERTIES));
         when(config.strippedSubset(eq(ConfigurationPrefixes.LOGGING_CONFIG_PREFIX)))
             .thenReturn(new MapConfiguration());
         hqlistener = mock(HornetqContextListener.class);
@@ -116,7 +116,7 @@ public class CandlepinContextListenerTest {
         verify(hqlistener).contextInitialized(any(Injector.class));
         verify(pinlistener).contextInitialized();
         verify(ctx).setAttribute(
-                eq(CandlepinContextListener.CONFIGURATION_NAME), eq(config));
+            eq(CandlepinContextListener.CONFIGURATION_NAME), eq(config));
         verify(configRead).verify(eq(ctx));
     }
 

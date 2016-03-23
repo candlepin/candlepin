@@ -73,8 +73,7 @@ public abstract class FilterBuilder {
     }
 
     public void applyTo(Criteria parentCriteria) {
-        if (!attributeFilters.isEmpty() || !idFilters.isEmpty() ||
-                !otherCriteria.isEmpty()) {
+        if (!attributeFilters.isEmpty() || !idFilters.isEmpty() || !otherCriteria.isEmpty()) {
             parentCriteria.add(getCriteria());
         }
     }

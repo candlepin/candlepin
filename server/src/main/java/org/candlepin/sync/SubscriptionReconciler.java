@@ -72,8 +72,7 @@ public class SubscriptionReconciler {
      *  Remaining incoming subscriptions that did not match any pools per the above are
      *  treated as new subscriptions.
      */
-    public void reconcile(Owner owner, List<Subscription> subsToImport,
-            PoolCurator poolCurator) {
+    public void reconcile(Owner owner, List<Subscription> subsToImport, PoolCurator poolCurator) {
 
         Map<String, Map<String, Pool>> existingPoolsByUpstreamPool =
             mapPoolsByUpstreamPool(owner, poolCurator);
@@ -123,8 +122,7 @@ public class SubscriptionReconciler {
             }
             for (Pool localSub : map.values()) {
                 // TODO quantity
-                Long quantity = localSub.getQuantity() /
-                        localSub.getProduct().getMultiplier();
+                Long quantity = localSub.getQuantity() / localSub.getProduct().getMultiplier();
                 if (quantity.equals(subscription.getQuantity())) {
                     local = localSub;
                     break;
@@ -180,8 +178,7 @@ public class SubscriptionReconciler {
     /*
      * Maps upstream pool ID to a map of upstream entitlement ID to Subscription.
      */
-    private Map<String, Map<String, Pool>> mapPoolsByUpstreamPool(Owner owner,
-            PoolCurator poolCurator) {
+    private Map<String, Map<String, Pool>> mapPoolsByUpstreamPool(Owner owner, PoolCurator poolCurator) {
         Map<String, Map<String, Pool>> existingSubsByUpstreamPool =
             new HashMap<String, Map<String, Pool>>();
         int idx = 0;

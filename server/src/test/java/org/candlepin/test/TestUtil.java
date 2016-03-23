@@ -387,8 +387,8 @@ public class TestUtil {
             pool.getOrderNumber()
         );
 
-        p.setSourceSubscription(new SourceSubscription(pool.getSubscriptionId(),
-                pool.getSubscriptionSubKey()));
+        p.setSourceSubscription(
+            new SourceSubscription(pool.getSubscriptionId(), pool.getSubscriptionSubKey()));
 
         // Copy sub-product data if there is any:
         p.setDerivedProduct(pool.getDerivedProduct());

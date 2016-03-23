@@ -54,16 +54,14 @@ public class GutterballContextListenerTest {
 
                 return new MapConfiguration(
                     new HashMap<String, String>() {
-
-                        private static final long serialVersionUID = 1L;
-                        {
+                        private static final long serialVersionUID = 1L; {
                             put(ConfigProperties.AMQP_KEYSTORE, "value");
                             put(ConfigProperties.AMQP_CONNECT_STRING, "value");
                             put(ConfigProperties.AMQP_CONNECT_STRING,
-                                    "amqp://guest:guest@localhost/test");
+                                "amqp://guest:guest@localhost/test");
                             put(ConfigProperties.AMQP_KEYSTORE_PASSWORD, "password");
                             put(ConfigProperties.AMQP_TRUSTSTORE,
-                                    "/etc/gutterball/certs/amqp/gutterball.truststore");
+                                "/etc/gutterball/certs/amqp/gutterball.truststore");
                             put(ConfigProperties.AMQP_TRUSTSTORE_PASSWORD, "password");
                         }
                     });

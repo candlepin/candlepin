@@ -127,10 +127,9 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
     private Criterion getRevokedCriteria() {
         Conjunction crit = Restrictions.conjunction();
         for (Class clazz : CERTCLASSES) {
-            DetachedCriteria certSerialQuery =
-                DetachedCriteria.forClass(clazz)
-                    .createCriteria("serial")
-                    .setProjection(Projections.property("id"));
+            DetachedCriteria certSerialQuery = DetachedCriteria.forClass(clazz)
+                .createCriteria("serial")
+                .setProjection(Projections.property("id"));
             crit.add(Subqueries.propertyNotIn("id", certSerialQuery));
         }
         return crit;

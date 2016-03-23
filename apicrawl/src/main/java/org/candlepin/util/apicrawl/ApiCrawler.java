@@ -58,8 +58,8 @@ public class ApiCrawler {
 
     // Let's just set it to pretty_print the output instead of having
     // to construct a configuration only to get a simple value.
-    private ObjectMapper mapper = new JsonProvider(true)
-            .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
+    private ObjectMapper mapper =
+        new JsonProvider(true).locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
     private List<Class<?>> httpClasses;
     private NonRecursiveModule dontRecurse;
 

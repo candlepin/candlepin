@@ -84,14 +84,14 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
 
     @Override
     public Map<String, ValidationResult> preEntitlement(Consumer consumer,
-            Collection<PoolQuantity> entitlementPoolQuantities,
-            CallerType caller) {
+        Collection<PoolQuantity> entitlementPoolQuantities,
+        CallerType caller) {
         return preEntitlement(consumer, getHost(consumer), entitlementPoolQuantities, caller);
     }
 
     @Override
     public Map<String, ValidationResult> preEntitlement(Consumer consumer, Consumer host,
-            Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
+        Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
         JsonJsContext args = new JsonJsContext(objectMapper);
         args.put("consumer", consumer);
         args.put("hostConsumer", host);
@@ -104,7 +104,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         String json = jsRules.runJsFunction(String.class, "validate_pools_batch", args);
         Map<String, ValidationResult> resultMap;
         TypeReference<Map<String, ValidationResult>> typeref =
-                new TypeReference<Map<String, ValidationResult>>() {};
+            new TypeReference<Map<String, ValidationResult>>() {};
         try {
             resultMap = objectMapper.toObject(json, typeref);
             for (PoolQuantity poolQuantity : entitlementPoolQuantities) {
@@ -113,7 +113,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
                     log.info("no result returned for pool: {}", poolQuantity.getPool());
                 }
                 finishValidation(resultMap.get(poolQuantity.getPool().getId()), poolQuantity.getPool(),
-                        poolQuantity.getQuantity());
+                    poolQuantity.getQuantity());
             }
         }
         catch (Exception e) {
@@ -167,17 +167,16 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
 
     private Consumer getHost(Consumer consumer) {
         Consumer host = consumer.hasFact("virt.uuid") ? consumerCurator.getHost(
-                consumer.getFact("virt.uuid"), consumer.getOwner()) : null;
+            consumer.getFact("virt.uuid"), consumer.getOwner()) : null;
         return host;
     }
 
     private void finishValidation(ValidationResult result, Pool pool, Integer quantity) {
         validatePoolQuantity(result, pool, quantity);
         if (pool.isExpired(dateSource)) {
-            result.addError(
-                new ValidationError(i18n.tr("Subscriptions for {0} expired on: {1}",
-                    pool.getProductId(),
-                    pool.getEndDate())));
+            result.addError(new ValidationError(i18n.tr("Subscriptions for {0} expired on: {1}",
+                pool.getProductId(),
+                pool.getEndDate())));
         }
     }
 }

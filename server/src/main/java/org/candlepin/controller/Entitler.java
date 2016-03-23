@@ -100,7 +100,7 @@ public class Entitler {
     }
 
     public List<Entitlement> bindByPoolQuantities(String consumeruuid,
-            Map<String, Integer> poolIdAndQuantities) throws EntitlementRefusedException {
+        Map<String, Integer> poolIdAndQuantities) throws EntitlementRefusedException {
         Consumer c = consumerCurator.findByUuid(consumeruuid);
         return bindByPoolQuantities(c, poolIdAndQuantities);
     }
@@ -121,7 +121,7 @@ public class Entitler {
     }
 
     public List<Entitlement> bindByPoolQuantities(Consumer consumer,
-            Map<String, Integer> poolIdAndQuantities) throws EntitlementRefusedException {
+        Map<String, Integer> poolIdAndQuantities) throws EntitlementRefusedException {
         // Attempt to create entitlements:
         try {
             List<Entitlement> entitlementList = poolManager.entitleByPools(consumer, poolIdAndQuantities);
@@ -150,7 +150,7 @@ public class Entitler {
         String consumeruuid, Date entitleDate, Collection<String> fromPools) {
         Consumer c = consumerCurator.findByUuid(consumeruuid);
         AutobindData data = AutobindData.create(c).on(entitleDate)
-                .forProducts(productIds).withPools(fromPools);
+            .forProducts(productIds).withPools(fromPools);
         return bindByProducts(data);
     }
 
@@ -190,9 +190,8 @@ public class Entitler {
                     host.getUuid(), consumer.getUuid());
 
                 try {
-                    List<Entitlement> hostEntitlements =
-                        poolManager.entitleByProductsForHost(consumer, host,
-                                data.getOnDate(), data.getPossiblePools());
+                    List<Entitlement> hostEntitlements = poolManager.entitleByProductsForHost(
+                        consumer, host, data.getOnDate(), data.getPossiblePools());
                     log.debug("Granted host {} entitlements", hostEntitlements.size());
                     sendEvents(hostEntitlements);
                 }
@@ -212,7 +211,7 @@ public class Entitler {
         }
         if (consumer.isDev()) {
             if (config.getBoolean(ConfigProperties.STANDALONE) ||
-                    !poolCurator.hasActiveEntitlementPools(consumer.getOwner(), null)) {
+                !poolCurator.hasActiveEntitlementPools(consumer.getOwner(), null)) {
                 throw new ForbiddenException(i18n.tr(
                         "Development units may only be used on hosted servers" +
                         " and with orgs that have active subscriptions."));
@@ -281,7 +280,7 @@ public class Entitler {
         Date startDate = consumer.getCreated();
         Date endDate = getEndDate(skuProduct, startDate);
         Pool p = new Pool(consumer.getOwner(), skuProduct, devProducts.getProvided(), 1L, startDate,
-                endDate, "", "", "");
+            endDate, "", "", "");
         log.info("Created development pool with SKU {}", skuProduct.getId());
         p.setAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
         p.setAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
@@ -370,7 +369,7 @@ public class Entitler {
         for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
             if (!devProducts.containsProduct(ip.getProductId())) {
                 log.warn(i18n.tr("Installed product not available to this " +
-                        "development unit: ''{0}''", ip.getProductId()));
+                    "development unit: ''{0}''", ip.getProductId()));
             }
         }
     }
@@ -391,7 +390,7 @@ public class Entitler {
             Owner owner = consumer.getOwner();
             if (consumer.isDev()) {
                 if (config.getBoolean(ConfigProperties.STANDALONE) ||
-                        !poolCurator.hasActiveEntitlementPools(consumer.getOwner(), null)) {
+                    !poolCurator.hasActiveEntitlementPools(consumer.getOwner(), null)) {
                     throw new ForbiddenException(i18n.tr(
                             "Development units may only be used on hosted servers" +
                             " and with orgs that have active subscriptions."));

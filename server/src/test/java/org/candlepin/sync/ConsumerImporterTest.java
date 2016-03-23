@@ -67,13 +67,12 @@ public class ConsumerImporterTest {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         importer = new ConsumerImporter(curator, idCertCurator, i18n, serialCurator);
         mapper = SyncUtils.getObjectMapper(new MapConfiguration(
-                new HashMap<String, String>() {
-
-                    {
-                        put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
-                                "false");
-                    }
-                }));
+            new HashMap<String, String>() {
+                {
+                    put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+                }
+            }
+        ));
     }
 
     @Test
@@ -93,9 +92,8 @@ public class ConsumerImporterTest {
         configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
         mapper = SyncUtils.getObjectMapper(new MapConfiguration(configProps));
 
-        ConsumerDto consumer =
-            importer.createObject(mapper, new StringReader(
-                "{\"uuid\":\"test-uuid\", \"unknown\":\"notreal\"}"));
+        ConsumerDto consumer = importer.createObject(
+            mapper, new StringReader("{\"uuid\":\"test-uuid\", \"unknown\":\"notreal\"}"));
         assertEquals("test-uuid", consumer.getUuid());
     }
 

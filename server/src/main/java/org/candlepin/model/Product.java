@@ -98,8 +98,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @JoinTable(
         name = "cp2_owner_products",
         joinColumns = {@JoinColumn(name = "product_uuid", insertable = true, updatable = true)},
-        inverseJoinColumns = {@JoinColumn(name = "owner_id")}
-    )
+        inverseJoinColumns = {@JoinColumn(name = "owner_id")})
     @LazyCollection(LazyCollectionOption.FALSE)
     @XmlTransient
     private Set<Owner> owners;
@@ -117,8 +116,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     private Set<ProductAttribute> attributes;
 
     @ElementCollection
-    @CollectionTable(name = "cp2_product_content",
-                     joinColumns = @JoinColumn(name = "product_uuid"))
+    @CollectionTable(name = "cp2_product_content", joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
     private List<ProductContent> productContent;
@@ -130,7 +128,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      */
     @ElementCollection
     @CollectionTable(name = "cp2_product_dependent_products",
-                     joinColumns = @JoinColumn(name = "product_uuid"))
+        joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
     @LazyCollection(LazyCollectionOption.FALSE)
     private Set<String> dependentProductIds; // Should these be product references?
@@ -887,9 +885,9 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     public List<String> getSkuDisabledContentIds() {
         List<String> skuDisabled = new ArrayList<String>();
         if (this.hasAttribute("content_override_disabled") &&
-               this.getAttributeValue("content_override_disabled").length() > 0) {
+            this.getAttributeValue("content_override_disabled").length() > 0) {
             StringTokenizer stDisable = new StringTokenizer(
-                    this.getAttributeValue("content_override_disabled"), ",");
+                this.getAttributeValue("content_override_disabled"), ",");
             while (stDisable.hasMoreElements()) {
                 skuDisabled.add((String) stDisable.nextElement());
             }
@@ -901,9 +899,9 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     public List<String> getSkuEnabledContentIds() {
         List<String> skuEnabled = new ArrayList<String>();
         if (this.hasAttribute("content_override_enabled") &&
-               this.getAttributeValue("content_override_enabled").length() > 0) {
+            this.getAttributeValue("content_override_enabled").length() > 0) {
             StringTokenizer stActive = new StringTokenizer(
-                    this.getAttributeValue("content_override_enabled"), ",");
+                this.getAttributeValue("content_override_enabled"), ",");
             while (stActive.hasMoreElements()) {
                 skuEnabled.add((String) stActive.nextElement());
             }

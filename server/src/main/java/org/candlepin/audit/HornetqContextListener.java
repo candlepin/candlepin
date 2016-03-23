@@ -106,7 +106,7 @@ public class HornetqContextListener {
             AddressSettings pagingConfig = new AddressSettings();
 
             String addressPolicyString =
-                    candlepinConfig.getString(ConfigProperties.HORNETQ_ADDRESS_FULL_POLICY);
+                candlepinConfig.getString(ConfigProperties.HORNETQ_ADDRESS_FULL_POLICY);
             long maxQueueSizeInMb = candlepinConfig.getInt(ConfigProperties.HORNETQ_MAX_QUEUE_SIZE);
             long maxPageSizeInMb = candlepinConfig.getInt(ConfigProperties.HORNETQ_MAX_PAGE_SIZE);
 
@@ -198,10 +198,10 @@ public class HornetqContextListener {
      * @return List of class names that will be configured as HornetQ listeners.
      */
     public static List<String> getHornetqListeners(
-            org.candlepin.common.config.Configuration candlepinConfig) {
+        org.candlepin.common.config.Configuration candlepinConfig) {
         //AMQP integration here - If it is disabled, don't add it to listeners.
         List<String> listeners = Lists.newArrayList(
-                candlepinConfig.getList(ConfigProperties.AUDIT_LISTENERS));
+            candlepinConfig.getList(ConfigProperties.AUDIT_LISTENERS));
 
         if (candlepinConfig
             .getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {

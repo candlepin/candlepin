@@ -50,7 +50,7 @@ public class ConsumerTrendReport extends Report<ReportResult> {
      */
     @Inject
     public ConsumerTrendReport(Provider<I18n> i18nProvider, ComplianceSnapshotCurator snapshotCurator,
-            StatusReasonMessageGenerator messageGenerator) {
+        StatusReasonMessageGenerator messageGenerator) {
         super(i18nProvider, "consumer_trend",
                 i18nProvider.get().tr("Lists the status of each consumer over a date range"));
         this.snapshotCurator = snapshotCurator;
@@ -58,49 +58,49 @@ public class ConsumerTrendReport extends Report<ReportResult> {
     }
 
     @Override
+    @SuppressWarnings("checkstyle:indentation")
     protected void initParameters() {
         ReportParameterBuilder builder = new ReportParameterBuilder(i18n);
 
         addParameter(
             builder.init("consumer_uuid", i18n.tr("Filters the results by the specified consumer UUID."))
-                .mandatory()
-                .getParameter()
+            .mandatory()
+            .getParameter()
         );
 
         addParameter(
             builder.init("hours", i18n.tr(
-                        "The number of hours to filter on (used independent of date range)."))
-                   .mustBeInteger()
-                   .mustNotHave("start_date", "end_date")
-                   .getParameter());
+                "The number of hours to filter on (used independent of date range)."))
+           .mustBeInteger()
+           .mustNotHave("start_date", "end_date")
+           .getParameter());
 
         addParameter(
             builder.init("start_date", i18n.tr("The start date to filter on (used with {0}).", "end_date"))
-                .mustNotHave("hours")
-                .mustHave("end_date")
-                .mustBeDate(REPORT_DATETIME_FORMATS)
-                .getParameter());
+            .mustNotHave("hours")
+            .mustHave("end_date")
+            .mustBeDate(REPORT_DATETIME_FORMATS)
+            .getParameter());
 
         addParameter(
             builder.init("end_date", i18n.tr("The end date to filter on (used with {0})", "start_date"))
-                .mustNotHave("hours")
-                .mustHave("start_date")
-                .mustBeDate(REPORT_DATETIME_FORMATS)
-                .getParameter());
+            .mustNotHave("hours")
+            .mustHave("start_date")
+            .mustBeDate(REPORT_DATETIME_FORMATS)
+            .getParameter());
 
         addParameter(
             builder.init(CUSTOM_RESULTS_PARAM, i18n.tr("Enables/disables custom report result " +
-                        "functionality via attribute filtering (Boolean).")).getParameter());
+                "functionality via attribute filtering (Boolean)."))
+            .getParameter());
 
-        addParameter(builder.init("include",
-                i18n.tr("Includes the specified attribute in the result JSON"))
+        addParameter(builder.init("include", i18n.tr("Includes the specified attribute in the result JSON"))
             .multiValued()
             .mustHave(CUSTOM_RESULTS_PARAM)
             .mustNotHave("exclude")
             .getParameter());
 
-        addParameter(builder.init("exclude",
-                i18n.tr("Excludes the specified attribute in the result JSON"))
+        addParameter(builder.init("exclude", i18n.tr("Excludes the specified attribute in the result JSON"))
             .multiValued()
             .mustHave(CUSTOM_RESULTS_PARAM)
             .mustNotHave("include")
@@ -134,10 +134,7 @@ public class ConsumerTrendReport extends Report<ReportResult> {
         boolean useCustom = PropertyConverter.toBoolean(custom);
 
         Page<Iterator<Compliance>> page = this.snapshotCurator.getSnapshotIteratorForConsumer(
-                consumer,
-                startDate,
-                endDate,
-                pageRequest
+            consumer, startDate, endDate, pageRequest
         );
 
         ResteasyProviderFactory.pushContext(Page.class, page);

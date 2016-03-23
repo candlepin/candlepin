@@ -88,8 +88,8 @@ public class SubscriptionReconcilerTest {
         List<Pool> pools = new LinkedList<Pool>();
         for (Subscription sub : subs) {
             Pool p = new Pool(sub.getOwner(), sub.getProduct(), sub.getProvidedProducts(),
-                    sub.getQuantity(), sub.getStartDate(), sub.getEndDate(),
-                    sub.getContractNumber(), sub.getAccountNumber(), sub.getOrderNumber());
+                sub.getQuantity(), sub.getStartDate(), sub.getEndDate(),
+                sub.getContractNumber(), sub.getAccountNumber(), sub.getOrderNumber());
             p.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
             p.setUpstreamPoolId(sub.getUpstreamPoolId());
             p.setUpstreamConsumerId(sub.getUpstreamConsumerId());
@@ -110,8 +110,7 @@ public class SubscriptionReconcilerTest {
 
     @Test
     public void oneExistsUnchanged() {
-        Subscription testSub1 = createSubscription(owner, "test-prod-1",
-                "up1", "ue1", "uc1", 25);
+        Subscription testSub1 = createSubscription(owner, "test-prod-1", "up1", "ue1", "uc1", 25);
         createPoolsFor(testSub1);
 
         reconciler.reconcile(owner, Arrays.asList(testSub1), poolCurator);
@@ -293,11 +292,11 @@ public class SubscriptionReconcilerTest {
         Subscription testSub34 = createSubscription(owner, "test-prod-1", "up3", "ue34", "uc1", 5);
 
         createPoolsFor(testSub1, testSub2, testSub3, testSub4, testSub5,
-                testSub20, testSub21, testSub22, testSub24);
+            testSub20, testSub21, testSub22, testSub24);
 
         reconciler.reconcile(owner, Arrays.asList(testSub1, testSub2, testSub3, testSub4,
-                testSub5, testSub30, testSub31, testSub32, testSub33, testSub34),
-                poolCurator);
+            testSub5, testSub30, testSub31, testSub32, testSub33, testSub34),
+            poolCurator);
 
         // 20-24 have no matchup with 30-34 due to different upstream pool ID:
         assertUpstream(testSub1, testSub1.getId());
@@ -313,7 +312,8 @@ public class SubscriptionReconcilerTest {
     }
 
     private Subscription createSubscription(Owner daOwner, String productId,
-            String poolId, String entId, String conId, long quantity) {
+        String poolId, String entId, String conId, long quantity) {
+
         Subscription sub = new Subscription();
         sub.setProduct(new Product(productId, productId, owner));
         sub.setUpstreamPoolId(poolId);

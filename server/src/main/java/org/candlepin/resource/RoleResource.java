@@ -166,7 +166,7 @@ public class RoleResource {
     @Path("{role_id}/permissions/{perm_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Role removeRolePermission(@PathParam("role_id") String roleId,
-                                      @PathParam("perm_id") String permissionId) {
+        @PathParam("perm_id") String permissionId) {
 
         Role existingRole = lookupRole(roleId);
         Set<PermissionBlueprint> picks = new HashSet<PermissionBlueprint>();

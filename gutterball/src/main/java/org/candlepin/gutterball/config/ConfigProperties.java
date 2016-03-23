@@ -60,13 +60,13 @@ public class ConfigProperties {
             {
                 // AMQP (Qpid) defaults
                 this.put(AMQP_CONNECT_STRING, "amqp://guest:guest@localhost/test?brokerlist=" +
-                        "'tcp://localhost:5671?ssl='true'&ssl_cert_alias='gutterball''");
+                    "'tcp://localhost:5671?ssl='true'&ssl_cert_alias='gutterball''");
                 this.put(AMQP_CONNECTION_RETRY_INTERVAL, "10"); // Every 10 seconds
                 this.put(AMQP_CONNECTION_RETRY_ATTEMPTS, "12"); // Try for 2 minutes (10s * 12)
                 this.put(AMQP_KEYSTORE, "/etc/gutterball/certs/amqp/gutterball.jks");
                 this.put(AMQP_KEYSTORE_PASSWORD, "password");
                 this.put(AMQP_TRUSTSTORE,
-                        "/etc/gutterball/certs/amqp/gutterball.truststore");
+                    "/etc/gutterball/certs/amqp/gutterball.truststore");
                 this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
 
                 // JPA/hibernate Configuration

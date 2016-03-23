@@ -97,6 +97,7 @@ public class PoolFilterBuilder extends FilterBuilder {
         return !matchFilters.isEmpty();
     }
 
+    @SuppressWarnings("checkstyle:indentation")
     private void applyProductIdFilter(Criteria parent) {
         String originalPoolAlias = this.alias.isEmpty() ? "this." : alias;
         DetachedCriteria prodCrit = DetachedCriteria.forClass(Pool.class, "Pool2")
@@ -111,6 +112,7 @@ public class PoolFilterBuilder extends FilterBuilder {
         parent.add(Subqueries.exists(prodCrit));
     }
 
+    @SuppressWarnings("checkstyle:indentation")
     private void applySubscriptionIdFilter(Criteria parent) {
         String originalPoolAlias = this.alias.isEmpty() ? "this." : alias;
         DetachedCriteria subCrit = DetachedCriteria.forClass(Pool.class, "Pool2")
@@ -122,6 +124,7 @@ public class PoolFilterBuilder extends FilterBuilder {
         parent.add(Subqueries.exists(subCrit));
     }
 
+    @SuppressWarnings("checkstyle:indentation")
     private void applyMatchFilter(String matches) {
         String originalPoolAlias = this.alias.isEmpty() ? "this." : alias;
 
@@ -132,24 +135,20 @@ public class PoolFilterBuilder extends FilterBuilder {
         textOr.add(new FilterLikeExpression(alias + "orderNumber", matches, true));
 
         DetachedCriteria ppCriteria = DetachedCriteria.forClass(Pool.class, "Pool2")
-                .createAlias("providedProducts", "provided", JoinType.INNER_JOIN)
-                .createAlias("provided.productContent", "ppcw", JoinType.LEFT_OUTER_JOIN)
-                .createAlias("ppcw.content", "ppContent", JoinType.LEFT_OUTER_JOIN)
-                .add(Property.forName(originalPoolAlias + "id").eqProperty("Pool2.id"))
-                .add(Restrictions.disjunction()
-                   .add(new FilterLikeExpression("provided.id", matches, true))
-                   .add(new FilterLikeExpression("provided.name", matches, true))
-                   .add(new FilterLikeExpression("ppContent.name", matches, true))
-                   .add(new FilterLikeExpression("ppContent.label", matches, true)))
-                .setProjection(Projections.property("Pool2.id"));
+            .createAlias("providedProducts", "provided", JoinType.INNER_JOIN)
+            .createAlias("provided.productContent", "ppcw", JoinType.LEFT_OUTER_JOIN)
+            .createAlias("ppcw.content", "ppContent", JoinType.LEFT_OUTER_JOIN)
+            .add(Property.forName(originalPoolAlias + "id").eqProperty("Pool2.id"))
+            .add(Restrictions.disjunction()
+               .add(new FilterLikeExpression("provided.id", matches, true))
+               .add(new FilterLikeExpression("provided.name", matches, true))
+               .add(new FilterLikeExpression("ppContent.name", matches, true))
+               .add(new FilterLikeExpression("ppContent.label", matches, true)))
+            .setProjection(Projections.property("Pool2.id"));
         textOr.add(Subqueries.exists(ppCriteria));
 
         textOr.add(Subqueries.exists(
-            this.createProductAttributeCriteria(
-                "support_level",
-                Arrays.asList(matches)
-            )
-        ));
+            this.createProductAttributeCriteria("support_level", Arrays.asList(matches))));
 
         this.otherCriteria.add(textOr);
     }
@@ -176,23 +175,15 @@ public class PoolFilterBuilder extends FilterBuilder {
         Conjunction conjunction = new Conjunction();
 
         if (!values.isEmpty()) {
-            conjunction.add(
-                Restrictions.or(
-                    Subqueries.exists(this.createPoolAttributeCriteria(key, values)),
-                    Subqueries.exists(this.createProductAttributeCriteria(key, values))
-                )
-            );
+            conjunction.add(Restrictions.or(
+                Subqueries.exists(this.createPoolAttributeCriteria(key, values)),
+                Subqueries.exists(this.createProductAttributeCriteria(key, values))));
         }
 
         if (!negatives.isEmpty()) {
-            conjunction.add(
-                Restrictions.not(
-                    Restrictions.or(
-                        Subqueries.exists(this.createProductAttributeCriteria(key, negatives)),
-                        Subqueries.exists(this.createPoolAttributeCriteria(key, negatives))
-                    )
-                )
-            );
+            conjunction.add(Restrictions.not(Restrictions.or(
+                Subqueries.exists(this.createProductAttributeCriteria(key, negatives)),
+                Subqueries.exists(this.createPoolAttributeCriteria(key, negatives)))));
         }
 
         return conjunction;

@@ -86,8 +86,8 @@ public class PoolHelper {
      * @return pools the created pools
      */
     public static List<Pool> createHostRestrictedPools(PoolManager poolManager, Consumer consumer,
-            List<Pool> pools, Map<String, Entitlement> sourceEntitlements,
-            Map<String, Map<String, String>> attributeMaps) {
+        List<Pool> pools, Map<String, Entitlement> sourceEntitlements,
+        Map<String, Map<String, String>> attributeMaps) {
         List<Pool> poolsToCreate = new ArrayList<Pool>();
         List<Pool> poolsToUpdateFromStack = new ArrayList<Pool>();
         for (Pool pool : pools) {
@@ -143,7 +143,7 @@ public class PoolHelper {
                 // attribute per 795431, useful for rolling up pool info in headpin
                 consumerSpecificPool.setAttribute("source_pool_id", pool.getId());
                 consumerSpecificPool.setSourceSubscription(new SourceSubscription(pool.getSubscriptionId(),
-                        sourceEntitlements.get(pool.getId()).getId()));
+                    sourceEntitlements.get(pool.getId()).getId()));
             }
             poolsToCreate.add(consumerSpecificPool);
         }
@@ -185,15 +185,15 @@ public class PoolHelper {
     }
 
     public static Pool clonePool(Pool sourcePool, Product product, String quantity,
-            Map<String, String> attributes, String subKey, ProductCurator prodCurator,
-            Entitlement sourceEntitlement) {
+        Map<String, String> attributes, String subKey, ProductCurator prodCurator,
+        Entitlement sourceEntitlement) {
         Pool pool = createPool(product, sourcePool.getOwner(), quantity,
-                sourcePool.getStartDate(), sourcePool.getEndDate(),
-                sourcePool.getContractNumber(), sourcePool.getAccountNumber(),
-                sourcePool.getOrderNumber(), new HashSet<Product>(), sourceEntitlement);
+            sourcePool.getStartDate(), sourcePool.getEndDate(),
+            sourcePool.getContractNumber(), sourcePool.getAccountNumber(),
+            sourcePool.getOrderNumber(), new HashSet<Product>(), sourceEntitlement);
 
         pool.setSourceSubscription(
-                    new SourceSubscription(sourcePool.getSubscriptionId(), subKey));
+            new SourceSubscription(sourcePool.getSubscriptionId(), subKey));
 
         copyProvidedProducts(sourcePool, pool, prodCurator);
 
@@ -211,7 +211,8 @@ public class PoolHelper {
 
     private static Pool createPool(Product product, Owner owner, String quantity, Date startDate,
         Date endDate, String contractNumber, String accountNumber, String orderNumber,
-            Set<Product> providedProducts, Entitlement sourceEntitlement) {
+        Set<Product> providedProducts, Entitlement sourceEntitlement) {
+
         Long q = null;
         if (quantity.equalsIgnoreCase("unlimited")) {
             q = -1L;

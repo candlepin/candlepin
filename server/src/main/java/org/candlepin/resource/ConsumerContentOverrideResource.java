@@ -31,16 +31,16 @@ import javax.ws.rs.Path;
  */
 @Path("/consumers/{consumer_uuid}/content_overrides")
 public class ConsumerContentOverrideResource extends
-        ContentOverrideResource<ConsumerContentOverride,
-        ConsumerContentOverrideCurator, Consumer> {
+    ContentOverrideResource<ConsumerContentOverride,
+    ConsumerContentOverrideCurator, Consumer> {
 
     private ConsumerCurator consumerCurator;
 
     @Inject
     public ConsumerContentOverrideResource(
-            ConsumerContentOverrideCurator consumerContentOverrideCurator,
-            ConsumerCurator consumerCurator,
-            ContentOverrideValidator contentOverrideValidator, I18n i18n) {
+        ConsumerContentOverrideCurator consumerContentOverrideCurator,
+        ConsumerCurator consumerCurator,
+        ContentOverrideValidator contentOverrideValidator, I18n i18n) {
         super(consumerContentOverrideCurator, contentOverrideValidator,
             i18n, "consumer_uuid");
         this.consumerCurator = consumerCurator;

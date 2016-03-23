@@ -57,8 +57,7 @@ public class StatusResource {
     private JsRunnerProvider jsProvider;
 
     @Inject
-    public StatusResource(RulesCurator rulesCurator,
-                          Configuration config, JsRunnerProvider jsProvider) {
+    public StatusResource(RulesCurator rulesCurator, Configuration config, JsRunnerProvider jsProvider) {
         this.rulesCurator = rulesCurator;
 
         Map<String, String> map = VersionUtil.getVersionMap();

@@ -75,7 +75,7 @@ public class EventSinkImpl implements EventSink {
 
     @Inject
     public EventSinkImpl(EventFilter eventFilter, EventFactory eventFactory,
-            ObjectMapper mapper, Configuration config) {
+        ObjectMapper mapper, Configuration config) {
         this.eventFactory = eventFactory;
         this.mapper = mapper;
         this.config = config;
@@ -142,11 +142,9 @@ public class EventSinkImpl implements EventSink {
 
             ClientSession session = getClientSession();
             session.start();
-            for (String listenerClassName : HornetqContextListener.getHornetqListeners(
-                    config)) {
+            for (String listenerClassName : HornetqContextListener.getHornetqListeners(config)) {
                 String queueName = "event." + listenerClassName;
-                long msgCount = session.queueQuery(new SimpleString(queueName))
-                        .getMessageCount();
+                long msgCount = session.queueQuery(new SimpleString(queueName)).getMessageCount();
                 results.add(new QueueStatus(queueName, msgCount));
             }
         }
@@ -272,7 +270,7 @@ public class EventSinkImpl implements EventSink {
 
     @Override
     public void emitCompliance(Consumer consumer,
-            Set<Entitlement> entitlements, ComplianceStatus compliance) {
+        Set<Entitlement> entitlements, ComplianceStatus compliance) {
         queueEvent(eventFactory.complianceCreated(consumer, entitlements, compliance));
     }
 }

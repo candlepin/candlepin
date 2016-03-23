@@ -264,8 +264,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @JoinTable(
         name = "cp2_pool_provided_products",
         joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
-        inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
-    )
+        inverseJoinColumns = {@JoinColumn(name = "product_uuid")})
     @BatchSize(size = 1000)
     private Set<Product> providedProducts = new HashSet<Product>();
 
@@ -273,8 +272,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @JoinTable(
         name = "cp2_pool_derprov_products",
         joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
-        inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
-    )
+        inverseJoinColumns = {@JoinColumn(name = "product_uuid")})
     @BatchSize(size = 1000)
     private Set<Product> derivedProvidedProducts = new HashSet<Product>();
 
@@ -318,8 +316,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     // leave FROM capitalized until hibernate 5.0.3
     // https://hibernate.atlassian.net/browse/HHH-1400
-    @Formula("(select sum(ent.quantity) FROM cp_entitlement ent " +
-             "where ent.pool_id = id)")
+    @Formula("(select sum(ent.quantity) FROM cp_entitlement ent where ent.pool_id = id)")
     private Long consumed;
 
     // leave FROM capitalized until hibernate 5.0.3

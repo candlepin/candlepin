@@ -30,7 +30,7 @@ import javax.ws.rs.ext.Provider;
  */
 @Provider
 public class NotFoundExceptionMapper extends CandlepinExceptionMapper
-        implements ExceptionMapper<NotFoundException> {
+    implements ExceptionMapper<NotFoundException> {
 
     /**
      * Service that handles JAX-RS exceptions.

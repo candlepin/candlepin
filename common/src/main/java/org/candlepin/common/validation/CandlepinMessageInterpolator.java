@@ -33,6 +33,7 @@ import javax.validation.MessageInterpolator;
  * CandlepinMessageInterpolator
  */
 public class CandlepinMessageInterpolator implements MessageInterpolator {
+    @SuppressWarnings("checkstyle:indentation")
     public static final Map<String, ValidationMessage> MESSAGES =
         new HashMap<String, ValidationMessage>() {
             {
@@ -41,24 +42,19 @@ public class CandlepinMessageInterpolator implements MessageInterpolator {
                 put("{javax.validation.constraints.AssertTrue.message}",
                     new ValidationMessage(I18n.marktr("must be true")));
                 put("{javax.validation.constraints.DigitsMax.message}",
-                    new ValidationMessage(I18n.marktr("must be less than or equal to {0}"),
-                        "value"));
+                    new ValidationMessage(I18n.marktr("must be less than or equal to {0}"), "value"));
                 put("{javax.validation.constraints.DigitsMin.message}",
-                    new ValidationMessage(I18n.marktr("must be greater than or equal to {0}"),
-                        "value"));
+                    new ValidationMessage(I18n.marktr("must be greater than or equal to {0}"), "value"));
                 put("{javax.validation.constraints.Digits.message}",
                     new ValidationMessage(I18n.marktr(
-                        "numeric value out of bounds (<{integer} digits>" +
-                        ".<{fraction} digits> expected)"),
+                        "numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"),
                         "integer", "fraction"));
                 put("{javax.validation.constraints.Future.message}",
                     new ValidationMessage(I18n.marktr("must be in the future")));
                 put("{javax.validation.constraints.Max.message}",
-                    new ValidationMessage(I18n.marktr("must be less than or equal to {0}"),
-                        "value"));
+                    new ValidationMessage(I18n.marktr("must be less than or equal to {0}"), "value"));
                 put("{javax.validation.constraints.Min.message}",
-                    new ValidationMessage(I18n.marktr("must be greater than or equal to {0}"),
-                        "value"));
+                    new ValidationMessage(I18n.marktr("must be greater than or equal to {0}"), "value"));
                 put("{javax.validation.constraints.NotNull.message}",
                     new ValidationMessage(I18n.marktr("may not be null")));
                 put("{javax.validation.constraints.Null.message}",
@@ -66,25 +62,21 @@ public class CandlepinMessageInterpolator implements MessageInterpolator {
                 put("{javax.validation.constraints.Past.message}",
                     new ValidationMessage(I18n.marktr("must be in the past")));
                 put("{javax.validation.constraints.Pattern.message}",
-                    new ValidationMessage(I18n.marktr("must match ''{regexp}''"),
-                        "regexp"));
+                    new ValidationMessage(I18n.marktr("must match ''{regexp}''"), "regexp"));
                 put("{javax.validation.constraints.Size.message}",
-                    new ValidationMessage(I18n.marktr("size must be between {0} and {1}"),
-                        "min", "max"));
+                    new ValidationMessage(I18n.marktr("size must be between {0} and {1}"), "min", "max"));
                 put("{org.hibernate.validator.constraints.CreditCardNumber.message}",
                     new ValidationMessage(I18n.marktr("invalid credit card number")));
                 put("{org.hibernate.validator.constraints.Email.message}",
                     new ValidationMessage(I18n.marktr("not a well-formed email address")));
                 put("{org.hibernate.validator.constraints.Length.message}",
-                    new ValidationMessage(I18n.marktr("size must be between {0} and {1}"),
-                        "min", "max"));
+                    new ValidationMessage(I18n.marktr("size must be between {0} and {1}"), "min", "max"));
                 put("{org.hibernate.validator.constraints.NotBlank.message}",
                     new ValidationMessage(I18n.marktr("may not be empty")));
                 put("{org.hibernate.validator.constraints.NotEmpty.message}",
                     new ValidationMessage(I18n.marktr("may not be empty")));
                 put("{org.hibernate.validator.constraints.Range.message}",
-                    new ValidationMessage(I18n.marktr("must be between {min} and {max}"),
-                        "min", "max"));
+                    new ValidationMessage(I18n.marktr("must be between {min} and {max}"), "min", "max"));
                 put("{org.hibernate.validator.constraints.SafeHtml.message}",
                     new ValidationMessage(I18n.marktr("may have unsafe HTML content")));
                 put("{org.hibernate.validator.constraints.ScriptAssert.message}",

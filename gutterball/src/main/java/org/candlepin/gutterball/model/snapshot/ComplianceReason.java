@@ -82,8 +82,7 @@ public class ComplianceReason {
 
     @ElementCollection(fetch = FetchType.LAZY)
     @BatchSize(size = 100)
-    @CollectionTable(name = "gb_reason_attr_snap",
-                     joinColumns = @JoinColumn(name = "reason_snap_id"))
+    @CollectionTable(name = "gb_reason_attr_snap", joinColumns = @JoinColumn(name = "reason_snap_id"))
     @MapKeyColumn(name = "mapkey")
     @Column(name = "element")
     @Cascade({org.hibernate.annotations.CascadeType.ALL})

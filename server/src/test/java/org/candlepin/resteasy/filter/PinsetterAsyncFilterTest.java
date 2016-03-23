@@ -77,8 +77,7 @@ public class PinsetterAsyncFilterTest {
 
         this.interceptor.postProcess(response);
 
-        Assert.assertEquals(principal,
-                detail.getJobDataMap().get(PinsetterJobListener.PRINCIPAL_KEY));
+        Assert.assertEquals(principal, detail.getJobDataMap().get(PinsetterJobListener.PRINCIPAL_KEY));
     }
 
     @Test
@@ -98,8 +97,7 @@ public class PinsetterAsyncFilterTest {
 
         this.interceptor.postProcess(response);
 
-        Assert.assertSame(principal,
-                detail.getJobDataMap().get(PinsetterJobListener.PRINCIPAL_KEY));
+        Assert.assertSame(principal, detail.getJobDataMap().get(PinsetterJobListener.PRINCIPAL_KEY));
     }
 
     @Test

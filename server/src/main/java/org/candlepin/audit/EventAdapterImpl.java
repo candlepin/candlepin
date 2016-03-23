@@ -84,11 +84,7 @@ public class EventAdapterImpl implements EventAdapter {
                 // ignore, shouldn't happen
             }
             entry.setId(eventURI);
-            entry.getLinks().add(
-                new Link(
-                    "alternate",
-                    eventURI,
-                    MediaType.APPLICATION_JSON_TYPE));
+            entry.getLinks().add(new Link("alternate", eventURI, MediaType.APPLICATION_JSON_TYPE));
 
             Content content = new Content();
             content.setType(MediaType.APPLICATION_XML_TYPE);
@@ -136,7 +132,7 @@ public class EventAdapterImpl implements EventAdapter {
         MESSAGES.put("ENTITLEMENTDELETED",
             I18n.marktr("{0} returned the subscription for {1}"));
         MESSAGES.put("ENTITLEMENTEXPIRED",
-                I18n.marktr("{0} returned the subscription for {1}"));
+            I18n.marktr("{0} returned the subscription for {1}"));
         MESSAGES.put("POOLCREATED", I18n.marktr("{0} created a pool for product {1}"));
         MESSAGES.put("POOLMODIFIED", I18n.marktr("{0} modified a pool for product {1}"));
         MESSAGES.put("POOLDELETED", I18n.marktr("{0} deleted a pool for product {1}"));
@@ -166,7 +162,7 @@ public class EventAdapterImpl implements EventAdapter {
         MESSAGES.put("RULESDELETED",
             I18n.marktr("{0} removed the rules from the database"));
         MESSAGES.put("COMPLIANCECREATED",
-                I18n.marktr("Compliance recalculated for consumer {1}"));
+            I18n.marktr("Compliance recalculated for consumer {1}"));
     }
 
 }

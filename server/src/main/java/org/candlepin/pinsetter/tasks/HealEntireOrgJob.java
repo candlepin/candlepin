@@ -49,8 +49,7 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
     protected static String prefix = "heal_entire_org_";
 
     @Inject
-    public HealEntireOrgJob(Entitler e,
-            ConsumerCurator c, OwnerCurator o) {
+    public HealEntireOrgJob(Entitler e, ConsumerCurator c, OwnerCurator o) {
         this.entitler = e;
         this.consumerCurator = c;
         this.ownerCurator = o;

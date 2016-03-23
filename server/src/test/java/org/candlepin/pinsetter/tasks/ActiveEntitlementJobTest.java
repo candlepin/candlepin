@@ -67,7 +67,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
 
         consumer = new Consumer("a consumer", "username", owner, ct);
         consumer.addInstalledProduct(new ConsumerInstalledProduct(
-                prod.getId(), prod.getName()));
+            prod.getId(), prod.getName()));
         consumerCurator.create(consumer);
     }
 
@@ -75,7 +75,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
     public void testActiveEntitlementJob() throws JobExecutionException {
         Pool p = createPool(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
         Entitlement ent = this.createEntitlement(owner, consumer, p,
-                createEntitlementCertificate("entkey", "ecert"));
+            createEntitlementCertificate("entkey", "ecert"));
         // Needs to be flipped
         ent.setUpdatedOnStart(false);
         entitlementCurator.create(ent);
@@ -95,7 +95,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
     public void testActiveEntitlementJobNoChange() throws JobExecutionException {
         Pool p = createPool(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
         Entitlement ent = this.createEntitlement(owner, consumer, p,
-                createEntitlementCertificate("entkey", "ecert"));
+            createEntitlementCertificate("entkey", "ecert"));
         // Already done
         ent.setUpdatedOnStart(true);
         entitlementCurator.create(ent);
@@ -111,7 +111,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
         // Future pool
         Pool p = createPool(owner, prod, 5L, Util.tomorrow(), Util.addDaysToDt(10));
         Entitlement ent = this.createEntitlement(owner, consumer, p,
-                createEntitlementCertificate("entkey", "ecert"));
+            createEntitlementCertificate("entkey", "ecert"));
         // Needs to be flipped, eventually
         ent.setUpdatedOnStart(false);
         entitlementCurator.create(ent);

@@ -66,6 +66,7 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
     }
 
     @Override
+    @SuppressWarnings("checkstyle:indentation")
     protected void initParameters() {
         ReportParameterBuilder builder = new ReportParameterBuilder(i18n);
 
@@ -82,63 +83,59 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
 
         this.addParameter(
             builder.init("start_date", i18n.tr("The start date on which to filter"))
-                .mustBeDate(REPORT_DATE_FORMATS)
-                .mustSatisfy(yearValidator)
-                .getParameter()
+            .mustBeDate(REPORT_DATE_FORMATS)
+            .mustSatisfy(yearValidator)
+            .getParameter()
         );
 
         this.addParameter(
             builder.init("end_date", i18n.tr("The end date on which to filter"))
-                .mustBeDate(REPORT_DATE_FORMATS)
-                .mustSatisfy(yearValidator)
-                .getParameter()
+            .mustBeDate(REPORT_DATE_FORMATS)
+            .mustSatisfy(yearValidator)
+            .getParameter()
         );
 
         this.addParameter(
             builder.init("consumer_uuid", i18n.tr("The consumer UUID(s) on which to filter"))
-                .multiValued()
-                .getParameter()
+            .multiValued()
+            .getParameter()
         );
 
         this.addParameter(
             builder.init("owner", i18n.tr("An owner key on which to filter"))
-                .getParameter()
+            .getParameter()
         );
 
         this.addParameter(
             builder.init("product_name", i18n.tr("The name of a product on which to filter"))
-                .mustNotHave("sku", "subscription_name", "management_enabled")
-                .getParameter()
+            .mustNotHave("sku", "subscription_name", "management_enabled")
+            .getParameter()
         );
 
         this.addParameter(
             builder.init("sku", i18n.tr("The entitlement SKU on which to filter"))
-                .mustNotHave("product_name", "subscription_name", "management_enabled")
-                .getParameter()
+            .mustNotHave("product_name", "subscription_name", "management_enabled")
+            .getParameter()
         );
 
         this.addParameter(
             builder.init("subscription_name", i18n.tr("The name of a subscription on which to filter"))
-                .mustNotHave("product_name", "sku", "management_enabled")
-                .getParameter()
+            .mustNotHave("product_name", "sku", "management_enabled")
+            .getParameter()
         );
 
         this.addParameter(
-            builder.init(
-                "management_enabled",
-                i18n.tr("Filter on subscriptions which have management enabled set to this value (Boolean)")
-            )
-                .mustNotHave("product_name", "sku", "subscription_name")
-                .getParameter()
+            builder.init("management_enabled", i18n.tr(
+                "Filter on subscriptions which have management enabled set to this value (Boolean)"))
+            .mustNotHave("product_name", "sku", "subscription_name")
+            .getParameter()
         );
 
         this.addParameter(
-            builder.init(
-                "timezone",
-                i18n.tr("The timezone to use when processing the request and returning results")
-            )
-                .mustBeTimeZone()
-                .getParameter()
+            builder.init("timezone", i18n.tr(
+                "The timezone to use when processing the request and returning results"))
+            .mustBeTimeZone()
+            .getParameter()
         );
     }
 

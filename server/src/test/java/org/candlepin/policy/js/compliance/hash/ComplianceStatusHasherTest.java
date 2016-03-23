@@ -236,7 +236,7 @@ public class ComplianceStatusHasherTest {
         consumer.setInstalledProducts(new HashSet<ConsumerInstalledProduct>(initialInstalled));
         assertEquals(initialHash, generateHash(testStatus, consumer));
         ConsumerInstalledProduct installed = new ConsumerInstalledProduct(product.getUuid(),
-                product.getName());
+            product.getName());
         consumer.addInstalledProduct(installed);
 
         String updatedHash = generateHash(testStatus, consumer);
@@ -323,7 +323,7 @@ public class ComplianceStatusHasherTest {
 
     private Consumer createConsumer(Owner owner) {
         Consumer consumer = new Consumer("test-consumer", "test-consumer", owner,
-                new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
+            new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
         consumer.setId("1");
         consumer.setUuid("12345");
         consumer.setFact("ram", "4");

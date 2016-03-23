@@ -89,24 +89,22 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     @Test
     public void testPoolNotYetActive() {
         Pool pool = createPool(owner, product, 100L,
-                TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
+            TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
 
-        List<Pool> results =
-            poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
-                (String) null, TestUtil.createDate(20450, 3, 2), true);
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(
+            consumer, consumer.getOwner(), null, TestUtil.createDate(20450, 3, 2), true);
         assertEquals(0, results.size());
     }
 
     @Test
     public void testPoolExpired() {
         Pool pool = createPool(owner, product, 100L,
-                TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2005, 3, 2));
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool);
 
-        List<Pool> results =
-            poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
-                (String) null, TestUtil.createDate(2005, 3, 3), true);
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(
+            consumer, consumer.getOwner(), null, TestUtil.createDate(2005, 3, 3), true);
         assertEquals(0, results.size());
 
         // If we specify no date filtering, the expired pool should be returned:
@@ -124,9 +122,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         ueberCertGenerator.generate(owner, new NoAuthPrincipal());
 
-        List<Pool> results =
-            poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
-                (String) null, null, true);
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(
+            consumer, consumer.getOwner(), null, null, true);
         assertEquals(1, results.size());
     }
 
@@ -521,20 +518,20 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         productCurator.create(product);
 
         Pool p = new Pool(owner, product, new HashSet<Product>(), 1L, new Date(), new Date(), "contract",
-                "account", "order");
+            "account", "order");
 
         String subId1 = Util.generateDbUUID();
         p.setSourceSubscription(new SourceSubscription(subId1, "master"));
         poolCurator.create(p);
 
         Pool p2 = new Pool(owner, product, new HashSet<Product>(), 1L, new Date(), new Date(), "contract",
-                "account", "order");
+            "account", "order");
         String subId2 = Util.generateDbUUID();
         p2.setSourceSubscription(new SourceSubscription(subId2, "master"));
         poolCurator.create(p2);
 
         Pool p3 = new Pool(owner, product, new HashSet<Product>(), 1L, new Date(), new Date(), "contract",
-                "account", "order");
+            "account", "order");
         String subId3 = Util.generateDbUUID();
         p3.setSourceSubscription(new SourceSubscription(subId3, "master"));
         poolCurator.create(p3);
@@ -567,7 +564,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         String subId1 = Util.generateDbUUID();
 
         Pool p = new Pool(owner, product, new HashSet<Product>(), 1L, new Date(), new Date(), "contract",
-                "account", "order");
+            "account", "order");
 
         p.setSourceSubscription(new SourceSubscription(subId1, "master"));
         poolCurator.create(p);
@@ -579,10 +576,9 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.overrideInClauseLimit(5);
         List<String> items = new ArrayList<String>();
         String expected = "taylor in (0, 1, 2, 3, 4)" +
-                " or taylor in (5, 6, 7, 8, 9)" +
-                " or taylor in (10, 11, 12, 13, 14)" +
-                " or taylor in (15)";
-        boolean first = false;
+            " or taylor in (5, 6, 7, 8, 9)" +
+            " or taylor in (10, 11, 12, 13, 14)" +
+            " or taylor in (15)";
         for (int i = 0; i < 16; i++) {
             items.add("" + i);
         }
@@ -597,7 +593,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         List<String> items = new ArrayList<String>();
         String expected = "swift in (";
         int i = 0;
-        boolean first = false;
         for (; i < 998; i++) {
             expected += i + ", ";
             items.add("" + i);
@@ -683,8 +678,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Entitlement ent31 = new Entitlement(pool3, consumer, 1);
         entitlementCurator.create(ent31);
 
-        List<Entitlement> ents = poolCurator.retrieveFreeEntitlementsOfPools(Arrays.asList(pool1, pool2),
-                true);
+        List<Entitlement> ents = poolCurator.retrieveFreeEntitlementsOfPools(
+            Arrays.asList(pool1, pool2), true);
         assertEquals(4, ents.size());
         assertThat(ents, hasItems(ent11, ent12, ent13, ent21));
         assertThat(ents, not(hasItems(ent31)));
@@ -717,7 +712,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         List<Pool> expectedPools = new ArrayList<Pool>();
         for (Integer i = 0; i < 5; i++) {
             Pool pool = createPool(owner, product, 1L, TestUtil.createDate(2050, 3, 2),
-                    TestUtil.createDate(2055, 3, 2));
+                TestUtil.createDate(2055, 3, 2));
             poolCurator.create(pool);
             expectedPools.add(pool);
             String subid = pool.getSubscriptionId();
@@ -728,16 +723,16 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         }
 
         Pool unconsumedPool = createPool(owner, product, 1L, TestUtil.createDate(2050, 3, 2),
-                TestUtil.createDate(2055, 3, 2));
+            TestUtil.createDate(2055, 3, 2));
         poolCurator.create(unconsumedPool);
 
         Pool notOverConsumedPool = createPool(owner, product, 1L, TestUtil.createDate(2050, 3, 2),
-                TestUtil.createDate(2055, 3, 2));
+            TestUtil.createDate(2055, 3, 2));
         poolCurator.create(notOverConsumedPool);
         entitlementCurator.create(new Entitlement(notOverConsumedPool, consumer, 1));
 
         Pool overConsumedPool = createPool(owner, product, 1L, TestUtil.createDate(2050, 3, 2),
-                TestUtil.createDate(2055, 3, 2));
+            TestUtil.createDate(2055, 3, 2));
         poolCurator.create(overConsumedPool);
         entitlementCurator.create(new Entitlement(overConsumedPool, consumer, 2));
 
@@ -1124,8 +1119,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             productCurator.create(product);
 
             // Create derived pool referencing the entitlement just made:
-            Pool derivedPool = new Pool(owner, product, new HashSet<Product>(), 1L, TestUtil.createDate(
-                    2011, 3, 2), TestUtil.createDate(2055, 3, 2), "", "", "");
+            Pool derivedPool = new Pool(owner, product, new HashSet<Product>(), 1L,
+                TestUtil.createDate(2011, 3, 2), TestUtil.createDate(2055, 3, 2), "", "", "");
             derivedPool.setSourceStack(new SourceStack(consumer, stackId));
             derivedPool.setAttribute("requires_host", consumer.getUuid());
 
@@ -1333,7 +1328,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         this.poolCurator.create(p2);
 
         Page<List<Pool>> result = this.poolCurator.listAvailableEntitlementPools(null, owner1, null,
-                "subscriptionId-phil", new Date(), false, null, null, false);
+            "subscriptionId-phil", new Date(), false, null, null, false);
         assertEquals("subscriptionId-phil", result.getPageData().get(0).getSubscriptionId());
     }
 
@@ -1470,7 +1465,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void testLookupDevPoolForConsumer() throws Exception {
         // Make sure that multiple pools exist.
         createPool(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
-                TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
+            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
         Pool pool = createPool(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
             TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
         pool.setAttribute("requires_consumer", consumer.getUuid());
@@ -1487,7 +1482,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void testDevPoolForConsumerNotFoundReturnsNullWhenNoMatchOnConsumer() throws Exception {
         // Make sure that multiple pools exist.
         createPool(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
-                TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
+            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
         Pool pool = createPool(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
             TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
         pool.setAttribute("requires_consumer", "does-not-exist");

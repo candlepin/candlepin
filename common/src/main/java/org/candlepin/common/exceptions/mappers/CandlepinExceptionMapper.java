@@ -75,8 +75,7 @@ public class CandlepinExceptionMapper {
                 getBestMatch(DESIRED_RESPONSE_TYPES, headerMediaTypes);
         }
 
-        if (mediaType == null || (mediaType.getType().equals("*") &&
-                mediaType.getSubtype().equals("*"))) {
+        if (mediaType == null || (mediaType.getType().equals("*") && mediaType.getSubtype().equals("*"))) {
             mediaType = MediaType.APPLICATION_JSON_TYPE;
         }
 

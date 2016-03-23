@@ -105,7 +105,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         }
         catch (Exception ex) {
             assertEquals(ex.getCause().getCause().getClass(),
-                    SQLIntegrityConstraintViolationException.class);
+                SQLIntegrityConstraintViolationException.class);
         }
         finally {
             rollbackTransaction();
@@ -187,7 +187,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         // Provided product 2 will modify 1, both will be on the pool:
         Content c = new Content(this.owner, "fakecontent", "fakecontent", "facecontent",
-                "yum", "RH", "http://", "http://", "x86_64");
+            "yum", "RH", "http://", "http://", "x86_64");
         Set<String> modifiedIds = new HashSet<String>();
         modifiedIds.add(providedProduct1.getId());
         c.setModifiedProductIds(modifiedIds);
@@ -319,7 +319,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     }
 
     private Entitlement setUpModifyingEntitlements(Date startDate, Date endDate, Integer howMany,
-            String contentId) {
+        String contentId) {
         Product parentProductForTest = TestUtil.createProduct(owner);
         Product providedProduct1ForTest = TestUtil.createProduct(owner);
         Product providedProduct2ForTest = TestUtil.createProduct(owner);
@@ -331,7 +331,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         // Provided product 2 will modify 1, both will be on the pool:
         Content c = new Content(this.owner, "fakecontent", contentId, contentId, "yum", "RH",
-                "http://", "http://", "x86_64");
+            "http://", "http://", "x86_64");
         Set<String> modifiedIds = new HashSet<String>();
         modifiedIds.add(providedProduct1ForTest.getId());
         c.setModifiedProductIds(modifiedIds);
@@ -361,11 +361,11 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     public void prepareEntitlementsForModifying() {
         Content contentPool1 = new Content(owner, "fakecontent", "fakecontent",
-                "facecontent", "yum", "RH", "http://", "http://",
-                "x86_64");
+            "facecontent", "yum", "RH", "http://", "http://",
+            "x86_64");
         Content contentPool2 = new Content(owner, "fakecontent2", "fakecontent2",
-                "facecontent2", "yum", "RH", "http://",
-                "http://", "x86_64");
+            "facecontent2", "yum", "RH", "http://",
+            "http://", "x86_64");
 
         /**
          * Each of these products are provided by respective Entitlements
@@ -408,9 +408,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         providedProductEnt4.addContent(contentPool2);
 
         createPool("p3", createDate(1998, 1, 1), createDate(2003, 2, 1),
-                providedProductEnt3);
+            providedProductEnt3);
         createPool("p4", createDate(2001, 2, 30), createDate(2002, 1, 10),
-                providedProductEnt4);
+            providedProductEnt4);
 
         createPool("p5", createDate(2000, 5, 5), createDate(2000, 5, 10), null);
 
@@ -423,13 +423,13 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         prepareEntitlementsForModifying();
 
         ProductEntitlements pents = entitlementCurator.getOverlappingForModifying(
-                Arrays.asList(ent1modif, ent2modif));
+            Arrays.asList(ent1modif, ent2modif));
 
         assertTrue(!pents.isEmpty());
         assertEquals(5, pents.getAllProductIds().size());
         for (String id : Arrays.asList("prod-p3", "prod-p4", "prod-p5", "ppent3", "ppent4")) {
             assertTrue("Overlapping entitlements [" + pents + "] " +
-                     "doesn't contain product id [" + id + "]", pents.getAllProductIds().contains(id));
+                "doesn't contain product id [" + id + "]", pents.getAllProductIds().contains(id));
         }
     }
 
@@ -461,7 +461,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         for (Entitlement ent : ents) {
             assertTrue(ent.getPool().getProductId().equals("prod-p3") ||
-                    ent.getPool().getProductId().equals("prod-p4"));
+                ent.getPool().getProductId().equals("prod-p4"));
         }
     }
 
@@ -488,7 +488,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     public void listEntitledProductIds() {
         Entitlement ent = setupListProvidingEntitlement();
         Set<String> results = entitlementCurator.listEntitledProductIds(consumer,
-                ent.getStartDate(), ent.getEndDate());
+            ent.getStartDate(), ent.getEndDate());
         assertEquals(3, results.size());
         assertTrue(results.contains(providedProduct1.getId()));
         assertTrue(results.contains(providedProduct2.getId()));
@@ -508,7 +508,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     public void listEntitledProductIdsEndDateOverlap() {
         Entitlement ent = setupListProvidingEntitlement();
         Set<String> results = entitlementCurator.listEntitledProductIds(consumer,
-                pastDate, createDate(2002, 1, 1));
+            pastDate, createDate(2002, 1, 1));
         assertEquals(3, results.size());
         assertTrue(results.contains(ent.getPool().getProductId()));
     }
@@ -517,7 +517,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     public void listEntitledProductIdsTotalOverlap() {
         Entitlement ent = setupListProvidingEntitlement();
         Set<String> results = entitlementCurator.listEntitledProductIds(consumer,
-                pastDate, futureDate);
+            pastDate, futureDate);
         // Picks up suite pools as well:
         assertEquals(5, results.size());
         assertTrue(results.contains(ent.getPool().getProductId()));
@@ -527,7 +527,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     public void listEntitledProductIdsNoOverlap() {
         setupListProvidingEntitlement();
         Set<String> results = entitlementCurator.listEntitledProductIds(consumer,
-                pastDate, pastDate);
+            pastDate, pastDate);
         assertEquals(0, results.size());
     }
 

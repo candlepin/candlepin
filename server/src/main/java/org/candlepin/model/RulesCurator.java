@@ -66,7 +66,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
     public Rules create(Rules toCreate) {
         Rules current = getDbRules();
         if (current != null && !VersionUtil.getRulesVersionCompatibility(
-                current.getVersion(), toCreate.getVersion())) {
+            current.getVersion(), toCreate.getVersion())) {
             return current;
         }
         return super.create(toCreate);
@@ -88,8 +88,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         log.debug("RPM Rules version: " + rpmRules.getVersion());
 
         if (dbRules == null ||
-            !VersionUtil.getRulesVersionCompatibility(rpmRules.getVersion(),
-                dbRules.getVersion())) {
+            !VersionUtil.getRulesVersionCompatibility(rpmRules.getVersion(), dbRules.getVersion())) {
             this.resetToRpmRules();
         }
     }

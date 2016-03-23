@@ -70,7 +70,7 @@ public class EventCuratorTest extends DatabaseTestFixture {
     public void testSecondarySorting() {
 
         Consumer newConsumer = new Consumer("consumername", "user", owner,
-                new ConsumerType("system"));
+            new ConsumerType("system"));
         consumerTypeCurator.create(newConsumer.getType());
         consumerCurator.create(newConsumer);
 
@@ -80,7 +80,7 @@ public class EventCuratorTest extends DatabaseTestFixture {
         Date forcedDate = new Date();
 
         EventBuilder builder = eventFactory.getEventBuilder(Event.Target.RULES,
-                Event.Type.DELETED);
+            Event.Type.DELETED);
         Event rulesDeletedEvent = builder.setOldEntity(new Rules()).buildEvent();
         rulesDeletedEvent.setTimestamp(forcedDate);
 
@@ -92,7 +92,7 @@ public class EventCuratorTest extends DatabaseTestFixture {
         builder = eventFactory.getEventBuilder(Event.Target.CONSUMER,
                 Event.Type.MODIFIED);
         Event consumerModifiedEvent = builder.setNewEntity(newConsumer).
-                setOldEntity(newConsumer).buildEvent();
+            setOldEntity(newConsumer).buildEvent();
         consumerModifiedEvent.setTimestamp(forcedDate);
 
         eventCurator.create(rulesDeletedEvent);

@@ -332,7 +332,7 @@ public class Importer {
     }
 
     @Transactional(rollbackOn = {IOException.class, ImporterException.class,
-            RuntimeException.class, ImportConflictException.class})
+        RuntimeException.class, ImportConflictException.class})
     // WARNING: Keep this method public, otherwise @Transactional is ignored:
     List<Subscription> importObjects(Owner owner, Map<String, File> importFiles,
         ConflictOverrides overrides)
@@ -447,7 +447,7 @@ public class Importer {
 
         // Setup our import subscription adapter with the subscriptions imported:
         SubscriptionServiceAdapter adapter =
-                new ImportSubscriptionServiceAdapter(importSubs);
+            new ImportSubscriptionServiceAdapter(importSubs);
         Refresher refresher = poolManager.getRefresher(adapter);
         refresher.add(owner);
         refresher.run();

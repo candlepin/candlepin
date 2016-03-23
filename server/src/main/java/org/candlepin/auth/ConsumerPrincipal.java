@@ -70,7 +70,7 @@ public class ConsumerPrincipal extends Principal {
         }
         final ConsumerPrincipal other = (ConsumerPrincipal) obj;
         if (this.consumer != other.consumer &&
-                (this.consumer == null || !this.consumer.equals(other.consumer))) {
+            (this.consumer == null || !this.consumer.equals(other.consumer))) {
             return false;
         }
         return true;

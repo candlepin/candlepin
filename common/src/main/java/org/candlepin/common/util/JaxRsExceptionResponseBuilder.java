@@ -48,13 +48,13 @@ public class JaxRsExceptionResponseBuilder {
      * Regex for JAX-RS exception class names.
      */
     private static final Pattern PARAM_REGEX = Pattern
-            .compile("(?:javax\\.ws\\.rs\\.\\w+\\(\\\")([\\w\\s]+)(\\\"\\))");
+        .compile("(?:javax\\.ws\\.rs\\.\\w+\\(\\\")([\\w\\s]+)(\\\"\\))");
 
     /**
      * Regex to extract the errored values from the JAX-RS Exception.
      */
     private static final Pattern ILLEGAL_VAL_REGEX = Pattern
-            .compile(":?value\\sis\\s'([\\w\\s]+)(:?'\\sfor)");
+        .compile(":?value\\sis\\s'([\\w\\s]+)(:?'\\sfor)");
 
     /**
      * Service for i18n.
@@ -89,8 +89,7 @@ public class JaxRsExceptionResponseBuilder {
             Matcher paramMatcher = PARAM_REGEX.matcher(msg);
             Matcher illegalValMatcher = ILLEGAL_VAL_REGEX.matcher(msg);
             if (paramMatcher.find() && illegalValMatcher.find()) {
-                if ((paramMatcher.groupCount() == 2) &&
-                        (illegalValMatcher.groupCount() == 2)) {
+                if ((paramMatcher.groupCount() == 2) && (illegalValMatcher.groupCount() == 2)) {
                     return true;
                 }
             }
@@ -119,18 +118,14 @@ public class JaxRsExceptionResponseBuilder {
 
         Map<String, String> map = VersionUtil.getVersionMap();
         ResponseBuilder bldr = Response.status(Status.BAD_REQUEST)
-                .type(cem.determineBestMediaType())
-                .header(VersionUtil.VERSION_HEADER,
-                        map.get("version") + "-" + map.get("release"));
+            .type(cem.determineBestMediaType())
+            .header(VersionUtil.VERSION_HEADER, map.get("version") + "-" + map.get("release"));
 
         Throwable cause = exception.getCause();
         if (cause instanceof CandlepinParameterParseException) {
-            String msg = i18n.get()
-                    .tr("Invalid format for query parameter {0}. " +
-                            "Expected format: {1}",
-                    ((CandlepinParameterParseException) cause).getParamName(),
-                    ((CandlepinParameterParseException) cause)
-                            .getExpectedFormat());
+            String msg = i18n.get().tr("Invalid format for query parameter {0}. Expected format: {1}",
+                ((CandlepinParameterParseException) cause).getParamName(),
+                ((CandlepinParameterParseException) cause).getExpectedFormat());
             bldr.entity(new ExceptionMessage(msg));
         }
         else {
@@ -139,9 +134,8 @@ public class JaxRsExceptionResponseBuilder {
             Matcher illegalValMatcher = ILLEGAL_VAL_REGEX.matcher(msg);
             paramMatcher.find();
             illegalValMatcher.find();
-            String errorMessage = i18n.get().tr(
-                    "{0} is not a valid value for {1}",
-                    illegalValMatcher.group(1), paramMatcher.group(1));
+            String errorMessage = i18n.get().tr("{0} is not a valid value for {1}",
+                illegalValMatcher.group(1), paramMatcher.group(1));
             bldr.entity(new ExceptionMessage(errorMessage));
         }
         return bldr.build();

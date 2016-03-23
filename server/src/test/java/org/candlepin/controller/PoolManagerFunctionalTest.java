@@ -201,7 +201,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Pool monitoringPool = poolCurator.listByOwnerAndProduct(o, monitoring.getId()).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
         AutobindData data = AutobindData.create(parentSystem).on(new Date())
-                .forProducts(new String [] {monitoring.getId()});
+            .forProducts(new String [] {monitoring.getId()});
         for (int i = 0; i < 5; i++) {
             List<Entitlement> entitlements = poolManager.entitleByProducts(data);
             assertEquals(1, entitlements.size());
@@ -230,7 +230,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testRevocation() throws Exception {
         AutobindData data = AutobindData.create(parentSystem).on(new Date())
-                .forProducts(new String [] {monitoring.getId()});
+            .forProducts(new String [] {monitoring.getId()});
         Entitlement e = poolManager.entitleByProducts(data).get(0);
         poolManager.revokeEntitlement(e);
 
@@ -258,7 +258,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testRegenerateEntitlementCertificatesWithSingleEntitlement()
         throws Exception {
         AutobindData data = AutobindData.create(childVirtSystem).on(new Date())
-                .forProducts(new String [] {provisioning.getId()});
+            .forProducts(new String [] {provisioning.getId()});
         this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
         regenerateECAndAssertNotSameCertificates();
     }
@@ -293,7 +293,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testRegenerateEntitlementCertificatesWithMultipleEntitlements()
         throws EntitlementRefusedException {
         AutobindData data = AutobindData.create(childVirtSystem).on(new Date())
-                .forProducts(new String [] {provisioning.getId()});
+            .forProducts(new String [] {provisioning.getId()});
         this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
         this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
         regenerateECAndAssertNotSameCertificates();
@@ -341,7 +341,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // but it hasn't been saved yet). Since getting the pool ordering right is tricky
         // inside an entitleByProducts call, we do it in two singular calls here.
         AutobindData data = AutobindData.create(parentSystem).on(new Date())
-                .forProducts(new String [] {"modifier"});
+            .forProducts(new String [] {"modifier"});
         poolManager.entitleByProducts(data);
 
         try {
@@ -392,10 +392,9 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testListAllForConsumerIncludesWarnings() {
-        Page<List<Pool>> results =
-            poolManager.listAvailableEntitlementPools(parentSystem, null,
-                parentSystem.getOwner(), null, null, null, true, true,
-                new PoolFilterBuilder(), new PageRequest());
+        Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(
+            parentSystem, null, parentSystem.getOwner(), null, null, null, true, true,
+            new PoolFilterBuilder(), new PageRequest());
         assertEquals(4, results.getPageData().size());
 
         Pool pool = createPool(o, socketLimitedProduct, 100L,
@@ -415,10 +414,9 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Product p = new Product("test-product", "Test Product", o);
         productCurator.create(p);
 
-        Page<List<Pool>> results =
-            poolManager.listAvailableEntitlementPools(parentSystem, null,
-                parentSystem.getOwner(), null, null, null, true, true,
-                new PoolFilterBuilder(), new PageRequest());
+        Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(
+            parentSystem, null, parentSystem.getOwner(), null, null, null, true, true,
+            new PoolFilterBuilder(), new PageRequest());
         assertEquals(4, results.getPageData().size());
 
         // Creating a pool with no entitlements available, which will trigger
@@ -444,10 +442,9 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Pool akpool = new Pool();
         akpool.setAttribute("physical_only", "true");
         ak.addPool(akpool, 1L);
-        Page<List<Pool>> results =
-            poolManager.listAvailableEntitlementPools(null, ak,
-                parentSystem.getOwner(), null, null, null, true, true,
-                new PoolFilterBuilder(), new PageRequest());
+        Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(
+            null, ak, parentSystem.getOwner(), null, null, null, true, true,
+            new PoolFilterBuilder(), new PageRequest());
         assertEquals(4, results.getPageData().size());
 
         // Creating a pool with no entitlements available, which does not trigger
@@ -466,10 +463,9 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testListForConsumerExcludesWarnings() {
-        Page<List<Pool>> results =
-            poolManager.listAvailableEntitlementPools(parentSystem, null,
-                parentSystem.getOwner(), (String) null, null, null, true, false,
-                new PoolFilterBuilder(), new PageRequest());
+        Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(
+            parentSystem, null, parentSystem.getOwner(), (String) null, null, null, true, false,
+            new PoolFilterBuilder(), new PageRequest());
         assertEquals(4, results.getPageData().size());
 
         Pool pool = createPool(o, socketLimitedProduct, 100L,
@@ -568,11 +564,11 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         productCurator.create(p);
 
         Pool pool1 = createPool(owner, p, 10L,
-                TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
         poolCurator.create(pool1);
         Pool pool2 = createPool(owner, p, 10L,
-                TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool2);
 
         Consumer devSystem = new Consumer("dev", "user", owner, systemType);
@@ -582,7 +578,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         nonDevSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
 
         Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(devSystem, null,
-                owner, null, null, null, true, true, new PoolFilterBuilder(), new PageRequest());
+            owner, null, null, null, true, true, new PoolFilterBuilder(), new PageRequest());
         assertEquals(2, results.getPageData().size());
 
         results = poolManager.listAvailableEntitlementPools(nonDevSystem, null,
@@ -604,12 +600,12 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         consumerCurator.create(devSystem);
 
         Pool pool1 = createPool(owner, p, 10L,
-                TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
         pool1.addAttribute(new PoolAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, devSystem.getUuid()));
         poolCurator.create(pool1);
         Pool pool2 = createPool(owner, p, 10L,
-                TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool2);
         List<String> possPools = new ArrayList<String>();
         possPools.add(pool1.getId());
@@ -638,12 +634,12 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         consumerCurator.create(devSystem);
 
         Pool pool1 = createPool(owner, p, 10L, TestUtil.createDate(2000, 3, 2),
-                TestUtil.createDate(2050, 3, 2));
+            TestUtil.createDate(2050, 3, 2));
         pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
         pool1.addAttribute(new PoolAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, devSystem.getUuid()));
         poolCurator.create(pool1);
         Pool pool2 = createPool(owner, p, 10L, TestUtil.createDate(2000, 3, 2),
-                TestUtil.createDate(2050, 3, 2));
+            TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool2);
 
         Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
@@ -675,7 +671,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         consumerCurator.create(devSystem);
 
         Pool pool1 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),
-                TestUtil.createDate(2050, 3, 2));
+            TestUtil.createDate(2050, 3, 2));
         pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
         pool1.addAttribute(new PoolAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, devSystem.getUuid()));
         pool1.setConsumed(1L);
@@ -683,7 +679,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         assertEquals(1, poolCurator.find(pool1.getId()).getConsumed().intValue());
         Pool pool2 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),
-                TestUtil.createDate(2050, 3, 2));
+            TestUtil.createDate(2050, 3, 2));
         pool2.setConsumed(1L);
         poolCurator.create(pool2);
 
@@ -699,9 +695,9 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             assertNotNull(e.getResults());
             assertEquals(2, e.getResults().entrySet().size());
             assertEquals("rulefailed.no.entitlements.available", e.getResults().get(pool1.getId())
-                    .getErrors().get(0).getResourceKey());
+                .getErrors().get(0).getResourceKey());
             assertEquals("rulefailed.no.entitlements.available", e.getResults().get(pool2.getId())
-                    .getErrors().get(0).getResourceKey());
+                .getErrors().get(0).getResourceKey());
         }
 
     }
@@ -718,7 +714,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         consumerCurator.create(devSystem);
 
         Pool pool1 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),
-                TestUtil.createDate(2050, 3, 2));
+            TestUtil.createDate(2050, 3, 2));
         pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
         pool1.addAttribute(new PoolAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, devSystem.getUuid()));
         pool1.setConsumed(1L);
@@ -726,7 +722,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         assertEquals(1, poolCurator.find(pool1.getId()).getConsumed().intValue());
         Pool pool2 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),
-                TestUtil.createDate(2050, 3, 2));
+            TestUtil.createDate(2050, 3, 2));
         pool2.setConsumed(1L);
         poolCurator.create(pool2);
 

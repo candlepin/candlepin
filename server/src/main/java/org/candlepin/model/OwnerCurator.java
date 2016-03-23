@@ -90,8 +90,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
 
         DetachedCriteria ownerIdQuery = DetachedCriteria.forClass(Entitlement.class, "e")
             .add(Subqueries.propertyIn("e.pool.id", poolIdQuery))
-            .createCriteria("pool")
-                .add(Restrictions.gt("endDate", new Date()))
+            .createCriteria("pool").add(Restrictions.gt("endDate", new Date()))
             .setProjection(Property.forName("e.owner.id"));
 
         DetachedCriteria distinctQuery = DetachedCriteria.forClass(Owner.class, "o2")
@@ -133,10 +132,8 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
 
     @SuppressWarnings("unchecked")
     public List<String> getConsumerUuids(String ownerKey) {
-        DetachedCriteria ownerQuery =
-            DetachedCriteria.forClass(Owner.class)
-                .add(Restrictions.eq("key", ownerKey))
-                .setProjection(Property.forName("id"));
+        DetachedCriteria ownerQuery = DetachedCriteria.forClass(Owner.class).add(
+            Restrictions.eq("key", ownerKey)).setProjection(Property.forName("id"));
 
         return this.currentSession().createCriteria(Consumer.class)
             .add(Subqueries.propertyEq("owner.id", ownerQuery))

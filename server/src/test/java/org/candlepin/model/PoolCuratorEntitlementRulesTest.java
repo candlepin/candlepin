@@ -90,8 +90,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         poolQuantities.put(consumerPool.getId(), 1);
         anotherEntitler.entitleByPools(consumer, poolQuantities);
 
-        assertFalse(poolCurator.find(consumerPool.getId())
-                .entitlementsAvailable(1));
+        assertFalse(poolCurator.find(consumerPool.getId()).entitlementsAvailable(1));
     }
 
     @Test(expected = EntitlementRefusedException.class)

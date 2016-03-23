@@ -141,7 +141,7 @@ public class ComplianceRulesTest {
         consumer.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
         for (Product product : installedProducts) {
             consumer.addInstalledProduct(new ConsumerInstalledProduct(product.getId(),
-                    product.getName()));
+                product.getName()));
         }
         consumer.setFact("cpu.cpu_socket(s)", "8"); // 8 socket machine
         return consumer;
@@ -589,15 +589,11 @@ public class ComplianceRulesTest {
         assertEquals(0, status.getPartiallyCompliantProducts().size());
 
         assertEquals(2, status.getCompliantProducts().size());
-        assertTrue(status.getCompliantProducts().keySet().contains(
-                PRODUCT_1.getId()));
-        assertTrue(status.getCompliantProducts().keySet().contains(
-                PRODUCT_2.getId()));
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1.getId()));
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_2.getId()));
 
-        assertEquals(4, status.getCompliantProducts().get(
-                PRODUCT_1.getId()).size());
-        assertEquals(4, status.getCompliantProducts().get(
-                PRODUCT_2.getId()).size());
+        assertEquals(4, status.getCompliantProducts().get(PRODUCT_1.getId()).size());
+        assertEquals(4, status.getCompliantProducts().get(PRODUCT_2.getId()).size());
     }
 
     @Test
@@ -624,10 +620,8 @@ public class ComplianceRulesTest {
         assertEquals(0, status.getCompliantProducts().size());
         assertEquals(0, status.getNonCompliantProducts().size());
         assertEquals(2, status.getPartiallyCompliantProducts().size());
-        assertEquals(4, status.getPartiallyCompliantProducts().get(
-                PRODUCT_1.getId()).size());
-        assertEquals(4, status.getPartiallyCompliantProducts().get(
-                PRODUCT_2.getId()).size());
+        assertEquals(4, status.getPartiallyCompliantProducts().get(PRODUCT_1.getId()).size());
+        assertEquals(4, status.getPartiallyCompliantProducts().get(PRODUCT_2.getId()).size());
         assertEquals(1, status.getPartialStacks().size());
         assertTrue(status.getPartialStacks().keySet().contains(STACK_ID_1));
         assertEquals("partial", status.getStatus());
@@ -1173,8 +1167,7 @@ public class ComplianceRulesTest {
         assertEquals(0, status.getNonCompliantProducts().size());
         assertEquals(0, status.getPartiallyCompliantProducts().size());
         assertEquals(1, status.getCompliantProducts().size());
-        assertTrue(status.getCompliantProducts().keySet().contains(
-                PRODUCT_1.getId()));
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1.getId()));
         assertEquals(ComplianceStatus.GREEN, status.getStatus());
     }
 

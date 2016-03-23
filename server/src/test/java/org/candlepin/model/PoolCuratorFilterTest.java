@@ -66,7 +66,7 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         productCurator.create(searchProduct);
 
         Pool searchPool = createPool(owner, searchProduct, 100L,
-                TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));
+            TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));
 
         Product provided = TestUtil.createProduct("101111", "Server Bits", owner);
         provided.addContent(content);

@@ -92,8 +92,7 @@ public class EventFilter {
      * @param includes2
      * @param includesConfig
      */
-    private void fillEventTypeAndTargetFromConfig(
-            Set<EventTypeAndTarget> set, List<String> stringList) {
+    private void fillEventTypeAndTargetFromConfig(Set<EventTypeAndTarget> set, List<String> stringList) {
 
         for (String item : stringList) {
             if (item.trim().equals("")) {
@@ -123,8 +122,7 @@ public class EventFilter {
             return false;
         }
 
-        EventTypeAndTarget eventKey = new EventTypeAndTarget(event.getType(),
-                event.getTarget());
+        EventTypeAndTarget eventKey = new EventTypeAndTarget(event.getType(), event.getTarget());
 
         if (toNotFilter.contains(eventKey)) {
             return false;

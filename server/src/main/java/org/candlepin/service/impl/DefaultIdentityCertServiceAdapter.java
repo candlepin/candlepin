@@ -67,8 +67,7 @@ public class DefaultIdentityCertServiceAdapter implements
     @Override
     public void deleteIdentityCert(Consumer consumer) {
         if (consumer.getIdCert() == null) {
-            log.warn("Unable to delete null identity cert for consumer: " +
-                    consumer.getUuid());
+            log.warn("Unable to delete null identity cert for consumer: {}", consumer.getUuid());
             return;
         }
         IdentityCertificate certificate = idCertCurator

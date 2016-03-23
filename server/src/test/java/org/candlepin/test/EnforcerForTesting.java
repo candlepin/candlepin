@@ -36,18 +36,18 @@ public class EnforcerForTesting implements Enforcer {
 
     @Override
     public void postEntitlement(PoolManager manager, Consumer consumer, Map<String, Entitlement> ent,
-            List<Pool> subPoolsForStackIds) {
+        List<Pool> subPoolsForStackIds) {
     }
 
     @Override
     public ValidationResult preEntitlement(Consumer consumer, Pool enitlementPool,
-            Integer quantity) {
+        Integer quantity) {
         return new ValidationResult();
     }
 
     @Override
     public ValidationResult preEntitlement(Consumer consumer, Pool enitlementPool,
-            Integer quantity, CallerType caller) {
+        Integer quantity, CallerType caller) {
         return new ValidationResult();
     }
 
@@ -57,7 +57,7 @@ public class EnforcerForTesting implements Enforcer {
 
     @Override
     public void postUnbind(Consumer consumer, PoolManager poolManager,
-            Entitlement ent) {
+        Entitlement ent) {
     }
 
     @Override
@@ -68,7 +68,7 @@ public class EnforcerForTesting implements Enforcer {
 
     @Override
     public Map<String, ValidationResult> preEntitlement(Consumer consumer,
-            Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
+        Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
         Map<String, ValidationResult> result = new HashMap<String, ValidationResult>();
         for (PoolQuantity pool : entitlementPoolQuantities) {
             result.put(pool.getPool().getId(), preEntitlement(consumer, pool.getPool(), pool.getQuantity()));
@@ -78,7 +78,7 @@ public class EnforcerForTesting implements Enforcer {
 
     @Override
     public Map<String, ValidationResult> preEntitlement(Consumer consumer, Consumer host,
-            Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
+        Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
         return preEntitlement(consumer, entitlementPoolQuantities, caller);
     }
 }

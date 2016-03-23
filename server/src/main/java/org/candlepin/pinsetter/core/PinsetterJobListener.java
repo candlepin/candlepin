@@ -94,8 +94,7 @@ public class PinsetterJobListener implements JobListener {
             updateJob(context, exception);
         }
         catch (Exception e) {
-            if (UniqueByEntityJob.class.isAssignableFrom(
-                    context.getJobDetail().getJobClass())) {
+            if (UniqueByEntityJob.class.isAssignableFrom(context.getJobDetail().getJobClass())) {
                 log.error("jobWasExecuted encountered a problem on a blocking job." +
                     " This can block other jobs.  Marking finished, if possible", e);
                 try {

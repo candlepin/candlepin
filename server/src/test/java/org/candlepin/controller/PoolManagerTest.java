@@ -294,7 +294,7 @@ public class PoolManagerTest {
             .updateFloatingPools(eq(new LinkedList()), eq(true), any(Set.class));
         ArgumentCaptor<Pool> argPool = ArgumentCaptor.forClass(Pool.class);
         verify(this.manager).updatePoolsForMasterPool(eq(expectedModified), argPool.capture(),
-                eq(sub.getQuantity()), eq(false), any(Set.class));
+            eq(sub.getQuantity()), eq(false), any(Set.class));
         TestUtil.assertPoolsAreEqual(TestUtil.copyFromSub(sub), argPool.getValue());
     }
 
@@ -332,7 +332,7 @@ public class PoolManagerTest {
 
         when(this.mockProductCurator.lookupById(o, product.getId())).thenReturn(product);
         when(this.mockProductCurator.lookupById(o, subProduct.getId())).thenReturn(
-                subProduct);
+            subProduct);
 
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, productCuratorMock);
         List<Pool> pools = pRules.createAndEnrichPools(sub);
@@ -342,7 +342,7 @@ public class PoolManagerTest {
         assertNotNull(resultPool.getDerivedProduct());
         assertTrue(resultPool.getDerivedProduct().hasAttribute(testAttributeKey));
         assertEquals(expectedAttributeValue,
-                resultPool.getDerivedProduct().getAttributeValue(testAttributeKey));
+            resultPool.getDerivedProduct().getAttributeValue(testAttributeKey));
     }
 
     @Test
@@ -355,7 +355,7 @@ public class PoolManagerTest {
 
         when(this.mockProductCurator.lookupById(o, product.getId())).thenReturn(product);
         when(this.mockProductCurator.lookupById(o, subProduct.getId())).thenReturn(
-                subProduct);
+            subProduct);
 
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, productCuratorMock);
         List<Pool> pools = pRules.createAndEnrichPools(sub);
@@ -379,7 +379,7 @@ public class PoolManagerTest {
 
         when(this.mockProductCurator.lookupById(o, product.getId())).thenReturn(product);
         when(this.mockProductCurator.lookupById(o, subProduct.getId())).thenReturn(
-                subProduct);
+            subProduct);
 
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, productCuratorMock);
         List<Pool> pools = pRules.createAndEnrichPools(sub);
@@ -642,7 +642,7 @@ public class PoolManagerTest {
         assertFalse(e.getDirty());
 
         verify(entCertAdapterMock).generateEntitlementCerts(eq(con), entMapCaptor.capture(),
-                productMapCaptor.capture());
+            productMapCaptor.capture());
         assertEquals(e, entMapCaptor.getValue().get(pool.getId()));
         assertEquals(product, productMapCaptor.getValue().get(pool.getId()));
 
@@ -793,7 +793,7 @@ public class PoolManagerTest {
             .thenReturn(bestPools);
 
         AutobindData data = AutobindData.create(TestUtil.createConsumer(o))
-                .forProducts(new String[] { product.getUuid() }).on(now);
+            .forProducts(new String[] { product.getUuid() }).on(now);
 
         doNothing().when(mockPoolCurator).flush();
         doNothing().when(mockPoolCurator).clear();
@@ -822,11 +822,9 @@ public class PoolManagerTest {
         Page page = mock(Page.class);
 
         when(page.getPageData()).thenReturn(pools);
-        when(
-                mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class), any(Owner.class),
-                        any(String.class), any(String.class), eq(now), anyBoolean(),
-                        any(PoolFilterBuilder.class), any(PageRequest.class), anyBoolean())).thenReturn(
-                page);
+        when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class), any(Owner.class),
+            any(String.class), any(String.class), eq(now), anyBoolean(),
+            any(PoolFilterBuilder.class), any(PageRequest.class), anyBoolean())).thenReturn(page);
 
         when(mockPoolCurator.lockAndLoadBatch(any(List.class))).thenReturn(Arrays.asList(pool1));
         when(
@@ -845,7 +843,7 @@ public class PoolManagerTest {
                 .thenReturn(bestPools);
 
         AutobindData data = AutobindData.create(TestUtil.createConsumer(o))
-                .forProducts(new String[] { product.getUuid() }).on(now);
+            .forProducts(new String[] { product.getUuid() }).on(now);
 
         doNothing().when(mockPoolCurator).flush();
 
@@ -856,8 +854,8 @@ public class PoolManagerTest {
         catch (EntitlementRefusedException e) {
             assertNotNull(e);
             verify(autobindRules, times(4)).selectBestPools(any(Consumer.class), any(String[].class),
-                    any(List.class), any(ComplianceStatus.class), any(String.class), any(Set.class),
-                    eq(false));
+                any(List.class), any(ComplianceStatus.class), any(String.class), any(Set.class),
+                eq(false));
         }
 
     }
@@ -929,7 +927,7 @@ public class PoolManagerTest {
 
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(p);
         when(mockPoolCurator.entitlementsIn(p)).thenReturn(
-                new ArrayList<Entitlement>(p.getEntitlements()));
+            new ArrayList<Entitlement>(p.getEntitlements()));
         PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
@@ -954,7 +952,7 @@ public class PoolManagerTest {
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(p);
         when(mockPoolCurator.listExpiredPools()).thenReturn(pools);
         when(mockPoolCurator.entitlementsIn(p)).thenReturn(
-                new ArrayList<Entitlement>(p.getEntitlements()));
+            new ArrayList<Entitlement>(p.getEntitlements()));
         Subscription sub = new Subscription();
         sub.setId(p.getSubscriptionId());
         when(mockSubAdapter.getSubscription(any(String.class))).thenReturn(sub);
@@ -979,7 +977,7 @@ public class PoolManagerTest {
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(p);
         when(mockPoolCurator.listExpiredPools()).thenReturn(pools);
         when(mockPoolCurator.entitlementsIn(p)).thenReturn(
-                new ArrayList<Entitlement>(p.getEntitlements()));
+            new ArrayList<Entitlement>(p.getEntitlements()));
         Subscription sub = new Subscription();
         sub.setId(p.getSubscriptionId());
         when(mockSubAdapter.getSubscription(any(String.class))).thenReturn(sub);
@@ -1168,7 +1166,7 @@ public class PoolManagerTest {
     public void createPoolsForExistingSubscriptionsNoneExist() {
         Owner owner = this.getOwner();
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
-                productCuratorMock);
+            productCuratorMock);
         List<Subscription> subscriptions = Util.newList();
         Product prod = TestUtil.createProduct(owner);
         Set<Product> products = new HashSet<Product>();
@@ -1189,9 +1187,9 @@ public class PoolManagerTest {
 
         assertEquals(newPools.size(), 2);
         assertTrue(newPools.get(0).getSourceSubscription().getSubscriptionSubKey().equals("derived") ||
-                newPools.get(1).getSourceSubscription().getSubscriptionSubKey().equals("derived"));
+            newPools.get(1).getSourceSubscription().getSubscriptionSubKey().equals("derived"));
         assertTrue(newPools.get(0).getSourceSubscription().getSubscriptionSubKey().startsWith("master") ||
-                newPools.get(1).getSourceSubscription().getSubscriptionSubKey().startsWith("master"));
+            newPools.get(1).getSourceSubscription().getSubscriptionSubKey().startsWith("master"));
     }
 
     @Test
@@ -1207,16 +1205,16 @@ public class PoolManagerTest {
         assertEquals(2, newPools.size());
 
         assertTrue(newPools.get(0).getSourceSubscription().getSubscriptionSubKey().equals("derived") ||
-                newPools.get(1).getSourceSubscription().getSubscriptionSubKey().equals("derived"));
+            newPools.get(1).getSourceSubscription().getSubscriptionSubKey().equals("derived"));
         assertTrue(newPools.get(0).getSourceSubscription().getSubscriptionSubKey().startsWith("master") ||
-                newPools.get(1).getSourceSubscription().getSubscriptionSubKey().startsWith("master"));
+            newPools.get(1).getSourceSubscription().getSubscriptionSubKey().startsWith("master"));
     }
 
     @Test
     public void createPoolsForExistingSubscriptionsMasterExist() {
         Owner owner = this.getOwner();
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
-                productCuratorMock);
+            productCuratorMock);
         List<Subscription> subscriptions = Util.newList();
         Product prod = TestUtil.createProduct(owner);
         Set<Product> products = new HashSet<Product>();
@@ -1258,7 +1256,7 @@ public class PoolManagerTest {
     public void createPoolsForExistingSubscriptionsBonusExist() {
         Owner owner = this.getOwner();
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
-                productCuratorMock);
+            productCuratorMock);
         List<Subscription> subscriptions = Util.newList();
         Product prod = TestUtil.createProduct(owner);
         Set<Product> products = new HashSet<Product>();
@@ -2002,7 +2000,7 @@ public class PoolManagerTest {
         assertNotNull(message);
         message = message.split(": ")[1];
         assertEquals(message,
-                i18n.tr("Unmapped guest entitlement expired without establishing a host/guest mapping."));
+            i18n.tr("Unmapped guest entitlement expired without establishing a host/guest mapping."));
     }
 
     @Test
@@ -2032,9 +2030,9 @@ public class PoolManagerTest {
         when(mockPoolCurator.lockAndLoadBatch(anyCollection())).thenReturn(Arrays.asList(pool));
 
         when(mockPoolCurator.lookupOversubscribedBySubscriptionIds(anyMap())).thenReturn(
-                Arrays.asList(derivedPool));
+            Arrays.asList(derivedPool));
         when(mockPoolCurator.retrieveFreeEntitlementsOfPools(anyListOf(Pool.class), eq(true))).thenReturn(
-                Arrays.asList(derivedEnt));
+            Arrays.asList(derivedEnt));
         when(mockPoolCurator.lockAndLoad(eq(derivedPool))).thenReturn(derivedPool);
         pool.setId("masterpool");
 
@@ -2101,9 +2099,9 @@ public class PoolManagerTest {
         when(mockPoolCurator.lockAndLoadBatch(anyCollection())).thenReturn(Arrays.asList(pool));
 
         when(mockPoolCurator.lookupOversubscribedBySubscriptionIds(anyMap())).thenReturn(
-                Arrays.asList(derivedPool, derivedPool2, derivedPool3));
+            Arrays.asList(derivedPool, derivedPool2, derivedPool3));
         when(mockPoolCurator.retrieveFreeEntitlementsOfPools(anyListOf(Pool.class), eq(true))).thenReturn(
-                Arrays.asList(derivedEnt, derivedEnt2, derivedEnt3));
+            Arrays.asList(derivedEnt, derivedEnt2, derivedEnt3));
         when(mockPoolCurator.lockAndLoad(eq(derivedPool))).thenReturn(derivedPool);
         when(mockPoolCurator.lockAndLoad(eq(derivedPool2))).thenReturn(derivedPool2);
         pool.setId("masterpool");

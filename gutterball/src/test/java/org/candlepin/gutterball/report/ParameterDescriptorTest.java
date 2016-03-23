@@ -306,7 +306,7 @@ public class ParameterDescriptorTest {
     }
 
     private void assertInvalidParameter(ParameterDescriptor descriptor,
-            MultivaluedMap<String, String> params, String expectedMessage) {
+        MultivaluedMap<String, String> params, String expectedMessage) {
         try {
             descriptor.validate(params);
             fail("Expected param validation error.");

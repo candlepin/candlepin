@@ -62,7 +62,7 @@ public class HashableStringGenerators {
      * @return the generated string
      */
     public static <T extends Object> String generateFromCollection(
-            Collection<T> target, HashableStringGenerator<T> generator) {
+        Collection<T> target, HashableStringGenerator<T> generator) {
         // Just append null if the collection was null.
         if (target == null) {
             return null;

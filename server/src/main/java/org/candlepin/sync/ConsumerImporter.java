@@ -87,8 +87,7 @@ public class ConsumerImporter {
                     Importer.Conflict.DISTRIBUTOR_CONFLICT);
             }
             else {
-                log.warn("Forcing import from a new distributor for org: " +
-                        owner.getKey());
+                log.warn("Forcing import from a new distributor for org: {}", owner.getKey());
                 log.warn("Old distributor UUID: " + owner.getUpstreamUuid());
                 log.warn("New distributor UUID: " + consumer.getUuid());
             }

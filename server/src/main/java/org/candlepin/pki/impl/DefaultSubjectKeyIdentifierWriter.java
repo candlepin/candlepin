@@ -33,7 +33,7 @@ public class DefaultSubjectKeyIdentifierWriter implements SubjectKeyIdentifierWr
 
     @Override
     public DEREncodable getSubjectKeyIdentifier(KeyPair clientKeyPair,
-                                                Set<X509ExtensionWrapper> extensions)
+        Set<X509ExtensionWrapper> extensions)
         throws CertificateParsingException, IOException, InvalidKeyException {
 
         return new SubjectKeyIdentifierStructure(clientKeyPair.getPublic());

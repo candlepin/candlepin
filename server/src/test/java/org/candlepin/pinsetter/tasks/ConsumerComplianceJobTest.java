@@ -88,7 +88,7 @@ public class ConsumerComplianceJobTest {
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         when(curator.lockAndLoadByUuid(consumerUuid)).thenReturn(consumer);
         when(rules.getStatus(eq(consumer), any(Date.class), eq(false), eq(false))).thenThrow(
-                new RuleExecutionException("random exception"));
+            new RuleExecutionException("random exception"));
         job.execute(ctx);
     }
 
@@ -101,9 +101,9 @@ public class ConsumerComplianceJobTest {
         when(curator.lockAndLoadByUuid(consumerUuid)).thenReturn(null);
         job.execute(ctx);
 
-        verify(ctx).setResult(
-            eq(String.format("Compliance status update was not required as Consumer {} no longer exists.",
-                consumerUuid)));
+        verify(ctx).setResult(eq(String.format(
+            "Compliance status update was not required as Consumer {} no longer exists.",
+            consumerUuid)));
     }
 
 }

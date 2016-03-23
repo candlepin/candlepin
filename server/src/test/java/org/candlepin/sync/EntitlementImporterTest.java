@@ -122,10 +122,10 @@ public class EntitlementImporterTest {
 
         // Create our expected products
         Map<String, Product> productsById = buildProductCache(
-                parentProduct, provided1, derivedProduct, derivedProvided1);
+            parentProduct, provided1, derivedProduct, derivedProvided1);
 
         Subscription sub = importer.importObject(om, reader, owner, productsById,
-                consumerDto, meta);
+            consumerDto, meta);
 
         assertEquals(pool.getId(), sub.getUpstreamPoolId());
         assertEquals(consumer.getUuid(), sub.getUpstreamConsumerId());

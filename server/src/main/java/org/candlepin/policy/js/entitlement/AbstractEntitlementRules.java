@@ -268,7 +268,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     }
 
     protected void runPostEntitlement(PoolManager poolManager, Consumer consumer,
-            Map<String, Entitlement> entitlementMap, List<Pool> subPoolsForStackIds) {
+        Map<String, Entitlement> entitlementMap, List<Pool> subPoolsForStackIds) {
         Map<String, Map<String, String>> flatAttributeMaps = new HashMap<String, Map<String, String>>();
         Map<String, Entitlement> virtLimitEntitlements = new HashMap<String, Entitlement>();
         for (Entry<String, Entitlement> entry : entitlementMap.entrySet()) {
@@ -281,7 +281,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
         // Perform pool management based on the attributes of the pool:
         postBindVirtLimit(poolManager, consumer, virtLimitEntitlements, flatAttributeMaps,
-                subPoolsForStackIds);
+            subPoolsForStackIds);
     }
 
     protected void runPostUnbind(PoolManager poolManager, Entitlement entitlement) {
@@ -301,7 +301,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         boolean hostLimited = attributes.containsKey("host_limited") &&
             attributes.get("host_limited").equals("true");
         if (!config.getBoolean(ConfigProperties.STANDALONE) && !hostLimited &&
-                c.getType().isManifest()) {
+            c.getType().isManifest()) {
             String virtLimit = attributes.get("virt_limit");
             if (!"unlimited".equals(virtLimit)) {
                 // As we have unbound an entitlement from a physical pool that
@@ -341,8 +341,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     }
 
     private void postBindVirtLimit(PoolManager poolManager, Consumer c,
-            Map<String, Entitlement> entitlementMap, Map<String, Map<String, String>> attributeMaps,
-            List<Pool> subPoolsForStackIds) {
+        Map<String, Entitlement> entitlementMap, Map<String, Map<String, String>> attributeMaps,
+        List<Pool> subPoolsForStackIds) {
         Set<String> stackIdsThathaveSubPools = new HashSet<String>();
         if (CollectionUtils.isNotEmpty(subPoolsForStackIds)) {
             for (Pool pool : subPoolsForStackIds) {
@@ -353,7 +353,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         log.debug("Running virt_limit post-bind.");
 
         boolean consumerFactExpression = !c.getType().isManifest() &&
-                !"true".equalsIgnoreCase(c.getFact("virt.is_guest"));
+            !"true".equalsIgnoreCase(c.getFact("virt.is_guest"));
 
         boolean isStandalone = config.getBoolean(ConfigProperties.STANDALONE);
 
@@ -396,12 +396,12 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         if (CollectionUtils.isNotEmpty(createHostRestrictedPoolFor)) {
             log.debug("creating host restricted pools for: {}", createHostRestrictedPoolFor);
             PoolHelper.createHostRestrictedPools(poolManager, c, createHostRestrictedPoolFor,
-                    entitlementMap, attributeMaps);
+                entitlementMap, attributeMaps);
         }
         if (CollectionUtils.isNotEmpty(decrementHostedBonusPoolQuantityFor)) {
             log.debug("decrementHostedBonusPoolQuantity for: {}", decrementHostedBonusPoolQuantityFor);
             decrementHostedBonusPoolQuantity(poolManager, c, decrementHostedBonusPoolQuantityFor,
-                    attributeMaps);
+                attributeMaps);
         }
     }
 
@@ -410,9 +410,9 @@ public abstract class AbstractEntitlementRules implements Enforcer {
      * quantity on the bonus pool, as those entitlements have now been exported to on-site.
      */
     private void decrementHostedBonusPoolQuantity(PoolManager poolManager, Consumer c,
-            List<Entitlement> entitlements, Map<String, Map<String, String>> attributesMaps) {
+        List<Entitlement> entitlements, Map<String, Map<String, String>> attributesMaps) {
         boolean consumerFactExpression = c.getType().isManifest() &&
-                !config.getBoolean(ConfigProperties.STANDALONE);
+            !config.getBoolean(ConfigProperties.STANDALONE);
 
         // pre-fetch subscription and respective pools in a batch
         Set<String> subscriptionIds = new HashSet<String>();
@@ -476,7 +476,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     }
 
     public void postEntitlement(PoolManager poolManager, Consumer consumer,
-            Map<String, Entitlement> entitlements, List<Pool> subPoolsForStackIds) {
+        Map<String, Entitlement> entitlements, List<Pool> subPoolsForStackIds) {
         runPostEntitlement(poolManager, consumer, entitlements, subPoolsForStackIds);
     }
 

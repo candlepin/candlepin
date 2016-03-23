@@ -817,7 +817,7 @@ public class InstalledProductStatusCalculatorTest {
     }
 
     private Entitlement mockUnmappedGuestEntitlement(Consumer consumer, Product product,
-            DateRange range, Product ... providedProducts) {
+        DateRange range, Product ... providedProducts) {
 
         consumer.setFact("virt.is_guest", "True");
         Entitlement e = mockEntitlement(consumer, product, range, providedProducts);

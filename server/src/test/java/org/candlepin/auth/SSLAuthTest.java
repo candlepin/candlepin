@@ -71,7 +71,7 @@ public class SSLAuthTest {
     public void correctUserName() throws Exception {
         Owner owner = new Owner("test owner");
         Consumer consumer = new Consumer("machine_name", "test user", owner,
-                new ConsumerType(ConsumerTypeEnum.SYSTEM));
+            new ConsumerType(ConsumerTypeEnum.SYSTEM));
         ConsumerPrincipal expected = new ConsumerPrincipal(consumer);
 
         String dn = "CN=453-44423-235";
@@ -90,7 +90,7 @@ public class SSLAuthTest {
     public void noUuidOnCert() throws Exception {
         mockCert("OU=something");
         when(this.consumerCurator.findByUuid(anyString())).thenReturn(
-                new Consumer("machine_name", "test user", null, null));
+            new Consumer("machine_name", "test user", null, null));
         assertNull(this.auth.getPrincipal(httpRequest));
     }
 

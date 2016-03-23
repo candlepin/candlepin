@@ -97,12 +97,8 @@ public class HypervisorUpdateJobTest {
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
         job.execute(ctx);
-        verify(consumerResource).create(any(Consumer.class),
-                                        eq(principal),
-                                        anyString(),
-                                        eq("joe"),
-                                        anyString(),
-                                        eq(false));
+        verify(consumerResource).create(any(Consumer.class), eq(principal), anyString(), eq("joe"),
+            anyString(), eq(false));
     }
 
     @Test
@@ -110,21 +106,17 @@ public class HypervisorUpdateJobTest {
         when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal,
-                "createReporterId");
+            "createReporterId");
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class))).thenReturn(
-                new VirtConsumerMap());
+            new VirtConsumerMap());
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
         job.execute(ctx);
         ArgumentCaptor<Consumer> argument = ArgumentCaptor.forClass(Consumer.class);
-        verify(consumerResource).create(argument.capture(),
-                                        eq(principal),
-                                        anyString(),
-                                        eq("joe"),
-                                        anyString(),
-                                        eq(false));
+        verify(consumerResource).create(argument.capture(), eq(principal), anyString(), eq("joe"),
+            anyString(), eq(false));
         assertEquals("createReporterId", argument.getValue().getHypervisorId().getReporterId());
     }
 
@@ -145,7 +137,7 @@ public class HypervisorUpdateJobTest {
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
         job.execute(ctx);
         verify(consumerResource).performConsumerUpdates(any(Consumer.class), eq(hypervisor),
-                any(VirtConsumerMap.class), eq(false));
+            any(VirtConsumerMap.class), eq(false));
     }
 
     @Test
@@ -159,7 +151,7 @@ public class HypervisorUpdateJobTest {
         when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class))).thenReturn(vcm);
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal,
-                "updateReporterId");
+            "updateReporterId");
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
@@ -185,12 +177,8 @@ public class HypervisorUpdateJobTest {
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
         job.execute(ctx);
-        verify(consumerResource, never()).create(any(Consumer.class),
-                                        any(Principal.class),
-                                        anyString(),
-                                        anyString(),
-                                        anyString(),
-                                        eq(false));
+        verify(consumerResource, never()).create(any(Consumer.class), any(Principal.class),
+            anyString(), anyString(), anyString(), eq(false));
     }
 
     @Test
@@ -239,7 +227,7 @@ public class HypervisorUpdateJobTest {
         ListenerManager lm = mock(ListenerManager.class);
 
         when(jobCurator.getByClassAndTarget(anyString(), any(Class.class))).thenReturn(
-                preExistingJobStatus);
+            preExistingJobStatus);
         when(scheduler.getListenerManager()).thenReturn(lm);
         when(jobCurator.create(any(JobStatus.class))).thenReturn(newlyScheduledJobStatus);
 

@@ -125,7 +125,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.createProduct(prod, owner);
 
         List<Product> results = entityManager().createQuery(
-                "select p from Product as p").getResultList();
+            "select p from Product as p").getResultList();
         assertEquals(5, results.size());
     }
 
@@ -172,9 +172,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         assertEquals(new Product("label", "name", owner), new Product("label", "name", owner));
         assertFalse(new Product("label", "name", owner).equals(null));
         assertFalse(new Product("label", "name", owner).equals(new Product("label",
-                "another_name", owner)));
+            "another_name", owner)));
         assertFalse(new Product("label", "name", owner).equals(new Product(
-                "another_label", "name", owner)));
+            "another_label", "name", owner)));
     }
 
     @Test
@@ -290,8 +290,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testProductFullConstructor() {
-        Product prod = new Product("cp_test-label", "variant", owner,
-                                   "version", "arch", "", "SVC");
+        Product prod = new Product("cp_test-label", "variant", owner, "version", "arch", "", "SVC");
         productCurator.createProduct(prod, owner);
 
         productCurator.find(prod.getUuid());

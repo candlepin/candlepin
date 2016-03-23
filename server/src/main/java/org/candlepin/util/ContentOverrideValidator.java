@@ -42,8 +42,7 @@ public class ContentOverrideValidator {
     private OverrideRules overrideRules;
 
     @Inject
-    public ContentOverrideValidator(I18n i18n,
-            OverrideRules overrideRules) {
+    public ContentOverrideValidator(I18n i18n, OverrideRules overrideRules) {
         this.i18n = i18n;
         this.overrideRules = overrideRules;
     }

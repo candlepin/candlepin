@@ -265,7 +265,7 @@ public interface PoolManager {
      * @throws EntitlementRefusedException if unable to bind
      */
     List<Entitlement> entitleByProductsForHost(Consumer guest, Consumer host,
-            Date entitleDate, Collection<String> possiblePools)
+        Date entitleDate, Collection<String> possiblePools)
         throws EntitlementRefusedException;
 
     /**

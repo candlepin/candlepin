@@ -117,8 +117,7 @@ public class Entitlement {
 
     @ElementCollection(fetch = FetchType.LAZY)
     @BatchSize(size = 100)
-    @CollectionTable(name = "gb_ent_attr_snap",
-                     joinColumns = @JoinColumn(name = "ent_snap_id"))
+    @CollectionTable(name = "gb_ent_attr_snap", joinColumns = @JoinColumn(name = "ent_snap_id"))
     @MapKeyColumn(name = "gb_ent_attr_name")
     @Column(name = "gb_ent_attr_value")
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
@@ -126,8 +125,7 @@ public class Entitlement {
 
     @ElementCollection(fetch = FetchType.LAZY)
     @BatchSize(size = 25)
-    @CollectionTable(name = "gb_ent_prov_prod_snap",
-                     joinColumns = @JoinColumn(name = "ent_snap_id"))
+    @CollectionTable(name = "gb_ent_prov_prod_snap", joinColumns = @JoinColumn(name = "ent_snap_id"))
     @MapKeyColumn(name = "gb_ent_prov_prod_id")
     @Column(name = "gb_ent_prov_prod_name")
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
@@ -135,8 +133,7 @@ public class Entitlement {
 
     @ElementCollection(fetch = FetchType.LAZY)
     @BatchSize(size = 100)
-    @CollectionTable(name = "gb_ent_der_prod_attr_snap",
-                     joinColumns = @JoinColumn(name = "ent_snap_id"))
+    @CollectionTable(name = "gb_ent_der_prod_attr_snap", joinColumns = @JoinColumn(name = "ent_snap_id"))
     @MapKeyColumn(name = "gb_ent_der_prod_attr_name")
     @Column(name = "gb_ent_der_prod_attr_value")
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
@@ -144,8 +141,7 @@ public class Entitlement {
 
     @ElementCollection(fetch = FetchType.LAZY)
     @BatchSize(size = 25)
-    @CollectionTable(name = "gb_ent_der_prov_prod_snap",
-                     joinColumns = @JoinColumn(name = "ent_snap_id"))
+    @CollectionTable(name = "gb_ent_der_prov_prod_snap", joinColumns = @JoinColumn(name = "ent_snap_id"))
     @MapKeyColumn(name = "gb_ent_der_prov_prod_id")
     @Column(name = "gb_ent_der_prov_prod_name")
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
@@ -291,8 +287,7 @@ public class Entitlement {
         return derivedProvidedProducts;
     }
 
-    public void setDerivedProvidedProducts(
-            Map<String, String> derivedProvidedProducts) {
+    public void setDerivedProvidedProducts(Map<String, String> derivedProvidedProducts) {
         this.derivedProvidedProducts = derivedProvidedProducts;
     }
 
@@ -300,8 +295,7 @@ public class Entitlement {
         return derivedProductAttributes;
     }
 
-    public void setDerivedProductAttributes(
-            Map<String, String> derivedProductAttributes) {
+    public void setDerivedProductAttributes(Map<String, String> derivedProductAttributes) {
         this.derivedProductAttributes = derivedProductAttributes;
     }
 

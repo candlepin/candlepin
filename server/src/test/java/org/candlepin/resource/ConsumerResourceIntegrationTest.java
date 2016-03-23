@@ -200,6 +200,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
+    @SuppressWarnings("checkstyle:indentation")
     public void testCreateConsumer() {
         Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, null,
             standardSystemType);
@@ -219,6 +220,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
+    @SuppressWarnings("checkstyle:indentation")
     public void testCreateConsumerVsDefaultServiceLevelForOwner() {
         Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, null,
             standardSystemType);
@@ -243,7 +245,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
 
         Consumer submitted = consumerResource.create(toSubmit, principal, null,
-                owner.getKey(), null, true);
+            owner.getKey(), null, true);
         assertNotNull(submitted);
         assertNotNull(submitted.getId());
         assertNotNull(consumerCurator.find(submitted.getId()));
@@ -366,9 +368,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         consumerResource.unbindBySerial(consumer.getUuid(), serials.get(0)
             .getSerial().getId());
-        assertEquals(0,
-            consumerResource.listEntitlements(consumer.getUuid(), null, true,
-                    "", new ArrayList<KeyValueParameter>(), null).size());
+        assertEquals(0, consumerResource.listEntitlements(
+            consumer.getUuid(), null, true, "", new ArrayList<KeyValueParameter>(), null).size());
     }
 
     @Test(expected = NotFoundException.class)
@@ -401,10 +402,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         setupPrincipal(new ConsumerPrincipal(consumer));
 
-        assertEquals(
-            3,
-            consumerResource.getEntitlementCertificates(consumer.getUuid(),
-                null).size());
+        assertEquals(3, consumerResource.getEntitlementCertificates(
+            consumer.getUuid(), null).size());
     }
 
     @Test(expected = NotFoundException.class)
@@ -439,9 +438,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         setupAdminPrincipal("admin");
         securityInterceptor.enable();
 
-        assertEquals(0,
-            consumerResource.getEntitlementCertificates(consumer.getUuid(),
-                null).size());
+        assertEquals(0, consumerResource.getEntitlementCertificates(
+            consumer.getUuid(), null).size());
     }
 
     @Test(expected = NotFoundException.class)
@@ -492,9 +490,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(consumer));
         securityInterceptor.enable();
 
-        assertEquals(3,
-            consumerResource.listEntitlements(consumer.getUuid(), null, true,
-                    "", new ArrayList<KeyValueParameter>(), null).size());
+        assertEquals(3, consumerResource.listEntitlements(
+            consumer.getUuid(), null, true, "", new ArrayList<KeyValueParameter>(), null).size());
     }
 
     @Test(expected = NotFoundException.class)
@@ -514,7 +511,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         consumerResource.listEntitlements(consumer.getUuid(), null, true,
-                "", new ArrayList<KeyValueParameter>(), null);
+            "", new ArrayList<KeyValueParameter>(), null);
     }
 
     @Test(expected = NotFoundException.class)
@@ -533,7 +530,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         setupPrincipal(evilOwner, Access.ALL);
 
         consumerResource.listEntitlements(consumer.getUuid(), null, true,
-                "", new ArrayList<KeyValueParameter>(), null);
+            "", new ArrayList<KeyValueParameter>(), null);
     }
 
     @Test
@@ -547,9 +544,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
 
-        assertEquals(3,
-            consumerResource.listEntitlements(consumer.getUuid(), null, true,
-                    "", new ArrayList<KeyValueParameter>(), null).size());
+        assertEquals(3, consumerResource.listEntitlements(
+            consumer.getUuid(), null, true, "", new ArrayList<KeyValueParameter>(), null).size());
     }
 
     @Test
@@ -598,10 +594,10 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test
     public void testRegenerateEntitlementCertificateWithValidConsumerByEntitlement() {
         ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
-                null, null, this.entitlementCurator, null, null, null, null, null,
-                null, null, null, null, this.poolManager, null, null, null,
-                null, null, null, null, null, new CandlepinCommonTestConfig(), null,
-                null, null, mock(ConsumerBindUtil.class));
+            null, null, this.entitlementCurator, null, null, null, null, null,
+            null, null, null, null, this.poolManager, null, null, null,
+            null, null, null, null, null, new CandlepinCommonTestConfig(), null,
+            null, null, mock(ConsumerBindUtil.class));
 
         Response rsp = consumerResource.bind(
             consumer.getUuid(), pool.getId().toString(), null, 1, null,

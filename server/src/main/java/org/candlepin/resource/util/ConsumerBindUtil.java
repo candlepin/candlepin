@@ -63,11 +63,9 @@ public class ConsumerBindUtil {
     private static Logger log = LoggerFactory.getLogger(ConsumerBindUtil.class);
 
     @Inject
-    public ConsumerBindUtil(Entitler entitler,
-                            I18n i18n,
-                            ConsumerContentOverrideCurator consumerContentOverrideCurator,
-                            QuantityRules quantityRules,
-                            ServiceLevelValidator serviceLevelValidator) {
+    public ConsumerBindUtil(Entitler entitler, I18n i18n,
+        ConsumerContentOverrideCurator consumerContentOverrideCurator,
+        QuantityRules quantityRules, ServiceLevelValidator serviceLevelValidator) {
         this.entitler = entitler;
         this.i18n = i18n;
         this.consumerContentOverrideCurator = consumerContentOverrideCurator;
@@ -115,14 +113,14 @@ public class ConsumerBindUtil {
         for (ActivationKeyPool akp : toBind) {
             int quantity = (akp.getQuantity() == null) ?
                 getQuantityToBind(akp.getPool(), consumer) :
-                    akp.getQuantity().intValue();
+                akp.getQuantity().intValue();
             try {
                 entitler.sendEvents(entitler.bindByPoolQuantity(consumer, akp.getPool().getId(), quantity));
                 onePassed = true;
             }
             catch (ForbiddenException e) {
                 log.warn(i18n.tr("Cannot bind to pool ''{0}'' in activation key ''{1}'': {2}",
-                        akp.getPool().getId(), akp.getKey().getName(), e.getMessage()));
+                    akp.getPool().getId(), akp.getKey().getName(), e.getMessage()));
             }
         }
         return onePassed;
@@ -143,8 +141,8 @@ public class ConsumerBindUtil {
                 poolIds.add(p.getPool().getId());
             }
             AutobindData autobindData = AutobindData.create(consumer)
-                    .forProducts(productIds.toArray(new String[0]))
-                    .withPools(poolIds);
+                .forProducts(productIds.toArray(new String[0]))
+                .withPools(poolIds);
             List<Entitlement> ents = entitler.bindByProducts(autobindData);
             entitler.sendEvents(ents);
         }
@@ -161,7 +159,7 @@ public class ConsumerBindUtil {
     }
 
     private void handleActivationKeyOverrides(Consumer consumer,
-            Set<ActivationKeyContentOverride> overrides) {
+        Set<ActivationKeyContentOverride> overrides) {
         for (ActivationKeyContentOverride akco : overrides) {
             ConsumerContentOverride consumerOverride =
                 akco.buildConsumerContentOverride(consumer);
@@ -176,8 +174,7 @@ public class ConsumerBindUtil {
         }
     }
 
-    private boolean handleActivationKeyServiceLevel(Consumer consumer,
-            String level, Owner owner) {
+    private boolean handleActivationKeyServiceLevel(Consumer consumer, String level, Owner owner) {
         if (!StringUtils.isBlank(level)) {
             try {
                 serviceLevelValidator.validate(owner, level);

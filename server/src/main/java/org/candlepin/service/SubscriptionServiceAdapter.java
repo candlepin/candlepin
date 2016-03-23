@@ -90,8 +90,7 @@ public interface SubscriptionServiceAdapter {
      * @param email the email address tied to this consumer
      * @param emailLocale the i18n locale for the email
      */
-    void activateSubscription(Consumer consumer, String email,
-            String emailLocale);
+    void activateSubscription(Consumer consumer, String email, String emailLocale);
 
     /**
      * Create the given subscription.

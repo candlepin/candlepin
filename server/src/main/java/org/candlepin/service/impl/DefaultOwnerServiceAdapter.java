@@ -26,8 +26,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * default SubscriptionAdapter implementation
  */
-public class DefaultOwnerServiceAdapter implements
-        OwnerServiceAdapter {
+public class DefaultOwnerServiceAdapter implements OwnerServiceAdapter {
 
     private static Logger log =
         LoggerFactory.getLogger(DefaultOwnerServiceAdapter.class);

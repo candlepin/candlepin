@@ -109,8 +109,8 @@ public class EntitlerJobTest {
         ent.setPool(p);
         ent.setQuantity(100);
         ents.add(ent);
-        when(e.bindByPoolQuantities(eq(consumerUuid), anyMapOf(String.class, Integer.class))).thenReturn(
-                ents);
+        when(e.bindByPoolQuantities(eq(consumerUuid), anyMapOf(String.class, Integer.class)))
+            .thenReturn(ents);
 
         EntitlerJob job = new EntitlerJob(e, null, pC, null);
         job.execute(ctx);
@@ -164,8 +164,8 @@ public class EntitlerJobTest {
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         Class<HashMap<String, Integer>> className = (Class<HashMap<String, Integer>>) (Class) Map.class;
         ArgumentCaptor<HashMap<String, Integer>> pqMapCaptor = ArgumentCaptor.forClass(className);
-        when(e.bindByPoolQuantities(eq(consumerUuid), pqMapCaptor.capture())).thenThrow(
-                new ForbiddenException("job should fail"));
+        when(e.bindByPoolQuantities(eq(consumerUuid), pqMapCaptor.capture()))
+            .thenThrow(new ForbiddenException("job should fail"));
 
         EntitlerJob job = new EntitlerJob(e, null, null, null);
         job.execute(ctx);
@@ -183,8 +183,8 @@ public class EntitlerJobTest {
         ValidationResult result = new ValidationResult();
         result.addError("rulefailed.no.entitlements.available");
         mapResult.put("hello", result);
-        when(e.bindByPoolQuantities(eq(consumerUuid), anyMapOf(String.class, Integer.class))).thenThrow(
-                new EntitlementRefusedException(mapResult));
+        when(e.bindByPoolQuantities(eq(consumerUuid), anyMapOf(String.class, Integer.class)))
+            .thenThrow(new EntitlementRefusedException(mapResult));
 
         EntitlerJob job = new EntitlerJob(e, null, pC, i18n);
         Pool p = new Pool();
@@ -198,7 +198,7 @@ public class EntitlerJobTest {
         assertEquals("hello", resultErrors.get(0).getPoolId());
         assertEquals(1, resultErrors.get(0).getErrors().size());
         assertEquals("No subscriptions are available from the pool with ID 'hello'.", resultErrors.get(0)
-                .getErrors().get(0));
+            .getErrors().get(0));
     }
 
     @After

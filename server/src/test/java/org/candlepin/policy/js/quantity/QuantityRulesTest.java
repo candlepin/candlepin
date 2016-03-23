@@ -134,9 +134,8 @@ public class QuantityRulesTest {
         pool.getProduct().setAttribute("multi-entitlement", "no");
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);
-        Map<String, SuggestedQuantity> results =
-                quantityRules.getSuggestedQuantities(pools,
-                        new Consumer(), new Date());
+        Map<String, SuggestedQuantity> results = quantityRules.getSuggestedQuantities(
+            pools, new Consumer(), new Date());
         assertTrue(results.containsKey(pool.getId()));
         SuggestedQuantity suggested = results.get(pool.getId());
         assertEquals(new Long(1), suggested.getSuggested());
@@ -413,9 +412,8 @@ public class QuantityRulesTest {
 
         consumer.setEntitlements(ents);
 
-        SuggestedQuantity suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer,
-                TestUtil.createDate(2010, 1, 1));
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(
+            pool, consumer, TestUtil.createDate(2010, 1, 1));
         assertEquals(new Long(2), suggested.getSuggested());
     }
 
@@ -443,9 +441,8 @@ public class QuantityRulesTest {
         ents.add(currentEntitlement);
         consumer.setEntitlements(ents);
 
-        SuggestedQuantity suggested =
-            quantityRules.getSuggestedQuantity(currentPool,
-                consumer, TestUtil.createDate(2010, 6, 1));
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(
+            currentPool, consumer, TestUtil.createDate(2010, 6, 1));
         assertEquals(new Long(0), suggested.getSuggested());
 
         // Make sure current coverage does not affect the future

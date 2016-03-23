@@ -294,6 +294,7 @@ public class PinsetterKernel {
         }
     }
 
+    @SuppressWarnings("checkstyle:indentation")
     private void scheduleJobs(List<JobEntry> pendingJobs) {
         if (pendingJobs.size() == 0) {
             return;
@@ -317,6 +318,7 @@ public class PinsetterKernel {
         }
     }
 
+    @SuppressWarnings("checkstyle:indentation")
     public void scheduleJob(Class job, String jobName, String crontab)
         throws PinsetterException {
 
@@ -355,8 +357,7 @@ public class PinsetterKernel {
 
         try {
             JobStatus status = (JobStatus) (detail.getJobClass()
-                .getMethod("scheduleJob", JobCurator.class,
-                    Scheduler.class, JobDetail.class, Trigger.class)
+                .getMethod("scheduleJob", JobCurator.class, Scheduler.class, JobDetail.class, Trigger.class)
                 .invoke(null, jobCurator, scheduler, detail, trigger));
 
             if (log.isDebugEnabled()) {

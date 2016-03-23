@@ -49,7 +49,7 @@ public class RollbackExceptionMapper extends CandlepinExceptionMapper
         Map<String, String> map = VersionUtil.getVersionMap();
         ResponseBuilder bldr = Response.status(Status.BAD_REQUEST).type(
             determineBestMediaType()).header(VersionUtil.VERSION_HEADER,
-                map.get("version") + "-" + map.get("release"));
+            map.get("version") + "-" + map.get("release"));
 
         Throwable cause = exception.getCause();
         if (ValidationException.class.isAssignableFrom(cause.getClass())) {

@@ -86,10 +86,10 @@ public class EntitlementResource {
 
     @Inject
     public EntitlementResource(EntitlementCurator entitlementCurator,
-            ConsumerCurator consumerCurator,
-            PoolManager poolManager,
-            I18n i18n,
-            Entitler entitler, Enforcer enforcer, EntitlementRulesTranslator messageTranslator) {
+        ConsumerCurator consumerCurator,
+        PoolManager poolManager,
+        I18n i18n,
+        Entitler entitler, Enforcer enforcer, EntitlementRulesTranslator messageTranslator) {
 
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
@@ -120,7 +120,7 @@ public class EntitlementResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("consumer/{consumer_uuid}/product/{product_id}")
     public Entitlement hasEntitlement(@PathParam("consumer_uuid") String consumerUuid,
-            @PathParam("product_id") String productId) {
+        @PathParam("product_id") String productId) {
 
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
         verifyExistence(consumer, consumerUuid);
@@ -334,8 +334,8 @@ public class EntitlementResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("product/{product_id}")
     public JobDetail regenerateEntitlementCertificatesForProduct(
-            @PathParam("product_id") String productId,
-            @QueryParam("lazy_regen") @DefaultValue("true") boolean lazyRegen) {
+        @PathParam("product_id") String productId,
+        @QueryParam("lazy_regen") @DefaultValue("true") boolean lazyRegen) {
 
         JobDataMap map = new JobDataMap();
         map.put(RegenProductEntitlementCertsJob.PROD_ID, productId);
@@ -376,8 +376,7 @@ public class EntitlementResource {
             }
             if (quantity > 0 && quantity <= entitlement.getQuantity()) {
                 Consumer sourceConsumer = entitlement.getConsumer();
-                Consumer destinationConsumer = consumerCurator.verifyAndLookupConsumer(
-                        uuid);
+                Consumer destinationConsumer = consumerCurator.verifyAndLookupConsumer(uuid);
                 if (!sourceConsumer.getType().isManifest()) {
                     throw new BadRequestException(i18n.tr(
                         "Entitlement migration is not permissible for units of type ''{0}''",
@@ -394,7 +393,7 @@ public class EntitlementResource {
                 }
                 // test to ensure destination can use the pool
                 ValidationResult result = enforcer.preEntitlement(destinationConsumer,
-                        entitlement.getPool(), 0, CallerType.BIND);
+                    entitlement.getPool(), 0, CallerType.BIND);
                 if (!result.isSuccessful()) {
                     throw new BadRequestException(i18n.tr(
                         "The entitlement cannot be utilized by the destination unit: ") +
@@ -406,11 +405,11 @@ public class EntitlementResource {
                 }
                 else {
                     entitler.adjustEntitlementQuantity(sourceConsumer, entitlement,
-                            entitlement.getQuantity() - quantity);
+                        entitlement.getQuantity() - quantity);
                 }
                 Pool pool = entitlement.getPool();
                 entitlements.addAll(entitler.bindByPoolQuantity(destinationConsumer, pool.getId(),
-                        quantity));
+                    quantity));
 
                 // Trigger events:
                 entitler.sendEvents(entitlements);

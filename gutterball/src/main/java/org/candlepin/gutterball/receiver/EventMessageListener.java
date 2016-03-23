@@ -50,7 +50,7 @@ public class EventMessageListener implements MessageListener {
 
     @Inject
     public EventMessageListener(UnitOfWork unitOfWork, ObjectMapper mapper,
-            EventManager eventManager, EventCurator eventCurator) {
+        EventManager eventManager, EventCurator eventCurator) {
         this.unitOfWork = unitOfWork;
         this.eventManager = eventManager;
         this.mapper = mapper;

@@ -192,8 +192,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return list of EntitlementPools
      */
     @Transactional
-    public List<Pool> listByOwnerAndProduct(Owner owner,
-            String productId) {
+    public List<Pool> listByOwnerAndProduct(Owner owner, String productId) {
         return listAvailableEntitlementPools(null, owner, productId, null, false);
     }
 
@@ -445,10 +444,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Criterion[] exampleCriteria = new Criterion[0];
         for (Entry<String, Entitlement> entry : subIdMap.entrySet()) {
             SimpleExpression subscriptionExpr = Restrictions.eq("sourceSub.subscriptionId", entry.getKey());
-            Junction subscriptionJunction =
-                    Restrictions.and(subscriptionExpr)
-                    .add(Restrictions.or(Restrictions.isNull("sourceEntitlement"),
-                                         Restrictions.eqOrIsNull("sourceEntitlement", entry.getValue())));
+            Junction subscriptionJunction = Restrictions.and(subscriptionExpr).add(Restrictions.or(
+                Restrictions.isNull("sourceEntitlement"),
+                Restrictions.eqOrIsNull("sourceEntitlement", entry.getValue())));
             subIdMapCriteria.add(subscriptionJunction);
         }
 
@@ -490,15 +488,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     private static final String CONSUMER_FILTER = "Entitlement_CONSUMER_FILTER";
 
+    @SuppressWarnings("checkstyle:indentation")
     public int getNoOfDependentEntitlements(String entitlementId) {
         Filter consumerFilter = disableConsumerFilter();
-        Integer result = (Integer)
-            currentSession().createCriteria(Entitlement.class)
-                .setProjection(Projections.rowCount())
-                .createCriteria("pool")
-                    .createCriteria("sourceEntitlement")
-                        .add(Restrictions.idEq(entitlementId))
-                .list().get(0);
+        Integer result = (Integer) currentSession().createCriteria(Entitlement.class)
+            .setProjection(Projections.rowCount())
+            .createCriteria("pool")
+                .createCriteria("sourceEntitlement")
+                    .add(Restrictions.idEq(entitlementId))
+            .list().get(0);
         enableIfPrevEnabled(consumerFilter);
         return result;
     }
@@ -680,12 +678,12 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param stackIds
      * @return Derived pools which exist for the given consumer and stack ids
      */
+    @SuppressWarnings("checkstyle:indentation")
     public List<Pool> getSubPoolForStackIds(Consumer consumer, Collection stackIds) {
-        Criteria getPools = createSecureCriteria()
-                .createAlias("sourceStack", "ss")
-                .add(Restrictions.eq("ss.sourceConsumer", consumer))
-                .add(Restrictions.and(Restrictions.isNotNull("ss.sourceStackId"),
-                        unboundedInCriterion("ss.sourceStackId", stackIds)));
+        Criteria getPools = createSecureCriteria().createAlias("sourceStack", "ss")
+            .add(Restrictions.eq("ss.sourceConsumer", consumer))
+            .add(Restrictions.and(Restrictions.isNotNull("ss.sourceStackId"),
+                unboundedInCriterion("ss.sourceStackId", stackIds)));
         return (List<Pool>) getPools.list();
     }
 
@@ -708,8 +706,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @SuppressWarnings("unchecked")
     public List<Pool> getPoolsFromBadSubs(Owner owner, Collection<String> expectedSubIds) {
-        Criteria crit = currentSession().createCriteria(Pool.class)
-                .add(Restrictions.eq("owner", owner));
+        Criteria crit = currentSession().createCriteria(Pool.class).add(Restrictions.eq("owner", owner));
 
         if (!expectedSubIds.isEmpty()) {
             crit.createAlias("sourceSubscription", "sourceSub");

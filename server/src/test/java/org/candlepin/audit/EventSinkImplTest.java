@@ -87,10 +87,9 @@ public class EventSinkImplTest {
      * @return
      * @throws Exception
      */
-    private EventSinkImpl createEventSink(
-            final ClientSessionFactory sessionFactory) throws Exception {
-        EventSinkImpl sink = new EventSinkImpl(eventFilter,
-                factory, mapper, new CandlepinCommonTestConfig()) {
+    private EventSinkImpl createEventSink(final ClientSessionFactory sessionFactory) throws Exception {
+        EventSinkImpl sink =
+            new EventSinkImpl(eventFilter, factory, mapper, new CandlepinCommonTestConfig()) {
 
             @Override
             protected ClientSessionFactory createClientSessionFactory() {

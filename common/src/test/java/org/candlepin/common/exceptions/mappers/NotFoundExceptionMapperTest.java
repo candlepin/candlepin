@@ -30,8 +30,7 @@ public class NotFoundExceptionMapperTest extends TestExceptionMapperBase {
     @Test
     public void handleNotFoundException() {
         NotFoundException nfe = new NotFoundException("unacceptable");
-        NotFoundExceptionMapper nfem = injector
-                .getInstance(NotFoundExceptionMapper.class);
+        NotFoundExceptionMapper nfem = injector.getInstance(NotFoundExceptionMapper.class);
         Response r = nfem.toResponse(nfe);
         assertEquals(404, r.getStatus());
         verifyMessage(r, rtmsg("unacceptable"));
@@ -48,8 +47,7 @@ public class NotFoundExceptionMapperTest extends TestExceptionMapperBase {
      */
     @Test
     public void handleNotFoundQueryParameterException() {
-        NotFoundExceptionMapper nfem = injector
-                .getInstance(NotFoundExceptionMapper.class);
+        NotFoundExceptionMapper nfem = injector.getInstance(NotFoundExceptionMapper.class);
         String foo = "javax.ws.rs.SomeThing(\"paramName\") value is 'strVal' for";
         NotFoundException bre = new NotFoundException(foo);
         Response r = nfem.toResponse(bre);

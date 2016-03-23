@@ -46,7 +46,7 @@ public class ImportRecordJob extends KingpinJob {
 
     @Inject
     public ImportRecordJob(ImportRecordCurator importRecordCurator,
-            OwnerCurator ownerCurator, Configuration config) {
+        OwnerCurator ownerCurator, Configuration config) {
         this.importRecordCurator = importRecordCurator;
         this.ownerCurator = ownerCurator;
     }
@@ -62,8 +62,7 @@ public class ImportRecordJob extends KingpinJob {
 
             if (DEFAULT_KEEP < records.size()) {
                 // records are already sorted by date, so just shave off of the end
-                this.importRecordCurator.bulkDelete(
-                        records.subList(DEFAULT_KEEP, records.size()));
+                this.importRecordCurator.bulkDelete(records.subList(DEFAULT_KEEP, records.size()));
             }
         }
     }

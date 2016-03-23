@@ -64,8 +64,7 @@ public abstract class ConsumerAuth implements AuthProvider {
                 principal = new ConsumerPrincipal(consumer);
 
                 if (log.isDebugEnabled() && principal != null) {
-                    log.debug("principal created for consumer '" +
-                            principal.getConsumer().getUuid());
+                    log.debug("principal created for consumer {}", principal.getConsumer().getUuid());
                 }
             }
         }

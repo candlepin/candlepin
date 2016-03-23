@@ -37,7 +37,7 @@ import javax.ws.rs.ext.Provider;
  */
 @Provider
 public class BadRequestExceptionMapper extends CandlepinExceptionMapper
-        implements ExceptionMapper<BadRequestException> {
+    implements ExceptionMapper<BadRequestException> {
 
     /**
      * Service that handles JAX-RS exceptions.
@@ -55,9 +55,8 @@ public class BadRequestExceptionMapper extends CandlepinExceptionMapper
             // It may be just as good to use getDefaultBuilder here
             Map<String, String> map = VersionUtil.getVersionMap();
             ResponseBuilder bldr = Response.status(Status.BAD_REQUEST)
-                    .type(determineBestMediaType())
-                    .header(VersionUtil.VERSION_HEADER,
-                            map.get("version") + "-" + map.get("release"));
+                .type(determineBestMediaType())
+                .header(VersionUtil.VERSION_HEADER, map.get("version") + "-" + map.get("release"));
             bldr.entity(new ExceptionMessage(i18n.get().tr("Bad Request")));
             return bldr.build();
         }

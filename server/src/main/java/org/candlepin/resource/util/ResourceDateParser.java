@@ -34,7 +34,7 @@ public class ResourceDateParser {
     public static Date getFromDate(String from, String to, String days) {
         if (days != null && !days.trim().equals("") &&
             (to != null && !to.trim().equals("") ||
-                from != null && !from.trim().equals(""))) {
+            from != null && !from.trim().equals(""))) {
             throw new BadRequestException("You can use either the to/from " +
                                            "date parameters or the number of " +
                                            "days parameter, but not both");

@@ -75,6 +75,7 @@ public class LoggingListener implements EventListener {
     }
 
     @Override
+    @SuppressWarnings("checkstyle:indentation")
     public void onEvent(Event e) {
         auditLog.info(
             "{} principalType={} principal={} target={} entityId={} type={} owner={}\n",

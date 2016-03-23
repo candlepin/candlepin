@@ -31,9 +31,9 @@ import javax.ws.rs.Path;
  */
 @Path("/activation_keys/{activation_key_id}/content_overrides")
 public class ActivationKeyContentOverrideResource extends
-        ContentOverrideResource<ActivationKeyContentOverride,
-        ActivationKeyContentOverrideCurator,
-        ActivationKey> {
+    ContentOverrideResource<ActivationKeyContentOverride,
+    ActivationKeyContentOverrideCurator,
+    ActivationKey> {
 
     private ActivationKeyCurator activationKeyCurator;
 

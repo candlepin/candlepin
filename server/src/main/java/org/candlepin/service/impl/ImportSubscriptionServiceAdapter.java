@@ -35,8 +35,7 @@ import java.util.Map;
  * @author mstead
  *
  */
-public class ImportSubscriptionServiceAdapter implements
-        SubscriptionServiceAdapter {
+public class ImportSubscriptionServiceAdapter implements SubscriptionServiceAdapter {
 
     private List<Subscription> subscriptions;
     private Map<String, Subscription> subsBySubId = new HashMap<String, Subscription>();
@@ -74,8 +73,7 @@ public class ImportSubscriptionServiceAdapter implements
     }
 
     @Override
-    public void activateSubscription(Consumer consumer, String email,
-            String emailLocale) {
+    public void activateSubscription(Consumer consumer, String email, String emailLocale) {
         throw new ServiceUnavailableException(
                 i18n.tr("Standalone candlepin does not support redeeming a subscription."));
     }

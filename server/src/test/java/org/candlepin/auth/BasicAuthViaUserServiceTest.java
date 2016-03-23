@@ -128,7 +128,7 @@ public class BasicAuthViaUserServiceTest {
         when(userService.findByLogin("user")).thenReturn(new User());
 
         UserPrincipal expected = new UserPrincipal("user",
-                new ArrayList<Permission>(permissions), false);
+            new ArrayList<Permission>(permissions), false);
         assertEquals(expected, this.auth.getPrincipal(request));
     }
 
@@ -145,7 +145,7 @@ public class BasicAuthViaUserServiceTest {
         when(userService.findByLogin("user")).thenReturn(new User());
 
         UserPrincipal expected = new UserPrincipal("user",
-                new ArrayList<Permission>(permissions), false);
+            new ArrayList<Permission>(permissions), false);
         assertEquals(expected, this.auth.getPrincipal(request));
     }
     @Test
@@ -162,7 +162,7 @@ public class BasicAuthViaUserServiceTest {
         when(userService.findByLogin("user")).thenReturn(new User());
 
         UserPrincipal expected = new UserPrincipal("user",
-                new ArrayList<Permission>(permissions), false);
+            new ArrayList<Permission>(permissions), false);
         assertEquals(expected, this.auth.getPrincipal(request));
     }
 

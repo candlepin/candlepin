@@ -56,6 +56,7 @@ public class CheckJobStatusPermission extends TypedPermission<JobStatus> {
     }
 
     @Override
+    @SuppressWarnings("checkstyle:indentation")
     public Criterion getCriteriaRestrictions(Class entityClass) {
         if (!entityClass.equals(JobStatus.class)) {
             return null;
@@ -69,8 +70,7 @@ public class CheckJobStatusPermission extends TypedPermission<JobStatus> {
             Restrictions.ne("targetType", JobStatus.TargetType.OWNER),
             Restrictions.and(
                 Restrictions.eq("targetType", JobStatus.TargetType.OWNER),
-                Restrictions.eqProperty("ownerId", "targetId")
-            )
+                Restrictions.eqProperty("ownerId", "targetId"))
         ));
 
         // If the principal is not a user, make sure to enforce a principalName match.

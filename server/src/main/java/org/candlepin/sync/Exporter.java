@@ -162,8 +162,7 @@ public class Exporter {
         }
     }
 
-    public File getEntitlementExport(Consumer consumer,
-                        Set<Long> serials) throws ExportCreationException {
+    public File getEntitlementExport(Consumer consumer, Set<Long> serials) throws ExportCreationException {
         // TODO: need to delete tmpDir (which contains the archive,
         // which we need to return...)
         try {
@@ -373,10 +372,8 @@ public class Exporter {
         }
     }
 
-    private void exportEntitlementsCerts(File baseDir,
-                                         Consumer consumer,
-                                         Set<Long> serials,
-                                         boolean manifest)
+    private void exportEntitlementsCerts(File baseDir, Consumer consumer,
+        Set<Long> serials, boolean manifest)
         throws IOException {
 
         File entCertDir = new File(baseDir.getCanonicalPath(), "entitlement_certificates");
@@ -385,8 +382,8 @@ public class Exporter {
         for (EntitlementCertificate cert : entCertAdapter.listForConsumer(consumer)) {
             if (manifest && !this.exportRules.canExport(cert.getEntitlement())) {
                 if (log.isDebugEnabled()) {
-                    log.debug("Skipping export of entitlement cert with product:  " +
-                            cert.getEntitlement().getPool().getProductId());
+                    log.debug("Skipping export of entitlement cert with product: {}",
+                        cert.getEntitlement().getPool().getProductId());
                 }
                 continue;
             }
@@ -446,8 +443,8 @@ public class Exporter {
 
             if (!this.exportRules.canExport(ent)) {
                 if (log.isDebugEnabled()) {
-                    log.debug("Skipping export of entitlement with product:  " +
-                            ent.getPool().getProductId());
+                    log.debug("Skipping export of entitlement with product: {}",
+                        ent.getPool().getProductId());
                 }
 
                 continue;

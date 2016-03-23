@@ -111,8 +111,8 @@ public class NoopEventSinkImpl implements EventSink {
 
     @Override
     public void emitCompliance(Consumer consumer,
-            Set<Entitlement> entitlements, ComplianceStatus compliance) {
-        log.debug("emitCompliance: entitlements:" + entitlements + " ComplianceStatus:" + compliance);
+        Set<Entitlement> entitlements, ComplianceStatus compliance) {
+        log.debug("emitCompliance: entitlements: {} ComplianceStatus: {}", entitlements, compliance);
     }
 
     @Override

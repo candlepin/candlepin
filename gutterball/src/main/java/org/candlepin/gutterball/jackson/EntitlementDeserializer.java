@@ -90,7 +90,7 @@ public class EntitlementDeserializer extends JsonDeserializer<Entitlement> {
         while (elements.hasNext()) {
             JsonNode providedProductJson = elements.next();
             products.put(providedProductJson.get("productId").textValue(),
-                    getValue(providedProductJson, "productName"));
+                getValue(providedProductJson, "productName"));
         }
         return products;
     }

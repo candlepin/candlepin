@@ -54,13 +54,12 @@ public class ProductImporterTest {
     @Before
     public void setUp() throws IOException {
         mapper = SyncUtils.getObjectMapper(new MapConfiguration(
-                new HashMap<String, String>() {
-
-                    {
-                        put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
-                                "false");
-                    }
-                }));
+            new HashMap<String, String>() {
+                {
+                    put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+                }
+            }
+        ));
         productCuratorMock = mock(ProductCurator.class);
         contentCuratorMock = mock(ContentCurator.class);
         importer = new ProductImporter(productCuratorMock, contentCuratorMock);
