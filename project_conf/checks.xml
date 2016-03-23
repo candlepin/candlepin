@@ -289,7 +289,9 @@
        #######################################################################
      -->
     <module name="ModifierOrder"/>
-    <module name="RedundantModifier"/>
+    <module name="RedundantModifier">
+      <property name="tokens" value="METHOD_DEF, VARIABLE_DEF, ANNOTATION_FIELD_DEF, INTERFACE_DEF, CLASS_DEF"/>
+    </module>
 
     <!--
        #######################################################################
