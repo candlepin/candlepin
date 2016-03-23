@@ -414,6 +414,25 @@ describe 'Consumer Resource' do
     @cp.get_consumer(consumer['uuid'])['updated'].should_not == new_updated
   end
 
+  it 'consumer can async bind by product id' do
+    product_id = random_string('prod')
+    product = create_product(product_id, product_id, {:owner => @owner1['key']})
+    pool = create_pool_and_subscription(@owner1['key'], product.id)
+
+    status = @consumer1.consume_product(product.id, { :async => true })
+
+    status['targetType'].should == "consumer"
+    status['targetId'].should == @consumer1.uuid
+
+    job_status = wait_for_job(status['id'], 15)
+    job_status.should_not be_nil
+    job_status['state'].should == 'FINISHED'
+
+    entitlements = @consumer1.list_entitlements()
+    entitlements.size.should == 1
+    entitlements[0]['pool']['productId'].should == product.id
+  end
+
   it 'should allow consumer to bind to products based on product socket quantity across pools' do
     owner = create_owner random_string('owner')
     owner_client = user_client(owner, random_string('testowner'))
