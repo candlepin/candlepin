@@ -14,6 +14,8 @@
  */
 package org.candlepin.pki;
 
+import org.candlepin.common.config.Configuration;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,10 +60,13 @@ public abstract class PKIUtility {
 
     protected PKIReader reader;
     protected SubjectKeyIdentifierWriter subjectKeyWriter;
+    protected Configuration config;
 
-    public PKIUtility(PKIReader reader, SubjectKeyIdentifierWriter subjectKeyWriter) {
+    public PKIUtility(PKIReader reader, SubjectKeyIdentifierWriter subjectKeyWriter,
+        Configuration config) {
         this.reader = reader;
         this.subjectKeyWriter = subjectKeyWriter;
+        this.config = config;
     }
 
     public abstract X509Certificate createX509Certificate(String dn,

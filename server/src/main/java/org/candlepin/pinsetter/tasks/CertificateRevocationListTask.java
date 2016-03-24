@@ -59,7 +59,7 @@ public class CertificateRevocationListTask extends KingpinJob {
 
     public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
         String filePath = config.getString(ConfigProperties.CRL_FILE_PATH);
-        log.info("Executing CRL Job. CRL filePath=" + filePath);
+        log.info("Executing CRL Job. CRL filePath={}", filePath);
 
         if (filePath == null) {
             throw new JobExecutionException("Invalid " + ConfigProperties.CRL_FILE_PATH, false);
