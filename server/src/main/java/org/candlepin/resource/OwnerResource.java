@@ -1110,6 +1110,14 @@ public class OwnerResource {
             throw new BadRequestException(i18n.tr("Cannot update bonus pools, as they are auto generated"));
         }
 
+        /*
+         * These are @JsonIgnored. If a client creates a pool and subsequently
+         * wants to update it , we need to ensure Products are set
+         * appropriately.
+         */
+        newPool.setProduct(currentPool.getProduct());
+        newPool.setDerivedProduct(currentPool.getDerivedProduct());
+
         newPool = resolverUtil.resolvePool(newPool);
 
         this.poolManager.updateMasterPool(newPool);

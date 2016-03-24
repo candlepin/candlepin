@@ -20,102 +20,43 @@ import org.candlepin.model.ProductCertificate;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Product data may originate from a separate service outside Candlepin in some
  * configurations. This interface defines the operations Candlepin requires
- * related to Product data, different implementations can handle whether or not
+ * related to Product data. Different implementations can handle whether or not
  * this info comes from Candlepin's DB or from a separate service.
  */
 public interface ProductServiceAdapter {
 
     /**
-     * Query a specific product by its string ID.
-     * @param owner the owner/org in which to search for the product
-     * @param id product id
-     * @return specific product
-     */
-    Product getProductById(Owner owner, String id);
-
-    /**
-     * Query a list of products matching the given string IDs.
+     * Query a list of products matching the given string IDs. Only the products
+     * found will be returned. When no matching products are found, an empty List
+     * will be returned.
+     *
+     * When this method is called by candlepin, candlepin has already verified that
+     * the specified owner is known to candlepin and should not be null. If an
+     * implementation receives a null owner, a RuntimeException should be thrown.
+     * If the owner is unknown to the service, an empty list of products should
+     * be returned.
+     *
+     * If the ids param is null or empty, an empty list of products will be
+     * returned.
+     *
      * @param owner the owner/org in which to search for products
      * @param ids list of product ids
-     * @return list of products matching the given string IDs
+     * @return list of products matching the given string IDs,
+     *         empty list if none were found.
      */
     List<Product> getProductsByIds(Owner owner, Collection<String> ids);
 
     /**
-     * List all Products
-     * @return all products.
-     */
-    List<Product> getProducts();
-
-    /**
-     * deletes specified product
-     * @param product
-     */
-    void deleteProduct(Product product);
-
-    /**
      * Gets the certificate that defines the given product, creating one
-     * if necessary.
+     * if necessary. If the implementation does not support product certificates
+     * for some reason, null can be returned instead of creating a new one.
      *
-     * @param product
+     * @param product the source product of the certificate.
      * @return the stored or created {@link ProductCertificate}
      */
     ProductCertificate getProductCertificate(Product product);
-
-    /**
-     * Used to purge product cache
-     * @param cachedKeys productIds to remove from cache
-     */
-    void purgeCache(Collection<String> cachedKeys);
-
-    /**
-     * Remove content associated to a product.
-     * @param productId Product ID.
-     * @param contentId Content ID.
-     */
-    void removeContent(Owner owner, String productId, String contentId);
-
-    /**
-     * Checks if the specified product has any existing subscriptions for the given owner.
-     * <p/>
-     * Implementations which do not provide owner-specific product instancing may ignore the owner
-     * parameter, but may need to take extra steps to ensure the results pertain to the correct
-     * product.
-     *
-     * @param product
-     *  The product for which to check for subscriptions
-     *
-     * @param owner
-     *  The owner to which subscriptions should be restricted
-     *
-     * @return
-     *  true if there are any subscriptions for the given product; false otherwise
-     */
-    boolean productHasSubscriptions(Product product, Owner owner);
-
-    /**
-     * Merges the changes provided by the specified product instance into the backing data store for
-     * the given owner.
-     * <p/>
-     * Implementations which do not provide owner-specific product instancing may ignore the owner
-     * parameter, but may need to take extra steps to ensure the results pertain to the correct
-     * product.
-     *
-     * @param product
-     *  The product instance containing the updates to merge
-     *
-     * @owner owner
-     *  The owner for which the changes are to be applied
-     *
-     * @return
-     *  the updated/merged product instance
-     */
-    Product mergeProduct(Product product, Owner owner);
-
-    Set<String> getProductsWithContent(Owner owner, Collection<String> contentId);
 }

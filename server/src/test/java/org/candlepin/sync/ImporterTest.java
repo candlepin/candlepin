@@ -703,7 +703,7 @@ public class ImporterTest {
     public void importConsumer() throws Exception {
         Security.addProvider(new BouncyCastleProvider());
         PKIUtility pki = new BouncyCastlePKIUtility(null,
-            new DefaultSubjectKeyIdentifierWriter());
+            new DefaultSubjectKeyIdentifierWriter(), null);
 
         OwnerCurator oc = mock(OwnerCurator.class);
         ConsumerTypeCurator ctc = mock(ConsumerTypeCurator.class);

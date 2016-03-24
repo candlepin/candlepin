@@ -14,7 +14,6 @@
  */
 package org.candlepin.service.impl;
 
-import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
@@ -26,30 +25,19 @@ import org.candlepin.service.UniqueIdGenerator;
 
 import com.google.inject.Inject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Default implementation of the ProductserviceAdapter.
  */
 public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
-    private static Logger log =
-        LoggerFactory.getLogger(DefaultProductServiceAdapter.class);
-
     private ProductCurator prodCurator;
-    private ContentCurator contentCurator;
 
     // for product cert storage/generation - not sure if this should go in
     // a separate service?
     private ProductCertificateCurator prodCertCurator;
-    private UniqueIdGenerator idGenerator;
 
     @Inject
     public DefaultProductServiceAdapter(ProductCurator prodCurator,
@@ -58,28 +46,6 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
         this.prodCurator = prodCurator;
         this.prodCertCurator = prodCertCurator;
-        this.contentCurator = contentCurator;
-        this.idGenerator = idGenerator;
-    }
-
-    @Override
-    public Product getProductById(Owner owner, String id) {
-        return prodCurator.lookupById(owner, id);
-    }
-
-    @Override
-    public List<Product> getProducts() {
-        return prodCurator.listAll();
-    }
-
-    @Override
-    public void deleteProduct(Product product) {
-        // clean up any product certificates
-        ProductCertificate cert = prodCertCurator.findForProduct(product);
-        if (cert != null) {
-            prodCertCurator.delete(cert);
-        }
-        prodCurator.delete(product);
     }
 
     @Override
@@ -88,44 +54,8 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     }
 
     @Override
-    public void purgeCache(Collection<String> cachedKeys) {
-        // noop
-    }
-
-    @Override
-    public void removeContent(Owner owner, String productId, String contentId) {
-        Product product = prodCurator.lookupById(owner, productId);
-        Content content = contentCurator.lookupById(owner, contentId);
-
-        prodCurator.removeProductContent(product, Arrays.asList(content), owner);
-    }
-
-    @Override
-    public Product mergeProduct(Product product, Owner owner) {
-        // This is bad, as it has a strong possibility of clobbering shared data.
-        log.warn("Product merged directly through the service adapter: {}/{}", product, owner);
-
-        return prodCurator.updateProduct(product, owner);
-    }
-
-    public boolean productHasSubscriptions(Product product, Owner owner) {
-        return prodCurator.productHasSubscriptions(product, owner);
-    }
-
-    @Override
     public List<Product> getProductsByIds(Owner owner, Collection<String> ids) {
         return prodCurator.listAllByIds(owner, ids);
-    }
-
-    @Override
-    public Set<String> getProductsWithContent(Owner owner, Collection<String> contentIds) {
-        HashSet<String> productIds = new HashSet<String>();
-
-        for (Product product : prodCurator.getProductsWithContent(owner, contentIds)) {
-            productIds.add(product.getId());
-        }
-
-        return productIds;
     }
 
 }

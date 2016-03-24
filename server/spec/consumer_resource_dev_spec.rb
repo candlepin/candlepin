@@ -75,7 +75,7 @@ describe 'Consumer Dev Resource' do
     ents.length.should == 1
     ent_pool = ents[0].pool
     ent_pool.type.should == "DEVELOPMENT"
-    ent_pool.product.id.should == "dev_product"
+    ent_pool.productId.should == "dev_product"
     ent_pool.providedProducts.length.should == 2
     ent_pool.id.should == pools[0].pool.id
   end

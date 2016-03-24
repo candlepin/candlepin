@@ -34,6 +34,7 @@ import org.bouncycastle.jce.provider.X509CRLEntryObject;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
+import org.hamcrest.number.OrderingComparisons;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -249,12 +250,16 @@ public class X509CRLStreamWriterTest {
 
     @Test
     public void testAddEntryToEmptyCRL() throws Exception {
-        X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(issuer, new Date());
+        Date oneHourAgo = new Date(new Date().getTime() - 60L * 60L * 1000L);
+        Date oneHourHence = new Date(new Date().getTime() + 60L * 60L * 1000L);
+
+        X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(issuer, oneHourAgo);
         crlBuilder.addExtension(X509Extension.authorityKeyIdentifier, false,
             new AuthorityKeyIdentifierStructure(keyPair.getPublic()));
         /* With a CRL number of 127, incrementing it should cause the number of bytes in the length
          * portion of the TLV to increase by one.*/
         crlBuilder.addExtension(X509Extension.cRLNumber, false, new CRLNumber(new BigInteger("127")));
+        crlBuilder.setNextUpdate(oneHourHence);
         X509CRLHolder holder = crlBuilder.build(signer);
 
         File crlToChange = writeCRL(holder);
@@ -291,6 +296,14 @@ public class X509CRLStreamWriterTest {
         }
 
         X509CRL originalCrl = new JcaX509CRLConverter().setProvider(BC).getCRL(holder);
+
+        assertNotNull(changedCrl.getNextUpdate());
+
+        long changedCrlUpdateDelta =
+            changedCrl.getNextUpdate().getTime() - changedCrl.getThisUpdate().getTime();
+
+        assertEquals(changedCrlUpdateDelta, oneHourHence.getTime() - oneHourAgo.getTime());
+        assertThat(changedCrl.getThisUpdate(), OrderingComparisons.greaterThan(originalCrl.getThisUpdate()));
 
         assertEquals(newSerials, discoveredSerials);
         assertEquals(originalCrl.getIssuerX500Principal(), changedCrl.getIssuerX500Principal());

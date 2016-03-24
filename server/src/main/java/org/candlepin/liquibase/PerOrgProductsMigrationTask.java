@@ -33,8 +33,8 @@ import java.util.Set;
  * The PerOrgProductsMigrationTask performs the post-db upgrade data migration to the cp2_* tables.
  *
  * This task migrates data from the old cp_* tables to cp2_* tables, adding UUIDs and the new
- * upstream update timestamps where necessary. Only products and content referenced by existing
- * pools or subscriptions will be migrated over. Unreferenced objects will be silently discarded.
+ * timestamps where necessary. Only products and content referenced by existing pools or
+ * subscriptions will be migrated over. Unreferenced objects will be silently discarded.
  */
 public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
 

@@ -217,10 +217,6 @@ public class ExporterTest {
             "signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(consumer.getEntitlements()).thenReturn(entitlements);
-        when(psa.getProductById(owner, "12345")).thenReturn(prod);
-        when(psa.getProductById(owner, "MKT-prod")).thenReturn(prod1);
-        when(psa.getProductById(owner, "MKT-sub-prod")).thenReturn(subProduct);
-        when(psa.getProductById(owner, "332211")).thenReturn(subProvidedProduct);
         when(psa.getProductCertificate(any(Product.class))).thenReturn(pcert);
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");

@@ -16,6 +16,8 @@
 package org.candlepin.model;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -57,6 +59,10 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
     @Size(max = 255)
     protected String value;
 
+    /*
+     * After Jackson version is upgraded:
+     * @JsonProperty(access = Access.WRITE_ONLY)
+     */
     @ManyToOne
     @JoinColumn(name = "product_uuid", nullable = false)
     @NotNull
@@ -77,10 +83,12 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
     }
 
     @XmlTransient
+    @JsonIgnore
     public Product getProduct() {
         return product;
     }
 
+    @JsonProperty
     public void setProduct(Product product) {
         this.product = product;
     }

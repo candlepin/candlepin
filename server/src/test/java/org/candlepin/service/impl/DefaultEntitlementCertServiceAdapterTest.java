@@ -1396,9 +1396,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         inheritedArchProduct.setContent(Collections.singleton(noArchContent));
         products.add(inheritedArchProduct);
 
-        when(productAdapter.getProductById(eq(owner), eq(inheritedArchProduct.getId())))
-            .thenReturn(inheritedArchProduct);
-
         setupEntitlements(ARCH_LABEL, "3.2");
 
         Set<X509ExtensionWrapper> extensions =
@@ -1608,10 +1605,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testDetachedEntitlementDataNotAddedToCertV1()
-        throws Exception {
-
-        KeyPair keyPair = new BouncyCastlePKIUtility(null, null).generateNewKeyPair();
+    public void testDetachedEntitlementDataNotAddedToCertV1() throws Exception {
+        KeyPair keyPair = new BouncyCastlePKIUtility(null, null, null).generateNewKeyPair();
         when(keyPairCurator.getConsumerKeyPair(any(Consumer.class))).thenReturn(keyPair);
 
         when(mockedPKI.getPemEncoded(any(X509Certificate.class))).thenReturn(
@@ -1773,9 +1768,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         consumer.setUuid("test-consumer");
         consumer.setFact("system.certificate_version", "3.2");
         consumer.setFact("uname.machine", "x86_64");
-
-        when(productAdapter.getProductById(eq(owner), eq(extremeProduct.getId())))
-            .thenReturn(extremeProduct);
 
         certServiceAdapter.prepareV3Extensions(entitlement, "prefix", null);
         Set<X509ByteExtensionWrapper> byteExtensions =

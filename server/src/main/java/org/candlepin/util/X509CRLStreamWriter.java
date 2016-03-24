@@ -372,11 +372,19 @@ public class X509CRLStreamWriter {
         ASN1InputStream asn1in = null;
         try {
             asn1in = new ASN1InputStream(crlIn);
-            DERSequence certList = (DERSequence) asn1in.readObject();
-            X509CRLHolder oldCrl = new X509CRLHolder(new CertificateList(certList));
+            DERSequence certListSeq = (DERSequence) asn1in.readObject();
+            CertificateList certList = new CertificateList(certListSeq);
+            X509CRLHolder oldCrl = new X509CRLHolder(certList);
 
             X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(oldCrl.getIssuer(), new Date());
             crlBuilder.addCRL(oldCrl);
+
+            Date now = new Date();
+            Date oldNextUpdate = certList.getNextUpdate().getDate();
+            Date oldThisUpdate = certList.getThisUpdate().getDate();
+
+            Date nextUpdate = new Date(now.getTime() + (oldNextUpdate.getTime() - oldThisUpdate.getTime()));
+            crlBuilder.setNextUpdate(nextUpdate);
 
             for (Object o : oldCrl.getExtensionOIDs()) {
                 ASN1ObjectIdentifier oid = (ASN1ObjectIdentifier) o;

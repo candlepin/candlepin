@@ -36,7 +36,6 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
@@ -66,7 +65,6 @@ public class PoolRulesTest {
     private static final String DERIVED_ATTR = "lookformeimderived";
 
     @Mock private RulesCurator rulesCuratorMock;
-    @Mock private ProductServiceAdapter productAdapterMock;
     @Mock private PoolManager poolManagerMock;
     @Mock private Configuration configMock;
     @Mock private EntitlementCurator entCurMock;
@@ -249,9 +247,6 @@ public class PoolRulesTest {
         p.getBranding().add(b1);
         p.getBranding().add(b2);
 
-        when(productAdapterMock.getProductById(owner, p.getProduct().getId()))
-                .thenReturn(p.getProduct());
-
         // Copy the pool with the branding to begin with:
         Pool p1 = TestUtil.clone(p);
 
@@ -267,9 +262,6 @@ public class PoolRulesTest {
         Pool p = TestUtil.createPool(owner, TestUtil.createProduct(owner));
         p.getProduct().addAttribute(new ProductAttribute("virt_limit", "5"));
         p.setQuantity(10L);
-
-        when(productAdapterMock.getProductById(owner, p.getProduct().getId()))
-                .thenReturn(p.getProduct());
 
         // Setup a pool with a single (different) provided product:
         Pool p1 = TestUtil.clone(p);
@@ -493,7 +485,6 @@ public class PoolRulesTest {
         p.getProvidedProducts().add(provided1);
         p.getProvidedProducts().add(provided2);
         p.setDerivedProduct(derivedProd);
-        when(productAdapterMock.getProductById(owner, derivedProd.getId())).thenReturn(derivedProd);
         p.getDerivedProvidedProducts().add(derivedProvidedProd1);
         p.getDerivedProvidedProducts().add(derivedProvidedProd2);
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
@@ -629,7 +620,6 @@ public class PoolRulesTest {
                 new HashSet<Product>());
         assertEquals(2, updates.size());
         physicalPool = updates.get(0).getPool();
-        Pool unmappedPool = updates.get(1).getPool();
         assertEquals(new Long(50), physicalPool.getQuantity());
         assertEquals(0, physicalPool.getAttributes().size());
     }
@@ -739,8 +729,6 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = TestUtil.createPool(owner, TestUtil.createProduct(owner));
         p.setQuantity(10L);
-        when(productAdapterMock.getProductById(owner, p.getProduct().getId()))
-                .thenReturn(p.getProduct());
 
         // Setup a pool with a single (different) provided product:
         Pool p1 = TestUtil.clone(p);
