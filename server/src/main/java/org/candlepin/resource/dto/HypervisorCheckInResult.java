@@ -31,7 +31,8 @@ import java.util.Set;
  *     failed: a list of strings formated as '{host_virt_id}: Error message'.
  * </pre>
  */
-public class HypervisorCheckInResult implements Serializable{
+public class HypervisorCheckInResult implements Serializable {
+    private static final long serialVersionUID = -4015696081756396665L;
 
     private Set<Consumer> created;
     private Set<Consumer> updated;

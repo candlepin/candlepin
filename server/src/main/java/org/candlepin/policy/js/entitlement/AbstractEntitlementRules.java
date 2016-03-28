@@ -177,8 +177,9 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     /**
      * RuleOrderComparator
      */
-    public static class RuleOrderComparator implements Comparator<Rule>,
-        Serializable {
+    public static class RuleOrderComparator implements Comparator<Rule>, Serializable {
+        private static final long serialVersionUID = 7602679645721757886L;
+
         @Override
         public int compare(Rule o1, Rule o2) {
             return Integer.valueOf(o2.getOrder()).compareTo(

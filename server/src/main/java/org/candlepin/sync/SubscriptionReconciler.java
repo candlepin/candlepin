@@ -227,8 +227,8 @@ public class SubscriptionReconciler {
      *
      * descending quantity sort on Subscriptions
      */
-    public static class QuantityComparator implements
-        Comparator<Pool>, Serializable {
+    public static class QuantityComparator implements Comparator<Pool>, Serializable {
+        private static final long serialVersionUID = -5694014081615252430L;
 
         @Override
         public int compare(Pool s1, Pool s2) {
@@ -240,8 +240,8 @@ public class SubscriptionReconciler {
      * SubQuantityComparator
      *
      */
-    public static class SubQuantityComparator implements
-        Comparator<Subscription>, Serializable {
+    public static class SubQuantityComparator implements Comparator<Subscription>, Serializable {
+        private static final long serialVersionUID = -7739774339143293267L;
 
         @Override
         public int compare(Subscription s1, Subscription s2) {
