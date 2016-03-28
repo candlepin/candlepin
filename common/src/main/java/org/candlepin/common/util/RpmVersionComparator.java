@@ -27,6 +27,7 @@ import java.util.Comparator;
  * check the test.
  */
 public class RpmVersionComparator implements Comparator<String>, Serializable {
+    private static final long serialVersionUID = 4036652892664704660L;
 
     /**
      * {@inheritDoc}

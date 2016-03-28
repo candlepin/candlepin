@@ -33,6 +33,7 @@ import java.io.Serializable;
  * the permission is granting.
  */
 public class OwnerPermission implements Permission, Serializable {
+    private static final long serialVersionUID = -8906113952952371238L;
 
     private final Owner owner;
 

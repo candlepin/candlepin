@@ -35,6 +35,8 @@ import javax.xml.bind.annotation.XmlType;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFilter("DefaultFilter")
 public abstract class AbstractHibernateObject implements Persisted, Serializable {
+    private static final long serialVersionUID = 6677558844288404862L;
+
     public static final String DEFAULT_SORT_FIELD = "created";
 
     private Date created;
