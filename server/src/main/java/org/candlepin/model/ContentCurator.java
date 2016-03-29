@@ -14,6 +14,9 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
+
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
@@ -39,12 +42,20 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
 
     private static Logger log = LoggerFactory.getLogger(ContentCurator.class);
 
-    @Inject
+    private Configuration config;
     private ProductCurator productCurator;
 
+    /** Whether or not all content updates should occur in place (ie: global products/content) */
+    private boolean updateInPlace;
 
-    public ContentCurator() {
+    @Inject
+    public ContentCurator(Configuration config, ProductCurator productCurator) {
         super(Content.class);
+
+        this.config = config;
+        this.productCurator = productCurator;
+
+        this.updateInPlace = !config.getBoolean(ConfigProperties.PER_ORG_PRODUCTS, true);
     }
 
     // Needs an override due to the use of UUID as db identifier.
@@ -335,12 +346,6 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         // the caller), we can just point the given orgs to the new content instead of giving them
         // their own version.
         // This is probably going to be a very expensive operation, though.
-
-        // TODO:
-        // We could just use the current hashcode here with some Hibernate auto-updating magic to
-        // determine if two contents are equal rather than relying on an outside value we may never
-        // receive
-
         List<Content> alternateVersions = this.getContentByVersion(entity.getId(), entity.hashCode());
 
         for (Content alt : alternateVersions) {
@@ -353,7 +358,7 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         if (!existing.equals(entity)) {
             // If we're making the update for every owner using the content, don't bother creating
             // a new version -- just do a raw update.
-            if (existing.getOwners().size() == 1) {
+            if (this.updateInPlace || existing.getOwners().size() == 1) {
                 // The org receiving the update is the only org using it. We can do an in-place
                 // update here.
                 existing.merge(entity);

@@ -1,12 +1,20 @@
 require 'date'
 require 'spec_helper'
 require 'candlepin_scenarios'
+require 'dot_properties'
 
 
 
 describe 'Product Versioning' do
 
   include CandlepinMethods
+
+  before(:all) do
+    props = DotProperties.load('/etc/candlepin/candlepin.conf')
+    per_org = props['candlepin.per_org_products']
+
+    @per_org = [nil, '1', 't', 'true', 'y', 'yes'].include?(per_org)
+  end
 
   it "creates one product instance when shared by multiple orgs" do
     owner1 = create_owner random_string('test_owner')
@@ -39,6 +47,8 @@ describe 'Product Versioning' do
   end
 
   it "creates a new product instance when an org updates a shared instance" do
+    pending("candlepin is not running with per-org products") if !@per_org
+
     owner1 = create_owner random_string('test_owner')
     owner2 = create_owner random_string('test_owner')
     owner3 = create_owner random_string('test_owner')
@@ -62,6 +72,42 @@ describe 'Product Versioning' do
     prods.size.should == 1
     prods[0]["uuid"].should == prod4["uuid"]
     prods[0]["uuid"].should_not == prod2["uuid"]
+
+    prods = @cp.list_products_by_owner(owner1["key"])
+    prods.size.should == 1
+    prods[0]["uuid"].should == prod1["uuid"]
+
+    prods = @cp.list_products_by_owner(owner3["key"])
+    prods.size.should == 1
+    prods[0]["uuid"].should == prod3["uuid"]
+  end
+
+  it "updates in-place when per-org products is disabled" do
+    pending("candlepin is not running with per-org products") if @per_org
+
+    owner1 = create_owner random_string('test_owner')
+    owner2 = create_owner random_string('test_owner')
+    owner3 = create_owner random_string('test_owner')
+
+    id = random_string("product")
+    name = "shared_product"
+
+    updated_upstream = Date.today
+
+    prod1 = @cp.create_product(owner1["key"], id, name)
+    prod2 = @cp.create_product(owner2["key"], id, name)
+    prod3 = @cp.create_product(owner3["key"], id, name)
+
+    prod1["uuid"].should == prod2["uuid"]
+    prod1["uuid"].should == prod3["uuid"]
+
+    prod4 = @cp.update_product(owner2["key"], id, { :name => "new product name" })
+    prod4["uuid"].should == prod1["uuid"]
+
+    prods = @cp.list_products_by_owner(owner2["key"])
+    prods.size.should == 1
+    prods[0]["uuid"].should == prod4["uuid"]
+    prods[0]["uuid"].should == prod2["uuid"]
 
     prods = @cp.list_products_by_owner(owner1["key"])
     prods.size.should == 1
@@ -136,6 +182,8 @@ describe 'Product Versioning' do
   end
 
   it "creates new products when adding content to shared products" do
+    pending("candlepin is not running with per-org products") if !@per_org
+
     owner1 = create_owner random_string('test_owner')
     owner2 = create_owner random_string('test_owner')
 
@@ -177,6 +225,8 @@ describe 'Product Versioning' do
   end
 
   it "creates new products when updating content used by shared products" do
+    pending("candlepin is not running with per-org products") if !@per_org
+
     owner1 = create_owner random_string('test_owner')
     owner2 = create_owner random_string('test_owner')
 
@@ -241,8 +291,117 @@ describe 'Product Versioning' do
     prods[0]["uuid"].should_not == prod2["uuid"]
   end
 
+  it "updates in-place when adding content while per-org products are disabled" do
+    pending("candlepin is not running with per-org products") if @per_org
+
+    owner1 = create_owner random_string('test_owner')
+    owner2 = create_owner random_string('test_owner')
+
+    id = random_string("product")
+    name = "shared_product"
+
+    updated_upstream = Date.today
+
+    prod1 = @cp.create_product(owner1["key"], id, name)
+    prod2 = @cp.create_product(owner2["key"], id, name)
+
+    prod1["uuid"].should == prod2["uuid"]
+
+
+    content_id = random_string("content")
+    content_name = "shared_content"
+    content_label = "shared content"
+    content_type = "shared_content_type"
+    content_vendor = "generous vendor"
+
+    content1 = @cp.create_content(
+        owner1["key"], content_name, content_id, content_label, content_type, content_vendor
+    )
+
+    prod3 = @cp.add_content_to_product(owner1["key"], id, content_id)
+    prod3["uuid"].should == prod1["uuid"]
+    prod3["uuid"].should == prod2["uuid"]
+
+    prods = @cp.list_products_by_owner(owner1["key"])
+    prods.size.should == 1
+    prods[0]["uuid"].should == prod3["uuid"]
+    prods[0]["uuid"].should == prod1["uuid"]
+    prods[0]["uuid"].should == prod2["uuid"]
+
+    prods = @cp.list_products_by_owner(owner2["key"])
+    prods.size.should == 1
+    prods[0]["uuid"].should == prod2["uuid"]
+    prods[0]["uuid"].should == prod3["uuid"]
+  end
+
+  it "updates in-place when updating content while per-org products are disabled" do
+    pending("candlepin is not running with per-org products") if @per_org
+
+    owner1 = create_owner random_string('test_owner')
+    owner2 = create_owner random_string('test_owner')
+
+    id = random_string("product")
+    name = "shared_product"
+
+    updated_upstream = Date.today
+
+    prod1 = @cp.create_product(owner1["key"], id, name)
+    prod2 = @cp.create_product(owner2["key"], id, name)
+
+    prod1["uuid"].should == prod2["uuid"]
+
+
+    content_id = random_string("content")
+    content_name = "shared_content"
+    content_label = "shared content"
+    content_type = "shared_content_type"
+    content_vendor = "generous vendor"
+
+    content1 = @cp.create_content(
+        owner1["key"], content_name, content_id, content_label, content_type, content_vendor
+    )
+    content2 = @cp.create_content(
+        owner2["key"], content_name, content_id, content_label, content_type, content_vendor
+    )
+
+    prod3 = @cp.add_content_to_product(owner1["key"], id, content_id)
+    prod4 = @cp.add_content_to_product(owner2["key"], id, content_id)
+    prod3["uuid"].should == prod1["uuid"]
+    prod3["uuid"].should == prod2["uuid"]
+    prod4["uuid"].should == prod1["uuid"]
+    prod4["uuid"].should == prod2["uuid"]
+    prod3["uuid"].should == prod4["uuid"]
+
+    prods = @cp.list_products_by_owner(owner1["key"])
+    prods.size.should == 1
+    prods[0]["uuid"].should == prod3["uuid"]
+    prods[0]["uuid"].should == prod1["uuid"]
+    prods[0]["uuid"].should == prod2["uuid"]
+
+    prods = @cp.list_products_by_owner(owner2["key"])
+    prods.size.should == 1
+    prods[0]["uuid"].should == prod4["uuid"]
+    prods[0]["uuid"].should == prod1["uuid"]
+    prods[0]["uuid"].should == prod2["uuid"]
+
+    # Actual test starts here
+    content3 = @cp.update_content(owner1["key"], content_id, {:label => "new label"})
+
+    prods = @cp.list_products_by_owner(owner1["key"])
+    prods.size.should == 1
+    prods[0]["uuid"].should == prod1["uuid"]
+    prods[0]["uuid"].should == prod2["uuid"]
+    prods[0]["uuid"].should == prod3["uuid"]
+    prods[0]["uuid"].should == prod4["uuid"]
+
+    prods = @cp.list_products_by_owner(owner2["key"])
+    prods.size.should == 1
+    prods[0]["uuid"].should == prod4["uuid"]
+    prods[0]["uuid"].should == prod1["uuid"]
+    prods[0]["uuid"].should == prod2["uuid"]
+  end
+
   # TODO ? :
   # - Updating a shared product used by another resource properly links the new product
 
 end
-

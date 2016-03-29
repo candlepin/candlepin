@@ -48,14 +48,23 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
     private static Logger log = LoggerFactory.getLogger(ProductCurator.class);
 
-    @Inject private Configuration config;
-    @Inject private I18n i18n;
+    private Configuration config;
+    private I18n i18n;
+
+    /** Whether or not all product updates should occur in place (ie: global products) */
+    private boolean updateInPlace;
 
     /**
      * default ctor
      */
-    public ProductCurator() {
+    @Inject
+    public ProductCurator(Configuration config, I18n i18n) {
         super(Product.class);
+
+        this.config = config;
+        this.i18n = i18n;
+
+        this.updateInPlace = !config.getBoolean(ConfigProperties.PER_ORG_PRODUCTS, true);
     }
 
     /**
@@ -592,12 +601,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         // the caller), we can just point the given orgs to the new product instead of giving them
         // their own version.
         // This is probably going to be a very expensive operation, though.
-
-        // TODO:
-        // We could just use the current hashcode here with some Hibernate auto-updating magic to
-        // determine if two products are equal rather than relying on an outside value we may never
-        // receive
-
         List<Product> alternateVersions = this.getProductsByVersion(entity.getId(), entity.hashCode());
 
         for (Product alt : alternateVersions) {
@@ -610,7 +613,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         if (!existing.equals(entity)) {
             // If we're making the update for every owner using the product, don't bother creating
             // a new version -- just do a raw update.
-            if (existing.getOwners().size() == 1) {
+            if (this.updateInPlace || existing.getOwners().size() == 1) {
                 // The org receiving the update is the only org using it. We can do an in-place
                 // update here.
                 existing.merge(entity);
