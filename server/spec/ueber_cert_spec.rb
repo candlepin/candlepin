@@ -43,9 +43,9 @@ describe 'Uebercert' do
     content2 = create_content({:owner => owner1['key']})
     content3 = create_content({:owner => owner1['key']})
 
-    @cp.add_content_to_product(owner1['key'], prod1.id, content1.id, true)
-    @cp.add_content_to_product(owner1['key'], prod1.id, content2.id, true)
-    @cp.add_content_to_product(owner1['key'], prod2.id, content3.id, true)
+    @cp.add_content_to_product(prod1.id, content1.id, true)
+    @cp.add_content_to_product(prod1.id, content2.id, true)
+    @cp.add_content_to_product(prod2.id, content3.id, true)
 
     create_pool_and_subscription(owner1['key'], prod1.id, 10, [], '12345', '6789', 'order1',
 				nil, nil, true)
@@ -121,4 +121,3 @@ describe 'Uebercert' do
     cert_content_suffix.should == exp_content_suffix
   end
 end
-
