@@ -484,7 +484,6 @@ module Candlepin
         user_client.create_product(
           :product_id => prod_id,
           :name => rand_string,
-          :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
           :owner => owner[:key],
         )
@@ -495,19 +494,19 @@ module Candlepin
         )
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:multiplier]).to eq(2)
+        expect(pools.first[:productAttributes]).to_not be_empty
 
         user_client.update_product(
           :product_id => prod_id,
-          :multiplier => 4,
           :owner => owner[:key],
+          :attributes => {},
         )
 
         result = user_client.refresh_pools(:owner => owner[:key])
         expect(result).to be_success
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:multiplier]).to eq(4)
+        expect(pools.first[:productAttributes]).to be_empty
       end
 
       it 'refreshes pools asynchronously' do
@@ -515,7 +514,6 @@ module Candlepin
         owner_client.create_product(
           :product_id => prod_id,
           :name => rand_string,
-          :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
         )
 
@@ -523,12 +521,13 @@ module Candlepin
           :product_id => prod_id,
         )
 
+        owner_client.debug!
         pools = owner_client.get_owner_pools.content
-        expect(pools.first[:product][:multiplier]).to eq(2)
+        expect(pools.first[:productAttributes]).to_not be_empty
 
         owner_client.update_product(
           :product_id => prod_id,
-          :multiplier => 4,
+          :attributes => {},
         )
 
         result = owner_client.refresh_pools_async
@@ -537,7 +536,7 @@ module Candlepin
         expect(result.pop).to be_success
 
         pools = owner_client.get_owner_pools.content
-        expect(pools.first[:product][:multiplier]).to eq(4)
+        expect(pools.first[:productAttributes]).to be_empty
       end
 
       it 'refreshes pools for a product' do
@@ -545,7 +544,6 @@ module Candlepin
         user_client.create_product(
           :product_id => prod_id,
           :name => rand_string,
-          :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
           :owner => owner[:key],
         )
@@ -556,11 +554,11 @@ module Candlepin
         )
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:multiplier]).to eq(2)
+        expect(pools.first[:productAttributes]).to_not be_empty
 
         user_client.update_product(
           :product_id => prod_id,
-          :multiplier => 4,
+          :attributes => {},
           :owner => owner[:key],
         )
 
@@ -568,7 +566,7 @@ module Candlepin
         expect(result).to be_success
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:multiplier]).to eq(4)
+        expect(pools.first[:productAttributes]).to be_empty
       end
 
       it 'gets owner hypervisors' do
@@ -1054,7 +1052,7 @@ module Candlepin
         ).content
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:id]).to eq(product[:id])
+        expect(pools.first[:productId]).to eq(product[:id])
 
         x509_client = user_client.register_and_get_client(
           :owner => owner[:key],
@@ -1116,7 +1114,7 @@ module Candlepin
         ).content
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:id]).to eq(product[:id])
+        expect(pools.first[:productId]).to eq(product[:id])
 
         x509_client = user_client.register_and_get_client(
           :owner => owner[:key],
@@ -1136,7 +1134,7 @@ module Candlepin
         ).content
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:id]).to eq(product[:id])
+        expect(pools.first[:productId]).to eq(product[:id])
 
         x509_client = user_client.register_and_get_client(
           :owner => owner[:key],
@@ -1177,7 +1175,7 @@ module Candlepin
         ).content
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:id]).to eq(product[:id])
+        expect(pools.first[:productId]).to eq(product[:id])
 
         x509_client = user_client.register_and_get_client(
           :owner => owner[:key],
@@ -1199,7 +1197,7 @@ module Candlepin
         ).content
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:id]).to eq(product[:id])
+        expect(pools.first[:productId]).to eq(product[:id])
 
         x509_client = user_client.register_and_get_client(
           :owner => owner[:key],
@@ -1218,7 +1216,7 @@ module Candlepin
         )
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:id]).to eq(product[:id])
+        expect(pools.first[:productId]).to eq(product[:id])
 
         x509_client = user_client.register_and_get_client(
           :owner => owner[:key],
@@ -1513,7 +1511,7 @@ module Candlepin
         )
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:id]).to eq(product[:id])
+        expect(pools.first[:productId]).to eq(product[:id])
 
         x509_client = user_client.register_and_get_client(
           :owner => owner[:key],
@@ -1553,7 +1551,7 @@ module Candlepin
         )
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:id]).to eq(product[:id])
+        expect(pools.first[:productId]).to eq(product[:id])
 
         x509_client = user_client.register_and_get_client(
           :owner => owner[:key],
@@ -1651,7 +1649,7 @@ module Candlepin
           :product_id => product[:id],
         )
         expect(res).to be_success
-        expect(res.content[:product][:id]).to eq(product[:id])
+        expect(res.content[:productId]).to eq(product[:id])
       end
 
       it 'creates a distributor version' do
