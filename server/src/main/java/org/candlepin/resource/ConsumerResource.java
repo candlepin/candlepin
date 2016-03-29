@@ -368,7 +368,7 @@ public class ConsumerResource {
                     log.info(
                             "Regenerating identity certificate for consumer: {}, expiry: {}",
                             uuid, expire);
-                    consumer = this.regenerateIdentityCertificates(uuid);
+                    consumer = this.regenerateIdentityCertificate(consumer);
                 }
             }
 
@@ -1970,15 +1970,26 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
 
         Consumer c = consumerCurator.verifyAndLookupConsumer(uuid);
+        return regenerateIdentityCertificate(c);
+    }
+
+    /**
+     * Identity Certificate regeneration for a given consumer.
+     * Includes persistence of the certificate and consumer
+     *
+     * @param consumer consumer that will get new identity cert
+     * @return a Consumer object
+     */
+    private Consumer regenerateIdentityCertificate(Consumer consumer) {
         EventBuilder eventBuilder = eventFactory
                 .getEventBuilder(Target.CONSUMER, Type.MODIFIED)
-                .setOldEntity(c);
+                .setOldEntity(consumer);
 
-        IdentityCertificate ic = generateIdCert(c, true);
-        c.setIdCert(ic);
-        consumerCurator.update(c);
-        sink.queueEvent(eventBuilder.setNewEntity(c).buildEvent());
-        return c;
+        IdentityCertificate ic = generateIdCert(consumer, true);
+        consumer.setIdCert(ic);
+        consumerCurator.update(consumer);
+        sink.queueEvent(eventBuilder.setNewEntity(consumer).buildEvent());
+        return consumer;
     }
 
     /**
