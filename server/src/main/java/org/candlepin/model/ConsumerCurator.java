@@ -86,7 +86,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         if (entity.getFacts() != null) {
             entity.setFacts(filterAndVerifyFacts(entity));
         }
-        
+
         return super.create(entity);
     }
 
