@@ -230,6 +230,12 @@ module Candlepin
       opts.assert_valid_keys(*defaults.keys)
       defaults.deep_merge(opts)
     end
+
+    def wrap_in_array!(opts, key)
+      unless opts[key].is_a?(Array)
+        opts[key] = [opts[key]]
+      end
+    end
   end
 
   module API
@@ -448,13 +454,8 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        unless opts[:installed_products].is_a?(Array)
-          opts[:installed_products] = [opts[:installed_products]]
-        end
-
-        unless opts[:activation_keys].is_a?(Array)
-          opts[:activation_keys] = [opts[:activation_keys]]
-        end
+        wrap_in_array!(opts, :installed_products)
+        wrap_in_array!(opts, :activation_keys)
 
         consumer_json = opts.slice(:name, :facts, :uuid)
 
@@ -681,9 +682,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :uuids)
 
-        unless opts[:uuids].is_a?(Array)
-          opts[:uuids] = [opts[:uuids]]
-        end
+        wrap_in_array!(opts, :uuids)
 
         get("/consumers/compliance", :uuid => opts[:uuids])
       end
@@ -770,9 +769,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :uuid, :serials)
 
-        unless opts[:serials].is_a?(Array)
-          opts[:serials] = [opts[:serials]]
-        end
+        wrap_in_array!(opts, :serials)
 
         get("/consumers/#{opts[:uuid]}/certificates",
           :query => { :serials => opts[:serials].join(",") })
@@ -891,9 +888,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :env_id, :content_ids)
 
-        unless opts[:content_ids].is_a?(Array)
-          opts[:content_ids] = [opts[:content_ids]]
-        end
+        wrap_in_array!(opts, :content_ids)
 
         body = []
         opts[:content_ids].each do |c|
@@ -919,9 +914,8 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :env_id, :content_ids)
 
-        unless opts[:content_ids].is_a?(Array)
-          opts[:content_ids] = [opts[:content_ids]]
-        end
+        wrap_in_array!(opts, :content_ids)
+
         url = "/environments/#{opts[:env_id]}/content"
         query = opts.slice(:lazy_regen)
         query[:content] = opts[:content_ids]
@@ -1057,9 +1051,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :id)
 
-        unless opts[:overrides].is_a?(Array)
-          opts[:overrides] = [opts[:overrides]]
-        end
+        wrap_in_array!(opts, :overrides)
 
         override_defaults = {
           :content_label => nil,
@@ -1084,9 +1076,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :id)
 
-        unless opts[:overrides].is_a?(Array)
-          opts[:overrides] = [opts[:overrides]]
-        end
+        wrap_in_array!(opts, :overrides)
 
         override_defaults = {
           :content_label => nil,
@@ -1285,9 +1275,7 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        unless opts[:permissions].is_a?(Array)
-          opts[:permissions] = [opts[:permissions]]
-        end
+        wrap_in_array!(opts, :permissions)
 
         post("/roles", opts)
       end
@@ -1444,13 +1432,8 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :owner)
 
-        unless opts[:types].is_a?(Array)
-          opts[:types] = [opts[:types]]
-        end
-
-        unless opts[:facts].is_a?(Array)
-          opts[:facts] = [opts[:facts]]
-        end
+        wrap_in_array!(opts, :types)
+        wrap_in_array!(opts, :facts)
 
         get("/owners/#{opts[:owner]}/consumers",
           :type => opts[:types],
@@ -1701,9 +1684,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :owner, :manifest)
 
-        unless opts[:force].is_a?(Array)
-          opts[:force] = [opts[:force]]
-        end
+        wrap_in_array!(opts, :force)
 
         if opts[:force].empty?
           opts.extract!(:force)
@@ -2055,9 +2036,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :uuid)
 
-        unless opts[:overrides].is_a?(Array)
-          opts[:overrides] = [opts[:overrides]]
-        end
+        wrap_in_array!(opts, :overrides)
 
         override_defaults = {
           :content_label => nil,
@@ -2092,9 +2071,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :uuid)
 
-        unless opts[:overrides].is_a?(Array)
-          opts[:overrides] = [opts[:overrides]]
-        end
+        wrap_in_array!(opts, :overrides)
 
         override_defaults = {
           :content_label => nil,
@@ -2156,9 +2133,8 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :product_ids)
-        unless opts[:product_ids].is_a?(Array)
-          opts[:product_ids] = [opts[:product_ids]]
-        end
+        wrap_in_array!(opts, :product_ids)
+
         query = opts.slice(:lazy_regen)
         query[:product] = opts[:product_ids]
 
