@@ -186,8 +186,9 @@ public class Entitler {
 
             Consumer host = consumerCurator.getHost(guestUuid, consumer.getOwner());
             if (host != null && (force || host.isAutoheal())) {
-                log.info("Attempting to heal host machine with UUID " +
-                    host.getUuid() + " for guest with UUID " + consumer.getUuid());
+                log.info("Attempting to heal host machine with UUID \"{}\" for guest with UUID \"{}\"",
+                    host.getUuid(), consumer.getUuid());
+
                 try {
                     List<Entitlement> hostEntitlements =
                         poolManager.entitleByProductsForHost(consumer, host,
@@ -197,8 +198,8 @@ public class Entitler {
                 }
                 catch (Exception e) {
                     //log and continue, this should NEVER block
-                    log.debug("Healing failed for host UUID " + host.getUuid() +
-                        " with message: " + e.getMessage());
+                    log.debug("Healing failed for host UUID {} with message: {}",
+                        host.getUuid(), e.getMessage());
                 }
 
                 /* Consumer is stale at this point.  Note that we use find() instead of
@@ -234,7 +235,7 @@ public class Entitler {
         try {
             // the pools are only used to bind the guest
             List<Entitlement> entitlements = poolManager.entitleByProducts(data);
-            log.debug("Created entitlements: " + entitlements);
+            log.debug("Created entitlements: {}", entitlements);
             return entitlements;
         }
         catch (EntitlementRefusedException e) {
@@ -281,7 +282,7 @@ public class Entitler {
         Date endDate = getEndDate(skuProduct, startDate);
         Pool p = new Pool(consumer.getOwner(), skuProduct, devProducts.getProvided(), 1L, startDate,
                 endDate, "", "", "");
-        log.info("Created development pool with SKU " + skuProduct.getId());
+        log.info("Created development pool with SKU {}", skuProduct.getId());
         p.setAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
         p.setAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
         return p;
@@ -290,32 +291,7 @@ public class Entitler {
     private DeveloperProducts getDeveloperPoolProducts(Consumer consumer, String sku) {
         DeveloperProducts devProducts = getDevProductMap(consumer, sku);
         verifyDevProducts(consumer, sku, devProducts);
-        updateDevProducts(consumer, devProducts);
         return devProducts;
-    }
-
-    /**
-     * Update the developer product references as they will be out of sync
-     * when retrieved from the server.
-     *
-     * @param devConsumer
-     * @param devProducts
-     */
-    protected void updateDevProducts(Consumer devConsumer, DeveloperProducts devProducts) {
-        Product skuProduct = devProducts.getSku();
-        if (StringUtils.isEmpty(skuProduct.getAttributeValue("support_level"))) {
-            // if there is no SLA, apply the default
-            skuProduct.setAttribute("support_level", this.DEFAULT_DEV_SLA);
-        }
-
-        // Update the owner references on the retrieved Product and content.
-        for (Product prod : devProducts.getAll()) {
-            prod.setOwner(devConsumer.getOwner());
-            for (ProductContent pc : prod.getProductContent()) {
-                pc.getContent().setOwner(devConsumer.getOwner());
-            }
-            productCurator.createOrUpdate(prod);
-        }
     }
 
     /**
@@ -333,8 +309,44 @@ public class Entitler {
         for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
             devProductIds.add(ip.getProductId());
         }
-        List<Product> prods = productAdapter.getProductsByIds(consumer.getOwner(), devProductIds);
-        return new DeveloperProducts(sku, prods);
+
+        Owner owner = consumer.getOwner();
+        Set<Product> products = new HashSet<Product>();
+
+        for (Product product : productAdapter.getProductsByIds(consumer.getOwner(), devProductIds)) {
+            for (ProductContent pc : product.getProductContent()) {
+                pc.getContent().addOwner(owner);
+
+                // VERSIONING TODO: We may need to hit the content curator here. Hopefully the update on
+                // product will cascade down.
+            }
+
+            product.addOwner(owner);
+            product.setLocked(true);
+
+            if (sku.equals(product.getId()) &&
+                StringUtils.isEmpty(product.getAttributeValue("support_level"))) {
+
+                // if there is no SLA, apply the default
+                product.setAttribute("support_level", this.DEFAULT_DEV_SLA);
+            }
+
+            try {
+                product = productCurator.updateProduct(product, consumer.getOwner());
+            }
+            catch (IllegalStateException e) {
+                // This should only happen if we try to update a product that hasn't yet been
+                // created. We'll do that here.
+                log.debug("Product doesn't yet exist locally; creating it now. {}", product);
+                product = productCurator.createProduct(product, consumer.getOwner());
+            }
+
+            products.add(product);
+        }
+
+        log.debug("New dev products with sku: {}", sku);
+
+        return new DeveloperProducts(sku, products);
     }
 
     /**
@@ -358,7 +370,7 @@ public class Entitler {
         for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
             if (!devProducts.containsProduct(ip.getProductId())) {
                 log.warn(i18n.tr("Installed product not available to this " +
-                        "development unit: {0}", ip.getProductId()));
+                        "development unit: ''{0}''", ip.getProductId()));
             }
         }
     }
@@ -400,7 +412,7 @@ public class Entitler {
                 result = poolManager.getBestPools(
                     consumer, null, null, owner, serviceLevelOverride, null);
             }
-            log.debug("Created Pool Quantity list: " + result);
+            log.debug("Created Pool Quantity list: {}", result);
         }
         catch (EntitlementRefusedException e) {
             // If we catch an exception we will just return an empty list
@@ -468,8 +480,9 @@ public class Entitler {
         private Product sku;
         private Map<String, Product> provided;
 
-        public DeveloperProducts(String expectedSku, List<Product> products) {
+        public DeveloperProducts(String expectedSku, Collection<Product> products) {
             provided = new HashMap<String, Product>();
+
             for (Product prod : products) {
                 if (expectedSku.equals(prod.getId())) {
                     sku = prod;
@@ -478,21 +491,14 @@ public class Entitler {
                     provided.put(prod.getId(), prod);
                 }
             }
-
-        }
-
-        public Set<Product> getAll() {
-            Set<Product> all = new HashSet<Product>(provided.values());
-            all.add(sku);
-            return all;
         }
 
         public Product getSku() {
             return sku;
         }
 
-        public Set<Product> getProvided() {
-            return new HashSet<Product>(provided.values());
+        public Collection<Product> getProvided() {
+            return provided.values();
         }
 
         public boolean foundSku() {

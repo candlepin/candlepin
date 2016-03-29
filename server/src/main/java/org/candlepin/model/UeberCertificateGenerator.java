@@ -88,10 +88,10 @@ public class UeberCertificateGenerator {
         // generated with numeric IDs.
 
         Product ueberProduct = Product.createUeberProductForOwner(idGenerator, o);
-        productCurator.create(ueberProduct);
+        productCurator.createProduct(ueberProduct, o);
 
         Content ueberContent = Content.createUeberContent(idGenerator, o, ueberProduct);
-        contentCurator.create(ueberContent);
+        contentCurator.createContent(ueberContent, o);
 
         ProductContent productContent = new ProductContent(ueberProduct, ueberContent, true);
         ueberProduct.getProductContent().add(productContent);

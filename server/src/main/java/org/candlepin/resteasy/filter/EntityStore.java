@@ -27,8 +27,6 @@ import java.util.List;
  * @param <E> a type that implements the Persisted interface.
  */
 interface EntityStore<E extends Persisted> {
-    E lookup(String key);
     E lookup(String key, Owner owner);
-    List<E> lookup(Collection<String> keys);
-    Owner getOwner(Persisted entity);
+    List<E> lookup(Collection<String> keys, Owner owner);
 }

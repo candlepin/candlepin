@@ -31,6 +31,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -261,7 +262,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     @ManyToMany
     @JoinTable(
-        name = "cpo_pool_provided_products",
+        name = "cp2_pool_provided_products",
         joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
         inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
     )
@@ -270,7 +271,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     @ManyToMany
     @JoinTable(
-        name = "cpo_pool_derived_products",
+        name = "cp2_pool_derprov_products",
         joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
         inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
     )
@@ -381,7 +382,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     public Pool() {
     }
 
-    public Pool(Owner ownerIn, Product product, Set<Product> providedProducts,
+    public Pool(Owner ownerIn, Product product, Collection<Product> providedProducts,
         Long quantityIn, Date startDateIn, Date endDateIn, String contractNumber,
         String accountNumber, String orderNumber) {
 
@@ -394,9 +395,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.accountNumber = accountNumber;
         this.orderNumber = orderNumber;
 
-        if (providedProducts != null) {
-            this.setProvidedProducts(providedProducts);
-        }
+        this.setProvidedProducts(providedProducts);
     }
 
     /** {@inheritDoc} */
@@ -516,6 +515,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     public String getDerivedProductName() {
         return (this.getDerivedProduct() != null ? this.getDerivedProduct().getName() : null);
     }
+
     /**
      * Return the contract for this pool's subscription.
      *
@@ -759,7 +759,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.providedProducts.add(provided);
     }
 
-    public void setProvidedProducts(Set<Product> providedProducts) {
+    public void setProvidedProducts(Collection<Product> providedProducts) {
         this.providedProducts.clear();
 
         if (providedProducts != null) {
@@ -989,16 +989,32 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         else if (getDerivedImportedProductId() != null) {
             return getDerivedImportedProductId();
         }
-        return null;
 
+        return null;
     }
 
+    /**
+     * Retrieves the product attributes for this pool. The product attributes will be identical to
+     * those retrieved from getProduct().getAttributes(), except the set returned by this method is
+     * not modifiable.
+     *
+     * @return
+     *  The attributes associated with the marketing product (SKU) for this pool
+     */
     public Set<ProductAttribute> getProductAttributes() {
         return this.getProduct() != null ?
             this.getProduct().getAttributes() :
             this.productAttributes;
     }
 
+    /**
+     * Retrieves the derived product attributes for this pool. The derived product attributes will
+     * be identical to those retrieved from getDerivedProduct().getAttributes(), except the set
+     * returned by this method is not modifiable.
+     *
+     * @return
+     *  The attributes associated with the derived product (???) for this pool
+     */
     public Set<ProductAttribute> getDerivedProductAttributes() {
         return this.getDerivedProduct() != null ?
             this.getDerivedProduct().getAttributes() :
@@ -1035,7 +1051,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         return derivedProvidedProducts;
     }
 
-    public void setDerivedProvidedProducts(Set<Product> derivedProvidedProducts) {
+    public void setDerivedProvidedProducts(Collection<Product> derivedProvidedProducts) {
         this.derivedProvidedProducts.clear();
 
         if (derivedProvidedProducts != null) {

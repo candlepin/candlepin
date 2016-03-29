@@ -125,8 +125,8 @@ public class RulesObjectMapperTest {
 
         String output = objMapper.toJsonString(context);
         // Shouldn't see timestamps:
-        assertFalse(output.contains("created"));
-        assertFalse(output.contains("updated"));
+        assertFalse(output.contains("\"created\""));
+        assertFalse(output.contains("\"updated\""));
 
         // Shouldn't see a productId:
         assertFalse(output.contains("PRODID"));

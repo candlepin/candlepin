@@ -139,14 +139,7 @@ public class ProductResource {
     @SecurityHole
     public Product getProduct(@PathParam("product_id") String productId) {
         Product product = this.findProduct(productId);
-
-        // Make sure the owner cannot be identified from the returned product
-        // TODO: It may be better/cleaner to evict the object (and its related objects) from
-        // Hibernate's session cache rather than creating a copy.
-        Product censored = (Product) product.clone();
-        censored.setOwner(null);
-
-        return censored;
+        return product;
     }
 
     /**

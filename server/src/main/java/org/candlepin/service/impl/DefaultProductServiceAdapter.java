@@ -53,10 +53,6 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         return this.prodCertCurator.getCertForProduct(product);
     }
 
-    public boolean productHasSubscriptions(Product prod) {
-        return prodCurator.productHasSubscriptions(prod);
-    }
-
     @Override
     public List<Product> getProductsByIds(Owner owner, Collection<String> ids) {
         return prodCurator.listAllByIds(owner, ids);

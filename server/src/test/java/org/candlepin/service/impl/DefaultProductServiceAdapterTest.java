@@ -100,13 +100,6 @@ public class DefaultProductServiceAdapterTest {
         assertEquals(p, result.getProduct());
     }
 
-    @Test
-    public void hasSubscriptions() {
-        Product p = mock(Product.class);
-        dpsa.productHasSubscriptions(p);
-        verify(pc).productHasSubscriptions(eq(p));
-    }
-
     // can't mock a final class, so create a dummy one
     private KeyPair createKeyPair() {
         PublicKey pk = mock(PublicKey.class);

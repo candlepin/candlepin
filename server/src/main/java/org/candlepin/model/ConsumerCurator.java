@@ -86,20 +86,19 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         if (entity.getFacts() != null) {
             entity.setFacts(filterAndVerifyFacts(entity));
         }
+        
         return super.create(entity);
     }
 
     @Transactional
     public void delete(Consumer entity) {
         // save off the IDs before we delete
-        DeletedConsumer dc = new DeletedConsumer(entity.getUuid(),
-            entity.getOwner().getId(), entity.getOwner().getKey(),
-            entity.getOwner().getDisplayName());
+        DeletedConsumer dc = new DeletedConsumer(entity.getUuid(), entity.getOwner().getId(),
+            entity.getOwner().getKey(), entity.getOwner().getDisplayName());
 
         super.delete(entity);
 
-        DeletedConsumer existing = deletedConsumerCurator.
-                    findByConsumerUuid(dc.getConsumerUuid());
+        DeletedConsumer existing = deletedConsumerCurator.findByConsumerUuid(dc.getConsumerUuid());
         if (existing != null) {
             // update the owner ID in case the same UUID was specified by two owners
             existing.setOwnerId(dc.getOwnerId());
@@ -119,13 +118,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             entitlement.setConsumer(consumer);
         }
 
-        ConsumerType consumerType = consumerTypeCurator.lookupByLabel(consumer
-            .getType().getLabel());
+        ConsumerType consumerType = consumerTypeCurator.lookupByLabel(consumer.getType().getLabel());
         consumer.setType(consumerType);
 
         IdentityCertificate idCert = consumer.getIdCert();
-        this.currentSession().replicate(idCert.getSerial(),
-            ReplicationMode.EXCEPTION);
+        this.currentSession().replicate(idCert.getSerial(), ReplicationMode.EXCEPTION);
         this.currentSession().replicate(idCert, ReplicationMode.EXCEPTION);
 
         this.currentSession().replicate(consumer, ReplicationMode.EXCEPTION);
@@ -294,7 +291,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public Consumer lockAndLoad(Consumer c) {
         getEntityManager().lock(c, LockModeType.PESSIMISTIC_WRITE);
         return c;
-
     }
 
     @Transactional

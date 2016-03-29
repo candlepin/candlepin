@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
-# USAGE: smoke-test.sh <image_name> <cp_repo_url>
-# Example: smoke-test.sh candlepin/candlepin-rhel6-base http://download.devel.redhat.com/brewroot/repos/candlepin-mead-rhel-6-build/latest/x86_64
+# USAGE: smoke-test.py <image_name> <cp_repo_url>
+# Example: smoke-test.py candlepin/candlepin-rhel6-base http://download.devel.redhat.com/brewroot/repos/candlepin-mead-rhel-6-build/latest/x86_64
 
 import json
 import os

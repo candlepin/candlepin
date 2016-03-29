@@ -104,7 +104,7 @@ public class ProductImporterTest {
         storeThese.add(created);
 
         // Simulate the pre-existing product:
-        when(productCuratorMock.lookupById(product.getOwner(), product.getId())).thenReturn(product);
+        when(productCuratorMock.lookupById(owner, product.getId())).thenReturn(product);
     }
 
     @Test

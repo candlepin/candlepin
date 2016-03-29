@@ -60,10 +60,10 @@ public class ContentCuratorTest extends DatabaseTestFixture {
             "Test Content", updates.getId(),
             "test-content-label", "yum", "test-vendor",
             "test-content-url", "test-gpg-url", "test-arch1");
-        contentCurator.create(toBeUpdated);
+        contentCurator.createContent(toBeUpdated, owner);
 
         updates.setUuid(toBeUpdated.getUuid());
-        toBeUpdated = contentCurator.createOrUpdate(updates);
+        toBeUpdated = contentCurator.updateContent(updates, owner);
 
         assertEquals(toBeUpdated.getName(), updates.getName());
         assertEquals(toBeUpdated.getLabel(), updates.getLabel());
@@ -79,12 +79,15 @@ public class ContentCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void importSameContentForMultipleProducts() {
+        // TODO: This test may not have any value now since we no longer have a createOrUpdate
+        // method that needs to work on the same content twice.
+
         Content c1 = new Content(owner, "mycontent", "5006", "mycontent", "yum",
                 "vendor", "nobodycares", "nobodystillcares", "x86_64");
         Content c2 = new Content(owner, "mycontent", "5006", "mycontent", "yum",
                 "vendor", "nobodycares", "nobodystillcares", "x86_64");
-        contentCurator.createOrUpdate(c1);
-        contentCurator.createOrUpdate(c2);
+        contentCurator.createContent(c1, owner);
+        contentCurator.updateContent(c2, owner);
 
     }
 }

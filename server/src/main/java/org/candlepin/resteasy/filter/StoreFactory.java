@@ -90,23 +90,13 @@ public class StoreFactory {
         @Inject private OwnerCurator ownerCurator;
 
         @Override
-        public Owner lookup(String key) {
-            return ownerCurator.lookupByKey(key);
-        }
-
-        @Override
-        public List<Owner> lookup(Collection<String> keys) {
-            return ownerCurator.lookupByKeys(keys);
-        }
-
-        @Override
         public Owner lookup(String key, Owner owner) {
-            throw new IllegalStateException("Cannot look up an owner with an owner");
+            return this.ownerCurator.lookupByKey(key);
         }
 
         @Override
-        public Owner getOwner(Persisted entity) {
-            return (Owner) entity;
+        public List<Owner> lookup(Collection<String> keys, Owner owner) {
+            return this.ownerCurator.lookupByKeys(keys);
         }
     }
 
@@ -114,23 +104,13 @@ public class StoreFactory {
         @Inject private EnvironmentCurator envCurator;
 
         @Override
-        public Environment lookup(String key) {
+        public Environment lookup(String key, Owner owner) {
             return envCurator.secureFind(key);
         }
 
         @Override
-        public List<Environment> lookup(Collection<String> keys) {
+        public List<Environment> lookup(Collection<String> keys, Owner owner) {
             return envCurator.listAllByIds(keys);
-        }
-
-        @Override
-        public Environment lookup(String key, Owner owner) {
-            return lookup(key);
-        }
-
-        @Override
-        public Owner getOwner(Persisted entity) {
-            return ((Environment) entity).getOwner();
         }
     }
 
@@ -140,7 +120,7 @@ public class StoreFactory {
         @Inject private Provider<I18n> i18nProvider;
 
         @Override
-        public Consumer lookup(String key) {
+        public Consumer lookup(String key, Owner owner) {
             if (deletedConsumerCurator.countByConsumerUuid(key) > 0) {
                 throw new GoneException(i18nProvider.get().tr("Unit {0} has been deleted", key), key);
             }
@@ -149,21 +129,11 @@ public class StoreFactory {
         }
 
         @Override
-        public Consumer lookup(String key, Owner owner) {
-            return lookup(key);
-        }
-
-        @Override
-        public List<Consumer> lookup(Collection<String> keys) {
+        public List<Consumer> lookup(Collection<String> keys, Owner owner) {
             // Do not look for deleted consumers because we do not want to throw
             // an exception and reject the whole request just because one of
             // the requested items is deleted.
             return consumerCurator.findByUuids(keys);
-        }
-
-        @Override
-        public Owner getOwner(Persisted entity) {
-            return ((Consumer) entity).getOwner();
         }
     }
 
@@ -171,23 +141,13 @@ public class StoreFactory {
         @Inject private EntitlementCurator entitlementCurator;
 
         @Override
-        public Entitlement lookup(String key) {
+        public Entitlement lookup(String key, Owner owner) {
             return entitlementCurator.secureFind(key);
         }
 
         @Override
-        public Entitlement lookup(String key, Owner owner) {
-            return lookup(key);
-        }
-
-        @Override
-        public List<Entitlement> lookup(Collection<String> keys) {
+        public List<Entitlement> lookup(Collection<String> keys, Owner owner) {
             return entitlementCurator.listAllByIds(keys);
-        }
-
-        @Override
-        public Owner getOwner(Persisted entity) {
-            return ((Entitlement) entity).getOwner();
         }
     }
 
@@ -195,23 +155,13 @@ public class StoreFactory {
         @Inject private PoolCurator poolCurator;
 
         @Override
-        public Pool lookup(String key) {
+        public Pool lookup(String key, Owner owner) {
             return poolCurator.secureFind(key);
         }
 
         @Override
-        public Pool lookup(String key, Owner owner) {
-            return lookup(key);
-        }
-
-        @Override
-        public List<Pool> lookup(Collection<String> keys) {
+        public List<Pool> lookup(Collection<String> keys, Owner owner) {
             return poolCurator.listAllByIds(keys);
-        }
-
-        @Override
-        public Owner getOwner(Persisted entity) {
-            return ((Pool) entity).getOwner();
         }
     }
 
@@ -219,23 +169,13 @@ public class StoreFactory {
         @Inject private ActivationKeyCurator activationKeyCurator;
 
         @Override
-        public ActivationKey lookup(String key) {
+        public ActivationKey lookup(String key, Owner owner) {
             return activationKeyCurator.secureFind(key);
         }
 
         @Override
-        public ActivationKey lookup(String key, Owner owner) {
-            return lookup(key);
-        }
-
-        @Override
-        public List<ActivationKey> lookup(Collection<String> keys) {
+        public List<ActivationKey> lookup(Collection<String> keys, Owner owner) {
             return activationKeyCurator.listAllByIds(keys);
-        }
-
-        @Override
-        public Owner getOwner(Persisted entity) {
-            return ((ActivationKey) entity).getOwner();
         }
     }
 
@@ -243,26 +183,13 @@ public class StoreFactory {
         @Inject private ProductCurator productCurator;
 
         @Override
-        public Product lookup(String key) {
-            return productCurator.lookupById(key);
-        }
-
         public Product lookup(String key, Owner owner) {
-            return owner == null ? this.lookup(key) : productCurator.lookupById(owner.getId(), key);
+            return owner != null ? productCurator.lookupById(owner.getId(), key) : null;
         }
 
         @Override
-        public List<Product> lookup(Collection<String> keys) {
-            return productCurator.listAllByIds(keys);
-        }
-
         public List<Product> lookup(Collection<String> keys, Owner owner) {
             return productCurator.listAllByIds(owner, keys);
-        }
-
-        @Override
-        public Owner getOwner(Persisted entity) {
-            return ((Product) entity).getOwner();
         }
     }
 
@@ -270,55 +197,33 @@ public class StoreFactory {
         @Inject private JobCurator jobCurator;
 
         @Override
-        public JobStatus lookup(String jobId) {
+        public JobStatus lookup(String jobId, Owner owner) {
             return jobCurator.find(jobId);
         }
 
         @Override
-        public JobStatus lookup(String key, Owner owner) {
-            return lookup(key);
-        }
-
-        @Override
-        public List<JobStatus> lookup(Collection<String> jobIds) {
+        public List<JobStatus> lookup(Collection<String> jobIds, Owner owner) {
             return jobCurator.listAllByIds(jobIds);
-        }
-
-        @Override
-        public Owner getOwner(Persisted entity) {
-            // JobStatus does not necessarily belong to an owner.
-            return null;
         }
     }
 
     private static class UserStore implements EntityStore<User> {
         @Override
-        public User lookup(String username) {
+        public User lookup(String key, Owner owner) {
             /* WARNING: Semi-risky business here, we need a user object for the security
              * code to validate, but in this area we seem to only need the username.
              */
-            return new User(username, null);
+            return new User(key, null);
         }
 
         @Override
-        public User lookup(String key, Owner owner) {
-            return lookup(key);
-        }
-
-        @Override
-        public List<User> lookup(Collection<String> keys) {
+        public List<User> lookup(Collection<String> keys, Owner owner) {
             List<User> users = new ArrayList<User>();
             for (String username : keys) {
                 users.add(new User(username, null));
             }
 
             return users;
-        }
-
-        @Override
-        public Owner getOwner(Persisted entity) {
-            // Users do not (necessarily) belong to a specific org:
-            return null;
         }
     }
 }

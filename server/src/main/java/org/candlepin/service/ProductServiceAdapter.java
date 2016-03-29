@@ -59,5 +59,4 @@ public interface ProductServiceAdapter {
      * @return the stored or created {@link ProductCertificate}
      */
     ProductCertificate getProductCertificate(Product product);
-
 }

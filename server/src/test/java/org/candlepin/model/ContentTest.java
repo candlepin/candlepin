@@ -98,7 +98,7 @@ public class ContentTest extends DatabaseTestFixture {
 
         modifiedContent.setUuid(content.getUuid());
 
-        contentCurator.createOrUpdate(modifiedContent);
+        contentCurator.updateContent(modifiedContent, owner);
 
         content = contentCurator.lookupById(owner, "100");
         assertEquals(newLabel, content.getLabel());

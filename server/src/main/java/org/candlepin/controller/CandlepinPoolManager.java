@@ -72,7 +72,6 @@ import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
 
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
@@ -97,6 +96,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
+
 
 /**
  * PoolManager
@@ -170,6 +171,7 @@ public class CandlepinPoolManager implements PoolManager {
      * We need to update/regen entitlements in the same transaction we update pools
      * so we don't miss anything
      */
+    @Transactional
     void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter, Owner owner, boolean lazy) {
         long start = System.currentTimeMillis();
         owner = refreshOwner(owner);
@@ -183,8 +185,6 @@ public class CandlepinPoolManager implements PoolManager {
 
         Set<String> subIds = Util.newSet();
 
-        // TODO:
-        // Does changedContent have a use? Should refreshing products imply refreshing content?
         refreshContent(owner, subs);
         Set<Product> changedProducts = refreshProducts(owner, subs);
 
@@ -211,9 +211,9 @@ public class CandlepinPoolManager implements PoolManager {
         // We deleted some, need to take that into account so we
         // remove everything that isn't actually active
         subIds.removeAll(deletedSubs);
-        List<Pool> poolsToDelete = new ArrayList<Pool>();
-        // delete pools whose subscription disappeared:
 
+        // delete pools whose subscription disappeared:
+        List<Pool> poolsToDelete = new ArrayList<Pool>();
         for (Pool pool : poolCurator.getPoolsFromBadSubs(owner, subIds)) {
             if (pool.getSourceSubscription() != null && !pool.getType().isDerivedType() &&
                 (ueberPoolId == null || !ueberPoolId.equals(pool.getId()))) {
@@ -289,20 +289,24 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
-        Set<Content> changed = this.getChangedContent(owner, content.values());
+        Set<Content> changed = this.getChangedContent(owner, content);
+
+        // We need to flush here to make sure our pending persists and merges get pushed to the DB
+        // so our reference updates don't fail.
+        this.contentCurator.flush();
 
         // Go back through each sub and update content references so we don't end up with dangling,
         // transient or duplicate references on any of the subs' products.
         for (Subscription sub : subs) {
-            this.updateContentRefs(owner, sub.getProduct());
-            this.updateContentRefs(owner, sub.getDerivedProduct());
+            this.updateContentRefs(content, owner, sub.getProduct());
+            this.updateContentRefs(content, owner, sub.getDerivedProduct());
 
             for (Product product : sub.getProvidedProducts()) {
-                this.updateContentRefs(owner, product);
+                this.updateContentRefs(content, owner, product);
             }
 
             for (Product product : sub.getDerivedProvidedProducts()) {
-                this.updateContentRefs(owner, product);
+                this.updateContentRefs(content, owner, product);
             }
         }
 
@@ -340,8 +344,9 @@ public class CandlepinPoolManager implements PoolManager {
 
             if (existing != null && !content.equals(existing)) {
                 log.warn(
-                    "Multiple versions of the same content found on a single subscription: {}.{}",
-                    (content.getOwner() != null ? content.getOwner().getId() : null), content.getId()
+                    "Multiple versions of the same content found on a single subscription; " +
+                    "discarding previous version: {} => {}, {}",
+                    content.getId(), existing, content
                 );
             }
 
@@ -352,48 +357,53 @@ public class CandlepinPoolManager implements PoolManager {
         product.getProductContent().removeAll(duplicates);
     }
 
-    private void updateContentRefs(Owner owner, Product product) {
+    private void updateContentRefs(Map<String, Content> contentCache, Owner owner, Product product) {
         if (product == null) {
             return;
         }
 
-        // TODO:
-        // Explore caching the output from the curator.create(orupdate) calls in getChangedContent
-        // to avoid doing another potential DB hit for every content instance here.
         for (ProductContent pc : product.getProductContent()) {
             Content content = pc.getContent();
             Content existing = this.contentCurator.lookupById(owner, content.getId());
 
             if (existing == null) {
                 // This should never happen.
-                throw new RuntimeException("Unable to resolve content reference");
+                throw new RuntimeException(String.format(
+                    "Unable to resolve content reference: %s", content
+                ));
             }
 
             pc.setContent(existing);
         }
     }
 
-    public Set<Content> getChangedContent(Owner owner, Collection<Content> content) {
+    public Set<Content> getChangedContent(Owner owner, Map<String, Content> contentCache) {
         Set<Content> changed = Util.newSet();
 
-        log.debug("Syncing {} incoming content.", content.size());
+        log.debug("Syncing {} incoming content", contentCache.size());
+        for (String cid : contentCache.keySet()) {
+            // If cid and incoming.getId() aren't equal, we're in trouble.
+            Content incoming = contentCache.get(cid);
+            Content existing = this.contentCurator.lookupById(owner, cid);
 
-        for (Content inbound : content) {
-            Content existing = this.contentCurator.lookupById(owner, inbound.getId());
-
-            // We always want to ensure it contains the proper owner reference
-            inbound.setOwner(owner);
+            // Ensure the incoming product is linked to the owner that initiated the refresh
+            incoming.addOwner(owner);
 
             if (existing == null) {
-                log.info("Creating new content for org {}: {}", owner.getKey(), inbound.getId());
+                log.info("Creating new content for org {}: {}", owner.getKey(), cid);
 
-                this.contentCurator.create(inbound);
+                // This is coming from a manifest or upstream; lock it so it can't be modified
+                // with the API
+                incoming.setLocked(true);
+
+                incoming = this.contentCurator.createContent(incoming, owner);
             }
-            else if (!inbound.equals(existing)) {
-                log.info("Updating existing content for org {}: {}", owner.getKey(), inbound.getId());
+            else if (!incoming.equals(existing)) {
+                log.info("Updating existing content for org {}: {}", owner.getKey(), cid);
 
-                this.contentCurator.createOrUpdate(inbound);
-                changed.add(inbound);
+                incoming = this.contentCurator.updateContent(incoming, owner);
+
+                changed.add(incoming);
             }
         }
 
@@ -423,26 +433,30 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
-        Set<Product> changed = this.getChangedProducts(owner, products.values());
+        Set<Product> changed = this.getChangedProducts(owner, products);
+
+        // We need to flush here to make sure our pending persists and merges get pushed to the DB
+        // so our reference updates don't fail.
+        this.prodCurator.flush();
 
         // Go back through each sub and update product references so we don't end up with dangling,
         // transient or duplicate references on any of the subs.
         for (Subscription sub : subs) {
-            sub.setProduct(this.resolveProductRef(owner, sub.getProduct()));
+            sub.setProduct(this.updateProductRef(products, owner, sub.getProduct()));
 
             if (sub.getDerivedProduct() != null) {
-                sub.setDerivedProduct(this.resolveProductRef(owner, sub.getDerivedProduct()));
+                sub.setDerivedProduct(this.updateProductRef(products, owner, sub.getDerivedProduct()));
             }
 
             Set<Product> pset = new HashSet<Product>();
             for (Product product : sub.getProvidedProducts()) {
-                pset.add(this.resolveProductRef(owner, product));
+                pset.add(this.updateProductRef(products, owner, product));
             }
             sub.setProvidedProducts(pset);
 
             pset.clear();
             for (Product product : sub.getDerivedProvidedProducts()) {
-                pset.add(this.resolveProductRef(owner, product));
+                pset.add(this.updateProductRef(products, owner, product));
             }
             sub.setDerivedProvidedProducts(pset);
         }
@@ -455,10 +469,11 @@ public class CandlepinPoolManager implements PoolManager {
             // Check that the product hasn't changed if we've already seen it.
             Product existing = productMap.get(product.getId());
 
-            if (existing != null && !this.hasProductChanged(existing, product)) {
+            if (existing != null && existing.equals(product)) {
                 log.warn(
-                    "Multiple versions of the same product found on a single subscription: {}.{}",
-                    (product.getOwner() != null ? product.getOwner().getId() : null), product.getId()
+                    "Multiple versions of the same product found on a single subscription; " +
+                    "discarding previous version: {} => {}, {}",
+                    product.getId(), existing, product
                 );
             }
 
@@ -466,12 +481,9 @@ public class CandlepinPoolManager implements PoolManager {
         }
     }
 
-    private Product resolveProductRef(Owner owner, Product product) {
+    private Product updateProductRef(Map<String, Product> productCache, Owner owner, Product product) {
         Product resolved = null;
 
-        // TODO:
-        // Explore caching the output from the curator.create(orupdate) calls in getChangedProducts
-        // to avoid doing another potential DB hit for every product instance here.
         if (product != null) {
             resolved = this.prodCurator.lookupById(owner, product.getId());
 
@@ -486,63 +498,39 @@ public class CandlepinPoolManager implements PoolManager {
         return resolved;
     }
 
-    public Set<Product> getChangedProducts(Owner owner, Collection<Product> allProducts) {
+    public Set<Product> getChangedProducts(Owner owner, Map<String, Product> productCache) {
+
+        log.debug("Syncing {} incoming products", productCache.size());
+
         Set<Product> changedProducts = Util.newSet();
 
-        log.debug("Syncing {} incoming products.", allProducts.size());
-        for (Product incoming : allProducts) {
-            Product existing = prodCurator.lookupById(owner, incoming.getId());
+        for (String pid : productCache.keySet()) {
+            // If the pid key and product.getId() don't match, we'll have some serious issues here.
+            Product incoming = productCache.get(pid);
+            Product existing = this.prodCurator.lookupById(owner, pid);
 
-            // We always want to ensure the owner is the one we've refreshed
-            incoming.setOwner(owner);
+            // Ensure the inbound product is linked to the owner that initiated the refresh
+            incoming.addOwner(owner);
 
             if (existing == null) {
-                log.info("Creating new product for org {}: {}", owner.getKey(), incoming.getId());
+                log.info("Creating new product for org {}: {}", owner.getKey(), pid);
 
-                prodCurator.create(incoming);
+                // This is coming from a manifest or upstream; lock it so it can't be modified
+                // with the API
+                incoming.setLocked(true);
+
+                incoming = this.prodCurator.createProduct(incoming, owner);
             }
-            // TODO: Eventually change this to use Product.equals so we're not maintaining two
-            // ways of checking for equality
-            else if (hasProductChanged(existing, incoming)) {
-                log.info("Product changed for org {}: {}", owner.getKey(), incoming.getId());
+            else if (!existing.equals(incoming)) {
+                log.info("Product changed for org {}: {}", owner.getKey(), pid);
 
-                prodCurator.createOrUpdate(incoming);
+                incoming = this.prodCurator.updateProduct(incoming, owner);
+
                 changedProducts.add(incoming);
             }
         }
 
         return changedProducts;
-    }
-
-    // TODO: move to comparator? Perhaps updating Product.equals and using that would be better?
-    protected final boolean hasProductChanged(Product existingProd, Product importedProd) {
-        // trying to go in order from least to most work.
-        if (!existingProd.getName().equals(importedProd.getName())) {
-            return true;
-        }
-
-        if (!existingProd.getMultiplier().equals(importedProd.getMultiplier())) {
-            return true;
-        }
-
-        if (existingProd.getAttributes().size() != importedProd.getAttributes().size()) {
-            return true;
-        }
-        if (Sets.intersection(existingProd.getAttributes(),
-            importedProd.getAttributes()).size() != existingProd.getAttributes().size()) {
-            return true;
-        }
-
-        if (existingProd.getProductContent().size() != importedProd.getProductContent().size()) {
-            return true;
-        }
-        if (Sets.intersection(new HashSet<ProductContent>(existingProd.getProductContent()),
-                new HashSet<ProductContent>(importedProd.getProductContent())).size() !=
-                existingProd.getProductContent().size()) {
-            return true;
-        }
-
-        return false;
     }
 
     @Transactional
@@ -583,6 +571,7 @@ public class CandlepinPoolManager implements PoolManager {
                 // is revoked.
                 continue;
             }
+
             log.info("Cleaning up expired pool: {} ({})", p.getId(), p.getEndDate());
             toDelete.add(p);
         }

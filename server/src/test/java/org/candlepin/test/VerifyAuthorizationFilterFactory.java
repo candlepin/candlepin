@@ -96,7 +96,7 @@ public class VerifyAuthorizationFilterFactory implements MethodInterceptor {
                 }
             }
 
-            Owner owner = findOwner(argMap, principal, defaultAccess);
+            Owner owner = findOwnerFromParams(argMap, principal, defaultAccess);
             if (!hasAccess(argMap, principal, owner, defaultAccess)) {
                 denyAccess(principal, method);
             }

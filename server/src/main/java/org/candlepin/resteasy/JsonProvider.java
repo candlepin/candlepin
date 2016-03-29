@@ -75,10 +75,12 @@ public class JsonProvider extends JacksonJsonProvider {
         Hibernate4Module hbm = new Hibernate4Module();
         hbm.enable(Hibernate4Module.Feature.FORCE_LAZY_LOADING);
         mapper.registerModule(hbm);
+
         SimpleModule dateModule = new SimpleModule("DateModule", new Version(1, 0, 0, null, null, null));
         // Ensure our DateSerializer is used for all Date objects
         dateModule.addSerializer(Date.class, new DateSerializer());
         mapper.registerModule(dateModule);
+
         configureHateoasObjectMapper(mapper, indentJson);
         setMapper(mapper);
     }

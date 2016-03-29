@@ -165,12 +165,11 @@ public class TestUtil {
         );
     }
 
-    public static Subscription createSubscription(Product product) {
-        return createSubscription(product.getOwner(), product);
-    }
-
     public static Subscription createSubscription() {
-        return createSubscription(createProduct(createOwner()));
+        Owner owner = createOwner();
+        Product product = createProduct(owner);
+
+        return createSubscription(owner, product);
     }
 
     public static Subscription createSubscription(Owner owner, Product product) {

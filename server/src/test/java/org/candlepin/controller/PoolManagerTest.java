@@ -308,7 +308,7 @@ public class PoolManagerTest {
         String expectedAttributeValue = "yes";
         sub.getProduct().setAttribute(testAttributeKey, expectedAttributeValue);
 
-        when(mockProductCurator.lookupById(product.getOwner(), product.getId())).thenReturn(product);
+        when(mockProductCurator.lookupById(o, product.getId())).thenReturn(product);
 
         List<Pool> pools = pRules.createAndEnrichPools(sub);
         assertEquals(1, pools.size());
@@ -330,8 +330,8 @@ public class PoolManagerTest {
         String expectedAttributeValue = "yes";
         subProduct.setAttribute(testAttributeKey, expectedAttributeValue);
 
-        when(this.mockProductCurator.lookupById(product.getOwner(), product.getId())).thenReturn(product);
-        when(this.mockProductCurator.lookupById(subProduct.getOwner(), subProduct.getId())).thenReturn(
+        when(this.mockProductCurator.lookupById(o, product.getId())).thenReturn(product);
+        when(this.mockProductCurator.lookupById(o, subProduct.getId())).thenReturn(
                 subProduct);
 
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, productCuratorMock);
@@ -353,8 +353,8 @@ public class PoolManagerTest {
         Subscription sub = TestUtil.createSubscription(o, product);
         sub.setDerivedProduct(subProduct);
 
-        when(this.mockProductCurator.lookupById(product.getOwner(), product.getId())).thenReturn(product);
-        when(this.mockProductCurator.lookupById(subProduct.getOwner(), subProduct.getId())).thenReturn(
+        when(this.mockProductCurator.lookupById(o, product.getId())).thenReturn(product);
+        when(this.mockProductCurator.lookupById(o, subProduct.getId())).thenReturn(
                 subProduct);
 
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, productCuratorMock);
@@ -377,8 +377,8 @@ public class PoolManagerTest {
         subProvided.add(subProvidedProduct);
         sub.setDerivedProvidedProducts(subProvided);
 
-        when(this.mockProductCurator.lookupById(product.getOwner(), product.getId())).thenReturn(product);
-        when(this.mockProductCurator.lookupById(subProduct.getOwner(), subProduct.getId())).thenReturn(
+        when(this.mockProductCurator.lookupById(o, product.getId())).thenReturn(product);
+        when(this.mockProductCurator.lookupById(o, subProduct.getId())).thenReturn(
                 subProduct);
 
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, productCuratorMock);
@@ -399,7 +399,7 @@ public class PoolManagerTest {
         sub.getBranding().add(b1);
         sub.getBranding().add(b2);
 
-        when(this.mockProductCurator.lookupById(product.getOwner(), product.getId())).thenReturn(product);
+        when(this.mockProductCurator.lookupById(o, product.getId())).thenReturn(product);
 
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, productCuratorMock);
         List<Pool> pools = pRules.createAndEnrichPools(sub);
@@ -448,6 +448,7 @@ public class PoolManagerTest {
 
         Owner owner = getOwner();
         when(ownerCuratorMock.lookupByKey(owner.getKey())).thenReturn(owner);
+
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
         List<Pool> delPools = Arrays.asList(p);
         verify(this.manager).deletePools(eq(delPools));
@@ -513,6 +514,7 @@ public class PoolManagerTest {
         mockPoolsList(pools);
         Owner owner = getOwner();
         when(ownerCuratorMock.lookupByKey(owner.getKey())).thenReturn(owner);
+
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
         verify(this.manager, never()).deletePool(same(p));
     }
@@ -1176,7 +1178,7 @@ public class PoolManagerTest {
         Subscription s = TestUtil.createSubscription(owner, prod);
         subscriptions.add(s);
 
-        when(productCuratorMock.lookupById(prod.getOwner(), prod.getId())).thenReturn(prod);
+        when(productCuratorMock.lookupById(owner, prod.getId())).thenReturn(prod);
 
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
@@ -1224,9 +1226,8 @@ public class PoolManagerTest {
         Subscription s = TestUtil.createSubscription(owner, prod);
         subscriptions.add(s);
 
-        when(productCuratorMock.lookupById(prod.getOwner(), prod.getId())).thenReturn(prod);
-        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
-            subscriptions);
+        when(productCuratorMock.lookupById(owner, prod.getId())).thenReturn(prod);
+        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(subscriptions);
         when(mockConfig.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
 
         List<Pool> existingPools = new LinkedList<Pool>();
@@ -1266,9 +1267,8 @@ public class PoolManagerTest {
         prod.setAttribute("virt_limit", "4");
         Subscription s = TestUtil.createSubscription(owner, prod);
         subscriptions.add(s);
-        when(productCuratorMock.lookupById(prod.getOwner(), prod.getId())).thenReturn(prod);
-        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
-            subscriptions);
+        when(productCuratorMock.lookupById(owner, prod.getId())).thenReturn(prod);
+        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(subscriptions);
         when(mockConfig.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
 
         List<Pool> existingPools = new LinkedList<Pool>();
@@ -1301,14 +1301,14 @@ public class PoolManagerTest {
     public void testGetChangedProductsNoNewProducts() {
         Product oldProduct = TestUtil.createProduct("fake id", "fake name", o);
 
-        Set<Product> products = new HashSet<Product>();
+        Map<String, Product> products = new HashMap<String, Product>();
 
-        when(productCuratorMock.lookupById(oldProduct.getOwner(), oldProduct.getId()))
+        when(productCuratorMock.lookupById(o, oldProduct.getId()))
             .thenReturn(oldProduct);
 
         Set<Product> changed = manager.getChangedProducts(o, products);
 
-        verify(productCuratorMock, times(0)).lookupById(oldProduct.getOwner(), oldProduct.getId());
+        verify(productCuratorMock, times(0)).lookupById(o, oldProduct.getId());
 
         assertTrue(changed.isEmpty());
     }
@@ -1317,10 +1317,10 @@ public class PoolManagerTest {
     public void testGetChangedProductsAllBrandNew() {
         Product newProduct = TestUtil.createProduct("fake id", "fake name", o);
 
-        Set<Product> products = new HashSet<Product>();
-        products.add(newProduct);
+        Map<String, Product> products = new HashMap<String, Product>();
+        products.put(newProduct.getId(), newProduct);
 
-        when(productCuratorMock.lookupById(newProduct.getOwner(), newProduct.getId()))
+        when(productCuratorMock.lookupById(o, newProduct.getId()))
             .thenReturn(null);
 
         Set<Product> changed = manager.getChangedProducts(o, products);
@@ -1328,17 +1328,17 @@ public class PoolManagerTest {
         assertTrue(changed.isEmpty());
     }
 
-    private void mockProduct(Product p) {
-        when(productCuratorMock.lookupById(p.getOwner(), p.getId())).thenReturn(p);
+    private void mockProduct(Owner owner, Product p) {
+        when(productCuratorMock.lookupById(owner, p.getId())).thenReturn(p);
     }
 
     @Test
     public void testGetChangedProductsAllIdentical() {
         Product oldProduct = TestUtil.createProduct("fake id", "fake name", o);
-        mockProduct(oldProduct);
+        mockProduct(o, oldProduct);
 
-        Set<Product> products = new HashSet<Product>();
-        products.add(oldProduct);
+        Map<String, Product> products = new HashMap<String, Product>();
+        products.put(oldProduct.getId(), oldProduct);
 
         Set<Product> changed = manager.getChangedProducts(o, products);
 
@@ -1350,10 +1350,10 @@ public class PoolManagerTest {
         Product newProduct = TestUtil.createProduct("fake id", "fake name new", o);
         Product oldProduct = TestUtil.createProduct("fake id", "fake name", o);
 
-        Set<Product> products = new HashSet<Product>();
-        products.add(newProduct);
+        Map<String, Product> products = new HashMap<String, Product>();
+        products.put(newProduct.getId(), newProduct);
 
-        mockProduct(oldProduct);
+        mockProduct(o, oldProduct);
 
         Set<Product> changed = manager.getChangedProducts(o, products);
 
@@ -1368,10 +1368,10 @@ public class PoolManagerTest {
         oldProduct.setMultiplier(1L);
         newProduct.setMultiplier(2L);
 
-        Set<Product> products = new HashSet<Product>();
-        products.add(newProduct);
+        Map<String, Product> products = new HashMap<String, Product>();
+        products.put(newProduct.getId(), newProduct);
 
-        mockProduct(oldProduct);
+        mockProduct(o, oldProduct);
 
         Set<Product> changed = manager.getChangedProducts(o, products);
 
@@ -1385,10 +1385,10 @@ public class PoolManagerTest {
 
         newProduct.setAttribute("fake attr", "value");
 
-        Set<Product> products = new HashSet<Product>();
-        products.add(newProduct);
+        Map<String, Product> products = new HashMap<String, Product>();
+        products.put(newProduct.getId(), newProduct);
 
-        mockProduct(oldProduct);
+        mockProduct(o, oldProduct);
 
         Set<Product> changed = manager.getChangedProducts(o, products);
 
@@ -1402,10 +1402,10 @@ public class PoolManagerTest {
 
         oldProduct.setAttribute("fake attr", "value");
 
-        Set<Product> products = new HashSet<Product>();
-        products.add(newProduct);
+        Map<String, Product> products = new HashMap<String, Product>();
+        products.put(newProduct.getId(), newProduct);
 
-        mockProduct(oldProduct);
+        mockProduct(o, oldProduct);
 
         Set<Product> changed = manager.getChangedProducts(o, products);
 
@@ -1420,10 +1420,10 @@ public class PoolManagerTest {
         oldProduct.setAttribute("fake attr", "value");
         newProduct.setAttribute("fake attr", "value new");
 
-        Set<Product> products = new HashSet<Product>();
-        products.add(newProduct);
+        Map<String, Product> products = new HashMap<String, Product>();
+        products.put(newProduct.getId(), newProduct);
 
-        mockProduct(oldProduct);
+        mockProduct(o, oldProduct);
 
         Set<Product> changed = manager.getChangedProducts(o, products);
 
@@ -1438,10 +1438,10 @@ public class PoolManagerTest {
         oldProduct.setAttribute("fake attr", "value");
         newProduct.setAttribute("other fake attr", "value");
 
-        Set<Product> products = new HashSet<Product>();
-        products.add(newProduct);
+        Map<String, Product> products = new HashMap<String, Product>();
+        products.put(newProduct.getId(), newProduct);
 
-        mockProduct(oldProduct);
+        mockProduct(o, oldProduct);
 
         Set<Product> changed = manager.getChangedProducts(o, products);
 
@@ -1457,10 +1457,10 @@ public class PoolManagerTest {
 
         newProduct.addContent(content);
 
-        Set<Product> products = new HashSet<Product>();
-        products.add(newProduct);
+        Map<String, Product> products = new HashMap<String, Product>();
+        products.put(newProduct.getId(), newProduct);
 
-        mockProduct(oldProduct);
+        mockProduct(o, oldProduct);
 
         Set<Product> changed = manager.getChangedProducts(o, products);
 
@@ -1476,10 +1476,10 @@ public class PoolManagerTest {
 
         oldProduct.addContent(content);
 
-        Set<Product> products = new HashSet<Product>();
-        products.add(newProduct);
+        Map<String, Product> products = new HashMap<String, Product>();
+        products.put(newProduct.getId(), newProduct);
 
-        mockProduct(oldProduct);
+        mockProduct(o, oldProduct);
 
         Set<Product> changed = manager.getChangedProducts(o, products);
 
@@ -1497,10 +1497,10 @@ public class PoolManagerTest {
         oldProduct.addContent(content);
         newProduct.addContent(content2);
 
-        Set<Product> products = new HashSet<Product>();
-        products.add(newProduct);
+        Map<String, Product> products = new HashMap<String, Product>();
+        products.put(newProduct.getId(), newProduct);
 
-        mockProduct(oldProduct);
+        mockProduct(o, oldProduct);
 
         Set<Product> changed = manager.getChangedProducts(o, products);
 
@@ -1515,12 +1515,12 @@ public class PoolManagerTest {
         Content content = new Content(o, "foobar", null, null, null, null, null, null, null);
 
         oldProduct.addContent(content);
-        newProduct.addEnabledContent(content);
+        newProduct.addContent(content, true);
 
-        Set<Product> products = new HashSet<Product>();
-        products.add(newProduct);
+        Map<String, Product> products = new HashMap<String, Product>();
+        products.put(newProduct.getId(), newProduct);
 
-        mockProduct(oldProduct);
+        mockProduct(o, oldProduct);
 
         Set<Product> changed = manager.getChangedProducts(o, products);
 
@@ -1637,7 +1637,7 @@ public class PoolManagerTest {
         );
 
         content.setId("cid" + rand);
-        content.setOwner(owner);
+        content.setOwners(Util.asSet(owner));
 
         content.setContentUrl("https://www.content_url.com/" + rand);
         content.setGpgUrl("https://www.gpg_url.com/" + rand);
@@ -1653,16 +1653,11 @@ public class PoolManagerTest {
         return content;
     }
 
-    private Content copyContent(Content source) {
-        Content copy = (new Content()).copyProperties(source);
-        copy.setId(source.getId());
-        copy.setOwner(source.getOwner());
+    private Content mockContent(Owner owner, Content content) {
+        when(contentCuratorMock.lookupById(owner, content.getId())).thenReturn(content);
+        when(contentCuratorMock.createContent(content, owner)).thenReturn(content);
+        when(contentCuratorMock.updateContent(content, owner)).thenReturn(content);
 
-        return copy;
-    }
-
-    private Content mockContent(Content content) {
-        when(contentCuratorMock.lookupById(content.getOwner(), content.getId())).thenReturn(content);
         return content;
     }
 
@@ -1670,12 +1665,16 @@ public class PoolManagerTest {
     public void testGetChangedContentNewContent() {
         Owner owner = TestUtil.createOwner();
 
-        Content c1 = this.mockContent(this.buildContent(owner));
+        Content c1 = this.mockContent(owner, this.buildContent(owner));
         Content c2 = this.buildContent(owner);
 
-        Content c1m = this.copyContent(c1);
+        Content c1m = (Content) c1.clone();
 
-        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2));
+        Map<String, Content> content = new HashMap<String, Content>();
+        content.put(c1m.getId(), c1m);
+        content.put(c2.getId(), c2);
+
+        Set<Content> result = manager.getChangedContent(owner, content);
 
         assertEquals(0, result.size());
     }
@@ -1684,16 +1683,22 @@ public class PoolManagerTest {
     public void testGetChangedContentDifferingContentURL() {
         Owner owner = TestUtil.createOwner();
 
-        Content c1 = this.mockContent(this.buildContent(owner));
-        Content c2 = this.mockContent(this.buildContent(owner));
+        Content c1 = this.mockContent(owner, this.buildContent(owner));
+        Content c2 = this.mockContent(owner, this.buildContent(owner));
 
-        Content c1m = this.copyContent(c1);
-        Content c2m = this.copyContent(c2);
+        Content c1m = (Content) c1.clone();
+        Content c2m = (Content) c2.clone();
 
         c1m.setContentUrl("modified_value");
 
+        when(contentCuratorMock.updateContent(c1m, owner)).thenReturn(c1m);
+        when(contentCuratorMock.updateContent(c2m, owner)).thenReturn(c2m);
 
-        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+        Map<String, Content> content = new HashMap<String, Content>();
+        content.put(c1m.getId(), c1m);
+        content.put(c2m.getId(), c2m);
+
+        Set<Content> result = manager.getChangedContent(owner, content);
 
         assertEquals(1, result.size());
         assertEquals(c1m, result.toArray()[0]);
@@ -1703,16 +1708,22 @@ public class PoolManagerTest {
     public void testGetChangedContentDifferingGPGURL() {
         Owner owner = TestUtil.createOwner();
 
-        Content c1 = this.mockContent(this.buildContent(owner));
-        Content c2 = this.mockContent(this.buildContent(owner));
+        Content c1 = this.mockContent(owner, this.buildContent(owner));
+        Content c2 = this.mockContent(owner, this.buildContent(owner));
 
-        Content c1m = this.copyContent(c1);
-        Content c2m = this.copyContent(c2);
+        Content c1m = (Content) c1.clone();
+        Content c2m = (Content) c2.clone();
 
         c1m.setGpgUrl("modified_value");
 
+        when(contentCuratorMock.updateContent(c1m, owner)).thenReturn(c1m);
+        when(contentCuratorMock.updateContent(c2m, owner)).thenReturn(c2m);
 
-        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+        Map<String, Content> content = new HashMap<String, Content>();
+        content.put(c1m.getId(), c1m);
+        content.put(c2m.getId(), c2m);
+
+        Set<Content> result = manager.getChangedContent(owner, content);
 
         assertEquals(1, result.size());
         assertEquals(c1m, result.toArray()[0]);
@@ -1722,16 +1733,22 @@ public class PoolManagerTest {
     public void testGetChangedContentDifferingLabel() {
         Owner owner = TestUtil.createOwner();
 
-        Content c1 = this.mockContent(this.buildContent(owner));
-        Content c2 = this.mockContent(this.buildContent(owner));
+        Content c1 = this.mockContent(owner, this.buildContent(owner));
+        Content c2 = this.mockContent(owner, this.buildContent(owner));
 
-        Content c1m = this.copyContent(c1);
-        Content c2m = this.copyContent(c2);
+        Content c1m = (Content) c1.clone();
+        Content c2m = (Content) c2.clone();
 
         c1m.setLabel("modified_value");
 
+        when(contentCuratorMock.updateContent(c1m, owner)).thenReturn(c1m);
+        when(contentCuratorMock.updateContent(c2m, owner)).thenReturn(c2m);
 
-        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+        Map<String, Content> content = new HashMap<String, Content>();
+        content.put(c1m.getId(), c1m);
+        content.put(c2m.getId(), c2m);
+
+        Set<Content> result = manager.getChangedContent(owner, content);
 
         assertEquals(1, result.size());
         assertEquals(c1m, result.toArray()[0]);
@@ -1741,16 +1758,22 @@ public class PoolManagerTest {
     public void testGetChangedContentDifferingName() {
         Owner owner = TestUtil.createOwner();
 
-        Content c1 = this.mockContent(this.buildContent(owner));
-        Content c2 = this.mockContent(this.buildContent(owner));
+        Content c1 = this.mockContent(owner, this.buildContent(owner));
+        Content c2 = this.mockContent(owner, this.buildContent(owner));
 
-        Content c1m = this.copyContent(c1);
-        Content c2m = this.copyContent(c2);
+        Content c1m = (Content) c1.clone();
+        Content c2m = (Content) c2.clone();
+
+        when(contentCuratorMock.updateContent(c1m, owner)).thenReturn(c1m);
+        when(contentCuratorMock.updateContent(c2m, owner)).thenReturn(c2m);
 
         c1m.setName("modified_value");
 
+        Map<String, Content> content = new HashMap<String, Content>();
+        content.put(c1m.getId(), c1m);
+        content.put(c2m.getId(), c2m);
 
-        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+        Set<Content> result = manager.getChangedContent(owner, content);
 
         assertEquals(1, result.size());
         assertEquals(c1m, result.toArray()[0]);
@@ -1760,16 +1783,22 @@ public class PoolManagerTest {
     public void testGetChangedContentDifferingReleaseVersion() {
         Owner owner = TestUtil.createOwner();
 
-        Content c1 = this.mockContent(this.buildContent(owner));
-        Content c2 = this.mockContent(this.buildContent(owner));
+        Content c1 = this.mockContent(owner, this.buildContent(owner));
+        Content c2 = this.mockContent(owner, this.buildContent(owner));
 
-        Content c1m = this.copyContent(c1);
-        Content c2m = this.copyContent(c2);
+        Content c1m = (Content) c1.clone();
+        Content c2m = (Content) c2.clone();
+
+        when(contentCuratorMock.updateContent(c1m, owner)).thenReturn(c1m);
+        when(contentCuratorMock.updateContent(c2m, owner)).thenReturn(c2m);
 
         c1m.setReleaseVer("modified_value");
 
+        Map<String, Content> content = new HashMap<String, Content>();
+        content.put(c1m.getId(), c1m);
+        content.put(c2m.getId(), c2m);
 
-        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+        Set<Content> result = manager.getChangedContent(owner, content);
 
         assertEquals(1, result.size());
         assertEquals(c1m, result.toArray()[0]);
@@ -1779,16 +1808,22 @@ public class PoolManagerTest {
     public void testGetChangedContentDifferingRequiredTags() {
         Owner owner = TestUtil.createOwner();
 
-        Content c1 = this.mockContent(this.buildContent(owner));
-        Content c2 = this.mockContent(this.buildContent(owner));
+        Content c1 = this.mockContent(owner, this.buildContent(owner));
+        Content c2 = this.mockContent(owner, this.buildContent(owner));
 
-        Content c1m = this.copyContent(c1);
-        Content c2m = this.copyContent(c2);
+        Content c1m = (Content) c1.clone();
+        Content c2m = (Content) c2.clone();
 
         c1m.setRequiredTags("modified_value");
 
+        when(contentCuratorMock.updateContent(c1m, owner)).thenReturn(c1m);
+        when(contentCuratorMock.updateContent(c2m, owner)).thenReturn(c2m);
 
-        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+        Map<String, Content> content = new HashMap<String, Content>();
+        content.put(c1m.getId(), c1m);
+        content.put(c2m.getId(), c2m);
+
+        Set<Content> result = manager.getChangedContent(owner, content);
 
         assertEquals(1, result.size());
         assertEquals(c1m, result.toArray()[0]);
@@ -1798,16 +1833,22 @@ public class PoolManagerTest {
     public void testGetChangedContentDifferingType() {
         Owner owner = TestUtil.createOwner();
 
-        Content c1 = this.mockContent(this.buildContent(owner));
-        Content c2 = this.mockContent(this.buildContent(owner));
+        Content c1 = this.mockContent(owner, this.buildContent(owner));
+        Content c2 = this.mockContent(owner, this.buildContent(owner));
 
-        Content c1m = this.copyContent(c1);
-        Content c2m = this.copyContent(c2);
+        Content c1m = (Content) c1.clone();
+        Content c2m = (Content) c2.clone();
+
+        when(contentCuratorMock.updateContent(c1m, owner)).thenReturn(c1m);
+        when(contentCuratorMock.updateContent(c2m, owner)).thenReturn(c2m);
 
         c1m.setType("modified_value");
 
+        Map<String, Content> content = new HashMap<String, Content>();
+        content.put(c1m.getId(), c1m);
+        content.put(c2m.getId(), c2m);
 
-        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+        Set<Content> result = manager.getChangedContent(owner, content);
 
         assertEquals(1, result.size());
         assertEquals(c1m, result.toArray()[0]);
@@ -1817,16 +1858,22 @@ public class PoolManagerTest {
     public void testGetChangedContentDifferingVendor() {
         Owner owner = TestUtil.createOwner();
 
-        Content c1 = this.mockContent(this.buildContent(owner));
-        Content c2 = this.mockContent(this.buildContent(owner));
+        Content c1 = this.mockContent(owner, this.buildContent(owner));
+        Content c2 = this.mockContent(owner, this.buildContent(owner));
 
-        Content c1m = this.copyContent(c1);
-        Content c2m = this.copyContent(c2);
+        Content c1m = (Content) c1.clone();
+        Content c2m = (Content) c2.clone();
+
+        when(contentCuratorMock.updateContent(c1m, owner)).thenReturn(c1m);
+        when(contentCuratorMock.updateContent(c2m, owner)).thenReturn(c2m);
 
         c1m.setVendor("modified_value");
 
+        Map<String, Content> content = new HashMap<String, Content>();
+        content.put(c1m.getId(), c1m);
+        content.put(c2m.getId(), c2m);
 
-        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+        Set<Content> result = manager.getChangedContent(owner, content);
 
         assertEquals(1, result.size());
         assertEquals(c1m, result.toArray()[0]);
@@ -1836,16 +1883,22 @@ public class PoolManagerTest {
     public void testGetChangedContentDifferingArches() {
         Owner owner = TestUtil.createOwner();
 
-        Content c1 = this.mockContent(this.buildContent(owner));
-        Content c2 = this.mockContent(this.buildContent(owner));
+        Content c1 = this.mockContent(owner, this.buildContent(owner));
+        Content c2 = this.mockContent(owner, this.buildContent(owner));
 
-        Content c1m = this.copyContent(c1);
-        Content c2m = this.copyContent(c2);
+        Content c1m = (Content) c1.clone();
+        Content c2m = (Content) c2.clone();
 
         c1m.setArches("modified_value");
 
+        when(contentCuratorMock.updateContent(c1m, owner)).thenReturn(c1m);
+        when(contentCuratorMock.updateContent(c2m, owner)).thenReturn(c2m);
 
-        Set<Content> result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+        Map<String, Content> content = new HashMap<String, Content>();
+        content.put(c1m.getId(), c1m);
+        content.put(c2m.getId(), c2m);
+
+        Set<Content> result = manager.getChangedContent(owner, content);
 
         assertEquals(1, result.size());
         assertEquals(c1m, result.toArray()[0]);
@@ -1855,14 +1908,21 @@ public class PoolManagerTest {
     public void testGetChangedContentDifferingModifiedProductIds() {
         Owner owner = TestUtil.createOwner();
 
-        Content c1 = this.mockContent(this.buildContent(owner));
-        Content c2 = this.mockContent(this.buildContent(owner));
+        Content c1 = this.mockContent(owner, this.buildContent(owner));
+        Content c2 = this.mockContent(owner, this.buildContent(owner));
 
-        Content c1m = this.copyContent(c1);
-        Content c2m = this.copyContent(c2);
+        Content c1m = (Content) c1.clone();
+        Content c2m = (Content) c2.clone();
+
+        when(contentCuratorMock.updateContent(c1m, owner)).thenReturn(c1m);
+        when(contentCuratorMock.updateContent(c2m, owner)).thenReturn(c2m);
 
         HashSet<String> modifiedProductIds = new HashSet<String>();
         Set<Content> result;
+
+        Map<String, Content> content = new HashMap<String, Content>();
+        content.put(c1m.getId(), c1m);
+        content.put(c2m.getId(), c2m);
 
         // New modified product
         modifiedProductIds.clear();
@@ -1870,7 +1930,7 @@ public class PoolManagerTest {
         modifiedProductIds.add("modified_value");
 
         c1m.setModifiedProductIds(modifiedProductIds);
-        result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+        result = manager.getChangedContent(owner, content);
 
         assertEquals(1, result.size());
         assertEquals(c1m, result.toArray()[0]);
@@ -1882,7 +1942,7 @@ public class PoolManagerTest {
         modifiedProductIds.remove(modifiedProductIds.toArray()[0]);
 
         c1m.setModifiedProductIds(modifiedProductIds);
-        result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+        result = manager.getChangedContent(owner, content);
 
         assertEquals(1, result.size());
         assertEquals(c1m, result.toArray()[0]);
@@ -1895,7 +1955,7 @@ public class PoolManagerTest {
         modifiedProductIds.add("modified_value");
 
         c1m.setModifiedProductIds(modifiedProductIds);
-        result = manager.getChangedContent(owner, Arrays.asList(c1m, c2m));
+        result = manager.getChangedContent(owner, content);
 
         assertEquals(1, result.size());
         assertEquals(c1m, result.toArray()[0]);

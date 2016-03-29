@@ -28,6 +28,7 @@ import com.google.inject.persist.Transactional;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.SQLQuery;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
@@ -49,6 +50,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import javax.persistence.OptimisticLockException;
 
+
+
 /**
  * AbstractHibernateCurator base class for all Candlepin curators. Curators are
  * the applications database layer, typically following the pattern of one
@@ -57,6 +60,8 @@ import javax.persistence.OptimisticLockException;
  * @param <E> Entity specific curator.
  */
 public abstract class AbstractHibernateCurator<E extends Persisted> {
+    private static final int IN_OPERATOR_BLOCK_SIZE = 30000;
+
     @Inject protected Provider<EntityManager> entityManager;
     @Inject protected I18n i18n;
     private final Class<E> entityType;
@@ -378,12 +383,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     @Transactional
-    protected final <T> T get(Class<T> clazz, Serializable id) {
+    protected <T> T get(Class<T> clazz, Serializable id) {
         return clazz.cast(currentSession().get(clazz, id));
     }
 
     @Transactional
-    protected final void save(E anObject) {
+    protected void save(E anObject) {
         getEntityManager().persist(anObject);
         flush();
     }
@@ -393,8 +398,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             getEntityManager().flush();
         }
         catch (OptimisticLockException e) {
-            throw new ConcurrentModificationException(getConcurrentModificationMessage(),
-                e);
+            throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
         }
     }
 
@@ -476,8 +480,9 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         this.getEntityManager().lock(object, lmt);
     }
 
-    public void evict(E object) {
+    public E evict(E object) {
         currentSession().evict(object);
+        return object;
     }
 
     public List<E> takeSubList(PageRequest pageRequest, List<E> results) {
@@ -497,6 +502,47 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     private String getConcurrentModificationMessage() {
         return i18n.tr("Request failed due to concurrent modification, please re-try.");
+    }
+
+    /**
+     * Performs a direct SQL update or delete operation with a collection by breaking the collection
+     * into chunks and repeatedly performing the update.
+     * <p/>
+     * The parameter receiving the collection chunks must be the last parameter in the query and the
+     * provided collection must support the subList operation.
+     *
+     * @param sql
+     *  The SQL statement to execute; must be an UPDATE or DELETE operation
+     *
+     * @param collection
+     *  The collection to be broken up into chunks
+     *
+     * @return
+     *  the number of rows updated as a result of this query
+     */
+    protected int safeSQLUpdateWithCollection(String sql, List<?> collection, Object... params) {
+        int count = 0;
+
+        Session session = this.currentSession();
+
+        for (int block = 0; block * IN_OPERATOR_BLOCK_SIZE < collection.size(); ++block) {
+            int start = block * IN_OPERATOR_BLOCK_SIZE;
+            int end = Math.min(start + IN_OPERATOR_BLOCK_SIZE, collection.size() - start);
+
+            SQLQuery query = session.createSQLQuery(sql);
+            int index = 1;
+
+            if (params != null) {
+                for (; index <= params.length; ++index) {
+                    query.setParameter(String.valueOf(index), params[index - 1]);
+                }
+            }
+            query.setParameterList(String.valueOf(index), collection.subList(start, end));
+
+            count += query.executeUpdate();
+        }
+
+        return count;
     }
 
     public <T extends Object> Criterion unboundedInCriterion(String expression, Collection<T> values) {

@@ -104,6 +104,7 @@ public class Util {
     public static <T> List<T> subList(List<T> parentList, int size) {
         return subList(parentList, 0, size - 1);
     }
+
     public static <E> List<E> newList() {
         return new ArrayList<E>();
     }
@@ -114,6 +115,16 @@ public class Util {
 
     public static <T> Set<T> newSet() {
         return new HashSet<T>();
+    }
+
+    public static <T> Set<T> asSet(T... values) {
+        Set<T> output = new HashSet<T>(values.length);
+
+        for (T value : values) {
+            output.add(value);
+        }
+
+        return output;
     }
 
     public static Date getFutureDate(int years) {
@@ -432,5 +443,59 @@ public class Util {
             buf.append(" ");
         }
         return buf.toString();
+    }
+
+    /**
+     * Compares two collections for equality without using the collection's equals method. This is
+     * primarily only useful when working with collections that may actually be Hibernate bags, as
+     * bags and proxies do not properly implement the equals method, which tends to lead to
+     * incorrect results and unnecessary work.
+     * <p/>
+     * WARNING: This method will not work with collections which use iterators that return its
+     * elements in an inconsistent order. The order does not need to be known, but it must be
+     * consistent for a given collection state.
+     *
+     * @param c1
+     *  A collection to compare to c2
+     *
+     * @param c2
+     *  A collection to compare to c1
+     *
+     * @return
+     *  true if both collections are the same instance, are both null or contain the same elements;
+     *  false otherwise
+     */
+    public static <T> boolean collectionsAreEqual(Collection<T> c1, Collection<T> c2) {
+        if (c1 == c2) {
+            return true;
+        }
+
+        if (c1 == null || c2 == null || c1.size() != c2.size()) {
+            return false;
+        }
+
+        Set<Integer> indexes = new HashSet<Integer>();
+        for (T lhs : c1) {
+            boolean found = false;
+            int offset = -1;
+
+            for (T rhs : c2) {
+                if (indexes.contains(++offset)) {
+                    continue;
+                }
+
+                if (lhs == rhs || (lhs != null && lhs.equals(rhs))) {
+                    indexes.add(offset);
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

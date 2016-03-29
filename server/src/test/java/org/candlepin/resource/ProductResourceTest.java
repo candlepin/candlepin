@@ -112,7 +112,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Set<Subscription> subs = new HashSet<Subscription>();
         Subscription s = mock(Subscription.class);
         subs.add(s);
-        when(pc.productHasSubscriptions(eq(p))).thenReturn(true);
+        when(pc.productHasSubscriptions(eq(p), eq(o))).thenReturn(true);
 
         pr.deleteProduct("10");
     }
@@ -124,9 +124,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
 
-        // The returned product should be have the owner information removed.
         Product expected = (Product) product.clone();
-        expected.setOwner(null);
 
         Product actual = productResource.getProduct(product.getId());
         assertEquals(actual, expected);

@@ -44,7 +44,10 @@ public abstract class AbstractHibernateObject implements Persisted, Serializable
     protected void onCreate() {
         Date now = new Date();
 
-        setCreated(now);
+        if (this.created == null) {
+            setCreated(now);
+        }
+
         setUpdated(now);
     }
 

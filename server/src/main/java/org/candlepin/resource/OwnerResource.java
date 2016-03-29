@@ -370,7 +370,7 @@ public class OwnerResource {
             // need to check if this has been removed due to a
             // parent being deleted
             // TODO: There has to be a more efficient way to do this...
-            log.info("Deleting consumer: " + consumer);
+            log.info("Deleting consumer: {}", consumer);
             Consumer next = consumerCurator.find(consumer.getId());
             if (next != null) {
                 consumerCurator.delete(next);
@@ -379,16 +379,16 @@ public class OwnerResource {
 
         for (ActivationKey key : activationKeyCurator
             .listByOwner(owner)) {
-            log.info("Deleting activation key: " + key);
+            log.info("Deleting activation key: {}", key);
             activationKeyCurator.delete(key);
         }
         for (Environment e : owner.getEnvironments()) {
-            log.info("Deleting environment: " + e.getId());
+            log.info("Deleting environment: {}", e.getId());
             envCurator.delete(e);
         }
 
         for (Pool p : poolManager.listPoolsByOwner(owner)) {
-            log.info("Deleting pool: " + p);
+            log.info("Deleting pool: {}", p);
             poolManager.deletePool(p);
         }
 
@@ -397,30 +397,31 @@ public class OwnerResource {
         ExporterMetadata m = exportCurator.lookupByTypeAndOwner(
             ExporterMetadata.TYPE_PER_USER, owner);
         if (m != null) {
-            log.info("Deleting export metadata: " + m);
+            log.info("Deleting export metadata: {}", m);
             exportCurator.delete(m);
         }
         for (ImportRecord record : importRecordCurator.findRecords(owner)) {
-            log.info("Deleting import record:  " + record);
+            log.info("Deleting import record:  {}", record);
             importRecordCurator.delete(record);
         }
 
         for (PermissionBlueprint perm : permissionCurator.findByOwner(owner)) {
-            log.info("Deleting permission: " + perm.getAccess());
+            log.info("Deleting permission: {}", perm.getAccess());
             perm.getRole().getPermissions().remove(perm);
             permissionCurator.delete(perm);
         }
 
         for (Product p : prodCurator.listByOwner(owner)) {
-            prodCurator.delete(p);
+            log.info("Deleting product: {}", p);
+            prodCurator.removeProduct(p, owner);
         }
 
         for (Content c : contentCurator.listByOwner(owner)) {
-            log.info("Deleting content: " + c);
-            contentCurator.delete(c);
+            log.info("Deleting content: {}", c);
+            contentCurator.removeContent(c, owner);
         }
 
-        log.info("Deleting owner: " + owner);
+        log.info("Deleting owner: {}", owner);
         ownerCurator.delete(owner);
     }
 
