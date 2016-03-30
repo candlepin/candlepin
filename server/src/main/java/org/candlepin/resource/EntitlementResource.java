@@ -368,7 +368,7 @@ public class EntitlementResource {
         @QueryParam("quantity") Integer quantity) {
         // confirm entitlement
         Entitlement entitlement = entitlementCurator.find(id);
-        List<Entitlement> entitlements = new ArrayList();
+        List<Entitlement> entitlements = new ArrayList<Entitlement>();
 
         if (entitlement != null) {
             if (quantity == null) {
@@ -436,6 +436,8 @@ public class EntitlementResource {
      * CdnInfo represents a container for subscription entitlement and cdn
      */
     public static class CdnInfo implements Serializable {
+        private static final long serialVersionUID = 523637879312970984L;
+
         private Cdn cdn;
         private String subCert;
 

@@ -50,8 +50,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp_environment",
     uniqueConstraints = {@UniqueConstraint(columnNames = {"owner_id", "name"})})
-public class Environment extends AbstractHibernateObject implements Serializable,
-    Owned {
+public class Environment extends AbstractHibernateObject implements Serializable, Owned {
+    private static final long serialVersionUID = 4162471699021316341L;
 
     @ManyToOne
     @ForeignKey(name = "fk_env_owner")
