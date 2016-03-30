@@ -656,6 +656,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
                 .append(this.id, that.id)
                 .append(this.name, that.name)
                 .append(this.multiplier, that.multiplier)
+                .append(this.locked, that.locked)
                 .isEquals();
 
             if (equals) {
@@ -703,7 +704,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
             .append(this.id)
             .append(this.name)
-            .append(this.multiplier);
+            .append(this.multiplier)
+            .append(this.locked);
 
         // Impl note:
         // Because we handle the collections specially in .equals, we have to do the same special

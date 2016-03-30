@@ -104,4 +104,38 @@ public class ContentTest extends DatabaseTestFixture {
         assertEquals(newLabel, content.getLabel());
         assertEquals(newName, content.getName());
     }
+
+    @Test
+    public void testLockStateAffectsEquality() {
+        Owner owner = new Owner("Example-Corporation");
+        Content c1 = new Content(owner, "Test Content", "100", "test-content-label", "yum",
+            "test-vendor", "test-content-url", "test-gpg-url", "test-arch1");
+        Content c2 = new Content(owner, "Test Content", "100", "test-content-label", "yum",
+            "test-vendor", "test-content-url", "test-gpg-url", "test-arch1");
+
+        assertEquals(c1, c2);
+
+        c2.setLocked(true);
+        assertNotEquals(c1, c2);
+
+        c1.setLocked(true);
+        assertEquals(c1, c2);
+    }
+
+    @Test
+    public void testLockStateAffectsHashCode() {
+        Owner owner = new Owner("Example-Corporation");
+        Content c1 = new Content(owner, "Test Content", "100", "test-content-label", "yum",
+            "test-vendor", "test-content-url", "test-gpg-url", "test-arch1");
+        Content c2 = new Content(owner, "Test Content", "100", "test-content-label", "yum",
+            "test-vendor", "test-content-url", "test-gpg-url", "test-arch1");
+
+        assertEquals(c1.hashCode(), c2.hashCode());
+
+        c2.setLocked(true);
+        assertNotEquals(c1.hashCode(), c2.hashCode());
+
+        c1.setLocked(true);
+        assertEquals(c1.hashCode(), c2.hashCode());
+    }
 }
