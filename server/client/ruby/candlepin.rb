@@ -393,6 +393,26 @@ module Candlepin
       def delete_job(opts = {})
         delete_by_id("/jobs", :job_id, opts)
       end
+
+      def wait_for_job(opts = {})
+        defaults = {
+          :job_id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        res = get_job(:job_id => opts[:job_id])
+        loop do
+          job = res.ok_content
+          case job[:state]
+          when "CREATED", "PENDING", "WAITING", "RUNNING"
+            sleep 1
+            res = get_job(:job_id => opts[:job_id])
+          when "FINISHED", "CANCELED", "FAILED"
+            break
+          end
+        end
+        res
+      end
     end
 
     module ConsumerTypeResource
@@ -422,6 +442,11 @@ module Candlepin
     module StatusResource
       def get_status
         get('/status')
+      end
+
+      def hosted_mode?
+        status = get_status.ok_content
+        !status[:standalone]
       end
     end
 
@@ -1546,16 +1571,19 @@ module Candlepin
 
         # HTTPClient is a little quirky here.  It does not expect
         # a PUT without a body, so we need to provide a dummy body.
-        put_async("/owners/#{opts[:owner]}/subscriptions",
+        put("/owners/#{opts[:owner]}/subscriptions",
           :query => opts.slice(:auto_create_owner, :lazy_regen),
           :body => nil)
       end
 
       # Same as refresh_pools_async but just block before returning
       def refresh_pools(opts = {})
-        connection = refresh_pools_async(opts)
-        connection.join
-        connection.pop
+        res = refresh_pools_async(opts)
+        # In standalone mode, refresh_pools does nothing
+        return if res.status_code == 204
+
+        job = res.ok_content
+        wait_for_job(:job_id => job[:id])
       end
 
       def create_activation_key(opts = {})
@@ -2140,16 +2168,25 @@ module Candlepin
 
         # HTTPClient is a little quirky here.  It does not expect
         # a PUT without a body, so we need to provide a dummy body.
-        put_async("/products/subscriptions",
+        put("/products/subscriptions",
           :query => query,
           :body => nil)
       end
 
       # Same as async call but just block before returning
       def refresh_pools_for_product(opts = {})
-        connection = refresh_pools_for_product_async(opts)
-        connection.join
-        connection.pop
+        res = refresh_pools_for_product_async(opts)
+        # In standalone mode, refresh_pools does nothing
+        return if res.status_code == 204
+
+        job = res.ok_content
+        responses = []
+        job.each do |j|
+          responses << wait_for_job(:job_id => j[:id])
+        end
+        # Kind of weird that we have to return an arry
+        # but I don't have any better ideas at the moment
+        responses
       end
     end
 

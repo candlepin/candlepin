@@ -76,6 +76,10 @@ module Candlepin
       let!(:user_client) { BasicAuthClient.new }
       let!(:no_auth_client) { NoAuthClient.new }
 
+      let(:hosted_mode?) do
+        user_client.hosted_mode?
+      end
+
       let(:owner) do
         key = rand_string('owner')
         res = user_client.create_owner(
@@ -480,6 +484,8 @@ module Candlepin
       end
 
       it 'refreshes pools synchronously' do
+        skip "This test is irrelevant in standalone" unless hosted_mode?
+
         prod_id = rand_string
         user_client.create_product(
           :product_id => prod_id,
@@ -504,12 +510,17 @@ module Candlepin
 
         result = user_client.refresh_pools(:owner => owner[:key])
         expect(result).to be_success
+        expect(result.ok_content[:state]).to satisfy do |v|
+          %w(FINISHED FAILED CANCELED).include?(v)
+        end
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
         expect(pools.first[:productAttributes]).to be_empty
       end
 
       it 'refreshes pools asynchronously' do
+        skip "This test is irrelevant in standalone" unless hosted_mode?
+
         prod_id = rand_string
         owner_client.create_product(
           :product_id => prod_id,
@@ -521,7 +532,6 @@ module Candlepin
           :product_id => prod_id,
         )
 
-        owner_client.debug!
         pools = owner_client.get_owner_pools.content
         expect(pools.first[:productAttributes]).to_not be_empty
 
@@ -531,15 +541,13 @@ module Candlepin
         )
 
         result = owner_client.refresh_pools_async
-        expect(result).to be_kind_of(HTTPClient::Connection)
-        result.join
-        expect(result.pop).to be_success
-
-        pools = owner_client.get_owner_pools.content
-        expect(pools.first[:productAttributes]).to be_empty
+        expect(result).to be_success
+        expect(result.ok_content).to have_key(:state)
       end
 
       it 'refreshes pools for a product' do
+        skip "This test is irrelevant in standalone" unless hosted_mode?
+
         prod_id = rand_string
         user_client.create_product(
           :product_id => prod_id,
@@ -562,8 +570,11 @@ module Candlepin
           :owner => owner[:key],
         )
 
-        result = user_client.refresh_pools_for_product(:product_ids => prod_id)
+        result = user_client.refresh_pools_for_product(:product_ids => prod_id).first
         expect(result).to be_success
+        expect(result.ok_content[:state]).to satisfy do |v|
+          %w(FINISHED FAILED CANCELED).include?(v)
+        end
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
         expect(pools.first[:productAttributes]).to be_empty
