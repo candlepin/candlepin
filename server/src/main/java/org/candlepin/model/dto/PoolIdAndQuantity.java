@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class PoolIdAndQuantity implements Serializable {
+    private static final long serialVersionUID = 2968171615393788401L;
 
     private String poolId;
     private Integer quantity;

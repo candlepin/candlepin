@@ -25,7 +25,7 @@ import java.io.Serializable;
  * @param <T> The type of target that this permission addresses.
  */
 public abstract class TypedPermission<T> implements Permission, Serializable {
-
+    private static final long serialVersionUID = 5318420454223766039L;
     protected Access access;
 
     public abstract Class<T> getTargetType();

@@ -56,6 +56,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @JsonFilter("OwnerFilter")
 public class Owner extends AbstractHibernateObject implements Serializable,
     Linkable, Owned, Named, Eventful {
+    private static final long serialVersionUID = -7059065874812188165L;
 
     @OneToOne
     @JoinColumn(name = "parent_owner", nullable = true)

@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class PoolIdAndErrors implements Serializable {
+    private static final long serialVersionUID = 3991230823059230558L;
 
     private String poolId;
     private List<String> errors;

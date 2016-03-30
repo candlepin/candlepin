@@ -36,6 +36,7 @@ import java.io.Serializable;
  * Allows the user to create and manage entitlements for the consumer as well.
  */
 public class UsernameConsumersPermission implements Permission, Serializable {
+    private static final long serialVersionUID = 571612156736570455L;
 
     private final User user;
     private final Owner owner;
