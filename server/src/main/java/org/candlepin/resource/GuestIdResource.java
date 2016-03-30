@@ -139,6 +139,7 @@ public class GuestIdResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         List<GuestId> guestIds) {
         Consumer toUpdate = consumerCurator.findByUuid(consumerUuid);
+        List<GuestId> startGuests = toUpdate.getGuestIds();
 
         // Create a skeleton consumer for consumerResource.performConsumerUpdates
         Consumer consumer = new Consumer();
@@ -153,6 +154,8 @@ public class GuestIdResource {
 
         if (consumerResource.performConsumerUpdates(consumer, toUpdate, guestConsumerMap)) {
             consumerCurator.update(toUpdate);
+            consumerResource.checkForGuestsMigration(toUpdate, startGuests, toUpdate.getGuestIds(),
+                guestConsumerMap);
         }
     }
 
@@ -198,13 +201,20 @@ public class GuestIdResource {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         updated.setConsumer(consumer);
-        GuestId toUpdate =
-            guestIdCurator.findByGuestIdAndOrg(guestId, consumer.getOwner());
-        // If this guest has a consumer, we want to remove host-specific entitlements
+        GuestId toUpdate = guestIdCurator.findByGuestIdAndOrg(guestId, consumer.getOwner());
         if (toUpdate != null) {
             updated.setId(toUpdate.getId());
         }
         guestIdCurator.merge(updated);
+
+        Set<String> allGuestIds = new HashSet<String>();
+        allGuestIds.add(guestId);
+        VirtConsumerMap guestConsumerMap = consumerCurator.getGuestConsumersMap(
+            consumer.getOwner(), allGuestIds);
+        // we want to remove host-specific entitlements
+        if (guestConsumerMap != null && guestConsumerMap.get(guestId) != null) {
+            consumerResource.checkForGuestMigration(consumer, guestConsumerMap.get(guestId));
+        }
     }
 
     /**

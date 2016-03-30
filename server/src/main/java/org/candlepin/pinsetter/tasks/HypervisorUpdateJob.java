@@ -213,6 +213,7 @@ public class HypervisorUpdateJob extends KingpinJob {
                 Consumer knownHost = hypervisorConsumersMap.get(hypervisorId);
                 Consumer incoming = incomingHosts.get(hypervisorId);
                 Consumer reportedOnConsumer = null;
+                List<GuestId> startGuests = new ArrayList<GuestId>();
                 if (knownHost == null) {
                     if (!create) {
                         result.failed(hypervisorId, "Unable to find hypervisor with id " +
@@ -229,6 +230,7 @@ public class HypervisorUpdateJob extends KingpinJob {
                     }
                 }
                 else {
+                    startGuests = knownHost.getGuestIds();
                     reportedOnConsumer = knownHost;
                     if (jobReporterId != null && knownHost.getHypervisorId() != null &&
                         hypervisorId.equalsIgnoreCase(knownHost.getHypervisorId().getHypervisorId()) &&
@@ -247,6 +249,9 @@ public class HypervisorUpdateJob extends KingpinJob {
                         result.unchanged(knownHost);
                     }
                 }
+                consumerResource.checkForGuestsMigration(knownHost, startGuests,
+                    knownHost == null ? null : knownHost.getGuestIds(),
+                    guestConsumersMap);
                 // update reporter id if it changed
                 if (jobReporterId != null && reportedOnConsumer != null &&
                     reportedOnConsumer.getHypervisorId() != null &&

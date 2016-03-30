@@ -605,7 +605,7 @@ describe 'Hypervisor Resource', :type => :virt do
   def async_update_hypervisor(owner, consumer, host_name, host_hyp_id, guests, create=true, reporter_id=nil)
     host_mapping = get_async_host_guest_mapping(host_name, host_hyp_id, guests)
     job_detail = JSON.parse(consumer.hypervisor_update(owner['key'], host_mapping, create, reporter_id))
-    wait_for_job(job_detail['id'], 5)
+    wait_for_job(job_detail['id'], 60)
     job_detail = @cp.get_job(job_detail['id'], true)
     job_detail['state'].should == 'FINISHED'
     job_detail['result'].should_not be_nil
@@ -618,5 +618,123 @@ describe 'Hypervisor Resource', :type => :virt do
            :productName => "Installed"}])
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     return consumer_client
+  end
+
+it 'should allow a single guest to be migrated and revoke host-limited ents' do
+    owner = create_owner random_string('test_owner1')
+    user = user_client(owner, random_string("user"))
+    virtwho = create_virtwho_client(user)
+    uuid1 = random_string('system.uuid')
+    guests = [{:guestId => uuid1}]
+
+    host_consumer = user.register(random_string('host1'), :hypervisor, nil,
+      {}, nil, owner['key'], [], [], nil, [], 'hypervisor_id_1')
+    new_host_consumer = user.register(random_string('host2'), :hypervisor, nil,
+      {}, nil, owner['key'], [], [], nil, [], 'hypervisor_id_2')
+
+    guest_consumer = user.register(random_string('guest'), :system, nil,
+      {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, owner['key'], [], [])
+    # Create a product/subscription
+    super_awesome = create_product(nil, random_string('super_awesome'),
+                            :attributes => { "virt_limit" => "10", "host_limited" => "true" }, :owner => owner['key'])
+    create_pool_and_subscription(owner['key'], super_awesome.id, 20)
+    consumer_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
+    new_consumer_client = Candlepin.new(nil, nil, new_host_consumer['idCert']['cert'], new_host_consumer['idCert']['key'])
+    guest_client = Candlepin.new(nil, nil, guest_consumer['idCert']['cert'], guest_consumer['idCert']['key'])
+
+    virtwho.hypervisor_check_in(owner['key'], get_host_guest_mapping('hypervisor_id_1', [uuid1]))
+
+    # consumer_client.update_guestids(guests)
+    pools = consumer_client.list_pools :consumer => host_consumer['uuid']
+    pools.length.should == 1
+    consumer_client.consume_pool(pools[0]['id'], {:quantity => 1})
+    new_consumer_client.consume_pool(pools[0]['id'], {:quantity => 1})
+
+    pools = guest_client.list_pools :consumer => guest_consumer['uuid']
+
+    # The original pool and the new host limited pool should be available
+    pools.length.should == 2
+    # Get the guest pool
+    guest_pool = pools.find_all { |i| !i['sourceEntitlement'].nil? }[0]
+
+    # Make sure the required host is actually the host
+    requires_host = guest_pool['attributes'].find_all {
+      |i| i['name'] == 'requires_host' }[0]
+    requires_host['value'].should == host_consumer['uuid']
+
+    # Consume the host limited pool
+    guest_client.consume_pool(guest_pool['id'], {:quantity => 1})
+
+    # Should have a host with 1 registered guest
+    guestList = @cp.get_consumer_guests(host_consumer['uuid'])
+    guestList.length.should == 1
+    guestList[0]['uuid'].should == guest_consumer['uuid']
+
+    guest_client.list_entitlements().length.should == 1
+    # Updating to a new host should remove host specific entitlements
+
+    virtwho.hypervisor_check_in(owner['key'], get_host_guest_mapping('hypervisor_id_2', [uuid1]))
+
+    # The guests host limited entitlement should be gone
+    guest_client.list_entitlements().length.should == 0
+  end
+
+it 'should allow a single guest to be migrated and revoke host-limited ents - async' do
+    owner = create_owner random_string('test_owner1')
+    user = user_client(owner, random_string("user"))
+    virtwho = create_virtwho_client(user)
+    uuid1 = random_string('system.uuid')
+    guests = [{:guestId => uuid1}]
+
+    host_consumer = user.register(random_string('host1'), :hypervisor, nil,
+      {}, nil, owner['key'], [], [], nil, [], 'hypervisor_id_1')
+    new_host_consumer = user.register(random_string('host2'), :system, nil,
+      {}, nil, owner['key'], [], [], nil, [], 'hypervisor_id_2')
+
+    guest_consumer = user.register(random_string('guest'), :system, nil,
+      {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, owner['key'], [], [])
+    # Create a product/subscription
+    super_awesome = create_product(nil, random_string('super_awesome'),
+                            :attributes => { "virt_limit" => "10", "host_limited" => "true" }, :owner => owner['key'])
+    create_pool_and_subscription(owner['key'], super_awesome.id, 20)
+    consumer_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
+    new_consumer_client = Candlepin.new(nil, nil, new_host_consumer['idCert']['cert'], new_host_consumer['idCert']['key'])
+    guest_client = Candlepin.new(nil, nil, guest_consumer['idCert']['cert'], guest_consumer['idCert']['key'])
+
+    async_update_hypervisor(owner, user, 'tester', 'hypervisor_id_1', [uuid1])
+
+    # consumer_client.update_guestids(guests)
+    pools = consumer_client.list_pools :consumer => host_consumer['uuid']
+    pools.length.should == 1
+    consumer_client.consume_pool(pools[0]['id'], {:quantity => 1})
+    new_consumer_client.consume_pool(pools[0]['id'], {:quantity => 1})
+
+    pools = guest_client.list_pools :consumer => guest_consumer['uuid']
+
+    # The original pool and the new host limited pool should be available
+    pools.length.should == 2
+    # Get the guest pool
+    guest_pool = pools.find_all { |i| !i['sourceEntitlement'].nil? }[0]
+
+    # Make sure the required host is actually the host
+    requires_host = guest_pool['attributes'].find_all {
+      |i| i['name'] == 'requires_host' }[0]
+    requires_host['value'].should == host_consumer['uuid']
+
+    # Consume the host limited pool
+    guest_client.consume_pool(guest_pool['id'], {:quantity => 1})
+
+    # Should have a host with 1 registered guest
+    guestList = @cp.get_consumer_guests(host_consumer['uuid'])
+    guestList.length.should == 1
+    guestList[0]['uuid'].should == guest_consumer['uuid']
+
+    guest_client.list_entitlements().length.should == 1
+    # Updating to a new host should remove host specific entitlements
+
+    async_update_hypervisor(owner, user, 'tester', 'hypervisor_id_2', [uuid1])
+
+    # The guests host limited entitlement should be gone
+    guest_client.list_entitlements().length.should == 0
   end
 end

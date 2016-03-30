@@ -144,9 +144,9 @@ describe 'GuestId Resource' do
     guests = [{:guestId => uuid1}]
 
     user_cp = user_client(@owner1, random_string('test-user'))
-    host_consumer = user_cp.register(random_string('host'), :system, nil,
+    host_consumer = user_cp.register(random_string('host1'), :system, nil,
       {}, nil, @owner1['key'], [], [])
-    new_host_consumer = user_cp.register(random_string('host'), :system, nil,
+    new_host_consumer = user_cp.register(random_string('host2'), :system, nil,
       {}, nil, @owner1['key'], [], [])
     guest_consumer = user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, @owner1['key'], [], [])

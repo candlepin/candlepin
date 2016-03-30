@@ -823,7 +823,7 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         Consumer consumer) {
         Consumer toUpdate = consumerCurator.verifyAndLookupConsumer(uuid);
-
+        List<GuestId> startGuests = toUpdate.getGuestIds();
         VirtConsumerMap guestConsumerMap = new VirtConsumerMap();
         if (consumer.getGuestIds() != null) {
             Set<String> allGuestIds = new HashSet<String>();
@@ -831,12 +831,13 @@ public class ConsumerResource {
                 allGuestIds.add(gid.getGuestId());
             }
             guestConsumerMap = consumerCurator.getGuestConsumersMap(
-                    toUpdate.getOwner(), allGuestIds);
+                toUpdate.getOwner(), allGuestIds);
         }
 
         if (performConsumerUpdates(consumer, toUpdate, guestConsumerMap)) {
             try {
                 consumerCurator.update(toUpdate);
+                checkForGuestsMigration(toUpdate, startGuests, toUpdate.getGuestIds(), guestConsumerMap);
             }
             catch (CandlepinException ce) {
                 // If it is one of ours, rethrow it.
@@ -846,6 +847,30 @@ public class ConsumerResource {
                 log.error("Problem updating unit:", e);
                 throw new BadRequestException(i18n.tr(
                     "Problem updating unit {0}", consumer));
+            }
+        }
+    }
+
+    /**
+     * We need to ensure that the guests don't have entitlements for other hosts
+     * @param startGuests
+     * @param updatedGuests
+     * @param guestConsumerMap
+     */
+    public void checkForGuestsMigration(Consumer host, List<GuestId> startGuests, List<GuestId> updatedGuests,
+        VirtConsumerMap guestConsumerMap) {
+        Set<GuestId> toCheck = new HashSet<GuestId>();
+        if (startGuests != null) {
+            toCheck.addAll(startGuests);
+        }
+        if (updatedGuests != null) {
+            toCheck.addAll(updatedGuests);
+        }
+        for (GuestId guestId : toCheck) {
+            Consumer guest = guestConsumerMap == null ?
+                null : guestConsumerMap.get(guestId.getGuestId());
+            if (guest != null) {
+                checkForGuestMigration(host, guest);
             }
         }
     }
@@ -875,8 +900,7 @@ public class ConsumerResource {
 
         changesMade = checkForFactsUpdate(toUpdate, updated) || changesMade;
         changesMade = checkForInstalledProductsUpdate(toUpdate, updated) || changesMade;
-        changesMade = checkForGuestsUpdate(toUpdate, updated,
-                guestConsumerMap) || changesMade;
+        changesMade = checkForGuestsUpdate(toUpdate, updated, guestConsumerMap) || changesMade;
         changesMade = checkForHypervisorIdUpdate(toUpdate, updated) || changesMade;
 
         if (updated.getContentTags() != null &&
@@ -1095,12 +1119,6 @@ public class ConsumerResource {
                 }
                 sink.queueEvent(eventFactory.guestIdCreated(guestId));
             }
-
-            // The guest has not registered. No need to process entitlements.
-            Consumer guest = guestConsumerMap.get(guestId.getGuestId());
-            if (guest == null) {
-                continue;
-            }
         }
 
         // If nothing shows as being added, and nothing shows as being removed, we should
@@ -1140,7 +1158,7 @@ public class ConsumerResource {
      * the guest's current host, as determined by the most recent guest ID report in the
      * db.
      */
-    protected void checkForGuestMigration(Consumer guest) {
+    public void checkForGuestMigration(Consumer host, Consumer guest) {
         if (!"true".equalsIgnoreCase(guest.getFact("virt.is_guest"))) {
             // This isn't a guest, skip this entire step.
             return;
@@ -1151,7 +1169,7 @@ public class ConsumerResource {
 
         String guestVirtUuid = guest.getFact("virt.uuid");
 
-        Consumer host = consumerCurator.getHost(guestVirtUuid, guest.getOwner());
+        // Consumer host = consumerCurator.getHost(guestVirtUuid, guest.getOwner());
 
         // we need to create a list of entitlements to delete before actually
         // deleting, otherwise we are tampering with the loop iterator (BZ #786730)
@@ -1167,7 +1185,7 @@ public class ConsumerResource {
 
             if (pool.hasAttribute("requires_host")) {
                 String requiredHost = getRequiredHost(pool);
-                if (host != null && !requiredHost.equals(host.getUuid())) {
+                if (host == null || !requiredHost.equals(host.getUuid())) {
                     log.debug("Removing entitlement {} from guest {} due to host mismatch.",
                         entitlement.getId(), guest.getUuid());
                     deletableGuestEntitlements.add(entitlement);
@@ -1263,7 +1281,6 @@ public class ConsumerResource {
 
         log.debug("Getting client certificates for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        checkForGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(
             entitlementCurator.listByConsumer(consumer));
 
@@ -1299,7 +1316,6 @@ public class ConsumerResource {
 
         log.debug("Getting client certificate zip file for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        checkForGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(
             entitlementCurator.listByConsumer(consumer));
 
@@ -1368,7 +1384,6 @@ public class ConsumerResource {
 
         log.debug("Getting client certificate serials for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        checkForGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(
             entitlementCurator.listByConsumer(consumer));
 
@@ -1661,10 +1676,6 @@ public class ConsumerResource {
         @Context PageRequest pageRequest) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-
-        if (regen) {
-            checkForGuestMigration(consumer);
-        }
 
         EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
         Page<List<Entitlement>> entitlementsPage = entitlementCurator.listByConsumer(consumer, productId,
