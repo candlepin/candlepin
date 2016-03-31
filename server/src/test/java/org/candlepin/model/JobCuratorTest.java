@@ -104,6 +104,15 @@ public class JobCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void deleteJobNoStatusReturn() {
+        newJobStatus().result("Taylor Swift").state(JobState.CANCELED).create();
+        List<JobStatus> statuses = this.curator.listAll();
+        assertEquals(1, statuses.size());
+        this.curator.deleteJobNoStatusReturn(statuses.get(0).getId());
+        assertEquals(0, this.curator.listAll().size());
+    }
+
+    @Test
     public void findByPrincipalName() {
         JobStatus job = newJobStatus().principalName("donald").owner("ducks").create();
         List<JobStatus> jobs = this.curator.findByPrincipalName("donald");

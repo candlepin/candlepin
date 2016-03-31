@@ -251,6 +251,39 @@ public class PinsetterKernelTest {
     }
 
     @Test
+    public void deletedCronTask() throws Exception {
+        Map<String, String> props = new HashMap<String, String>();
+        props.put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());
+        props.put("org.quartz.jobStore.isClustered", "true");
+        props.put("pinsetter.org.candlepin.pinsetter.tasks.JobCleaner.schedule", "*/1 * * * * ?");
+        Configuration config = new MapConfiguration(props);
+        JobDetail jobDetail = mock(JobDetail.class);
+
+        String crongrp = "cron group";
+        Set<JobKey> jobs = new HashSet<JobKey>();
+
+        String deletedJobId = "StatisticHistoryTask-taylor-swift";
+        JobKey deletedKey = jobKey(deletedJobId);
+        jobs.add(deletedKey);
+        JobKey key = jobKey("org.candlepin.pinsetter.tasks.JobCleaner");
+        jobs.add(key);
+
+        CronTrigger cronTrigger = mock(CronTrigger.class);
+        when(cronTrigger.getJobKey()).thenReturn(deletedKey);
+
+        when(sched.getJobKeys(eq(jobGroupEquals(crongrp)))).thenReturn(jobs);
+        when(sched.getTrigger(any(TriggerKey.class))).thenReturn(cronTrigger);
+        when(sched.getJobDetail(any(JobKey.class))).thenReturn(jobDetail);
+
+        doReturn(JobCleaner.class).when(jobDetail).getJobClass();
+
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk.startup();
+        verify(jcurator).deleteJobNoStatusReturn(eq(deletedJobId));
+        verify(sched, atLeastOnce()).deleteJob(deletedKey);
+    }
+
+    @Test
     public void updateMultipleSchedules() throws Exception {
         Map<String, String> props = new HashMap<String, String>();
         props.put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());

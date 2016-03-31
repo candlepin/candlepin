@@ -72,6 +72,13 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
         }
     }
 
+    public int deleteJobNoStatusReturn(String jobId) {
+        return this.currentSession().createQuery(
+            "delete from JobStatus where id = :jobid")
+                .setParameter("jobid", jobId)
+                .executeUpdate();
+    }
+
     public int cleanupAllOldJobs(Date deadline) {
         return this.currentSession().createQuery(
             "delete from JobStatus where updated <= :date")
