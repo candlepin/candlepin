@@ -8,7 +8,7 @@ describe 'One Sub Pool Per Stack' do
   include VirtHelper
 
   before(:each) do
-    pending("candlepin running in standalone mode") if is_hosted?
+    skip("candlepin running in standalone mode") if is_hosted?
     @owner = create_owner random_string('virt_owner')
     @user = user_client(@owner, random_string('virt_user'))
 
@@ -148,21 +148,21 @@ describe 'One Sub Pool Per Stack' do
     @host_client.update_consumer({:guestIds => [{'guestId' => @guest_uuid}]})
     @cp.get_consumer_guests(@host['uuid']).length.should == 1
 
-    @host_client.list_pools(:consumer => @host['uuid']).should have(@initial_pool_count).things
-    @guest_client.list_pools(:consumer => @guest['uuid']).should have(@initial_pool_count).things
+    @host_client.list_pools(:consumer => @host['uuid']).length.should eq(@initial_pool_count)
+    @guest_client.list_pools(:consumer => @guest['uuid']).length.should eq(@initial_pool_count)
   end
 
   it 'should create one sub pool when host binds to stackable virt_limit pool' do
     host_ent = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
     host_ent.should_not be_nil
 
-    @host_client.list_pools(:consumer => @host['uuid']).should have(@initial_pool_count).things
+    @host_client.list_pools(:consumer => @host['uuid']).length.should eq(@initial_pool_count)
     # sub pool should have been created
     guest_pools = @guest_client.list_pools(:consumer => @guest['uuid'])
-    guest_pools.should have(@initial_pool_count + 1).things
+    guest_pools.length.should eq(@initial_pool_count + 1)
 
     sub_pools = guest_pools.find_all { |i| !i['sourceStackId'].nil? }
-    sub_pools.should have(1).thing
+    sub_pools.length.should eq(1)
     sub_pool = sub_pools[0]
     sub_pool['sourceStackId'].should == @stack_id
     sub_pool['sourceConsumer']['uuid'].should == @host['uuid']

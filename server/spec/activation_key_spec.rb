@@ -116,10 +116,10 @@ describe 'Activation Keys' do
   it 'should allow auto attach flag to be set on activation keys' do
     @cp.update_activation_key({'id' => @activation_key['id'], "autoAttach" => "true"})
     key = @cp.get_activation_key(@activation_key['id'])
-    key['autoAttach'].should be_true
+    key['autoAttach'].should be true
     @cp.update_activation_key({'id' => @activation_key['id'], "autoAttach" => "false"})
     key = @cp.get_activation_key(@activation_key['id'])
-    key['autoAttach'].should be_false
+    key['autoAttach'].should be false
   end
 
   it 'should allow overrides to be added to keys' do

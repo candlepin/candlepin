@@ -28,7 +28,7 @@ RSpec::Matchers.define :be_success do
     (200..206).cover?(res.status_code)
   end
 
-  failure_message_for_should do |res|
+  failure_message do |res|
     status_match_failure_message(res, "200 through 206")
   end
 end
@@ -38,7 +38,7 @@ RSpec::Matchers.define :be_unauthorized do
     res.status_code == 401
   end
 
-  failure_message_for_should do |res|
+  failure_message do |res|
     status_match_failure_message(res, "401")
   end
 end
@@ -48,7 +48,7 @@ RSpec::Matchers.define :be_forbidden do
     res.status_code == 403
   end
 
-  failure_message_for_should do |res|
+  failure_message do |res|
     status_match_failure_message(res, "403")
   end
 end
@@ -58,7 +58,7 @@ RSpec::Matchers.define :be_missing do
     res.status_code == 404
   end
 
-  failure_message_for_should do |res|
+  failure_message do |res|
     status_match_failure_message(res, "404")
   end
 end
@@ -1198,7 +1198,7 @@ module Candlepin
 
         entitlement = res.content.first
         expect(entitlement[:certificates]).to_not be_empty
-        expect(entitlement[:certificates].first.key?(:key)).to be_true
+        expect(entitlement[:certificates].first.key?(:key)).to be true
       end
 
       it 'performs a dry run of autobind' do
@@ -1241,7 +1241,7 @@ module Candlepin
 
         entitlement = res.content.first
         expect(entitlement[:certificates]).to_not be_empty
-        expect(entitlement[:certificates].first.key?(:key)).to be_true
+        expect(entitlement[:certificates].first.key?(:key)).to be true
       end
 
       it 'does not allow binding by both pool and product' do
@@ -1470,7 +1470,7 @@ module Candlepin
 
       it 'gets a status as JSON' do
         res = no_auth_client.get('/status')
-        expect(res.content.key?(:version)).to be_true
+        expect(res.content.key?(:version)).to be true
       end
 
       it 'gets all owners with basic auth' do
@@ -1479,8 +1479,8 @@ module Candlepin
           :display_name => rand_string,
         )
         res = user_client.get_all_owners
-        expect(res.content.empty?).to be_false
-        expect(res.content.first.key?(:id)).to be_true
+        expect(res.content.empty?).to be false
+        expect(res.content.first.key?(:id)).to be true
       end
 
       it 'fails with bad password' do

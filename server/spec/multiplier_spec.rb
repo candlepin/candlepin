@@ -15,7 +15,7 @@ describe 'Multiplier Products' do
 
     pools = @user.list_pools :owner => @owner.id
 
-    pools.should have(1).things
+    pools.length.should eq(1)
     pools.first.quantity.should == 100
   end
 
@@ -25,7 +25,7 @@ describe 'Multiplier Products' do
 
     pools = @user.list_pools :owner => @owner.id
 
-    pools.should have(1).things
+    pools.length.should eq(1)
     pools.first.quantity.should == 34
   end
 
@@ -35,7 +35,7 @@ describe 'Multiplier Products' do
 
     pools = @user.list_pools :owner => @owner.id
 
-    pools.should have(1).things
+    pools.length.should eq(1)
     pools.first.quantity.should == 18
   end
 
@@ -48,7 +48,7 @@ describe 'Multiplier Products' do
 
     pools = @user.list_pools :owner => @owner.id
 
-    pools.should have(1).things
+    pools.length.should eq(1)
     pools.first.quantity.should == 500
   end
 end

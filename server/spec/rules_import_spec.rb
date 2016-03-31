@@ -36,7 +36,7 @@ describe 'Rules Import', :serial => true do
     result = @cp.upload_rules(encoded_rules)
     fetched_rules = @cp.list_rules
     decoded_fetched_rules = Base64.decode64(fetched_rules)
-    (decoded_fetched_rules == @rules).should be_true
+    (decoded_fetched_rules == @rules).should be true
     @cp.get_status()['rulesVersion'].should == @new_ver
   end
 

@@ -143,18 +143,18 @@ describe 'Export', :serial => true do
       File.join(@cp_export.export_dir, "rules2/rules.js"))
 
     # Should also contain legacy rules file:
-    File.exists?(File.join(@cp_export.export_dir, "rules/default-rules.js")).should be_true
+    File.exists?(File.join(@cp_export.export_dir, "rules/default-rules.js")).should be true
   end
 
   it 'should export products' do
     prod_dir = File.join(@cp_export.export_dir, 'products')
-    File.exists?(prod_dir).should be_true
+    File.exists?(prod_dir).should be true
     files = Dir["#{prod_dir}/*.json"].find_all.collect {|file| file}
     files.length.should == @exporter.products.length
 
     expected_certs = 0
     @exporter.products.each do |name, product|
-      File.exists?(File.join(prod_dir, "#{product.id}.json")).should be_true
+      File.exists?(File.join(prod_dir, "#{product.id}.json")).should be true
       # Count numeric ids
       if !!(product.id =~ /^[-+]?[0-9]+$/)
         expected_certs += 1
@@ -165,7 +165,7 @@ describe 'Export', :serial => true do
     # a numeric ID (real products) have certs created on export.
     certs = Dir["#{prod_dir}/*.pem"].find_all.collect {|file| file}
     certs.length.should == expected_certs
-    File.exists?(File.join(prod_dir, "#{@exporter.products[:derived_provided_prod].id}.pem")).should be_true
+    File.exists?(File.join(prod_dir, "#{@exporter.products[:derived_provided_prod].id}.pem")).should be true
   end
 
   it 'should allow manifest creation with read only user' do

@@ -74,7 +74,7 @@ describe 'Unbind' do
     consumer.unbind_entitlement ent.id
 
     # All the serials should be revoked
-    serials.each { |serial| @cp.get_serial(serial).revoked.should be_true }
+    serials.each { |serial| @cp.get_serial(serial).revoked.should be true }
   end
 
   it 'should leave other entitlements in tact' do
@@ -100,6 +100,6 @@ describe 'Unbind' do
     consumer.unbind_entitlement virt_host_ent.id
 
     # None of the serials should be revoked
-    serials.each { |serial| @cp.get_serial(serial).revoked.should be_false }
+    serials.each { |serial| @cp.get_serial(serial).revoked.should be false }
   end
 end

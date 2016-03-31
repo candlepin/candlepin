@@ -55,7 +55,7 @@ describe 'Entitlements' do
     box = consumer_client(@user, 'random_box', :candlepin, nil, 'cpu.cpu_socket(s)' => 8)
 
     box.consume_product(@super_awesome.id)
-    box.list_entitlements.should have(1).things
+    box.list_entitlements.length.should eq(1)
   end
 
   it 'should throw an error when filtering by a non-existant product ID' do
@@ -66,14 +66,14 @@ describe 'Entitlements' do
 
   it 'should allow an entitlement to be consumed by product' do
     @system.consume_product @virt.id
-    @system.list_entitlements.should have(1).things
+    @system.list_entitlements.length.should eq(1)
   end
 
   it 'should allow an entitlement to be consumed by pool' do
     pool = find_pool_for_product @virt
     @system.consume_pool pool.id
 
-    @system.list_entitlements.should have(1).things
+    @system.list_entitlements.length.should eq(1)
   end
 
   it 'should allow consumption of quantity 10' do
@@ -87,30 +87,30 @@ describe 'Entitlements' do
     @system.consume_product(@virt.id)
     @system.consume_product(@monitoring.id)
 
-    @system.list_entitlements.should have(2).things
+    @system.list_entitlements.length.should eq(2)
   end
 
   it 'should have the correct product ID when subscribing by product' do
     @system.consume_product @monitoring.id
 
     entitlements = @system.list_entitlements(:product_id => @monitoring.id)
-    entitlements.should have(1).things
+    entitlements.length.should eq(1)
   end
 
   it 'should have the correct product ID when subscribing by pool' do
     @system.consume_pool find_pool_for_product(@monitoring).id
 
     entitlements = @system.list_entitlements(:product_id => @monitoring.id)
-    entitlements.should have(1).things
+    entitlements.length.should eq(1)
   end
 
   it 'should filter entitlements by product attribute' do
     @system.consume_pool find_pool_for_product(@virt_limit).id
     @system.consume_pool find_pool_for_product(@super_awesome).id
-    @system.list_entitlements().should have(2).things
+    @system.list_entitlements().length.should eq(2)
 
     entitlements = @system.list_entitlements(:attr_filters => {:variant => "Satellite*"})
-    entitlements.should have(1).things
+    entitlements.length.should eq(1)
 
     found_attr = false
     entitlements[0].pool.productAttributes.each do |attr|
@@ -125,10 +125,10 @@ describe 'Entitlements' do
   it 'should filter consumer entitlements by matches parameter' do
     @system.consume_pool find_pool_for_product(@ram).id
     @system.consume_pool find_pool_for_product(@super_awesome).id
-    @system.list_entitlements().should have(2).things
+    @system.list_entitlements().length.should eq(2)
 
     entitlements = @system.list_entitlements(:matches => "*ram*")
-    entitlements.should have(1).things
+    entitlements.length.should eq(1)
 
     found_attr = false
     entitlements[0].pool.productName.should == @ram.name

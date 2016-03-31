@@ -226,8 +226,8 @@ module CandlepinMethods
   end
 
   def check_for_hateoas(json)
-    json.has_key?('href').should be_true
-    json.has_key?('id').should be_true
+    json.has_key?('href').should be true
+    json.has_key?('id').should be true
   end
 
   def extension_from_cert(cert, extension_id)

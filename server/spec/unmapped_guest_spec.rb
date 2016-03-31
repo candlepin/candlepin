@@ -50,7 +50,7 @@ describe 'Unmapped Guest Pools' do
       end
     end
     ents = @guest1_client.list_entitlements()
-    ents.should have(1).things
+    ents.length.should eq(1)
   end
 
   it 'does not allow a new guest with a host to attach to an unmapped guest pool' do
@@ -82,7 +82,7 @@ describe 'Unmapped Guest Pools' do
 
     @guest1_client.autoheal_consumer
     ents = @guest1_client.list_entitlements()
-    ents.should have(1).things
+    ents.length.should eq(1)
 
     bound_pool = ents[0].pool
     bound_pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0].should_not be nil
@@ -104,15 +104,15 @@ describe 'Unmapped Guest Pools' do
 
     @guest1_client.autoheal_consumer
     ents = @guest1_client.list_entitlements()
-    ents.should have(1).things
+    ents.length.should eq(1)
 
     @guest1_client.autoheal_consumer
     ents = @guest1_client.list_entitlements()
-    ents.should have(1).things
+    ents.length.should eq(1)
 
     @guest1_client.autoheal_consumer
     ents = @guest1_client.list_entitlements()
-    ents.should have(1).things
+    ents.length.should eq(1)
   end
 
   it 'unmapped guest entitlement does not have pool end date' do
@@ -126,7 +126,7 @@ describe 'Unmapped Guest Pools' do
       end
     end
     ents = @guest1_client.list_entitlements()
-    ents.should have(1).things
+    ents.length.should eq(1)
     ents[0]['endDate'].should_not == unmapped_pool['endDate']
   end
 
@@ -139,12 +139,12 @@ describe 'Unmapped Guest Pools' do
       end
     end
     ents = @guest1_client.list_entitlements()
-    ents.should have(1).things
+    ents.length.should eq(1)
     original_ent_id = ents.first['id']
 
     @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]})
     ents = @guest1_client.list_entitlements()
-    ents.should have(1).things
+    ents.length.should eq(1)
     autohealed_ent_id = ents.first['id']
     original_ent_id.should_not equal(autohealed_ent_id)
   end
@@ -157,7 +157,7 @@ describe 'Unmapped Guest Pools' do
 
     filtered_pools = @user.list_owner_pools(@owner['displayName'], {:product => @virt_limit_product.id},
       ["unmapped_guests_only:!true"])
-    filtered_pools.should have(all_pools.length - 1).things
+    filtered_pools.length.should eq(all_pools.length - 1)
 
     filtered_pools.each do |p|
       p.should satisfy do |o|
@@ -185,7 +185,7 @@ describe 'Unmapped Guest Pools' do
 
     @guest1_client.consume_product(@virt_limit_product.id)
     ents = @guest1_client.list_entitlements()
-    ents.should have(1).things
+    ents.length.should eq(1)
 
     bound_pool = ents[0].pool
     requires_att = bound_pool['attributes'].select {|i| i['name'] == 'requires_host' }[0]
@@ -195,14 +195,14 @@ describe 'Unmapped Guest Pools' do
     # should not remove until attached to new host
     @host1_client.update_consumer({:guestIds => []});
     ents = @guest1_client.list_entitlements()
-    ents.should have(1).things
+    ents.length.should eq(1)
 
     # now migrate the guest
     @host2_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]});
 
     @guest1_client.consume_product(@virt_limit_product.id)
     ents = @guest1_client.list_entitlements()
-    ents.should have(1).things
+    ents.length.should eq(1)
 
     bound_pool = ents[0].pool
     requires_att = bound_pool['attributes'].select {|i| i['name'] == 'requires_host' }[0]
@@ -219,7 +219,7 @@ describe 'Unmapped Guest Pools' do
       end
     end
     ents = @guest1_client.list_entitlements()
-    ents.should have(1).things
+    ents.length.should eq(1)
 
     compliance_status = @guest1_client.get_compliance()
     compliance_status['status'].should == 'partial'
@@ -239,7 +239,7 @@ describe 'Unmapped Guest Pools' do
       end
     end
     ents = @guest1_client.list_entitlements()
-    ents.should have(1).things
+    ents.length.should eq(1)
 
     compliance_status = @guest1_client.get_compliance()
     compliance_status['status'].should == 'partial'

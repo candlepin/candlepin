@@ -59,7 +59,7 @@ RSpec.configure do |config|
   end
 
   config.before(:each, :type => :virt) do
-    pending("candlepin running in standalone mode") if is_hosted?
+    skip("candlepin running in standalone mode") if is_hosted?
     @owner = create_owner random_string('virt_owner')
     @user = user_client(@owner, random_string('virt_user'))
 

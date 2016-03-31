@@ -8,7 +8,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
   include VirtHelper
 
   before(:each) do
-    pending("candlepin running in standalone mode") if is_hosted?
+    skip("candlepin running in standalone mode") if is_hosted?
 
     # Setup two virt host consumers:
     @host1 = @user.register(random_string('host'), :system, nil,
@@ -39,7 +39,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     # Find the host-restricted pool:
     pools = @guest1_client.list_pools :consumer => @guest1['uuid']
 
-    pools.should have(3).things
+    pools.length.should eq(3)
     @guest_pool = pools.find_all { |i| !i['sourceEntitlement'].nil? }[0]
 
   end
@@ -64,9 +64,9 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     # Other guest shouldn't be able to see the virt sub-pool:
     pools = @guest2_client.list_pools :consumer => @guest2['uuid']
     # unmapped guest show 2 base and 2 unmapped guest pools
-    pools.should have(4).things
+    pools.length.should eq(4)
     filter_unmapped_guest_pools(pools)
-    pools.should have(2).things
+    pools.length.should eq(2)
   end
 
   it 'should check arch matches and guest_limit enforced on restricted subpools' do
@@ -91,7 +91,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
 
     # Find the host-restricted pool:
     pools = @guest1_client.list_pools :consumer => @guest1['uuid'], :listall => true, :product => arch_virt_product.id
-    pools.should have(2).things
+    pools.length.should eq(2)
     # Find the correct host-restricted subpool
     guest_pool_with_arch = pools.find_all { |i| !i['sourceConsumer'].nil? }[0]
     guest_pool_with_arch.should_not == nil

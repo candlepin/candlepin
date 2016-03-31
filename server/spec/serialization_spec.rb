@@ -14,7 +14,7 @@ describe 'Consumer serialization' do
   end
 
   it "references owner as a link" do
-    @consumer.has_key?('owner').should be_true
+    @consumer.has_key?('owner').should be true
     check_for_hateoas(@consumer['owner'])
   end
 
@@ -33,7 +33,7 @@ describe 'Pool serialization' do
   end
 
   it 'references owner as a link' do
-    @pool.has_key?('owner').should be_true
+    @pool.has_key?('owner').should be true
     check_for_hateoas(@pool['owner'])
   end
 
@@ -57,7 +57,7 @@ describe 'Entitlement Serialization' do
   end
 
   it 'references pool as a link' do
-    @ent.has_key?('pool').should be_true
+    @ent.has_key?('pool').should be true
     check_for_hateoas(@ent['pool'])
   end
 end

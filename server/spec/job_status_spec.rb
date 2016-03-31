@@ -147,7 +147,7 @@ describe 'Job Status' do
     system = consumer_client(@user, 'system7')
     job = system.consume_product(@monitoring.id, { :async => true })
     status = system.get_job(job['id'])
-    status['id'].should == job['id']
+    status['id'].should eq(job['id'])
     # wait for job to complete, or test clean up will conflict with the asynchronous job.
     wait_for_job(status['id'], 15)
   end

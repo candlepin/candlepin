@@ -86,7 +86,7 @@ describe 'Consumer Resource' do
     atom = @consumer1.list_consumer_events_atom(@consumer1.uuid)
     doc = REXML::Document.new(atom)
     events = REXML::XPath.match(doc, "//*[local-name()='event'][type = 'CREATED' and target ='CONSUMER']")
-    events.should have_at_least(1).things
+    events.length.should be >= 1
 
     # Consumer 2 should not be able to see consumer 1's feed:
     lambda {
@@ -170,8 +170,8 @@ describe 'Consumer Resource' do
       c['facts'].should be_nil
       c['idCert'].should be_nil
     end
-    uuids.include?(@consumer1.uuid).should be_true
-    uuids.include?(@consumer2.uuid).should be_true
+    uuids.include?(@consumer1.uuid).should be true
+    uuids.include?(@consumer2.uuid).should be true
   end
 
   it 'allows super admins to query consumers by id' do
@@ -181,8 +181,8 @@ describe 'Consumer Resource' do
     @cp.list_consumers({:uuids => [@consumer1.uuid, @consumer2.uuid]}).each do |c|
       returned_uuids << c['uuid']
     end
-    returned_uuids.include?(@consumer1.uuid).should be_true
-    returned_uuids.include?(@consumer2.uuid).should be_true
+    returned_uuids.include?(@consumer1.uuid).should be true
+    returned_uuids.include?(@consumer2.uuid).should be true
     returned_uuids.length.should == 2
   end
 

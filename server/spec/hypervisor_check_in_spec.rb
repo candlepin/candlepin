@@ -6,7 +6,7 @@ describe 'Hypervisor Resource', :type => :virt do
   include VirtHelper
 
   before(:each) do
-    pending("candlepin running in standalone mode") if is_hosted?
+    skip("candlepin running in standalone mode") if is_hosted?
     @expected_host_hyp_id = random_string("host")
     @expected_host_name = random_string("name")
     @expected_guest_ids = [@uuid1, @uuid2]

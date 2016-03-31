@@ -1,9 +1,9 @@
 source 'https://rubygems.org'
 
-gem 'buildr', '1.4.19'
+gem 'buildr', '1.4.24'
 # Not a typo - we use both buildr and buildr
 gem 'builder'
-gem 'rspec'
+gem 'rspec', '~> 3.0'
 gem 'mime-types', '~> 1.25.0'
 gem 'oauth'
 gem 'parallel_tests'

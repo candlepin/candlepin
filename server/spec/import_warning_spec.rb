@@ -10,7 +10,7 @@ describe 'Import Warning', :serial => true do
 
   before(:all) do
     @cp = Candlepin.new('admin', 'admin')
-    pending("candlepin running in hosted mode") if is_hosted?
+    skip("candlepin running in hosted mode") if is_hosted?
 
     @cp_export = StandardExporter.new
     @cp_export.create_candlepin_export()

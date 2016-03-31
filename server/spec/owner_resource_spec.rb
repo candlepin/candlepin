@@ -575,7 +575,7 @@ describe 'Owner Resource Pool Filter Tests' do
     create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id, provided_product2.id, provided_product3.id])
 
     pools = @cp.list_owner_pools(owner['key'], { :consumer => consumer.uuid, :matches => target_prod_name })
-    pools.should have(1).things
+    pools.length.should eq(1)
 
     test_pool = pools[0]
     test_pool.owner['key'].should == owner['key']
@@ -730,18 +730,18 @@ describe 'Owner Resource Entitlement List Tests' do
 
   it 'can fetch all entitlements of an owner' do
     ents = @cp.list_ents_via_owners_resource(:owner_key => @owner['key'])
-    ents.should have(2).things
+    ents.length.should eq(2)
   end
 
   it 'can filter all entitlements by using matches param' do
     ents = @cp.list_ents_via_owners_resource(:owner_key => @owner['key'],:matches => "virtualization")
-    ents.should have(1).things
+    ents.length.should eq(1)
   end
 
   it 'can filter consumer entitlements by product attribute' do
     ents = @cp.list_ents_via_owners_resource(:owner_key => @owner['key'],
       :attr_filters => { "variant" => "Satellite Starter Pack" })
-    ents.should have(1).things
+    ents.length.should eq(1)
 
     found_attr = false
     ents[0].pool.productAttributes.each do |attr|

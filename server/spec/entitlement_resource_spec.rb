@@ -29,13 +29,13 @@ describe 'Entitlement Resource' do
     @system.consume_product(@virt_prod.id)
 
     ents = @cp.list_ents_via_entitlements_resource(:matches => "virtualization")
-    ents.should have(1).things
+    ents.length.should eq(1)
   end
 
   it 'should not re-calculate attributes when fetching entitlements' do
     @system.consume_product(@virt_prod.id)
     ents = @cp.list_ents_via_entitlements_resource(:matches => "virtualization")
-    ents.should have(1).things
+    ents.length.should eq(1)
     ents[0].pool.calculatedAttributes.should be_nil
   end
 
@@ -45,7 +45,7 @@ describe 'Entitlement Resource' do
 
     ents = @cp.list_ents_via_entitlements_resource(
       :attr_filters => { "variant" => "Satellite Starter Pack" })
-    ents.should have(1).things
+    ents.length.should eq(1)
 
     found_attr = false
     ents[0].pool.productAttributes.each do |attr|
@@ -60,11 +60,11 @@ describe 'Entitlement Resource' do
   it 'can filter consumer entitlements by product attribute' do
     @system.consume_product(@monitoring_prod.id)
     @system.consume_product(@virt_prod.id)
-    @cp.list_ents_via_entitlements_resource(:consumer_uuid => @system.uuid).should have(2).things
+    @cp.list_ents_via_entitlements_resource(:consumer_uuid => @system.uuid).length.should eq(2)
 
     ents = @cp.list_ents_via_entitlements_resource(:consumer_uuid => @system.uuid,
       :attr_filters => { "variant" => "Satellite Starter Pack" })
-    ents.should have(1).things
+    ents.length.should eq(1)
 
     found_attr = false
     ents[0].pool.productAttributes.each do |attr|
@@ -79,11 +79,11 @@ describe 'Entitlement Resource' do
   it 'can filter consumer entitlements by using matches param' do
     @system.consume_product(@monitoring_prod.id)
     @system.consume_product(@virt_prod.id)
-    @cp.list_ents_via_entitlements_resource(:consumer_uuid => @system.uuid).should have(2).things
+    @cp.list_ents_via_entitlements_resource(:consumer_uuid => @system.uuid).length.should eq(2)
 
     ents = @cp.list_ents_via_entitlements_resource(:consumer_uuid => @system.uuid,
       :matches => "virtualization")
-    ents.should have(1).things
+    ents.length.should eq(1)
   end
 
   it 'should allow entitlement certificate regeneration based on product id' do
