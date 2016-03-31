@@ -72,13 +72,12 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void normalCreate() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumerCurator.create(consumer);
 
-        List<Product> results = entityManager().createQuery(
-                "select c from Consumer as c").getResultList();
+        List<Consumer> results = entityManager().createQuery(
+                "select c from Consumer as c", Consumer.class).getResultList();
         assertEquals(1, results.size());
     }
 
@@ -700,5 +699,34 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.delete(c);
         i = (BigInteger) em.createNativeQuery(countQuery).getSingleResult();
         assertEquals(new BigInteger("0"), i);
+    }
+
+    @Test
+    public void lockAndLoadByUuidReturnsFindsConsumer() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumerCurator.create(consumer);
+        assertTrue(consumer.getUuid() != null && !consumer.getUuid().isEmpty());
+
+        beginTransaction();
+        try {
+            Consumer found = consumerCurator.lockAndLoadByUuid(consumer.getUuid());
+            assertNotNull(found);
+            assertEquals(consumer.getUuid(), found.getUuid());
+        }
+        finally {
+            rollbackTransaction();
+        }
+    }
+
+    @Test
+    public void lockAndLoadByUuidReturnsNullWhenConsumerIsNotFound() {
+        beginTransaction();
+        try {
+            Consumer found = consumerCurator.lockAndLoadByUuid("an_unknown_uuid");
+            assertNull(found);
+        }
+        finally {
+            rollbackTransaction();
+        }
     }
 }

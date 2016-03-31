@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 
+
 /**
  * ConsumerComplianceJob
  */
@@ -53,21 +54,32 @@ public class ConsumerComplianceJob extends UniqueByEntityJob {
     @Override
     @Transactional
     public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
+        JobDataMap map = ctx.getMergedJobDataMap();
+        String uuid = (String) map.get(JobStatus.TARGET_ID);
+        Date onDate = (Date) map.get("onDate");
+        Boolean calculateComplianceUntill = (Boolean) map.get("calculate_compliance_until");
+        Boolean forceUpdate = (Boolean) map.get("force_update");
+        Boolean update = (Boolean) map.get("update");
+
         try {
-            JobDataMap map = ctx.getMergedJobDataMap();
-            String uuid = (String) map.get(JobStatus.TARGET_ID);
-            Date onDate = (Date) map.get("onDate");
-            Boolean calculateComplianceUntill = (Boolean) map.get("calculate_compliance_until");
-            Boolean forceUpdate = (Boolean) map.get("force_update");
-            Boolean update = (Boolean) map.get("update");
-            Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
-            consumerCurator.lockAndLoad(consumer);
+
+            Consumer consumer = consumerCurator.lockAndLoadByUuid(uuid);
+            // A consumer might have been unregistered/deleted before the compliance status
+            // is recalculated. If it has been deleted, consider the job successful but report
+            // that the consumer was deleted before the update could occur.
+            if (consumer == null) {
+                String message = "Compliance status update was not required as Consumer {} no longer exists.";
+                log.info(message, uuid);
+                ctx.setResult(String.format(message, uuid));
+                return;
+            }
+
             // Check consumer's new compliance status and save:
             complianceRules.getStatus(consumer, onDate, calculateComplianceUntill, update);
             if (forceUpdate) {
                 consumerCurator.update(consumer);
             }
-            ctx.setResult("Compliance computed for consumer: " + consumer.getUuid());
+            ctx.setResult(String.format("Compliance computed for consumer: {}", consumer.getUuid()));
         }
         catch (Exception e) {
             log.error("ConsumerComplianceJob encountered a problem.", e);

@@ -34,6 +34,7 @@ import org.quartz.JobExecutionException;
 
 import java.util.Date;
 
+
 import static org.mockito.Mockito.*;
 /**
  * CancelJobJobTest
@@ -62,9 +63,9 @@ public class ConsumerComplianceJobTest {
         JobDetail detail = job.scheduleStatusCheck(consumer, new Date(), true, false);
         assertNotNull(detail);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        when(curator.verifyAndLookupConsumer(consumerUuid)).thenReturn(consumer);
+        when(curator.lockAndLoadByUuid(consumerUuid)).thenReturn(consumer);
         job.execute(ctx);
-        verify(curator).lockAndLoad(eq(consumer));
+        verify(curator).lockAndLoadByUuid(eq(consumerUuid));
         verify(rules).getStatus(eq(consumer), any(Date.class), eq(true), eq(false));
     }
 
@@ -73,9 +74,9 @@ public class ConsumerComplianceJobTest {
         JobDetail detail = job.scheduleWithForceUpdate(consumer);
         assertNotNull(detail);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        when(curator.verifyAndLookupConsumer(consumerUuid)).thenReturn(consumer);
+        when(curator.lockAndLoadByUuid(consumerUuid)).thenReturn(consumer);
         job.execute(ctx);
-        verify(curator).lockAndLoad(eq(consumer));
+        verify(curator).lockAndLoadByUuid(eq(consumerUuid));
         verify(rules).getStatus(eq(consumer), any(Date.class), eq(false), eq(false));
         verify(curator).update(consumer);
     }
@@ -85,10 +86,24 @@ public class ConsumerComplianceJobTest {
         JobDetail detail = job.scheduleWithForceUpdate(consumer);
         assertNotNull(detail);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        when(curator.verifyAndLookupConsumer(consumerUuid)).thenReturn(consumer);
+        when(curator.lockAndLoadByUuid(consumerUuid)).thenReturn(consumer);
         when(rules.getStatus(eq(consumer), any(Date.class), eq(false), eq(false))).thenThrow(
                 new RuleExecutionException("random exception"));
         job.execute(ctx);
+    }
+
+    @Test
+    public void jobIsConsideredSuccessfullWhenConsumerWasDeletedBeforeComplianceCalcCompletes()
+        throws JobExecutionException {
+        JobDetail detail = job.scheduleWithForceUpdate(consumer);
+        assertNotNull(detail);
+        when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
+        when(curator.lockAndLoadByUuid(consumerUuid)).thenReturn(null);
+        job.execute(ctx);
+
+        verify(ctx).setResult(
+            eq(String.format("Compliance status update was not required as Consumer {} no longer exists.",
+                consumerUuid)));
     }
 
 }

@@ -59,6 +59,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.persistence.LockModeType;
+import javax.persistence.NoResultException;
 
 /**
  * ConsumerCurator
@@ -291,6 +292,27 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public Consumer lockAndLoad(Consumer c) {
         getEntityManager().lock(c, LockModeType.PESSIMISTIC_WRITE);
         return c;
+    }
+
+    /**
+     * Find a consumer by uuid and immediately lock it.
+     *
+     * @param consumerUuid the uuid of the target consumer.
+     *
+     * @return the Consumer matching the given uuid, null if the consumer was not found.
+     */
+    public Consumer lockAndLoadByUuid(String consumerUuid) {
+        String jpql = "select c from Consumer c where c.uuid = :consumerUuid";
+
+        try {
+            return getEntityManager().createQuery(jpql, Consumer.class)
+                .setParameter("consumerUuid", consumerUuid)
+                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+                .getSingleResult();
+        }
+        catch (NoResultException nre) {
+            return null;
+        }
     }
 
     @Transactional
