@@ -15,8 +15,10 @@
 package org.candlepin.resource;
 
 import org.candlepin.common.auth.SecurityHole;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;

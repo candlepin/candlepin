@@ -35,7 +35,9 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.paging.Paginate;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -171,6 +173,8 @@ public class OwnerResource {
     private Configuration config;
     private ContentCurator contentCurator;
     private ResolverUtil resolverUtil;
+    private ProductManager productManager;
+    private ContentManager contentManager;
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator,
@@ -199,7 +203,10 @@ public class OwnerResource {
         ProductCurator productCurator,
         Configuration config,
         ContentCurator contentCurator,
-        ResolverUtil resolverUtil) {
+        ResolverUtil resolverUtil,
+        ProductManager productManager,
+        ContentManager contentManager
+        ) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -228,6 +235,8 @@ public class OwnerResource {
         this.config = config;
         this.contentCurator = contentCurator;
         this.resolverUtil = resolverUtil;
+        this.productManager = productManager;
+        this.contentManager = contentManager;
     }
 
     /**
@@ -413,12 +422,12 @@ public class OwnerResource {
 
         for (Product p : prodCurator.listByOwner(owner)) {
             log.info("Deleting product: {}", p);
-            prodCurator.removeProduct(p, owner);
+            this.productManager.removeProduct(p, owner);
         }
 
         for (Content c : contentCurator.listByOwner(owner)) {
             log.info("Deleting content: {}", c);
-            contentCurator.removeContent(c, owner);
+            this.contentManager.removeContent(c, owner, true);
         }
 
         log.info("Deleting owner: {}", owner);
@@ -518,8 +527,7 @@ public class OwnerResource {
             }
         }
         // test is on the string "true" and is case insensitive.
-        return poolManager.retrieveServiceLevelsForOwner(owner,
-            Boolean.parseBoolean(exempt));
+        return poolManager.retrieveServiceLevelsForOwner(owner, Boolean.parseBoolean(exempt));
     }
 
     /**
