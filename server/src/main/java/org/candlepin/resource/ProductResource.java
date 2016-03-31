@@ -60,15 +60,17 @@ public class ProductResource {
     private ProductCurator productCurator;
     private OwnerCurator ownerCurator;
     private ProductCertificateCurator productCertCurator;
+    private Configuration config;
     private I18n i18n;
 
     @Inject
     public ProductResource(ProductCurator productCurator, OwnerCurator ownerCurator,
-            ProductCertificateCurator productCertCurator, I18n i18n) {
+            ProductCertificateCurator productCertCurator, Configuration config, I18n i18n) {
 
         this.productCurator = productCurator;
         this.productCertCurator = productCertCurator;
         this.ownerCurator = ownerCurator;
+        this.config = config;
         this.i18n = i18n;
     }
 
@@ -309,6 +311,11 @@ public class ProductResource {
 
         if (productIds.isEmpty()) {
             throw new BadRequestException(i18n.tr("No product IDs specified"));
+        }
+
+        if (config.getBoolean(ConfigProperties.STANDALONE)) {
+            log.warn("Ignoring refresh pools request due to standalone config.");
+            return null;
         }
 
         List<Owner> owners = this.ownerCurator.lookupOwnersWithProduct(productIds);

@@ -70,17 +70,19 @@ public class OwnerProductResource {
     private ContentCurator contentCurator;
     private OwnerCurator ownerCurator;
     private ProductCertificateCurator productCertCurator;
+    private Configuration config;
     private I18n i18n;
-
 
     @Inject
     public OwnerProductResource(ProductCurator productCurator, ContentCurator contentCurator,
-            OwnerCurator ownerCurator, ProductCertificateCurator productCertCurator, I18n i18n) {
+            OwnerCurator ownerCurator, ProductCertificateCurator productCertCurator,
+            Configuration config, I18n i18n) {
 
         this.productCurator = productCurator;
         this.contentCurator = contentCurator;
         this.productCertCurator = productCertCurator;
         this.ownerCurator = ownerCurator;
+        this.config = config;
         this.i18n = i18n;
     }
 
@@ -439,6 +441,11 @@ public class OwnerProductResource {
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
+
+        if (config.getBoolean(ConfigProperties.STANDALONE)) {
+            log.warn("Ignoring refresh pools request due to standalone config.");
+            return null;
+        }
 
         Product product = this.getProduct(ownerKey, productId);
 
