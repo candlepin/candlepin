@@ -67,6 +67,7 @@ public class PinsetterKernel {
 
     public static final String CRON_GROUP = "cron group";
     public static final String SINGLE_JOB_GROUP = "async group";
+    public static final String[] DELETED_JOBS = new String[] { "StatisticHistoryTask" };
 
     private static Logger log = LoggerFactory.getLogger(PinsetterKernel.class);
 
@@ -169,6 +170,22 @@ public class PinsetterKernel {
             }
             log.debug("Jobs implemented:" + jobImpls);
             Set<JobKey> jobKeys = scheduler.getJobKeys(jobGroupEquals(CRON_GROUP));
+
+            /*
+             * purge jobs that have been deleted from this version of Candlepin.
+             * This is necessary as we might not even have the Class definition
+             * at classpath, Hence any attempt at fetching the JobDetail by the
+             * Scheduler or JobStatus by the JobCurator will fail.
+             */
+            for (JobKey jobKey : jobKeys) {
+                for (String deletedJob : DELETED_JOBS) {
+                    if (jobKey.getName().contains(deletedJob)) {
+                        scheduler.deleteJob(jobKey);
+                        jobCurator.deleteJobNoStatusReturn(jobKey.getName());
+                        break;
+                    }
+                }
+            }
 
             for (String jobImpl : jobImpls) {
                 if (log.isDebugEnabled()) {
