@@ -315,9 +315,13 @@ class Exporter
 
   end
 
+  def do_export(client, dest_dir, opts={}, uuid=nil)
+    client.export_consumer(dest_dir, opts, uuid)
+  end
+
   def create_candlepin_export
     export = Export.new
-    export.export_filename = @candlepin_client.export_consumer(export.tmp_dir, @opts)
+    export.export_filename = do_export(@candlepin_client, export.tmp_dir, @opts)
     export.extract()
     @exports << export
     export
@@ -326,7 +330,7 @@ class Exporter
   def create_candlepin_export_with_ro_user
     ro_user_client = user_client(@owner, random_string('CPExport_user'), true)
     export = Export.new
-    export.export_filename = ro_user_client.export_consumer(export.tmp_dir, @opts, @candlepin_client.uuid)
+    export.export_filename = do_export(ro_user_client, export.tmp_dir, @opts, @candlepin_client.uuid)
     export.extract()
     @exports << export
     export
@@ -501,4 +505,24 @@ class StandardExporter < Exporter
 
     create_candlepin_export()
   end
+end
+
+class AsyncStandardExporter < StandardExporter
+
+  def initialize
+    super()
+  end
+
+  def do_export(client, dest_dir, opts={}, uuid=nil)
+    job = client.export_consumer_async(opts, uuid)
+    # Wait a little longer here as export can take a bit of time
+    wait_for_job(job["id"], 60)
+    status = client.get_job(job["id"], true)
+    if status["state"] == "FAILED"
+      raise AsyncExportFailure.new(status)
+    end
+    result = status["resultData"]
+    client.download_consumer_export(result["exportedConsumer"], result["exportId"], dest_dir)
+  end
+
 end

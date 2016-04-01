@@ -31,6 +31,7 @@ import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import java.io.File;
 import java.io.IOException;
 
+
 /**
  * SyncUtils
  */
@@ -85,4 +86,9 @@ class SyncUtils {
 
         return (tmp);
     }
+
+    File tempFileReference(String name) throws IOException {
+        return new File(baseDir, name);
+    }
+
 }

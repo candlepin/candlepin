@@ -169,7 +169,8 @@ class OracleConf(object):
 class PostgresqlConf(object):
     def __init__(self, options):
         self.options = options
-        self.dialect = "org.hibernate.dialect.PostgreSQLDialect"
+        #self.dialect = "org.hibernate.dialect.PostgreSQLDialect"
+	self.dialect = "org.candlepin.hibernate.PostgreSQLDialect"
         self.driver = "org.postgresql.Driver"
 
         # Build up the correct jdbc URL:

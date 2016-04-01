@@ -135,8 +135,7 @@ public class Exporter {
     }
 
     public File getFullExport(Consumer consumer, String cdnKey, String webAppPrefix,
-        String apiUrl)
-        throws ExportCreationException {
+        String apiUrl) throws ExportCreationException {
         // TODO: need to delete tmpDir (which contains the archive,
         // which we need to return...)
         try {
@@ -188,7 +187,7 @@ public class Exporter {
      */
     private File makeArchive(Consumer consumer, File tempDir, File exportDir)
         throws IOException {
-        String exportFileName = exportDir.getName() + ".zip";
+        String exportFileName = String.format("%s-%s.zip", consumer.getUuid(), exportDir.getName());
         log.info("Creating archive of " + exportDir.getAbsolutePath() + " in: " +
             exportFileName);
 
@@ -317,7 +316,7 @@ public class Exporter {
         try {
             writer = new FileWriter(file);
             Meta m = new Meta(getVersion(), new Date(),
-                principalProvider.get().getPrincipalName(),
+                principalProvider.get().getName(),
                 null, cdnKey);
             meta.export(mapper, writer, m);
         }
@@ -633,4 +632,5 @@ public class Exporter {
             }
         }
     }
+
 }

@@ -26,6 +26,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ManifestManager;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
@@ -105,6 +106,7 @@ public class ExporterTest {
     private CandlepinCommonTestConfig config;
     private ExportRules exportRules;
     private PrincipalProvider pprov;
+    private ManifestManager manifestManager;
 
     @Before
     public void setUp() {
@@ -129,6 +131,7 @@ public class ExporterTest {
         dve = new DistributorVersionExporter();
         cdnc = mock(CdnCurator.class);
         cdne = new CdnExporter();
+        manifestManager = mock(ManifestManager.class);
 
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
     }

@@ -74,6 +74,8 @@ import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.service.impl.stub.StubEntitlementCertServiceAdapter;
+import org.candlepin.sync.ManifestFileService;
+import org.candlepin.sync.file.DBManifestService;
 import org.candlepin.test.VerifyAuthorizationFilterFactory;
 import org.candlepin.test.DateSourceForTesting;
 import org.candlepin.test.EnforcerForTesting;
@@ -269,6 +271,7 @@ public class TestingModules {
                 DefaultOwnerServiceAdapter.class);
             bind(EntitlementCertServiceAdapter.class).to(
                 StubEntitlementCertServiceAdapter.class);
+            bind(ManifestFileService.class).to(DBManifestService.class);
             bind(ScriptEngineProvider.class);
 
             bind(JobFactory.class).to(GuiceJobFactory.class);

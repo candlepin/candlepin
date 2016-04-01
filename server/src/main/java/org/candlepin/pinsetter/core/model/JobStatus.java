@@ -171,6 +171,9 @@ public class JobStatus extends AbstractHibernateObject {
 
         Object jobResult = context.getResult();
         if (jobResult != null) {
+            // TODO Check for instance of JobResult and set these appropriately
+            //      Which will allow for a result message of sorts instead of just
+            //      a class name resulting from Class.toString()
             // BZ1004780: setResult truncates long strings
             // setting result directly causes database issues.
             setResult(jobResult.toString());

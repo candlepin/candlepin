@@ -14,7 +14,9 @@
  */
 package org.candlepin.sync;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -44,5 +46,13 @@ public class ConflictOverrides {
 
     public boolean isEmpty() {
         return conflictsToForce.size() == 0;
+    }
+
+    public String[] asStringArray() {
+        List<String> all = new ArrayList<String>();
+        for (Importer.Conflict conflict : conflictsToForce) {
+            all.add(conflict.name());
+        }
+        return all.toArray(new String[all.size()]);
     }
 }

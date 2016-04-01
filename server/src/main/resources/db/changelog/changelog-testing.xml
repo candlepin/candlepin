@@ -2028,7 +2028,7 @@
     </changeSet>
     <changeSet author="awood" id="1413225753032-290">
         <comment>
-             Add the default quartz lock columns. 
+             Add the default quartz lock columns.
         </comment>
         <insert tableName="QRTZ_LOCKS">
             <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>
@@ -2277,4 +2277,5 @@
     <include file="db/changelog/20160224171417-drop-stat-history-table.xml"/>
     <include file="db/changelog/20160412131122-add-unique-constraint-to-product-certificate-rows.xml"/>
     <include file="db/changelog/20160419110701-oracle-add-indexes-for-foreign-keys.xml"/>
+    <include file="db/changelog/20160419092221-add-db-file-storage.xml"/>
 </databaseChangeLog>

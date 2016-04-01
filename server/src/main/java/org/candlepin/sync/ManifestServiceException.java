@@ -15,18 +15,19 @@
 package org.candlepin.sync;
 
 /**
- * ExportCreationException
+ * Thrown when there is an issue on the {@link ManifestFileService}.
  */
-public class ExportCreationException extends SyncException {
+public class ManifestServiceException extends RuntimeException {
 
-    private static final long serialVersionUID = 1126642027355176388L;
-
-    public ExportCreationException(String msg, Throwable e) {
-        super(msg, e);
+    public ManifestServiceException(String message) {
+        super(message);
     }
 
-    public ExportCreationException(String msg) {
-        super(msg);
+    public ManifestServiceException(String message, Throwable e) {
+        super(message, e);
     }
 
+    public ManifestServiceException(Throwable e) {
+        super(e);
+    }
 }

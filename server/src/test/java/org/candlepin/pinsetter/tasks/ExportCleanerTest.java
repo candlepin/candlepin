@@ -19,6 +19,7 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ManifestManager;
 import org.candlepin.util.Util;
 
 import org.apache.commons.io.FileUtils;
@@ -38,11 +39,13 @@ import java.io.File;
 public class ExportCleanerTest {
 
     @Mock private Configuration config;
+    @Mock private ManifestManager manifestManager;
+
     private ExportCleaner cleaner;
 
     @Before
     public void init() {
-        cleaner = new ExportCleaner(config);
+        cleaner = new ExportCleaner(config, manifestManager);
     }
 
     @Test

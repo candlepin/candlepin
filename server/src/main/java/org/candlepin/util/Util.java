@@ -154,6 +154,12 @@ public class Util {
         return calendar.getTime();
     }
 
+    public static Date hoursAgo(int hours) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.HOUR, hours * -1);
+        return calendar.getTime();
+    }
+
     public static Date addToFields(int day, int month, int yr) {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DAY_OF_MONTH, day);

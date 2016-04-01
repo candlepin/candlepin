@@ -18,6 +18,8 @@ import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 
+import java.io.Serializable;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -45,7 +47,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = "cp_consumer_capability")
 
-public class ConsumerCapability {
+public class ConsumerCapability implements Serializable {
 
     @Id
     @GeneratedValue(generator = "system-uuid")

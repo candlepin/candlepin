@@ -16,6 +16,8 @@ package org.candlepin.common.exceptions;
 
 import org.slf4j.MDC;
 
+import java.io.Serializable;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -25,7 +27,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
-public class ExceptionMessage {
+public class ExceptionMessage implements Serializable {
 
     private String displayMessage;
     private String requestUuid;

@@ -85,6 +85,15 @@ public class ImportUpstreamConsumer extends AbstractHibernateObject {
         // needed for Hibernate
     }
 
+    public ImportUpstreamConsumer(UpstreamConsumer uc) {
+        this.setOwnerId(uc.getOwnerId());
+        this.setName(uc.getName());
+        this.setUuid(uc.getUuid());
+        this.setType(uc.getType());
+        this.setWebUrl(uc.getWebUrl());
+        this.setApiUrl(uc.getApiUrl());
+    }
+
     /**
      * @return the Consumer's UUID
      */

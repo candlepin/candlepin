@@ -483,13 +483,32 @@ class Candlepin
   def export_consumer(dest_dir, params={}, uuid=nil)
     uuid = @uuid unless uuid
     path = "/consumers/#{uuid}/export"
+    do_consumer_export(path, dest_dir, params)
+  end
+
+  def export_consumer_async(params={}, uuid=nil)
+    uuid = @uuid unless uuid
+    path = "/consumers/#{uuid}/export/async"
+    do_consumer_export(path, nil, params)
+  end
+
+  def download_consumer_export(uuid, export_id, dest_dir)
+    path = "/consumers/#{uuid}/export/download?export_id=#{export_id}"
+    get_file(path, dest_dir)
+  end
+
+  def do_consumer_export(path, dest_dir, params)
     path += "?" if params
     path += "cdn_label=#{params[:cdn_label]}&" if params[:cdn_label]
     path += "webapp_prefix=#{params[:webapp_prefix]}&" if params[:webapp_prefix]
     path += "api_url=#{params[:api_url]}&" if params[:api_url]
-
     begin
-      get_file(path, dest_dir)
+      if dest_dir.nil?
+        # support async call
+        get(path)
+      else
+        get_file(path, dest_dir)
+      end
     rescue Exception => e
       puts e.response
     end
@@ -1180,7 +1199,15 @@ class Candlepin
   end
 
   def import(owner_key, filename, params = {})
-    path = "/owners/#{owner_key}/imports?"
+    do_import("/owners/#{owner_key}/imports", filename, params)
+  end
+
+  def import_async(owner_key, filename, params = {})
+    do_import("/owners/#{owner_key}/imports/async", filename, params)
+  end
+
+  def do_import(path, filename, params = {})
+    path += "?"
     if params.has_key? :force
       if params[:force].kind_of? Array
         # New style, array of conflict keys to force:

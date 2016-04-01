@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * UniqueByOwnerJob can by extended by jobs that should not be run concurrently
+ * UniqueByEntityJob can by extended by jobs that should not be run concurrently
  * per owner. Additional scheduled jobs will be ignored if a similar job exists
  * for the same owner that has not started running yet. A job will wait for the
  * running job to finish before beginning execution.

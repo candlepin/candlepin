@@ -39,6 +39,7 @@ import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.paging.Paginate;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.Entitler;
+import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerialDto;
@@ -96,7 +97,6 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.sync.ExportCreationException;
-import org.candlepin.sync.Exporter;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -174,7 +174,6 @@ public class ConsumerResource {
     private EventCurator eventCurator;
     private EventAdapter eventAdapter;
     private static final int FEED_LIMIT = 1000;
-    private Exporter exporter;
     private PoolManager poolManager;
     private ConsumerRules consumerRules;
     private OwnerCurator ownerCurator;
@@ -188,6 +187,7 @@ public class ConsumerResource {
     private Configuration config;
     private CalculatedAttributesUtil calculatedAttributesUtil;
     private ConsumerBindUtil consumerBindUtil;
+    private ManifestManager manifestManager;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -198,8 +198,7 @@ public class ConsumerResource {
         IdentityCertServiceAdapter identityCertService,
         EntitlementCertServiceAdapter entCertServiceAdapter, I18n i18n,
         EventSink sink, EventFactory eventFactory, EventCurator eventCurator,
-        EventAdapter eventAdapter, UserServiceAdapter userService,
-        Exporter exporter, PoolManager poolManager,
+        EventAdapter eventAdapter, UserServiceAdapter userService, PoolManager poolManager,
         ConsumerRules consumerRules, OwnerCurator ownerCurator,
         ActivationKeyCurator activationKeyCurator, Entitler entitler,
         ComplianceRules complianceRules, DeletedConsumerCurator deletedConsumerCurator,
@@ -207,7 +206,7 @@ public class ConsumerResource {
         DistributorVersionCurator distributorVersionCurator,
         Configuration config, ContentCurator contentCurator,
         CdnCurator cdnCurator, CalculatedAttributesUtil calculatedAttributesUtil,
-        ConsumerBindUtil consumerBindUtil) {
+        ConsumerBindUtil consumerBindUtil, ManifestManager manifestManager) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -221,7 +220,6 @@ public class ConsumerResource {
         this.eventFactory = eventFactory;
         this.eventCurator = eventCurator;
         this.userService = userService;
-        this.exporter = exporter;
         this.poolManager = poolManager;
         this.consumerRules = consumerRules;
         this.ownerCurator = ownerCurator;
@@ -240,6 +238,7 @@ public class ConsumerResource {
         this.config = config;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
         this.consumerBindUtil = consumerBindUtil;
+        this.manifestManager = manifestManager;
     }
 
     @ApiOperation(notes = "Retrieves a list of the Consumers", value = "list")
@@ -1248,11 +1247,6 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("serials") String serials) {
 
-        log.debug("Getting client certificate zip file for consumer: {}", consumerUuid);
-        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        poolManager.regenerateDirtyEntitlements(
-            entitlementCurator.listByConsumer(consumer));
-
         Set<Long> serialSet = this.extractSerials(serials);
         // filtering requires a null set, so make this null if it is
         // empty
@@ -1262,7 +1256,7 @@ public class ConsumerResource {
 
         File archive;
         try {
-            archive = exporter.getEntitlementExport(consumer, serialSet);
+            archive = manifestManager.generateEntitlementArchive(consumerUuid, serialSet);
             response.addHeader("Content-Disposition", "attachment; filename=" +
                 archive.getName());
 
@@ -1760,11 +1754,26 @@ public class ConsumerResource {
         }
     }
 
-    @ApiOperation(notes = "Retrieves a Compressed File representation of a Consumer", value = "exportData")
+    /**
+     * Retrieves a compressed file representation of a Consumer (manifest).
+     *
+     * @deprecated use GET /consumers/:consumer_uuid/export/async
+     * @param response
+     * @param consumerUuid
+     * @param cdnLabel
+     * @param webAppPrefix
+     * @param apiUrl
+     * @return the generated file archive.
+     */
+    @Deprecated
+    @ApiOperation(
+        notes = "Retrieves a Compressed File representation of a Consumer (manifest).",
+        value = "Consumer Export (manifest)",
+        response = File.class)
     @ApiResponses({ @ApiResponse(code = 403, message = ""), @ApiResponse(code = 500, message = ""),
         @ApiResponse(code = 404, message = "") })
-    @GET
     @Produces("application/zip")
+    @GET
     @Path("{consumer_uuid}/export")
     public File exportData(
         @Context HttpServletResponse response,
@@ -1773,39 +1782,115 @@ public class ConsumerResource {
         @QueryParam("webapp_prefix") String webAppPrefix,
         @QueryParam("api_url") String apiUrl) {
 
-        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        if (consumer.getType() == null ||
-            !consumer.getType().isManifest()) {
-            throw new ForbiddenException(
-                i18n.tr(
-                    "Unit {0} cannot be exported. " +
-                    "A manifest cannot be made for units of type ''{1}''.",
-                    consumerUuid, consumer.getType().getLabel()));
-        }
-
-        if (!StringUtils.isBlank(cdnLabel) &&
-            cdnCurator.lookupByLabel(cdnLabel) == null) {
-            throw new ForbiddenException(
-                i18n.tr("A CDN with label {0} does not exist on this system.", cdnLabel));
-        }
-
-        poolManager.regenerateDirtyEntitlements(entitlementCurator.listByConsumer(consumer));
-
-        File archive;
+        Consumer consumer = verifyExportParams(consumerUuid, cdnLabel);
         try {
-            archive = exporter.getFullExport(consumer, cdnLabel, webAppPrefix, apiUrl);
-            response.addHeader("Content-Disposition", "attachment; filename=" +
-                archive.getName());
-
-            sink.queueEvent(eventFactory.exportCreated(consumer));
+            File archive = manifestManager.generateManifest(consumer, cdnLabel, webAppPrefix, apiUrl);
+            response.addHeader("Content-Disposition", "attachment; filename=" + archive.getName());
             return archive;
         }
         catch (ExportCreationException e) {
-            throw new IseException(i18n.tr("Unable to create export archive"),
-                e);
+            throw new IseException(i18n.tr("Unable to create export archive"), e);
         }
     }
 
+    /**
+     * Initiates an async generation of a compressed file representation of a {@link Consumer} (manifest).
+     * The response will contain the id of the job from which its result data will contain the href to
+     * download the generated file.
+     *
+     * @param response
+     * @param consumerUuid the uuid of the target consumer.
+     * @param cdnLabel
+     * @param webAppPrefix
+     * @param apiUrl
+     * @return the details of the async export job that is to be started.
+     */
+    @ApiOperation(
+        notes = "Initiates an async generation of a Compressed File representation of a Consumer " +
+        "(manifest). The response will contain the id of the job from which its result data " +
+        " will contain the href to download the generated file.",
+        value = "Async Consumer Export (manifest)",
+        response = JobDetail.class)
+    @ApiResponses({ @ApiResponse(code = 403, message = ""), @ApiResponse(code = 500, message = ""),
+        @ApiResponse(code = 404, message = "") })
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{consumer_uuid}/export/async")
+    public JobDetail exportDataAsync(
+        @Context HttpServletResponse response,
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        @QueryParam("cdn_label") String cdnLabel,
+        @QueryParam("webapp_prefix") String webAppPrefix,
+        @QueryParam("api_url") String apiUrl) {
+        Consumer consumer = verifyExportParams(consumerUuid, cdnLabel);
+        return manifestManager.generateManifestAsync(consumer, cdnLabel, webAppPrefix, apiUrl);
+    }
+
+    /**
+     * Downloads an asynchronously generated consumer export file (manifest). If the file
+     * was successfully downloaded, it will be deleted.
+     *
+     * @param response
+     * @param consumerUuid the UUID of the target consumer.
+     * @param exportId the id of the stored export.
+     */
+    @ApiOperation(
+        notes = "Downloads an asynchronously generated consumer export file (manifest).",
+        value = "Async Consumer Export (manifest) Download",
+        response = File.class)
+    @ApiResponses({ @ApiResponse(code = 403, message = ""), @ApiResponse(code = 500, message = ""),
+        @ApiResponse(code = 404, message = "") })
+    @GET
+    @Produces("application/zip")
+    @Path("{consumer_uuid}/export/download")
+    public void downloadExistingExport(
+        @Context HttpServletResponse response,
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        @QueryParam("export_id") String exportId) {
+
+        // *******************************************************************************
+        // NOTE: If changing the path or parameters of this endpoint, be sure to update
+        // the HREF generation in ExportResult.
+        // *******************************************************************************
+
+        // If an exception happens during a download request, always report a
+        // NotFound exception.
+        NotFoundException toThrow = new NotFoundException(
+            i18n.tr("The specified file does not exist, or can not be accessed."));
+
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        if (consumer.getType() == null || !consumer.getType().isManifest()) {
+            log.error("Invalid consumer type specified for the manifest download");
+            throw new NotFoundException(
+                i18n.tr("The specified file does not exist, or can not be accessed."));
+        }
+
+        // The response for this request is formulated a little different for this
+        // file download. In some cases, such as for a hibernate DB file service, we must
+        // stream the results from the DB to the client by directly writing to the
+        // response output stream.
+        //
+        // NOTE: Passing the database input stream to the response builder seems
+        //       like it would be a correct approach here, but large object streaming
+        //       can only be done inside a single transaction, so we have to stream it
+        //       manually.
+        // TODO See if there is a way to get RestEasy to do this so we don't have to.
+        manifestManager.writeStoredExportToResponse(exportId, consumer, response);
+
+        // On successful manifest read, delete the record. The manifest can only be
+        // downloaded once and must then be regenerated.
+        manifestManager.deleteStoredManifest(exportId);
+    }
+
+    /**
+     * Retrieves a single Consumer
+     *
+     * @param uuid uuid of the consumer sought.
+     * @return a Consumer object
+     * @httpcode 400
+     * @httpcode 404
+     * @httpcode 200
+     */
     @ApiOperation(notes = "Retrieves a single Consumer", value = "regenerateIdentityCertificates")
     @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @POST
@@ -2018,6 +2103,25 @@ public class ConsumerResource {
         Map<String, String> calculatedAttributes =
             calculatedAttributesUtil.buildCalculatedAttributes(ent.getPool(), null);
         ent.getPool().setCalculatedAttributes(calculatedAttributes);
+    }
+
+    private Consumer verifyExportParams(String consumerUuid, String cdnLabel) {
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        if (consumer.getType() == null ||
+            !consumer.getType().isManifest()) {
+            throw new ForbiddenException(
+                i18n.tr(
+                    "Unit {0} cannot be exported. " +
+                    "A manifest cannot be made for units of type ''{1}''.",
+                    consumerUuid, consumer.getType().getLabel()));
+        }
+
+        if (!StringUtils.isBlank(cdnLabel) &&
+            cdnCurator.lookupByLabel(cdnLabel) == null) {
+            throw new ForbiddenException(
+                i18n.tr("A CDN with label {0} does not exist on this system.", cdnLabel));
+        }
+        return consumer;
     }
 
 }

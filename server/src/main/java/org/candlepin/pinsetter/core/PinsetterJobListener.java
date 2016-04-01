@@ -15,6 +15,7 @@
 package org.candlepin.pinsetter.core;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
@@ -129,6 +130,10 @@ public class PinsetterJobListener implements JobListener {
                 log.error("Job [" + status.getId() + "] failed." , exc);
                 status.setState(JobState.FAILED);
                 status.setResult(exc.getMessage());
+
+                if (exc.getCause() instanceof CandlepinException) {
+                    status.setResultData(((CandlepinException) exc.getCause()).message());
+                }
             }
             else {
                 status.update(ctx);
