@@ -372,8 +372,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     @OneToOne
     @JoinColumn(name = "cdn_id")
+    @JsonIgnore
     private Cdn cdn;
-
 
     public Pool() {
     }

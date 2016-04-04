@@ -161,4 +161,24 @@ describe 'Pool Resource' do
     pool['calculatedAttributes']['compliance_type'].should == "Standard"
   end
 
+  it 'should allow fetching content delivery network by pool id' do
+    cdn_label = random_string("test-cdn")
+    cdn = create_cdn(cdn_label,
+                     "Test CDN",
+                     "https://cdn.test.com")
+    cdn.id.should_not be nil
+
+    @opts = {"cdn_label"=> cdn_label}
+    @cp_export = StandardExporter.new
+    @cp_export.create_candlepin_export()
+    @cp_export_file = @cp_export.export_filename
+    @import_owner = @cp.create_owner(random_string("test_owner"))
+    import_record = @cp.import(@import_owner['key'], @cp_export_file)
+    pool = @cp.list_owner_pools(@import_owner['key'])[0]
+    pool.cdn.should be nil
+    result_cdn = @cp.get_cdn_from_pool(pool['id'])
+    result_cdn.name.should == cdn.name
+    result_cdn.url.should == cdn.url
+  end
+
 end
