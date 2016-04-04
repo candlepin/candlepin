@@ -74,7 +74,9 @@ public class OwnerManager {
     @Transactional
     public void cleanupAndDelete(Owner owner, boolean revokeCerts) {
         log.info("Cleaning up owner: " + owner);
-        List<Consumer> consumers = consumerCurator.listByOwner(owner);
+
+        List<String> ids = ownerCurator.getConsumerUuids(owner.getKey());
+        List<Consumer> consumers = consumerCurator.lockAndLoadBatch(ids);
 
         for (Consumer c : consumers) {
             log.info("Removing all entitlements for consumer: {}", c);

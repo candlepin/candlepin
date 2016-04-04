@@ -43,6 +43,7 @@ import org.xnap.commons.i18n.I18n;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -572,6 +573,41 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                     Restrictions.or(criterion, Restrictions.in(expression, subList));
         }
         return criterion;
+    }
+
+    public List<E> lockAndLoadBatch(Collection<String> ids, String entityName, String keyName) {
+        List<E> result = new ArrayList<E>();
+        if (CollectionUtils.isNotEmpty(ids)) {
+            List<String> idsList = new ArrayList<String>(ids);
+            Collections.sort(idsList);
+
+            log.debug("Locking entities");
+            int listSize = idsList.size();
+            for (int i = 0; i < listSize; i += inClauseLimit) {
+                result.addAll(lockAndLoadInternalOnly(
+                        idsList.subList(i, Math.min(listSize, i + inClauseLimit)),
+                        entityName, keyName));
+            }
+        }
+        return result;
+    }
+
+    /*
+     * Because does not sort, so could lead to dead locks.
+     * also this allows unlimited ids in the inclause which is not safe.
+     * Hence, Not for external use, meant only for supporting the above method.
+     */
+    @SuppressWarnings("unchecked")
+    private List<E> lockAndLoadInternalOnly(List<String> ids, String entityName, String keyName) {
+
+        if (CollectionUtils.isEmpty(ids)) {
+            return new ArrayList<E>();
+        }
+        return getEntityManager()
+                .createQuery("SELECT x FROM " + entityName + " x WHERE " + keyName + " in :ids")
+                .setParameter("ids", ids)
+                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+                .getResultList();
     }
 
 }
