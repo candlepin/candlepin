@@ -410,7 +410,9 @@ describe 'Consumer Resource' do
     poolAndQuantities.push(poolAndQuantity)
     poolAndQuantity = { 'poolId' => pool2.id, 'quantity' => 1}
     poolAndQuantities.push(poolAndQuantity)
-    consumer_client.consume_pools(poolAndQuantities)
+    status = consumer_client.consume_pools(poolAndQuantities)
+    # wait for job to complete, or test clean up will conflict with the asynchronous job.
+    wait_for_job(status['id'], 15)
     @cp.get_consumer(consumer['uuid'])['updated'].should_not == new_updated
   end
 
