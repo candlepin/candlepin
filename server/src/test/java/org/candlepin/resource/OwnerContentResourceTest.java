@@ -18,6 +18,7 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
@@ -45,6 +46,7 @@ import java.util.Locale;
 public class OwnerContentResourceTest {
 
     private ContentCurator cc;
+    private ContentManager cm;
     private OwnerContentResource ocr;
     private I18n i18n;
     private EnvironmentContentCurator envContentCurator;
@@ -56,13 +58,14 @@ public class OwnerContentResourceTest {
     public void init() {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         cc = mock(ContentCurator.class);
+        cm = mock(ContentManager.class);
         envContentCurator = mock(EnvironmentContentCurator.class);
         poolManager = mock(PoolManager.class);
         oc = mock(OwnerCurator.class);
         productCurator = mock(ProductCurator.class);
 
         ocr = new OwnerContentResource(cc, i18n, new DefaultUniqueIdGenerator(),
-            envContentCurator, poolManager, productCurator, oc);
+            envContentCurator, poolManager, productCurator, oc, cm);
 
     }
 
@@ -102,7 +105,7 @@ public class OwnerContentResourceTest {
 
         when(content.getId()).thenReturn("10");
         when(oc.lookupByKey(eq("owner"))).thenReturn(owner);
-        when(cc.createContent(eq(content), eq(owner))).thenReturn(content);
+        when(cm.createContent(eq(content), eq(owner))).thenReturn(content);
 
         assertEquals(content, ocr.createContent("owner", content));
     }
@@ -117,7 +120,7 @@ public class OwnerContentResourceTest {
         when(cc.lookupById(eq(owner), eq("10"))).thenReturn(null);
 
         ocr.createContent("owner", content);
-        verify(cc, atLeastOnce()).createContent(content, owner);
+        verify(cm, atLeastOnce()).createContent(content, owner);
     }
 
     @Test
@@ -136,7 +139,7 @@ public class OwnerContentResourceTest {
 
         ocr.remove("owner", "10");
 
-        verify(cc, atLeastOnce()).removeContent(eq(content), eq(owner));
+        verify(cm, atLeastOnce()).removeContent(eq(content), eq(owner), anyBoolean());
     }
 
     @Test(expected = NotFoundException.class)
@@ -149,7 +152,7 @@ public class OwnerContentResourceTest {
         when(cc.lookupById(eq(owner), eq("10"))).thenReturn(null);
 
         ocr.remove("owner", "10");
-        verify(cc, never()).removeContent(eq(content), eq(owner));
+        verify(cm, never()).removeContent(eq(content), eq(owner), anyBoolean());
     }
 
     @Test
@@ -169,14 +172,14 @@ public class OwnerContentResourceTest {
 
         when(oc.lookupByKey(eq(ownerId))).thenReturn(owner);
         when(cc.lookupById(eq(owner), eq(contentId))).thenReturn(content);
-        when(cc.updateContent(eq(content), eq(owner))).thenReturn(content);
+        when(cm.updateContent(eq(content), eq(owner), anyBoolean())).thenReturn(content);
         when(productCurator.getProductsWithContent(eq(owner), eq(Arrays.asList(contentId))))
             .thenReturn(Arrays.asList(product));
 
         ocr.updateContent(ownerId, contentId, content);
 
         verify(cc).lookupById(eq(owner), eq(contentId));
-        verify(cc).updateContent(eq(content), eq(owner));
+        verify(cm).updateContent(eq(content), eq(owner), anyBoolean());
         verify(productCurator).getProductsWithContent(eq(owner), eq(Arrays.asList(contentId)));
         verify(poolManager).regenerateCertificatesOf(eq(owner), eq(productId), eq(true));
     }

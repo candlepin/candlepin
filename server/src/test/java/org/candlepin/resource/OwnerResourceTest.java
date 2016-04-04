@@ -35,7 +35,9 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -131,6 +133,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Inject private Configuration config;
     @Inject private ImportRecordCurator importRecordCurator;
     @Inject private ContentOverrideValidator contentOverrideValidator;
+    @Inject private ProductManager productManager;
+    @Inject private ContentManager contentManager;
 
     private Owner owner;
     private List<Owner> owners;
@@ -255,8 +259,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         // Trigger the refresh:
         poolManager.getRefresher(subAdapter).add(owner).run();
-        assertNull("Pool not having subscription should have been deleted",
-            poolCurator.find(poolId));
+        assertNull("Pool not having subscription should have been deleted", poolCurator.find(poolId));
     }
 
     @Test
@@ -709,8 +712,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         consumerTypeCurator.create(new ConsumerType("type"));
 
         List<Consumer> results = ownerResource.listConsumers(
-            owner.getKey(), "username", types, uuids, null, null, null, null,
-            null, new PageRequest());
+            owner.getKey(), "username", types, uuids, null, null, null, null, null, new PageRequest()
+        );
 
         assertEquals(0, results.size());
     }
@@ -734,9 +737,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
 
-        assertEquals(1,
-            ownerResource.listConsumers(owner.getKey(), null, null,
-                uuids, null, null, null, null, null, null).size());
+        assertEquals(1, ownerResource.listConsumers(
+            owner.getKey(), null, null, uuids, null, null, null, null, null, null
+        ).size());
     }
 
     /**
@@ -1016,36 +1019,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(akc.lookupForOwner(eq("testKey"), eq(o))).thenReturn(akOld);
         when(oc.lookupByKey(eq("testOwner"))).thenReturn(o);
 
-        OwnerResource or = new OwnerResource(
-            oc,
-            akc,
-            null,
-            i18n,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            contentOverrideValidator,
-            serviceLevelValidator,
-            null,
-            null,
-            null,
-            null,
-            null
+        OwnerResource ownerres = new OwnerResource(
+            oc, akc, null, i18n, null, null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null, null, productManager,
+            contentManager
         );
-        or.createActivationKey("testOwner", ak);
+
+        ownerres.createActivationKey("testOwner", ak);
     }
 
     @Test
@@ -1121,8 +1101,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testImportRecordSuccessWithFilename()
-        throws IOException, ImporterException {
+    public void testImportRecordSuccessWithFilename() throws IOException, ImporterException {
 
         MultipartInput input = mock(MultipartInput.class);
 
@@ -1144,9 +1123,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void importManifestWithNoActiveSubscriptions()
-        throws IOException, ImporterException {
-
+    public void importManifestWithNoActiveSubscriptions() throws IOException, ImporterException {
         MultipartInput input = mock(MultipartInput.class);
         List<Subscription> subscriptions = new ArrayList<Subscription>();
         Map<String, Object> result = new HashMap<String, Object>();
@@ -1156,13 +1133,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ImportRecord record = thisOwnerResource.importManifest(owner.getKey(), new String[0], input);
         assertEquals(ImportRecord.Status.SUCCESS_WITH_WARNING, record.getStatus());
         assertEquals(owner.getKey() + " file imported successfully." +
-                "No active subscriptions found in the file.", record.getStatusMessage());
+            "No active subscriptions found in the file.", record.getStatusMessage());
     }
 
     @Test
-    public void importManifestWithSomeActiveSubscriptions()
-        throws IOException, ImporterException {
-
+    public void importManifestWithSomeActiveSubscriptions() throws IOException, ImporterException {
         MultipartInput input = mock(MultipartInput.class);
         Map<String, Object> result = new HashMap<String, Object>();
         List<Subscription> subscriptions = new ArrayList<Subscription>();
@@ -1181,20 +1156,19 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ImportRecord record = thisOwnerResource.importManifest(owner.getKey(), new String[0], input);
         assertEquals(ImportRecord.Status.SUCCESS_WITH_WARNING, record.getStatus());
         assertEquals(owner.getKey() + " file imported successfully." +
-                "One or more inactive subscriptions found in the file.", record.getStatusMessage());
+            "One or more inactive subscriptions found in the file.", record.getStatusMessage());
         verify(es).emitSubscriptionExpired(subscription);
     }
 
     private OwnerResource setUpSuccesfullImport(MultipartInput input, Map<String, Object> result,
-            EventSink es)
-        throws IOException, ImporterException {
+        EventSink es) throws IOException, ImporterException {
 
         Importer importer = mock(Importer.class);
-        OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null,
-            null, i18n, es, null, null, null, importer, null, null,
-            null, importRecordCurator, null, null, null, null,
-            null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, null, null);
+        OwnerResource thisOwnerResource = new OwnerResource(
+            ownerCurator, null, null, i18n, es, null, null, null, importer, null, null, null,
+            importRecordCurator, null, null, null, null, null, null, null, contentOverrideValidator,
+            serviceLevelValidator, null, null, null, null, null, productManager, contentManager
+        );
 
         InputPart part = mock(InputPart.class);
         File archive = mock(File.class);
@@ -1215,15 +1189,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testImportRecordFailureWithFilename()
-        throws IOException, ImporterException {
+    public void testImportRecordFailureWithFilename() throws IOException, ImporterException {
         Importer importer = mock(Importer.class);
         EventSink es = mock(EventSink.class);
-        OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null,
-            null, i18n, es, null, null, null, importer, null, null,
-            null, importRecordCurator, null, null, null, null,
-            null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, null, null);
+        OwnerResource thisOwnerResource = new OwnerResource(
+            ownerCurator, null, null, i18n, es, null, null, null, importer, null, null, null,
+            importRecordCurator, null, null, null, null, null, null, null, contentOverrideValidator,
+            serviceLevelValidator, null, null, null, null, null, productManager, contentManager
+        );
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1261,10 +1234,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerCurator oc = mock(OwnerCurator.class);
         UpstreamConsumer upstream = mock(UpstreamConsumer.class);
         Owner owner = mock(Owner.class);
-        OwnerResource ownerres = new OwnerResource(oc, null,
-            null, i18n, null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null, null, null,
-            contentOverrideValidator, serviceLevelValidator, null, null, null, null, null);
+        OwnerResource ownerres = new OwnerResource(
+            oc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, contentOverrideValidator, serviceLevelValidator, null,
+            null, null, null, null, productManager, contentManager
+        );
 
         when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
         when(owner.getUpstreamConsumer()).thenReturn(upstream);
@@ -1378,9 +1352,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         List<Pool> pools = poolCurator.listByOwner(owner);
         assertEquals(2, pools.size());
         assertTrue(pools.get(0).getSubscriptionSubKey().startsWith("master") ||
-                pools.get(1).getSubscriptionSubKey().startsWith("master"));
+            pools.get(1).getSubscriptionSubKey().startsWith("master"));
         assertTrue(pools.get(0).getSubscriptionSubKey().equals("derived") ||
-                pools.get(1).getSubscriptionSubKey().equals("derived"));
+            pools.get(1).getSubscriptionSubKey().equals("derived"));
         assertEquals(100L, pools.get(0).getQuantity().longValue());
         assertEquals(300L, pools.get(1).getQuantity().longValue());
     }
@@ -1457,15 +1431,15 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerCurator oc = mock(OwnerCurator.class);
         EntitlementCurator ec = mock(EntitlementCurator.class);
-        OwnerResource ownerres = new OwnerResource(oc, null,
-                null, i18n, null, null, null, null, null, null, null,
-                null, null, null, null, null, ec, null, null, null,
-                null, null, null, null, null, null, null);
+        OwnerResource ownerres = new OwnerResource(
+            oc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null,
+            null, ec, null, null, null, null, null, null, null, null, null, null, productManager,
+            contentManager
+        );
 
         when(oc.lookupByKey(owner.getKey())).thenReturn(owner);
-        when(
-                ec.listByOwner(isA(Owner.class), anyString(), isA(EntitlementFilterBuilder.class),
-                        isA(PageRequest.class))).thenReturn(page);
+        when(ec.listByOwner(isA(Owner.class), anyString(), isA(EntitlementFilterBuilder.class),
+            isA(PageRequest.class))).thenReturn(page);
 
         List<Entitlement> result = ownerres.ownerEntitlements(owner.getKey(), null, null, null, req);
 
@@ -1480,10 +1454,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         req.setPerPage(10);
 
         OwnerCurator oc = mock(OwnerCurator.class);
-        OwnerResource ownerres = new OwnerResource(oc, null,
-                null, i18n, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null);
+        OwnerResource ownerres = new OwnerResource(
+            oc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null, null, productManager,
+            contentManager
+        );
 
         ownerres.ownerEntitlements("Taylor Swift", null, null, null, req);
     }
@@ -1506,7 +1481,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerResource resource = new OwnerResource(
             oc, null, cc, i18n, null, null, null, null, null, cpm, null, null, null, null,
-            null, ecc, ec, ucg, null, null, null, null, null, null, null, null, null
+            null, ecc, ec, ucg, null, null, null, null, null, null, null, null, null,
+            productManager, contentManager
         );
 
         try {
@@ -1542,7 +1518,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerResource resource = new OwnerResource(
             oc, null, cc, i18n, null, null, null, null, null, cpm, null, null, null, null,
-            null, ecc, ec, ucg, null, null, null, null, null, null, null, null, null
+            null, ecc, ec, ucg, null, null, null, null, null, null, null, null, null,
+            productManager, contentManager
         );
 
         when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
@@ -1574,7 +1551,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerResource resource = new OwnerResource(
             oc, null, cc, i18n, null, null, null, null, null, cpm, null, null, null, null,
-            null, ecc, ec, ucg, null, null, null, null, null, null, null, null, null
+            null, ecc, ec, ucg, null, null, null, null, null, null, null, null, null,
+            productManager, contentManager
         );
 
         try {
@@ -1605,7 +1583,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerResource resource = new OwnerResource(
             oc, null, cc, i18n, null, null, null, null, null, cpm, null, null, null, null,
-            null, ecc, ec, ucg, null, null, null, null, null, null, null, null, null
+            null, ecc, ec, ucg, null, null, null, null, null, null, null, null, null,
+            productManager, contentManager
         );
 
         EntitlementCertificate result = resource.createUeberCertificate(principal, "admin");
@@ -1632,9 +1611,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(pm.retrieveServiceLevelsForOwner(eq(o), eq(false))).thenReturn(levels);
 
         OwnerResource resource = new OwnerResource(
-                oc, null, cc, i18n, null, null, null, null, null, pm, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null, null
-            );
+            oc, null, cc, i18n, null, null, null, null, null, pm, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null, null, null,
+            productManager, contentManager
+        );
+
         Set<String> returnLevels = resource.ownerServiceLevels("owner-A", p, "false");
         assert (returnLevels.size() == 1);
         for (String s : returnLevels) {

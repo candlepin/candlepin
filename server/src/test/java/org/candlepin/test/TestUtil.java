@@ -50,6 +50,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -201,18 +202,23 @@ public class TestUtil {
     }
 
     public static Pool createPool(Owner owner, Product product, int quantity) {
-        return createPool(owner, product, new HashSet<Product>(), quantity);
+        return createPool(owner, product, null, quantity);
     }
 
-    public static Pool createPool(Owner owner, Product product, Set<Product> providedProducts,
+    public static Pool createPool(Owner owner, Product product, Collection<Product> providedProducts,
         int quantity) {
 
         String random = String.valueOf(randomInt());
 
+        Set<Product> provided = new HashSet<Product>();
+        if (providedProducts != null) {
+            provided.addAll(providedProducts);
+        }
+
         Pool pool = new Pool(
             owner,
             product,
-            providedProducts,
+            provided,
             Long.valueOf(quantity),
             TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 10, 11, 30),
@@ -226,12 +232,17 @@ public class TestUtil {
         return pool;
     }
 
-    public static Pool createPool(Owner owner, Product product, Set<Product> providedProducts,
-        Product derivedProduct, Set<Product> subProvidedProducts, int quantity) {
+    public static Pool createPool(Owner owner, Product product, Collection<Product> providedProducts,
+        Product derivedProduct, Collection<Product> subProvidedProducts, int quantity) {
 
         Pool pool = createPool(owner, product, providedProducts, quantity);
+        Set<Product> subProvided = new HashSet<Product>();
+        if (subProvidedProducts != null) {
+            subProvided.addAll(subProvidedProducts);
+        }
+
         pool.setDerivedProduct(derivedProduct);
-        pool.setDerivedProvidedProducts(subProvidedProducts);
+        pool.setDerivedProvidedProducts(subProvided);
 
         return pool;
     }

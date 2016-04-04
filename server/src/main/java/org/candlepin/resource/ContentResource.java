@@ -55,9 +55,10 @@ public class ContentResource {
     private OwnerCurator ownerCurator;
 
     @Inject
-    public ContentResource(ContentCurator contentCurator, I18n i18n,
-        UniqueIdGenerator idGenerator, EnvironmentContentCurator envContentCurator,
-        PoolManager poolManager, ProductCurator productCurator, OwnerCurator ownerCurator) {
+    public ContentResource(ContentCurator contentCurator, I18n i18n, UniqueIdGenerator idGenerator,
+        EnvironmentContentCurator envContentCurator, PoolManager poolManager,
+        ProductCurator productCurator, OwnerCurator ownerCurator) {
+
         this.i18n = i18n;
         this.contentCurator = contentCurator;
         this.idGenerator = idGenerator;

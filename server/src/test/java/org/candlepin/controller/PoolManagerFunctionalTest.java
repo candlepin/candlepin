@@ -302,7 +302,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testRegenerateEntitlementCertificatesWithNoEntitlement() {
         reset(this.eventSink); // pool creation events went out from setup
-        poolManager.regenerateEntitlementCertificates(childVirtSystem, true);
+        poolManager.regenerateCertificatesOf(childVirtSystem, true);
         assertEquals(0, collectEntitlementCertIds(this.childVirtSystem).size());
         Mockito.verifyZeroInteractions(this.eventSink);
     }
@@ -513,7 +513,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     private void regenerateECAndAssertNotSameCertificates() {
         Set<EntitlementCertificate> oldsIds =
             collectEntitlementCertIds(this.childVirtSystem);
-        poolManager.regenerateEntitlementCertificates(childVirtSystem, false);
+        poolManager.regenerateCertificatesOf(childVirtSystem, false);
         Mockito.verify(this.eventSink, Mockito.times(oldsIds.size()))
             .queueEvent(any(Event.class));
         Set<EntitlementCertificate> newIds =

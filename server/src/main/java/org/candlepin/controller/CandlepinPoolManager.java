@@ -1380,12 +1380,14 @@ public class CandlepinPoolManager implements PoolManager {
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put(entitlement.getPool().getId(), entitlement);
 
-        List<Entitlement> result = addOrUpdateEntitlements(consumer, poolQuantities, entitlements, true,
-                CallerType.UNKNOWN);
+        List<Entitlement> result = addOrUpdateEntitlements(
+            consumer, poolQuantities, entitlements, true, CallerType.UNKNOWN);
+
         if (CollectionUtils.isNotEmpty(result)) {
             // always going to be one entitlement for a single pool
             return result.get(0);
         }
+
         return null;
     }
 
@@ -1420,9 +1422,9 @@ public class CandlepinPoolManager implements PoolManager {
      */
     @Transactional
     protected List<Entitlement> addOrUpdateEntitlements(Consumer consumer,
-            Map<String, Integer> poolQuantityMap,
-            Map<String, Entitlement> entitlements, boolean generateUeberCert, CallerType caller)
-        throws EntitlementRefusedException {
+        Map<String, Integer> poolQuantityMap, Map<String, Entitlement> entitlements,
+        boolean generateUeberCert, CallerType caller) throws EntitlementRefusedException {
+
         // Because there are several paths to this one place where entitlements
         // are granted, we cannot be positive the caller obtained a lock on the
         // pool when it was read. As such we're going to reload it with a lock
@@ -1445,25 +1447,27 @@ public class CandlepinPoolManager implements PoolManager {
             if (quantity > 0) {
                 quantityFound = true;
             }
+
             poolQuantities.put(pool.getId(), new PoolQuantity(pool, quantity));
             poolQuantityMap.remove(pool.getId());
         }
 
         if (!poolQuantityMap.isEmpty()) {
             throw new IllegalArgumentException(i18n.tr("Subscription pool(s) {0} do not exist.",
-                    poolQuantityMap.keySet()));
+                poolQuantityMap.keySet()));
         }
         if (quantityFound) {
             log.info("Running pre-entitlement rules.");
             // XXX preEntitlement is run twice for new entitlement creation
             Map<String, ValidationResult> results = enforcer.preEntitlement(consumer,
-                    poolQuantities.values(), caller);
+                poolQuantities.values(), caller);
 
             for (Entry<String, ValidationResult> entry : results.entrySet()) {
                 ValidationResult result = entry.getValue();
                 if (!result.isSuccessful()) {
                     log.warn("Entitlement not granted: {} for pool: {}",
-                            result.getErrors().toString(), entry.getKey());
+                        result.getErrors().toString(), entry.getKey());
+
                     throw new EntitlementRefusedException(results);
                 }
             }
@@ -1474,10 +1478,10 @@ public class CandlepinPoolManager implements PoolManager {
             handler = new NewHandler();
         }
         else if (!poolQuantities.keySet().equals(entitlements.keySet())) {
-            throw new IllegalArgumentException(
-                            i18n.tr("Argument mismatch in entitlement update, number of pools: {}," +
-                            " number of entitlements: {}",
-                            entitlements.keySet().size(), poolQuantityMap.keySet().size()));
+            throw new IllegalArgumentException(i18n.tr(
+                "Argument mismatch in entitlement update, number of pools: {}, number of entitlements: {}",
+                entitlements.keySet().size(), poolQuantityMap.keySet().size()
+            ));
         }
         else {
             handler = new UpdateHandler();
@@ -1514,7 +1518,8 @@ public class CandlepinPoolManager implements PoolManager {
         detail.getJobDataMap().put(PinsetterJobListener.PRINCIPAL_KEY, new SystemPrincipal());
 
         log.info("Triggering ConsumerComplianceJob: {} for consumer: {}", detail.getKey(),
-                consumer.getUuid());
+            consumer.getUuid());
+
         try {
             pinsetterKernel.scheduleSingleJob(detail);
         }
@@ -1535,13 +1540,13 @@ public class CandlepinPoolManager implements PoolManager {
      * @param pool
      */
     private void checkBonusPoolQuantities(Map<String, PoolQuantity> poolQuantities,
-            Map<String, Entitlement> entitlements) {
+        Map<String, Entitlement> entitlements) {
+
         Set<String> excludePoolIds = new HashSet<String>();
         Map<String, Entitlement> subEntitlementMap = new HashMap<String, Entitlement>();
         for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
             Pool pool = entry.getValue().getPool();
-            subEntitlementMap.put(pool.getSubscriptionId(),
-                    entitlements.get(entry.getKey()));
+            subEntitlementMap.put(pool.getSubscriptionId(), entitlements.get(entry.getKey()));
             excludePoolIds.add(pool.getId());
         }
 
@@ -1558,7 +1563,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public void regenerateCertificatesOf(Consumer consumer, boolean lazy) {
-        this.regenerateCertificatesOf(consumer, lazy);
+        this.ecGenerator.regenerateCertificatesOf(consumer, lazy);
     }
 
     @Transactional
@@ -1584,7 +1589,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     @Transactional
     public void regenerateCertificatesOf(Environment e, Set<String> affectedContent, boolean lazy) {
-        this.regenerateCertificatesOf(e, affectedContent, lazy);
+        this.ecGenerator.regenerateCertificatesOf(e, affectedContent, lazy);
     }
 
     /**
@@ -1593,13 +1598,13 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     @Transactional
     public void regenerateCertificatesOf(Entitlement e, boolean ueberCertificate, boolean lazy) {
-        this.regenerateCertificatesOf(e, ueberCertificate, lazy);
+        this.ecGenerator.regenerateCertificatesOf(e, ueberCertificate, lazy);
     }
 
     @Override
     @Transactional
     public void regenerateCertificatesOf(Owner owner, String productId, boolean lazy) {
-        this.regenerateCertificatesOf(owner, productId, lazy);
+        this.ecGenerator.regenerateCertificatesOf(owner, productId, lazy);
     }
 
     @Override
