@@ -500,12 +500,12 @@ module Candlepin
           :type => { :label => opts[:type] },
         }.merge(consumer_json)
 
-        consumer_json[:installed_products] = []
+        consumer_json[:installedProducts] = []
         opts[:installed_products].each do |ip|
           if ip.is_a?(Hash)
-            consumer_json[:installed_products] << { :id => ip[:id] }
+            consumer_json[:installedProducts] << ip
           else
-            consumer_json[:installed_products] << { :id => ip }
+            raise RuntimeError.new(":installed_products must be a hash with :productId and :productName")
           end
         end
 
@@ -674,25 +674,42 @@ module Candlepin
       def update_consumer(opts = {})
         defaults = {
           :uuid => uuid,
-          :facts => {},
-          :installed_products => [],
+          :facts => nil,
+          :installed_products => nil,
           :hypervisor_id => nil,
-          :guest_ids => [],
+          :guest_ids => nil,
           :autoheal => true,
           :service_level => nil,
-          :capabilities => [],
+          :capabilities => nil,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :uuid)
+        opts.compact!
 
         body = opts.dup
 
-        body[:capabilities].map! do |name|
-          { :name => name }
+        if opts.key?(:capabilities)
+          body[:capabilities].map! do |name|
+            { :name => name }
+          end
         end
 
-        body[:guest_ids].map! do |id|
-          { :guestId => id }
+        if opts.key?(:guest_ids)
+          body[:guest_ids].map! do |id|
+            { :guestId => id }
+          end
+        end
+
+        if opts.key?(:installed_products)
+          wrap_in_array!(opts, :installed_products)
+          body[:installed_products] = []
+          opts[:installed_products].each do |ip|
+            if ip.is_a?(Hash)
+              body[:installed_products] << ip
+            else
+              raise RuntimeError.new(":installed_products must be a hash or list of hashes with :productId and :productName")
+            end
+          end
         end
 
         body = camelize_hash(body)
