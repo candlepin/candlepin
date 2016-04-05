@@ -182,13 +182,15 @@ public class ContentManager {
 
         for (Content alt : alternateVersions) {
             if (alt.equals(entity)) {
-                entity = this.contentCurator.updateOwnerContentReferences(
-                    existing, alt, Arrays.asList(owner)
-                );
+                List<Owner> owners = Arrays.asList(owner);
+                entity = this.contentCurator.updateOwnerContentReferences(existing, alt, owners);
 
                 if (regenerateEntitlementCerts) {
-                    // TODO:
-                    // regenerate entitlements for affected products for the given org
+                    List<Product> affectedProducts = this.productCurator.getProductsWithContent(
+                        owner, Arrays.asList(entity.getId())
+                    );
+
+                    this.entitlementCertGenerator.regenerateCertificatesOf(owners, affectedProducts, true);
                 }
 
                 return entity;
@@ -200,27 +202,22 @@ public class ContentManager {
             // If we're making the update for every owner using the content, don't bother creating
             // a new version -- just do a raw update.
             if (this.updateInPlace || existing.getOwners().size() == 1) {
-                // The org receiving the update is the only org using it. We can do an in-place
-                // update here.
                 existing.merge(entity);
                 entity = existing;
 
                 this.contentCurator.merge(entity);
 
                 if (regenerateEntitlementCerts) {
-                    List<Product> affectedProducts = this.productCurator.getProductsWithContent(
-                        owner, Arrays.asList(existing.getId())
+                    // Every owner with a pool using any of the affected products needs an update.
+                    this.entitlementCertGenerator.regenerateCertificatesOf(
+                        this.productCurator.getProductsWithContent(Arrays.asList(existing.getUuid())), true
                     );
-
-                    // TODO:
-                    // regenerate entitlements of all products using this content for all owners here.
                 }
             }
             else {
-                List<Owner> owners = Arrays.asList(owner);
-
                 // This org isn't the only org using the content. We need to create a new content
                 // instance and move the org over to the new content.
+                List<Owner> owners = Arrays.asList(owner);
                 Content copy = (Content) entity.clone();
 
                 // Clear the UUID so Hibernate doesn't think our copy is a detached entity
@@ -249,13 +246,11 @@ public class ContentManager {
                         }
                     }
 
+                    // Impl note: This should also take care of our entitlement cert regeneration ??
                     this.productManager.updateProduct(product, owner, regenerateEntitlementCerts);
                 }
 
                 entity = this.contentCurator.updateOwnerContentReferences(existing, copy, owners);
-
-                // TODO:
-                // regenerate entitlements for all affected products only for the given org
             }
         }
 

@@ -168,9 +168,14 @@ public class ProductManager {
 
         for (Product alt : alternateVersions) {
             if (alt.equals(entity)) {
-                return this.productCurator.updateOwnerProductReferences(
-                    existing, alt, Arrays.asList(owner)
-                );
+                List<Owner> owners = Arrays.asList(owner);
+                entity = this.productCurator.updateOwnerProductReferences(existing, alt, owners);
+
+                if (regenerateEntitlementCerts) {
+                    this.entitlementCertGenerator.regenerateCertificatesOf(
+                        owners, Arrays.asList(entity), true
+                    );
+                }
             }
         }
 
@@ -179,18 +184,19 @@ public class ProductManager {
             // If we're making the update for every owner using the product, don't bother creating
             // a new version -- just do a raw update.
             if (this.updateInPlace || existing.getOwners().size() == 1) {
-                // The org receiving the update is the only org using it. We can do an in-place
-                // update here.
                 existing.merge(entity);
                 entity = existing;
 
                 this.productCurator.merge(entity);
+
+                if (regenerateEntitlementCerts) {
+                    this.entitlementCertGenerator.regenerateCertificatesOf(Arrays.asList(entity), true);
+                }
             }
             else {
-                List<Owner> owners = Arrays.asList(owner);
-
                 // This org isn't the only org using the product. We need to create a new product
                 // instance and move the org over to the new product.
+                List<Owner> owners = Arrays.asList(owner);
                 Product copy = (Product) entity.clone();
 
                 // Clear the UUID so Hibernate doesn't think our copy is a detached entity
@@ -204,6 +210,12 @@ public class ProductManager {
                 copy = this.productCurator.create(copy);
 
                 entity = this.productCurator.updateOwnerProductReferences(existing, copy, owners);
+
+                if (regenerateEntitlementCerts) {
+                    this.entitlementCertGenerator.regenerateCertificatesOf(
+                        owners, Arrays.asList(entity), true
+                    );
+                }
             }
         }
 

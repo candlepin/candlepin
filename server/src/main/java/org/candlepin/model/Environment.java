@@ -155,4 +155,9 @@ public class Environment extends AbstractHibernateObject implements Serializable
     public int hashCode() {
         return id.hashCode();
     }
+
+    @Override
+    public String toString() {
+        return String.format("Environment [id: %s, name: %s, owner: %s]", this.id, this.name, this.owner);
+    }
 }

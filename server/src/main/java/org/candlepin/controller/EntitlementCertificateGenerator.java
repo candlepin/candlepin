@@ -26,7 +26,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.version.CertVersionConflictException;
@@ -65,7 +64,6 @@ public class EntitlementCertificateGenerator {
     private EntitlementCertServiceAdapter entCertServiceAdapter;
     private EntitlementCurator entitlementCurator;
     private PoolCurator poolCurator;
-    private ProductCurator productCurator;
 
     private EventSink eventSink;
     private EventFactory eventFactory;
@@ -73,14 +71,12 @@ public class EntitlementCertificateGenerator {
     @Inject
     public EntitlementCertificateGenerator(EntitlementCertificateCurator entitlementCertificateCurator,
         EntitlementCertServiceAdapter entCertServiceAdapter, EntitlementCurator entitlementCurator,
-        PoolCurator poolCurator, ProductCurator productCurator, EventSink eventSink,
-        EventFactory eventFactory) {
+        PoolCurator poolCurator, EventSink eventSink, EventFactory eventFactory) {
 
         this.entitlementCertificateCurator = entitlementCertificateCurator;
         this.entCertServiceAdapter = entCertServiceAdapter;
         this.entitlementCurator = entitlementCurator;
         this.poolCurator = poolCurator;
-        this.productCurator = productCurator;
 
         this.eventSink = eventSink;
         this.eventFactory = eventFactory;
@@ -286,23 +282,25 @@ public class EntitlementCertificateGenerator {
     public void regenerateCertificatesOf(Environment environment, Collection<String> contentIds, boolean lazy) {
         log.info("Regenerating relevant certificates in environment: {}", environment);
 
-        List<Entitlement> allEnvEnts = this.entitlementCurator.listByEnvironment(environment);
+        List<Entitlement> entitlements = this.entitlementCurator.listByEnvironment(environment);
         Set<Entitlement> entsToRegen = new HashSet<Entitlement>();
 
-        for (Entitlement ent : allEnvEnts) {
-            Product prod = this.productCurator.lookupById(ent.getOwner(), ent.getPool().getProductId());
+        entLoop: for (Entitlement entitlement : entitlements) {
+            // Impl note:
+            // Since the entitlements came from the DB, we should be safe to traverse the graph as
+            // necessary without any sanity checks (so long as our model's restrictions aren't
+            // broken).
 
             for (String contentId : contentIds) {
-                if (prod.hasContent(contentId)) {
-                    entsToRegen.add(ent);
+                if (entitlement.getPool().getProduct().hasContent(contentId)) {
+                    entsToRegen.add(entitlement);
+                    continue entLoop;
                 }
-            }
 
-            // Now the provided products:
-            for (Product provided : ent.getPool().getProvidedProducts()) {
-                for (String contentId : contentIds) {
+                for (Product provided : entitlement.getPool().getProvidedProducts()) {
                     if (provided.hasContent(contentId)) {
-                        entsToRegen.add(ent);
+                        entsToRegen.add(entitlement);
+                        continue entLoop;
                     }
                 }
             }
@@ -313,7 +311,8 @@ public class EntitlementCertificateGenerator {
     }
 
     /**
-     * Regenerates the entitlement certificates for all entitlements for the specified product.
+     * Regenerates the entitlement certificates of all entitlements for pools using the specified
+     * product.
      *
      * @param owner
      *  The owner for which to regenerate entitlement certificates
@@ -332,60 +331,89 @@ public class EntitlementCertificateGenerator {
         );
 
         for (Pool pool : pools) {
-            regenerateCertificatesOf(pool.getEntitlements(), lazy);
+            this.regenerateCertificatesOf(pool.getEntitlements(), lazy);
         }
     }
 
     /**
-     * Regenerates the entitlement certificates for all pools using the specified product, effective
-     * for the given owners.
+     * Regenerates the entitlement certificates of all entitlements for pools using the specified
+     * product.
      *
-     * @param products
-     *  A collection of products for which to regenerate affected certificates
+     * @param owner
+     *  The owner for which to regenerate entitlement certificates
      *
-     * @param owners
-     *  A collection of owners for which the certificates should be generated. Pools using the given
-     *  products but not owned by an owner within this collection will not have their certificates
-     *  regenerated.
+     * @param product
+     *  The product for which to regenerate certificates
      *
      * @param lazy
      *  Whether or not to generate the certificate immediately, or mark it dirty and allow it to be
      *  regenerated on-demand
      */
     @Transactional
-    public void regenerateCertificatesOf(Collection<Product> products, Collection<Owner> owners, boolean lazy) {
+    public void regenerateCertificatesOf(Owner owner, Product product, boolean lazy) {
+        this.regenerateCertificatesOf(owner, product.getId(), lazy);
+    }
+
+    /**
+     * Regenerates the entitlement certificates for all pools using any of the the specified
+     * product(s), effective for the given owners.
+     *
+     * @param owners
+     *  A collection of owners for which the certificates should be generated. Pools using the given
+     *  products but not owned by an owner within this collection will not have their certificates
+     *  regenerated.
+     *
+     * @param products
+     *  A collection of products for which to regenerate affected certificates
+     *
+     * @param lazy
+     *  Whether or not to generate the certificate immediately, or mark it dirty and allow it to be
+     *  regenerated on-demand
+     */
+    @Transactional
+    public void regenerateCertificatesOf(Collection<Owner> owners, Collection<Product> products, boolean lazy) {
         List<Pool> pools = new LinkedList<Pool>();
 
-        Date now = new Date();
-
         Set<String> productIds = new HashSet<String>();
-        boolean collectOwners = (owners == null || owners.size() == 0);
-
-        if (owners == null) {
-            owners = new HashSet<Owner>();
-        }
+        Date now = new Date();
 
         for (Product product : products) {
             productIds.add(product.getId());
-
-            if (collectOwners) {
-                owners.addAll(product.getOwners());
-            }
         }
 
+        // TODO: This is a very expensive operation. Update pool curator with something to let us
+        // do this without hitting the DB several times over.
         for (Owner owner : owners) {
-            for (String productId : productIds) {
-                // TODO: This is a very expensive call. Update pool curator with something to let us
-                // do this without hitting the DB several times over.
-                pools.addAll(
-                    this.poolCurator.listAvailableEntitlementPools(null, owner, productId, now, false)
-                );
-            }
+            pools.addAll(
+                this.poolCurator.listAvailableEntitlementPools(null, owner, productIds, now, false)
+            );
         }
 
         for (Pool pool : pools) {
             this.regenerateCertificatesOf(pool.getEntitlements(), lazy);
         }
+    }
+
+    /**
+     * Regenerates the entitlement certificates for all pools using any of the the specified
+     * product(s), effective for the all owners using them.
+     *
+     * @param products
+     *  A collection of products for which to regenerate affected certificates
+     *
+     * @param lazy
+     *  Whether or not to generate the certificate immediately, or mark it dirty and allow it to be
+     *  regenerated on-demand
+     */
+    @Transactional
+    public void regenerateCertificatesOf(Collection<Product> products, boolean lazy) {
+        Set<Owner> owners = new HashSet<Owner>();
+
+        for (Product product : products) {
+            owners.addAll(product.getOwners());
+        }
+
+        this.regenerateCertificatesOf(owners, products, lazy);
     }
 
 }

@@ -131,7 +131,7 @@ public class TestUtil {
         return new Content(
             owner,
             name,
-            name,
+            id,
             name,
             "test-type",
             "test-vendor",
@@ -191,6 +191,10 @@ public class TestUtil {
         );
 
         return sub;
+    }
+
+    public static Pool createPool(Owner owner) {
+        return createPool(owner, createProduct(owner));
     }
 
     public static Pool createPool(Product product) {
@@ -321,17 +325,20 @@ public class TestUtil {
         return idCert;
     }
 
-    public static Entitlement createEntitlement(Owner owner, Consumer consumer,
-        Pool pool, EntitlementCertificate cert) {
+    public static Entitlement createEntitlement(Owner owner, Consumer consumer, Pool pool,
+        EntitlementCertificate cert) {
+
         Entitlement toReturn = new Entitlement();
         toReturn.setOwner(owner);
         toReturn.setPool(pool);
-        toReturn.setOwner(owner);
+
         consumer.addEntitlement(toReturn);
+
         if (cert != null) {
             cert.setEntitlement(toReturn);
             toReturn.getCertificates().add(cert);
         }
+
         return toReturn;
     }
 
