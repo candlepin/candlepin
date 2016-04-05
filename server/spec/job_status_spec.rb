@@ -127,13 +127,16 @@ describe 'Job Status' do
     job = system.consume_product(@monitoring.id, { :async => true })
     status = @user.get_job(job['id'])
     status['id'].should == job['id']
+    # wait for job to complete, or test clean up will conflict with the asynchronous job.
+    wait_for_job(status['id'], 15)
   end
 
   it 'should not allow user to view job status outside of managed org' do
     other_user = user_client(@owner2, random_string("other_user"))
     system = consumer_client(other_user, random_string("another_system"))
     job = system.consume_product(@monitoring.id, { :async => true })
-
+    # wait for job to complete, or test clean up will conflict with the asynchronous job.
+    wait_for_job(job['id'], 15)
     lambda do
       @user.get_job(job['id'])
     end.should raise_exception(RestClient::Forbidden)
@@ -145,6 +148,8 @@ describe 'Job Status' do
     job = system.consume_product(@monitoring.id, { :async => true })
     status = system.get_job(job['id'])
     status['id'].should == job['id']
+    # wait for job to complete, or test clean up will conflict with the asynchronous job.
+    wait_for_job(status['id'], 15)
   end
 
   it 'should not allow consumer to access another consumers job status' do
@@ -153,6 +158,8 @@ describe 'Job Status' do
 
     job = system1.consume_product(@monitoring.id, { :async => true })
     status = system1.get_job(job['id'])
+    # wait for job to complete, or test clean up will conflict with the asynchronous job.
+    wait_for_job(status['id'], 15)
 
     lambda do
       system2.get_job(job['id'])

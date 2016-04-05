@@ -1413,7 +1413,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         log.debug("Locking pools: {}", poolQuantityMap.keySet());
 
-        List<Pool> pools = poolCurator.lockAndLoad(poolQuantityMap.keySet());
+        List<Pool> pools = poolCurator.lockAndLoadBatch(poolQuantityMap.keySet());
 
         if (log.isDebugEnabled()) {
             for (Pool pool : pools) {

@@ -56,6 +56,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.OwnerManager;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.pinsetter.core.GuiceJobFactory;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
@@ -202,6 +203,7 @@ public class CandlepinModule extends AbstractModule {
         bind(Enforcer.class).to(EntitlementRules.class);
         bind(EntitlementRulesTranslator.class);
         bind(PoolManager.class).to(CandlepinPoolManager.class);
+        bind(OwnerManager.class);
         bind(PoolRules.class);
         bind(CriteriaRules.class);
         bind(Entitler.class);

@@ -28,6 +28,7 @@ import org.candlepin.auth.Verify;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.CandlepinException;
+import org.candlepin.common.exceptions.ConflictException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -35,13 +36,12 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.paging.Paginate;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -59,13 +59,9 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfo;
 import org.candlepin.model.OwnerInfoCurator;
-import org.candlepin.model.PermissionBlueprint;
-import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolFilterBuilder;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
@@ -95,6 +91,7 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.exception.ConstraintViolationException;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -120,6 +117,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import javax.persistence.PersistenceException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -157,8 +155,8 @@ public class OwnerResource {
     private Importer importer;
     private ExporterMetadataCurator exportCurator;
     private ImportRecordCurator importRecordCurator;
-    private PermissionBlueprintCurator permissionCurator;
     private PoolManager poolManager;
+    private OwnerManager ownerManager;
     private ConsumerTypeCurator consumerTypeCurator;
     private EntitlementCertificateCurator entitlementCertCurator;
     private EntitlementCurator entitlementCurator;
@@ -167,9 +165,7 @@ public class OwnerResource {
     private CalculatedAttributesUtil calculatedAttributesUtil;
     private ContentOverrideValidator contentOverrideValidator;
     private ServiceLevelValidator serviceLevelValidator;
-    private ProductCurator prodCurator;
     private Configuration config;
-    private ContentCurator contentCurator;
     private ResolverUtil resolverUtil;
 
     @Inject
@@ -183,10 +179,10 @@ public class OwnerResource {
         EventAdapter eventAdapter,
         Importer importer,
         PoolManager poolManager,
+        OwnerManager ownerManager,
         ExporterMetadataCurator exportCurator,
         OwnerInfoCurator ownerInfoCurator,
         ImportRecordCurator importRecordCurator,
-        PermissionBlueprintCurator permCurator,
         ConsumerTypeCurator consumerTypeCurator,
         EntitlementCertificateCurator entitlementCertCurator,
         EntitlementCurator entitlementCurator,
@@ -196,9 +192,7 @@ public class OwnerResource {
         ContentOverrideValidator contentOverrideValidator,
         ServiceLevelValidator serviceLevelValidator,
         OwnerServiceAdapter ownerService,
-        ProductCurator productCurator,
         Configuration config,
-        ContentCurator contentCurator,
         ResolverUtil resolverUtil) {
 
         this.ownerCurator = ownerCurator;
@@ -213,8 +207,8 @@ public class OwnerResource {
         this.exportCurator = exportCurator;
         this.importRecordCurator = importRecordCurator;
         this.poolManager = poolManager;
+        this.ownerManager = ownerManager;
         this.eventAdapter = eventAdapter;
-        this.permissionCurator = permCurator;
         this.consumerTypeCurator = consumerTypeCurator;
         this.entitlementCertCurator = entitlementCertCurator;
         this.entitlementCurator = entitlementCurator;
@@ -224,9 +218,7 @@ public class OwnerResource {
         this.contentOverrideValidator = contentOverrideValidator;
         this.serviceLevelValidator = serviceLevelValidator;
         this.ownerService = ownerService;
-        this.prodCurator = productCurator;
         this.config = config;
-        this.contentCurator = contentCurator;
         this.resolverUtil = resolverUtil;
     }
 
@@ -342,101 +334,21 @@ public class OwnerResource {
     public void deleteOwner(@PathParam("owner_key") String ownerKey,
         @QueryParam("revoke") @DefaultValue("true") boolean revoke) {
         Owner owner = findOwner(ownerKey);
-        Event e = eventFactory.ownerDeleted(owner);
+        Event event = eventFactory.ownerDeleted(owner);
 
-        cleanupAndDelete(owner, revoke);
-
-        sink.queueEvent(e);
-    }
-
-    private void cleanupAndDelete(Owner owner, boolean revokeCerts) {
-        log.info("Cleaning up owner: " + owner);
-        List<Consumer> consumers = consumerCurator.listByOwner(owner);
-
-        for (Consumer c : consumers) {
-            log.info("Removing all entitlements for consumer: {}", c);
-
-            poolManager.revokeAllEntitlements(c, revokeCerts);
+        try {
+            ownerManager.cleanupAndDelete(owner, revoke);
         }
-
-        // Actual consumer deletion had to be moved out of
-        // the loop above since all entitlements needed to
-        // be removed before the deletion occured. This is
-        // due to the sourceConsumer that was added to Pool.
-        // Deleting an entitlement may result in the deletion
-        // of a sub pool, which would cause issues.
-        // FIXME  Perhaps this can be handled a little better.
-        for (Consumer consumer : consumers) {
-            // need to check if this has been removed due to a
-            // parent being deleted
-            // TODO: There has to be a more efficient way to do this...
-            log.info("Deleting consumer: {}", consumer);
-            Consumer next = consumerCurator.find(consumer.getId());
-            if (next != null) {
-                consumerCurator.delete(next);
+        catch (PersistenceException e) {
+            if (e.getCause() instanceof ConstraintViolationException) {
+                throw new ConflictException(e.getMessage(), e);
+            }
+            else {
+                throw e;
             }
         }
 
-        for (ActivationKey key : activationKeyCurator
-            .listByOwner(owner)) {
-            log.info("Deleting activation key: {}", key);
-            activationKeyCurator.delete(key);
-        }
-        for (Environment e : owner.getEnvironments()) {
-            log.info("Deleting environment: {}", e.getId());
-            envCurator.delete(e);
-        }
-
-        for (Pool p : poolManager.listPoolsByOwner(owner)) {
-            log.info("Deleting pool: {}", p);
-            poolManager.deletePool(p);
-        }
-
-        cleanupUeberCert(owner);
-
-        ExporterMetadata m = exportCurator.lookupByTypeAndOwner(
-            ExporterMetadata.TYPE_PER_USER, owner);
-        if (m != null) {
-            log.info("Deleting export metadata: {}", m);
-            exportCurator.delete(m);
-        }
-        for (ImportRecord record : importRecordCurator.findRecords(owner)) {
-            log.info("Deleting import record:  {}", record);
-            importRecordCurator.delete(record);
-        }
-
-        for (PermissionBlueprint perm : permissionCurator.findByOwner(owner)) {
-            log.info("Deleting permission: {}", perm.getAccess());
-            perm.getRole().getPermissions().remove(perm);
-            permissionCurator.delete(perm);
-        }
-
-        for (Product p : prodCurator.listByOwner(owner)) {
-            log.info("Deleting product: {}", p);
-            prodCurator.removeProduct(p, owner);
-        }
-
-        for (Content c : contentCurator.listByOwner(owner)) {
-            log.info("Deleting content: {}", c);
-            contentCurator.removeContent(c, owner);
-        }
-
-        log.info("Deleting owner: {}", owner);
-        ownerCurator.delete(owner);
-    }
-
-    /**
-     * The pool created when generating a uebercert do not appear in the normal list of pools for
-     * that owner, and so do not get cleaned up by the normal operations. Instead we must check if
-     * they exist and explicitly delete them.
-     *
-     * @param owner Owner to check for uebercert pool.
-     */
-    private void cleanupUeberCert(Owner owner) {
-        Pool ueberPool = poolManager.findUeberPool(owner);
-        if (ueberPool != null) {
-            poolManager.deletePool(ueberPool);
-        }
+        sink.queueEvent(event);
     }
 
     /**

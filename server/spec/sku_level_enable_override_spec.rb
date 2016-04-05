@@ -66,7 +66,7 @@ describe 'SKU Level Enable Override' do
   end
 
   it 'sku override for enabled superceded by environment promotion' do
-    env = @org_admin.create_environment(@owner['key'], 'testenv1',
+    env = @org_admin.create_environment(@owner['key'], random_string('testenv'),
       "My Test Env 1", "For test systems only.")
     consumer = @org_admin.register(random_string('consumer'), :system, nil,
         {'system.certificate_version' => '3.2'},
@@ -138,7 +138,7 @@ describe 'SKU Level Enable Override' do
   end
 
   it 'sku override for enabled superceded by environment promotion V1' do
-    env = @org_admin.create_environment(@owner['key'], 'testenv1',
+    env = @org_admin.create_environment(@owner['key'], random_string('testenv'),
       "My Test Env 1", "For test systems only.")
     consumer = @org_admin.register(random_string('consumer'), :system, nil,
         {'system.certificate_version' => '1.0'},

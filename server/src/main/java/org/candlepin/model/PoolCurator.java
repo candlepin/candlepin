@@ -25,7 +25,6 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.persist.Transactional;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
@@ -47,7 +46,6 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -56,8 +54,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
-
-import javax.persistence.LockModeType;
 
 /**
  * EntitlementPoolCurator
@@ -546,37 +542,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return pool;
     }
 
-    public List<Pool> lockAndLoad(Collection<String> ids) {
-        List<Pool> result = new ArrayList<Pool>();
-        if (CollectionUtils.isNotEmpty(ids)) {
-            List<String> idsList = new ArrayList<String>(ids);
-            Collections.sort(idsList);
-
-            log.debug("Locking pools");
-            int listSize = idsList.size();
-            for (int i = 0; i < listSize; i += inClauseLimit) {
-                result.addAll(lockAndLoadInternalOnly(
-                        idsList.subList(i, Math.min(listSize, i + inClauseLimit))));
-            }
-        }
-        return result;
-    }
-
-    /*
-     * Because does not sort, so could lead to dead locks.
-     * also this allows unlimited ids in the inclause which is not safe.
-     * Hence, Not for external use, meant only for supporting the above method.
-     */
-    @SuppressWarnings("unchecked")
-    private List<Pool> lockAndLoadInternalOnly(List<String> ids) {
-        if (CollectionUtils.isEmpty(ids)) {
-            return new ArrayList<Pool>();
-        }
-        return getEntityManager()
-                .createQuery("SELECT p FROM Pool p WHERE id in :ids")
-                .setParameter("ids", ids)
-                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
-                .getResultList();
+    public List<Pool> lockAndLoadBatch(Collection<String> ids) {
+        return lockAndLoadBatch(ids, "Pool", "id");
     }
 
     public void lock(List<Pool> poolsToLock) {
@@ -588,7 +555,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         for (Pool p : poolsToLock) {
             ids.add(p.getId());
         }
-        lockAndLoadInternalOnly(ids);
+        lockAndLoadBatch(ids);
         log.debug("Done locking pools");
     }
 

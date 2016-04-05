@@ -26,6 +26,7 @@ import org.candlepin.util.Util;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -48,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -59,7 +61,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.persistence.LockModeType;
-import javax.persistence.NoResultException;
 
 /**
  * ConsumerCurator
@@ -302,17 +303,12 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return the Consumer matching the given uuid, null if the consumer was not found.
      */
     public Consumer lockAndLoadByUuid(String consumerUuid) {
-        String jpql = "select c from Consumer c where c.uuid = :consumerUuid";
+        List<Consumer> consumerList = lockAndLoadBatch(Arrays.asList(consumerUuid));
+        return (CollectionUtils.isEmpty(consumerList)) ? null : consumerList.get(0);
+    }
 
-        try {
-            return getEntityManager().createQuery(jpql, Consumer.class)
-                .setParameter("consumerUuid", consumerUuid)
-                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
-                .getSingleResult();
-        }
-        catch (NoResultException nre) {
-            return null;
-        }
+    public List<Consumer> lockAndLoadBatch(Collection<String> uuids) {
+        return lockAndLoadBatch(uuids, "Consumer", "uuid");
     }
 
     @Transactional

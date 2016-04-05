@@ -779,7 +779,7 @@ public class PoolManagerTest {
             any(PoolFilterBuilder.class), any(PageRequest.class),
             anyBoolean())).thenReturn(page);
 
-        when(mockPoolCurator.lockAndLoad(any(List.class))).thenReturn(Arrays.asList(pool1));
+        when(mockPoolCurator.lockAndLoadBatch(any(List.class))).thenReturn(Arrays.asList(pool1));
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),
             any(CallerType.class))).thenReturn(result);
 
@@ -828,7 +828,7 @@ public class PoolManagerTest {
                         any(PoolFilterBuilder.class), any(PageRequest.class), anyBoolean())).thenReturn(
                 page);
 
-        when(mockPoolCurator.lockAndLoad(any(List.class))).thenReturn(Arrays.asList(pool1));
+        when(mockPoolCurator.lockAndLoadBatch(any(List.class))).thenReturn(Arrays.asList(pool1));
         when(
                 enforcerMock.preEntitlement(any(Consumer.class), anyCollectionOf(PoolQuantity.class),
                         any(CallerType.class))).thenReturn(resultMap);
@@ -1039,7 +1039,7 @@ public class PoolManagerTest {
             any(PageRequest.class), anyBoolean()))
                 .thenReturn(page);
 
-        when(mockPoolCurator.lockAndLoad(anyListOf(String.class))).thenReturn(pools);
+        when(mockPoolCurator.lockAndLoadBatch(anyListOf(String.class))).thenReturn(pools);
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),
             any(CallerType.class))).thenReturn(result);
 
@@ -2029,7 +2029,7 @@ public class PoolManagerTest {
         assertEquals(3, derivedPool.getConsumed().intValue());
         assertEquals(1, derivedPool.getEntitlements().size());
 
-        when(mockPoolCurator.lockAndLoad(anyCollection())).thenReturn(Arrays.asList(pool));
+        when(mockPoolCurator.lockAndLoadBatch(anyCollection())).thenReturn(Arrays.asList(pool));
 
         when(mockPoolCurator.lookupOversubscribedBySubscriptionIds(anyMap())).thenReturn(
                 Arrays.asList(derivedPool));
@@ -2098,7 +2098,7 @@ public class PoolManagerTest {
         assertEquals(1, derivedPool2.getEntitlements().size());
         assertEquals(2, derivedPool2.getConsumed().intValue());
 
-        when(mockPoolCurator.lockAndLoad(anyCollection())).thenReturn(Arrays.asList(pool));
+        when(mockPoolCurator.lockAndLoadBatch(anyCollection())).thenReturn(Arrays.asList(pool));
 
         when(mockPoolCurator.lookupOversubscribedBySubscriptionIds(anyMap())).thenReturn(
                 Arrays.asList(derivedPool, derivedPool2, derivedPool3));
