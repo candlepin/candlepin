@@ -14,9 +14,9 @@
  */
 package org.candlepin.model.dto;
 
-import org.candlepin.audit.Eventful;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;
+import org.candlepin.model.Eventful;
 import org.candlepin.model.Named;
 import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;

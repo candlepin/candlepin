@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.audit;
+package org.candlepin.model;
 
 /**
  * Marker Interface for objects which may produce events

@@ -14,8 +14,8 @@
  */
 package org.candlepin.model.activationkeys;
 
-import org.candlepin.audit.Eventful;
 import org.candlepin.model.AbstractHibernateObject;
+import org.candlepin.model.Eventful;
 import org.candlepin.model.Named;
 import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;
