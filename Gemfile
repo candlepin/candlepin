@@ -13,6 +13,7 @@ gem 'stringex'
 gem 'digest-murmurhash'
 gem 'httpclient'
 gem 'activesupport'
+gem 'dot-properties'
 
 # Remove this once we are fully using the new Ruby bindings
 gem 'rest-client', '~> 1.6.0'
