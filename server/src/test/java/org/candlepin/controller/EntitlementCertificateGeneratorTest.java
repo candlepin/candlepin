@@ -118,7 +118,7 @@ public class EntitlementCertificateGeneratorTest {
      *  A list of entitlements
      */
     private List<Entitlement> generateEntitlements() {
-        Owner owner = new Owner("test-owner", "Test Owner");
+        Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
 
         Content c1 = TestUtil.createContent(owner, "c1");
         Content c2 = TestUtil.createContent(owner, "c2");
@@ -194,7 +194,7 @@ public class EntitlementCertificateGeneratorTest {
 
     @Test
     public void testLazyRegenerationForProductById() throws Exception {
-        Owner owner = new Owner("test-owner", "Test Owner");
+        Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
         Consumer consumer = TestUtil.createConsumer(owner);
         Product product = TestUtil.createProduct(owner);
         Pool pool = TestUtil.createPool(owner, product);
@@ -215,7 +215,7 @@ public class EntitlementCertificateGeneratorTest {
 
     @Test
     public void testNonLazyRegenerationForProductById() throws Exception {
-        Owner owner = new Owner("test-owner", "Test Owner");
+        Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
         Consumer consumer = TestUtil.createConsumer(owner);
         Product product = TestUtil.createProduct(owner);
         Pool pool = TestUtil.createPool(owner, product);
@@ -242,21 +242,6 @@ public class EntitlementCertificateGeneratorTest {
         verify(this.mockEventSink, times(1)).queueEvent(any(Event.class));
     }
 
-
-    // @Test
-    // public void testLazyRegenerationForOwnerProducts() {
-    //     Owner owner1 = new Owner("test-owner-1", "Test Owner 1");
-    //     Owner owner2 = new Owner("test-owner-2", "Test Owner 2");
-    //     Product prod1 = TestUtil.createProduct(owner1);
-    //     Product prod2 = TestUtil.createProduct(owner2);
-
-
-
-
-
-    // }
-
-
     @Test
     public void testLazyRegenerateForConsumer() {
         Entitlement entitlement = new Entitlement();
@@ -271,7 +256,7 @@ public class EntitlementCertificateGeneratorTest {
 
     @Test
     public void testNonLazyRegenerate() throws Exception {
-        Owner owner = new Owner("test-owner", "Test Owner");
+        Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
         Product product = TestUtil.createProduct(owner);
 
         Pool pool = TestUtil.createPool(owner, product);

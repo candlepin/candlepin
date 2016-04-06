@@ -71,6 +71,14 @@ public class TestUtil {
         return new Owner("Test Owner " + randomInt());
     }
 
+    public static Owner createOwner(String key) {
+        return new Owner(key);
+    }
+
+    public static Owner createOwner(String key, String name) {
+        return new Owner(key, name);
+    }
+
     public static Consumer createConsumer(ConsumerType type, Owner owner) {
         return new Consumer("TestConsumer" + randomInt(), "User", owner, type);
     }

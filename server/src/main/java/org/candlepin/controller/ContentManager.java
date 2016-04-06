@@ -168,7 +168,7 @@ public class ContentManager {
         if (existing == entity) {
             // Nothing to do, really. The caller likely intends for the changes to be persisted, so
             // we can do that for them.
-            return this.contentCurator.merge(existing);
+            return this.contentCurator.merge(entity);
         }
 
         // Check for newer versions of the same content. We want to try to dedupe as much data as we
@@ -183,6 +183,8 @@ public class ContentManager {
         for (Content alt : alternateVersions) {
             if (alt.equals(entity)) {
                 List<Owner> owners = Arrays.asList(owner);
+
+                alt.addOwner(owner);
                 entity = this.contentCurator.updateOwnerContentReferences(existing, alt, owners);
 
                 if (regenerateEntitlementCerts) {

@@ -154,7 +154,7 @@ public class ProductManager {
         if (existing == entity) {
             // Nothing to do, really. The caller likely intends for the changes to be persisted, so
             // we can do that for them.
-            return this.productCurator.merge(existing);
+            return this.productCurator.merge(entity);
         }
 
         // Check for newer versions of the same product. We want to try to dedupe as much data as we
@@ -169,6 +169,8 @@ public class ProductManager {
         for (Product alt : alternateVersions) {
             if (alt.equals(entity)) {
                 List<Owner> owners = Arrays.asList(owner);
+
+                alt.addOwner(owner);
                 entity = this.productCurator.updateOwnerProductReferences(existing, alt, owners);
 
                 if (regenerateEntitlementCerts) {
@@ -176,6 +178,8 @@ public class ProductManager {
                         owners, Arrays.asList(entity), true
                     );
                 }
+
+                return entity;
             }
         }
 
@@ -208,7 +212,6 @@ public class ProductManager {
 
                 this.productCurator.merge(existing);
                 copy = this.productCurator.create(copy);
-
                 entity = this.productCurator.updateOwnerProductReferences(existing, copy, owners);
 
                 if (regenerateEntitlementCerts) {
@@ -261,7 +264,6 @@ public class ProductManager {
         }
 
         existing.removeOwner(owner);
-
         if (existing.getOwners().size() == 0) {
             this.productCurator.delete(existing);
         }
@@ -296,19 +298,21 @@ public class ProductManager {
 
         Set<ProductContent> remove = new HashSet<ProductContent>();
 
-        for (Content test : content) {
-            for (ProductContent pc : product.getProductContent()) {
-                if (test == pc.getContent() || test.equals(pc.getContent())) {
-                    remove.add(pc);
+        if (product.getOwners().contains(owner)) {
+            for (Content test : content) {
+                for (ProductContent pc : product.getProductContent()) {
+                    if (test == pc.getContent() || test.equals(pc.getContent())) {
+                        remove.add(pc);
+                    }
                 }
             }
-        }
 
-        if (remove.size() > 0) {
-            product = (Product) product.clone();
-            product.getProductContent().removeAll(remove);
+            if (remove.size() > 0) {
+                product = (Product) product.clone();
+                product.getProductContent().removeAll(remove);
 
-            return this.updateProduct(product, owner, regenerateEntitlementCerts);
+                return this.updateProduct(product, owner, regenerateEntitlementCerts);
+            }
         }
 
         return product;
