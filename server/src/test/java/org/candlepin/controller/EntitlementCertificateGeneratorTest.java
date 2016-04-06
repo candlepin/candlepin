@@ -40,15 +40,15 @@ import org.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -85,8 +85,58 @@ public class EntitlementCertificateGeneratorTest {
         );
     }
 
-// public Map<String, EntitlementCertificate> generateEntitlementCertificates(Consumer consumer,
-// public EntitlementCertificate generateEntitlementCertificate(Pool pool, Entitlement entitlement,
+    @Test
+    public void testGenerateEntitlementCertificate() throws GeneralSecurityException, IOException {
+        this.ecGenerator = new EntitlementCertificateGenerator(this.mockEntCertCurator,
+                this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
+                this.mockEventSink, this.mockEventFactory);
+        Consumer consumer = mock(Consumer.class);
+        Pool pool = mock(Pool.class);
+        Product product = mock(Product.class);
+        when(pool.getId()).thenReturn("Swift");
+        when(pool.getProduct()).thenReturn(product);
+        Entitlement entitlement = mock(Entitlement.class);
+        when(entitlement.getConsumer()).thenReturn(consumer);
+        EntitlementCertificate entitlementCert = mock(EntitlementCertificate.class);
+        Map<String, EntitlementCertificate> expected = new HashMap<String, EntitlementCertificate>();
+        expected.put("Swift", entitlementCert);
+        when(mockEntCertAdapter.generateUeberCerts(eq(consumer), entMapCaptor.capture(),
+                        productMapCaptor.capture())).thenReturn(expected);
+        EntitlementCertificate result = ecGenerator.generateEntitlementCertificate(pool, entitlement, true);
+        assertEquals(entitlementCert, result);
+    }
+
+    @Test
+    public void testGenerateEntitlementCertificatesUber() throws GeneralSecurityException, IOException {
+        this.ecGenerator = new EntitlementCertificateGenerator(this.mockEntCertCurator,
+                this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
+                this.mockEventSink, this.mockEventFactory);
+        Consumer consumer = mock(Consumer.class);
+        Product product = mock(Product.class);
+        Entitlement entitlement = mock(Entitlement.class);
+        Map<String, Product> products = new HashMap<String, Product>();
+        products.put("Taylor", product);
+        Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
+        entitlements.put("Taylor", entitlement);
+        ecGenerator.generateEntitlementCertificates(consumer, products, entitlements, true);
+        verify(mockEntCertAdapter).generateUeberCerts(eq(consumer), eq(entitlements), eq(products));
+    }
+
+    @Test
+    public void testGenerateEntitlementCertificates() throws GeneralSecurityException, IOException {
+        this.ecGenerator = new EntitlementCertificateGenerator(this.mockEntCertCurator,
+            this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
+            this.mockEventSink, this.mockEventFactory);
+        Consumer consumer = mock(Consumer.class);
+        Product product = mock(Product.class);
+        Entitlement entitlement = mock(Entitlement.class);
+        Map<String, Product> products = new HashMap<String, Product>();
+        products.put("Taylor", product);
+        Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
+        entitlements.put("Taylor", entitlement);
+        ecGenerator.generateEntitlementCertificates(consumer, products, entitlements, false);
+        verify(mockEntCertAdapter).generateEntitlementCerts(eq(consumer), eq(entitlements), eq(products));
+    }
 
     @Test
     public void testLazyRegenerateForEntitlement() {
