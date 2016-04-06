@@ -345,7 +345,7 @@ describe 'One Sub Pool Per Stack' do
     @host2_client.update_consumer({:guestIds => [{'guestId' => @guest_uuid}]})
 
     # Need to wait a moment here for MySQL to catch up
-    sleep 2
+    sleep 4
 
     # Guest entitlement should now be revoked.
     @guest_client.list_entitlements.length.should == 0
