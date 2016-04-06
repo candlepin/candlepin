@@ -522,6 +522,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
                 .append(this.gpgUrl, that.gpgUrl)
                 .append(this.metadataExpire, that.metadataExpire)
                 .append(this.arches, that.arches)
+                .append(this.locked, that.locked)
                 .isEquals();
 
             if (equals) {
@@ -554,7 +555,8 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
             .append(this.releaseVer)
             .append(this.gpgUrl)
             .append(this.metadataExpire)
-            .append(this.arches);
+            .append(this.arches)
+            .append(this.locked);
 
         // Impl note:
         // Because we handle the collections specially in .equals, we have to do the same special
