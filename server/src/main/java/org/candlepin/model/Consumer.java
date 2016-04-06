@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.audit.Eventful;
 import org.candlepin.common.jackson.HateoasArrayExclude;
 import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;

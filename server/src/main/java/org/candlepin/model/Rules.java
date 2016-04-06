@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.audit.Eventful;
 import org.candlepin.policy.js.RuleParseException;
 
 import org.hibernate.annotations.GenericGenerator;
