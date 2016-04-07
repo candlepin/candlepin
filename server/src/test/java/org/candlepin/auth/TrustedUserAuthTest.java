@@ -14,7 +14,6 @@
  */
 package org.candlepin.auth;
 
-import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -77,8 +76,7 @@ public class TrustedUserAuthTest {
     @Test
     public void normalTrustedAuth() throws Exception {
         headerMap.add(TrustedUserAuth.USER_HEADER, USERNAME);
-        Principal p = auth.getPrincipal(request);
-        assertThat(p, is(TrustedUserPrincipal.class));
+        TrustedUserPrincipal p = (TrustedUserPrincipal) auth.getPrincipal(request);
         verify(userService, never()).validateUser(any(String.class), any(String.class));
         verify(userService, never()).findByLogin(any(String.class));
         assertTrue(p.hasFullAccess());
@@ -94,8 +92,7 @@ public class TrustedUserAuthTest {
         User u = new User(USERNAME, "pass");
         when(userService.findByLogin(eq(USERNAME))).thenReturn(u);
 
-        Principal p = auth.getPrincipal(request);
-        assertThat(p, is(UserPrincipal.class));
+        UserPrincipal p = (UserPrincipal) auth.getPrincipal(request);
 
         // This shouldn't attempt to verify a password:
         verify(userService, never()).validateUser(any(String.class), any(String.class));

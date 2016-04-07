@@ -14,7 +14,7 @@
  */
 package org.candlepin.policy;
 
-import static org.hamcrest.collection.IsCollectionContaining.*;
+import static org.hamcrest.Matchers.hasItems;
 import static org.junit.Assert.*;
 import static org.mockito.AdditionalAnswers.*;
 import static org.mockito.Matchers.eq;

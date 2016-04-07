@@ -15,6 +15,7 @@
 package org.candlepin.util;
 
 import static org.candlepin.test.MatchesPattern.matchesPattern;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import org.apache.commons.io.FileUtils;
@@ -34,7 +35,6 @@ import org.bouncycastle.jce.provider.X509CRLEntryObject;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
-import org.hamcrest.number.OrderingComparisons;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -303,7 +303,7 @@ public class X509CRLStreamWriterTest {
             changedCrl.getNextUpdate().getTime() - changedCrl.getThisUpdate().getTime();
 
         assertEquals(changedCrlUpdateDelta, oneHourHence.getTime() - oneHourAgo.getTime());
-        assertThat(changedCrl.getThisUpdate(), OrderingComparisons.greaterThan(originalCrl.getThisUpdate()));
+        assertThat(changedCrl.getThisUpdate(), greaterThan(originalCrl.getThisUpdate()));
 
         assertEquals(newSerials, discoveredSerials);
         assertEquals(originalCrl.getIssuerX500Principal(), changedCrl.getIssuerX500Principal());

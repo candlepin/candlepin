@@ -14,7 +14,8 @@
  */
 package org.candlepin.controller;
 
-import static org.hamcrest.collection.IsCollectionContaining.*;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
