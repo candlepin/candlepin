@@ -20,7 +20,9 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Product;
@@ -44,6 +46,7 @@ import java.util.Set;
 import javax.inject.Inject;
 
 
+
 /**
  * OwnerProductResourceTest
  */
@@ -52,6 +55,8 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
     @Inject private ContentCurator contentCurator;
     @Inject private OwnerProductResource ownerProductResource;
     @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductManager productManager;
+    @Inject private Configuration config;
 
     private Product createProduct(Owner owner) {
         String label = "test_product";
@@ -79,9 +84,11 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         Product toSubmit = createProduct(owner);
         String  contentHash = String.valueOf(
             Math.abs(Long.valueOf("test-content".hashCode())));
-        Content testContent = new Content(owner, "test-content", contentHash,
-            "test-content-label", "yum", "test-vendor",
-            "test-content-url", "test-gpg-url", "test-arch");
+
+        Content testContent = new Content(
+            owner, "test-content", contentHash, "test-content-label", "yum", "test-vendor",
+            "test-content-url", "test-gpg-url", "test-arch"
+        );
 
         HashSet<Content> contentSet = new HashSet<Content>();
         testContent = contentCurator.create(testContent);
@@ -96,7 +103,8 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         ProductCurator pc = mock(ProductCurator.class);
         OwnerCurator oc = mock(OwnerCurator.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        OwnerProductResource pr = new OwnerProductResource(pc, null, oc, null, i18n);
+        OwnerProductResource pr = new OwnerProductResource(pc, null, oc, null, productManager,
+            config, i18n);
 
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);

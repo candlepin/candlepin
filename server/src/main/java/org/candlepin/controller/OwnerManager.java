@@ -48,28 +48,17 @@ import java.util.List;
  */
 public class OwnerManager {
 
-    @Inject
-    private static Logger log = LoggerFactory.getLogger(OwnerManager.class);
-    @Inject
-    private ConsumerCurator consumerCurator;
-    @Inject
-    private PoolManager poolManager;
-    @Inject
-    private ActivationKeyCurator activationKeyCurator;
-    @Inject
-    private EnvironmentCurator envCurator;
-    @Inject
-    private ExporterMetadataCurator exportCurator;
-    @Inject
-    private ImportRecordCurator importRecordCurator;
-    @Inject
-    private PermissionBlueprintCurator permissionCurator;
-    @Inject
-    private ProductCurator prodCurator;
-    @Inject
-    private ContentCurator contentCurator;
-    @Inject
-    private OwnerCurator ownerCurator;
+    @Inject private static Logger log = LoggerFactory.getLogger(OwnerManager.class);
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private PoolManager poolManager;
+    @Inject private ActivationKeyCurator activationKeyCurator;
+    @Inject private EnvironmentCurator envCurator;
+    @Inject private ExporterMetadataCurator exportCurator;
+    @Inject private ImportRecordCurator importRecordCurator;
+    @Inject private PermissionBlueprintCurator permissionCurator;
+    @Inject private ProductCurator prodCurator;
+    @Inject private ContentCurator contentCurator;
+    @Inject private OwnerCurator ownerCurator;
 
     @Transactional
     public void cleanupAndDelete(Owner owner, boolean revokeCerts) {

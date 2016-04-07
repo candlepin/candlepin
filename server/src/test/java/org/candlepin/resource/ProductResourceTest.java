@@ -20,7 +20,10 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Pool;
@@ -61,6 +64,8 @@ public class ProductResourceTest extends DatabaseTestFixture {
     @Inject private ProductResource productResource;
     @Inject private OwnerCurator ownerCurator;
     @Inject private ProductCurator productCurator;
+    @Inject private Configuration config;
+    @Inject private I18n i18n;
 
     private Product createProduct(Owner owner) {
         String label = "test_product";
@@ -86,11 +91,12 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
 
         Product toSubmit = createProduct(owner);
-        String  contentHash = String.valueOf(
-            Math.abs(Long.valueOf("test-content".hashCode())));
-        Content testContent = new Content(owner, "test-content", contentHash,
-            "test-content-label", "yum", "test-vendor",
-            "test-content-url", "test-gpg-url", "test-arch");
+        String  contentHash = String.valueOf(Math.abs(Long.valueOf("test-content".hashCode())));
+
+        Content testContent = new Content(
+            owner, "test-content", contentHash, "test-content-label", "yum", "test-vendor",
+            "test-content-url", "test-gpg-url", "test-arch"
+        );
 
         HashSet<Content> contentSet = new HashSet<Content>();
         testContent = contentCurator.create(testContent);
@@ -104,7 +110,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     public void testDeleteProductWithSubscriptions() {
         ProductCurator pc = mock(ProductCurator.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        ProductResource pr = new ProductResource(pc, null, null, i18n);
+        ProductResource pr = new ProductResource(pc, null, null, config, i18n);
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);
         when(pc.lookupById(eq(o), eq("10"))).thenReturn(p);
@@ -232,6 +238,13 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testRefreshPoolsByProduct() {
+        Configuration config = new MapConfiguration(this.config);
+        config.setProperty(ConfigProperties.STANDALONE, "false");
+
+        ProductResource productResource = new ProductResource(
+            this.productCurator, this.ownerCurator, this.productCertificateCurator, config, this.i18n
+        );
+
         List<Owner> owners = this.setupDBForOwnerProdTests();
         Owner owner1 = owners.get(0);
         Owner owner2 = owners.get(1);

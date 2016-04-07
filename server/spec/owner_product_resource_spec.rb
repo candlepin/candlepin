@@ -132,6 +132,91 @@ describe 'Owner Product Resource' do
     pool.should have(0).things
   end
 
+  def setupOrgProductsAndPools()
+    owner1 = create_owner(random_string("owner"))
+    owner2 = create_owner(random_string("owner"))
+    owner3 = create_owner(random_string("owner"))
+
+    prod1o1 = create_product("p1", "p1", { :owner => owner1['key'] })
+    prod1o2 = create_product("p1", "p1", { :owner => owner2['key'] })
+    prod1o3 = create_product("p1", "p1", { :owner => owner3['key'] })
+
+    prod2o1 = create_product("p2", "p2", { :owner => owner1['key'] })
+    prod2o2 = create_product("p2", "p2", { :owner => owner2['key'] })
+
+    prod3o2 = create_product("p3", "p3", { :owner => owner2['key'] })
+    prod3o3 = create_product("p3", "p3", { :owner => owner3['key'] })
+
+    prod4 = create_product("p4", "p4", { :owner => owner1['key'] })
+    prod4d = create_product("p4d", "p4d", { :owner => owner1['key'] })
+    prod5 = create_product("p5", "p5", { :owner => owner2['key'] })
+    prod5d = create_product("p5d", "p5d", { :owner => owner2['key'] })
+    prod6 = create_product("p6", "p6", { :owner => owner3['key'] })
+    prod6d = create_product("p6d", "p6d", { :owner => owner3['key'] })
+
+    @cp.create_pool(owner1['key'], "p4", {
+      :derived_product_id         => "p4d",
+      :provided_products          => ["p1"],
+      :derived_provided_products  => ["p2"]
+    });
+
+    @cp.create_pool(owner2['key'], "p5", {
+      :derived_product_id         => "p5d",
+      :provided_products          => ["p1", "p2"],
+      :derived_provided_products  => ["p3"]
+    });
+
+    @cp.create_pool(owner3['key'], "p6", {
+      :derived_product_id         => "p6d",
+      :provided_products          => ["p1"],
+      :derived_provided_products  => ["p3"]
+    });
+
+    return [owner1, owner2, owner3]
+  end
+
+  it "refreshes pools for orgs owning products" do
+    pending("candlepin running in standalone mode") if not is_hosted?
+
+    owners = setupOrgProductsAndPools()
+    owner1 = owners[0]
+    owner2 = owners[1]
+    owner3 = owners[2]
+
+    # Override enabled to true:
+    jobs = @cp.refresh_pools_for_product(owner1['key'], ["p4"])
+    jobs.length.should == 1
+    jobs.each do |job|
+      job['id'].should include("refresh_pools")
+      wait_for_job(job['id'], 15)
+    end
+
+    jobs = @cp.refresh_pools_for_product(owner2['key'], ["p5d"])
+    jobs.length.should == 1
+    jobs.each do |job|
+      job['id'].should include("refresh_pools")
+      wait_for_job(job['id'], 15)
+    end
+
+    jobs = @cp.refresh_pools_for_product(owner3['key'], ["p1"])
+    jobs.length.should == 3
+    jobs.each do |job|
+      job['id'].should include("refresh_pools")
+      wait_for_job(job['id'], 15)
+    end
+
+    jobs = @cp.refresh_pools_for_product(owner3['key'], ["p3"])
+    jobs.length.should == 2
+    jobs.each do |job|
+      job['id'].should include("refresh_pools")
+      wait_for_job(job['id'], 15)
+    end
+
+    lambda do
+      @cp.refresh_pools_for_product(["nope"])
+    end.should raise_exception(RestClient::BadRequest)
+  end
+
   it 'lists all products in bulk fetch' do
     prod1_id = random_string("test_id")
     prod2_id = random_string("test_id")

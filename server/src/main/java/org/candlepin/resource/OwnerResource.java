@@ -36,8 +36,13 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.paging.Paginate;
 import org.candlepin.config.ConfigProperties;
+<<<<<<< HEAD
+import org.candlepin.controller.ContentManager;
+=======
 import org.candlepin.controller.OwnerManager;
+>>>>>>> master
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -167,6 +172,8 @@ public class OwnerResource {
     private ServiceLevelValidator serviceLevelValidator;
     private Configuration config;
     private ResolverUtil resolverUtil;
+    private ProductManager productManager;
+    private ContentManager contentManager;
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator,
@@ -179,10 +186,10 @@ public class OwnerResource {
         EventAdapter eventAdapter,
         Importer importer,
         PoolManager poolManager,
-        OwnerManager ownerManager,
         ExporterMetadataCurator exportCurator,
         OwnerInfoCurator ownerInfoCurator,
         ImportRecordCurator importRecordCurator,
+        PermissionBlueprintCurator permCurator,
         ConsumerTypeCurator consumerTypeCurator,
         EntitlementCertificateCurator entitlementCertCurator,
         EntitlementCurator entitlementCurator,
@@ -192,8 +199,12 @@ public class OwnerResource {
         ContentOverrideValidator contentOverrideValidator,
         ServiceLevelValidator serviceLevelValidator,
         OwnerServiceAdapter ownerService,
+        ProductCurator productCurator,
         Configuration config,
-        ResolverUtil resolverUtil) {
+        ContentCurator contentCurator,
+        ResolverUtil resolverUtil,
+        ProductManager productManager,
+        ContentManager contentManager) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -220,6 +231,8 @@ public class OwnerResource {
         this.ownerService = ownerService;
         this.config = config;
         this.resolverUtil = resolverUtil;
+        this.productManager = productManager;
+        this.contentManager = contentManager;
     }
 
     /**
@@ -374,8 +387,8 @@ public class OwnerResource {
         Owner owner = findOwner(ownerKey);
 
         EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
-        Page<List<Entitlement>> entitlementsPage = entitlementCurator.listByOwner(owner, productId, filters,
-            pageRequest);
+        Page<List<Entitlement>> entitlementsPage = entitlementCurator
+            .listByOwner(owner, productId, filters, pageRequest);
 
         // Store the page for the LinkHeaderPostInterceptor
         ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);
@@ -430,8 +443,7 @@ public class OwnerResource {
             }
         }
         // test is on the string "true" and is case insensitive.
-        return poolManager.retrieveServiceLevelsForOwner(owner,
-            Boolean.parseBoolean(exempt));
+        return poolManager.retrieveServiceLevelsForOwner(owner, Boolean.parseBoolean(exempt));
     }
 
     /**
@@ -480,11 +492,11 @@ public class OwnerResource {
         activationKey.setOwner(owner);
 
         if (StringUtils.isBlank(activationKey.getName())) {
-            throw new BadRequestException(
-                i18n.tr("Must provide a name for activation key."));
+            throw new BadRequestException(i18n.tr("Must provide a name for activation key."));
         }
 
         String testName = activationKey.getName().replace("-", "0").replace("_", "0");
+
         if (!testName.matches("[a-zA-Z0-9]*")) {
             throw new BadRequestException(
                 i18n.tr("The activation key name ''{0}'' must be alphanumeric or " +
@@ -626,6 +638,7 @@ public class OwnerResource {
         @QueryParam("subscription_id") List<String> subscriptionIds,
         @QueryParam("contract") List<String> contracts,
         @Context PageRequest pageRequest) {
+
         Owner owner = findOwner(ownerKey);
         List<ConsumerType> types = null;
         if (typeLabels != null && !typeLabels.isEmpty()) {
@@ -717,8 +730,8 @@ public class OwnerResource {
             poolFilters.addMatchesFilter(matches);
         }
 
-        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, key, owner, productId,
-            subscriptionId, activeOnDate, true, listAll, poolFilters, pageRequest
+        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(
+            c, key, owner, productId, subscriptionId, activeOnDate, true, listAll, poolFilters, pageRequest
         );
         List<Pool> poolList = page.getPageData();
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);
@@ -739,12 +752,10 @@ public class OwnerResource {
     @GET
     @Produces("application/atom+xml")
     @Path("{owner_key}/atom")
-    public Feed getOwnerAtomFeed(@PathParam("owner_key")
-        @Verify(Owner.class) String ownerKey) {
+    public Feed getOwnerAtomFeed(@PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner o = findOwner(ownerKey);
         String path = String.format("/owners/%s/atom", ownerKey);
-        Feed feed = this.eventAdapter.toFeed(
-            this.eventCurator.listMostRecent(FEED_LIMIT, o), path);
+        Feed feed = this.eventAdapter.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT, o), path);
         feed.setTitle("Event feed for owner " + o.getDisplayName());
         return feed;
     }
@@ -759,8 +770,7 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/events")
-    public List<Event> getEvents(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+    public List<Event> getEvents(@PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner o = findOwner(ownerKey);
         List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT, o);
         if (events != null) {
@@ -1005,9 +1015,7 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
-    public void updatePool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        Pool newPool) {
-
+    public void updatePool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey, Pool newPool) {
         Pool currentPool = this.poolManager.find(newPool.getId());
         if (currentPool == null) {
             throw new NotFoundException(i18n.tr(
@@ -1275,8 +1283,7 @@ public class OwnerResource {
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
         Owner o = findOwner(ownerKey);
         if (o == null) {
-            throw new NotFoundException(i18n.tr(
-                "owner with key: {0} was not found.", ownerKey));
+            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", ownerKey));
         }
 
         // returning as a list for future proofing. today we support one, but

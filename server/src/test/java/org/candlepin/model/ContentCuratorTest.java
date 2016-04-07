@@ -43,10 +43,10 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         ownerCurator.create(owner);
 
         updates = new Content(
-            this.owner,
-            "Test Content 1", "100",
-            "test-content-label-1", "yum-1", "test-vendor-1",
-            "test-content-url-1", "test-gpg-url-1", "test-arch1,test-arch2");
+            this.owner, "Test Content 1", "100", "test-content-label-1", "yum-1", "test-vendor-1",
+            "test-content-url-1", "test-gpg-url-1", "test-arch1,test-arch2"
+        );
+
         updates.setRequiredTags("required-tags");
         updates.setReleaseVer("releaseVer");
         updates.setMetadataExpire(new Long(1));
@@ -56,14 +56,14 @@ public class ContentCuratorTest extends DatabaseTestFixture {
     @Test
     public void shouldUpdateContentWithNewValues() {
         Content toBeUpdated = new Content(
-            this.owner,
-            "Test Content", updates.getId(),
-            "test-content-label", "yum", "test-vendor",
-            "test-content-url", "test-gpg-url", "test-arch1");
-        contentCurator.createContent(toBeUpdated, owner);
+            this.owner, "Test Content", updates.getId(), "test-content-label", "yum", "test-vendor",
+            "test-content-url", "test-gpg-url", "test-arch1"
+        );
+
+        contentCurator.create(toBeUpdated);
 
         updates.setUuid(toBeUpdated.getUuid());
-        toBeUpdated = contentCurator.updateContent(updates, owner);
+        toBeUpdated = contentCurator.merge(updates);
 
         assertEquals(toBeUpdated.getName(), updates.getName());
         assertEquals(toBeUpdated.getLabel(), updates.getLabel());
@@ -75,18 +75,5 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         assertEquals(toBeUpdated.getMetadataExpire(), updates.getMetadataExpire());
         assertEquals(toBeUpdated.getModifiedProductIds(), updates.getModifiedProductIds());
         assertEquals(toBeUpdated.getArches(), updates.getArches());
-    }
-
-    @Test
-    public void importSameContentForMultipleProducts() {
-        // TODO: This test may not have any value now since we no longer have a createOrUpdate
-        // method that needs to work on the same content twice.
-
-        Content c1 = new Content(owner, "mycontent", "5006", "mycontent", "yum",
-            "vendor", "nobodycares", "nobodystillcares", "x86_64");
-        Content c2 = new Content(owner, "mycontent", "5006", "mycontent", "yum",
-            "vendor", "nobodycares", "nobodystillcares", "x86_64");
-        contentCurator.createContent(c1, owner);
-        contentCurator.updateContent(c2, owner);
     }
 }

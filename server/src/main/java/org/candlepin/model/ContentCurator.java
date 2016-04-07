@@ -23,10 +23,8 @@ import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -39,12 +37,13 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
 
     private static Logger log = LoggerFactory.getLogger(ContentCurator.class);
 
-    @Inject
     private ProductCurator productCurator;
 
-
-    public ContentCurator() {
+    @Inject
+    public ContentCurator(ProductCurator productCurator) {
         super(Content.class);
+
+        this.productCurator = productCurator;
     }
 
     // Needs an override due to the use of UUID as db identifier.
@@ -146,7 +145,7 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
      * @return
      *  a reference to the updated content
      */
-    protected Content updateOwnerContentReferences(Content current, Content updated,
+    public Content updateOwnerContentReferences(Content current, Content updated,
         Collection<Owner> owners) {
         // Impl note:
         // We're doing this in straight SQL because direct use of the ORM would require querying all
@@ -209,16 +208,13 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
      * Removes the references to the specified content object from all other objects for the given
      * owner.
      *
-     * @param current
+     * @param content
      *  The content instance other objects are referencing
      *
      * @param owners
      *  A collection of owners for which to apply the reference removal
-     *
-     * @return
-     *  a reference to the updated content
      */
-    protected void removeOwnerContentReferences(Content content, Collection<Owner> owners) {
+    public void removeOwnerContentReferences(Content content, Collection<Owner> owners) {
         // Impl note:
         // As is the case in updateOwnerContentReferences, HQL's bulk delete doesn't allow us to
         // touch anything that even looks like a join. As such, we have to do this in vanilla SQL.
@@ -249,209 +245,6 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
 
         int ecCount = this.safeSQLUpdateWithCollection(sql, ids, content.getUuid());
         log.debug("{} environment-content relations updated", ecCount);
-    }
-
-    /**
-     * Creates a new Content for the given owner, potentially using a different version than the
-     * entity provided if a matching entity has already been registered for another owner.
-     *
-     * @param entity
-     *  A Content instance representing the content to create
-     *
-     * @param owner
-     *  The owner for which to create the content
-     *
-     * @return
-     *  a new Content instance representing the specified content for the given owner
-     */
-    @Transactional
-    public Content createContent(Content entity, Owner owner) {
-        Content existing = this.lookupById(owner, entity.getId());
-
-        if (existing != null) {
-            // If we're doing an exclusive creation, this should be an error condition
-            throw new IllegalStateException("Content has already been created");
-        }
-
-        // Check if we have an alternate version we can use instead.
-
-        // TODO: Not sure if we really even need the version check. If we have any other matching
-        // content, we should probably use it -- regardless of the actual version value.
-        List<Content> alternateVersions = this.getContentByVersion(entity.getId(), entity.hashCode());
-
-        for (Content alt : alternateVersions) {
-            if (alt.equals(entity)) {
-                // If we're "creating" a content, we shouldn't have any other object references to
-                // update for this content. Instead, we'll just add the new owner to the content.
-                alt.addOwner(owner);
-
-                return this.merge(alt);
-            }
-        }
-
-        entity.addOwner(owner);
-        return this.create(entity);
-    }
-
-    /**
-     * Updates the specified content instance, creating a new version of the content as necessary.
-     * The content instance returned by this method is not guaranteed to be the same instance passed
-     * in. As such, once this method has been called, callers should only use the instance output by
-     * this method.
-     *
-     * @param entity
-     *  The content entity to update
-     *
-     * @param owner
-     *  The owner for which to update the content
-     *
-     * @return
-     *  the updated content entity, or a new content entity
-     */
-    @Transactional
-    public Content updateContent(Content entity, Owner owner) {
-        log.debug("Applying content update for org: {}, {}", entity, owner);
-
-        if (entity == null) {
-            throw new NullPointerException("entity");
-        }
-
-        // This has to fetch a new instance, or we'll be unable to compare the objects
-        Content existing = this.lookupById(owner, entity.getId());
-
-        if (existing == null) {
-            // If we're doing an exclusive update, this should be an error condition
-            throw new IllegalStateException("Content has not yet been created");
-        }
-
-        if (existing == entity) {
-            // Nothing to do, really. The caller likely intends for the changes to be persisted, so
-            // we can do that for them.
-            return this.merge(existing);
-        }
-
-        // Check for newer versions of the same content. We want to try to dedupe as much data as we
-        // can, and if we have a newer version of the content (which matches the version provided by
-        // the caller), we can just point the given orgs to the new content instead of giving them
-        // their own version.
-        // This is probably going to be a very expensive operation, though.
-
-        // TODO:
-        // We could just use the current hashcode here with some Hibernate auto-updating magic to
-        // determine if two contents are equal rather than relying on an outside value we may never
-        // receive
-
-        List<Content> alternateVersions = this.getContentByVersion(entity.getId(), entity.hashCode());
-
-        for (Content alt : alternateVersions) {
-            if (alt.equals(entity)) {
-                return this.updateOwnerContentReferences(existing, alt, Arrays.asList(owner));
-            }
-        }
-
-        // Make sure we actually have something to update.
-        if (!existing.equals(entity)) {
-            // If we're making the update for every owner using the content, don't bother creating
-            // a new version -- just do a raw update.
-            if (existing.getOwners().size() == 1) {
-                // The org receiving the update is the only org using it. We can do an in-place
-                // update here.
-                existing.merge(entity);
-                entity = existing;
-
-                this.merge(entity);
-            }
-            else {
-                List<Owner> owners = Arrays.asList(owner);
-
-                // This org isn't the only org using the content. We need to create a new content
-                // instance and move the org over to the new content.
-                Content copy = (Content) entity.clone();
-
-                // Clear the UUID so Hibernate doesn't think our copy is a detached entity
-                copy.setUuid(null);
-
-                // Get products that currently use this content...
-                List<Product> affectedProducts =
-                    this.productCurator.getProductsWithContent(owner, Arrays.asList(existing.getId()));
-
-                // Set the owner so when we create it, we don't end up with duplicate keys...
-                existing.removeOwner(owner);
-                copy.setOwners(owners);
-
-                this.merge(existing);
-                copy = this.create(copy);
-
-                // Update the products using this content so they are regenerated using the new
-                // content
-                for (Product product : affectedProducts) {
-                    product = (Product) product.clone();
-
-                    for (ProductContent pc : product.getProductContent()) {
-                        if (existing == pc.getContent() || existing.equals(pc.getContent())) {
-                            pc.setContent(copy);
-                        }
-                    }
-
-                    this.productCurator.updateProduct(product, owner);
-                }
-
-                entity = this.updateOwnerContentReferences(existing, copy, owners);
-            }
-        }
-
-        return entity;
-    }
-
-    /**
-     * Removes the specification
-     *
-     * @param entity
-     *  The content entity to remove
-     *
-     * @param owner
-     *  The owner for which to remove the content
-     *
-     * @return
-     *  a list of products affected by the removal of the given content
-     */
-    @Transactional
-    public List<Product> removeContent(Content entity, Owner owner) {
-        log.debug("Removing content for org: {}, {}", entity, owner);
-
-        if (entity == null) {
-            throw new NullPointerException("entity");
-        }
-
-        // This has to fetch a new instance, or we'll be unable to compare the objects
-        Content existing = this.lookupById(owner, entity.getId());
-
-        if (existing == null) {
-            // If we're doing an exclusive update, this should be an error condition
-            throw new IllegalStateException("Content has not yet been created");
-        }
-
-        List<Product> affectedProducts =
-            this.productCurator.getProductsWithContent(owner, Arrays.asList(existing.getId()));
-
-        existing.removeOwner(owner);
-        if (existing.getOwners().size() == 0) {
-            this.delete(existing);
-        }
-
-        // Clean up any dangling references to content
-        this.removeOwnerContentReferences(existing, Arrays.asList(owner));
-
-        // Update affected products and regenerate their certs
-        List<Product> updatedAffectedProducts = new LinkedList<Product>();
-        List<Content> contentList = Arrays.asList(existing);
-
-        for (Product product : affectedProducts) {
-            product = this.productCurator.removeProductContent(product, contentList, owner);
-            updatedAffectedProducts.add(product);
-        }
-
-        return updatedAffectedProducts;
     }
 
 }

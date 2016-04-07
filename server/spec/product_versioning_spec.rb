@@ -20,7 +20,7 @@ describe 'Product Versioning' do
     prod1 = @cp.create_product(owner1["key"], id, name)
     prod2 = @cp.create_product(owner2["key"], id, name)
 
-    prod1["uuid"].should == prod2["uuid"]
+    prod1["uuid"].should eq(prod2["uuid"])
   end
 
   it "creates two distinct product instances when details differ" do
@@ -35,7 +35,7 @@ describe 'Product Versioning' do
     prod1 = @cp.create_product(owner1["key"], id, name)
     prod2 = @cp.create_product(owner2["key"], id, name + "2")
 
-    prod1["uuid"].should_not == prod2["uuid"]
+    prod1["uuid"].should_not eq(prod2["uuid"])
   end
 
   it "creates a new product instance when an org updates a shared instance" do
@@ -52,24 +52,24 @@ describe 'Product Versioning' do
     prod2 = @cp.create_product(owner2["key"], id, name)
     prod3 = @cp.create_product(owner3["key"], id, name)
 
-    prod1["uuid"].should == prod2["uuid"]
-    prod1["uuid"].should == prod3["uuid"]
+    prod1["uuid"].should eq(prod2["uuid"])
+    prod1["uuid"].should eq(prod3["uuid"])
 
     prod4 = @cp.update_product(owner2["key"], id, { :name => "new product name" })
-    prod4["uuid"].should_not == prod1["uuid"]
+    prod4["uuid"].should_not eq(prod1["uuid"])
 
     prods = @cp.list_products_by_owner(owner2["key"])
-    prods.size.should == 1
-    prods[0]["uuid"].should == prod4["uuid"]
-    prods[0]["uuid"].should_not == prod2["uuid"]
+    prods.size.should eq(1)
+    prods[0]["uuid"].should eq(prod4["uuid"])
+    prods[0]["uuid"].should_not eq(prod2["uuid"])
 
     prods = @cp.list_products_by_owner(owner1["key"])
-    prods.size.should == 1
-    prods[0]["uuid"].should == prod1["uuid"]
+    prods.size.should eq(1)
+    prods[0]["uuid"].should eq(prod1["uuid"])
 
     prods = @cp.list_products_by_owner(owner3["key"])
-    prods.size.should == 1
-    prods[0]["uuid"].should == prod3["uuid"]
+    prods.size.should eq(1)
+    prods[0]["uuid"].should eq(prod3["uuid"])
   end
 
   it "converges products when a given version already exists" do
@@ -86,25 +86,25 @@ describe 'Product Versioning' do
     prod2 = @cp.create_product(owner2["key"], id, name)
     prod3 = @cp.create_product(owner3["key"], id, "differing product name")
 
-    prod1["uuid"].should == prod2["uuid"]
-    prod2["uuid"].should_not == prod3["uuid"]
+    prod1["uuid"].should eq(prod2["uuid"])
+    prod2["uuid"].should_not eq(prod3["uuid"])
 
     prod4 = @cp.update_product(owner3["key"], id, { :name => name })
 
-    prod4["uuid"].should == prod1["uuid"]
+    prod4["uuid"].should eq(prod1["uuid"])
 
     prods = @cp.list_products_by_owner(owner1["key"])
-    prods.size.should == 1
-    prods[0]["uuid"].should == prod1["uuid"]
+    prods.size.should eq(1)
+    prods[0]["uuid"].should eq(prod1["uuid"])
 
     prods = @cp.list_products_by_owner(owner2["key"])
-    prods.size.should == 1
-    prods[0]["uuid"].should == prod2["uuid"]
+    prods.size.should eq(1)
+    prods[0]["uuid"].should eq(prod2["uuid"])
 
     prods = @cp.list_products_by_owner(owner3["key"])
-    prods.size.should == 1
-    prods[0]["uuid"].should == prod1["uuid"]
-    prods[0]["uuid"].should_not == prod3["uuid"]
+    prods.size.should eq(1)
+    prods[0]["uuid"].should eq(prod1["uuid"])
+    prods[0]["uuid"].should_not eq(prod3["uuid"])
   end
 
   it "deletes products without affecting other orgs" do
@@ -119,20 +119,20 @@ describe 'Product Versioning' do
     prod1 = @cp.create_product(owner1["key"], id, name)
     prod2 = @cp.create_product(owner2["key"], id, name)
 
-    prod1["uuid"].should == prod2["uuid"]
+    prod1["uuid"].should eq(prod2["uuid"])
 
     @cp.delete_product(owner1["key"], id)
 
     prods = @cp.list_products_by_owner(owner1["key"])
-    prods.size.should == 0
+    prods.size.should eq(0)
 
     lambda do
       @cp.get_product(owner1["key"], id)
     end.should raise_exception(RestClient::ResourceNotFound)
 
     prods = @cp.list_products_by_owner(owner2["key"])
-    prods.size.should == 1
-    prods[0]["uuid"].should == prod2["uuid"]
+    prods.size.should eq(1)
+    prods[0]["uuid"].should eq(prod2["uuid"])
   end
 
   it "creates new products when adding content to shared products" do
@@ -147,7 +147,7 @@ describe 'Product Versioning' do
     prod1 = @cp.create_product(owner1["key"], id, name)
     prod2 = @cp.create_product(owner2["key"], id, name)
 
-    prod1["uuid"].should == prod2["uuid"]
+    prod1["uuid"].should eq(prod2["uuid"])
 
 
     content_id = random_string("content")
@@ -161,19 +161,19 @@ describe 'Product Versioning' do
     )
 
     prod3 = @cp.add_content_to_product(owner1["key"], id, content_id)
-    prod3["uuid"].should_not == prod1["uuid"]
-    prod3["uuid"].should_not == prod2["uuid"]
+    prod3["uuid"].should_not eq(prod1["uuid"])
+    prod3["uuid"].should_not eq(prod2["uuid"])
 
     prods = @cp.list_products_by_owner(owner1["key"])
-    prods.size.should == 1
-    prods[0]["uuid"].should == prod3["uuid"]
-    prods[0]["uuid"].should_not == prod1["uuid"]
-    prods[0]["uuid"].should_not == prod2["uuid"]
+    prods.size.should eq(1)
+    prods[0]["uuid"].should eq(prod3["uuid"])
+    prods[0]["uuid"].should_not eq(prod1["uuid"])
+    prods[0]["uuid"].should_not eq(prod2["uuid"])
 
     prods = @cp.list_products_by_owner(owner2["key"])
-    prods.size.should == 1
-    prods[0]["uuid"].should == prod2["uuid"]
-    prods[0]["uuid"].should_not == prod3["uuid"]
+    prods.size.should eq(1)
+    prods[0]["uuid"].should eq(prod2["uuid"])
+    prods[0]["uuid"].should_not eq(prod3["uuid"])
   end
 
   it "creates new products when updating content used by shared products" do
@@ -188,7 +188,7 @@ describe 'Product Versioning' do
     prod1 = @cp.create_product(owner1["key"], id, name)
     prod2 = @cp.create_product(owner2["key"], id, name)
 
-    prod1["uuid"].should == prod2["uuid"]
+    prod1["uuid"].should eq(prod2["uuid"])
 
 
     content_id = random_string("content")
@@ -206,43 +206,42 @@ describe 'Product Versioning' do
 
     prod3 = @cp.add_content_to_product(owner1["key"], id, content_id)
     prod4 = @cp.add_content_to_product(owner2["key"], id, content_id)
-    prod3["uuid"].should_not == prod1["uuid"]
-    prod3["uuid"].should_not == prod2["uuid"]
-    prod4["uuid"].should_not == prod1["uuid"]
-    prod4["uuid"].should_not == prod2["uuid"]
-    prod3["uuid"].should == prod4["uuid"]
+    prod3["uuid"].should_not eq(prod1["uuid"])
+    prod3["uuid"].should_not eq(prod2["uuid"])
+    prod4["uuid"].should_not eq(prod1["uuid"])
+    prod4["uuid"].should_not eq(prod2["uuid"])
+    prod3["uuid"].should eq(prod4["uuid"])
 
     prods = @cp.list_products_by_owner(owner1["key"])
-    prods.size.should == 1
-    prods[0]["uuid"].should == prod3["uuid"]
-    prods[0]["uuid"].should_not == prod1["uuid"]
-    prods[0]["uuid"].should_not == prod2["uuid"]
+    prods.size.should eq(1)
+    prods[0]["uuid"].should eq(prod3["uuid"])
+    prods[0]["uuid"].should_not eq(prod1["uuid"])
+    prods[0]["uuid"].should_not eq(prod2["uuid"])
 
     prods = @cp.list_products_by_owner(owner2["key"])
-    prods.size.should == 1
-    prods[0]["uuid"].should == prod4["uuid"]
-    prods[0]["uuid"].should_not == prod1["uuid"]
-    prods[0]["uuid"].should_not == prod2["uuid"]
+    prods.size.should eq(1)
+    prods[0]["uuid"].should eq(prod4["uuid"])
+    prods[0]["uuid"].should_not eq(prod1["uuid"])
+    prods[0]["uuid"].should_not eq(prod2["uuid"])
 
     # Actual test starts here
     content3 = @cp.update_content(owner1["key"], content_id, {:label => "new label"})
 
     prods = @cp.list_products_by_owner(owner1["key"])
-    prods.size.should == 1
-    prods[0]["uuid"].should_not == prod1["uuid"]
-    prods[0]["uuid"].should_not == prod2["uuid"]
-    prods[0]["uuid"].should_not == prod3["uuid"]
-    prods[0]["uuid"].should_not == prod4["uuid"]
+    prods.size.should eq(1)
+    prods[0]["uuid"].should_not eq(prod1["uuid"])
+    prods[0]["uuid"].should_not eq(prod2["uuid"])
+    prods[0]["uuid"].should_not eq(prod3["uuid"])
+    prods[0]["uuid"].should_not eq(prod4["uuid"])
 
     prods = @cp.list_products_by_owner(owner2["key"])
-    prods.size.should == 1
-    prods[0]["uuid"].should == prod4["uuid"]
-    prods[0]["uuid"].should_not == prod1["uuid"]
-    prods[0]["uuid"].should_not == prod2["uuid"]
+    prods.size.should eq(1)
+    prods[0]["uuid"].should eq(prod4["uuid"])
+    prods[0]["uuid"].should_not eq(prod1["uuid"])
+    prods[0]["uuid"].should_not eq(prod2["uuid"])
   end
 
   # TODO ? :
   # - Updating a shared product used by another resource properly links the new product
 
 end
-
