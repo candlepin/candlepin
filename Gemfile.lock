@@ -30,7 +30,7 @@ GEM
       xml-simple (= 1.1.2)
     buildr-findBugs (0.1.1)
       buildr (>= 1.4.0)
-    byebug (8.2.2)
+    byebug (8.2.4)
     coderay (1.1.1)
     debug_inspector (0.0.2)
     diff-lcs (1.2.4)
@@ -51,7 +51,7 @@ GEM
     oauth (0.5.1)
     orderedhash (0.0.6)
     parallel (1.8.0)
-    parallel_tests (2.4.1)
+    parallel_tests (2.5.0)
       parallel
     parser (2.3.0.7)
       ast (~> 2.2)

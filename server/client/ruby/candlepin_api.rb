@@ -674,7 +674,7 @@ class Candlepin
     return async_call(immediate) do
       url="/owners/#{owner_key}/products/#{product_id}/subscriptions?"
       url += "lazy_regen=false&" if !lazy_regen
-      put(url)
+      return put(url)
     end
   end
 

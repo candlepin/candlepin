@@ -16,9 +16,12 @@ package org.candlepin.resource;
 
 import org.candlepin.auth.Verify;
 import org.candlepin.common.auth.SecurityHole;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
@@ -70,17 +73,21 @@ public class OwnerProductResource {
     private ContentCurator contentCurator;
     private OwnerCurator ownerCurator;
     private ProductCertificateCurator productCertCurator;
+    private ProductManager productManager;
+    private Configuration config;
     private I18n i18n;
-
 
     @Inject
     public OwnerProductResource(ProductCurator productCurator, ContentCurator contentCurator,
-        OwnerCurator ownerCurator, ProductCertificateCurator productCertCurator, I18n i18n) {
+        OwnerCurator ownerCurator, ProductCertificateCurator productCertCurator,
+        ProductManager productManager, Configuration config, I18n i18n) {
 
         this.productCurator = productCurator;
         this.contentCurator = contentCurator;
-        this.productCertCurator = productCertCurator;
         this.ownerCurator = ownerCurator;
+        this.productCertCurator = productCertCurator;
+        this.productManager = productManager;
+        this.config = config;
         this.i18n = i18n;
     }
 
@@ -264,7 +271,7 @@ public class OwnerProductResource {
 
         Owner owner = this.getOwnerByKey(ownerKey);
 
-        return productCurator.createProduct(product, owner);
+        return productManager.createProduct(product, owner);
     }
 
     /**
@@ -291,7 +298,7 @@ public class OwnerProductResource {
             throw new ForbiddenException(i18n.tr("product \"{1}\" is locked", product.getId()));
         }
 
-        return this.productCurator.updateProduct(((Product) existing.clone()).merge(product), owner);
+        return this.productManager.updateProduct(((Product) existing.clone()).merge(product), owner, true);
     }
 
     /**
@@ -322,13 +329,14 @@ public class OwnerProductResource {
 
         this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
         product = (Product) product.clone();
+        boolean change = false;
 
         for (Entry<String, Boolean> entry : contentMap.entrySet()) {
             Content content = this.fetchContent(owner, entry.getKey());
-            product.addContent(content, entry.getValue());
+            change = product.addContent(content, entry.getValue()) || change;
         }
 
-        return this.productCurator.updateProduct(product, owner);
+        return change ? this.productManager.updateProduct(product, owner, true) : product;
     }
 
     /**
@@ -361,9 +369,9 @@ public class OwnerProductResource {
         this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
 
         product = (Product) product.clone();
-        product.addContent(content, enabled);
-
-        return this.productCurator.updateProduct(product, owner);
+        return product.addContent(content, enabled) ?
+            this.productManager.updateProduct(product, owner, true) :
+            product;
     }
 
     /**
@@ -389,7 +397,7 @@ public class OwnerProductResource {
         }
 
         // Remove content
-        this.productCurator.removeProductContent(product, Arrays.asList(content), owner);
+        this.productManager.removeProductContent(product, Arrays.asList(content), owner, true);
     }
 
     /**
@@ -414,7 +422,7 @@ public class OwnerProductResource {
             throw new ForbiddenException(i18n.tr("product \"{1}\" is locked", product.getId()));
         }
 
-        if (productCurator.productHasSubscriptions(product, owner)) {
+        if (this.productCurator.productHasSubscriptions(product, owner)) {
             throw new BadRequestException(
                 i18n.tr(
                     "Product with ID ''{0}'' cannot be deleted while subscriptions exist.",
@@ -423,7 +431,7 @@ public class OwnerProductResource {
             );
         }
 
-        this.productCurator.removeProduct(product, owner);
+        this.productManager.removeProduct(product, owner);
     }
 
     /**
@@ -443,6 +451,11 @@ public class OwnerProductResource {
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
+
+        if (config.getBoolean(ConfigProperties.STANDALONE)) {
+            log.warn("Ignoring refresh pools request due to standalone config.");
+            return null;
+        }
 
         Product product = this.getProduct(ownerKey, productId);
 

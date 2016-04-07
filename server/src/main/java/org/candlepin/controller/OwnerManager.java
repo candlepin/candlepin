@@ -48,28 +48,19 @@ import java.util.List;
  */
 public class OwnerManager {
 
-    @Inject
-    private static Logger log = LoggerFactory.getLogger(OwnerManager.class);
-    @Inject
-    private ConsumerCurator consumerCurator;
-    @Inject
-    private PoolManager poolManager;
-    @Inject
-    private ActivationKeyCurator activationKeyCurator;
-    @Inject
-    private EnvironmentCurator envCurator;
-    @Inject
-    private ExporterMetadataCurator exportCurator;
-    @Inject
-    private ImportRecordCurator importRecordCurator;
-    @Inject
-    private PermissionBlueprintCurator permissionCurator;
-    @Inject
-    private ProductCurator prodCurator;
-    @Inject
-    private ContentCurator contentCurator;
-    @Inject
-    private OwnerCurator ownerCurator;
+    @Inject private static Logger log = LoggerFactory.getLogger(OwnerManager.class);
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private PoolManager poolManager;
+    @Inject private ActivationKeyCurator activationKeyCurator;
+    @Inject private EnvironmentCurator envCurator;
+    @Inject private ExporterMetadataCurator exportCurator;
+    @Inject private ImportRecordCurator importRecordCurator;
+    @Inject private PermissionBlueprintCurator permissionCurator;
+    @Inject private ProductCurator prodCurator;
+    @Inject private ProductManager prodManager;
+    @Inject private ContentCurator contentCurator;
+    @Inject private ContentManager contentManager;
+    @Inject private OwnerCurator ownerCurator;
 
     @Transactional
     public void cleanupAndDelete(Owner owner, boolean revokeCerts) {
@@ -144,7 +135,7 @@ public class OwnerManager {
 
         for (Product p : prodCurator.listByOwner(owner)) {
             log.info("Deleting product: {}", p);
-            prodCurator.removeProduct(p, owner);
+            this.prodManager.removeProduct(p, owner);
         }
 
         /*
@@ -153,7 +144,7 @@ public class OwnerManager {
         contentCurator.flush();
         for (Content c : contentCurator.listByOwner(owner)) {
             log.info("Deleting content: {}", c);
-            contentCurator.removeContent(c, owner);
+            this.contentManager.removeContent(c, owner, false);
         }
 
         log.info("Deleting owner: {}", owner);

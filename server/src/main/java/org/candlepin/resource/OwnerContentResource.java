@@ -17,13 +17,13 @@ package org.candlepin.resource;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.service.UniqueIdGenerator;
 
@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -65,11 +64,12 @@ public class OwnerContentResource {
     private OwnerCurator ownerCurator;
     private PoolManager poolManager;
     private ProductCurator productCurator;
+    private ContentManager contentManager;
 
     @Inject
     public OwnerContentResource(ContentCurator contentCurator, I18n i18n, UniqueIdGenerator idGenerator,
         EnvironmentContentCurator envContentCurator, PoolManager poolManager,
-        ProductCurator productCurator, OwnerCurator ownerCurator) {
+        ProductCurator productCurator, OwnerCurator ownerCurator, ContentManager contentManager) {
 
         this.i18n = i18n;
         this.contentCurator = contentCurator;
@@ -78,6 +78,7 @@ public class OwnerContentResource {
         this.poolManager = poolManager;
         this.productCurator = productCurator;
         this.ownerCurator = ownerCurator;
+        this.contentManager = contentManager;
     }
 
     /**
@@ -179,16 +180,16 @@ public class OwnerContentResource {
 
         if (content.getId() == null || content.getId().trim().length() == 0) {
             content.setId(this.idGenerator.generateId());
-            content = this.contentCurator.createContent(content, owner);
+            content = this.contentManager.createContent(content, owner);
         }
         else {
             Content lookedUp = this.contentCurator.lookupById(owner, content.getId());
 
             if (lookedUp != null) {
-                content = this.contentCurator.updateContent(content, owner);
+                content = this.contentManager.updateContent(content, owner, true);
             }
             else {
-                content = this.contentCurator.createContent(content, owner);
+                content = this.contentManager.createContent(content, owner);
             }
         }
 
@@ -254,17 +255,7 @@ public class OwnerContentResource {
             throw new ForbiddenException(i18n.tr("content \"{1}\" is locked", content.getId()));
         }
 
-        content = this.contentCurator.updateContent(((Content) existing.clone()).merge(content), owner);
-
-        // require regeneration of entitlement certificates of affected consumers
-        List<Product> affectedProducts =
-            this.productCurator.getProductsWithContent(owner, Arrays.asList(contentId));
-
-        for (Product product : affectedProducts) {
-            poolManager.regenerateCertificatesOf(owner, product.getId(), true);
-        }
-
-        return content;
+        return this.contentManager.updateContent(((Content) existing.clone()).merge(content), owner, true);
     }
 
     /**
@@ -285,11 +276,6 @@ public class OwnerContentResource {
             throw new ForbiddenException(i18n.tr("content \"{1}\" is locked", content.getId()));
         }
 
-        List<Product> affectedProducts = this.contentCurator.removeContent(content, owner);
-
-        // Regenerate affected product certs as dirty...
-        for (Product product : affectedProducts) {
-            poolManager.regenerateCertificatesOf(owner, product.getId(), true);
-        }
+        this.contentManager.removeContent(content, owner, true);
     }
 }

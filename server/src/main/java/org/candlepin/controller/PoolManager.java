@@ -143,7 +143,7 @@ public interface PoolManager {
 
     void regenerateCertificatesOf(Owner owner, String productId, boolean lazy);
 
-    void regenerateEntitlementCertificates(Consumer consumer, boolean lazy);
+    void regenerateCertificatesOf(Consumer consumer, boolean lazy);
 
     int revokeAllEntitlements(Consumer consumer);
     int revokeAllEntitlements(Consumer consumer, boolean regenCertsAndStatuses);
