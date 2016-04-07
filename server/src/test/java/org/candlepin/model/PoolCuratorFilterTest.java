@@ -24,6 +24,7 @@ import org.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -101,7 +102,7 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
 
     private void searchTest(PoolFilterBuilder filters, int expectedResults, String ... expectedIds) {
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, null, null, null, false, filters, req, false
+            null, owner, (Collection<String>) null, null, null, false, filters, req, false
         );
         List<Pool> results = page.getPageData();
 

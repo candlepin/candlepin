@@ -925,7 +925,7 @@ public class ConsumerResource {
             toUpdate.setEnvironment(e);
 
             // lazily regenerate certs, so the client can still work
-            poolManager.regenerateEntitlementCertificates(toUpdate, true);
+            poolManager.regenerateCertificatesOf(toUpdate, true);
             changesMade = true;
         }
 
@@ -1892,7 +1892,7 @@ public class ConsumerResource {
         }
         else {
             Consumer c = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-            poolManager.regenerateEntitlementCertificates(c, lazyRegen);
+            poolManager.regenerateCertificatesOf(c, lazyRegen);
         }
     }
 

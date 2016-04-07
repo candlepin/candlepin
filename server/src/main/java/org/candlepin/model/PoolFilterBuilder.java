@@ -30,7 +30,10 @@ import org.hibernate.sql.JoinType;
 
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 
@@ -43,7 +46,7 @@ public class PoolFilterBuilder extends FilterBuilder {
 
     private String alias = "";
     private List<String> matchFilters = new ArrayList<String>();
-    private String productIdFilter;
+    private Set<String> productIds;
     private String subscriptionIdFilter;
 
     public PoolFilterBuilder() {
@@ -56,8 +59,8 @@ public class PoolFilterBuilder extends FilterBuilder {
 
     @Override
     public void applyTo(Criteria parentCriteria) {
-        if (productIdFilter != null && !productIdFilter.isEmpty()) {
-            applyProductIdFilter(parentCriteria);
+        if (productIds != null && productIds.size() > 0) {
+            this.applyProductIdFilter(parentCriteria);
         }
 
         if (subscriptionIdFilter != null && !subscriptionIdFilter.isEmpty()) {
@@ -71,7 +74,21 @@ public class PoolFilterBuilder extends FilterBuilder {
     }
 
     public void setProductIdFilter(String productId) {
-        this.productIdFilter = productId;
+        if (this.productIds == null) {
+            this.productIds = new HashSet<String>();
+        }
+
+        this.productIds.clear();
+        this.productIds.add(productId);
+    }
+
+    public void setProductIdFilter(Collection<String> productIds) {
+        if (this.productIds == null) {
+            this.productIds = new HashSet<String>();
+        }
+
+        this.productIds.clear();
+        this.productIds.addAll(productIds);
     }
 
     public void setSubscriptionIdFilter(String subscriptionId) {
@@ -105,8 +122,8 @@ public class PoolFilterBuilder extends FilterBuilder {
             .createAlias("providedProducts", "provided", JoinType.LEFT_OUTER_JOIN)
             .add(Property.forName(originalPoolAlias + "id").eqProperty("Pool2.id"))
             .add(Restrictions.disjunction()
-                .add(Restrictions.eq("product.id", this.productIdFilter))
-                .add(Restrictions.eq("provided.id", productIdFilter)))
+                .add(Restrictions.in("product.id", this.productIds))
+                .add(Restrictions.in("provided.id", this.productIds)))
             .setProjection(Projections.property("Pool2.id"));
 
         parent.add(Subqueries.exists(prodCrit));

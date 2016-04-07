@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -48,14 +47,18 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
     private static Logger log = LoggerFactory.getLogger(ProductCurator.class);
 
-    @Inject private Configuration config;
-    @Inject private I18n i18n;
+    private Configuration config;
+    private I18n i18n;
 
     /**
      * default ctor
      */
-    public ProductCurator() {
+    @Inject
+    public ProductCurator(Configuration config, I18n i18n) {
         super(Product.class);
+
+        this.config = config;
+        this.i18n = i18n;
     }
 
     /**
@@ -94,12 +97,8 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     @Deprecated
     @Transactional
     public Product lookupById(String id) {
-        // This provides an interesting problem in that we don't have a way to reference a specific
-        // version of the product. Since we're using a timestamp for the version, we can use the
-        // max value as our tiebreaker
-
-        return (Product) this.createSecureCriteria()
-            .add(Restrictions.eq("id", id)).uniqueResult();
+        List<Product> products = (List<Product>) this.createSecureCriteria().add(Restrictions.eq("id", id));
+        return products.size() > 0 ? products.get(0) : null;
     }
 
     /**
@@ -317,7 +316,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @return
      *  a reference to the updated product
      */
-    protected Product updateOwnerProductReferences(Product current, Product updated,
+    public Product updateOwnerProductReferences(Product current, Product updated,
         Collection<Owner> owners) {
         // Impl note:
         // We're doing this in straight SQL because direct use of the ORM would require querying all
@@ -427,7 +426,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @param owners
      *  A collection of owners for which to apply the reference changes
      */
-    protected void removeOwnerProductReferences(Product entity, Collection<Owner> owners) {
+    public void removeOwnerProductReferences(Product entity, Collection<Owner> owners) {
         // Impl note:
         // We're doing this in straight SQL because direct use of the ORM would require querying all
         // of these objects and the available HQL refuses to do any joining (implicit or otherwise),
@@ -502,227 +501,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     public void delete(Product entity) {
         Product toDelete = find(entity.getUuid());
         currentSession().delete(toDelete);
-    }
-
-    /**
-     * Creates a new Product for the given owner, potentially using a different version than the
-     * entity provided if a matching entity has already been registered for another owner.
-     *
-     * @param entity
-     *  A Product instance representing the product to create
-     *
-     * @param owner
-     *  The owner for which to create the product
-     *
-     * @return
-     *  a new Product instance representing the specified product for the given owner
-     */
-    @Transactional
-    public Product createProduct(Product entity, Owner owner) {
-        log.debug("Creating new product instance from entity: {}, {}", entity, owner);
-
-        Product existing = this.lookupById(owner, entity.getId());
-
-        if (existing != null) {
-            // If we're doing an exclusive creation, this should be an error condition
-            throw new IllegalStateException("Product has already been created");
-        }
-
-        // Check if we have an alternate version we can use instead.
-
-        // TODO: Not sure if we really even need the version check. If we have any other matching
-        // product, we should probably use it -- regardless of the actual version value.
-        List<Product> alternateVersions = this.getProductsByVersion(entity.getId(), entity.hashCode());
-
-        for (Product alt : alternateVersions) {
-            if (alt.equals(entity)) {
-                // If we're "creating" a product, we shouldn't have any other object references to
-                // update for this product. Instead, we'll just add the new owner to the product.
-                alt.addOwner(owner);
-
-                log.debug("Found a matching version, merging into existing entity: {}", alt);
-                log.debug("Owners: {}", alt.getOwners());
-                return this.merge(alt);
-            }
-        }
-
-        entity.addOwner(owner);
-        return this.create(entity);
-    }
-
-    /**
-     * Updates the specified product instance, creating a new version of the product as necessary.
-     * The product instance returned by this method is not guaranteed to be the same instance passed
-     * in. As such, once this method has been called, callers should only use the instance output by
-     * this method.
-     *
-     * @param entity
-     *  The product entity to update
-     *
-     * @param owner
-     *  The owner for which to update the product
-     *
-     * @return
-     *  the updated product entity, or a new product entity
-     */
-    @Transactional
-    public Product updateProduct(Product entity, Owner owner) {
-        log.debug("Applying product update for org: {}, {}", entity, owner);
-
-        if (entity == null) {
-            throw new NullPointerException("entity");
-        }
-
-        // This has to fetch a new instance, or we'll be unable to compare the objects
-        Product existing = this.lookupById(owner, entity.getId());
-
-        if (existing == null) {
-            // If we're doing an exclusive update, this should be an error condition
-            throw new IllegalStateException("Product has not yet been created");
-        }
-
-        if (existing == entity) {
-            // Nothing to do, really. The caller likely intends for the changes to be persisted, so
-            // we can do that for them.
-            return this.merge(existing);
-        }
-
-        // Check for newer versions of the same product. We want to try to dedupe as much data as we
-        // can, and if we have a newer version of the product (which matches the version provided by
-        // the caller), we can just point the given orgs to the new product instead of giving them
-        // their own version.
-        // This is probably going to be a very expensive operation, though.
-
-        // TODO:
-        // We could just use the current hashcode here with some Hibernate auto-updating magic to
-        // determine if two products are equal rather than relying on an outside value we may never
-        // receive
-
-        List<Product> alternateVersions = this.getProductsByVersion(entity.getId(), entity.hashCode());
-
-        for (Product alt : alternateVersions) {
-            if (alt.equals(entity)) {
-                return this.updateOwnerProductReferences(existing, alt, Arrays.asList(owner));
-            }
-        }
-
-        // Make sure we actually have something to update.
-        if (!existing.equals(entity)) {
-            // If we're making the update for every owner using the product, don't bother creating
-            // a new version -- just do a raw update.
-            if (existing.getOwners().size() == 1) {
-                // The org receiving the update is the only org using it. We can do an in-place
-                // update here.
-                existing.merge(entity);
-                entity = existing;
-
-                this.merge(entity);
-            }
-            else {
-                List<Owner> owners = Arrays.asList(owner);
-
-                // This org isn't the only org using the product. We need to create a new product
-                // instance and move the org over to the new product.
-                Product copy = (Product) entity.clone();
-
-                // Clear the UUID so Hibernate doesn't think our copy is a detached entity
-                copy.setUuid(null);
-
-                // Set the owner so when we create it, we don't end up with duplicate keys...
-                existing.removeOwner(owner);
-                copy.setOwners(owners);
-
-                this.merge(existing);
-                copy = this.create(copy);
-
-                entity = this.updateOwnerProductReferences(existing, copy, owners);
-            }
-        }
-
-        return entity;
-    }
-
-    /**
-     * Removes the specified product from the given owner. If the product is in use by multiple
-     * owners, the product will not actually be deleted, but, instead, will simply by removed from
-     * the given owner's visibility.
-     *
-     * @param entity
-     *  The product entity to remove
-     *
-     * @param owner
-     *  The owner for which to remove the product
-     */
-    @Transactional
-    public void removeProduct(Product entity, Owner owner) {
-        log.debug("Removing product from owner: {}, {}", entity, owner);
-
-        if (entity == null) {
-            throw new NullPointerException("entity");
-        }
-
-        // This has to fetch a new instance, or we'll be unable to compare the objects
-        Product existing = this.lookupById(owner, entity.getId());
-
-        if (existing == null) {
-            // If we're doing an exclusive update, this should be an error condition
-            throw new IllegalStateException("Product has not yet been created");
-        }
-
-        if (this.productHasSubscriptions(existing, owner)) {
-            throw new IllegalStateException("Product is currently in use by one or more pools");
-        }
-
-        log.debug("Existing owners for this product: {}", existing.getOwners());
-
-        existing.removeOwner(owner);
-
-        log.debug("Updated owners for this product: {}", existing.getOwners());
-
-        if (existing.getOwners().size() == 0) {
-            this.delete(existing);
-        }
-
-        // Clean up any dangling references to content
-        this.removeOwnerProductReferences(existing, Arrays.asList(owner));
-    }
-
-    /**
-     * Removes the specified content from the given product for a single owner. The changes made to
-     * the product may result in the convergence or divergence of product versions.
-     *
-     * @param product
-     *  the product from which to remove content
-     *
-     * @param content
-     *  the content to remove
-     *
-     * @param owner
-     *  the owner for which the change should take effect
-     *
-     * @return
-     *  the updated product instance
-     */
-    @Transactional
-    public Product removeProductContent(Product product, Collection<Content> content, Owner owner) {
-        Set<ProductContent> remove = new HashSet<ProductContent>();
-
-        for (Content test : content) {
-            for (ProductContent pc : product.getProductContent()) {
-                if (test == pc.getContent() || test.equals(pc.getContent())) {
-                    remove.add(pc);
-                }
-            }
-        }
-
-        if (remove.size() > 0) {
-            product = (Product) product.clone();
-            product.getProductContent().removeAll(remove);
-
-            return this.updateProduct(product, owner);
-        }
-
-        return product;
     }
 
     public boolean productHasSubscriptions(Product prod, Owner owner) {

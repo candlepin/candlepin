@@ -22,6 +22,8 @@ import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.controller.ContentManager;
+import org.candlepin.controller.ProductManager;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -71,6 +73,8 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     @Inject private ServiceLevelValidator serviceLevelValidator;
     @Inject private I18n i18n;
     @Inject private ContentOverrideValidator contentOverrideValidator;
+    @Inject private ProductManager productManager;
+    @Inject private ContentManager contentManager;
 
     private Owner owner;
     private OwnerResource or;
@@ -93,12 +97,10 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         ConsumerType ueberCertType = new ConsumerType(ConsumerTypeEnum.UEBER_CERT);
         consumerTypeCurator.create(ueberCertType);
 
-        or = new OwnerResource(ownerCurator,
-            null, consumerCurator, i18n, null, null, null,
-            null, null, poolManager, null, null, null,
-            null, consumerTypeCurator, entCertCurator, entitlementCurator,
-            ueberCertGenerator, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null);
+        or = new OwnerResource(ownerCurator, null, consumerCurator, i18n, null, null, null, null,
+            null, poolManager, null, null, null, null, consumerTypeCurator, entCertCurator,
+            entitlementCurator, ueberCertGenerator, null, null, contentOverrideValidator,
+            serviceLevelValidator, null, null, null, null, null, productManager, contentManager);
     }
 
     @Test

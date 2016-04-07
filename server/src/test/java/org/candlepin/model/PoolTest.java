@@ -112,27 +112,27 @@ public class PoolTest extends DatabaseTestFixture {
 
         Pool lookedUp = entityManager().find(Pool.class, p.getId());
         assertEquals(1, lookedUp.getProvidedProducts().size());
-        assertEquals(prod2.getId(),
-            lookedUp.getProvidedProducts().iterator().next().getId());
+        assertEquals(prod2.getId(), lookedUp.getProvidedProducts().iterator().next().getId());
         assertEquals(1, lookedUp.getDerivedProvidedProducts().size());
-        assertEquals(derivedProd.getId(),
-            lookedUp.getDerivedProvidedProducts().iterator().next().getId());
+        assertEquals(derivedProd.getId(), lookedUp.getDerivedProvidedProducts().iterator().next().getId());
     }
 
     @Test
     public void testMultiplePoolsForOwnerProductAllowed() {
-        Pool duplicatePool = createPool(owner,
-            prod1, -1L, TestUtil.createDate(2009, 11, 30),
-            TestUtil.createDate(2050, 11, 30));
+        Pool duplicatePool = createPool(
+            owner, prod1, -1L, TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30)
+        );
+
         // Just need to see no exception is thrown.
         poolCurator.create(duplicatePool);
     }
 
     @Test
     public void testIsOverflowing() {
-        Pool duplicatePool = createPool(owner,
-            prod1, -1L, TestUtil.createDate(2009, 11, 30),
-            TestUtil.createDate(2050, 11, 30));
+        Pool duplicatePool = createPool(
+            owner, prod1, -1L, TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30)
+        );
+
         assertFalse(duplicatePool.isOverflowing());
     }
 
@@ -140,9 +140,11 @@ public class PoolTest extends DatabaseTestFixture {
     public void testUnlimitedPool() {
         Product newProduct = TestUtil.createProduct(owner);
         productCurator.create(newProduct);
-        Pool unlimitedPool = createPool(owner, newProduct,
-            -1L, TestUtil.createDate(2009, 11, 30),
-            TestUtil.createDate(2050, 11, 30));
+
+        Pool unlimitedPool = createPool(
+            owner, newProduct, -1L, TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30)
+        );
+
         poolCurator.create(unlimitedPool);
         assertTrue(unlimitedPool.entitlementsAvailable(1));
     }
@@ -153,9 +155,9 @@ public class PoolTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct(owner);
 
         productCurator.create(newProduct);
-        Pool consumerPool = createPool(owner, newProduct,
-            numAvailEntitlements, TestUtil.createDate(2009, 11, 30),
-            TestUtil.createDate(2050, 11, 30));
+        Pool consumerPool = createPool(owner, newProduct, numAvailEntitlements,
+            TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
+
         consumerPool = poolCurator.create(consumerPool);
 
         Map<String, Integer> pQs = new HashMap<String, Integer>();
@@ -223,11 +225,12 @@ public class PoolTest extends DatabaseTestFixture {
     public void testCreationTimestamp() {
         Product newProduct = TestUtil.createProduct(owner);
         productCurator.create(newProduct);
-        Pool pool = createPool(owner, newProduct, 1L,
-            TestUtil.createDate(2011, 3, 30),
-            TestUtil.createDate(2022, 11, 29));
-        poolCurator.create(pool);
 
+        Pool pool = createPool(
+            owner, newProduct, 1L, TestUtil.createDate(2011, 3, 30), TestUtil.createDate(2022, 11, 29)
+        );
+
+        poolCurator.create(pool);
         assertNotNull(pool.getCreated());
     }
 
@@ -235,11 +238,11 @@ public class PoolTest extends DatabaseTestFixture {
     public void testInitialUpdateTimestamp() {
         Product newProduct = TestUtil.createProduct(owner);
         productCurator.create(newProduct);
-        Pool pool = createPool(owner, newProduct, 1L,
-            TestUtil.createDate(2011, 3, 30),
-            TestUtil.createDate(2022, 11, 29));
-        pool = poolCurator.create(pool);
+        Pool pool = createPool(
+            owner, newProduct, 1L, TestUtil.createDate(2011, 3, 30), TestUtil.createDate(2022, 11, 29)
+        );
 
+        pool = poolCurator.create(pool);
         assertNotNull(pool.getUpdated());
     }
 
@@ -251,9 +254,9 @@ public class PoolTest extends DatabaseTestFixture {
     public void testSubsequentUpdateTimestamp() {
         Product newProduct = TestUtil.createProduct(owner);
         productCurator.create(newProduct);
-        Pool pool = createPool(owner, newProduct, 1L,
-            TestUtil.createDate(2011, 3, 30),
-            TestUtil.createDate(2022, 11, 29));
+        Pool pool = createPool(
+            owner, newProduct, 1L, TestUtil.createDate(2011, 3, 30), TestUtil.createDate(2022, 11, 29)
+        );
 
         pool = poolCurator.create(pool);
 

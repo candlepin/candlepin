@@ -75,6 +75,7 @@ public class Entitler {
     private Configuration config;
     private PoolCurator poolCurator;
     private ProductCurator productCurator;
+    private ProductManager productManager;
     private ProductServiceAdapter productAdapter;
     private int maxDevLifeDays = 90;
     final String DEFAULT_DEV_SLA = "Self-Service";
@@ -82,8 +83,8 @@ public class Entitler {
     @Inject
     public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n, EventFactory evtFactory,
         EventSink sink, EntitlementRulesTranslator messageTranslator,
-        EntitlementCurator entitlementCurator, Configuration config,
-        PoolCurator poolCurator, ProductCurator productCurator,
+        EntitlementCurator entitlementCurator, Configuration config, PoolCurator poolCurator,
+        ProductCurator productCurator, ProductManager productManager,
         ProductServiceAdapter productAdapter) {
 
         this.poolManager = pm;
@@ -96,6 +97,7 @@ public class Entitler {
         this.config = config;
         this.poolCurator = poolCurator;
         this.productCurator = productCurator;
+        this.productManager = productManager;
         this.productAdapter = productAdapter;
     }
 
@@ -331,13 +333,15 @@ public class Entitler {
             }
 
             try {
-                product = productCurator.updateProduct(product, consumer.getOwner());
+                // TODO: If we juggle/manage entitlement certs later, we should tell the product
+                // manager to skip the entitlement cert regeneration (by setting the true to false)
+                product = this.productManager.updateProduct(product, consumer.getOwner(), true);
             }
             catch (IllegalStateException e) {
                 // This should only happen if we try to update a product that hasn't yet been
                 // created. We'll do that here.
                 log.debug("Product doesn't yet exist locally; creating it now. {}", product);
-                product = productCurator.createProduct(product, consumer.getOwner());
+                product = this.productManager.createProduct(product, consumer.getOwner());
             }
 
             products.add(product);

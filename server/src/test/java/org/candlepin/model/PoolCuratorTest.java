@@ -40,6 +40,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -153,7 +154,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         filters.addAttributeFilter("cores", "8");
 
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, null, null, activeDate, false, filters,
+            null, owner, (Collection<String>) null, null, activeDate, false, filters,
             req, false);
         List<Pool> results = page.getPageData();
         assertEquals(1, results.size());
@@ -183,7 +184,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         filters.addAttributeFilter("virt_only", "true");
 
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, null, null, activeDate, false, filters,
+            null, owner, (Collection<String>) null, null, activeDate, false, filters,
             req, false);
         List<Pool> results = page.getPageData();
         assertEquals(1, results.size());
@@ -212,8 +213,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         filters.addIdFilter(pool2.getId());
 
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, null, null, activeDate, false, filters,
-            req, false);
+            null, owner, (Collection<String>) null, null, activeDate, false, filters, req, false);
         List<Pool> results = page.getPageData();
         assertEquals(1, results.size());
         assertEquals(pool2.getId(), results.get(0).getId());
@@ -223,8 +223,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         filters.addIdFilter(pool2.getId());
 
         page = poolCurator.listAvailableEntitlementPools(
-            null, owner, null, null, activeDate, false, filters,
-            req, false);
+            null, owner, (Collection<String>) null, null, activeDate, false, filters, req, false);
         results = page.getPageData();
         assertEquals(2, results.size());
     }
@@ -251,8 +250,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         filters.addAttributeFilter("virt_only", "true");
 
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, null, null, activeDate, false, filters,
-            null, false);
+            null, owner, (Collection<String>) null, null, activeDate, false, filters, null, false);
         List<Pool> results = page.getPageData();
 
         assertEquals(1, results.size());
@@ -288,8 +286,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         filters.addAttributeFilter("cores", "4");
 
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, null, null, activeDate, false, filters,
-            req, false);
+            null, owner, (Collection<String>) null, null, activeDate, false, filters, req, false);
         List<Pool> results = page.getPageData();
         assertEquals(1, results.size());
         assertEquals(pool2.getId(), results.get(0).getId());
@@ -321,8 +318,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         filters.addAttributeFilter("empty-attr", "");
 
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, null, null, activeDate, false, filters,
-            req, false);
+            null, owner, (Collection<String>) null, null, activeDate, false, filters, req, false);
         List<Pool> results = page.getPageData();
         assertEquals(1, results.size());
         assertEquals(pool2.getId(), results.get(0).getId());
@@ -351,8 +347,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         filters.addAttributeFilter("A", "FOO");
 
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, null, null, activeDate, false, filters,
-            req, false);
+            null, owner, (Collection<String>) null, null, activeDate, false, filters, req, false);
         List<Pool> results = page.getPageData();
         assertEquals(1, results.size());
         assertEquals(pool, results.get(0));
@@ -416,8 +411,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         filters.addAttributeFilter("B", "zoo");
 
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, null, null, activeDate, false, filters,
-            req, false);
+            null, owner, (Collection<String>) null, null, activeDate, false, filters, req, false);
         List<Pool> results = page.getPageData();
         assertEquals(2, results.size());
 
@@ -821,7 +815,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool.setStartDate(activeOn);
         poolCurator.create(pool);
 
-        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null,
+        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, (Collection<String>) null,
             activeOn, false).size());
     }
 
@@ -833,7 +827,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool.setEndDate(activeOn);
         poolCurator.create(pool);
 
-        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null,
+        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, (Collection<String>) null,
             activeOn, false).size());
     }
 
@@ -846,7 +840,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool.setEndDate(TestUtil.createDate(2011, 3, 2));
         poolCurator.create(pool);
 
-        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null,
+        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, (Collection<String>) null,
             activeOn, false).size());
     }
 
@@ -1327,8 +1321,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         this.poolCurator.create(p1);
         this.poolCurator.create(p2);
 
-        Page<List<Pool>> result = this.poolCurator.listAvailableEntitlementPools(null, owner1, null,
-            "subscriptionId-phil", new Date(), false, null, null, false);
+        Page<List<Pool>> result = this.poolCurator.listAvailableEntitlementPools(null, owner1,
+            (Collection<String>) null, "subscriptionId-phil", new Date(), false, null, null, false);
         assertEquals("subscriptionId-phil", result.getPageData().get(0).getSubscriptionId());
     }
 
