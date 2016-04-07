@@ -37,8 +37,7 @@ public class ActiveEntitlementJob extends KingpinJob {
     private ComplianceRules complianceRules;
 
     @Inject
-    public ActiveEntitlementJob(ConsumerCurator consumerCurator,
-            ComplianceRules complianceRules) {
+    public ActiveEntitlementJob(ConsumerCurator consumerCurator, ComplianceRules complianceRules) {
         this.consumerCurator = consumerCurator;
         this.complianceRules = complianceRules;
     }

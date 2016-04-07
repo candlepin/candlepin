@@ -84,7 +84,7 @@ public class PropertiesFileConfigurationTest {
         config.setEncoding(UTF8);
         config.load(p);
         assertEquals(Arrays.asList("chocolate chip", "oatmeal", "peanut butter"),
-                config.getList("cookies"));
+            config.getList("cookies"));
         assertEquals("chocolate chip, oatmeal, peanut butter", config.getString("cookies"));
     }
 
@@ -97,9 +97,9 @@ public class PropertiesFileConfigurationTest {
         config.load(p);
 
         String poem = "The Assyrian came down like the wolf on the fold," +
-                "And his cohorts were gleaming in purple and gold;" +
-                "And the sheen of their spears was like stars on the sea," +
-                "When the blue wave rolls nightly on deep Galilee.";
+            "And his cohorts were gleaming in purple and gold;" +
+            "And the sheen of their spears was like stars on the sea," +
+            "When the blue wave rolls nightly on deep Galilee.";
         assertEquals(poem, config.getString("poem"));
     }
 

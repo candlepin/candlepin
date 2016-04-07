@@ -156,7 +156,7 @@ public class TestingModules {
 
         @Provides
         protected ValidatorFactory getValidationFactory(
-                Provider<MessageInterpolator> interpolatorProvider) {
+            Provider<MessageInterpolator> interpolatorProvider) {
             HibernateValidatorConfiguration configure =
                 Validation.byProvider(HibernateValidator.class).configure();
 

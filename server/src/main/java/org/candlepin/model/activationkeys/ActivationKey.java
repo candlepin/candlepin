@@ -54,8 +54,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_activation_key",
-    uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "owner_id"})}
-)
+    uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "owner_id"})})
 public class ActivationKey extends AbstractHibernateObject implements Owned, Named, Eventful {
 
     public static final int RELEASE_VERSION_LENGTH = 255;
@@ -90,8 +89,7 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
     @JoinTable(
         name = "cp2_activation_key_products",
         joinColumns = {@JoinColumn(name = "key_id")},
-        inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
-    )
+        inverseJoinColumns = {@JoinColumn(name = "product_uuid")})
     private Set<Product> products = new HashSet<Product>();
 
     @OneToMany(targetEntity = ActivationKeyContentOverride.class, mappedBy = "key")
@@ -282,8 +280,7 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
     /**
      * @param contentOverrides the contentOverrides to set
      */
-    public void setContentOverrides(
-            Set<ActivationKeyContentOverride> contentOverrides) {
+    public void setContentOverrides(Set<ActivationKeyContentOverride> contentOverrides) {
         this.contentOverrides.clear();
         this.addContentOverrides(contentOverrides);
     }
@@ -363,7 +360,7 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
         boolean found = false;
         for (ActivationKeyContentOverride existing : this.getContentOverrides()) {
             if (existing.getContentLabel().equalsIgnoreCase(override.getContentLabel()) &&
-                    existing.getName().equalsIgnoreCase(override.getName())) {
+                existing.getName().equalsIgnoreCase(override.getName())) {
                 existing.setValue(override.getValue());
                 found = true;
                 break;

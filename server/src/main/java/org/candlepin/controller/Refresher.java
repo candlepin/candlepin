@@ -96,7 +96,7 @@ public class Refresher {
             // given products to be refreshed.
             List<Subscription> subs = subAdapter.getSubscriptions(product);
             log.debug("Will refresh {} subscriptions in all orgs using product: ",
-                    subs.size(), product.getId());
+                subs.size(), product.getId());
 
             if (log.isDebugEnabled()) {
                 for (Subscription s : subs) {

@@ -79,8 +79,7 @@ public class DistributorVersionCurator
     }
 
     @SuppressWarnings("unchecked")
-    public Set<DistributorVersionCapability>
-    findCapabilitiesByDistVersion(String distVersion) {
+    public Set<DistributorVersionCapability> findCapabilitiesByDistVersion(String distVersion) {
         List<DistributorVersion> dvList = currentSession()
             .createCriteria(DistributorVersion.class)
             .add(Restrictions.eq("name", distVersion)).list();

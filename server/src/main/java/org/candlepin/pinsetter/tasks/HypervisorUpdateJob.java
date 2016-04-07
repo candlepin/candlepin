@@ -81,13 +81,12 @@ public class HypervisorUpdateJob extends KingpinJob {
 
     @Inject
     public HypervisorUpdateJob(OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
-            ConsumerResource consumerResource) {
+        ConsumerResource consumerResource) {
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.consumerResource = consumerResource;
     }
 
-    @SuppressWarnings("unchecked")
     public static JobStatus scheduleJob(JobCurator jobCurator,
         Scheduler scheduler, JobDetail detail,
         Trigger trigger) throws SchedulerException {
@@ -176,6 +175,7 @@ public class HypervisorUpdateJob extends KingpinJob {
      * @param context the job's execution context
      */
     @Transactional
+    @SuppressWarnings("checkstyle:indentation")
     public void toExecute(JobExecutionContext context) throws JobExecutionException {
         try {
             JobDataMap map = context.getMergedJobDataMap();
@@ -221,8 +221,7 @@ public class HypervisorUpdateJob extends KingpinJob {
                     else {
                         log.debug("Registering new host consumer for hypervisor ID: {}", hypervisorId);
                         Consumer newHost = createConsumerForHypervisorId(hypervisorId, owner, principal);
-                        consumerResource.performConsumerUpdates(incoming, newHost, guestConsumersMap,
-                            false);
+                        consumerResource.performConsumerUpdates(incoming, newHost, guestConsumersMap, false);
                         consumerResource.create(newHost, principal, null, owner.getKey(), null, false);
                         hypervisorConsumersMap.add(hypervisorId, newHost);
                         result.created(newHost);
@@ -232,16 +231,15 @@ public class HypervisorUpdateJob extends KingpinJob {
                 else {
                     reportedOnConsumer = knownHost;
                     if (jobReporterId != null && knownHost.getHypervisorId() != null &&
-                            hypervisorId.equalsIgnoreCase(knownHost.getHypervisorId().getHypervisorId()) &&
-                            knownHost.getHypervisorId().getReporterId() != null &&
-                            !jobReporterId.equalsIgnoreCase(
-                                    knownHost.getHypervisorId().getReporterId())) {
+                        hypervisorId.equalsIgnoreCase(knownHost.getHypervisorId().getHypervisorId()) &&
+                        knownHost.getHypervisorId().getReporterId() != null &&
+                        !jobReporterId.equalsIgnoreCase(knownHost.getHypervisorId().getReporterId())) {
                         log.warn("Reporter changed for Hypervisor {} of Owner {} from {} to {}",
-                                hypervisorId, ownerKey, knownHost.getHypervisorId().getReporterId(),
-                                jobReporterId);
+                            hypervisorId, ownerKey, knownHost.getHypervisorId().getReporterId(),
+                            jobReporterId);
                     }
                     if (consumerResource.performConsumerUpdates(incoming, knownHost, guestConsumersMap,
-                            false)) {
+                        false)) {
                         consumerCurator.update(knownHost);
                         result.updated(knownHost);
                     }
@@ -251,15 +249,14 @@ public class HypervisorUpdateJob extends KingpinJob {
                 }
                 // update reporter id if it changed
                 if (jobReporterId != null && reportedOnConsumer != null &&
-                        reportedOnConsumer.getHypervisorId() != null &&
-                        (reportedOnConsumer.getHypervisorId().getReporterId() == null || !jobReporterId
-                                .contentEquals(reportedOnConsumer.getHypervisorId().getReporterId()))) {
+                    reportedOnConsumer.getHypervisorId() != null &&
+                    (reportedOnConsumer.getHypervisorId().getReporterId() == null ||
+                    !jobReporterId.contentEquals(reportedOnConsumer.getHypervisorId().getReporterId()))) {
                     reportedOnConsumer.getHypervisorId().setReporterId(jobReporterId);
                 }
                 else if (jobReporterId == null) {
-                    log.debug("hypervisor checkin reported asynchronously" +
-                              " without reporter id for hypervisor:{} of owner:{}",
-                            hypervisorId, ownerKey);
+                    log.debug("hypervisor checkin reported asynchronously without reporter id " +
+                        "for hypervisor:{} of owner:{}", hypervisorId, ownerKey);
                 }
             }
             log.info("Summary for report from {} by principal {}\n {}", jobReporterId, principal, result);
@@ -279,7 +276,7 @@ public class HypervisorUpdateJob extends KingpinJob {
      * @return a {@link JobDetail} that describes the job run
      */
     public static JobDetail forOwner(Owner owner, String data, Boolean create, Principal principal,
-            String reporterId) {
+        String reporterId) {
         JobDataMap map = new JobDataMap();
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, owner.getKey());
@@ -336,7 +333,7 @@ public class HypervisorUpdateJob extends KingpinJob {
      * Create a new hypervisor type consumer to represent the incoming hypervisorId
      */
     private Consumer createConsumerForHypervisorId(String incHypervisorId,
-            Owner owner, Principal principal) {
+        Owner owner, Principal principal) {
         Consumer consumer = new Consumer();
         consumer.setName(incHypervisorId);
         consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));

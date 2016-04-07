@@ -152,10 +152,8 @@ public class CertTest {
         // the CA for the attribute certificate should be different to that of
         // the client certificate
         //
-        X509Certificate caCert = AttrCertExample.createAcIssuerCert(caPubKey,
-                caPrivKey);
-        X509Certificate clientCert = AttrCertExample.createClientCert(pubKey,
-                caPrivKey, caPubKey);
+        X509Certificate caCert = AttrCertExample.createAcIssuerCert(caPubKey, caPrivKey);
+        X509Certificate clientCert = AttrCertExample.createClientCert(pubKey, caPrivKey, caPubKey);
         // Instantiate a new AC generator
         X509V2AttributeCertificateGenerator acGen =
             new X509V2AttributeCertificateGenerator();
@@ -168,8 +166,7 @@ public class CertTest {
         acGen.setHolder(new AttributeCertificateHolder(clientCert));
 
         // set the Issuer
-        acGen.setIssuer(new AttributeCertificateIssuer(caCert
-                .getSubjectX500Principal()));
+        acGen.setIssuer(new AttributeCertificateIssuer(caCert.getSubjectX500Principal()));
 
         //
         // serial number (as it's an example we don't have to keep track of the
@@ -187,20 +184,17 @@ public class CertTest {
         acGen.setSignatureAlgorithm("SHA1WithRSAEncryption");
 
         // the actual attributes
-        GeneralName roleName = new GeneralName(GeneralName.rfc822Name,
-                "DAU123456789");
+        GeneralName roleName = new GeneralName(GeneralName.rfc822Name, "DAU123456789");
         ASN1EncodableVector roleSyntax = new ASN1EncodableVector();
         roleSyntax.add(roleName);
 
         // roleSyntax OID: 2.5.24.72
-        X509Attribute attributes = new X509Attribute("2.5.24.72",
-                new DERSequence(roleSyntax));
+        X509Attribute attributes = new X509Attribute("2.5.24.72", new DERSequence(roleSyntax));
 
         acGen.addAttribute(attributes);
 
         // finally create the AC
-        X509V2AttributeCertificate att = (X509V2AttributeCertificate) acGen
-                .generate(caPrivKey, "BC");
+        X509V2AttributeCertificate att = (X509V2AttributeCertificate) acGen.generate(caPrivKey, "BC");
 
 
 

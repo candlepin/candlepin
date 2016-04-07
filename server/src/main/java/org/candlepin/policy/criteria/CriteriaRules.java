@@ -46,8 +46,7 @@ public class CriteriaRules  {
     protected ConsumerCurator consumerCurator;
 
     @Inject
-    public CriteriaRules(Configuration config,
-            ConsumerCurator consumerCurator) {
+    public CriteriaRules(Configuration config, ConsumerCurator consumerCurator) {
         this.config = config;
         this.consumerCurator = consumerCurator;
     }
@@ -60,6 +59,7 @@ public class CriteriaRules  {
      * @param consumer The consumer we are filtering pools for
      * @return List of Criterion
      */
+    @SuppressWarnings("checkstyle:indentation")
     public List<Criterion> availableEntitlementCriteria(Consumer consumer) {
 
         // avoid passing in a consumerCurator just to get the host
@@ -75,8 +75,7 @@ public class CriteriaRules  {
         // Don't load virt_only pools if this consumer isn't a guest
         // or a manifest consumer
         if (consumer.getType().isManifest()) {
-            DetachedCriteria requiresHost = DetachedCriteria.forClass(
-                    PoolAttribute.class, "attr")
+            DetachedCriteria requiresHost = DetachedCriteria.forClass(PoolAttribute.class, "attr")
                 .add(Restrictions.eq("name", "requires_host"))
                 .add(Property.forName("this.id").eqProperty("attr.pool.id"))
                 .setProjection(Projections.property("attr.id"));

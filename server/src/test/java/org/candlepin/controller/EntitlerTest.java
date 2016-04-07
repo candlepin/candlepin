@@ -530,7 +530,7 @@ public class EntitlerTest {
         }
         catch (ForbiddenException fe) {
             assertEquals(i18n.tr("SKU product not available to this development unit: ''{0}''",
-                    p.getId()), fe.getMessage());
+                p.getId()), fe.getMessage());
         }
     }
 

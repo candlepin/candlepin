@@ -72,7 +72,7 @@ public class ConfigProperties {
      * will be used.
      */
     public static final String HORNETQ_MAX_SCHEDULED_THREADS =
-            "candlepin.audit.hornetq.max_scheduled_threads";
+        "candlepin.audit.hornetq.max_scheduled_threads";
     public static final String HORNETQ_MAX_THREADS = "candlepin.audit.hornetq.max_threads";
     /**
      * This can be either BLOCK or PAGE. When set to PAGE then
@@ -266,8 +266,8 @@ public class ConfigProperties {
                 this.put(HORNETQ_MAX_PAGE_SIZE, "1");
                 this.put(AUDIT_LISTENERS,
                     "org.candlepin.audit.DatabaseListener," +
-                        "org.candlepin.audit.LoggingListener," +
-                        "org.candlepin.audit.ActivationListener");
+                    "org.candlepin.audit.LoggingListener," +
+                    "org.candlepin.audit.ActivationListener");
                 this.put(AUDIT_LOG_FILE, "/var/log/candlepin/audit.log");
                 this.put(AUDIT_LOG_VERBOSE, "false");
                 this.put(AUDIT_FILTER_ENABLED, "false");
@@ -280,11 +280,11 @@ public class ConfigProperties {
                 * SATELLITE-6.1.0/app/lib/actions/candlepin/reindex_pool_subscription_handler.rb#L43
                 */
                 this.put(AUDIT_FILTER_DO_NOT_FILTER,
-                        "CREATED-ENTITLEMENT," +
-                            "DELETED-ENTITLEMENT," +
-                            "CREATED-POOL," +
-                            "DELETED-POOL," +
-                            "CREATED-COMPLIANCE");
+                    "CREATED-ENTITLEMENT," +
+                    "DELETED-ENTITLEMENT," +
+                    "CREATED-POOL," +
+                    "DELETED-POOL," +
+                    "CREATED-COMPLIANCE");
 
                 this.put(AUDIT_FILTER_DO_FILTER, "");
                 this.put(AUDIT_FILTER_DEFAULT_POLICY, "DO_FILTER");

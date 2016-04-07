@@ -91,8 +91,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @JoinTable(
         name = "cp2_owner_content",
         joinColumns = {@JoinColumn(name = "content_uuid", insertable = true, updatable = true)},
-        inverseJoinColumns = {@JoinColumn(name = "owner_id")}
-    )
+        inverseJoinColumns = {@JoinColumn(name = "owner_id")})
     @LazyCollection(LazyCollectionOption.FALSE)
     @XmlTransient
     private Set<Owner> owners;
@@ -129,8 +128,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     private Long metadataExpire;
 
     @ElementCollection
-    @CollectionTable(name = "cp2_content_modified_products",
-                     joinColumns = @JoinColumn(name = "content_uuid"))
+    @CollectionTable(name = "cp2_content_modified_products", joinColumns = @JoinColumn(name = "content_uuid"))
     @Column(name = "element")
     @Size(max = 255)
     private Set<String> modifiedProductIds = new HashSet<String>();

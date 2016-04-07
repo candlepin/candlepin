@@ -375,7 +375,7 @@ public class OwnerResource {
 
         EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
         Page<List<Entitlement>> entitlementsPage = entitlementCurator.listByOwner(owner, productId, filters,
-                pageRequest);
+            pageRequest);
 
         // Store the page for the LinkHeaderPostInterceptor
         ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);
@@ -484,8 +484,7 @@ public class OwnerResource {
                 i18n.tr("Must provide a name for activation key."));
         }
 
-        String testName = activationKey.getName().replace("-", "0")
-                          .replace("_", "0");
+        String testName = activationKey.getName().replace("-", "0").replace("_", "0");
         if (!testName.matches("[a-zA-Z0-9]*")) {
             throw new BadRequestException(
                 i18n.tr("The activation key name ''{0}'' must be alphanumeric or " +
@@ -613,21 +612,20 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/consumers")
     @Paginate
+    @SuppressWarnings("checkstyle:indentation")
     public List<Consumer> listConsumers(
-            @PathParam("owner_key")
-            @Verify(value = Owner.class,
-                subResource = SubResource.CONSUMERS) String ownerKey,
-            @QueryParam("username") String userName,
-            @QueryParam("type") Set<String> typeLabels,
-            @QueryParam("uuid") @Verify(value = Consumer.class, nullable = true)
-                List<String> uuids,
-            @QueryParam("hypervisor_id") List<String> hypervisorIds,
-            @QueryParam("fact") @CandlepinParam(type = KeyValueParameter.class)
-                List<KeyValueParameter> attrFilters,
-            @QueryParam("sku") List<String> skus,
-            @QueryParam("subscription_id") List<String> subscriptionIds,
-            @QueryParam("contract") List<String> contracts,
-            @Context PageRequest pageRequest) {
+        @PathParam("owner_key")
+        @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey,
+        @QueryParam("username") String userName,
+        @QueryParam("type") Set<String> typeLabels,
+        @QueryParam("uuid") @Verify(value = Consumer.class, nullable = true) List<String> uuids,
+        @QueryParam("hypervisor_id") List<String> hypervisorIds,
+        @QueryParam("fact") @CandlepinParam(type = KeyValueParameter.class)
+            List<KeyValueParameter> attrFilters,
+        @QueryParam("sku") List<String> skus,
+        @QueryParam("subscription_id") List<String> subscriptionIds,
+        @QueryParam("contract") List<String> contracts,
+        @Context PageRequest pageRequest) {
         Owner owner = findOwner(ownerKey);
         List<ConsumerType> types = null;
         if (typeLabels != null && !typeLabels.isEmpty()) {
@@ -659,9 +657,9 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
     @Paginate
+    @SuppressWarnings("checkstyle:indentation")
     public List<Pool> listPools(
-        @PathParam("owner_key")
-            @Verify(value = Owner.class, subResource = SubResource.POOLS) String ownerKey,
+        @PathParam("owner_key") @Verify(value = Owner.class, subResource = SubResource.POOLS) String ownerKey,
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("activation_key") String activationKeyName,
         @QueryParam("product") String productId,
@@ -720,7 +718,7 @@ public class OwnerResource {
         }
 
         Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, key, owner, productId,
-                subscriptionId, activeOnDate, true, listAll, poolFilters, pageRequest
+            subscriptionId, activeOnDate, true, listAll, poolFilters, pageRequest
         );
         List<Pool> poolList = page.getPageData();
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);
@@ -742,7 +740,7 @@ public class OwnerResource {
     @Produces("application/atom+xml")
     @Path("{owner_key}/atom")
     public Feed getOwnerAtomFeed(@PathParam("owner_key")
-            @Verify(Owner.class) String ownerKey) {
+        @Verify(Owner.class) String ownerKey) {
         Owner o = findOwner(ownerKey);
         String path = String.format("/owners/%s/atom", ownerKey);
         Feed feed = this.eventAdapter.toFeed(
@@ -1008,7 +1006,7 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
     public void updatePool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-            Pool newPool) {
+        Pool newPool) {
 
         Pool currentPool = this.poolManager.find(newPool.getId());
         if (currentPool == null) {
@@ -1018,7 +1016,7 @@ public class OwnerResource {
         }
 
         if (currentPool.getType() != PoolType.NORMAL ||
-                newPool.getType() != PoolType.NORMAL) {
+            newPool.getType() != PoolType.NORMAL) {
             throw new BadRequestException(i18n.tr("Cannot update bonus pools, as they are auto generated"));
         }
 

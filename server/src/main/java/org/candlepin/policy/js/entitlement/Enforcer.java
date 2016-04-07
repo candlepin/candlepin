@@ -105,8 +105,8 @@ public interface Enforcer {
      *         pre-entitlement run.
      */
     Map<String, ValidationResult> preEntitlement(Consumer consumer,
-            Collection<PoolQuantity> entitlementPoolQuantities,
-            CallerType caller);
+        Collection<PoolQuantity> entitlementPoolQuantities,
+        CallerType caller);
 
     /**
      * Run pre-entitlement checks on a batch of pools.
@@ -123,7 +123,7 @@ public interface Enforcer {
      *         pre-entitlement run.
      */
     Map<String, ValidationResult> preEntitlement(Consumer consumer, Consumer host,
-            Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller);
+        Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller);
 
     /**
      * @param consumer Consumer who wishes to consume an entitlement.
@@ -141,7 +141,7 @@ public interface Enforcer {
      * @param ents The entitlement that was just granted.
      */
     void postEntitlement(PoolManager poolManager, Consumer c, Map<String, Entitlement> ents,
-            List<Pool> subPoolsForStackIds);
+        List<Pool> subPoolsForStackIds);
 
     /**
      * Run post-entitlement actions.

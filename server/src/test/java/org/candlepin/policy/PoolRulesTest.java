@@ -138,7 +138,7 @@ public class PoolRulesTest {
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p1);
         List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(),
-                new HashSet<Product>());
+            new HashSet<Product>());
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
         assertTrue(update.getProductsChanged());
@@ -156,7 +156,7 @@ public class PoolRulesTest {
 
         List<Pool> existingPools = Arrays.asList(p1);
         List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(),
-                TestUtil.stubChangedProducts(p.getProduct()));
+            TestUtil.stubChangedProducts(p.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -176,7 +176,7 @@ public class PoolRulesTest {
 
         List<Pool> existingPools = Arrays.asList(p1);
         List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(),
-                new HashSet<Product>());
+            new HashSet<Product>());
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -196,7 +196,7 @@ public class PoolRulesTest {
 
         List<Pool> existingPools = Arrays.asList(p1);
         List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(),
-                new HashSet<Product>());
+            new HashSet<Product>());
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -220,7 +220,7 @@ public class PoolRulesTest {
 
         List<Pool> existingPools = Arrays.asList(p1);
         List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(),
-                new HashSet<Product>());
+            new HashSet<Product>());
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -252,7 +252,7 @@ public class PoolRulesTest {
 
         List<Pool> existingPools = Arrays.asList(p1);
         List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(),
-                new HashSet<Product>());
+            new HashSet<Product>());
 
         assertEquals(0, updates.size());
     }
@@ -270,8 +270,7 @@ public class PoolRulesTest {
         p1.setQuantity(40L);
 
         List<Pool> existingPools = Arrays.asList(p1);
-        List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(),
-                null);
+        List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(), null);
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -302,7 +301,7 @@ public class PoolRulesTest {
         List<Pool> existingPools = Arrays.asList(p1);
 
         List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(),
-                new HashSet<Product>());
+            new HashSet<Product>());
         assertEquals(1, updates.size());
         assertEquals(2, updates.get(0).getPool().getDerivedProvidedProducts().size());
     }
@@ -394,7 +393,7 @@ public class PoolRulesTest {
         // Now we update the sub and see if that unlimited pool gets adjusted:
         p.getProduct().setAttribute("virt_limit", "10");
         List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(),
-                TestUtil.stubChangedProducts(p.getProduct()));
+            TestUtil.stubChangedProducts(p.getProduct()));
         assertEquals(2, updates.size());
 
         PoolUpdate virtUpdate = updates.get(1);
@@ -413,7 +412,7 @@ public class PoolRulesTest {
         // the unlimited pool gets adjusted and flagged for cleanup:
         p.setProduct(TestUtil.createProduct(p.getProduct().getId(), p.getProduct().getName(), owner));
         List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(),
-                TestUtil.stubChangedProducts(p.getProduct()));
+            TestUtil.stubChangedProducts(p.getProduct()));
         assertEquals(2, updates.size());
 
         // Regular pool should be in a sane state:
@@ -454,8 +453,7 @@ public class PoolRulesTest {
 
         int virtOnlyCount = 0;
         for (Pool pool : pools) {
-            if (pool.hasAttribute("virt_only") &&
-                    pool.attributeEquals("virt_only", "true")) {
+            if (pool.hasAttribute("virt_only") && pool.attributeEquals("virt_only", "true")) {
                 virtOnlyCount++;
                 assertEquals("false", pool.getAttributeValue("physical_only"));
             }
@@ -496,7 +494,7 @@ public class PoolRulesTest {
         assertEquals(0, physicalPool.getAttributes().size());
         assertProvidedProducts(p.getProvidedProducts(), physicalPool.getProvidedProducts());
         assertProvidedProducts(p.getDerivedProvidedProducts(),
-                physicalPool.getDerivedProvidedProducts());
+            physicalPool.getDerivedProvidedProducts());
 
         Pool unmappedVirtPool = pools.get(1);
         assert ("true".equals(unmappedVirtPool.getAttributeValue("virt_only")));
@@ -505,9 +503,9 @@ public class PoolRulesTest {
         // The derived provided products of the sub should be promoted to provided products
         // on the unmappedVirtPool
         assertProvidedProducts(p.getDerivedProvidedProducts(),
-                unmappedVirtPool.getProvidedProducts());
+            unmappedVirtPool.getProvidedProducts());
         assertProvidedProducts(new HashSet<Product>(),
-                unmappedVirtPool.getDerivedProvidedProducts());
+            unmappedVirtPool.getDerivedProvidedProducts());
 
         // Test for BZ 1204311 - Refreshing pools should not change unmapped guest pools
         // Refresh is a no-op in multiorg
@@ -519,7 +517,7 @@ public class PoolRulesTest {
     public void standaloneVirtLimitSubCreateDerived() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Subscription s = createVirtLimitSubWithDerivedProducts("virtLimitProduct",
-                "derivedProd", 10, 10);
+            "derivedProd", 10, 10);
         Pool p = TestUtil.copyFromSub(s);
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
 
@@ -536,14 +534,13 @@ public class PoolRulesTest {
         assertEquals("derivedProd", unmappedVirtPool.getProductId());
 
         assertProvidedProducts(s.getDerivedProvidedProducts(),
-                unmappedVirtPool.getProvidedProducts());
+            unmappedVirtPool.getProvidedProducts());
         assertProvidedProducts(new HashSet<Product>(),
-                unmappedVirtPool.getDerivedProvidedProducts());
+            unmappedVirtPool.getDerivedProvidedProducts());
         assertTrue(unmappedVirtPool.getProduct().hasAttribute(DERIVED_ATTR));
     }
 
-    private void assertProvidedProducts(Set<Product> expectedProducts,
-            Set<Product> providedProducts) {
+    private void assertProvidedProducts(Set<Product> expectedProducts, Set<Product> providedProducts) {
         assertEquals(expectedProducts.size(), providedProducts.size());
         for (Product expected : expectedProducts) {
             boolean found = false;
@@ -559,7 +556,7 @@ public class PoolRulesTest {
     }
 
     private Subscription createVirtLimitSubWithDerivedProducts(String productId,
-            String derivedProductId, int quantity, int virtLimit) {
+        String derivedProductId, int quantity, int virtLimit) {
 
         Product product = new Product(productId, productId, owner);
         product.setAttribute("virt_limit", Integer.toString(virtLimit));
@@ -616,8 +613,7 @@ public class PoolRulesTest {
 
         p = createVirtLimitPool("virtLimitProduct", 10, 10);
         p.setQuantity(50L);
-        List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(),
-                new HashSet<Product>());
+        List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(), new HashSet<Product>());
         assertEquals(2, updates.size());
         physicalPool = updates.get(0).getPool();
         assertEquals(new Long(50), physicalPool.getQuantity());
@@ -661,8 +657,7 @@ public class PoolRulesTest {
         assertEquals(1, pools.size());
 
         p = createVirtOnlyPool("virtOnlyProduct", 20);
-        List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(),
-                new HashSet<Product>());
+        List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(), new HashSet<Product>());
         assertEquals(1, updates.size());
         Pool updated = updates.get(0).getPool();
         assertEquals(new Long(20), updated.getQuantity());
@@ -687,8 +682,7 @@ public class PoolRulesTest {
         consumerSpecificPool.setSourceEntitlement(ent);
         pools.add(consumerSpecificPool);
 
-        List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(),
-                new HashSet<Product>());
+        List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(), new HashSet<Product>());
         assertEquals(0, updates.size());
     }
 
@@ -714,7 +708,7 @@ public class PoolRulesTest {
 
         p.getProduct().setAttribute("virt_limit", "40");
         List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(),
-                TestUtil.stubChangedProducts(p.getProduct()));
+            TestUtil.stubChangedProducts(p.getProduct()));
         assertEquals(3, updates.size());
         Pool regular = updates.get(0).getPool();
         Pool unmappedSubPool = updates.get(1).getPool();
@@ -739,7 +733,7 @@ public class PoolRulesTest {
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p1);
         List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(),
-                new HashSet<Product>());
+            new HashSet<Product>());
 
         assertEquals(0, updates.size());
     }
@@ -759,7 +753,7 @@ public class PoolRulesTest {
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p1);
         List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(),
-                new HashSet<Product>());
+            new HashSet<Product>());
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -782,7 +776,7 @@ public class PoolRulesTest {
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p1);
         List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(),
-                new HashSet<Product>());
+            new HashSet<Product>());
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -803,7 +797,7 @@ public class PoolRulesTest {
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p1);
         List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(),
-                new HashSet<Product>());
+            new HashSet<Product>());
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -824,7 +818,7 @@ public class PoolRulesTest {
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p1);
         List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(),
-                new HashSet<Product>());
+            new HashSet<Product>());
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);

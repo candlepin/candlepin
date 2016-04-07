@@ -45,8 +45,7 @@ public class JsonProviderTest {
     public void dateFormat() {
         JsonProvider provider = new JsonProvider(config);
 
-        boolean datesAsTimestamps = isEnabled(provider,
-                SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        boolean datesAsTimestamps = isEnabled(provider, SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         assertFalse(datesAsTimestamps);
     }
@@ -59,16 +58,14 @@ public class JsonProviderTest {
         iso8601WithoutMilliseconds.setTimeZone(TimeZone.getTimeZone("UTC"));
         String expectedDate = "\"" + iso8601WithoutMilliseconds.format(now) + "\"";
         JsonProvider provider = new JsonProvider(config);
-        ObjectMapper mapper = provider.locateMapper(Object.class,
-                MediaType.APPLICATION_JSON_TYPE);
+        ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
         String serializedDate = mapper.writeValueAsString(now);
         assertTrue(serializedDate.equals(expectedDate));
     }
 
 
     private boolean isEnabled(JsonProvider provider, SerializationFeature feature) {
-        ObjectMapper mapper = provider.locateMapper(Object.class,
-                MediaType.APPLICATION_JSON_TYPE);
+        ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
         SerializationConfig sConfig = mapper.getSerializationConfig();
         return sConfig.isEnabled(feature);
     }

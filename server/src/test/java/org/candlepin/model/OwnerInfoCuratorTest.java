@@ -432,8 +432,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     public void testOwnerPoolMultiEnabledCount() {
         ConsumerType type1 = consumerTypeCurator.lookupByLabel("domain");
         ConsumerType type2 = consumerTypeCurator.lookupByLabel("system");
-        pool1.setAttribute("enabled_consumer_types", type1.getLabel() +
-                           "," + type2.getLabel());
+        pool1.setAttribute("enabled_consumer_types", type1.getLabel() + "," + type2.getLabel());
         owner.addEntitlementPool(pool1);
 
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);

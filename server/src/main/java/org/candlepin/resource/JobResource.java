@@ -105,8 +105,8 @@ public class JobResource {
         @QueryParam("principal") String principalName) {
 
         boolean allParamsEmpty = StringUtils.isEmpty(ownerKey) &&
-                                 StringUtils.isEmpty(uuid) &&
-                                 StringUtils.isEmpty(principalName);
+            StringUtils.isEmpty(uuid) &&
+            StringUtils.isEmpty(principalName);
 
         // make sure we only specified one
         if (allParamsEmpty || !ensureOnlyOne(ownerKey, uuid, principalName)) {
@@ -210,7 +210,7 @@ public class JobResource {
     @Path("/{job_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public JobStatus getStatus(@PathParam("job_id") @Verify(JobStatus.class) String jobId,
-                               @QueryParam("result_data") @DefaultValue("false") boolean resultData) {
+        @QueryParam("result_data") @DefaultValue("false") boolean resultData) {
         JobStatus js = curator.find(jobId);
         js.cloakResultData(!resultData);
         return js;

@@ -77,7 +77,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     }
 
     @Before
-    @SuppressWarnings("checkstyle:methodlength")
+    @SuppressWarnings({ "checkstyle:methodlength", "serial" })
     public void initData() {
         Compliance compliance;
         Calendar cal = this.getCalendar();
@@ -146,10 +146,10 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         this.beginTransaction();
 
         // Consumer products
-        Set<String> c1prods = new HashSet(Arrays.asList("p1"));
-        Set<String> c2prods = new HashSet(Arrays.asList("p1", "p2"));
-        Set<String> c3prods = new HashSet(Arrays.asList("p3", "p4"));
-        Set<String> c4prods = new HashSet(Arrays.asList("p1", "p4"));
+        Set<String> c1prods = new HashSet<String>(Arrays.asList("p1"));
+        Set<String> c2prods = new HashSet<String>(Arrays.asList("p1", "p2"));
+        Set<String> c3prods = new HashSet<String>(Arrays.asList("p3", "p4"));
+        Set<String> c4prods = new HashSet<String>(Arrays.asList("p1", "p4"));
 
         // Consumer created
         cal.set(Calendar.MONTH, Calendar.MARCH);
@@ -178,7 +178,8 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         attachEntitlement(compliance, entitlement2);
         cal.set(Calendar.MONTH, Calendar.JUNE);
         compliance = createSnapshotWithProductsAndCompliances(cal.getTime(), "c3", "o2", "partial",
-            c3prods, new HashSet(Arrays.asList("p3")), new HashSet(Arrays.asList("p4")), null);
+            c3prods, new HashSet<String>(Arrays.asList("p3")),
+            new HashSet<String>(Arrays.asList("p4")), null);
         attachEntitlement(compliance, entitlement2);
 
         cal.set(Calendar.MONTH, Calendar.MAY);
@@ -481,7 +482,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         for (Compliance cs : snaps) {
             String uuid = cs.getConsumer().getUuid();
             assertEquals("Invalid status found for " + uuid,
-                    expectedStatusDates.get(uuid), cs.getStatus().getDate());
+                expectedStatusDates.get(uuid), cs.getStatus().getDate());
         }
     }
 
@@ -769,6 +770,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     }
 
 
+    @SuppressWarnings("serial")
     @Test
     public void testGetAllStatusReports() {
         HashMap<String, Integer> expected = new HashMap<String, Integer>() {
@@ -783,6 +785,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         this.testConsumerTrendReport(expected, null, null);
     }
 
+    @SuppressWarnings("serial")
     @Test
     public void testGetStatusReportsTimeframe() {
         Calendar cal = this.getCalendar();
@@ -1112,6 +1115,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         return output;
     }
 
+    @SuppressWarnings({ "checkstyle:indentation", "unchecked" })
     public Object[] buildMapForStatusCountsBetweenDates() {
         LinkedList<Object[]> tests = new LinkedList<Object[]>();
         Object[][] beforeSet = this.buildMapForStatusCountsBeforeDate();
@@ -1133,6 +1137,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         return tests.toArray();
     }
 
+    @SuppressWarnings({ "checkstyle:indentation", "unchecked" })
     public Object[] buildMapForStatusCountsWithSku() {
         LinkedList<Object[]> tests = new LinkedList<Object[]>();
         Object[][] beforeSet = this.buildMapForStatusCountsBeforeDate();
@@ -1159,6 +1164,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         return tests.toArray();
     }
 
+    @SuppressWarnings({ "checkstyle:indentation", "unchecked" })
     public Object[] buildMapForStatusCountsWithSubscriptionName() {
         LinkedList<Object[]> tests = new LinkedList<Object[]>();
         Object[][] beforeSet = this.buildMapForStatusCountsBeforeDate();
@@ -1185,6 +1191,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         return tests.toArray();
     }
 
+    @SuppressWarnings({ "checkstyle:indentation", "unchecked" })
     public Object[] buildMapForStatusCountsWithProducts() {
         LinkedList<Object[]> tests = new LinkedList<Object[]>();
         Object[][] beforeSet = this.buildMapForStatusCountsBeforeDate();
@@ -1216,6 +1223,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         return tests.toArray();
     }
 
+    @SuppressWarnings({ "checkstyle:indentation", "unchecked" })
     public Object[] buildMapForStatusCountsWithAttributes() {
         LinkedList<Object[]> tests = new LinkedList<Object[]>();
         Object[][] beforeSet = this.buildMapForStatusCountsBeforeDate();
@@ -1587,6 +1595,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         return output;
     }
 
+    @SuppressWarnings({ "checkstyle:indentation", "unchecked" })
     public Object[] buildMapForStatusCountsForConsumersBetweenDates() {
         LinkedList<Object[]> tests = new LinkedList<Object[]>();
         Object[][] beforeSet = this.buildMapForStatusCountsBeforeDate();
@@ -1725,7 +1734,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         return output;
     }
 
-    @SuppressWarnings("checkstyle:methodlength")
+    @SuppressWarnings({ "checkstyle:methodlength", "serial" })
     private Object[][] buildSubMapForStatusCountsWithAttributes() {
         long millis;
         Calendar cal = this.getCalendar();

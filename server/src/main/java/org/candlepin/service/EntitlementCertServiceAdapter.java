@@ -73,7 +73,7 @@ public interface EntitlementCertServiceAdapter {
      * @throws GeneralSecurityException thrown security problem
      */
     Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer,
-            Map<String, Entitlement> entitlements, Map<String, Product> products)
+        Map<String, Entitlement> entitlements, Map<String, Product> products)
         throws GeneralSecurityException, IOException;
 
     /**
@@ -92,7 +92,7 @@ public interface EntitlementCertServiceAdapter {
      * @throws GeneralSecurityException thrown security problem
      */
     Map<String, EntitlementCertificate> generateUeberCerts(Consumer consumer,
-            Map<String, Entitlement> entitlements, Map<String, Product> products)
+        Map<String, Entitlement> entitlements, Map<String, Product> products)
         throws GeneralSecurityException, IOException;
 
     /**

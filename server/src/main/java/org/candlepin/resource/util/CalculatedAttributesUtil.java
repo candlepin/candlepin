@@ -81,7 +81,7 @@ public class CalculatedAttributesUtil {
             return;
         }
         Map<String, SuggestedQuantity> results = quantityRules.getSuggestedQuantities(
-                poolList, c, date);
+            poolList, c, date);
 
         for (Pool p : poolList) {
             SuggestedQuantity suggested = results.get(p.getId());

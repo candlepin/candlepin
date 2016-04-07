@@ -35,8 +35,7 @@ public class ConsumerTypeTest extends DatabaseTestFixture {
 
         commitTransaction();
 
-        List<?> results = entityManager().createQuery(
-                "select ct from ConsumerType as ct").getResultList();
+        List<?> results = entityManager().createQuery("select ct from ConsumerType as ct").getResultList();
         assertEquals(1, results.size());
     }
 

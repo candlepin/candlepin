@@ -35,8 +35,7 @@ public class GuestIdCurator extends AbstractHibernateCurator<GuestId> {
         super(GuestId.class);
     }
 
-    public Page<List<GuestId>> listByConsumer(Consumer consumer,
-            PageRequest pageRequest) {
+    public Page<List<GuestId>> listByConsumer(Consumer consumer, PageRequest pageRequest) {
         Criteria criteria = this.currentSession().createCriteria(GuestId.class)
             .add(Restrictions.eq("consumer", consumer));
         return listByCriteria(criteria, pageRequest);

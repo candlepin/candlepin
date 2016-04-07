@@ -117,18 +117,18 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     @SuppressWarnings("unchecked")
     public List<Entitlement> listByConsumerAndPoolId(Consumer consumer, String poolId) {
         Criteria query = currentSession().createCriteria(Entitlement.class)
-                    .add(Restrictions.eq("pool.id", poolId));
+            .add(Restrictions.eq("pool.id", poolId));
         query.add(Restrictions.eq("consumer", consumer));
         return listByCriteria(query);
     }
 
     public Page<List<Entitlement>> listByConsumer(Consumer consumer, String productId,
-            EntitlementFilterBuilder filters, PageRequest pageRequest) {
+        EntitlementFilterBuilder filters, PageRequest pageRequest) {
         return listFilteredPages(consumer, "consumer", productId, filters, pageRequest);
     }
 
     public Page<List<Entitlement>> listByOwner(Owner owner, String productId,
-            EntitlementFilterBuilder filters, PageRequest pageRequest) {
+        EntitlementFilterBuilder filters, PageRequest pageRequest) {
         return listFilteredPages(owner, "owner", productId, filters, pageRequest);
     }
 
@@ -137,7 +137,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     private Page<List<Entitlement>> listFilteredPages(AbstractHibernateObject object, String objectType,
-            String productId, EntitlementFilterBuilder filters, PageRequest pageRequest) {
+        String productId, EntitlementFilterBuilder filters, PageRequest pageRequest) {
         Page<List<Entitlement>> entitlementsPage;
         Owner owner = null;
         if (object != null) {
@@ -197,8 +197,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         Criteria criteria = currentSession().createCriteria(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer))
             .createCriteria("pool")
-                .add(Restrictions.le("startDate", activeOn))
-                .add(Restrictions.ge("endDate", activeOn));
+            .add(Restrictions.le("startDate", activeOn))
+            .add(Restrictions.ge("endDate", activeOn));
         List<Entitlement> entitlements = criteria.list();
         return entitlements;
     }
@@ -268,7 +268,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * with a "modifying" entitlement that has just been granted.
      */
     private Criteria createModifiesDateFilteringCriteria(Set<Consumer> consumers, Date startDate,
-            Date endDate, List<Entitlement> excludeEnts) {
+        Date endDate, List<Entitlement> excludeEnts) {
         Criteria criteria = currentSession().createCriteria(Entitlement.class)
             .add(unboundedInCriterion("consumer", consumers));
 
@@ -311,8 +311,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             return modifying;
         }
 
-        List<Product> overlappingProducts =
-                productCurator.listAllByIds(pidEnts.getAllProductIds());
+        List<Product> overlappingProducts = productCurator.listAllByIds(pidEnts.getAllProductIds());
 
         Set<String> entitlementProducts = new HashSet<String>();
         for (Entitlement entitlement : entitlements) {
@@ -347,7 +346,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     public Map<Consumer, List<Entitlement>> getDistinctConsumers(
-            List<Entitlement> entsToRevoke) {
+        List<Entitlement> entsToRevoke) {
         Map<Consumer, List<Entitlement>> result = new HashMap<Consumer, List<Entitlement>>();
         for (Entitlement ent : entsToRevoke) {
             List<Entitlement> ents = result.get(ent.getConsumer());
@@ -366,8 +365,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         Set<Consumer> consumers = getDistinctConsumers(e).keySet();
 
         List<Entitlement> overlapEnts = createModifiesDateFilteringCriteria(
-                consumers, earliestStartDate, latestEndDate, e)
-                .list();
+            consumers, earliestStartDate, latestEndDate, e).list();
 
         return new ProductEntitlements(overlapEnts);
     }
@@ -394,7 +392,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     public Page<List<Entitlement>> listByConsumerAndProduct(Consumer consumer,
-            String productId, PageRequest pageRequest) {
+        String productId, PageRequest pageRequest) {
         return listByProduct(consumer, "consumer", productId, pageRequest);
     }
 
@@ -406,12 +404,10 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .add(Restrictions.eq(objectType, object))
             .createAlias("pool", "p")
             .createAlias("p.product", "prod")
-            .createAlias("p.providedProducts", "pp",
-                CriteriaSpecification.LEFT_JOIN)
+            .createAlias("p.providedProducts", "pp", CriteriaSpecification.LEFT_JOIN)
             // Never show a consumer expired entitlements
             .add(Restrictions.ge("p.endDate", new Date()))
-            .add(Restrictions.or(Restrictions.eq("prod.id", productId),
-                Restrictions.eq("pp.id", productId)));
+            .add(Restrictions.or(Restrictions.eq("prod.id", productId), Restrictions.eq("pp.id", productId)));
 
         Page<List<Entitlement>> page = listByCriteria(query, pageRequest);
 
@@ -475,15 +471,15 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     @SuppressWarnings("unchecked")
     public List<Entitlement> findByStackIds(Consumer consumer, Collection stackIds) {
         Criteria activeNowQuery = currentSession().createCriteria(Entitlement.class)
-                .add(Restrictions.eq("consumer", consumer))
-                .createAlias("pool", "ent_pool")
-                .createAlias("ent_pool.product", "product")
-                .createAlias("product.attributes", "attrs")
-                .add(Restrictions.eq("attrs.name", "stacking_id"))
-                .add(unboundedInCriterion("attrs.value", stackIds))
-                .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
-                .createAlias("ent_pool.sourceStack", "ss", JoinType.LEFT_OUTER_JOIN)
-                .add(Restrictions.isNull("ss.id"));
+            .add(Restrictions.eq("consumer", consumer))
+            .createAlias("pool", "ent_pool")
+            .createAlias("ent_pool.product", "product")
+            .createAlias("product.attributes", "attrs")
+            .add(Restrictions.eq("attrs.name", "stacking_id"))
+            .add(unboundedInCriterion("attrs.value", stackIds))
+            .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
+            .createAlias("ent_pool.sourceStack", "ss", JoinType.LEFT_OUTER_JOIN)
+            .add(Restrictions.isNull("ss.id"));
         return activeNowQuery.list();
     }
 
@@ -553,7 +549,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .add(Restrictions.eq("attrs.value", stackId))
             .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
             .createAlias("ent_pool.sourceSubscription", "sourceSub")
-                .add(Restrictions.isNotNull("sourceSub.id"))
+            .add(Restrictions.isNotNull("sourceSub.id"))
             .addOrder(Order.asc("created")) // eldest entitlement
             .setMaxResults(1);
         return (Entitlement) activeNowQuery.uniqueResult();

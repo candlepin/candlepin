@@ -166,8 +166,7 @@ public class CandlepinModule extends AbstractModule {
         bind(CandlepinRequestScope.class).toInstance(requestScope);
 
         bind(I18n.class).toProvider(I18nProvider.class);
-        bind(BeanValidationEventListener.class).toProvider(
-                ValidationListenerProvider.class);
+        bind(BeanValidationEventListener.class).toProvider(ValidationListenerProvider.class);
         bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
 
         configureJPA();
@@ -275,8 +274,7 @@ public class CandlepinModule extends AbstractModule {
     }
 
     @Provides
-    protected ValidatorFactory getValidationFactory(
-            Provider<MessageInterpolator> interpolatorProvider) {
+    protected ValidatorFactory getValidationFactory(Provider<MessageInterpolator> interpolatorProvider) {
         HibernateValidatorConfiguration configure =
             Validation.byProvider(HibernateValidator.class).configure();
 

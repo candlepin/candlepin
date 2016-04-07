@@ -85,7 +85,7 @@ public class EntitleByProductsJobTest {
         EntitleByProductsJob job = new EntitleByProductsJob(e, null);
         job.execute(ctx);
         verify(e).bindByProducts(eq(pids), eq(consumerUuid), eq((Date) null),
-                eq((Collection<String>) null));
+            eq((Collection<String>) null));
         verify(e).sendEvents(eq(ents));
     }
 

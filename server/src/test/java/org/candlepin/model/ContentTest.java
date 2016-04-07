@@ -42,9 +42,9 @@ public class ContentTest extends DatabaseTestFixture {
         String  contentHash = String.valueOf(
             Math.abs(Long.valueOf("test-content".hashCode())));
         Content content = new Content(owner, "test-content", contentHash,
-                            "test-content-label", "yum", "test-vendor",
-                             "test-content-url", "test-gpg-url",
-                             "test-arch1,test-arch2");
+            "test-content-label", "yum", "test-vendor",
+            "test-content-url", "test-gpg-url",
+            "test-arch1,test-arch2");
         HashSet<String> modifiedProductIds = new HashSet<String>();
         modifiedProductIds.add("ProductA");
         modifiedProductIds.add("ProductB");
@@ -69,8 +69,8 @@ public class ContentTest extends DatabaseTestFixture {
             Math.abs(Long.valueOf("test-content-arches".hashCode())));
 
         Content content = new Content(owner, "test-content-arches", contentHash,
-                            "test-content-arches-label", "yum", "test-vendor",
-                             "test-content-url", "test-gpg-url", "");
+            "test-content-arches-label", "yum", "test-vendor",
+            "test-content-url", "test-gpg-url", "");
         String arches = "x86_64, i386";
         content.setArches(arches);
         contentCurator.create(content);
@@ -86,7 +86,7 @@ public class ContentTest extends DatabaseTestFixture {
 
         Content content = new Content(owner, "Test Content", "100",
             "test-content-label", "yum", "test-vendor",
-             "test-content-url", "test-gpg-url", "test-arch1");
+            "test-content-url", "test-gpg-url", "test-arch1");
         contentCurator.create(content);
 
         // Same ID, but label changed:

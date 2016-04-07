@@ -64,7 +64,7 @@ public class ProductResource {
 
     @Inject
     public ProductResource(ProductCurator productCurator, OwnerCurator ownerCurator,
-            ProductCertificateCurator productCertCurator, I18n i18n) {
+        ProductCertificateCurator productCertCurator, I18n i18n) {
 
         this.productCurator = productCurator;
         this.productCertCurator = productCertCurator;

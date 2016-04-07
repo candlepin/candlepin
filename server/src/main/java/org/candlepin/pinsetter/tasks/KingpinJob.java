@@ -143,8 +143,7 @@ public abstract class KingpinJob implements Job {
         throws JobExecutionException;
 
     public static JobStatus scheduleJob(JobCurator jobCurator,
-            Scheduler scheduler, JobDetail detail,
-            Trigger trigger) throws SchedulerException {
+        Scheduler scheduler, JobDetail detail, Trigger trigger) throws SchedulerException {
 
         scheduler.getListenerManager().addJobListenerMatcher(
             PinsetterJobListener.LISTENER_NAME,

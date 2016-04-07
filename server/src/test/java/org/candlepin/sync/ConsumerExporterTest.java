@@ -37,13 +37,11 @@ public class ConsumerExporterTest {
     @Test
     public void testConsumerExport() throws IOException {
         ObjectMapper mapper = SyncUtils.getObjectMapper(new MapConfiguration(
-                new HashMap<String, String>() {
-
-                    {
-                        put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
-                                "false");
-                    }
-                }));
+            new HashMap<String, String>() {
+                {
+                    put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+                }
+            }));
 
 
         ConsumerExporter exporter = new ConsumerExporter();

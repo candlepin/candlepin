@@ -76,7 +76,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = "cp_consumer")
 @JsonFilter("ConsumerFilter")
 public class Consumer extends AbstractHibernateObject implements Linkable, Owned, Named, ConsumerProperty,
-        Eventful {
+    Eventful {
 
     public static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
 
@@ -162,8 +162,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     private Set<Entitlement> entitlements;
 
     @ElementCollection
-    @CollectionTable(name = "cp_consumer_facts",
-                     joinColumns = @JoinColumn(name = "cp_consumer_id"))
+    @CollectionTable(name = "cp_consumer_facts", joinColumns = @JoinColumn(name = "cp_consumer_id"))
     @MapKeyColumn(name = "mapkey")
     @Column(name = "element")
     //FIXME A cascade shouldn't be necessary here as ElementCollections cascade by default
@@ -197,8 +196,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     @Valid  // Enable validation.  See http://stackoverflow.com/a/13992948
     @ElementCollection
-    @CollectionTable(name = "cp_consumer_content_tags",
-                     joinColumns = @JoinColumn(name = "consumer_id"))
+    @CollectionTable(name = "cp_consumer_content_tags", joinColumns = @JoinColumn(name = "consumer_id"))
     @Column(name = "content_tag")
     private Set<String> contentTags;
 

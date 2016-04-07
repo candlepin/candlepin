@@ -47,8 +47,7 @@ public class ActivationKeyContentOverride extends ContentOverride {
     public ActivationKeyContentOverride() {
     }
 
-    public ActivationKeyContentOverride(ActivationKey key,
-            String contentLabel, String name, String value) {
+    public ActivationKeyContentOverride(ActivationKey key, String contentLabel, String name, String value) {
         super(contentLabel, name, value);
         this.setKey(key);
     }

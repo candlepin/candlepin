@@ -122,7 +122,7 @@ public class PoolRulesInstanceTest {
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
         List<PoolUpdate> updates = poolRules.updatePools(p, existingPools, p.getQuantity(),
-                TestUtil.stubChangedProducts(p.getProduct()));
+            TestUtil.stubChangedProducts(p.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -148,7 +148,7 @@ public class PoolRulesInstanceTest {
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
         List<PoolUpdate> updates = poolRules.updatePools(masterPool, existingPools, s.getQuantity(),
-                TestUtil.stubChangedProducts(masterPool.getProduct()));
+            TestUtil.stubChangedProducts(masterPool.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -174,7 +174,7 @@ public class PoolRulesInstanceTest {
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
         List<PoolUpdate> updates = poolRules.updatePools(masterPool, existingPools,
-                masterPool.getQuantity(), TestUtil.stubChangedProducts(masterPool.getProduct()));
+            masterPool.getQuantity(), TestUtil.stubChangedProducts(masterPool.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -186,7 +186,7 @@ public class PoolRulesInstanceTest {
     }
 
     private Subscription createInstanceBasedSub(String productId, int quantity, int instanceMultiplier,
-            boolean exported) {
+        boolean exported) {
         Owner owner = new Owner("Test Corporation");
         Product product = new Product(productId, productId, owner);
         product.setAttribute("instance_multiplier", Integer.toString(instanceMultiplier));

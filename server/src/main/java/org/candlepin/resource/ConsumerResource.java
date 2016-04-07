@@ -247,6 +247,7 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "consumers")
     @Paginate
+    @SuppressWarnings("checkstyle:indentation")
     public List<Consumer> list(@QueryParam("username") String userName,
         @QueryParam("type") Set<String> typeLabels,
         @QueryParam("owner") String ownerKey,
@@ -257,8 +258,8 @@ public class ConsumerResource {
         @Context PageRequest pageRequest) {
 
         if (userName == null && (typeLabels == null || typeLabels.isEmpty()) && ownerKey == null &&
-                (uuids == null || uuids.isEmpty()) && (hypervisorIds == null || hypervisorIds.isEmpty()) &&
-                (attrFilters == null || attrFilters.isEmpty())) {
+            (uuids == null || uuids.isEmpty()) && (hypervisorIds == null || hypervisorIds.isEmpty()) &&
+            (attrFilters == null || attrFilters.isEmpty())) {
             throw new BadRequestException(i18n.tr("Must specify at least one search criteria."));
         }
 
@@ -357,17 +358,15 @@ public class ConsumerResource {
             IdentityCertificate idcert = consumer.getIdCert();
             if (idcert != null) {
                 Date expire = idcert.getSerial().getExpiration();
-                int days = config.getInt(
-                        ConfigProperties.IDENTITY_CERT_EXPIRY_THRESHOLD, 90);
+                int days = config.getInt(ConfigProperties.IDENTITY_CERT_EXPIRY_THRESHOLD, 90);
                 Date futureExpire = Util.addDaysToDt(days);
                 // if expiration is within 90 days, regenerate it
                 log.debug("Threshold [{}] expires on [{}] futureExpire [{}]",
-                        days, expire, futureExpire);
+                    days, expire, futureExpire);
 
                 if (expire.before(futureExpire)) {
-                    log.info(
-                            "Regenerating identity certificate for consumer: {}, expiry: {}",
-                            uuid, expire);
+                    log.info("Regenerating identity certificate for consumer: {}, expiry: {}",
+                        uuid, expire);
                     consumer = this.regenerateIdentityCertificate(consumer);
                 }
             }
@@ -500,8 +499,7 @@ public class ConsumerResource {
                 consumer.setCreated(createdDate);
             }
             if (lastCheckIn != null) {
-                log.info("Creating with specific last checkin time: {}",
-                        consumer.getLastCheckin());
+                log.info("Creating with specific last checkin time: {}", consumer.getLastCheckin());
                 consumer.setLastCheckin(lastCheckIn);
             }
             if (identityCertCreation) {
@@ -536,7 +534,7 @@ public class ConsumerResource {
     }
 
     private List<ActivationKey>  checkActivationKeys(Principal principal, Owner owner,
-            Set<String> keyStrings) throws BadRequestException {
+        Set<String> keyStrings) throws BadRequestException {
         List<ActivationKey> keys = new ArrayList<ActivationKey>();
         for (String keyString : keyStrings) {
             ActivationKey key = null;
@@ -836,8 +834,7 @@ public class ConsumerResource {
                     toUpdate.getOwner(), allGuestIds);
         }
 
-        if (performConsumerUpdates(consumer, toUpdate,
-                guestConsumerMap)) {
+        if (performConsumerUpdates(consumer, toUpdate, guestConsumerMap)) {
             try {
                 consumerCurator.update(toUpdate);
             }
@@ -854,14 +851,14 @@ public class ConsumerResource {
     }
 
     public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate,
-            VirtConsumerMap guestConsumerMap) {
+        VirtConsumerMap guestConsumerMap) {
         return performConsumerUpdates(updated, toUpdate, guestConsumerMap,
                 true);
     }
 
     @Transactional
     public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate,
-            VirtConsumerMap guestConsumerMap, boolean isIdCert) {
+        VirtConsumerMap guestConsumerMap, boolean isIdCert) {
         if (log.isDebugEnabled()) {
             log.debug("Updating consumer: {}", toUpdate.getUuid());
         }
@@ -870,7 +867,7 @@ public class ConsumerResource {
         // If nothing changes we won't send.  The new entity needs to be correct though,
         // so we should get a Jsonstring now, and finish it off if we're going to send
         EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.CONSUMER, Type.MODIFIED)
-                .setOldEntity(toUpdate);
+            .setOldEntity(toUpdate);
 
         // version changed on non-checked in consumer, or list of capabilities
         // changed on checked in consumer
@@ -891,7 +888,7 @@ public class ConsumerResource {
 
         // Allow optional setting of the autoheal attribute:
         if (updated.isAutoheal() != null &&
-             !updated.isAutoheal().equals(toUpdate.isAutoheal())) {
+            !updated.isAutoheal().equals(toUpdate.isAutoheal())) {
             log.info("   Updating consumer autoheal setting.");
             toUpdate.setAutoheal(updated.isAutoheal());
             changesMade = true;
@@ -918,7 +915,7 @@ public class ConsumerResource {
         String environmentId =
             updated.getEnvironment() == null ? null : updated.getEnvironment().getId();
         if (environmentId != null && (toUpdate.getEnvironment() == null ||
-                    !toUpdate.getEnvironment().getId().equals(environmentId))) {
+            !toUpdate.getEnvironment().getId().equals(environmentId))) {
             Environment e = environmentCurator.find(environmentId);
             if (e == null) {
                 throw new NotFoundException(i18n.tr(
@@ -937,8 +934,7 @@ public class ConsumerResource {
         if (updated.getName() != null && !toUpdate.getName().equals(updated.getName())) {
             checkConsumerName(updated);
 
-            log.info("Updating consumer name: {} -> {}",
-                    toUpdate.getName(), updated.getName());
+            log.info("Updating consumer name: {} -> {}", toUpdate.getName(), updated.getName());
             toUpdate.setName(updated.getName());
 
             // get the new name into the id cert if we are using the cert
@@ -949,8 +945,7 @@ public class ConsumerResource {
         }
 
         if (updated.getLastCheckin() != null) {
-            log.info("Updating to specific last checkin time: {}",
-                    updated.getLastCheckin());
+            log.info("Updating to specific last checkin time: {}", updated.getLastCheckin());
             toUpdate.setLastCheckin(updated.getLastCheckin());
             changesMade = true;
         }
@@ -975,8 +970,7 @@ public class ConsumerResource {
         HypervisorId incomingId = incoming.getHypervisorId();
         if (incomingId != null) {
             HypervisorId existingId = existing.getHypervisorId();
-            if (incomingId.getHypervisorId() == null ||
-                    incomingId.getHypervisorId().isEmpty()) {
+            if (incomingId.getHypervisorId() == null || incomingId.getHypervisorId().isEmpty()) {
                 // Allow hypervisorId to be removed
                 existing.setHypervisorId(null);
             }
@@ -1066,7 +1060,7 @@ public class ConsumerResource {
      * @return a boolean
      */
     private boolean checkForGuestsUpdate(Consumer existing, Consumer incoming,
-            VirtConsumerMap guestConsumerMap) {
+        VirtConsumerMap guestConsumerMap) {
 
         if (incoming.getGuestIds() == null) {
             log.debug("Guests not included in this consumer update, skipping update.");
@@ -1192,7 +1186,7 @@ public class ConsumerResource {
         if (deletableGuestEntitlements.size() > 0) {
             // auto heal guests after revocations
             boolean hasInstalledProducts = guest.getInstalledProducts() != null &&
-                    !guest.getInstalledProducts().isEmpty();
+                !guest.getInstalledProducts().isEmpty();
             if (guest.isAutoheal() && !deletableGuestEntitlements.isEmpty() && hasInstalledProducts) {
                 AutobindData autobindData = AutobindData.create(guest).on(new Date());
                 List<Entitlement> ents = entitler.bindByProducts(autobindData);
@@ -1388,7 +1382,7 @@ public class ConsumerResource {
     }
 
     private void validateBindArguments(boolean hasPoolQuantities, String poolIdString, Integer quantity,
-            String[] productIds, List<String> fromPools, Date entitleDate, boolean async) {
+        String[] productIds, List<String> fromPools, Date entitleDate, boolean async) {
         short parameters = 0;
 
         if (hasPoolQuantities) {
@@ -1398,7 +1392,7 @@ public class ConsumerResource {
             parameters++;
         }
         if (ArrayUtils.isNotEmpty(productIds) || CollectionUtils.isNotEmpty(fromPools) ||
-                entitleDate != null) {
+            entitleDate != null) {
             parameters++;
         }
         if (parameters > 1) {
@@ -1455,11 +1449,11 @@ public class ConsumerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
+    @SuppressWarnings("checkstyle:indentation")
     public Response bind(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("pool") @Verify(value = Pool.class, nullable = true,
-            subResource = SubResource.ENTITLEMENTS)
-                String poolIdString,
+            subResource = SubResource.ENTITLEMENTS) String poolIdString,
         @QueryParam("product") String[] productIds,
         @QueryParam("quantity") Integer quantity,
         @QueryParam("email") String email,
@@ -1476,7 +1470,7 @@ public class ConsumerResource {
 
         // Check that only one query param was set, and some other validations
         validateBindArguments(hasPoolQuantities, poolIdString, quantity, productIds, fromPools,
-                entitleDate, async);
+            entitleDate, async);
 
         // Verify consumer exists:
         Consumer consumer = consumerCurator.verifyAndLookupConsumerWithEntitlements(consumerUuid);
@@ -1514,7 +1508,7 @@ public class ConsumerResource {
                 return Response.serverError().build();
             }
             log.info("Checked if consumer has unaccepted subscription terms in {}ms",
-                    (System.currentTimeMillis() - subTermsStart));
+                (System.currentTimeMillis() - subTermsStart));
         }
         catch (CandlepinException e) {
             log.debug(e.getMessage());
@@ -1563,7 +1557,7 @@ public class ConsumerResource {
         }
         else {
             AutobindData autobindData = AutobindData.create(consumer).on(entitleDate)
-                    .forProducts(productIds).withPools(fromPools);
+                .forProducts(productIds).withPools(fromPools);
             entitlements = entitler.bindByProducts(autobindData);
         }
 
@@ -1674,7 +1668,7 @@ public class ConsumerResource {
 
         EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
         Page<List<Entitlement>> entitlementsPage = entitlementCurator.listByConsumer(consumer, productId,
-                filters, pageRequest);
+            filters, pageRequest);
 
         // Store the page for the LinkHeaderPostInterceptor
         ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);
@@ -1982,8 +1976,8 @@ public class ConsumerResource {
      */
     private Consumer regenerateIdentityCertificate(Consumer consumer) {
         EventBuilder eventBuilder = eventFactory
-                .getEventBuilder(Target.CONSUMER, Type.MODIFIED)
-                .setOldEntity(consumer);
+            .getEventBuilder(Target.CONSUMER, Type.MODIFIED)
+            .setOldEntity(consumer);
 
         IdentityCertificate ic = generateIdCert(consumer, true);
         consumer.setIdCert(ic);
@@ -2130,8 +2124,7 @@ public class ConsumerResource {
     @Path("/compliance")
     @Transactional
     public Map<String, ComplianceStatus> getComplianceStatusList(
-        @QueryParam("uuid") @Verify(value = Consumer.class, nullable = true)
-            List<String> uuids) {
+        @QueryParam("uuid") @Verify(value = Consumer.class, nullable = true) List<String> uuids) {
         List<Consumer> consumers = uuids == null ? new LinkedList<Consumer>() :
             consumerCurator.findByUuids(uuids);
         Map<String, ComplianceStatus> results = new HashMap<String, ComplianceStatus>();

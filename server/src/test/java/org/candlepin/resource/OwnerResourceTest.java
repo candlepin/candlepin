@@ -494,14 +494,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
 
         List<Pool> nowList = ownerResource.listPools(owner.getKey(), c.getUuid(), null, null, null, false,
-                null, null, new ArrayList<KeyValueParameter>(), principal, null);
+            null, null, new ArrayList<KeyValueParameter>(), principal, null);
         assertEquals(1, nowList.size());
         assert (nowList.get(0).getId().equals(pool1.getId()));
 
         Date activeOn = new Date(pool2.getStartDate().getTime() + 1000L * 60 * 60 * 24);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         List<Pool> futureList = ownerResource.listPools(owner.getKey(), c.getUuid(), null, null, null,
-                false, sdf.format(activeOn), null, new ArrayList<KeyValueParameter>(), principal, null);
+            false, sdf.format(activeOn), null, new ArrayList<KeyValueParameter>(), principal, null);
         assertEquals(1, futureList.size());
         assert (futureList.get(0).getId().equals(pool2.getId()));
     }
@@ -741,7 +741,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         assertEquals(1,
             ownerResource.listConsumers(owner.getKey(), null, null,
-                uuids, null, null, null, null, null, null).size());
+            uuids, null, null, null, null, null, null).size());
     }
 
     /**
@@ -930,8 +930,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         createEntitlementWithQ(pool, retrieved, consumer1, e2, "01/01/2010");
         assertEquals(pool.getConsumed(), Long.valueOf(e1 + e2));
         this.config.setProperty(
-            ConfigProperties.REVOKE_ENTITLEMENT_IN_FIFO_ORDER, fifo ? "true" :
-                "false");
+            ConfigProperties.REVOKE_ENTITLEMENT_IN_FIFO_ORDER, fifo ? "true" : "false");
 
         poolManager.getRefresher(subAdapter).add(retrieved).run();
         pool = poolCurator.find(pool.getId());
@@ -1201,7 +1200,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ImportRecord record = thisOwnerResource.importManifest(owner.getKey(), new String[0], input);
         assertEquals(ImportRecord.Status.SUCCESS_WITH_WARNING, record.getStatus());
         assertEquals(owner.getKey() + " file imported successfully." +
-                "No active subscriptions found in the file.", record.getStatusMessage());
+            "No active subscriptions found in the file.", record.getStatusMessage());
     }
 
     @Test
@@ -1226,13 +1225,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ImportRecord record = thisOwnerResource.importManifest(owner.getKey(), new String[0], input);
         assertEquals(ImportRecord.Status.SUCCESS_WITH_WARNING, record.getStatus());
         assertEquals(owner.getKey() + " file imported successfully." +
-                "One or more inactive subscriptions found in the file.", record.getStatusMessage());
+            "One or more inactive subscriptions found in the file.", record.getStatusMessage());
         verify(es).emitSubscriptionExpired(subscription);
     }
 
     private OwnerResource setUpSuccesfullImport(MultipartInput input, Map<String, Object> result,
-            EventSink es)
-        throws IOException, ImporterException {
+        EventSink es) throws IOException, ImporterException {
 
         Importer importer = mock(Importer.class);
         OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null,
@@ -1405,9 +1403,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         List<Pool> pools = poolCurator.listByOwner(owner);
         assertEquals(2, pools.size());
         assertTrue(pools.get(0).getSubscriptionSubKey().startsWith("master") ||
-                pools.get(1).getSubscriptionSubKey().startsWith("master"));
+            pools.get(1).getSubscriptionSubKey().startsWith("master"));
         assertTrue(pools.get(0).getSubscriptionSubKey().equals("derived") ||
-                pools.get(1).getSubscriptionSubKey().equals("derived"));
+            pools.get(1).getSubscriptionSubKey().equals("derived"));
     }
 
     @Test
@@ -1423,9 +1421,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         List<Pool> pools = poolCurator.listByOwner(owner);
         assertEquals(2, pools.size());
         assertTrue(pools.get(0).getSubscriptionSubKey().startsWith("master") ||
-                pools.get(1).getSubscriptionSubKey().startsWith("master"));
+            pools.get(1).getSubscriptionSubKey().startsWith("master"));
         assertTrue(pools.get(0).getSubscriptionSubKey().equals("derived") ||
-                pools.get(1).getSubscriptionSubKey().equals("derived"));
+            pools.get(1).getSubscriptionSubKey().equals("derived"));
         assertEquals(100L, pools.get(0).getQuantity().longValue());
         assertEquals(300L, pools.get(1).getQuantity().longValue());
     }
@@ -1503,9 +1501,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerCurator oc = mock(OwnerCurator.class);
         EntitlementCurator ec = mock(EntitlementCurator.class);
         OwnerResource ownerres = new OwnerResource(oc, null,
-                null, i18n, null, null, null, null, null, null, null,
-                null, null, null, null, null, ec, null, null, null,
-                null, null, null, null, null);
+            null, i18n, null, null, null, null, null, null, null,
+            null, null, null, null, null, ec, null, null, null,
+            null, null, null, null, null);
 
         when(oc.lookupByKey(owner.getKey())).thenReturn(owner);
         when(
@@ -1526,9 +1524,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerCurator oc = mock(OwnerCurator.class);
         OwnerResource ownerres = new OwnerResource(oc, null,
-                null, i18n, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null);
+            null, i18n, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null);
 
         ownerres.ownerEntitlements("Taylor Swift", null, null, null, req);
     }
@@ -1677,9 +1675,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(pm.retrieveServiceLevelsForOwner(eq(o), eq(false))).thenReturn(levels);
 
         OwnerResource resource = new OwnerResource(
-                oc, null, cc, i18n, null, null, null, null, null, pm, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null
-            );
+            oc, null, cc, i18n, null, null, null, null, null, pm, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null);
         Set<String> returnLevels = resource.ownerServiceLevels("owner-A", p, "false");
         assert (returnLevels.size() == 1);
         for (String s : returnLevels) {

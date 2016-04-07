@@ -86,7 +86,7 @@ public class QuantityRules {
      * @return suggested quantities for all pools requested
      */
     public Map<String, SuggestedQuantity> getSuggestedQuantities(List<Pool> pools,
-            Consumer c, Date date) {
+        Consumer c, Date date) {
 
         JsonJsContext args = new JsonJsContext(mapper);
 

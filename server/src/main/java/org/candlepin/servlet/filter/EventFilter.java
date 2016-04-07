@@ -57,8 +57,7 @@ public class EventFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response,
         FilterChain chain) throws IOException, ServletException {
 
-        TeeHttpServletResponse resp = new TeeHttpServletResponse(
-                (HttpServletResponse) response);
+        TeeHttpServletResponse resp = new TeeHttpServletResponse((HttpServletResponse) response);
         chain.doFilter(request, resp);
         Status status = Status.fromStatusCode(resp.getStatus());
         if (status.getFamily() == Status.Family.SUCCESSFUL) {

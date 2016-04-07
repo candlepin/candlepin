@@ -92,7 +92,7 @@ public class PropertyConverterTest {
     @Test
     public void testToList() {
         assertEquals(Arrays.asList("Hello", "world", "how", "are you?"),
-                toList("Hello, world,how,  are you?"));
+            toList("Hello, world,how,  are you?"));
     }
 
     @Test

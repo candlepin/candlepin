@@ -124,8 +124,7 @@ public class Compliance {
         return status;
     }
 
-    public void setStatus(
-            ComplianceStatus complianceStatusSnapshot) {
+    public void setStatus(ComplianceStatus complianceStatusSnapshot) {
         this.status = complianceStatusSnapshot;
         this.status.setComplianceSnapshot(this);
     }
@@ -134,8 +133,7 @@ public class Compliance {
         return entitlements;
     }
 
-    public void setEntitlements(
-            Set<Entitlement> entitlementSnapshots) {
+    public void setEntitlements(Set<Entitlement> entitlementSnapshots) {
         this.entitlements = entitlementSnapshots;
 
         for (Entitlement snapshot : this.entitlements) {

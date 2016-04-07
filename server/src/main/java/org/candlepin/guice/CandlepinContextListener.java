@@ -197,8 +197,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     protected List<Module> getModules(ServletContext context) {
         List<Module> modules = new LinkedList<Module>();
 
-        modules.add(Modules.override(new DefaultConfig()).with(
-                new CustomizableModules().load(config)));
+        modules.add(Modules.override(new DefaultConfig()).with(new CustomizableModules().load(config)));
 
         modules.add(new AbstractModule() {
 

@@ -88,7 +88,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         if (entity.getFacts() != null) {
             entity.setFacts(filterAndVerifyFacts(entity));
         }
-
         return super.create(entity);
     }
 
@@ -195,15 +194,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * none exists.
      */
     @Transactional
-    public VirtConsumerMap getGuestConsumersMap(Owner owner,
-            Set<String> guestIds) {
+    public VirtConsumerMap getGuestConsumersMap(Owner owner, Set<String> guestIds) {
         VirtConsumerMap guestConsumersMap = new VirtConsumerMap();
         if (guestIds.size() == 0) {
             return guestConsumersMap;
         }
 
-        List<String> possibleGuestIds = Util.getPossibleUuids(guestIds.toArray(
-                new String [guestIds.size()]));
+        List<String> possibleGuestIds = Util.getPossibleUuids(guestIds.toArray(new String [guestIds.size()]));
 
         String sql = "select cp_consumer.uuid from cp_consumer " +
             "inner join cp_consumer_facts " +
@@ -592,8 +589,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return VirtConsumerMap of hypervisor ID to it's consumer, or null if none exists.
      */
     @Transactional
-    public VirtConsumerMap getHostConsumersMap(Owner owner,
-            Set<String> hypervisorIds) {
+    public VirtConsumerMap getHostConsumersMap(Owner owner, Set<String> hypervisorIds) {
         List<String> idList = new ArrayList<String>();
         idList.addAll(hypervisorIds);
         List<Consumer> results = new ArrayList<Consumer>();
@@ -624,8 +620,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @SuppressWarnings("unchecked")
     @Transactional
-    public List<Consumer> getHypervisorsBulk(Collection<String> hypervisorIds,
-            String ownerKey) {
+    public List<Consumer> getHypervisorsBulk(Collection<String> hypervisorIds, String ownerKey) {
         if (hypervisorIds == null || hypervisorIds.isEmpty()) {
             return new LinkedList<Consumer>();
         }
@@ -674,8 +669,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return consumer;
     }
 
-    public Consumer verifyAndLookupConsumerWithEntitlements(
-            String consumerUuid) {
+    public Consumer verifyAndLookupConsumerWithEntitlements(String consumerUuid) {
         Consumer consumer = this.findByUuid(consumerUuid);
         if (consumer == null) {
             throw new NotFoundException(i18n.tr(
@@ -698,10 +692,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return consumer;
     }
 
+    @SuppressWarnings("checkstyle:indentation")
     public Page<List<Consumer>> searchOwnerConsumers(Owner owner, String userName,
-            Collection<ConsumerType> types, List<String> uuids, List<String> hypervisorIds,
-            List<KeyValueParameter> factFilters, List<String> skus,
-            List<String> subscriptionIds, List<String> contracts, PageRequest pageRequest) {
+        Collection<ConsumerType> types, List<String> uuids, List<String> hypervisorIds,
+        List<KeyValueParameter> factFilters, List<String> skus,
+        List<String> subscriptionIds, List<String> contracts, PageRequest pageRequest) {
         Criteria crit = super.createSecureCriteria();
         if (owner != null) {
             crit.add(Restrictions.eq("owner", owner));
@@ -746,12 +741,14 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                         subCrit.add(Restrictions.eq("owner", owner));
                     }
 
-                    subCrit.createCriteria("entitlements").createCriteria("pool")
-                        .createCriteria("product").add(
-                            Restrictions.eq("id", sku))
-                        .createCriteria("attributes").add(Restrictions.and(
-                            Restrictions.eq("name", "type"),
-                            Restrictions.eq("value", "MKT")));
+                    subCrit.createCriteria("entitlements")
+                        .createCriteria("pool")
+                        .createCriteria("product").add(Restrictions.eq("id", sku))
+                        .createCriteria("attributes").add(
+                            Restrictions.and(
+                                Restrictions.eq("name", "type"),
+                                Restrictions.eq("value", "MKT"))
+                        );
 
                     subCrit.add(Restrictions.eqProperty("this.id", "subquery_consumer.id"));
 
@@ -860,14 +857,14 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             final String[] columns = criteriaQuery.findColumns(this.propertyName, criteria);
             final String[] wrappedLowerColumns = wrapLower(columns);
             if (criteriaQuery.getFactory().getDialect().supportsRowValueConstructorSyntaxInInList() ||
-                    columns.length <= 1) {
+                columns.length <= 1) {
 
                 String singleValueParam = StringHelper.repeat("lower(?), ", columns.length - 1) + "lower(?)";
                 if (columns.length > 1) {
                     singleValueParam = '(' + singleValueParam + ')';
                 }
                 final String params = this.values.length > 0 ? StringHelper.repeat(singleValueParam + ", ",
-                        this.values.length - 1) + singleValueParam : "";
+                    this.values.length - 1) + singleValueParam : "";
                 String cols = StringHelper.join(", ", wrappedLowerColumns);
                 if (columns.length > 1) {
                     cols = '(' + cols + ')';
@@ -876,7 +873,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             }
             else {
                 String cols = " ( " + StringHelper.join(" = lower(?) and ",
-                        wrappedLowerColumns) + "= lower(?) ) ";
+                    wrappedLowerColumns) + "= lower(?) ) ";
                 cols = this.values.length > 0 ? StringHelper.repeat(cols + "or ",
                         this.values.length - 1) + cols : "";
                 cols = " ( " + cols + " ) ";

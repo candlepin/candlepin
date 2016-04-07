@@ -87,10 +87,8 @@ public class X509V3ExtensionUtil extends X509Util {
         String contentPrefix, Map<String, EnvironmentContent> promotedContent) {
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
 
-        X509ExtensionWrapper versionExtension =
-            new X509ExtensionWrapper(OIDUtil.REDHAT_OID + "." +
-                OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_VERSION_KEY),
-                false, thisVersion);
+        X509ExtensionWrapper versionExtension = new X509ExtensionWrapper(OIDUtil.REDHAT_OID + "." +
+            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_VERSION_KEY), false, thisVersion);
 
         toReturn.add(versionExtension);
 
@@ -98,8 +96,8 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public Set<X509ByteExtensionWrapper> getByteExtensions(Product sku,
-            List<org.candlepin.model.dto.Product> productModels,
-            Entitlement ent, String contentPrefix,
+        List<org.candlepin.model.dto.Product> productModels,
+        Entitlement ent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent) throws IOException {
         Set<X509ByteExtensionWrapper> toReturn =
             new LinkedHashSet<X509ByteExtensionWrapper>();
@@ -107,23 +105,21 @@ public class X509V3ExtensionUtil extends X509Util {
         EntitlementBody eb = createEntitlementBodyContent(sku, productModels, ent,
             contentPrefix, promotedContent);
 
-        X509ByteExtensionWrapper bodyExtension =
-            new X509ByteExtensionWrapper(OIDUtil.REDHAT_OID + "." +
-                OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_DATA_KEY),
-                false, retreiveContentValue(eb));
+        X509ByteExtensionWrapper bodyExtension = new X509ByteExtensionWrapper(OIDUtil.REDHAT_OID + "." +
+            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_DATA_KEY), false, retreiveContentValue(eb));
         toReturn.add(bodyExtension);
 
         return toReturn;
     }
 
     public byte[] createEntitlementDataPayload(Product skuProduct,
-            List<org.candlepin.model.dto.Product> productModels,
-            Entitlement ent, String contentPrefix,
-            Map<String, EnvironmentContent> promotedContent)
+        List<org.candlepin.model.dto.Product> productModels,
+        Entitlement ent, String contentPrefix,
+        Map<String, EnvironmentContent> promotedContent)
         throws UnsupportedEncodingException, IOException {
 
-        EntitlementBody map = createEntitlementBody(skuProduct, productModels,
-                ent, contentPrefix, promotedContent);
+        EntitlementBody map = createEntitlementBody(skuProduct, productModels, ent,
+            contentPrefix, promotedContent);
 
         String json = toJson(map);
         return processPayload(json);
@@ -151,9 +147,9 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public EntitlementBody createEntitlementBody(Product skuProduct,
-            List<org.candlepin.model.dto.Product> productModels,
-            Entitlement ent, String contentPrefix,
-            Map<String, EnvironmentContent> promotedContent) {
+        List<org.candlepin.model.dto.Product> productModels,
+        Entitlement ent, String contentPrefix,
+        Map<String, EnvironmentContent> promotedContent) {
 
         EntitlementBody toReturn = new EntitlementBody();
         toReturn.setConsumer(ent.getConsumer().getUuid());
@@ -167,7 +163,7 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public EntitlementBody createEntitlementBodyContent(Product sku,
-            List<org.candlepin.model.dto.Product> productModels,
+        List<org.candlepin.model.dto.Product> productModels,
         Entitlement ent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent) {
 
@@ -212,8 +208,7 @@ public class X509V3ExtensionUtil extends X509Util {
         String management = product.getAttributeValue("management_enabled");
         if (management != null && !management.trim().equals("")) {
             // only included if not the default value of false
-            if (management.equalsIgnoreCase("true") ||
-                    management.equalsIgnoreCase("1")) {
+            if (management.equalsIgnoreCase("true") || management.equalsIgnoreCase("1")) {
                 toReturn.setManagement(Boolean.TRUE);
             }
         }
@@ -272,8 +267,8 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public List<org.candlepin.model.dto.Product> createProducts(Product sku,
-            Set<Product> products, String contentPrefix,
-            Map<String, EnvironmentContent> promotedContent, Consumer consumer, Entitlement ent) {
+        Set<Product> products, String contentPrefix,
+        Map<String, EnvironmentContent> promotedContent, Consumer consumer, Entitlement ent) {
 
         List<org.candlepin.model.dto.Product> toReturn =
             new ArrayList<org.candlepin.model.dto.Product>();
@@ -322,8 +317,7 @@ public class X509V3ExtensionUtil extends X509Util {
             archList.add(arch);
         }
         toReturn.setArchitectures(archList);
-        toReturn.setContent(createContent(filterProductContent(engProduct, ent,
-                entitledProductIds), sku,
+        toReturn.setContent(createContent(filterProductContent(engProduct, ent, entitledProductIds), sku,
             contentPrefix, promotedContent, consumer, engProduct, ent));
 
         return toReturn;
@@ -366,8 +360,7 @@ public class X509V3ExtensionUtil extends X509Util {
 
         List<Content> toReturn = new ArrayList<Content>();
 
-        boolean enableEnvironmentFiltering = config.getBoolean(
-                ConfigProperties.ENV_CONTENT_FILTERING);
+        boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
 
         // Return only the contents that are arch appropriate
         Set<ProductContent> archApproriateProductContent = filterContentByContentArch(
@@ -468,7 +461,7 @@ public class X509V3ExtensionUtil extends X509Util {
      * @return ProductContent to include in the certificate.
      */
     public Set<ProductContent> filterProductContent(Product prod, Entitlement ent,
-            Set<String> entitledProductIds) {
+        Set<String> entitledProductIds) {
         Set<ProductContent> filtered = new HashSet<ProductContent>();
 
         for (ProductContent pc : prod.getProductContent()) {

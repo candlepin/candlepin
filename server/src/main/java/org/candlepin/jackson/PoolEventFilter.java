@@ -27,14 +27,14 @@ import com.fasterxml.jackson.databind.ser.PropertyWriter;
 public class PoolEventFilter extends HateoasBeanPropertyFilter {
 
     public boolean isSerializable(Object obj, JsonGenerator jsonGenerator,
-            SerializerProvider serializerProvider, PropertyWriter writer) {
+        SerializerProvider serializerProvider, PropertyWriter writer) {
         JsonStreamContext context = jsonGenerator.getOutputContext();
 
         // Special case list of entitlements to show full json
         if (context.getParent() != null && context.getParent().getParent() != null &&
-                context.getParent().getParent().getParent() != null &&
-                context.getParent().inObject() &&
-                context.getParent().getParent().getParent().inRoot()) {
+            context.getParent().getParent().getParent() != null &&
+            context.getParent().inObject() &&
+            context.getParent().getParent().getParent().inRoot()) {
             return true;
         }
         return super.isSerializable(obj, jsonGenerator, serializerProvider, writer);

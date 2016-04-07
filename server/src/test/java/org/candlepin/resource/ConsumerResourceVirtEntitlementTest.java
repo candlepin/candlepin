@@ -252,7 +252,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             when(config.getString(eq(ConfigProperties.CONSUMER_PERSON_NAME_PATTERN)))
                 .thenReturn("[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
             when(config.subset(eq("org.quartz"))).thenReturn(
-                    new MapConfiguration(ConfigProperties.DEFAULT_PROPERTIES));
+                new MapConfiguration(ConfigProperties.DEFAULT_PROPERTIES));
             bind(Configuration.class).toInstance(config);
             bind(Enforcer.class).to(EntitlementRules.class);
         }

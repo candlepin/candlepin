@@ -43,7 +43,7 @@ public class AMQPBusPublisher implements EventListener {
 
     @Inject
     public AMQPBusPublisher(TopicSession session,
-            Map<Target, Map<Type, TopicPublisher>> producerMap, ObjectMapper omapper) {
+        Map<Target, Map<Type, TopicPublisher>> producerMap, ObjectMapper omapper) {
         this.session = session;
         this.producerMap = producerMap;
         this.mapper = omapper;

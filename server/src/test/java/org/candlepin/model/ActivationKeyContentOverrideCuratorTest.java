@@ -80,8 +80,7 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
         activationKeyContentOverrideCurator.merge(cco);
 
         ActivationKeyContentOverride cco2 =
-                activationKeyContentOverrideCurator.retrieve(
-                    key, "test-content", "name");
+            activationKeyContentOverrideCurator.retrieve(key, "test-content", "name");
         assert (cco2 != null);
         assertEquals("value-update", cco2.getValue());
     }

@@ -158,7 +158,7 @@ public class EntitlementImporter {
      * to the actual persisted location.
      */
     public void associateProvidedProducts(Map<String, Product> productsById,
-            Entitlement entitlement, Subscription subscription)
+        Entitlement entitlement, Subscription subscription)
         throws SyncDataFormatException {
 
         // Associate main provided products:

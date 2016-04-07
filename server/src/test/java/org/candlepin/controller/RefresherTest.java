@@ -140,6 +140,6 @@ public class RefresherTest {
         refresher.run();
 
         verify(poolManager, times(1)).refreshPoolsForMasterPool(eq(mainPool), eq(true), eq(false),
-                any(Set.class));
+            any(Set.class));
     }
 }

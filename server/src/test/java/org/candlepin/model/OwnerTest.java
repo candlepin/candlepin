@@ -43,8 +43,8 @@ public class OwnerTest extends DatabaseTestFixture {
         ownerCurator.create(o);
 
         Owner result = (Owner) entityManager().createQuery(
-                "select o from Owner o where o.key = :key").setParameter(
-                "key", ownerName).getSingleResult();
+            "select o from Owner o where o.key = :key").setParameter(
+            "key", ownerName).getSingleResult();
 
         assertNotNull(result);
         assertEquals(ownerName, result.getKey());
@@ -57,14 +57,13 @@ public class OwnerTest extends DatabaseTestFixture {
     @Test
     public void testList() throws Exception {
         int beforeCount = entityManager().createQuery(
-                "select o from Owner as o").getResultList().size();
+            "select o from Owner as o").getResultList().size();
 
         for (int i = 0; i < 10; i++) {
             ownerCurator.create(new Owner("Corp " + i));
         }
 
-        int afterCount = entityManager()
-                .createQuery("select o from Owner as o").getResultList().size();
+        int afterCount = entityManager().createQuery("select o from Owner as o").getResultList().size();
         assertEquals(10, afterCount - beforeCount);
     }
 
@@ -72,8 +71,7 @@ public class OwnerTest extends DatabaseTestFixture {
     public void testObjectRelationships() throws Exception {
         Owner owner = new Owner("test-owner");
         // Product
-        Product rhel = new Product("Red Hat Enterprise Linux",
-                "Red Hat Enterprise Linux", owner);
+        Product rhel = new Product("Red Hat Enterprise Linux", "Red Hat Enterprise Linux", owner);
 
         // Consumer
         Consumer c = new Consumer();

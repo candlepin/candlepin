@@ -56,8 +56,7 @@ public class PropertyConverter {
             return (Boolean) value;
         }
         else if (value instanceof String) {
-            if ("1".equalsIgnoreCase((String) value) ||
-                    "y".equalsIgnoreCase((String) value)) {
+            if ("1".equalsIgnoreCase((String) value) || "y".equalsIgnoreCase((String) value)) {
                 return true;
             }
 

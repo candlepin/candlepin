@@ -158,7 +158,7 @@ public class StatusTrendReportTest {
     }
 
     private void validateParams(MultivaluedMap<String, String> params, String expectedParam,
-            String expectedMessage) {
+        String expectedMessage) {
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, this.complianceSnapshotCurator);
 

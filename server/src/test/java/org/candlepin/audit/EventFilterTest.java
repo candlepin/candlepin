@@ -53,31 +53,32 @@ public class EventFilterTest {
     private Configuration configurationDoNotFilter;
 
     @Before
+    @SuppressWarnings("checkstyle:indentation")
     public void init() throws Exception {
         when(configurationAuditEnabled
                 .getBoolean(eq(ConfigProperties.AUDIT_FILTER_ENABLED))).thenReturn(true);
         when(configurationAuditEnabled
-                .getList(eq(ConfigProperties.AUDIT_FILTER_DO_NOT_FILTER))).thenReturn(
-                        Arrays.asList("CREATED-ENTITLEMENT",
-                        "DELETED-ENTITLEMENT",
-                        "CREATED-POOL",
-                        "DELETED-POOL",
-                        "CREATED-COMPLIANCE"));
+            .getList(eq(ConfigProperties.AUDIT_FILTER_DO_NOT_FILTER))).thenReturn(
+                Arrays.asList("CREATED-ENTITLEMENT",
+                "DELETED-ENTITLEMENT",
+                "CREATED-POOL",
+                "DELETED-POOL",
+                "CREATED-COMPLIANCE"));
         when(configurationAuditEnabled
                 .getString(eq(ConfigProperties.AUDIT_FILTER_DEFAULT_POLICY))).thenReturn("DO_FILTER");
 
         when(configurationDoNotFilter
                 .getBoolean(eq(ConfigProperties.AUDIT_FILTER_ENABLED))).thenReturn(true);
         when(configurationDoNotFilter
-                .getList(eq(ConfigProperties.AUDIT_FILTER_DO_NOT_FILTER))).thenReturn(
-                        Arrays.asList("CREATED-ENTITLEMENT",
-                        "DELETED-ENTITLEMENT",
-                        "CREATED-POOL",
-                        "DELETED-POOL",
-                        "CREATED-COMPLIANCE"));
+            .getList(eq(ConfigProperties.AUDIT_FILTER_DO_NOT_FILTER))).thenReturn(
+                Arrays.asList("CREATED-ENTITLEMENT",
+                "DELETED-ENTITLEMENT",
+                "CREATED-POOL",
+                "DELETED-POOL",
+                "CREATED-COMPLIANCE"));
         when(configurationDoNotFilter
-                .getList(eq(ConfigProperties.AUDIT_FILTER_DO_FILTER))).thenReturn(
-                        Arrays.asList("MODIFIED-EXPORT"));
+            .getList(eq(ConfigProperties.AUDIT_FILTER_DO_FILTER))).thenReturn(
+                Arrays.asList("MODIFIED-EXPORT"));
         when(configurationDoNotFilter
                 .getString(eq(ConfigProperties.AUDIT_FILTER_DEFAULT_POLICY))).thenReturn("DO_NOT_FILTER");
 

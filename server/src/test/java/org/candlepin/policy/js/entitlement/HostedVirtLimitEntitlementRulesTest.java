@@ -137,8 +137,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
 
         Subscription s2 = createVirtLimitSub("virtLimitProduct2", 10, "10");
         s2.setId("subId2");
-        List<Pool> pools2 = poolRules
-                .createAndEnrichPools(TestUtil.copyFromSub(s2), new LinkedList<Pool>());
+        List<Pool> pools2 = poolRules.createAndEnrichPools(TestUtil.copyFromSub(s2), new LinkedList<Pool>());
         assertEquals(2, pools.size());
 
         Pool physicalPool2 = pools2.get(0);
@@ -163,10 +162,10 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
 
         ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
         when(poolManagerMock.lookupBySubscriptionIds(captor.capture())).thenReturn(poolList);
-        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId()))).thenReturn(
-                poolList);
-        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool2.getSubscriptionId()))).thenReturn(
-                poolList2);
+        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId())))
+            .thenReturn(poolList);
+        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool2.getSubscriptionId())))
+            .thenReturn(poolList2);
 
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put(physicalPool.getId(), e);

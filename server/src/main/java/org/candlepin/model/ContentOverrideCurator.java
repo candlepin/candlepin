@@ -27,8 +27,8 @@ import java.util.List;
  * @param <Parent> parent of the content override, Consumer or ActivationKey for example
  */
 public abstract class ContentOverrideCurator
-        <T extends ContentOverride, Parent extends AbstractHibernateObject>
-        extends AbstractHibernateCurator<T> {
+    <T extends ContentOverride, Parent extends AbstractHibernateObject>
+    extends AbstractHibernateCurator<T> {
 
     private String parentAttr;
 

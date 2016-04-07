@@ -40,6 +40,7 @@ import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.JsRunnerRequestCache;
 import org.candlepin.policy.js.RuleExecutionException;
+import org.candlepin.policy.js.entitlement.AbstractEntitlementRules.Rule;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.service.ProductServiceAdapter;
@@ -103,9 +104,8 @@ public class EnforcerTest extends DatabaseTestFixture {
         consumerTypeCurator.create(consumer.getType());
         consumerCurator.create(consumer);
 
-        BufferedReader reader
-            = new BufferedReader(new InputStreamReader(
-                getClass().getResourceAsStream("/rules/test-rules.js")));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(
+            getClass().getResourceAsStream("/rules/test-rules.js")));
         StringBuilder builder = new StringBuilder();
         String line = null;
         while ((line = reader.readLine()) != null) {
@@ -128,18 +128,12 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Test
     public void shouldParseValidMapping() {
-        assertEquals(
-            new EntitlementRules.Rule(
-                "func1", 1,
-                new HashSet<String>() { { add("attr1"); add("attr2"); add("attr3"); } }
-            ),
+        Rule func1rule = new EntitlementRules.Rule(
+            "func1", 1, new HashSet<String>() { { add("attr1"); add("attr2"); add("attr3"); } });
+        assertEquals(func1rule,
             ((EntitlementRules) enforcer).parseRule("func1:1:attr1:attr2:attr3"));
 
-        assertEquals(
-            new EntitlementRules.Rule(
-                "func3", 3,
-                new HashSet<String>() { { add("attr4"); } }
-            ),
+        assertEquals(new EntitlementRules.Rule("func3", 3, new HashSet<String>() { { add("attr4"); } }),
             ((EntitlementRules) enforcer).parseRule("func3:3:attr4"));
     }
 
@@ -180,9 +174,8 @@ public class EnforcerTest extends DatabaseTestFixture {
                 }
             };
 
-        List<EntitlementRules.Rule> orderedAndFilteredRules =
-            ((EntitlementRules) enforcer).rulesForAttributes(
-                new HashSet<String>() { { add("attr1"); } }, rules);
+        List<EntitlementRules.Rule> orderedAndFilteredRules = ((EntitlementRules) enforcer)
+            .rulesForAttributes(new HashSet<String>() { { add("attr1"); } }, rules);
 
         assertEquals(
             new LinkedList<EntitlementRules.Rule>() {
@@ -198,38 +191,30 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Test
     public void shouldSelectAllRulesMappedToMultipleAttributes() {
-        Map<String, Set<EntitlementRules.Rule>> rules
-            = new HashMap<String, Set<EntitlementRules.Rule>>() {
-                {
-                    put("attr1",
-                        rules(
-                            rule("func5", 5, "attr1", "attr2", "attr3"),
-                            rule("func1", 2, "attr1", "attr2"),
-                            rule("func6", 4, "attr1", "attr2", "attr3", "attr4"))
-                    );
-                    put("attr3", rules(rule("func3", 3, "attr3")));
-                }
-            };
+        Map<String, Set<EntitlementRules.Rule>> rules = new HashMap<String, Set<EntitlementRules.Rule>>() {
+            {
+                put("attr1", rules(
+                    rule("func5", 5, "attr1", "attr2", "attr3"),
+                    rule("func1", 2, "attr1", "attr2"),
+                    rule("func6", 4, "attr1", "attr2", "attr3", "attr4"))
+                );
+                put("attr3", rules(rule("func3", 3, "attr3")));
+            }
+        };
 
-        List<EntitlementRules.Rule> orderedAndFilteredRules =
-            ((EntitlementRules) enforcer).rulesForAttributes(
-                new HashSet<String>() {
-                    {
-                        add("attr1"); add("attr2"); add("attr3");
-                    }
-                }, rules);
-
-        assertEquals(
-            new LinkedList<EntitlementRules.Rule>() {
+        List<EntitlementRules.Rule> orderedAndFilteredRules = ((EntitlementRules) enforcer)
+            .rulesForAttributes(new HashSet<String>() {
                 {
-                    add(rule("func5", 5, "attr1", "attr2", "attr3"));
-                    add(rule("func3", 3, "attr3"));
-                    add(rule("func1", 2, "attr1", "attr2"));
-                    add(rule("global", 0, new String[0]));
-                }
-            },
-            orderedAndFilteredRules
-        );
+                    add("attr1"); add("attr2"); add("attr3");
+                }}, rules);
+
+        assertEquals(new LinkedList<EntitlementRules.Rule>() {
+            {
+                add(rule("func5", 5, "attr1", "attr2", "attr3"));
+                add(rule("func3", 3, "attr3"));
+                add(rule("func1", 2, "attr1", "attr2"));
+                add(rule("global", 0, new String[0]));
+            }}, orderedAndFilteredRules);
     }
 
     // This exception should mention wrapping a MissingFactException
@@ -241,9 +226,7 @@ public class EnforcerTest extends DatabaseTestFixture {
 
         ValidationResult result = enforcer.preEntitlement(
             TestUtil.createConsumer(),
-            entitlementPoolWithMembersAndExpiration(owner, product, 1, 2,
-                expiryDate(2000, 1, 1)),
-            1);
+            entitlementPoolWithMembersAndExpiration(owner, product, 1, 2, expiryDate(2000, 1, 1)), 1);
 
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());

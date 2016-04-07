@@ -137,7 +137,7 @@ public class BouncyCastlePKIUtility extends PKIUtility {
         certGen.addExtension(X509Extensions.AuthorityKeyIdentifier, false,
             new AuthorityKeyIdentifierStructure(caCert));
         certGen.addExtension(X509Extensions.SubjectKeyIdentifier, false,
-              subjectKeyWriter.getSubjectKeyIdentifier(clientKeyPair, extensions));
+            subjectKeyWriter.getSubjectKeyIdentifier(clientKeyPair, extensions));
         certGen.addExtension(X509Extensions.ExtendedKeyUsage, false,
             new ExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth));
 

@@ -77,7 +77,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.create(consumer);
 
         List<Consumer> results = entityManager().createQuery(
-                "select c from Consumer as c", Consumer.class).getResultList();
+            "select c from Consumer as c", Consumer.class).getResultList();
         assertEquals(1, results.size());
     }
 
@@ -498,19 +498,19 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         guestIds.add(guestId1ReverseEndian); // reversed endian match
         guestIds.add(guestId2); // direct match
         VirtConsumerMap guestMap = consumerCurator.getGuestConsumersMap(
-                owner, guestIds);
+            owner, guestIds);
 
         assertEquals(2, guestMap.size());
 
         assertEquals(gConsumer1.getId(), guestMap.get(
-                guestId1.toLowerCase()).getId());
+            guestId1.toLowerCase()).getId());
         assertEquals(gConsumer1.getId(), guestMap.get(
-                guestId1ReverseEndian).getId());
+            guestId1ReverseEndian).getId());
 
         assertEquals(gConsumer2.getId(), guestMap.get(
-                guestId2.toLowerCase()).getId());
+            guestId2.toLowerCase()).getId());
         assertEquals(gConsumer2.getId(), guestMap.get(
-                Util.transformUuid(guestId2.toLowerCase())).getId());
+            Util.transformUuid(guestId2.toLowerCase())).getId());
     }
 
     @Test
@@ -602,8 +602,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         hypervisorIds.add(hypervisorId2);
         hypervisorIds.add("not really a hypervisor");
 
-        VirtConsumerMap hypervisorMap =
-                consumerCurator.getHostConsumersMap(owner, hypervisorIds);
+        VirtConsumerMap hypervisorMap = consumerCurator.getHostConsumersMap(owner, hypervisorIds);
         assertEquals(2, hypervisorMap.size());
         assertEquals(consumer1.getId(), hypervisorMap.get(hypervisorId1).getId());
         assertEquals(consumer2.getId(), hypervisorMap.get(hypervisorId2).getId());
@@ -659,7 +658,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         this.productCurator.create(prod);
         Pool p = createPool(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
         Entitlement ent = this.createEntitlement(owner, consumer, p,
-                createEntitlementCertificate("entkey", "ecert"));
+            createEntitlementCertificate("entkey", "ecert"));
         ent.setUpdatedOnStart(false);
         entitlementCurator.create(ent);
 
@@ -676,7 +675,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         this.productCurator.create(prod);
         Pool p = createPool(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
         Entitlement ent = this.createEntitlement(owner, consumer, p,
-                createEntitlementCertificate("entkey", "ecert"));
+            createEntitlementCertificate("entkey", "ecert"));
         // Already taken care of
         ent.setUpdatedOnStart(true);
         entitlementCurator.create(ent);

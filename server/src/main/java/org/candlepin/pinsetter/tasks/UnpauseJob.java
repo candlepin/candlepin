@@ -45,8 +45,7 @@ public class UnpauseJob extends KingpinJob {
     private PinsetterKernel pinsetterKernel;
 
     @Inject
-    public UnpauseJob(JobCurator jobCurator,
-            PinsetterKernel pinsetterKernel) {
+    public UnpauseJob(JobCurator jobCurator, PinsetterKernel pinsetterKernel) {
         this.jobCurator = jobCurator;
         this.pinsetterKernel = pinsetterKernel;
     }

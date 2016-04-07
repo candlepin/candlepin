@@ -39,8 +39,7 @@ public abstract class X509Util {
 
     private static Logger log = LoggerFactory.getLogger(X509Util.class);
 
-    public static final Predicate<Product>
-    PROD_FILTER_PREDICATE = new Predicate<Product>() {
+    public static final Predicate<Product> PROD_FILTER_PREDICATE = new Predicate<Product>() {
         @Override
         public boolean apply(Product product) {
             return product != null && StringUtils.isNumeric(product.getId());
@@ -75,7 +74,7 @@ public abstract class X509Util {
             // Filter any content not promoted to environment.
             if (filterEnvironment &&
                 (ent.getConsumer().getEnvironment() != null &&
-                    !promotedContent.containsKey(pc.getContent().getId()))) {
+                !promotedContent.containsKey(pc.getContent().getId()))) {
 
                 log.debug("Skipping content not promoted to environment: " +
                     pc.getContent().getId());

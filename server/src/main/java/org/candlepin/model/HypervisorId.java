@@ -51,10 +51,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_consumer_hypervisor",
-    uniqueConstraints = @UniqueConstraint(
-        name = "cp_consumer_hypervisor_ukey",
-        columnNames = {"owner_id", "hypervisor_id"}))
+@Table(name = "cp_consumer_hypervisor", uniqueConstraints =
+    @UniqueConstraint(name = "cp_consumer_hypervisor_ukey", columnNames = {"owner_id", "hypervisor_id"}))
 public class HypervisorId extends AbstractHibernateObject {
 
     @Id

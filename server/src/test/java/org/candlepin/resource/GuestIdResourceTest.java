@@ -56,23 +56,12 @@ public class GuestIdResourceTest {
 
     private I18n i18n;
 
-    @Mock
-    private ConsumerCurator consumerCurator;
-
-    @Mock
-    private GuestIdCurator guestIdCurator;
-
-    @Mock
-    private ConsumerResourceForTesting consumerResource;
-
-    @Mock
-    private EventFactory eventFactory;
-
-    @Mock
-    private EventSink sink;
-
-    @Mock
-    private ServiceLevelValidator mockedServiceLevelValidator;
+    @Mock private ConsumerCurator consumerCurator;
+    @Mock private GuestIdCurator guestIdCurator;
+    @Mock private ConsumerResourceForTesting consumerResource;
+    @Mock private EventFactory eventFactory;
+    @Mock private EventSink sink;
+    @Mock private ServiceLevelValidator mockedServiceLevelValidator;
 
     private GuestIdResource guestIdResource;
 
@@ -139,8 +128,7 @@ public class GuestIdResourceTest {
 
         guestIdResource.updateGuests(consumer.getUuid(), guestIds);
         Mockito.verify(consumerResource, Mockito.times(1))
-            .performConsumerUpdates(any(Consumer.class), eq(consumer),
-                    any(VirtConsumerMap.class));
+            .performConsumerUpdates(any(Consumer.class), eq(consumer), any(VirtConsumerMap.class));
         // consumerResource returned true, so the consumer should be updated
         Mockito.verify(consumerCurator, Mockito.times(1)).update(eq(consumer));
     }
@@ -157,8 +145,7 @@ public class GuestIdResourceTest {
 
         guestIdResource.updateGuests(consumer.getUuid(), guestIds);
         Mockito.verify(consumerResource, Mockito.times(1))
-            .performConsumerUpdates(any(Consumer.class), eq(consumer),
-                    any(VirtConsumerMap.class));
+            .performConsumerUpdates(any(Consumer.class), eq(consumer), any(VirtConsumerMap.class));
         Mockito.verify(consumerCurator, Mockito.never()).update(eq(consumer));
     }
 
@@ -222,8 +209,7 @@ public class GuestIdResourceTest {
 
         // We now check for migration when the system checks in, not during guest ID updates.
         Mockito.verify(consumerResource, Mockito.times(0))
-            .checkForMigration(any(Consumer.class),
-                any(Consumer.class));
+            .checkForMigration(any(Consumer.class), any(Consumer.class));
     }
 
     @Test

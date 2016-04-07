@@ -56,15 +56,15 @@ public class UniqueByEntityJobTest {
         map.put(JobStatus.TARGET_ID, "TaylorSwift");
         JobKey jobKey = new JobKey("name", "group");
         JobDetail detail = newJob(TestUniqueByEntityJob.class)
-                .withIdentity(jobKey)
-                .requestRecovery(true)
-                .usingJobData(map).storeDurably(true)
-                .build();
+            .withIdentity(jobKey)
+            .requestRecovery(true)
+            .usingJobData(map).storeDurably(true)
+            .build();
         JobStatus preExistingJobStatus = new JobStatus();
         preExistingJobStatus.setState(JobState.WAITING);
         TestUniqueByEntityJob job = new TestUniqueByEntityJob();
         when(jobCurator.getByClassAndTarget(eq("TaylorSwift"), any(Class.class))).thenReturn(
-                preExistingJobStatus);
+            preExistingJobStatus);
 
         JobStatus resultStatus = job.scheduleJob(jobCurator, null, detail, null);
         assertEquals(preExistingJobStatus, resultStatus);

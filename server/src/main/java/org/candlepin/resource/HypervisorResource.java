@@ -110,6 +110,7 @@ public class HypervisorResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Deprecated
     @Transactional
+    @SuppressWarnings("checkstyle:indentation")
     public HypervisorCheckInResult hypervisorUpdate(
         Map<String, List<GuestId>> hostGuestMap, @Context Principal principal,
         @QueryParam("owner") @Verify(value = Owner.class,
@@ -132,7 +133,7 @@ public class HypervisorResource {
 
         // Maps virt hypervisor ID to registered consumer for that hypervisor, should one exist:
         VirtConsumerMap hypervisorConsumersMap =
-                consumerCurator.getHostConsumersMap(owner, hostGuestMap.keySet());
+            consumerCurator.getHostConsumersMap(owner, hostGuestMap.keySet());
 
         int emptyGuestIdCount = 0;
         Set<String> allGuestIds = new HashSet<String>();
@@ -158,7 +159,7 @@ public class HypervisorResource {
 
         // Maps virt guest ID to registered consumer for guest, if one exists:
         VirtConsumerMap guestConsumersMap = consumerCurator.getGuestConsumersMap(
-                owner, allGuestIds);
+            owner, allGuestIds);
 
         HypervisorCheckInResult result = new HypervisorCheckInResult();
         for (Entry<String, List<GuestId>> hostEntry : hostGuestMap.entrySet()) {
@@ -234,6 +235,7 @@ public class HypervisorResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     @Path("/{owner}")
+    @SuppressWarnings("checkstyle:indentation")
     public JobDetail hypervisorUpdateAsync(
         String hypervisorJson, @Context Principal principal,
         @PathParam("owner") @Verify(value = Owner.class,
@@ -271,12 +273,11 @@ public class HypervisorResource {
      * return whether or not there was any change
      */
     private boolean addGuestIds(Consumer consumer, List<GuestId> guestIds,
-            VirtConsumerMap guestConsumerMap) {
+        VirtConsumerMap guestConsumerMap) {
         Consumer withIds = new Consumer();
         withIds.setGuestIds(guestIds);
         boolean guestIdsUpdated =
-            consumerResource.performConsumerUpdates(withIds, consumer,
-                    guestConsumerMap);
+            consumerResource.performConsumerUpdates(withIds, consumer, guestConsumerMap);
         if (guestIdsUpdated) {
             consumerCurator.update(consumer);
         }
@@ -287,7 +288,7 @@ public class HypervisorResource {
      * Create a new hypervisor type consumer to represent the incoming hypervisorId
      */
     private Consumer createConsumerForHypervisorId(String incHypervisorId,
-            Owner owner, Principal principal) {
+        Owner owner, Principal principal) {
         Consumer consumer = new Consumer();
         consumer.setName(incHypervisorId);
         consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));

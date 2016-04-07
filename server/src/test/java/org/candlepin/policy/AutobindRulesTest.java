@@ -167,8 +167,7 @@ public class AutobindRulesTest {
                 new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
 
         List<PoolQuantity> results = autobindRules.selectBestPools(consumer,
-                new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
-                false);
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>(), false);
         assertEquals(1, results.size());
     }
 

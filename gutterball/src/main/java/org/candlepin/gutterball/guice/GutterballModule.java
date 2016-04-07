@@ -187,7 +187,7 @@ public class GutterballModule extends AbstractModule {
 
     protected void configureEventHandlers() {
         MapBinder<String, EventHandler> eventBinder =
-                MapBinder.newMapBinder(binder(), String.class, EventHandler.class);
+            MapBinder.newMapBinder(binder(), String.class, EventHandler.class);
         for (Class<? extends EventHandler> clazz : EventHandlerLoader.getClasses()) {
             if (clazz.isAnnotationPresent(HandlerTarget.class)) {
                 HandlerTarget targetAnnotation = clazz.getAnnotation(HandlerTarget.class);

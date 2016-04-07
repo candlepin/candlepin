@@ -585,8 +585,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             int listSize = idsList.size();
             for (int i = 0; i < listSize; i += inClauseLimit) {
                 result.addAll(lockAndLoadInternalOnly(
-                        idsList.subList(i, Math.min(listSize, i + inClauseLimit)),
-                        entityName, keyName));
+                    idsList.subList(i, Math.min(listSize, i + inClauseLimit)),
+                    entityName, keyName));
             }
         }
         return result;

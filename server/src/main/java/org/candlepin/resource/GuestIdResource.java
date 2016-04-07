@@ -70,8 +70,8 @@ public class GuestIdResource {
 
     @Inject
     public GuestIdResource(GuestIdCurator guestIdCurator,
-            ConsumerCurator consumerCurator, ConsumerResource consumerResource,
-            I18n i18n, EventFactory eventFactory, EventSink sink) {
+        ConsumerCurator consumerCurator, ConsumerResource consumerResource,
+        I18n i18n, EventFactory eventFactory, EventSink sink) {
         this.guestIdCurator = guestIdCurator;
         this.consumerCurator = consumerCurator;
         this.consumerResource = consumerResource;
@@ -91,8 +91,8 @@ public class GuestIdResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<GuestId> getGuestIds(
-            @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-            @Context PageRequest pageRequest) {
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        @Context PageRequest pageRequest) {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
         Page<List<GuestId>> page = guestIdCurator.listByConsumer(consumer, pageRequest);
 
@@ -115,8 +115,8 @@ public class GuestIdResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{guest_id}")
     public GuestId getGuestId(
-            @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-            @PathParam("guest_id") String guestId) {
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        @PathParam("guest_id") String guestId) {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
         GuestId result = validateGuestId(
             guestIdCurator.findByConsumerAndId(consumer, guestId), guestId);
@@ -136,8 +136,8 @@ public class GuestIdResource {
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     public void updateGuests(
-            @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-            List<GuestId> guestIds) {
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        List<GuestId> guestIds) {
         Consumer toUpdate = consumerCurator.findByUuid(consumerUuid);
 
         // Create a skeleton consumer for consumerResource.performConsumerUpdates
@@ -149,10 +149,9 @@ public class GuestIdResource {
             allGuestIds.add(gid.getGuestId());
         }
         VirtConsumerMap guestConsumerMap = consumerCurator.getGuestConsumersMap(
-                toUpdate.getOwner(), allGuestIds);
+            toUpdate.getOwner(), allGuestIds);
 
-        if (consumerResource.performConsumerUpdates(consumer, toUpdate,
-                guestConsumerMap)) {
+        if (consumerResource.performConsumerUpdates(consumer, toUpdate, guestConsumerMap)) {
             consumerCurator.update(toUpdate);
         }
     }
@@ -170,9 +169,9 @@ public class GuestIdResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{guest_id}")
     public void updateGuest(
-            @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-            @PathParam("guest_id") String guestId,
-            GuestId updated) {
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        @PathParam("guest_id") String guestId,
+        GuestId updated) {
 
         // I'm not sure this can happen
         if (guestId == null || guestId.isEmpty()) {
@@ -219,10 +218,10 @@ public class GuestIdResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{guest_id}")
     public void deleteGuest(
-            @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-            @PathParam("guest_id") String guestId,
-            @QueryParam("unregister") @DefaultValue("false") boolean unregister,
-            @Context Principal principal) {
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        @PathParam("guest_id") String guestId,
+        @QueryParam("unregister") @DefaultValue("false") boolean unregister,
+        @Context Principal principal) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         GuestId toDelete = validateGuestId(
@@ -249,7 +248,7 @@ public class GuestIdResource {
             guest.getConsumer().getOwner().getId());
         if (guestConsumer != null) {
             if ((principal == null) ||
-                    principal.canAccess(guestConsumer, SubResource.NONE, Access.ALL)) {
+                principal.canAccess(guestConsumer, SubResource.NONE, Access.ALL)) {
                 consumerResource.deleteConsumer(guestConsumer.getUuid(), principal);
             }
             else {

@@ -118,27 +118,27 @@ public class DefaultEntitlementCertServiceAdapter extends
     }
 
     private EntitlementCertificate generateSingleCert(Entitlement entitlement, Product product,
-            Boolean isUber) throws GeneralSecurityException, IOException {
+        Boolean isUber) throws GeneralSecurityException, IOException {
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put(entitlement.getPool().getId(), entitlement);
         Map<String, Product> products = new HashMap<String, Product>();
         products.put(entitlement.getPool().getId(), product);
         Map<String, EntitlementCertificate> result = generateEntitlementCerts(entitlement.getConsumer(),
-                entitlements, products, false);
+            entitlements, products, false);
 
         return result.get(entitlement.getPool().getId());
     }
 
     @Override
     public Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer,
-            Map<String, Entitlement> entitlements, Map<String, Product> products)
+        Map<String, Entitlement> entitlements, Map<String, Product> products)
         throws GeneralSecurityException, IOException {
         return generateEntitlementCerts(consumer, entitlements, products, false);
     }
 
     @Override
     public Map<String, EntitlementCertificate> generateUeberCerts(Consumer consumer,
-            Map<String, Entitlement> entitlements, Map<String, Product> products)
+        Map<String, Entitlement> entitlements, Map<String, Product> products)
         throws GeneralSecurityException, IOException {
         return generateEntitlementCerts(consumer, entitlements, products, true);
     }
@@ -186,8 +186,8 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         setupEntitlementEndDate(ent);
         X509Certificate x509Cert =  this.pki.createX509Certificate(
-                createDN(ent), extensions, byteExtensions, ent.getStartDate(),
-                ent.getEndDate(), keyPair, serialNumber, null);
+            createDN(ent), extensions, byteExtensions, ent.getStartDate(),
+            ent.getEndDate(), keyPair, serialNumber, null);
         return x509Cert;
     }
 
@@ -205,12 +205,11 @@ public class DefaultEntitlementCertServiceAdapter extends
         }
 
         boolean isUnmappedGuestPool = BooleanUtils.toBoolean(
-                pool.getAttributeValue("unmapped_guests_only"));
+            pool.getAttributeValue("unmapped_guests_only"));
 
         if (isUnmappedGuestPool) {
             Date oneDayFromRegistration = new Date(startDate.getTime() + 24L * 60L * 60L * 1000L);
-            log.info("Setting 24h expiration for unmapped guest pool entilement: " +
-                    oneDayFromRegistration);
+            log.info("Setting 24h expiration for unmapped guest pool entilement: {}", oneDayFromRegistration);
             ent.setEndDateOverride(oneDayFromRegistration);
             entCurator.merge(ent);
         }
@@ -256,7 +255,7 @@ public class DefaultEntitlementCertServiceAdapter extends
             log.debug("Consumer has environment, checking for promoted content in: " +
                 ent.getConsumer().getEnvironment());
             for (EnvironmentContent envContent :
-                    ent.getConsumer().getEnvironment().getEnvironmentContent()) {
+                ent.getConsumer().getEnvironment().getEnvironmentContent()) {
                 log.debug("  promoted content: " + envContent.getContent().getId());
                 promotedContent.put(envContent.getContent().getId(), envContent);
             }
@@ -270,8 +269,8 @@ public class DefaultEntitlementCertServiceAdapter extends
         Set<X509ExtensionWrapper> result =  new LinkedHashSet<X509ExtensionWrapper>();
 
         Set<String> entitledProductIds = entCurator.listEntitledProductIds(
-                ent.getConsumer(), ent.getPool().getStartDate(),
-                ent.getPool().getEndDate());
+            ent.getConsumer(), ent.getPool().getStartDate(),
+            ent.getPool().getEndDate());
 
         int contentCounter = 0;
         boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
@@ -282,9 +281,8 @@ public class DefaultEntitlementCertServiceAdapter extends
             log.debug("Adding X509 extensions for product: {}", prod);
             result.addAll(extensionUtil.productExtensions(prod));
 
-            Set<ProductContent> filteredContent =
-                extensionUtil.filterProductContent(prod, ent, entCurator,
-                    promotedContent, enableEnvironmentFiltering, entitledProductIds);
+            Set<ProductContent> filteredContent = extensionUtil.filterProductContent(
+                prod, ent, entCurator, promotedContent, enableEnvironmentFiltering, entitledProductIds);
 
             filteredContent = extensionUtil.filterContentByContentArch(filteredContent,
                 ent.getConsumer(), prod);
@@ -302,9 +300,9 @@ public class DefaultEntitlementCertServiceAdapter extends
         // informative error message to the user.
         if (contentCounter > X509ExtensionUtil.V1_CONTENT_LIMIT) {
             String cause = i18n.tr("Too many content sets for certificate {0}. A newer " +
-                    "client may be available to address this problem. " +
-                    "See knowledge database https://access.redhat.com/knowledge/node/129003 for more " +
-                    "information.", ent.getPool().getProductName());
+                "client may be available to address this problem. " +
+                "See knowledge database https://access.redhat.com/knowledge/node/129003 for more " +
+                "information.", ent.getPool().getProductName());
             throw new CertificateSizeException(cause);
         }
 
@@ -323,18 +321,18 @@ public class DefaultEntitlementCertServiceAdapter extends
 
     public Set<X509ExtensionWrapper> prepareV3Extensions(Entitlement ent,
         String contentPrefix, Map<String, EnvironmentContent> promotedContent) {
-        Set<X509ExtensionWrapper> result =  v3extensionUtil.getExtensions(ent,
+        Set<X509ExtensionWrapper> result = v3extensionUtil.getExtensions(ent,
             contentPrefix, promotedContent);
         return result;
     }
 
     public Set<X509ByteExtensionWrapper> prepareV3ByteExtensions(Product sku,
-            List<org.candlepin.model.dto.Product> productModels,
-            Entitlement ent, String contentPrefix,
-            Map<String, EnvironmentContent> promotedContent) throws IOException {
+        List<org.candlepin.model.dto.Product> productModels,
+        Entitlement ent, String contentPrefix,
+        Map<String, EnvironmentContent> promotedContent) throws IOException {
 
-        Set<X509ByteExtensionWrapper> result =  v3extensionUtil.getByteExtensions(sku,
-                productModels, ent, contentPrefix, promotedContent);
+        Set<X509ByteExtensionWrapper> result = v3extensionUtil.getByteExtensions(sku,
+            productModels, ent, contentPrefix, promotedContent);
         return result;
     }
 
@@ -364,7 +362,7 @@ public class DefaultEntitlementCertServiceAdapter extends
      *         id
      */
     private Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer,
-            Map<String, Entitlement> entitlements, Map<String, Product> productMap, boolean thisIsUeberCert)
+        Map<String, Entitlement> entitlements, Map<String, Product> productMap, boolean thisIsUeberCert)
         throws GeneralSecurityException, IOException {
         log.info("Generating entitlement cert for entitlements");
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
@@ -402,10 +400,10 @@ public class DefaultEntitlementCertServiceAdapter extends
             log.info("Creating X509 cert for product: {}", product);
             log.debug("Provided products: {}", products);
             List<org.candlepin.model.dto.Product> productModels = v3extensionUtil.createProducts(product,
-                    products, contentPrefix, promotedContent, entitlement.getConsumer(), entitlement);
+                products, contentPrefix, promotedContent, entitlement.getConsumer(), entitlement);
 
             X509Certificate x509Cert = createX509Certificate(entitlement, product, products, productModels,
-                    BigInteger.valueOf(serial.getId()), keyPair, !thisIsUeberCert);
+                BigInteger.valueOf(serial.getId()), keyPair, !thisIsUeberCert);
 
             EntitlementCertificate cert = new EntitlementCertificate();
             cert.setSerial(serial);

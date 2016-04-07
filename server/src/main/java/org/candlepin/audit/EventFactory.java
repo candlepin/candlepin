@@ -219,7 +219,7 @@ public class EventFactory {
     }
 
     public Event complianceCreated(Consumer consumer,
-            Set<Entitlement> entitlements, ComplianceStatus compliance) {
+        Set<Entitlement> entitlements, ComplianceStatus compliance) {
         return new Event(Event.Type.CREATED, Event.Target.COMPLIANCE,
                 consumer.getName(), principalProvider.get(),
                 consumer.getOwner().getId(), consumer.getId(),
@@ -229,7 +229,7 @@ public class EventFactory {
 
     // Jackson should think all 3 are root entities so hateoas doesn't bite us
     protected String buildComplianceDataJson(Consumer consumer,
-            Set<Entitlement> entitlements, ComplianceStatus status) {
+        Set<Entitlement> entitlements, ComplianceStatus status) {
         StringBuilder sb = new StringBuilder();
         sb.append("{\"consumer\": ");
         sb.append(entityToJson(consumer));

@@ -124,6 +124,7 @@ public class OwnerInfoCurator {
         info.setPhysicalCount(physicalCount);
     }
 
+    @SuppressWarnings("checkstyle:indentation")
     private void setConsumerCountsByComplianceStatus(Owner owner, OwnerInfo info) {
         // We exclude the following types since they are fake/transparent consumers
         // and we do not want them included in the totals.

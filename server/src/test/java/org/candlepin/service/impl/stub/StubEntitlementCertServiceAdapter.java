@@ -93,12 +93,13 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
 
     @Override
     public Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer,
-            Map<String, Entitlement> entitlements, Map<String, Product> products)
+        Map<String, Entitlement> entitlements, Map<String, Product> products)
         throws GeneralSecurityException, IOException {
+
         Map<String, EntitlementCertificate> result = new HashMap<String, EntitlementCertificate>();
         for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
             EntitlementCertificate cert = generateEntitlementCert(entry.getValue(),
-                    products.get(entry.getKey()));
+                products.get(entry.getKey()));
             result.put(entry.getKey(), cert);
         }
         return result;
@@ -106,12 +107,13 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
 
     @Override
     public Map<String, EntitlementCertificate> generateUeberCerts(Consumer consumer,
-            Map<String, Entitlement> entitlements, Map<String, Product> products)
+        Map<String, Entitlement> entitlements, Map<String, Product> products)
         throws GeneralSecurityException, IOException {
+
         Map<String, EntitlementCertificate> result = new HashMap<String, EntitlementCertificate>();
         for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
             EntitlementCertificate cert = generateUeberCert(entry.getValue(),
-                    products.get(entry.getKey()));
+                products.get(entry.getKey()));
             result.put(entry.getKey(), cert);
         }
         return result;

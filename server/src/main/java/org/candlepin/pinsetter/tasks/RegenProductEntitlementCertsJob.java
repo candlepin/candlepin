@@ -35,8 +35,7 @@ public class RegenProductEntitlementCertsJob extends KingpinJob {
     private OwnerCurator ownerCurator;
 
     @Inject
-    public RegenProductEntitlementCertsJob(PoolManager poolManager,
-            OwnerCurator ownerCurator) {
+    public RegenProductEntitlementCertsJob(PoolManager poolManager, OwnerCurator ownerCurator) {
 
         this.poolManager = poolManager;
         this.ownerCurator = ownerCurator;

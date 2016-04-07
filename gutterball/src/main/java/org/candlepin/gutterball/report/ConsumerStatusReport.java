@@ -51,7 +51,7 @@ public class ConsumerStatusReport extends Report<ReportResult> {
      */
     @Inject
     public ConsumerStatusReport(Provider<I18n> i18nProvider, ComplianceSnapshotCurator curator,
-            StatusReasonMessageGenerator messageGenerator) {
+        StatusReasonMessageGenerator messageGenerator) {
         super(i18nProvider, "consumer_status",
                 i18nProvider.get().tr("List the status of all consumers"));
         this.complianceSnapshotCurator = curator;
@@ -59,46 +59,47 @@ public class ConsumerStatusReport extends Report<ReportResult> {
     }
 
     @Override
+    @SuppressWarnings("checkstyle:indentation")
     protected void initParameters() {
         ReportParameterBuilder builder = new ReportParameterBuilder(i18n);
 
         addParameter(
             builder.init("consumer_uuid", i18n.tr("Filters the results by the specified consumer UUID."))
-                .multiValued()
-                .getParameter()
+            .multiValued()
+            .getParameter()
         );
 
         addParameter(
             builder.init("owner", i18n.tr("The Owner key(s) to filter on."))
-                .multiValued()
-                .getParameter());
+            .multiValued()
+            .getParameter());
 
         addParameter(
-            builder.init("status", i18n.tr("The subscription status to filter on [{0}, {1}, {2}].",
-                    "valid", "invalid", "partial"))
-                .multiValued()
-                .getParameter()
+            builder.init("status", i18n.tr(
+                "The subscription status to filter on [{0}, {1}, {2}].", "valid", "invalid", "partial"))
+            .multiValued()
+            .getParameter()
         );
 
         addParameter(
             builder.init("on_date", i18n.tr("The date to filter on. Defaults to NOW."))
-                .mustBeDate(REPORT_DATE_FORMATS)
-                .getParameter()
+            .mustBeDate(REPORT_DATE_FORMATS)
+            .getParameter()
         );
 
         this.addParameter(
             builder.init("product_name", i18n.tr("The name of a product on which to filter"))
-                .getParameter()
+            .getParameter()
         );
 
         this.addParameter(
             builder.init("sku", i18n.tr("The entitlement SKU on which to filter"))
-                .getParameter()
+            .getParameter()
         );
 
         this.addParameter(
             builder.init("subscription_name", i18n.tr("The name of a subscription on which to filter"))
-                .getParameter()
+            .getParameter()
         );
 
         this.addParameter(
@@ -106,7 +107,7 @@ public class ConsumerStatusReport extends Report<ReportResult> {
                 "management_enabled",
                 i18n.tr("Filter on subscriptions which have management enabled set to this value (Boolean)")
             )
-                .getParameter()
+            .getParameter()
         );
 
         addParameter(
@@ -114,20 +115,20 @@ public class ConsumerStatusReport extends Report<ReportResult> {
                     "functionality via attribute filtering (Boolean).")).getParameter());
 
         addParameter(builder.init("include_reasons", i18n.tr("Include status reasons in results"))
-                .mustNotHave(CUSTOM_RESULTS_PARAM)
-                .getParameter());
+            .mustNotHave(CUSTOM_RESULTS_PARAM)
+            .getParameter());
 
         addParameter(builder.init("include", i18n.tr("Includes the specified attribute in the result JSON"))
-                .mustHave(CUSTOM_RESULTS_PARAM)
-                .mustNotHave("exclude")
-                .multiValued()
-                .getParameter());
+            .mustHave(CUSTOM_RESULTS_PARAM)
+            .mustNotHave("exclude")
+            .multiValued()
+            .getParameter());
 
         addParameter(builder.init("exclude", i18n.tr("Excludes the specified attribute in the result JSON"))
-                .mustHave(CUSTOM_RESULTS_PARAM)
-                .mustNotHave("include")
-                .multiValued()
-                .getParameter());
+            .mustHave(CUSTOM_RESULTS_PARAM)
+            .mustNotHave("include")
+            .multiValued()
+            .getParameter());
     }
 
     @Override

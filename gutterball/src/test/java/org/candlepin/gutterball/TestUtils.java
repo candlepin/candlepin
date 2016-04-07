@@ -62,12 +62,12 @@ public class TestUtils {
     }
 
     public static Compliance createComplianceSnapshot(Date statusDate, String consumerUuid,
-            String owner, String statusString) {
+        String owner, String statusString) {
         return createComplianceSnapshot(statusDate, consumerUuid, owner, statusString, null);
     }
 
     public static Compliance createComplianceSnapshot(Date statusDate, String consumerUuid,
-            String owner, String statusString, ConsumerState state) {
+        String owner, String statusString, ConsumerState state) {
         Consumer consumerSnap = new Consumer(consumerUuid, null, createOwnerSnapshot(owner, owner));
         consumerSnap.setConsumerState(state);
         ComplianceStatus statusSnap = new ComplianceStatus(statusDate, statusString);
@@ -81,7 +81,7 @@ public class TestUtils {
     }
 
     public static Compliance createComplianceSnapshotWithProducts(Date statusDate, String consumerUuid,
-            String owner, String statusString, ConsumerState state, Set<String> products) {
+        String owner, String statusString, ConsumerState state, Set<String> products) {
 
         return createComplianceSnapshotWithProductsAndCompliances(statusDate, consumerUuid, owner,
             statusString, state, products, null, null, null);

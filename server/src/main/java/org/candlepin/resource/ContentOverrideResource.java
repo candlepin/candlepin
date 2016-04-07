@@ -48,8 +48,8 @@ import javax.ws.rs.core.UriInfo;
  * @param <Parent> parent of the content override, Consumer or ActivationKey for example
  */
 public abstract class ContentOverrideResource<T extends ContentOverride,
-        Curator extends ContentOverrideCurator<T, Parent>,
-        Parent extends AbstractHibernateObject> {
+    Curator extends ContentOverrideCurator<T, Parent>,
+    Parent extends AbstractHibernateObject> {
 
     private Curator contentOverrideCurator;
     private ContentOverrideValidator contentOverrideValidator;
@@ -57,8 +57,8 @@ public abstract class ContentOverrideResource<T extends ContentOverride,
     private I18n i18n;
 
     public ContentOverrideResource(Curator contentOverrideCurator,
-            ContentOverrideValidator contentOverrideValidator,
-            I18n i18n, String parentPath) {
+        ContentOverrideValidator contentOverrideValidator,
+        I18n i18n, String parentPath) {
         this.contentOverrideCurator = contentOverrideCurator;
         this.contentOverrideValidator = contentOverrideValidator;
         this.parentPath = parentPath;

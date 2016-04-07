@@ -56,7 +56,7 @@ public class LinkHeaderResponseFilter implements ContainerResponseFilter {
 
     @Inject
     public LinkHeaderResponseFilter(Configuration config,
-            @Named("PREFIX_APIURL_KEY") String apiUrlPrefixKey) {
+        @Named("PREFIX_APIURL_KEY") String apiUrlPrefixKey) {
         this.config = config;
         this.apiUrlPrefixKey = apiUrlPrefixKey;
     }

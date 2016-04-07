@@ -66,7 +66,7 @@ public abstract class LiquibaseCustomTaskWrapper<T extends LiquibaseCustomTask> 
     public void execute(Database database) throws CustomChangeException {
         try {
             T task = this.typeClass.getConstructor(Database.class, CustomTaskLogger.class)
-                        .newInstance(database, new LiquibaseCustomTaskLogger());
+                .newInstance(database, new LiquibaseCustomTaskLogger());
 
             task.execute();
         }

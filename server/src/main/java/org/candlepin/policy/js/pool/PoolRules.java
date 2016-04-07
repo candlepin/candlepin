@@ -73,11 +73,9 @@ public class PoolRules {
         // In hosted, we increase the quantity on the subscription. However in standalone,
         // we assume this already has happened in hosted and the accurate quantity was
         // exported:
-        if (product.hasAttribute("instance_multiplier") &&
-                upstreamPoolId == null) {
+        if (product.hasAttribute("instance_multiplier") && upstreamPoolId == null) {
 
-            int instanceMultiplier = Integer.parseInt(
-                    product.getAttributeValue("instance_multiplier"));
+            int instanceMultiplier = Integer.parseInt(product.getAttributeValue("instance_multiplier"));
             log.debug("Increasing pool quantity for instance multiplier: " +
                 instanceMultiplier);
             result = result * instanceMultiplier;
@@ -110,8 +108,7 @@ public class PoolRules {
     public List<Pool> createAndEnrichPools(Pool masterPool, List<Pool> existingPools) {
         List<Pool> pools = new LinkedList<Pool>();
         masterPool.setQuantity(calculateQuantity(masterPool.getQuantity(),
-                                                 masterPool.getProduct(),
-                                                 masterPool.getUpstreamPoolId()));
+            masterPool.getProduct(), masterPool.getUpstreamPoolId()));
 
         ProductAttribute virtAtt = masterPool.getProduct().getAttribute("virt_only");
         // The following will make virt_only a pool attribute. That makes the
@@ -124,7 +121,7 @@ public class PoolRules {
         log.info("Checking if pools need to be created for: {}", masterPool);
         if (!hasMasterPool(existingPools)) {
             if (masterPool.getSourceSubscription() != null &&
-                    masterPool.getSourceSubscription().getSubscriptionSubKey().contentEquals("derived")) {
+                masterPool.getSourceSubscription().getSubscriptionSubKey().contentEquals("derived")) {
                 // while we can create bonus pool from master pool, the reverse
                 // is not possible without the subscription itself
                 throw new IllegalStateException("Cannot create master pool from bonus pool");
@@ -154,7 +151,7 @@ public class PoolRules {
         if (attributes.containsKey("virt_limit") && !hasBonusPool(existingPools) && virtQuantity != null) {
 
             boolean hostLimited = attributes.containsKey("host_limited") &&
-                    attributes.get("host_limited").equals("true");
+                attributes.get("host_limited").equals("true");
             HashMap<String, String> virtAttributes = new HashMap<String, String>();
             virtAttributes.put("virt_only", "true");
             virtAttributes.put("pool_derived", "true");
@@ -168,12 +165,12 @@ public class PoolRules {
 
             // Favor derived products if they are available
             Product sku = masterPool.getDerivedProduct() != null ? masterPool.getDerivedProduct() :
-                    masterPool.getProduct();
+                masterPool.getProduct();
 
             // Using derived here because only one derived pool is created for
             // this subscription
             Pool bonusPool = PoolHelper.clonePool(masterPool, sku, virtQuantity, virtAttributes, "derived",
-                    prodCurator, null);
+                prodCurator, null);
 
             log.info("Creating new derived pool: {}", bonusPool);
             return bonusPool;
@@ -230,7 +227,7 @@ public class PoolRules {
      * @return pool updates
      */
     public List<PoolUpdate> updatePools(List<Pool> floatingPools,
-            Set<Product> changedProducts) {
+        Set<Product> changedProducts) {
         List<PoolUpdate> updates = new LinkedList<PoolUpdate>();
         for (Pool p : floatingPools) {
 
@@ -259,7 +256,7 @@ public class PoolRules {
     }
 
     public List<PoolUpdate> updatePools(Pool masterPool, List<Pool> existingPools, Long originalQuantity,
-            Set<Product> changedProducts) {
+        Set<Product> changedProducts) {
         //local.setCertificate(subscription.getCertificate());
 
         log.debug("Refreshing pools for existing master pool: {}", masterPool);
@@ -284,22 +281,21 @@ public class PoolRules {
             PoolUpdate update = new PoolUpdate(existingPool);
 
             update.setDatesChanged(checkForDateChange(masterPool.getStartDate(), masterPool.getEndDate(),
-                    existingPool));
+                existingPool));
 
             update.setQuantityChanged(checkForQuantityChange(masterPool, existingPool, originalQuantity,
-                    existingPools, attributes));
+                existingPools, attributes));
 
             if (!existingPool.isMarkedForDelete()) {
                 boolean useDerived = BooleanUtils.toBoolean(
-                                         existingPool.getAttributeValue("pool_derived")) &&
-                                     masterPool.getDerivedProduct() != null;
+                    existingPool.getAttributeValue("pool_derived")) &&
+                    masterPool.getDerivedProduct() != null;
 
-                update.setProductsChanged(
-                        checkForChangedProducts(
-                                useDerived ? masterPool.getDerivedProduct() : masterPool.getProduct(),
-                                getExpectedProvidedProducts(masterPool, useDerived),
-                                existingPool,
-                                changedProducts));
+                update.setProductsChanged(checkForChangedProducts(
+                    useDerived ? masterPool.getDerivedProduct() : masterPool.getProduct(),
+                    getExpectedProvidedProducts(masterPool, useDerived),
+                    existingPool,
+                    changedProducts));
 
                 if (!useDerived) {
                     update.setDerivedProductsChanged(
@@ -345,7 +341,7 @@ public class PoolRules {
      * @return updates
      */
     public List<PoolUpdate> updatePoolsFromStack(Consumer consumer, List<Pool> pools,
-            boolean deleteIfNoStackedEnts) {
+        boolean deleteIfNoStackedEnts) {
         Map<String, List<Entitlement>> entitlementMap = new HashMap<String, List<Entitlement>>();
         Set<String> sourceStackIds = new HashSet<String>();
         List<PoolUpdate> result = new ArrayList<PoolUpdate>();
@@ -368,7 +364,7 @@ public class PoolRules {
             List<Entitlement> entitlements = entitlementMap.get(pool.getSourceStackId());
             if (CollectionUtils.isNotEmpty(entitlements)) {
                 result.add(this.updatePoolFromStackedEntitlements(pool, entitlements,
-                        new HashSet<Product>()));
+                    new HashSet<Product>()));
             }
             else if (deleteIfNoStackedEnts) {
                 poolsToDelete.add(pool);
@@ -529,7 +525,7 @@ public class PoolRules {
     }
 
     private boolean checkForChangedDerivedProducts(Pool pool, Pool existingPool,
-            Set<Product> changedProducts) {
+        Set<Product> changedProducts) {
 
         boolean productsChanged = false;
         if (pool.getDerivedProduct() != null) {
@@ -588,7 +584,7 @@ public class PoolRules {
         // Expected quantity is normally the main pool's quantity, but for
         // virt only pools we expect it to be main pool quantity * virt_limit:
         long expectedQuantity = calculateQuantity(originalQuantity, pool.getProduct(),
-                pool.getUpstreamPoolId());
+            pool.getUpstreamPoolId());
         expectedQuantity = processVirtLimitPools(existingPools,
             attributes, existingPool, expectedQuantity);
 

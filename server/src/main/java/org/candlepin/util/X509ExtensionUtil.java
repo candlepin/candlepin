@@ -231,8 +231,7 @@ public class X509ExtensionUtil  extends X509Util{
             }
             String contentOid = OIDUtil.REDHAT_OID +
                 "." +
-                OIDUtil.TOPLEVEL_NAMESPACES
-                    .get(OIDUtil.CHANNEL_FAMILY_NAMESPACE_KEY) + "." +
+                OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.CHANNEL_FAMILY_NAMESPACE_KEY) + "." +
                 pc.getContent().getId().toString() + "." +
                 OIDUtil.CF_REPO_TYPE.get(pc.getContent().getType());
             toReturn.add(new X509ExtensionWrapper(contentOid, false, pc
@@ -282,11 +281,9 @@ public class X509ExtensionUtil  extends X509Util{
 
             // Include metadata expiry if specified on the content:
             if (pc.getContent().getMetadataExpire() != null) {
-                toReturn.add(new X509ExtensionWrapper(
-                    contentOid +
-                        "." +
-                        OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_METADATA_EXPIRE),
-                        false, pc.getContent().getMetadataExpire().toString()));
+                toReturn.add(new X509ExtensionWrapper(contentOid + "." +
+                    OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_METADATA_EXPIRE),
+                    false, pc.getContent().getMetadataExpire().toString()));
             }
 
             // Include required tags if specified on the content set:

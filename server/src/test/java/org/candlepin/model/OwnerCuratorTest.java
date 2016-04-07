@@ -51,8 +51,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
         this.ownerCurator.replicate(owner);
 
-        assertEquals("testing",
-                this.ownerCurator.find("testing-primary-key").getKey());
+        assertEquals("testing", this.ownerCurator.find("testing-primary-key").getKey());
     }
 
     @Test(expected = RollbackException.class)
@@ -184,8 +183,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         owner = ownerCurator.create(owner);
         ConsumerType type = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         consumerTypeCurator.create(type);
-        UpstreamConsumer uc = new UpstreamConsumer("test-upstream-consumer",
-               owner, type, "someuuid");
+        UpstreamConsumer uc = new UpstreamConsumer("test-upstream-consumer", owner, type, "someuuid");
         owner.setUpstreamConsumer(uc);
         ownerCurator.merge(owner);
 

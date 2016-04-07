@@ -53,7 +53,7 @@ public class AdminResource {
 
     @Inject
     public AdminResource(UserServiceAdapter userService, UserCurator userCurator,
-            EventSink dispatcher, Configuration config) {
+        EventSink dispatcher, Configuration config) {
         this.userService = userService;
         this.userCurator = userCurator;
         this.sink = dispatcher;

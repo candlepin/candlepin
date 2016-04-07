@@ -45,9 +45,9 @@ public class RestEasyOAuthMessage extends OAuthMessage{
     }
 
     private static void copyHeaders(HttpRequest request,
-                                    Collection<Map.Entry<String, String>> into) {
-        Iterator<String> names = request.getHttpHeaders()
-                                    .getRequestHeaders().keySet().iterator();
+        Collection<Map.Entry<String, String>> into) {
+        Iterator<String> names =
+            request.getHttpHeaders().getRequestHeaders().keySet().iterator();
         if (names != null) {
             while (names.hasNext()) {
                 String name = names.next();
@@ -79,14 +79,12 @@ public class RestEasyOAuthMessage extends OAuthMessage{
         }
 
         // we can't call getFormParameters when it's a PUT and not a form.
-        if (request.getHttpMethod().equals("PUT") &&
-            !request.getHttpHeaders().getMediaType().isCompatible(
-                MediaType.valueOf("application/x-www-form-urlencoded"))) {
+        if (request.getHttpMethod().equals("PUT") && !request.getHttpHeaders().getMediaType().isCompatible(
+            MediaType.valueOf("application/x-www-form-urlencoded"))) {
             return list;
         }
 
-        for (Map.Entry<String, List<String>> entry :
-                request.getFormParameters().entrySet()) {
+        for (Map.Entry<String, List<String>> entry : request.getFormParameters().entrySet()) {
             String name = entry.getKey();
             for (String value : entry.getValue()) {
                 list.add(new OAuth.Parameter(name, value));

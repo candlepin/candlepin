@@ -55,7 +55,7 @@ public class ActivationListener implements EventListener {
     @Override
     public void onEvent(Event e) {
         if (e.getType().equals(Event.Type.CREATED) &&
-                e.getTarget().equals(Event.Target.POOL)) {
+            e.getTarget().equals(Event.Target.POOL)) {
             String poolJson = e.getNewEntity();
             Reader reader = new StringReader(poolJson);
             try {

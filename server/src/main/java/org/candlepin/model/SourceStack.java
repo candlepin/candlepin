@@ -28,7 +28,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -44,14 +43,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_pool_source_stack",
-    uniqueConstraints = {
-        @UniqueConstraint(
-            name = "cp_pool_source_stack_ukey",
-            columnNames = {"sourceconsumer_id", "sourcestackid"}),
-        @UniqueConstraint(
-            name = "cp_pool_source_stack_pool_ukey",
-            columnNames = {"derivedpool_id"})})
+@Table(name = "cp_pool_source_stack")
 public class SourceStack extends AbstractHibernateObject {
 
     @Id

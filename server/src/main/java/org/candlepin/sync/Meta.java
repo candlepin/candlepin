@@ -30,9 +30,7 @@ public class Meta {
         this("0.0.0", new Date(), "", null, null);
     }
 
-    public Meta(String version, Date creation,
-                String userName, String webAppPrefix,
-                String cdnLabel) {
+    public Meta(String version, Date creation, String userName, String webAppPrefix, String cdnLabel) {
         this.version = version;
         this.created = creation;
 

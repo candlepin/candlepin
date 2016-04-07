@@ -53,7 +53,7 @@ public class RefreshPoolsJob extends UniqueByEntityJob {
 
     @Inject
     public RefreshPoolsJob(OwnerCurator ownerCurator, PoolManager poolManager,
-            SubscriptionServiceAdapter subAdapter) {
+        SubscriptionServiceAdapter subAdapter) {
 
         this.ownerCurator = ownerCurator;
         this.poolManager = poolManager;

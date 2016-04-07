@@ -143,7 +143,7 @@ public class OwnerContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")
     public Content getContent(@PathParam("owner_key") String ownerKey,
-                              @PathParam("content_id") String contentId) {
+        @PathParam("content_id") String contentId) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Content content = this.contentCurator.lookupById(owner, contentId);
@@ -238,8 +238,8 @@ public class OwnerContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")
     public Content updateContent(@PathParam("owner_key") String ownerKey,
-                                 @PathParam("content_id") String contentId,
-                                 Content content) {
+        @PathParam("content_id") String contentId,
+        Content content) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Content existing  = this.getContent(ownerKey, contentId);
@@ -270,7 +270,7 @@ public class OwnerContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")
     public void remove(@PathParam("owner_key") String ownerKey,
-                       @PathParam("content_id") String contentId) {
+        @PathParam("content_id") String contentId) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Content content = this.getContent(ownerKey, contentId);

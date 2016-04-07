@@ -277,9 +277,8 @@ public class PoolResource {
     @Path("{pool_id}/entitlements")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Entitlement> getPoolEntitlements(@PathParam("pool_id")
-                            @Verify(value = Pool.class,
-                                subResource = SubResource.ENTITLEMENTS) String id,
-                            @Context Principal principal) {
+        @Verify(value = Pool.class, subResource = SubResource.ENTITLEMENTS) String id,
+        @Context Principal principal) {
 
         Pool pool = poolManager.find(id);
 

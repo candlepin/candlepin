@@ -305,7 +305,7 @@ public class ConsumerStatusReportTest {
     }
 
     private void validateParams(MultivaluedMap<String, String> params, String expectedParam,
-            String expectedMessage) {
+        String expectedMessage) {
         try {
             report.validateParameters(params);
             fail("Expected param validation error.");

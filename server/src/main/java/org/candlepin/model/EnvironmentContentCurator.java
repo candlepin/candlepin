@@ -21,8 +21,7 @@ import java.util.List;
 /**
  * EnvironmentContentCurator
  */
-public class EnvironmentContentCurator extends
-        AbstractHibernateCurator<EnvironmentContent> {
+public class EnvironmentContentCurator extends AbstractHibernateCurator<EnvironmentContent> {
 
     public EnvironmentContentCurator() {
         super(EnvironmentContent.class);

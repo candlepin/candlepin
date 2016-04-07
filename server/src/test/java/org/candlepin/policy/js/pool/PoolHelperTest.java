@@ -170,7 +170,7 @@ public class PoolHelperTest {
 
         when(pm.createPools(anyListOf(Pool.class))).then(returnsFirstArg());
         List<Pool> pools = PoolHelper.createHostRestrictedPools(pm, cons, targetPools, entitlements,
-                attributes);
+            attributes);
 
         assertEquals(2, pools.size());
         Pool first = null, second = null;
@@ -232,7 +232,7 @@ public class PoolHelperTest {
         attributes.put(targetPool.getId(), PoolHelper.getFlattenedAttributes(targetPool));
         when(pm.createPools(anyListOf(Pool.class))).then(returnsFirstArg());
         List<Pool> hostRestrictedPools = PoolHelper.createHostRestrictedPools(pm, cons, targetPools,
-                entitlements, attributes);
+            entitlements, attributes);
 
         assertEquals(1, hostRestrictedPools.size());
         Pool hostRestrictedPool = hostRestrictedPools.get(0);
@@ -275,9 +275,9 @@ public class PoolHelperTest {
         assertNotEquals(pool.getSourceSubscription(), clone);
         assertEquals(pool.getSourceSubscription().getSubscriptionId(), clone.getSubscriptionId());
         assertEquals(pool.getSourceSubscription().getSubscriptionId(),
-                clone.getSourceSubscription().getSubscriptionId());
+            clone.getSourceSubscription().getSubscriptionId());
         assertEquals("TaylorSwift",
-                clone.getSourceSubscription().getSubscriptionSubKey());
+            clone.getSourceSubscription().getSubscriptionSubKey());
 
         assertEquals(1, clone.getBranding().size());
         Branding brandingClone = clone.getBranding().iterator().next();

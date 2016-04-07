@@ -162,8 +162,8 @@ public abstract class PKIUtility {
     public static X509Certificate createCert(byte[] certData) {
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X509");
-            X509Certificate cert = (X509Certificate) cf
-            .generateCertificate(new ByteArrayInputStream(certData));
+            X509Certificate cert =
+                (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certData));
             return cert;
         }
         catch (Exception e) {
@@ -201,8 +201,8 @@ public abstract class PKIUtility {
         return false;
     }
 
-    public boolean verifySHA256WithRSAHash(
-            InputStream input, byte[] signedHash, Certificate certificate) {
+    public boolean verifySHA256WithRSAHash(InputStream input,
+        byte[] signedHash, Certificate certificate) {
         try {
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initVerify(certificate);

@@ -168,8 +168,7 @@ public class LinkHeaderResponseFilterTest {
         map.add("baz", "qu=ux");
         UriBuilder bu = UriBuilder.fromUri("https://localhost:8443/candlepin/resource");
         URI returned = interceptor.addUnchangingQueryParams(bu, map).build();
-        assertEquals(URI.create("https://localhost:8443/candlepin/resource?" +
-                "baz=qu%3Dux"), returned);
+        assertEquals(URI.create("https://localhost:8443/candlepin/resource?baz=qu%3Dux"), returned);
     }
 
     @Test

@@ -92,7 +92,7 @@ public class ConsumerComplianceJob extends UniqueByEntityJob {
      * Simple check, passes arguments as is, and updates consumer only if needed
      */
     public static JobDetail scheduleStatusCheck(Consumer consumer, Date date,
-            boolean calculateCompliantUntil, boolean updateConsumer) {
+        boolean calculateCompliantUntil, boolean updateConsumer) {
         JobDataMap map = new JobDataMap();
         if (date != null) {
             map.put("onDate", date);
@@ -123,9 +123,8 @@ public class ConsumerComplianceJob extends UniqueByEntityJob {
         map.put(JobStatus.TARGET_ID, consumer.getUuid());
 
         JobDetail detail = newJob(ConsumerComplianceJob.class).withIdentity(prefix + Util.generateUUID())
-                .usingJobData(map).storeDurably(true) // required if we have to
-                                                      // postpone the job
-                .build();
+            .usingJobData(map).storeDurably(true) // required if we have to postpone the job
+            .build();
 
         return detail;
     }

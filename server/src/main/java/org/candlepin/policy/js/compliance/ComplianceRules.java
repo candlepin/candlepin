@@ -93,8 +93,7 @@ public class ComplianceRules {
      * @param calculateCompliantUntil calculate how long the system will remain compliant (expensive)
      * @return Compliance status.
      */
-    public ComplianceStatus getStatus(Consumer c, Date date,
-            boolean calculateCompliantUntil) {
+    public ComplianceStatus getStatus(Consumer c, Date date, boolean calculateCompliantUntil) {
         return getStatus(c, date, calculateCompliantUntil, true);
     }
 

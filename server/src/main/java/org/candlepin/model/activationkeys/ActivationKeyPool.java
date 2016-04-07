@@ -42,8 +42,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Table(name = "cp_activationkey_pool",
-    uniqueConstraints = {@UniqueConstraint(columnNames = {"key_id", "pool_id"})}
-)
+    uniqueConstraints = {@UniqueConstraint(columnNames = {"key_id", "pool_id"})})
 public class ActivationKeyPool extends AbstractHibernateObject implements Comparable<ActivationKeyPool> {
 
     @Id

@@ -37,13 +37,12 @@ public class MetaExporterTest {
     @Test
     public void testMetaExporter() throws IOException {
         ObjectMapper mapper = SyncUtils.getObjectMapper(new MapConfiguration(
-                new HashMap<String, String>() {
-
-                    {
-                        put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
-                                "false");
-                    }
-                }));
+            new HashMap<String, String>() {
+                {
+                    put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+                }
+            }
+        ));
 
         MetaExporter metaEx = new MetaExporter();
         StringWriter writer = new StringWriter();

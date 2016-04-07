@@ -144,8 +144,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
         .add(Restrictions.eq("state", JobState.WAITING)).list();
     }
 
-    public long findNumRunningByClassAndTarget(
-            String target, Class<? extends KingpinJob> jobClass) {
+    public long findNumRunningByClassAndTarget(String target, Class<? extends KingpinJob> jobClass) {
         return (Long) this.currentSession().createCriteria(JobStatus.class)
             .add(Restrictions.ge("updated", getBlockingCutoff()))
             .add(Restrictions.eq("state", JobState.RUNNING))
@@ -155,8 +154,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
             .uniqueResult();
     }
 
-    public JobStatus getByClassAndTarget(
-            String target, Class<? extends KingpinJob> jobClass) {
+    public JobStatus getByClassAndTarget(String target, Class<? extends KingpinJob> jobClass) {
 
         return (JobStatus) this.currentSession().createCriteria(JobStatus.class)
             .addOrder(Order.desc("created"))

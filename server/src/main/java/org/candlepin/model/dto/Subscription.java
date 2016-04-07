@@ -76,7 +76,7 @@ public class Subscription implements Owned, Named, Eventful {
     }
 
     public Subscription(Owner ownerIn, Product productIn, Set<Product> providedProducts,
-            Long maxMembersIn, Date startDateIn, Date endDateIn, Date modified) {
+        Long maxMembersIn, Date startDateIn, Date endDateIn, Date modified) {
         this.owner = ownerIn;
         this.product = productIn;
         this.providedProducts = providedProducts;

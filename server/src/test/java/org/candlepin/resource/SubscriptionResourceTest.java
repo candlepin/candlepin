@@ -80,14 +80,12 @@ public class SubscriptionResourceTest  {
 
     @Test(expected = BadRequestException.class)
     public void activateNoEmailLocale() {
-        subResource.activateSubscription("random", "random@somthing.com",
-                null);
+        subResource.activateSubscription("random", "random@somthing.com", null);
     }
 
     @Test(expected = BadRequestException.class)
     public void activateBadConsumer() {
-        subResource.activateSubscription("test_consumer", "email@whatever.net",
-                "en_us");
+        subResource.activateSubscription("test_consumer", "email@whatever.net", "en_us");
     }
 
     @Test
@@ -95,8 +93,7 @@ public class SubscriptionResourceTest  {
         Consumer consumer = new Consumer("test_consumer", "alf", null, null);
         when(consumerCurator.findByUuid("ae843603bdc73")).thenReturn(consumer);
 
-        subResource.activateSubscription("ae843603bdc73", "alf@alfnet.com",
-                "en");
+        subResource.activateSubscription("ae843603bdc73", "alf@alfnet.com", "en");
 
         verify(subService).activateSubscription(consumer, "alf@alfnet.com", "en");
     }
@@ -106,8 +103,7 @@ public class SubscriptionResourceTest  {
         Consumer consumer = new Consumer("test_consumer", "alf", null, null);
         when(consumerCurator.findByUuid("ae843603bdc73")).thenReturn(consumer);
 
-        Response result = subResource.activateSubscription("ae843603bdc73", "alf@alfnet.com",
-                "en");
+        Response result = subResource.activateSubscription("ae843603bdc73", "alf@alfnet.com", "en");
 
         assertEquals(result.getStatus(), 202);
     }

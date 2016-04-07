@@ -69,7 +69,7 @@ public class AutobindRules {
         int poolsBeforeContentFilter = pools.size();
         pools = filterPoolsForV1Certificates(consumer, pools);
         log.debug("pools.size() before V1 certificate filter: {}, after: {}",
-                poolsBeforeContentFilter, pools.size());
+            poolsBeforeContentFilter, pools.size());
 
         if (pools.size() == 0) {
             List<String> fullList = new ArrayList<String>();

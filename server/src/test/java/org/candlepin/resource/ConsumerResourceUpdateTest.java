@@ -247,7 +247,7 @@ public class ConsumerResourceUpdateTest {
         this.resource.updateConsumer(consumer.getUuid(), incoming);
         verify(sink).queueEvent((Event) any());
         verify(complianceRules).getStatus(eq(consumer), any(Date.class),
-                any(Boolean.class), any(Boolean.class));
+            any(Boolean.class), any(Boolean.class));
     }
 
     @Test
@@ -699,8 +699,7 @@ public class ConsumerResourceUpdateTest {
         Consumer updated = new Consumer();
         updated.setEnvironment(changedEnvironment);
 
-        when(environmentCurator.find(changedEnvironment.getId())).thenReturn(
-                changedEnvironment);
+        when(environmentCurator.find(changedEnvironment.getId())).thenReturn(changedEnvironment);
 
         resource.updateConsumer(existing.getUuid(), updated);
 

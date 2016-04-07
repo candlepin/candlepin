@@ -193,7 +193,7 @@ public class PoolRulesStackDerivedTest {
         attributes.put(pool2.getId(), PoolHelper.getFlattenedAttributes(pool2));
         when(poolManagerMock.createPools(Matchers.anyListOf(Pool.class))).then(returnsFirstArg());
         List<Pool> resPools = PoolHelper.createHostRestrictedPools(poolManagerMock, consumer, reqPools,
-                entitlements, attributes);
+            entitlements, attributes);
         stackDerivedPool = resPools.get(0);
 
         reqPools.clear();
@@ -372,7 +372,7 @@ public class PoolRulesStackDerivedTest {
         when(entCurMock.findByStackIds(eq(consumer), arg.capture())).thenReturn(stackedEnts);
 
         List<PoolUpdate> updates = poolRules.updatePoolsFromStack(consumer,
-                Arrays.asList(stackDerivedPool, stackDerivedPool2), false);
+            Arrays.asList(stackDerivedPool, stackDerivedPool2), false);
         Set<String> stackIds = arg.getValue();
         assertEquals(2, stackIds.size());
         assertThat(stackIds, hasItems(STACK, STACK + "3"));

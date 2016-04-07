@@ -380,8 +380,8 @@ public class PinsetterKernelTest {
         pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.scheduleSingleJob(detail);
         verify(detail).setGroup(eq(singlegrp));
-        verify(lm).addJobListenerMatcher(PinsetterJobListener.LISTENER_NAME
-                , jobNameEquals(detail.getKey().getName()));
+        verify(lm).addJobListenerMatcher(PinsetterJobListener.LISTENER_NAME,
+            jobNameEquals(detail.getKey().getName()));
         verify(sched).scheduleJob(eq(detail), any(Trigger.class));
     }
 

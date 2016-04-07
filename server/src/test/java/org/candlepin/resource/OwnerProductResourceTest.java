@@ -60,8 +60,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         String version = "1.0";
         String arch = "ALL";
         String type = "SVC";
-        Product prod = new Product(label, name, owner, variant,
-                version, arch, type);
+        Product prod = new Product(label, name, owner, variant, version, arch, type);
         return prod;
     }
 
@@ -81,8 +80,8 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         String  contentHash = String.valueOf(
             Math.abs(Long.valueOf("test-content".hashCode())));
         Content testContent = new Content(owner, "test-content", contentHash,
-                            "test-content-label", "yum", "test-vendor",
-                             "test-content-url", "test-gpg-url", "test-arch");
+            "test-content-label", "yum", "test-vendor",
+            "test-content-url", "test-gpg-url", "test-arch");
 
         HashSet<Content> contentSet = new HashSet<Content>();
         testContent = contentCurator.create(testContent);

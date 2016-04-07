@@ -105,13 +105,12 @@ public class ImporterTest {
     @Before
     public void init() throws URISyntaxException, IOException {
         mapper = SyncUtils.getObjectMapper(new MapConfiguration(
-                new HashMap<String, String>() {
-
-                    {
-                        put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
-                                "false");
-                    }
-                }));
+            new HashMap<String, String>() {
+                {
+                    put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+                }
+            }
+        ));
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         config = new CandlepinCommonTestConfig();
         PrintStream ps = new PrintStream(new File(this.getClass()
@@ -581,8 +580,8 @@ public class ImporterTest {
         importFiles.put(ImportFile.META.fileName(), actualmeta);
 
         ConsumerDto consumer = new ConsumerDto("eb5e04bf-be27-44cf-abe3-0c0b1edd523e", "mymachine",
-                new ConsumerType(ConsumerTypeEnum.CANDLEPIN), owner, "foo.example.com/subscription",
-                "/candlepin");
+            new ConsumerType(ConsumerTypeEnum.CANDLEPIN), owner, "foo.example.com/subscription",
+            "/candlepin");
         File consumerFile = new File(folder.getRoot(), "consumer.json");
         mapper.writeValue(consumerFile, consumer);
         importFiles.put(ImportFile.CONSUMER.fileName(), consumerFile);
@@ -616,7 +615,7 @@ public class ImporterTest {
         ConflictOverrides co = mock(ConflictOverrides.class);
 
         Importer i = new Importer(ctc, null, ri, oc, null, null, pm,
-                null, config, emc, null, null, i18n, null, null);
+            null, config, emc, null, null, i18n, null, null);
         List<Subscription> subscriptions = i.importObjects(owner, importFiles, co);
 
         assertEquals(1, subscriptions.size());
@@ -656,7 +655,7 @@ public class ImporterTest {
     }
 
     private File createFile(String filename, String version, Date date,
-                 String username, String prefix)
+        String username, String prefix)
         throws JsonGenerationException, JsonMappingException, IOException {
 
         File f = new File(folder.getRoot(), filename);
@@ -715,15 +714,14 @@ public class ImporterTest {
             pki, null, null, mock(CertificateSerialCurator.class), null, i18n, null,
             null);
         File[] upstream = new File[2];
-        File idcertfile = new File(classLoader.getResource("upstream/testidcert.json")
-                .toURI());
+        File idcertfile = new File(classLoader.getResource("upstream/testidcert.json").toURI());
         File kpfile = new File(classLoader.getResource("upstream/keypair.pem").toURI());
         upstream[0] = idcertfile;
         upstream[1] = kpfile;
         Owner owner = new Owner("admin", "Admin Owner");
         ConsumerDto consumer = new ConsumerDto("eb5e04bf-be27-44cf-abe3-0c0b1edd523e",
-                "mymachine", new ConsumerType(ConsumerTypeEnum.CANDLEPIN), owner,
-                "foo.example.com/subscription", "/candlepin");
+            "mymachine", new ConsumerType(ConsumerTypeEnum.CANDLEPIN), owner,
+            "foo.example.com/subscription", "/candlepin");
         File consumerfile = new File(folder.getRoot(), "consumer.json");
         mapper.writeValue(consumerfile, consumer);
         ConflictOverrides forcedConflicts = mock(ConflictOverrides.class);

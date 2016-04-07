@@ -83,11 +83,10 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         // method that needs to work on the same content twice.
 
         Content c1 = new Content(owner, "mycontent", "5006", "mycontent", "yum",
-                "vendor", "nobodycares", "nobodystillcares", "x86_64");
+            "vendor", "nobodycares", "nobodystillcares", "x86_64");
         Content c2 = new Content(owner, "mycontent", "5006", "mycontent", "yum",
-                "vendor", "nobodycares", "nobodystillcares", "x86_64");
+            "vendor", "nobodycares", "nobodystillcares", "x86_64");
         contentCurator.createContent(c1, owner);
         contentCurator.updateContent(c2, owner);
-
     }
 }

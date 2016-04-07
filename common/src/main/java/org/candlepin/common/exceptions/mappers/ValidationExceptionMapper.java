@@ -42,7 +42,7 @@ public class ValidationExceptionMapper extends CandlepinExceptionMapper
         Map<String, String> map = VersionUtil.getVersionMap();
         ResponseBuilder bldr = Response.status(Status.BAD_REQUEST).type(
             determineBestMediaType()).header(VersionUtil.VERSION_HEADER,
-                map.get("version") + "-" + map.get("release"));
+            map.get("version") + "-" + map.get("release"));
 
         StringBuffer message = new StringBuffer();
         if (ConstraintViolationException.class.isAssignableFrom(exception.getClass())) {
