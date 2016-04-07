@@ -43,17 +43,12 @@ public class ProductManager {
     private ProductCurator productCurator;
     private EntitlementCertificateGenerator entitlementCertGenerator;
 
-    /** Whether or not all content updates should occur in place (ie: global products/content) */
-    private boolean updateInPlace;
-
     @Inject
     public ProductManager(ProductCurator productCurator,
         EntitlementCertificateGenerator entitlementCertGenerator, Configuration config) {
 
         this.productCurator = productCurator;
         this.entitlementCertGenerator = entitlementCertGenerator;
-
-        this.updateInPlace = !config.getBoolean(ConfigProperties.PER_ORG_PRODUCTS, true);
     }
 
     /**
@@ -189,7 +184,7 @@ public class ProductManager {
         if (!existing.equals(entity)) {
             // If we're making the update for every owner using the product, don't bother creating
             // a new version -- just do a raw update.
-            if (this.updateInPlace || existing.getOwners().size() == 1) {
+            if (existing.getOwners().size() == 1) {
                 existing.merge(entity);
                 entity = existing;
 

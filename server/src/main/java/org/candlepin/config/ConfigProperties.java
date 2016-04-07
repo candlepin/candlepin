@@ -242,12 +242,6 @@ public class ConfigProperties {
      */
     public static final String IDENTITY_CERT_EXPIRY_THRESHOLD = "candlepin.identityCert.expiry.threshold";
 
-    /**
-     * Whether or not per-org products should be enabled. If set to false, all products and content
-     * will be updated in-place.
-     */
-    public static final String PER_ORG_PRODUCTS = "candlepin.per_org_products";
-
     public static final Map<String, String> DEFAULT_PROPERTIES =
         new HashMap<String, String>() {
 
@@ -365,8 +359,6 @@ public class ConfigProperties {
                  *  a larger memory footprint as the cache fills up.
                  */
                 this.put(PRODUCT_CACHE_MAX, "100");
-
-                this.put(PER_ORG_PRODUCTS, "true");
 
                 /**
                  * As we do math on some facts and attributes, we need to constrain
