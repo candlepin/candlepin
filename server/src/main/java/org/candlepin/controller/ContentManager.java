@@ -114,7 +114,6 @@ public class ContentManager {
                 // If we're "creating" a content, we shouldn't have any other object references to
                 // update for this content. Instead, we'll just add the new owner to the content.
                 alt.addOwner(owner);
-
                 return this.contentCurator.merge(alt);
             }
         }
@@ -182,20 +181,28 @@ public class ContentManager {
 
         for (Content alt : alternateVersions) {
             if (alt.equals(entity)) {
-                List<Owner> owners = Arrays.asList(owner);
-
                 alt.addOwner(owner);
-                entity = this.contentCurator.updateOwnerContentReferences(existing, alt, owners);
+                this.contentCurator.merge(alt);
 
-                if (regenerateEntitlementCerts) {
-                    List<Product> affectedProducts = this.productCurator.getProductsWithContent(
-                        owner, Arrays.asList(entity.getId())
-                    );
+                // Make sure every product using the old version/entity are updated to use the new one
+                List<Product> affectedProducts = this.productCurator.getProductsWithContent(
+                    owner, Arrays.asList(entity.getId())
+                );
 
-                    this.entitlementCertGenerator.regenerateCertificatesOf(owners, affectedProducts, true);
+                for (Product product : affectedProducts) {
+                    product = (Product) product.clone();
+
+                    for (ProductContent pc : product.getProductContent()) {
+                        if (entity.equals(pc.getContent())) {
+                            pc.setContent(alt);
+                        }
+                    }
+
+                    // Impl note: This should also take care of our entitlement cert regeneration
+                    this.productManager.updateProduct(product, owner, regenerateEntitlementCerts);
                 }
 
-                return entity;
+                return this.contentCurator.updateOwnerContentReferences(existing, alt, Arrays.asList(owner));
             }
         }
 
@@ -243,7 +250,7 @@ public class ContentManager {
                     product = (Product) product.clone();
 
                     for (ProductContent pc : product.getProductContent()) {
-                        if (existing == pc.getContent() || existing.equals(pc.getContent())) {
+                        if (existing.equals(pc.getContent())) {
                             pc.setContent(copy);
                         }
                     }
@@ -301,14 +308,6 @@ public class ContentManager {
         List<Product> affectedProducts =
             this.productCurator.getProductsWithContent(owner, Arrays.asList(existing.getId()));
 
-        existing.removeOwner(owner);
-        if (existing.getOwners().size() == 0) {
-            this.contentCurator.delete(existing);
-        }
-
-        // Clean up any dangling references to content
-        this.contentCurator.removeOwnerContentReferences(existing, Arrays.asList(owner));
-
         // Update affected products and regenerate their certs
         List<Product> updatedAffectedProducts = new LinkedList<Product>();
         List<Content> contentList = Arrays.asList(existing);
@@ -320,6 +319,17 @@ public class ContentManager {
 
             updatedAffectedProducts.add(product);
         }
+
+        existing.removeOwner(owner);
+        if (existing.getOwners().size() == 0) {
+            this.contentCurator.delete(existing);
+        }
+        else {
+            this.contentCurator.merge(existing);
+        }
+
+        // Clean up any dangling references to content
+        this.contentCurator.removeOwnerContentReferences(existing, Arrays.asList(owner));
 
         return updatedAffectedProducts;
     }

@@ -134,8 +134,10 @@ public class TestUtil {
     }
 
     public static Content createContent(Owner owner, String id) {
-        String name = "test-content-" + randomInt();
+        return createContent(owner, id, "test-content-" + randomInt());
+    }
 
+    public static Content createContent(Owner owner, String id, String name) {
         return new Content(
             owner,
             name,

@@ -92,8 +92,6 @@ public class ProductManagerTest {
         Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
         Product product = TestUtil.createProduct("p1", "prod1", owner);
 
-        when(this.mockProductCurator.create(eq(product))).thenReturn(product);
-
         Product output = this.productManager.createProduct(product, owner);
 
         assertEquals(output, product);

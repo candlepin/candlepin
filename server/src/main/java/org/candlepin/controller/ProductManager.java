@@ -171,6 +171,8 @@ public class ProductManager {
                 List<Owner> owners = Arrays.asList(owner);
 
                 alt.addOwner(owner);
+                this.productCurator.merge(alt);
+
                 entity = this.productCurator.updateOwnerProductReferences(existing, alt, owners);
 
                 if (regenerateEntitlementCerts) {
@@ -266,6 +268,9 @@ public class ProductManager {
         existing.removeOwner(owner);
         if (existing.getOwners().size() == 0) {
             this.productCurator.delete(existing);
+        }
+        else {
+            this.productCurator.merge(existing);
         }
 
         // Clean up any dangling references to content
