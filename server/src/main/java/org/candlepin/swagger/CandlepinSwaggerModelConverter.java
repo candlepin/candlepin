@@ -15,6 +15,9 @@
 package org.candlepin.swagger;
 
 
+import org.candlepin.common.jackson.HateoasInclude;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -31,6 +34,34 @@ import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.google.common.collect.Iterables;
+import com.google.inject.Inject;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.validation.constraints.DecimalMax;
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.converter.ModelConverter;
@@ -54,35 +85,40 @@ import io.swagger.util.AllowableValues;
 import io.swagger.util.AllowableValuesUtils;
 import io.swagger.util.PrimitiveType;
 
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.validation.constraints.DecimalMax;
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlRootElement;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+/**
+ * This custom model converter is adapted version of standard swagger ModelResolver.
+ *
+ * The ModelResolver in Swagger has responsibility to introspect Models (in our case Entities) and
+ * decide which fields to include in swagger.json.
+ * The ModelResolver tries to account for various standard
+ * exlusion annotations such as JsonIgnore and XmlTransient, however Candlepin has much more
+ * complex rules for serialization that cannot bea easily captured just by adding new ModelConverter
+ * into the chain of Converters. Thats why this ModelResolver is being modified. The new
+ * capabilities of this ModelResolver are: Detection of nested Model properties, Hateoas Serialization.
+ *
+ * <h2>Detection of nested Model properties</h2>
+ * Candlepin serialization is configured in JsonProvider class. This class defines several JSON filters
+ * that enable Hateoas Serialization for nested fields. That means that an entity such as Owner will be
+ * serialized differently based on whether its top-level entity returned as Response or nested property
+ * e.g. parentOwner property inside an Owner. To allow for such behavior, this modified converter is
+ * detecting such nested property and uses inheritance hack (see java doc of NestedComplexType class) to
+ * make sure that a new model with prefix 'Nested' (e.g. NestedOwner) is created for each such nested
+ * type.  It is important to note that not all entities have it's nested counterparts. Only those that
+ * have JsonFilter annotation with appropriate filter (list of t hose is in JsonProvider) should have
+ * the nested counterpart.
+ *
+ * <h2>Hateoas Serializatoin</h2>
+ * See JavaDoc of HateoasInclude annotation for more details of how the serialization works. This converter
+ * make sure that when a model is nested (e.g. NestedOwner) it will include only those fields that
+ * are annotated for HateoasInclude
+ *
+ *
+ * @author fnguyen
+ *
+ */
 public class CandlepinSwaggerModelConverter extends AbstractModelConverter implements ModelConverter {
     Logger LOGGER = LoggerFactory.getLogger(CandlepinSwaggerModelConverter.class);
+    private Map<JavaType, NestedComplexType> nestedJavaTypes = new HashMap<JavaType, NestedComplexType>();
 
     @Inject
     public CandlepinSwaggerModelConverter(ObjectMapper mapper) {
@@ -113,22 +149,26 @@ public class CandlepinSwaggerModelConverter extends AbstractModelConverter imple
         return false;
     }
 
+
     public Property resolveProperty(Type type,
                                     ModelConverterContext context,
                                     Annotation[] annotations,
-                                    Iterator<ModelConverter> next) {
-        if (this.shouldIgnoreClass(type)) {
-            return null;
+            Iterator<ModelConverter> next) {
+        JavaType propType = null;
+
+        /**
+         * See java doc of NestedComplexType. This unwrapping makes sure that a
+         * real type of field is passed to _mapper
+         */
+        if (type instanceof NestedComplexType) {
+            propType = pMapper.constructType(((NestedComplexType) type).getOriginalType());
+        }
+        else {
+            propType = pMapper.constructType(type);
         }
 
-        return resolveProperty(pMapper.constructType(type), context, annotations, next);
-    }
-
-    public Property resolveProperty(JavaType propType,
-                                    ModelConverterContext context,
-                                    Annotation[] annotations,
-                                    Iterator<ModelConverter> next) {
         LOGGER.debug("resolveProperty " + propType);
+
 
         Property property = null;
         if (propType.isContainerType()) {
@@ -161,7 +201,7 @@ public class CandlepinSwaggerModelConverter extends AbstractModelConverter imple
             }
             else {
                 // complex type
-                Model innerModel = context.resolve(propType);
+                Model innerModel = context.resolve(type);
                 if (innerModel instanceof ModelImpl) {
                     ModelImpl mi = (ModelImpl) innerModel;
                     property = new RefProperty(StringUtils.isNotEmpty(mi.getReference()) ?
@@ -176,14 +216,6 @@ public class CandlepinSwaggerModelConverter extends AbstractModelConverter imple
     private boolean pIsOptionalType(JavaType propType) {
         return Arrays.asList("com.google.common.base.Optional", "java.util.Optional")
                 .contains(propType.getRawClass().getCanonicalName());
-    }
-
-    public Model resolve(Type type, ModelConverterContext context, Iterator<ModelConverter> next) {
-        if (this.shouldIgnoreClass(type)) {
-            return null;
-        }
-
-        return resolve(pMapper.constructType(type), context, next);
     }
 
     protected void pAddEnumProps(Class<?> propClass, Property property) {
@@ -210,7 +242,26 @@ public class CandlepinSwaggerModelConverter extends AbstractModelConverter imple
         }
     }
 
-    public Model resolve(JavaType type, ModelConverterContext context, Iterator<ModelConverter> next) {
+    public Model resolve(Type rawType, ModelConverterContext context, Iterator<ModelConverter> next) {
+        if (this.shouldIgnoreClass(rawType)) {
+            return null;
+        }
+
+        /**
+         * See java doc of NestedComplexType. This unwrapping makes sure that a
+         * real type of field used throughout the method. At the same time flag
+         * 'isNested' helps to indicate later in the method that this type may
+         * be introspected as Hateoas enabled field
+         */
+        boolean isNested = false;
+        if (rawType instanceof NestedComplexType) {
+            isNested = true;
+            NestedComplexType nested = (NestedComplexType) rawType;
+            rawType = nested.getOriginalType();
+        }
+        JavaType type = pMapper.constructType(rawType);
+
+
         if (type.isEnumType() || PrimitiveType.fromType(type) != null) {
             // We don't build models for primitive types
             return null;
@@ -218,7 +269,8 @@ public class CandlepinSwaggerModelConverter extends AbstractModelConverter imple
 
         final BeanDescription beanDesc = pMapper.getSerializationConfig().introspect(type);
         // Couple of possibilities for defining
-        String name = pTypeName(type, beanDesc);
+        String name = isNested ? "Nested" : "";
+        name += pTypeName(type, beanDesc);
 
         if ("Object".equals(name)) {
             return new ModelImpl();
@@ -279,7 +331,7 @@ public class CandlepinSwaggerModelConverter extends AbstractModelConverter imple
 
         List<Property> props = new ArrayList<Property>();
         for (BeanPropertyDefinition propDef : beanDesc.findProperties()) {
-            parseProperty(context, beanDesc, propertiesToIgnore, props, propDef);
+            parseProperty(context, isNested, beanDesc, propertiesToIgnore, props, propDef);
         }
 
 
@@ -302,31 +354,14 @@ public class CandlepinSwaggerModelConverter extends AbstractModelConverter imple
         return model;
     }
 
-    private void parseProperty(ModelConverterContext context, final BeanDescription beanDesc,
+    private void parseProperty(ModelConverterContext context,  boolean isNested,
+            final BeanDescription beanDesc,
             Set<String> propertiesToIgnore, List<Property> props, BeanPropertyDefinition propDef) {
         Property property = null;
         String propName = propDef.getName();
         Annotation[] annotations = null;
 
-        // hack to avoid clobbering properties with get/is names
-        // it's ugly but gets around https://github.com/swagger-api/swagger-core/issues/415
-        if (propDef.getPrimaryMember() != null) {
-            java.lang.reflect.Member member = propDef.getPrimaryMember().getMember();
-            if (member != null) {
-                String altName = member.getName();
-                if (altName != null) {
-                    final int length = altName.length();
-                    for (String prefix : Arrays.asList("get", "is")) {
-                        final int offset = prefix.length();
-                        if (altName.startsWith(prefix) && length > offset &&
-                                !Character.isUpperCase(altName.charAt(offset))) {
-                            propName = altName;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
+        propName = getPropName(propDef, propName);
 
         PropertyMetadata md = propDef.getMetadata();
 
@@ -353,7 +388,13 @@ public class CandlepinSwaggerModelConverter extends AbstractModelConverter imple
 
         final AnnotatedMember member = propDef.getPrimaryMember();
 
-        if (member != null && !propertiesToIgnore.contains(propName)) {
+        if (member != null && !propertiesToIgnore.contains(propName) &&
+                /**
+                 * If the owning type is nested than we should include only
+                 * those fields that have the Hateoas annotation.
+                 */
+                !(isNested && !member.hasAnnotation(HateoasInclude.class))) {
+
             List<Annotation> annotationList = new ArrayList<Annotation>();
             for (Annotation a : member.annotations()) {
                 annotationList.add(a);
@@ -367,7 +408,29 @@ public class CandlepinSwaggerModelConverter extends AbstractModelConverter imple
                 isReadOnly = mp.readOnly();
             }
 
+            Type nested = null;
             JavaType propType = member.getType(beanDesc.bindingsForBeanType());
+            JsonFilter jsonFilter = propType.getRawClass().getAnnotation(JsonFilter.class);
+
+            /**
+             * At this point the propType is a type of some nested field of the
+             * type that is being processed. The condition checks if this
+             * particular type should have Hateoas serialization enabled. In
+             * other words, if we should create a new Nested* model.
+             */
+            if (jsonFilter != null &&
+                    (jsonFilter.value().equals("ConsumerFilter") ||
+                     jsonFilter.value().equals("EntitlementFilter") ||
+                     jsonFilter.value().equals("OwnerFilter") ||
+                     jsonFilter.value().equals("GuestFilter"))) {
+                if (!nestedJavaTypes.containsKey(propType)) {
+                    nestedJavaTypes.put(propType, new NestedComplexType(propType));
+                }
+                nested = nestedJavaTypes.get(propType);
+            }
+            else {
+                nested = propType;
+            }
 
             // allow override of name from annotation
             if (mp != null && !mp.name().isEmpty()) {
@@ -389,7 +452,7 @@ public class CandlepinSwaggerModelConverter extends AbstractModelConverter imple
                             member.getAnnotation(JsonIdentityReference.class));
                 }
                 if (property == null) {
-                    property = context.resolveProperty(propType, annotations);
+                    property = context.resolveProperty(nested, annotations);
                 }
             }
 
@@ -399,6 +462,29 @@ public class CandlepinSwaggerModelConverter extends AbstractModelConverter imple
                 props.add(property);
             }
         }
+    }
+
+    private String getPropName(BeanPropertyDefinition propDef, String propName) {
+        // hack to avoid clobbering properties with get/is names
+        // it's ugly but gets around https://github.com/swagger-api/swagger-core/issues/415
+        if (propDef.getPrimaryMember() != null) {
+            java.lang.reflect.Member member = propDef.getPrimaryMember().getMember();
+            if (member != null) {
+                String altName = member.getName();
+                if (altName != null) {
+                    final int length = altName.length();
+                    for (String prefix : Arrays.asList("get", "is")) {
+                        final int offset = prefix.length();
+                        if (altName.startsWith(prefix) && length > offset &&
+                                !Character.isUpperCase(altName.charAt(offset))) {
+                            propName = altName;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return propName;
     }
 
     private void addMetadataToProperty(Property property, String propName,

@@ -23,8 +23,11 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyName;
 import com.fasterxml.jackson.databind.introspect.Annotated;
+import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -44,6 +47,11 @@ import io.swagger.jackson.TypeNameResolver;
 import io.swagger.models.Model;
 import io.swagger.models.properties.Property;
 
+/**
+ * Class adopted from https://github.com/swagger-api. Converters are Swagger extension points.
+ * @author fnguyen
+ *
+ */
 public abstract class AbstractModelConverter implements ModelConverter {
     protected final ObjectMapper pMapper;
     protected final AnnotationIntrospector pIntr;
@@ -55,6 +63,11 @@ public abstract class AbstractModelConverter implements ModelConverter {
     protected Map<JavaType, String> pResolvedTypeNames = new ConcurrentHashMap<JavaType, String>();
 
     protected AbstractModelConverter(ObjectMapper mapper) {
+        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
+        AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
+        mapper.setAnnotationIntrospector(pair);
+
         mapper.registerModule(
                 new SimpleModule("swagger", Version.unknownVersion()) {
                     @Override
