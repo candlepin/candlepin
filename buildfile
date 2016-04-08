@@ -46,7 +46,7 @@ RESTEASY = [group('jaxrs-api',
             'javax.ws.rs:javax.ws.rs-api:jar:2.0.1']
 
 JACKSON_NS = "com.fasterxml.jackson"
-JACKSON_VERSION = "2.3.0"
+JACKSON_VERSION = "2.4.5"
 JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
                  :under=> "#{JACKSON_NS}.core",
                  :version => JACKSON_VERSION),
@@ -105,6 +105,16 @@ HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0'
              'org.jboss.logging:jboss-logging:jar:3.1.1.GA'] + JAVAX
 
 POSTGRESQL = 'postgresql:postgresql:jar:9.0-801.jdbc4'
+
+SWAGGER = [group('swagger-jaxrs', 'swagger-core','swagger-models','swagger-annotations',
+                     :under => 'io.swagger',
+                     :version => '1.5.7'),
+          'org.reflections:reflections:jar:0.9.10',
+          'org.apache.commons:commons-lang3:jar:3.2.1',
+           group('jackson-dataformat-yaml', 'jackson-dataformat-xml',
+                  :under => 'com.fasterxml.jackson.dataformat',
+                  :version => JACKSON_VERSION)
+         ]
 
 MYSQL = 'mysql:mysql-connector-java:jar:5.1.26'
 
@@ -444,6 +454,7 @@ define "candlepin" do
       RESTEASY,
       RHINO,
       SUN_JAXB,
+      SWAGGER,
     ]
     compile.with(compile_classpath)
     compile.with(project('common'))
