@@ -14,13 +14,6 @@
  */
 package org.candlepin.guice;
 
-import java.util.Properties;
-
-import javax.inject.Provider;
-import javax.validation.MessageInterpolator;
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
-
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
@@ -51,6 +44,7 @@ import org.candlepin.common.guice.JPAInitializer;
 import org.candlepin.common.resteasy.filter.DynamicJsonFilter;
 import org.candlepin.common.resteasy.filter.LinkHeaderResponseFilter;
 import org.candlepin.common.resteasy.filter.PageRequestFilter;
+import org.candlepin.common.util.VersionUtil;
 import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
@@ -122,6 +116,7 @@ import org.candlepin.resteasy.filter.VerifyAuthorizationFilter;
 import org.candlepin.resteasy.filter.VersionResponseFilter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
+import org.candlepin.swagger.CandlepinSwaggerModelConverter;
 import org.candlepin.sync.ConsumerExporter;
 import org.candlepin.sync.ConsumerTypeExporter;
 import org.candlepin.sync.EntitlementCertExporter;
@@ -132,12 +127,6 @@ import org.candlepin.util.DateSource;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.X509ExtensionUtil;
-import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
-import org.hibernate.validator.HibernateValidator;
-import org.hibernate.validator.HibernateValidatorConfiguration;
-import org.quartz.JobListener;
-import org.quartz.spi.JobFactory;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
@@ -146,6 +135,24 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.persist.jpa.JpaPersistModule;
+
+import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
+import org.hibernate.validator.HibernateValidator;
+import org.hibernate.validator.HibernateValidatorConfiguration;
+import org.quartz.JobListener;
+import org.quartz.spi.JobFactory;
+import org.xnap.commons.i18n.I18n;
+
+import java.util.Properties;
+
+import javax.inject.Provider;
+import javax.validation.MessageInterpolator;
+import javax.validation.Validation;
+import javax.validation.ValidatorFactory;
+
+import io.swagger.jaxrs.config.BeanConfig;
+import io.swagger.jaxrs.listing.ApiListingResource;
+import io.swagger.jaxrs.listing.SwaggerSerializers;
 
 /**
  * CandlepinModule
@@ -247,6 +254,8 @@ public class CandlepinModule extends AbstractModule {
 
         configureExporter();
 
+        configureSwagger();
+
         // Async Jobs
         bind(RefreshPoolsJob.class);
         bind(EntitlerJob.class);
@@ -327,6 +336,25 @@ public class CandlepinModule extends AbstractModule {
         bind(ConsumerExporter.class);
         bind(RulesExporter.class);
         bind(EntitlementCertExporter.class);
+    }
+
+    private void configureSwagger() {
+        /**
+         * Using this binding, the swagger.(json|xml) will be available
+         * for an authenticated user at context: URL/candlepin/swagger.json
+         */
+        bind(ApiListingResource.class);
+        bind(SwaggerSerializers.class);
+
+        bind(CandlepinSwaggerModelConverter.class);
+
+        BeanConfig beanConfig = new BeanConfig();
+        beanConfig.setSchemes(new String[] { "http" });
+        beanConfig.setBasePath("/candlepin");
+        beanConfig.setResourcePackage("org.candlepin.resource");
+        beanConfig.setVersion(VersionUtil.getVersionString());
+        beanConfig.setTitle("Candlepin");
+        beanConfig.setScan(true);
     }
 
     private void configureAmqp() {

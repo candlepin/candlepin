@@ -37,12 +37,18 @@ public class CandlepinFilterModule extends ServletModule {
         Map<String, String> loggingFilterConfig = new HashMap<String, String>();
         loggingFilterConfig.put("header.name", "x-candlepin-request-uuid");
 
-        filter("/*").through(CandlepinScopeFilter.class);
-        filter("/*").through(CandlepinPersistFilter.class);
-        filter("/*").through(LoggingFilter.class, loggingFilterConfig);
-        filter("/*").through(ContentTypeHackFilter.class);
-        filter("/*").through(EventFilter.class);
+        /**
+         * A negative lookeahead regex that makes sure that we can serve
+         * static content at docs/
+         */
+        String regex = "^(?!/docs).*";
 
-        serve("/*").with(HttpServletDispatcher.class);
+        filterRegex(regex).through(CandlepinScopeFilter.class);
+        filterRegex(regex).through(CandlepinPersistFilter.class);
+        filterRegex(regex).through(LoggingFilter.class, loggingFilterConfig);
+        filterRegex(regex).through(ContentTypeHackFilter.class);
+        filterRegex(regex).through(EventFilter.class);
+
+        serveRegex(regex).with(HttpServletDispatcher.class);
     }
 }

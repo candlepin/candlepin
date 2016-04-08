@@ -17,6 +17,8 @@ package org.candlepin.model;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import io.swagger.annotations.ApiModelProperty;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -39,7 +41,9 @@ public abstract class AbstractHibernateObject implements Persisted, Serializable
 
     public static final String DEFAULT_SORT_FIELD = "created";
 
+    @ApiModelProperty(readOnly = true)
     private Date created;
+    @ApiModelProperty(readOnly = true)
     private Date updated;
 
     @PrePersist
