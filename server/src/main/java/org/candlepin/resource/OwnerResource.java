@@ -1287,7 +1287,7 @@ public class OwnerResource {
 
         if (overrideConflicts.length == 1) {
             /*
-             * For backward compatibility, look for force = true and if found,
+             * For backward compatibility, look for force=true and if found,
              * treat it just like what it used to mean, ignore an old manifest
              * creation date.
              */
@@ -1323,7 +1323,7 @@ public class OwnerResource {
             while (st.hasMoreTokens()) {
                 String entry = st.nextToken().trim();
                 if (entry.startsWith("filename")) {
-                    filename = entry.substring(entry.indexOf(" = ") + 2, entry.length() - 1);
+                    filename = entry.substring(entry.indexOf("=") + 2, entry.length() - 1);
                     break;
                 }
             }
