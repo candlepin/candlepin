@@ -14,7 +14,9 @@
  */
 package org.candlepin.guice;
 
-import static org.candlepin.config.ConfigProperties.*;
+import static org.candlepin.config.ConfigProperties.ENCRYPTED_PROPERTIES;
+import static org.candlepin.config.ConfigProperties.HORNETQ_ENABLED;
+import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.HornetqContextListener;
@@ -27,6 +29,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 import org.candlepin.resteasy.ResourceLocatorMap;
+import org.candlepin.swagger.CandlepinSwaggerModelConverter;
 import org.candlepin.util.Util;
 
 import com.google.inject.AbstractModule;
@@ -54,6 +57,8 @@ import java.util.Locale;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
+
+import io.swagger.converter.ModelConverters;
 
 /**
  * Customized Candlepin version of
@@ -136,6 +141,13 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         pinsetterListener.contextInitialized();
 
         loggerListener = injector.getInstance(LoggerContextListener.class);
+
+        /**
+         * Custom ModelConverter to handle our specific serialization requirements
+         */
+        ModelConverters.getInstance()
+            .addConverter(injector.getInstance(CandlepinSwaggerModelConverter.class));
+
         this.injector = injector;
     }
 
