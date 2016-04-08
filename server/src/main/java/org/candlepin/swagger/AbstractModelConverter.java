@@ -14,8 +14,6 @@
  */
 package org.candlepin.swagger;
 
-
-
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.BeanDescription;
@@ -23,8 +21,11 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyName;
 import com.fasterxml.jackson.databind.introspect.Annotated;
+import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -44,6 +45,13 @@ import io.swagger.jackson.TypeNameResolver;
 import io.swagger.models.Model;
 import io.swagger.models.properties.Property;
 
+/**
+ * Class adopted from https://github.com/swagger-api. Converters are Swagger
+ * extension points.
+ *
+ * @author fnguyen
+ *
+ */
 public abstract class AbstractModelConverter implements ModelConverter {
     protected final ObjectMapper pMapper;
     protected final AnnotationIntrospector pIntr;
@@ -55,13 +63,17 @@ public abstract class AbstractModelConverter implements ModelConverter {
     protected Map<JavaType, String> pResolvedTypeNames = new ConcurrentHashMap<JavaType, String>();
 
     protected AbstractModelConverter(ObjectMapper mapper) {
-        mapper.registerModule(
-                new SimpleModule("swagger", Version.unknownVersion()) {
-                    @Override
-                    public void setupModule(SetupContext context) {
-                        context.insertAnnotationIntrospector(new SwaggerAnnotationIntrospector());
-                    }
-                });
+        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
+        AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
+        mapper.setAnnotationIntrospector(pair);
+
+        mapper.registerModule(new SimpleModule("swagger", Version.unknownVersion()) {
+            @Override
+            public void setupModule(SetupContext context) {
+                context.insertAnnotationIntrospector(new SwaggerAnnotationIntrospector());
+            }
+        });
         pMapper = mapper;
         pIntr = mapper.getSerializationConfig().getAnnotationIntrospector();
 
@@ -86,10 +98,8 @@ public abstract class AbstractModelConverter implements ModelConverter {
     }
 
     @Override
-    public Property resolveProperty(Type type,
-                                    ModelConverterContext context,
-                                    Annotation[] annotations,
-                                    Iterator<ModelConverter> chain) {
+    public Property resolveProperty(Type type, ModelConverterContext context, Annotation[] annotations,
+        Iterator<ModelConverter> chain) {
         if (chain.hasNext()) {
             return chain.next().resolveProperty(type, context, annotations, chain);
         }
@@ -99,8 +109,10 @@ public abstract class AbstractModelConverter implements ModelConverter {
     }
 
     protected String pDescription(Annotated ann) {
-        // while name suggests it's only for properties, should work for any Annotated thing.
-        // also; with Swagger introspector's help, should get it from ApiModel/ApiModelProperty
+        // while name suggests it's only for properties, should work for any
+        // Annotated thing.
+        // also; with Swagger introspector's help, should get it from
+        // ApiModel/ApiModelProperty
         return pIntr.findPropertyDescription(ann);
     }
 
@@ -191,9 +203,10 @@ public abstract class AbstractModelConverter implements ModelConverter {
             else {
                 for (Class<?> a : cls.getInterfaces()) {
                     // this is dirty and ugly and needs to be extended
-                    //into a scala model converter.  But to avoid bringing in scala runtime...
+                    // into a scala model converter. But to avoid bringing in
+                    // scala runtime...
                     if (java.util.Set.class.equals(a) ||
-                            "interface scala.collection.Set".equals(a.toString())) {
+                        "interface scala.collection.Set".equals(a.toString())) {
                         return true;
                     }
                 }
