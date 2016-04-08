@@ -117,6 +117,7 @@ import org.candlepin.resteasy.filter.VerifyAuthorizationFilter;
 import org.candlepin.resteasy.filter.VersionResponseFilter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
+import org.candlepin.swagger.CandlepinSwaggerModelConverter;
 import org.candlepin.sync.ConsumerExporter;
 import org.candlepin.sync.ConsumerTypeExporter;
 import org.candlepin.sync.EntitlementCertExporter;
@@ -341,6 +342,8 @@ public class CandlepinModule extends AbstractModule {
          */
         bind(ApiListingResource.class);
         bind(SwaggerSerializers.class);
+
+        bind(CandlepinSwaggerModelConverter.class);
 
         BeanConfig beanConfig = new BeanConfig();
         beanConfig.setSchemes(new String[] { "https" });
