@@ -190,6 +190,15 @@ describe 'Owner Product Resource' do
     end.should raise_exception(RestClient::BadRequest)
   end
 
+  it 'ensures product.href is correct' do
+    owner = create_owner(random_string('owner'))
+    product = create_product(random_string("test_id"), random_string("test_name"), {:owner => owner['key']} )
+    product['href'].should eq("/owners/#{owner['key']}/products/#{product['id']}")
+
+    retrieved = @cp.get_product(@owner['key'], product['id'])
+
+    retrieved['href'].should eq(product['href'])
+  end
 
 end
 

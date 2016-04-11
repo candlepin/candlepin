@@ -15,6 +15,7 @@
 package org.candlepin.resteasy.filter;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.resteasy.ResourceLocatorMap;
 
 import com.google.inject.Inject;
 
@@ -42,8 +43,10 @@ public class SuperAdminAuthorizationFilter extends AbstractAuthorizationFilter {
     private static final Logger log = LoggerFactory.getLogger(SuperAdminAuthorizationFilter.class);
 
     @Inject
-    public SuperAdminAuthorizationFilter(javax.inject.Provider<I18n> i18nProvider) {
-        this.i18nProvider = i18nProvider;
+    public SuperAdminAuthorizationFilter(javax.inject.Provider<I18n> i18nProvider, StoreFactory storeFactory,
+        ResourceLocatorMap locatorMap) {
+
+        super(i18nProvider, storeFactory, locatorMap);
     }
 
     @Override
