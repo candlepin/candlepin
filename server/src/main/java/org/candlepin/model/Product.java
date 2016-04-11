@@ -844,7 +844,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     }
 
     public String getHref() {
-        Owner owner  = ResteasyProviderFactory.getContextData(Owner.class);
+        Owner owner = ResteasyProviderFactory.getContextData(Owner.class);
         return this.getHref(owner);
     }
 

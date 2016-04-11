@@ -14,8 +14,14 @@
  */
 package org.candlepin.resteasy.filter;
 
+import org.candlepin.resteasy.ResourceLocatorMap;
+
+import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.xnap.commons.i18n.I18n;
 
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
@@ -28,10 +34,16 @@ import javax.ws.rs.container.ContainerRequestContext;
  * a method.
  */
 @Priority(Priorities.AUTHORIZATION)
-public class SecurityHoleAuthorizationFilter
-    extends AbstractAuthorizationFilter {
+public class SecurityHoleAuthorizationFilter extends AbstractAuthorizationFilter {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityHoleAuthorizationFilter.class);
+
+    @Inject
+    public SecurityHoleAuthorizationFilter(javax.inject.Provider<I18n> i18nProvider,
+        StoreFactory storeFactory, ResourceLocatorMap locatorMap) {
+
+        super(i18nProvider, storeFactory, locatorMap);
+    }
 
     @Override
     void runFilter(ContainerRequestContext requestContext) {
