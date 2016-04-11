@@ -35,8 +35,8 @@ trapex() {
 }
 
 move_artifact() {
-    if [ -f $1 ] && [ -d $2 ]; then
-        cp -v $1 $2 || true
+    if [ -f "$1" ] && [ -d "$2" ]; then
+        cp -v "$1" "$2" || true
     fi
 }
 
@@ -123,6 +123,7 @@ while getopts ":dtrHulsc:p:v" opt; do
             RSPEC="1"
             DEPLOY="1"
             ;;
+        T  ) RSPEC_FILTER="${OPTARG}";;
         H  )
             HOSTED="1"
             RSPEC="1"
@@ -160,7 +161,7 @@ else
     git pull
     if [ ! -z "$CHECKOUT" ]; then
         echo "Checking out: $CHECKOUT"
-        git checkout $CHECKOUT
+        git checkout "$CHECKOUT"
     fi
 fi
 
@@ -180,7 +181,7 @@ if [ "$LINTER" == "1" ]; then
 fi
 
 # TODO: keep track of return code?
-cd $CP_HOME/$PROJECT
+cd "$CP_HOME/$PROJECT"
 
 if [ "$UNITTEST" == "1" ]; then
     echo "Running unit tests."
@@ -206,7 +207,7 @@ if [ "$DEPLOY" == "1" ]; then
         DEPLOY_FLAGS="$DEPLOY_FLAGS -v"
     fi
 
-    bin/deploy $DEPLOY_FLAGS
+    bin/deploy "$DEPLOY_FLAGS"
     sleep 7
 fi
 
@@ -214,7 +215,12 @@ if [ "$RSPEC" == "1" ]; then
     echo "Running rspec tests."
 
     tee /var/log/candlepin/rspec.log < /tmp/teepipe &
-    buildr rspec > /tmp/teepipe 2>&1
+
+    BUILDR_ARGS="rspec"
+    if [ ! -z "$RSPEC_FILTER" ]; then
+        BUILDR_ARGS="rspec:${RSPEC_FILTER}"
+    fi
+    buildr "${BUILDR_ARGS}" > /tmp/teepipe 2>&1
 fi
 
 cleanup
