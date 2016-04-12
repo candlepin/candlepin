@@ -156,11 +156,11 @@ public class HypervisorUpdateJob extends KingpinJob {
         }
 
         if (emptyHypervisorIdCount > 0) {
-            log.warn("Ignoring {} hypervisors with empty hypervisor IDs", emptyHypervisorIdCount);
+            log.debug("Ignoring {} hypervisors with empty hypervisor IDs", emptyHypervisorIdCount);
         }
 
         if (emptyGuestIdCount > 0) {
-            log.warn("Ignoring {} empty/null guestId(s)", emptyGuestIdCount);
+            log.debug("Ignoring {} empty/null guestId(s)", emptyGuestIdCount);
         }
     }
 
@@ -234,7 +234,7 @@ public class HypervisorUpdateJob extends KingpinJob {
                         hypervisorId.equalsIgnoreCase(knownHost.getHypervisorId().getHypervisorId()) &&
                         knownHost.getHypervisorId().getReporterId() != null &&
                         !jobReporterId.equalsIgnoreCase(knownHost.getHypervisorId().getReporterId())) {
-                        log.warn("Reporter changed for Hypervisor {} of Owner {} from {} to {}",
+                        log.debug("Reporter changed for Hypervisor {} of Owner {} from {} to {}",
                             hypervisorId, ownerKey, knownHost.getHypervisorId().getReporterId(),
                             jobReporterId);
                     }
