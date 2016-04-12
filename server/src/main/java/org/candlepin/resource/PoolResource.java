@@ -26,6 +26,7 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.paging.Paginate;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.Cdn;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
@@ -264,6 +265,29 @@ public class PoolResource {
         }
 
         poolManager.deletePool(pool);
+    }
+
+    /**
+     * Retrieve a CDN for a Pool
+     *
+     * @return the cdn for a pool
+     * @httpcode 400
+     * @httpcode 200
+     */
+    @GET
+    @Path("{pool_id}/cdn")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Cdn getPoolCdn(
+        @PathParam("pool_id") @Verify(Pool.class) String id) {
+
+        Pool pool = poolManager.find(id);
+
+        if (pool == null) {
+            throw new NotFoundException(i18n.tr(
+                "Subscription Pool with ID ''{0}'' could not be found.", id));
+        }
+
+        return pool.getCdn();
     }
 
     /**

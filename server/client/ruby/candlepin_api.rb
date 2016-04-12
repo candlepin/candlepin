@@ -1275,6 +1275,10 @@ class Candlepin
     delete("/cdn/#{label}")
   end
 
+  def get_cdn_from_pool(id)
+    get("/pools/#{id}/cdn")
+  end
+
   def get_cdns()
     get("/cdn")
   end
