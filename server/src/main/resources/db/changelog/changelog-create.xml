@@ -1185,4 +1185,5 @@
     <include file="db/changelog/20150820140403-revert-to-lastcheckin-column.xml"/>
     <include file="db/changelog/20150915094638-add-reporter-id-to-hypervisor-id.xml"/>
     <include file="db/changelog/20160224171417-drop-stat-history-table.xml"/>
+    <include file="db/changelog/20160412131122-add-unique-constraint-to-product-certificate-rows.xml"/>
 </databaseChangeLog>
