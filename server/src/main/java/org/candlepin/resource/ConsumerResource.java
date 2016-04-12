@@ -1168,13 +1168,13 @@ public class ConsumerResource {
             if (pool.hasAttribute("requires_host")) {
                 String requiredHost = getRequiredHost(pool);
                 if (host != null && !requiredHost.equals(host.getUuid())) {
-                    log.warn("Removing entitlement {} from guest {} due to host mismatch.",
+                    log.debug("Removing entitlement {} from guest {} due to host mismatch.",
                         entitlement.getId(), guest.getUuid());
                     deletableGuestEntitlements.add(entitlement);
                 }
             }
             else if (isUnmappedGuestPool(pool) && host != null) {
-                log.info("Removing unmapped guest pool from {} now that it is mapped", guest.getUuid());
+                log.debug("Removing unmapped guest pool from {} now that it is mapped", guest.getUuid());
                 deletableGuestEntitlements.add(entitlement);
             }
         }
