@@ -12,7 +12,8 @@ require 'pp'
 SMALL_SUB_QUANTITY = 5
 LARGE_SUB_QUANTITY = 10
 
-filenames=["test_products.json"]
+script_home = File.dirname(File.expand_path($0))
+filenames=["#{script_home}/test_data.json"]
 if not ARGV.empty?
   filenames.clear
   ARGV.each do |filename|
