@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20160412131122-1" author="awood">
+        <comment>Add unique constraint to product certificate rows.</comment>
+        <addUniqueConstraint constraintName="cp_unique_product_cert"
+            columnNames="product_id"
+            tableName="cp_product_certificate" />
+        <addUniqueConstraint constraintName="cp2_unique_product_cert"
+            columnNames="product_uuid"
+            tableName="cp2_product_certificates" />
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->
