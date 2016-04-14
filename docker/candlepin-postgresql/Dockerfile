@@ -1,5 +1,6 @@
 FROM candlepin/candlepin-base
 MAINTAINER Devan Goodwin <dgoodwin@redhat.com>
+MAINTAINER Chris Rog <crog@redhat.com>
 
 # Configure postgresql:
 ADD postgresql-setup /root/

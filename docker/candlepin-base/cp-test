@@ -112,6 +112,8 @@ usage() {
 HELP
 }
 
+ARGV=("$@")
+
 while getopts ":dtrHulsc:p:v" opt; do
     case $opt in
         d  ) DEPLOY="1";;
@@ -122,8 +124,13 @@ while getopts ":dtrHulsc:p:v" opt; do
         r  )
             RSPEC="1"
             DEPLOY="1"
+
+            ARG="${ARGV[$OPTIND - 1]}"
+            if [ "${ARG:0:1}" != "-" ] && [ "${ARG:0:1}" != "" ]; then
+                RSPEC_FILTER="$ARG"
+                OPTIND=$((OPTIND + 1))
+            fi
             ;;
-        T  ) RSPEC_FILTER="${OPTARG}";;
         H  )
             HOSTED="1"
             RSPEC="1"
@@ -184,14 +191,14 @@ fi
 cd "$CP_HOME/$PROJECT"
 
 if [ "$UNITTEST" == "1" ]; then
-    echo "Running unit tests."
+    echo "Running unit tests..."
 
     tee /var/log/candlepin/unit_tests.log < /tmp/teepipe &
     buildr test > /tmp/teepipe 2>&1
 fi
 
 if [ "$DEPLOY" == "1" ]; then
-    echo "Deploying candlepin."
+    echo "Deploying candlepin..."
 
     DEPLOY_FLAGS="-g"
 
@@ -212,7 +219,7 @@ if [ "$DEPLOY" == "1" ]; then
 fi
 
 if [ "$RSPEC" == "1" ]; then
-    echo "Running rspec tests."
+    echo "Running rspec tests..."
 
     tee /var/log/candlepin/rspec.log < /tmp/teepipe &
 
@@ -220,6 +227,7 @@ if [ "$RSPEC" == "1" ]; then
     if [ ! -z "$RSPEC_FILTER" ]; then
         BUILDR_ARGS="rspec:${RSPEC_FILTER}"
     fi
+
     buildr "${BUILDR_ARGS}" > /tmp/teepipe 2>&1
 fi
 
