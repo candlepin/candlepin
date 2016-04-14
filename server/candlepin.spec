@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.49.14
+Version: 0.9.49.15
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,11 @@ fi
 
 
 %changelog
+* Thu Apr 14 2016 Alex Wood <awood@redhat.com> 0.9.49.15-1
+- Update logrotate.conf files (wpoteat@redhat.com)
+- 1321630: Breaks up queries into smaller ones that will not exceed stack depth
+  on hypervisor checkin (csnyder@redhat.com)
+
 * Tue Mar 22 2016 Alex Wood <awood@redhat.com> 0.9.49.14-1
 - 1242310: Do not issue ueber certs that expire after 2050. (awood@redhat.com)
 
