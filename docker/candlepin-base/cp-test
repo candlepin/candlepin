@@ -35,8 +35,8 @@ trapex() {
 }
 
 move_artifact() {
-    if [ -f $1 ] && [ -d $2 ]; then
-        cp -v $1 $2 || true
+    if [ -f "$1" ] && [ -d "$2" ]; then
+        cp -v "$1" "$2" || true
     fi
 }
 
@@ -96,22 +96,24 @@ cleanup() {
 
 usage() {
     cat <<HELP
-    usage: cp-test [options]
+usage: cp-test [options]
 
-    OPTIONS:
-        -d  deploy a live candlepin
-        -t  populate Candlepin database with test data (implies -d)
-        -r  run rspec test suite (implies -d)
-        -H  run rspec tests in "hosted" mode (implies -r and -d)
-        -u  run unit test suite
-        -l  run the linter against the code
-        -s  run a bash shell when done
-        -c  git reference to checkout
-        -p  subproject to build (defaults to "server")
-        -v  enable verbose/debug output
+OPTIONS:
+  -d               deploy a live candlepin
+  -t               populate Candlepin database with test data (implies -d)
+  -r [filter]      run rspec test suite (implies -d); may be filtered by test
+                   suite and name
+  -H               run rspec tests in "hosted" mode (implies -r and -d)
+  -u               run unit test suite
+  -l               run the linter against the code
+  -s               run a bash shell when done
+  -c <ref>         git reference to checkout
+  -p <project>     subproject to build (defaults to "server")
+  -v               enable verbose/debug output
 HELP
 }
 
+ARGV=("$@")
 while getopts ":dtrHulsc:p:v" opt; do
     case $opt in
         d  ) DEPLOY="1";;
@@ -122,6 +124,12 @@ while getopts ":dtrHulsc:p:v" opt; do
         r  )
             RSPEC="1"
             DEPLOY="1"
+
+            ARG="${ARGV[$OPTIND - 1]}"
+            if [ "${ARG:0:1}" != "-" ] && [ "${ARG:0:1}" != "" ]; then
+                RSPEC_FILTER="$ARG"
+                OPTIND=$((OPTIND + 1))
+            fi
             ;;
         H  )
             HOSTED="1"
@@ -160,7 +168,7 @@ else
     git pull
     if [ ! -z "$CHECKOUT" ]; then
         echo "Checking out: $CHECKOUT"
-        git checkout $CHECKOUT
+        git checkout "$CHECKOUT"
     fi
 fi
 
@@ -180,17 +188,17 @@ if [ "$LINTER" == "1" ]; then
 fi
 
 # TODO: keep track of return code?
-cd $CP_HOME/$PROJECT
+cd "$CP_HOME/$PROJECT"
 
 if [ "$UNITTEST" == "1" ]; then
-    echo "Running unit tests."
+    echo "Running unit tests..."
 
     tee /var/log/candlepin/unit_tests.log < /tmp/teepipe &
     buildr test > /tmp/teepipe 2>&1
 fi
 
 if [ "$DEPLOY" == "1" ]; then
-    echo "Deploying candlepin."
+    echo "Deploying candlepin..."
 
     DEPLOY_FLAGS="-g"
 
@@ -206,15 +214,21 @@ if [ "$DEPLOY" == "1" ]; then
         DEPLOY_FLAGS="$DEPLOY_FLAGS -v"
     fi
 
-    bin/deploy $DEPLOY_FLAGS
+    bin/deploy "$DEPLOY_FLAGS"
     sleep 7
 fi
 
 if [ "$RSPEC" == "1" ]; then
-    echo "Running rspec tests."
+    echo "Running rspec tests..."
 
     tee /var/log/candlepin/rspec.log < /tmp/teepipe &
-    buildr rspec > /tmp/teepipe 2>&1
+
+    BUILDR_ARGS="rspec"
+    if [ ! -z "$RSPEC_FILTER" ]; then
+        BUILDR_ARGS="rspec:${RSPEC_FILTER}"
+    fi
+
+    buildr "${BUILDR_ARGS}" > /tmp/teepipe 2>&1
 fi
 
 cleanup
