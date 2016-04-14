@@ -96,24 +96,24 @@ cleanup() {
 
 usage() {
     cat <<HELP
-    usage: cp-test [options]
+usage: cp-test [options]
 
-    OPTIONS:
-        -d  deploy a live candlepin
-        -t  populate Candlepin database with test data (implies -d)
-        -r  run rspec test suite (implies -d)
-        -H  run rspec tests in "hosted" mode (implies -r and -d)
-        -u  run unit test suite
-        -l  run the linter against the code
-        -s  run a bash shell when done
-        -c  git reference to checkout
-        -p  subproject to build (defaults to "server")
-        -v  enable verbose/debug output
+OPTIONS:
+  -d               deploy a live candlepin
+  -t               populate Candlepin database with test data (implies -d)
+  -r [filter]      run rspec test suite (implies -d); may be filtered by test
+                   suite and name
+  -H               run rspec tests in "hosted" mode (implies -r and -d)
+  -u               run unit test suite
+  -l               run the linter against the code
+  -s               run a bash shell when done
+  -c <ref>         git reference to checkout
+  -p <project>     subproject to build (defaults to "server")
+  -v               enable verbose/debug output
 HELP
 }
 
 ARGV=("$@")
-
 while getopts ":dtrHulsc:p:v" opt; do
     case $opt in
         d  ) DEPLOY="1";;
