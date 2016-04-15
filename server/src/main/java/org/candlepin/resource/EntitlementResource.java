@@ -332,6 +332,7 @@ public class EntitlementResource {
      */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.WILDCARD)
     @Path("product/{product_id}")
     public JobDetail regenerateEntitlementCertificatesForProduct(
         @PathParam("product_id") String productId,
@@ -361,6 +362,7 @@ public class EntitlementResource {
      */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.WILDCARD)
     @Path("{entitlement_id}/migrate")
     public Response migrateEntitlement(
         @PathParam("entitlement_id") @Verify(Entitlement.class) String id,

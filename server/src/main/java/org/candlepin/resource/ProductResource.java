@@ -162,6 +162,7 @@ public class ProductResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     public Product createProduct(Product product) {
         throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic product write operations are not supported."
@@ -178,6 +179,7 @@ public class ProductResource {
     @PUT
     @Path("/{product_uuid}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     public Product updateProduct(
         @PathParam("product_uuid") String productUuid,
         Product product) {
@@ -217,6 +219,7 @@ public class ProductResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.WILDCARD)
     @Path("/{product_uuid}/content/{content_id}")
     public Product addContent(
         @PathParam("product_uuid") String productUuid,
@@ -293,6 +296,7 @@ public class ProductResource {
     @PUT
     @Path("/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.WILDCARD)
     public JobDetail[] refreshPoolsForProduct(
         @QueryParam("product") List<String> productUuids,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {

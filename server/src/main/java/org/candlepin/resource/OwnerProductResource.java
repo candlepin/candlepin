@@ -256,6 +256,7 @@ public class OwnerProductResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
     public Product createProduct(
         @PathParam("owner_key") String ownerKey,
@@ -276,6 +277,7 @@ public class OwnerProductResource {
     @PUT
     @Path("/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
     public Product updateProduct(
         @PathParam("owner_key") String ownerKey,
@@ -339,6 +341,7 @@ public class OwnerProductResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.WILDCARD)
     @Path("/{product_id}/content/{content_id}")
     @Transactional
     public Product addContent(
@@ -434,6 +437,7 @@ public class OwnerProductResource {
     @PUT
     @Path("/{product_id}/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.WILDCARD)
     @Transactional
     public JobDetail refreshPoolsForProduct(
         @PathParam("owner_key") String ownerKey,

@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -202,6 +203,7 @@ public class OwnerContentResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     public Content createContent(@PathParam("owner_key") String ownerKey, Content content) {
         Owner owner = this.getOwnerByKey(ownerKey);
         return this.createContentImpl(owner, content);
@@ -215,6 +217,7 @@ public class OwnerContentResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Path("/batch")
     public List<Content> createBatchContent(@PathParam("owner_key") String ownerKey,
         List<Content> contents) {
@@ -238,6 +241,7 @@ public class OwnerContentResource {
      */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")
     public Content updateContent(@PathParam("owner_key") String ownerKey,
         @PathParam("content_id") String contentId,

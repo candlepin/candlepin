@@ -30,6 +30,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.List;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -126,6 +127,7 @@ public class ContentResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     public Content createContent(Content content) {
         throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic content write operations are not supported."
@@ -140,6 +142,7 @@ public class ContentResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Path("/batch")
     public List<Content> createBatchContent(List<Content> contents) {
         throw new BadRequestException(this.i18n.tr(
@@ -156,6 +159,7 @@ public class ContentResource {
      */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{content_uuid}")
     public Content updateContent(@PathParam("content_uuid") String contentUuid, Content changes) {
         throw new BadRequestException(this.i18n.tr(

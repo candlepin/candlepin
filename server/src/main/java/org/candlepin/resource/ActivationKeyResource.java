@@ -36,6 +36,7 @@ import org.xnap.commons.i18n.I18n;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -138,6 +139,7 @@ public class ActivationKeyResource {
     @PUT
     @Path("{activation_key_id}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     public ActivationKey updateActivationKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         ActivationKey key) {
@@ -174,6 +176,7 @@ public class ActivationKeyResource {
     @POST
     @Path("{activation_key_id}/pools/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.WILDCARD)
     public ActivationKey addPoolToKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("pool_id") @Verify(Pool.class) String poolId,
@@ -228,6 +231,7 @@ public class ActivationKeyResource {
     @POST
     @Path("{activation_key_id}/product/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.WILDCARD)
     public ActivationKey addProductIdToKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("product_id") String productId) {

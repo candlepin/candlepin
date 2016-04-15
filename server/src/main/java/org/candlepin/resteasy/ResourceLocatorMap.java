@@ -26,10 +26,12 @@ import org.jboss.resteasy.util.GetRestful;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -38,7 +40,17 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.CookieParam;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.HEAD;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.MatrixParam;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 
 /**
  * ResourceLocatorMap holds a mapping of Methods to Resteasy ResourceLocators.  This map
@@ -158,7 +170,7 @@ public class ResourceLocatorMap implements Map<Method, ResourceLocator> {
     /**
      * Log what resources have been detected and warn about missing media types.
      *
-     * Not having a @Produces annotation on a method can have subtle affects on the way Resteasy
+     * Not having a @Produces annotation on a method can have subtle effects on the way Resteasy
      * resolves which method to dispatch a request to.
      *
      * Resource resolution order is detailed in the JAX-RS 2.0 specification in section 3.7.2.
@@ -195,12 +207,63 @@ public class ResourceLocatorMap implements Map<Method, ResourceLocator> {
         for (Method m : keySet()) {
             String name = m.getDeclaringClass() + "." + m.getName();
             registered.append("\t" + name + "\n");
+
             if (!m.isAnnotationPresent(Produces.class)) {
                 missingProduces.append("\t" + name + "\n");
             }
 
+            if (m.isAnnotationPresent(GET.class) ||
+                m.isAnnotationPresent(HEAD.class) ||
+                m.isAnnotationPresent(DELETE.class)) {
+                /* Technically GET, HEAD, and DELETE are allowed to have bodies (and therefore would
+                 * need a Consumes annotation, but the HTTP 1.1 spec states in section 4.3 that any
+                 * such body should be ignored.  See http://stackoverflow.com/a/983458/6124862
+                 *
+                 * Therefore, we won't print warnings on unannotated GET, HEAD, and DELETE methods.
+                 */
+                continue;
+            }
+
             if (!m.isAnnotationPresent(Consumes.class)) {
                 missingConsumes.append("\t" + name + "\n");
+            }
+            else {
+                /* The purpose of all the ridiculousness below is to find methods that
+                 * bind objects from the HTTP request body but that are marked as consuming
+                 * the star slash star wildcard mediatype.  Candlepin only consumes JSON
+                 * at the moment but even if that changes we still want to be explicit
+                 * about what we accept.
+                 */
+                Consumes consumes = m.getAnnotation(Consumes.class);
+                List<String> mediaTypes = Arrays.asList(consumes.value());
+                if (mediaTypes.contains(MediaType.WILDCARD)) {
+                    Annotation[][] allParamAnnotations = m.getParameterAnnotations();
+
+                    boolean bindsBody = false;
+                    for (Annotation[] paramAnnotations : allParamAnnotations) {
+                        boolean boundObjectFromBody = true;
+                        for (Annotation a : paramAnnotations) {
+                            Class<? extends Annotation> clazz = a.annotationType();
+                            if (QueryParam.class.isAssignableFrom(clazz) ||
+                                PathParam.class.isAssignableFrom(clazz) ||
+                                MatrixParam.class.isAssignableFrom(clazz) ||
+                                HeaderParam.class.isAssignableFrom(clazz) ||
+                                FormParam.class.isAssignableFrom(clazz) ||
+                                CookieParam.class.isAssignableFrom(clazz)
+                                ) {
+                                boundObjectFromBody = false;
+                                continue;
+                            }
+                        }
+                        bindsBody = bindsBody || boundObjectFromBody;
+                    }
+
+                    if (bindsBody) {
+                        log.warn("{} consumes a wildcard media type but binds an object from" +
+                            " the request body.  Define specific media types consumed instead.", name);
+                    }
+                }
+
             }
         }
 
