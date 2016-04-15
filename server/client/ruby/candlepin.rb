@@ -409,6 +409,8 @@ module Candlepin
             res = get_job(:job_id => opts[:job_id])
           when "FINISHED", "CANCELED", "FAILED"
             break
+          else
+            raise RuntimeError.new("Unknown job state returned.")
           end
         end
         res
@@ -502,10 +504,11 @@ module Candlepin
 
         consumer_json[:installedProducts] = []
         opts[:installed_products].each do |ip|
-          if ip.is_a?(Hash)
+          if ip.is_a?(Hash) && ip.key?(:productId) && ip.key?(:productName)
             consumer_json[:installedProducts] << ip
           else
-            raise RuntimeError.new(":installed_products must be a hash with :productId and :productName")
+            raise RuntimeError.new(
+              ":installed_products must be a hash with :productId and :productName")
           end
         end
 
@@ -704,10 +707,12 @@ module Candlepin
           wrap_in_array!(opts, :installed_products)
           body[:installed_products] = []
           opts[:installed_products].each do |ip|
-            if ip.is_a?(Hash)
+            if ip.is_a?(Hash) && ip.key?(:productId) && ip.key?(:productName)
               body[:installed_products] << ip
             else
-              raise RuntimeError.new(":installed_products must be a hash or list of hashes with :productId and :productName")
+              raise RuntimeError.new(
+                ":installed_products must be a hash or list of hashes " \
+                "with :productId and :productName")
             end
           end
         end

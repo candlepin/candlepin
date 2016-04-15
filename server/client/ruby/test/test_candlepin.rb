@@ -1213,7 +1213,7 @@ module Candlepin
         x509_client = user_client.register_and_get_client(
           :owner => owner[:key],
           :name => rand_string,
-          :installed_products => product[:id],
+          :installed_products => { :productId => product[:id], :productName => product[:name] },
         )
 
         res = x509_client.autobind_dryrun
@@ -1233,7 +1233,7 @@ module Candlepin
           :owner => owner[:key],
           :name => rand_string,
           :username => owner_user[:username],
-          :installed_products => product,
+          :installed_products => { :productId => product[:id], :productName => product[:name] },
         )
 
         res = x509_client.bind(:product => product[:id])
