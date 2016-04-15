@@ -1142,6 +1142,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         return PoolType.NORMAL;
     }
 
+    @JsonIgnore
     public PoolComplianceType getComplianceType() {
         Product product = this.getProduct();
 
@@ -1176,6 +1177,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         return (this.getProduct() != null ? this.getProduct().getAttributeValue(STACKING_ATTRIBUTE) : null);
     }
 
+    @JsonIgnore
     public boolean isUnmappedGuestPool() {
         return "true".equalsIgnoreCase(this.getAttributeValue(UNMAPPED_GUESTS_ATTRIBUTE));
     }
