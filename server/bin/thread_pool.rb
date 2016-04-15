@@ -3,7 +3,7 @@
 require 'thread'
 
 
-# Stolen from import_products
+# Stolen from import_test_data
 # Originally from http://burgestrand.se/articles/quick-and-simple-ruby-thread-pool.html
 class ThreadPool
   def initialize(size)

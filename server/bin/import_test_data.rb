@@ -21,18 +21,18 @@ if not ARGV.empty?
   end
 end
 
-data = {}
+data = {'products'=> [], 'content'=> [], 'owners'=> [], 'users'=> [], 'roles'=> []}
 @sourceSubId = 0
 
 filenames.each do |filename|
   puts filename
   product_data_buf = File.read(filename)
   product_data = JSON(product_data_buf, {})
-  data['products'] = data.fetch('products',[]) + product_data['products']
-  data['content'] = data.fetch('content',[]) + product_data['content']
-  data['owners'] = data.fetch('owners', []) + product_data['owners']
-  data['users'] = data.fetch('users', []) + product_data['users']
-  data['roles'] = data.fetch('roles', []) + product_data['roles']
+  data['products'] = data.fetch('products') + product_data['products'] unless product_data['products'].nil?
+  data['content'] = data.fetch('content') + product_data['content'] unless product_data['content'].nil?
+  data['owners'] = data.fetch('owners') + product_data['owners'] unless product_data['owners'].nil?
+  data['users'] = data.fetch('users') + product_data['users'] unless product_data['users'].nil?
+  data['roles'] = data.fetch('roles') + product_data['roles'] unless product_data['roles'].nil?
 end
 
 cp = Candlepin.new('admin', 'admin', nil, nil, 'localhost', 8443)
