@@ -20,7 +20,6 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContentCurator;
-import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.service.UniqueIdGenerator;
@@ -106,21 +105,13 @@ public class ContentResource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{content_id}")
-    public Content getContent(@PathParam("content_id") String contentId) {
-        Content content = null;
-
-        for (Owner owner : this.ownerCurator.listAll()) {
-            content = this.contentCurator.lookupById(owner, contentId);
-
-            if (content != null) {
-                break;
-            }
-        }
+    @Path("/{content_uuid}")
+    public Content getContent(@PathParam("content_uuid") String contentUuid) {
+        Content content = this.contentCurator.lookupByUuid(contentUuid);
 
         if (content == null) {
             throw new NotFoundException(
-                i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
+                i18n.tr("Content with UUID \"{0}\" could not be found.", contentUuid)
             );
         }
 
@@ -159,14 +150,14 @@ public class ContentResource {
     /**
      * Updates a Content
      *
-     * @param contentId
+     * @param contentUuid
      * @param changes
      * @return a Content object
      */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{content_id}")
-    public Content updateContent(@PathParam("content_id") String contentId, Content changes) {
+    @Path("/{content_uuid}")
+    public Content updateContent(@PathParam("content_uuid") String contentUuid, Content changes) {
         throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic content write operations are not supported."
         ));
@@ -179,8 +170,8 @@ public class ContentResource {
      */
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{content_id}")
-    public void remove(@PathParam("content_id") String contentId) {
+    @Path("/{content_uuid}")
+    public void remove(@PathParam("content_uuid") String contentUuid) {
         throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic content write operations are not supported."
         ));

@@ -21,7 +21,6 @@ import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.Owner;
-import org.candlepin.model.Owned;
 import org.candlepin.model.Persisted;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.util.Util;
@@ -104,24 +103,7 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
 
         Access defaultAccess = getDefaultAccess(method);
 
-        Owner owner;
-        try {
-            owner = findOwnerFromParams(argMap, principal, defaultAccess);
-
-            if (owner != null) {
-                ResteasyProviderFactory.pushContext(Owner.class, owner);
-                MDC.put("org", owner.getKey());
-                if (owner.getLogLevel() != null) {
-                    MDC.put("orgLogLevel", owner.getLogLevel());
-                }
-            }
-        }
-        catch (IseException e) {
-            log.error("Ambiguous owners in signature for {}", method, e);
-            throw e;
-        }
-
-        if (!hasAccess(argMap, principal, owner, defaultAccess)) {
+        if (!hasAccess(argMap, principal, defaultAccess)) {
             denyAccess(principal, method);
         }
     }
@@ -164,100 +146,17 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
         return argMap;
     }
 
-
-    protected Owner findOwnerFromParams(Map<Verify, Object> argMap, Principal principal,
-        Access defaultAccess) {
-
-        // Impl note:
-        // We don't check for access in this method since we'll be doing so in hasAccess
-
-        Owner contextOwner = null;
-
-        for (Map.Entry<Verify, Object> entry : argMap.entrySet()) {
-            Verify v = entry.getKey();
-            Class<?> verifyType = v.value();
-
-            if (v.nullable() && entry.getValue() == null) {
-                continue;
-            }
-
-            if (Owner.class.isAssignableFrom(verifyType)) {
-                Owner possibleOwner = (Owner) storeFactory.getFor(Owner.class).lookup(
-                    (String) entry.getValue(), null
-                );
-
-                if (possibleOwner != null) {
-                    if (contextOwner != null && !possibleOwner.equals(contextOwner)) {
-                        throw new IseException(
-                            "Multiple Owner parameters with @Verify found on requested method."
-                        );
-                    }
-
-                    contextOwner = possibleOwner;
-                }
-            }
-            else if (Owned.class.isAssignableFrom(verifyType)) {
-                Object value = entry.getValue();
-
-                if (value instanceof String) {
-                    // This is sketchy -- we may get null if we don't pass in an owner here
-                    Owned entity = (Owned) storeFactory.getFor(verifyType).lookup((String) value, null);
-
-                    Owner possibleOwner = entity != null ? entity.getOwner() : null;
-                    if (possibleOwner != null) {
-                        if (contextOwner != null && !possibleOwner.equals(contextOwner)) {
-                            throw new IseException(
-                                "Multiple owned objects provided from different owners."
-                            );
-                        }
-
-                        contextOwner = possibleOwner;
-                    }
-                }
-                else if (value instanceof Collection) {
-                    // This is also sketchy. What should happen if each element is owned by a
-                    // different owner?
-                    Collection<String> values = (Collection<String>) value;
-
-                    if (values.size() > 0) {
-                        List<?> elist = (List<?>) storeFactory.getFor(verifyType)
-                            .lookup(values, null);
-
-                        for (Object entity : elist) {
-                            Owner possibleOwner = entity != null ? ((Owned) entity).getOwner() : null;
-
-                            if (possibleOwner != null) {
-                                if (contextOwner != null && !possibleOwner.equals(contextOwner)) {
-                                    throw new IseException(
-                                        "Multiple owned objects provided from different owners."
-                                    );
-                                }
-
-                                contextOwner = possibleOwner;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return contextOwner;
-    }
-
-    protected boolean hasAccess(Map<Verify, Object> argMap, Principal principal,
-        Owner owner, Access defaultAccess) {
+    protected boolean hasAccess(Map<Verify, Object> argMap, Principal principal, Access defaultAccess) {
         boolean hasAccess = false;
-
-        // Impl note:
-        // This needs a complete rehash if/when we do object sharing
+        Owner owner = null;
 
         for (Map.Entry<Verify, Object> entry : argMap.entrySet()) {
             List<Persisted> accessedObjects = new ArrayList<Persisted>();
             Object obj = entry.getValue();
             Verify verify = entry.getKey();
-            Class<?> verifyType = verify.value();
+            Class<? extends Persisted> verifyType = verify.value();
 
-            accessedObjects.addAll(getAccessedEntities(verify, obj, owner));
+            accessedObjects.addAll(getAccessedEntities(verify, obj));
 
             Access requiredAccess = defaultAccess;
             if (verify.require() != Access.NONE) {
@@ -273,24 +172,17 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
                     break;
                 }
 
-                // Is this even necessary? What does it accomplish?
-                // if (entity instanceof SharedEntity) {
-                //     if (owner == null) {
-                //         // No context owner to verify access to a shared entity.
-                //         hasAccess = false;
-                //         break;
-                //     }
-
-                //     Collection<Owner> owners = ((SharedEntity) entity).getOwners();
-                //     if (owners == null || !owners.contains(owner)) {
-                //         // Entity is not yet owned by any owners or not owned by the contextual
-                //         // owner
-                //         hasAccess = false;
-                //         break;
-                //     }
-                // }
-
                 hasAccess = true;
+
+                Owner entityOwner = ((EntityStore) storeFactory.getFor(verifyType)).getOwner(entity);
+                if (entityOwner != null) {
+                    if (owner != null && !owner.equals(entityOwner)) {
+                        log.error("Found entities from multiple orgs in a single request");
+                        throw new IseException("Found entities from multiple orgs in a single request");
+                    }
+
+                    owner = entityOwner;
+                }
             }
 
             // Stop all further checking with any authorization failure
@@ -299,24 +191,32 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
             }
         }
 
+        if (hasAccess && owner != null) {
+            MDC.put("org", owner.getKey());
+
+            if (owner.getLogLevel() != null) {
+                MDC.put("orgLogLevel", owner.getLogLevel());
+            }
+        }
+
         return hasAccess;
     }
 
     @SuppressWarnings("unchecked")
-    protected List<Persisted> getAccessedEntities(Verify verify, Object requestValue, Owner owner) {
+    protected List<Persisted> getAccessedEntities(Verify verify, Object requestValue) {
         // Nothing to access!
         if (verify.nullable() && null == requestValue) {
             return Collections.emptyList();
         }
 
         List<Persisted> entities = new ArrayList<Persisted>();
-        Class<?> verifyType = verify.value();
+        Class<? extends Persisted> verifyType = verify.value();
 
         if (requestValue instanceof String) {
             String verifyParam = (String) requestValue;
             Persisted entity = null;
 
-            entity = storeFactory.getFor(verifyType).lookup(verifyParam, owner);
+            entity = storeFactory.getFor(verifyType).lookup(verifyParam);
 
             // If the request is just for a single item, throw an exception
             // if it is not found.
@@ -336,13 +236,13 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
 
             entities.add(entity);
         }
-        else {
+        else if (requestValue instanceof Collection) {
             Collection<String> verifyParams = (Collection<String>) requestValue;
 
             // If the request is for a list of items, we'll leave it
             // up to the requester to determine if something is missing or not.
             if (verifyParams != null && !verifyParams.isEmpty()) {
-                entities.addAll(storeFactory.getFor(verifyType).lookup(verifyParams, owner));
+                entities.addAll(storeFactory.getFor(verifyType).lookup(verifyParams));
             }
         }
 

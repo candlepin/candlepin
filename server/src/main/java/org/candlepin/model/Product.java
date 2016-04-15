@@ -31,8 +31,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -844,12 +842,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     }
 
     public String getHref() {
-        Owner owner  = ResteasyProviderFactory.getContextData(Owner.class);
-        return this.getHref(owner);
-    }
-
-    public String getHref(Owner owner) {
-        return owner != null ? String.format("/owners/%s/products/%s", owner.getKey(), this.getId()) : "";
+        return this.uuid != null ? String.format("/products/%s", this.uuid) : null;
     }
 
     public void setHref(String href) {

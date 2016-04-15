@@ -177,7 +177,7 @@ public class OwnerProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<Product> list(
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
-        @Verify(Product.class) @QueryParam("product") List<String> productIds) {
+        @QueryParam("product") List<String> productIds) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
 
@@ -219,7 +219,7 @@ public class OwnerProductResource {
     @SecurityHole
     public Product getProduct(
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
-        @Verify(Product.class) @PathParam("product_id") String productId) {
+        @PathParam("product_id") String productId) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         return this.fetchProduct(owner, productId);

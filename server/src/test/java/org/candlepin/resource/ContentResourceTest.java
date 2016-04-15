@@ -85,7 +85,7 @@ public class ContentResourceTest {
         Content content = mock(Content.class);
 
         when(oc.listAll()).thenReturn(Arrays.asList(owner));
-        when(cc.lookupById(eq(owner), eq("10"))).thenReturn(content);
+        when(cc.lookupByUuid(eq("10"))).thenReturn(content);
 
         assertEquals(content, cr.getContent("10"));
     }

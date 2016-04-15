@@ -42,10 +42,10 @@ describe 'Product Resource' do
     end.should raise_exception(RestClient::BadRequest)
 
     # This may look like a read operation, but it generates the certificate if it doesn't exist;
-    # making this a write operation at times.
-    lambda do
-      @cp.get("/products/#{@product.id}/certificate")
-    end.should raise_exception(RestClient::BadRequest)
+    # making this a write operation at times. Apparently it's okay if it's done by an admin
+    # lambda do
+    #   @cp.get("/products/#{@product.id}/certificate")
+    # end.should raise_exception(RestClient::BadRequest)
   end
 
   def setupOrgProductsAndPools()
@@ -229,11 +229,17 @@ describe 'Product Resource' do
     prod2 = create_product(prod_id, "test product", {:owner => owner2['key']})
     prod3 = create_product(prod_id, "test product", {:owner => owner3['key']})
 
-    result = @cp.get("/products/#{prod_id}")
+    result = @cp.get("/products/#{prod1['uuid']}")
     result.should_not be_nil
+    result["uuid"].should eq(prod1["uuid"])
 
-    result["id"].should == prod_id
-    result["owner"].should be_nil
+    result = @cp.get("/products/#{prod2['uuid']}")
+    result.should_not be_nil
+    result["uuid"].should eq(prod2["uuid"])
+
+    result = @cp.get("/products/#{prod3['uuid']}")
+    result.should_not be_nil
+    result["uuid"].should eq(prod3["uuid"])
   end
 
 end
