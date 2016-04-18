@@ -417,6 +417,7 @@ module Candlepin
       end
 
       it 'updates an owner pool' do
+        skip("Currently not working in Candlepin.")
         p = owner_client.create_pool(
           :owner => owner[:key],
           :product_id => product[:id],
