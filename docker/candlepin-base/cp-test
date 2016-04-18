@@ -23,6 +23,7 @@ export JAVA_HOME=/usr/lib/jvm/java-$JAVA_VERSION
 export SUPERVISOR=1
 export AUTOCONF=1
 export FORCECERT=1
+export UNITTEST=0
 
 trapex() {
     target="$1"
@@ -51,7 +52,8 @@ collect_artifacts() {
         move_artifact '/var/log/candlepin/audit.log' '/artifacts/'
         move_artifact '/var/log/candlepin/candlepin.log' '/artifacts/'
         move_artifact '/var/log/candlepin/error.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/checkstyle.log' '/artifacts/'
+        move_artifact '/var/log/candlepin/lint.log' '/artifacts/'
+        move_artifact '/var/log/candlepin/buildr.log' '/artifacts/'
         move_artifact '/var/log/candlepin/unit_tests.log' '/artifacts/'
         move_artifact '/var/log/candlepin/rspec.log' '/artifacts/'
     fi
@@ -104,9 +106,11 @@ OPTIONS:
   -r [filter]      run rspec test suite (implies -d); may be filtered by test
                    suite and name
   -H               run rspec tests in "hosted" mode (implies -r and -d)
-  -u               run unit test suite
-  -l               run the linter against the code
+  -u               run unit test suite N number of times, where N is number
+                   of times u was specifed in the arguments
+  -l               run the linters against the code
   -s               run a bash shell when done
+  -b <task>        execute arbitrary buildr task
   -c <ref>         git reference to checkout
   -p <project>     subproject to build (defaults to "server")
   -v               enable verbose/debug output
@@ -114,7 +118,7 @@ HELP
 }
 
 ARGV=("$@")
-while getopts ":dtrHulsc:p:v" opt; do
+while getopts ":dtrHulsb:c:p:v" opt; do
     case $opt in
         d  ) DEPLOY="1";;
         t  )
@@ -136,9 +140,10 @@ while getopts ":dtrHulsc:p:v" opt; do
             RSPEC="1"
             DEPLOY="1"
             ;;
-        u  ) UNITTEST="1";;
+        u  ) UNITTEST=$((UNITTEST + 1));;
         l  ) LINTER="1";;
         s  ) LAUNCHSHELL="1";;
+        b  ) ARBITRARY="${OPTARG}";;
         c  ) CHECKOUT="${OPTARG}";;
         p  ) PROJECT="${OPTARG}";;
         v  ) VERBOSE="1";;
@@ -183,18 +188,24 @@ if [ "$LINTER" == "1" ]; then
     cd $CP_HOME
     echo "Running linter..."
 
-    tee /var/log/candlepin/checkstyle.log < /tmp/teepipe &
-    buildr checkstyle > /tmp/teepipe 2>&1
+    tee /var/log/candlepin/lint.log < /tmp/teepipe &
+    buildr lint > /tmp/teepipe 2>&1
 fi
 
 # TODO: keep track of return code?
 cd "$CP_HOME/$PROJECT"
 
-if [ "$UNITTEST" == "1" ]; then
-    echo "Running unit tests..."
-
-    tee /var/log/candlepin/unit_tests.log < /tmp/teepipe &
-    buildr test > /tmp/teepipe 2>&1
+if [ "$UNITTEST" -gt 0 ]; then
+    echo "Running unit tests $UNITTEST time(s)"
+    # run $UNITTEST time(s) to increase chance of capturing
+    # non deterministic unit test failures.
+    for (( i=1; i<=$UNITTEST; i++ ))
+    do 
+        tee /var/log/candlepin/unit_tests.log < /tmp/teepipe &
+        buildr test > /tmp/teepipe 2>&1
+        rm -f /tmp/teepipe
+        mkfifo /tmp/teepipe
+    done
 fi
 
 if [ "$DEPLOY" == "1" ]; then
@@ -229,6 +240,13 @@ if [ "$RSPEC" == "1" ]; then
     fi
 
     buildr "${BUILDR_ARGS}" > /tmp/teepipe 2>&1
+fi
+
+if [ ! -z "$ARBITRARY" ]; then
+    cd "$CP_HOME"
+    tee /var/log/candlepin/buildr.log < /tmp/teepipe &
+    echo "Running buildr $ARBITRARY..."
+    buildr $ARBITRARY > /tmp/teepipe 2>&1
 fi
 
 cleanup
