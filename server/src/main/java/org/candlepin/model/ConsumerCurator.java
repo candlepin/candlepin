@@ -37,6 +37,7 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +67,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     private static final int MAX_FACT_STR_LENGTH = 255;
     private static final int NAME_LENGTH = 250;
+    private static final int MAX_IN_QUERY_LENGTH = 500;
     private static Logger log = LoggerFactory.getLogger(ConsumerCurator.class);
 
     public ConsumerCurator() {
@@ -211,9 +213,22 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         // each guest ID.
 
         Query q = currentSession().createSQLQuery(sql);
-        q.setParameterList("guestids", possibleGuestIds);
-        q.setParameter("ownerid", owner.getId());
-        List<String> consumerUuids = q.list();
+        List<String> consumerUuids = new ArrayList<String>();
+
+        int fromIndex = 0;
+        int toIndex = fromIndex + MAX_IN_QUERY_LENGTH;
+
+        while (fromIndex < possibleGuestIds.size()) {
+            if (toIndex > possibleGuestIds.size()) {
+                toIndex = possibleGuestIds.size();
+            }
+            List<String> subList = possibleGuestIds.subList(fromIndex, toIndex);
+            q.setParameterList("guestids", subList);
+            q.setParameter("ownerid", owner.getId());
+            consumerUuids.addAll(q.list());
+            fromIndex = toIndex;
+            toIndex += MAX_IN_QUERY_LENGTH;
+        }
 
         if (consumerUuids == null || consumerUuids.size() == 0) {
             return guestConsumersMap;
