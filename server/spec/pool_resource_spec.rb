@@ -162,12 +162,12 @@ describe 'Pool Resource' do
   end
 
   it 'should allow fetching content delivery network by pool id' do
+    pending("candlepin running in hosted mode") if is_hosted?
     cdn_label = random_string("test-cdn")
     cdn = create_cdn(cdn_label,
                      "Test CDN",
                      "https://cdn.test.com")
     cdn.id.should_not be nil
-
     @opts = {"cdn_label"=> cdn_label}
     @cp_export = StandardExporter.new
     @cp_export.create_candlepin_export()
@@ -179,6 +179,8 @@ describe 'Pool Resource' do
     result_cdn = @cp.get_cdn_from_pool(pool['id'])
     result_cdn.name.should == cdn.name
     result_cdn.url.should == cdn.url
+    @cp.delete_owner(@import_owner['key'])
+    @cp_export.cleanup
   end
 
 end
