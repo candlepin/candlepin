@@ -214,7 +214,7 @@ if [ "$DEPLOY" == "1" ]; then
         DEPLOY_FLAGS="$DEPLOY_FLAGS -v"
     fi
 
-    bin/deploy "$DEPLOY_FLAGS"
+    bin/deploy $DEPLOY_FLAGS
     sleep 7
 fi
 
