@@ -106,7 +106,8 @@ OPTIONS:
   -r [filter]      run rspec test suite (implies -d); may be filtered by test
                    suite and name
   -H               run rspec tests in "hosted" mode (implies -r and -d)
-  -u               run unit test suite
+  -u               run unit test suite N number of times, where N is number
+                   of times u was specifed in the arguments
   -l               run the linters against the code
   -s               run a bash shell when done
   -b <task>        execute arbitrary buildr task
@@ -243,10 +244,9 @@ fi
 
 if [ ! -z "$ARBITRARY" ]; then
     cd "$CP_HOME"
-    echo "Running buildr $ARBITRARY..."
     tee /var/log/candlepin/buildr.log < /tmp/teepipe &
-
-    buildr "${ARBITRARY}" > /tmp/teepipe 2>&1
+    echo "Running buildr $ARBITRARY..."
+    buildr $ARBITRARY > /tmp/teepipe 2>&1
 fi
 
 cleanup
