@@ -93,9 +93,7 @@ public class LinkHeaderResponseFilterTest {
         when(config.containsKey(eq(this.apiUrlPrefixKey))).thenReturn(true);
         when(config.getString(eq(this.apiUrlPrefixKey))).thenReturn("");
 
-        mockReq = MockHttpRequest.create("GET",
-                new URI("/candlepin"),
-                new URI("https://example.com"));
+        mockReq = MockHttpRequest.get("https://example.com/candlepin");
         when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
         UriBuilder builder = interceptor.buildBaseUrl(mockRequestContext);
@@ -107,9 +105,7 @@ public class LinkHeaderResponseFilterTest {
     public void testBuildBaseUrlWithNoConfigProperty() throws Exception {
         when(config.containsKey(eq(this.apiUrlPrefixKey))).thenReturn(false);
 
-        mockReq = MockHttpRequest.create("GET",
-                new URI("/candlepin"),
-                new URI("https://example.com"));
+        mockReq = MockHttpRequest.get("https://example.com/candlepin");
         when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
         UriBuilder builder = interceptor.buildBaseUrl(mockRequestContext);
@@ -118,9 +114,7 @@ public class LinkHeaderResponseFilterTest {
 
     @Test
     public void testBuildBaseUrlWithConfigDefault() throws Exception {
-        mockReq = MockHttpRequest.create("GET",
-                new URI("/candlepin/resource"),
-                new URI("https://example.com"));
+        mockReq = MockHttpRequest.get("https://example.com/candlepin/resource");
         when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
         LinkHeaderResponseFilter interceptorWithDefault =
@@ -136,9 +130,7 @@ public class LinkHeaderResponseFilterTest {
         when(config.getString(eq(this.apiUrlPrefixKey))).thenReturn(
             "localhost:8443/candlepin");
 
-        mockReq = MockHttpRequest.create("GET",
-                new URI("/candlepin/resource"),
-                new URI("https://example.com"));
+        mockReq = MockHttpRequest.get("https://example.com/candlepin/resource");
         when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
         UriBuilder builder = interceptor.buildBaseUrl(mockRequestContext);
@@ -150,9 +142,7 @@ public class LinkHeaderResponseFilterTest {
         when(config.containsKey(eq(this.apiUrlPrefixKey))).thenReturn(true);
         when(config.getString(eq(this.apiUrlPrefixKey))).thenReturn("localhost:8443/subscriptions");
 
-        mockReq = MockHttpRequest.create("GET",
-                new URI("/candlepin"),
-                new URI("https://example.com"));
+        mockReq = MockHttpRequest.get("https://example.com/candlepin");
         when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
         when(mockServletContext.getContextPath()).thenReturn("/subscriptions");

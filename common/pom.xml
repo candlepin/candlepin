@@ -34,12 +34,12 @@
     <com.googlecode.gettext-commons-gettext-commons.version>0.9.8</com.googlecode.gettext-commons-gettext-commons.version>
     <com.google.guava-guava.version>13.0</com.google.guava-guava.version>
     <javax.servlet-servlet-api.version>2.5</javax.servlet-servlet-api.version>
-    <org.jboss.resteasy-jaxrs-api.version>3.0.6.Final</org.jboss.resteasy-jaxrs-api.version>
-    <org.jboss.resteasy-resteasy-jaxrs.version>3.0.6.Final</org.jboss.resteasy-resteasy-jaxrs.version>
-    <org.jboss.resteasy-resteasy-jaxb-provider.version>3.0.6.Final</org.jboss.resteasy-resteasy-jaxb-provider.version>
-    <org.jboss.resteasy-resteasy-guice.version>3.0.6.Final</org.jboss.resteasy-resteasy-guice.version>
-    <org.jboss.resteasy-resteasy-atom-provider.version>3.0.6.Final</org.jboss.resteasy-resteasy-atom-provider.version>
-    <org.jboss.resteasy-resteasy-multipart-provider.version>3.0.6.Final</org.jboss.resteasy-resteasy-multipart-provider.version>
+    <org.jboss.resteasy-jaxrs-api.version>3.0.10.Final</org.jboss.resteasy-jaxrs-api.version>
+    <org.jboss.resteasy-resteasy-jaxrs.version>3.0.10.Final</org.jboss.resteasy-resteasy-jaxrs.version>
+    <org.jboss.resteasy-resteasy-jaxb-provider.version>3.0.10.Final</org.jboss.resteasy-resteasy-jaxb-provider.version>
+    <org.jboss.resteasy-resteasy-guice.version>3.0.10.Final</org.jboss.resteasy-resteasy-guice.version>
+    <org.jboss.resteasy-resteasy-atom-provider.version>3.0.10.Final</org.jboss.resteasy-resteasy-atom-provider.version>
+    <org.jboss.resteasy-resteasy-multipart-provider.version>3.0.10.Final</org.jboss.resteasy-resteasy-multipart-provider.version>
     <org.scannotation-scannotation.version>1.0.3</org.scannotation-scannotation.version>
     <org.apache.httpcomponents-httpclient.version>4.2.1</org.apache.httpcomponents-httpclient.version>
     <org.apache.james-apache-mime4j.version>0.6</org.apache.james-apache-mime4j.version>
