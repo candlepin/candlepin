@@ -9,7 +9,7 @@ describe 'Import', :serial => true do
 
   before(:all) do
     @cp = Candlepin.new('admin', 'admin')
-    pending("candlepin running in hosted mode") if is_hosted?
+    skip("candlepin running in hosted mode") if is_hosted?
 
     @cp_export = StandardExporter.new
     @cp_export.create_candlepin_export()
@@ -52,8 +52,8 @@ describe 'Import', :serial => true do
         derived_found = true
       end
     end
-    provided_found.should be_true
-    derived_found.should be_true
+    provided_found.should be true
+    derived_found.should be true
   end
 
   it 'created unmapped guest derived pool' do
@@ -153,11 +153,11 @@ describe 'Import', :serial => true do
       @cp.import(@import_owner['key'], @cp_export_file)
     rescue RestClient::Conflict => e
       json = JSON.parse(e.http_body)
-      json["conflicts"].should have(1).things
-      json["conflicts"].include?("MANIFEST_SAME").should be_true
+      json["conflicts"].length.should eq(1)
+      json["conflicts"].include?("MANIFEST_SAME").should be true
       exception = true
     end
-    exception.should be_true
+    exception.should be true
 
   end
 
@@ -177,11 +177,11 @@ describe 'Import', :serial => true do
       @cp.import(owner['key'], older)
     rescue RestClient::Conflict => e
       json = JSON.parse(e.http_body)
-      json["conflicts"].should have(1).things
-      json["conflicts"].include?("MANIFEST_OLD").should be_true
+      json["conflicts"].length.should eq(1)
+      json["conflicts"].include?("MANIFEST_OLD").should be true
       exception = true
     end
-    exception.should be_true
+    exception.should be true
   end
 
   it 'should create a FAILURE record on a duplicate import' do
@@ -234,9 +234,9 @@ describe 'Import', :serial => true do
     rescue RestClient::Exception => e
         expected = "Owner has already imported from another subscription management application."
         json = JSON.parse(e.http_body)
-        json["displayMessage"].include?(expected).should be_true
+        json["displayMessage"].include?(expected).should be true
         json["conflicts"].size.should == 1
-        json["conflicts"].include?("DISTRIBUTOR_CONFLICT").should be_true
+        json["conflicts"].include?("DISTRIBUTOR_CONFLICT").should be true
         e.http_code.should == 409
     end
     @cp.get_owner(@import_owner['key'])['upstreamConsumer']['uuid'].should == old_upstream_uuid
@@ -247,7 +247,7 @@ describe 'Import', :serial => true do
     rescue RestClient::Exception => e
         json = JSON.parse(e.http_body)
         json["conflicts"].size.should == 1
-        json["conflicts"].include?("DISTRIBUTOR_CONFLICT").should be_true
+        json["conflicts"].include?("DISTRIBUTOR_CONFLICT").should be true
     end
   end
 

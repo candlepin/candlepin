@@ -156,8 +156,8 @@ describe 'Entitlement Certificate V3' do
     arch_ret_content['metadata_expire'].should == 6400
     arch_ret_content['required_tags'].size.should == 2
     arch_ret_content['arches'].size.should == 2
-    arch_ret_content['arches'].include?('i386').should be_true
-    arch_ret_content['arches'].include?('x86_64').should be_true
+    arch_ret_content['arches'].include?('i386').should be true
+    arch_ret_content['arches'].include?('x86_64').should be true
 
     @system.unbind_entitlement entitlement.id
   end

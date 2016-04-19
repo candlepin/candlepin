@@ -37,14 +37,10 @@ end
 
 RSpec.configure do |config|
   # TODO: The "should" method has been deprecated in RSpec 2.11 and replaced with "expect".
-  # Our current version of Buildr uses RSpec 2.9.0, but newer Buildr versions use the
-  # newer RSpec.  Next time we upgrade Buildr, uncomment the block below to catch all
-  # instances of "should". (Both syntaxes can exist side-by-side by setting c.syntax = [:should, :expect])
   # See also http://myronmars.to/n/dev-blog/2012/06/rspecs-new-expectation-syntax
-  #
-  #config.expect_with :rspec do |c|
-  #  c.syntax = :expect
-  #end
+  config.expect_with :rspec do |c|
+    c.syntax = [:expect, :should]
+  end
 
   # Sometimes when diagnosing a test failure, you might not want to
   # run the :after hook so you can do a post-mortem.  If that's the case
@@ -59,7 +55,7 @@ RSpec.configure do |config|
   end
 
   config.before(:each, :type => :virt) do
-    pending("candlepin running in standalone mode") if is_hosted?
+    skip("candlepin running in standalone mode") if is_hosted?
     @owner = create_owner random_string('virt_owner')
     @user = user_client(@owner, random_string('virt_user'))
 

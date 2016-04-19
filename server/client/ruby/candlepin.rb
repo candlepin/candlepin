@@ -230,6 +230,12 @@ module Candlepin
       opts.assert_valid_keys(*defaults.keys)
       defaults.deep_merge(opts)
     end
+
+    def wrap_in_array!(opts, key)
+      unless opts[key].is_a?(Array)
+        opts[key] = [opts[key]]
+      end
+    end
   end
 
   module API
@@ -387,6 +393,30 @@ module Candlepin
       def delete_job(opts = {})
         delete_by_id("/jobs", :job_id, opts)
       end
+
+      def wait_for_job(opts = {})
+        defaults = {
+          :job_id => nil,
+          :timeout => 60,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        timeout_limit = Time.now + opts[:timeout]
+        res = get_job(:job_id => opts[:job_id])
+        while Time.now <= timeout_limit
+          job = res.ok_content
+          case job[:state]
+          when "CREATED", "PENDING", "WAITING", "RUNNING"
+            sleep 1
+            res = get_job(:job_id => opts[:job_id])
+          when "FINISHED", "CANCELED", "FAILED"
+            return res
+          else
+            raise RuntimeError.new("Unknown job state returned.")
+          end
+        end
+        raise RuntimeError.new("Timeout hit.  Last response was #{res}")
+      end
     end
 
     module ConsumerTypeResource
@@ -416,6 +446,11 @@ module Candlepin
     module StatusResource
       def get_status
         get('/status')
+      end
+
+      def hosted_mode?
+        status = get_status.ok_content
+        !status[:standalone]
       end
     end
 
@@ -448,13 +483,8 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        unless opts[:installed_products].is_a?(Array)
-          opts[:installed_products] = [opts[:installed_products]]
-        end
-
-        unless opts[:activation_keys].is_a?(Array)
-          opts[:activation_keys] = [opts[:activation_keys]]
-        end
+        wrap_in_array!(opts, :installed_products)
+        wrap_in_array!(opts, :activation_keys)
 
         consumer_json = opts.slice(:name, :facts, :uuid)
 
@@ -474,12 +504,13 @@ module Candlepin
           :type => { :label => opts[:type] },
         }.merge(consumer_json)
 
-        consumer_json[:installed_products] = []
+        consumer_json[:installedProducts] = []
         opts[:installed_products].each do |ip|
-          if ip.is_a?(Hash)
-            consumer_json[:installed_products] << { :id => ip[:id] }
+          if ip.is_a?(Hash) && ip.key?(:productId) && ip.key?(:productName)
+            consumer_json[:installedProducts] << ip
           else
-            consumer_json[:installed_products] << { :id => ip }
+            raise RuntimeError.new(
+              ":installed_products must be a hash with :productId and :productName")
           end
         end
 
@@ -648,25 +679,44 @@ module Candlepin
       def update_consumer(opts = {})
         defaults = {
           :uuid => uuid,
-          :facts => {},
-          :installed_products => [],
+          :facts => nil,
+          :installed_products => nil,
           :hypervisor_id => nil,
-          :guest_ids => [],
+          :guest_ids => nil,
           :autoheal => true,
           :service_level => nil,
-          :capabilities => [],
+          :capabilities => nil,
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :uuid)
+        opts.compact!
 
         body = opts.dup
 
-        body[:capabilities].map! do |name|
-          { :name => name }
+        if opts.key?(:capabilities)
+          body[:capabilities].map! do |name|
+            { :name => name }
+          end
         end
 
-        body[:guest_ids].map! do |id|
-          { :guestId => id }
+        if opts.key?(:guest_ids)
+          body[:guest_ids].map! do |id|
+            { :guestId => id }
+          end
+        end
+
+        if opts.key?(:installed_products)
+          wrap_in_array!(opts, :installed_products)
+          body[:installed_products] = []
+          opts[:installed_products].each do |ip|
+            if ip.is_a?(Hash) && ip.key?(:productId) && ip.key?(:productName)
+              body[:installed_products] << ip
+            else
+              raise RuntimeError.new(
+                ":installed_products must be a hash or list of hashes " \
+                "with :productId and :productName")
+            end
+          end
         end
 
         body = camelize_hash(body)
@@ -681,9 +731,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :uuids)
 
-        unless opts[:uuids].is_a?(Array)
-          opts[:uuids] = [opts[:uuids]]
-        end
+        wrap_in_array!(opts, :uuids)
 
         get("/consumers/compliance", :uuid => opts[:uuids])
       end
@@ -770,9 +818,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :uuid, :serials)
 
-        unless opts[:serials].is_a?(Array)
-          opts[:serials] = [opts[:serials]]
-        end
+        wrap_in_array!(opts, :serials)
 
         get("/consumers/#{opts[:uuid]}/certificates",
           :query => { :serials => opts[:serials].join(",") })
@@ -891,9 +937,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :env_id, :content_ids)
 
-        unless opts[:content_ids].is_a?(Array)
-          opts[:content_ids] = [opts[:content_ids]]
-        end
+        wrap_in_array!(opts, :content_ids)
 
         body = []
         opts[:content_ids].each do |c|
@@ -919,9 +963,8 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :env_id, :content_ids)
 
-        unless opts[:content_ids].is_a?(Array)
-          opts[:content_ids] = [opts[:content_ids]]
-        end
+        wrap_in_array!(opts, :content_ids)
+
         url = "/environments/#{opts[:env_id]}/content"
         query = opts.slice(:lazy_regen)
         query[:content] = opts[:content_ids]
@@ -1057,9 +1100,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :id)
 
-        unless opts[:overrides].is_a?(Array)
-          opts[:overrides] = [opts[:overrides]]
-        end
+        wrap_in_array!(opts, :overrides)
 
         override_defaults = {
           :content_label => nil,
@@ -1084,9 +1125,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :id)
 
-        unless opts[:overrides].is_a?(Array)
-          opts[:overrides] = [opts[:overrides]]
-        end
+        wrap_in_array!(opts, :overrides)
 
         override_defaults = {
           :content_label => nil,
@@ -1285,9 +1324,7 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
 
-        unless opts[:permissions].is_a?(Array)
-          opts[:permissions] = [opts[:permissions]]
-        end
+        wrap_in_array!(opts, :permissions)
 
         post("/roles", opts)
       end
@@ -1444,13 +1481,8 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :owner)
 
-        unless opts[:types].is_a?(Array)
-          opts[:types] = [opts[:types]]
-        end
-
-        unless opts[:facts].is_a?(Array)
-          opts[:facts] = [opts[:facts]]
-        end
+        wrap_in_array!(opts, :types)
+        wrap_in_array!(opts, :facts)
 
         get("/owners/#{opts[:owner]}/consumers",
           :type => opts[:types],
@@ -1563,16 +1595,24 @@ module Candlepin
 
         # HTTPClient is a little quirky here.  It does not expect
         # a PUT without a body, so we need to provide a dummy body.
-        put_async("/owners/#{opts[:owner]}/subscriptions",
+        put("/owners/#{opts[:owner]}/subscriptions",
           :query => opts.slice(:auto_create_owner, :lazy_regen),
           :body => nil)
       end
 
       # Same as refresh_pools_async but just block before returning
       def refresh_pools(opts = {})
-        connection = refresh_pools_async(opts)
-        connection.join
-        connection.pop
+        defaults = {
+          :timeout => 60,
+        }
+        res = refresh_pools_async(opts.except(:timeout))
+        opts = defaults.deep_merge(opts)
+
+        # In standalone mode, refresh_pools does nothing
+        return if res.status_code == 204
+
+        job = res.ok_content
+        wait_for_job(:job_id => job[:id], :timeout => opts[:timeout])
       end
 
       def create_activation_key(opts = {})
@@ -1701,9 +1741,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :owner, :manifest)
 
-        unless opts[:force].is_a?(Array)
-          opts[:force] = [opts[:force]]
-        end
+        wrap_in_array!(opts, :force)
 
         if opts[:force].empty?
           opts.extract!(:force)
@@ -2055,9 +2093,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :uuid)
 
-        unless opts[:overrides].is_a?(Array)
-          opts[:overrides] = [opts[:overrides]]
-        end
+        wrap_in_array!(opts, :overrides)
 
         override_defaults = {
           :content_label => nil,
@@ -2092,9 +2128,7 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :uuid)
 
-        unless opts[:overrides].is_a?(Array)
-          opts[:overrides] = [opts[:overrides]]
-        end
+        wrap_in_array!(opts, :overrides)
 
         override_defaults = {
           :content_label => nil,
@@ -2156,24 +2190,39 @@ module Candlepin
         }
         opts = verify_and_merge(opts, defaults)
         validate_keys(opts, :product_ids)
-        unless opts[:product_ids].is_a?(Array)
-          opts[:product_ids] = [opts[:product_ids]]
-        end
+        wrap_in_array!(opts, :product_ids)
+
         query = opts.slice(:lazy_regen)
         query[:product] = opts[:product_ids]
 
         # HTTPClient is a little quirky here.  It does not expect
         # a PUT without a body, so we need to provide a dummy body.
-        put_async("/products/subscriptions",
+        put("/products/subscriptions",
           :query => query,
           :body => nil)
       end
 
       # Same as async call but just block before returning
       def refresh_pools_for_product(opts = {})
-        connection = refresh_pools_for_product_async(opts)
-        connection.join
-        connection.pop
+        defaults = {
+          :timeout => 60,
+        }
+        res = refresh_pools_for_product_async(opts.except(:timeout))
+        opts = defaults.deep_merge(opts)
+
+        # In standalone mode, refresh_pools does nothing
+        return if res.status_code == 204
+
+        job = res.ok_content
+        responses = []
+        job.each do |j|
+          responses << wait_for_job(
+            :job_id => j[:id],
+            :timeout => opts[:timeout])
+        end
+        # Kind of weird that we have to return an array
+        # but I don't have any better ideas at the moment
+        responses
       end
     end
 

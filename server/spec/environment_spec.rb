@@ -205,8 +205,8 @@ describe 'Environments' do
 
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
     extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
-    extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content2['id']}.1").should_not be_true
-    extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content['id']}.1").should be_true
+    extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content2['id']}.1").should_not be true
+    extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content['id']}.1").should be true
 
     # Make sure the enabled field was overridden to false:
     extension_from_cert(ent['certificates'][0]['cert'],
@@ -238,8 +238,8 @@ describe 'Environments' do
 
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
     extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
-    extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content['id']}.1").should be_true
-    extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content2['id']}.1").should_not be_true
+    extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content['id']}.1").should be true
+    extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content2['id']}.1").should_not be true
     serial = ent['certificates'][0]['serial']['serial']
 
     # Promote the other content set and make sure certs were regenerated:
@@ -252,8 +252,8 @@ describe 'Environments' do
     ent = consumer_cp.list_entitlements()[0]
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
     extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
-    extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content['id']}.1").should be_true
-    extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content2['id']}.1").should be_true
+    extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content['id']}.1").should be true
+    extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content2['id']}.1").should be true
     new_serial = ent['certificates'][0]['serial']['serial']
     new_serial.should_not == serial
 
@@ -263,8 +263,8 @@ describe 'Environments' do
     ent = consumer_cp.list_entitlements()[0]
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
     extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
-    extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content['id']}.1").should be_true
-    extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content2['id']}.1").should_not be_true
+    extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content['id']}.1").should be true
+    extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content2['id']}.1").should_not be true
     another_serial = ent['certificates'][0]['serial']['serial']
     another_serial.should_not == new_serial
   end

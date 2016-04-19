@@ -15,7 +15,7 @@
 package org.candlepin.model;
 
 
-import static org.hamcrest.collection.IsCollectionContaining.hasItem;
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.*;
 
 import org.candlepin.test.DatabaseTestFixture;

@@ -14,8 +14,8 @@
  */
 package org.candlepin.model;
 
-import static org.hamcrest.collection.IsCollectionContaining.hasItem;
 import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
@@ -26,14 +26,13 @@ import org.candlepin.test.TestUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.junit.Before;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,8 +44,6 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 import javax.validation.ConstraintViolationException;
-
-
 
 public class ProductCuratorTest extends DatabaseTestFixture {
     private static Logger log = LoggerFactory.getLogger(ProductCuratorTest.class);
@@ -265,7 +262,6 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         Product lookedUp = productCurator.find(prod.getUuid());
         assertThat(lookedUp.getDependentProductIds(), hasItem("ProductX"));
-
     }
 
     /**

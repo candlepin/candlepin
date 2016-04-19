@@ -100,7 +100,7 @@ describe 'Owner Product Resource' do
     system = consumer_client(user, 'system6')
     system.consume_product(product.id)
     product_owners = @cp.get_product_owners([provided_product.id])
-    product_owners.should have(1).things
+    product_owners.length.should eq(1)
     product_owners[0]['key'].should == owner['key']
   end
 
@@ -122,14 +122,14 @@ describe 'Owner Product Resource' do
     create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id])
 
     pool = owner_client.list_pools(:owner => owner.id)
-    pool.should have(1).things
+    pool.length.should eq(1)
 
     pool = owner_client.list_pools(:owner => owner.id)
-    pool.should have(1).things
+    pool.length.should eq(1)
     pool[0]['owner']['key'].should == owner['key']
 
     pool = owner2_client.list_pools(:owner => owner2.id)
-    pool.should have(0).things
+    pool.length.should eq(0)
   end
 
   it 'lists all products in bulk fetch' do

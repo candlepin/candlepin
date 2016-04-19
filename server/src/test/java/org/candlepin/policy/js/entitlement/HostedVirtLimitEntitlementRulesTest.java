@@ -14,16 +14,10 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import static org.hamcrest.collection.IsCollectionContaining.*;
+import static org.hamcrest.Matchers.hasItems;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;

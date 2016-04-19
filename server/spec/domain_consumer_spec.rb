@@ -28,7 +28,7 @@ describe 'Domain Consumer' do
     consumer = consumer_client(@user, 'other_consumer', :domain)
 
     entitlements = consumer.consume_product @domain_product.id
-    entitlements.should have(1).things
+    entitlements.length.should eq(1)
   end
 
   it 'should ONLY be able to consume domain products' do

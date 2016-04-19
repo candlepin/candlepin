@@ -23,7 +23,7 @@ describe 'Entitlement Migrate' do
     pool = @dist1.list_pools(:owner => @owner['id'], :product => @product['id'])[0]
     entitlement = @dist1.consume_pool(pool.id, {:quantity => 25})[0]
     @cp.migrate_entitlement({:id => entitlement.id, :dest => @dist2.get_consumer()['uuid'], :quantity => 25})
-    @dist1.list_entitlements(:product_id => @product.id).should have(0).things
+    @dist1.list_entitlements(:product_id => @product.id).length.should eq(0)
     new_ent = @dist2.list_entitlements(:product_id => @product.id)[0]
     new_ent['quantity'].should == 25
     new_ent.id.should_not == entitlement.id
@@ -54,7 +54,7 @@ describe 'Entitlement Migrate' do
     pool = @dist1.list_pools(:owner => @owner['id'], :product => @product['id'])[0]
     entitlement = @dist1.consume_pool(pool.id, {:quantity => 25})[0]
     @cp.migrate_entitlement({:id => entitlement.id, :dest => @dist2.get_consumer()['uuid']})
-    @dist1.list_entitlements(:product_id => @product.id).should have(0).things
+    @dist1.list_entitlements(:product_id => @product.id).length.should eq(0)
     new_ent = @dist2.list_entitlements(:product_id => @product.id)[0]
     new_ent['quantity'].should == 25
     new_ent.id.should_not == entitlement.id

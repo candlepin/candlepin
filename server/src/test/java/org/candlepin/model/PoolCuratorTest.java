@@ -15,8 +15,7 @@
 package org.candlepin.model;
 
 import static org.junit.Assert.*;
-import static org.hamcrest.core.IsCollectionContaining.*;
-import static org.hamcrest.core.IsNot.*;
+import static org.hamcrest.Matchers.*;
 
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.common.paging.Page;

@@ -9,14 +9,14 @@ describe 'Refresh Pools' do
   include VirtHelper
 
   before(:each) do
-    pending("candlepin running in standalone mode") if not is_hosted?
+    skip("candlepin running in standalone mode") unless is_hosted?
   end
 
   it 'creates a valid job' do
     owner = create_owner random_string('test_owner')
 
     status = @cp.refresh_pools(owner['key'], true)
-    status.state.should == 'CREATED'
+    status.state.should eq('CREATED')
 
     # URI returned is valid - use post to clean up
     @cp.post(status.statusPath).state.should_not be_nil
@@ -27,10 +27,10 @@ describe 'Refresh Pools' do
     owner = create_owner test_owner
     result = @cp.refresh_pools(owner['key'])
 
-    if (not is_hosted?)
+    if !is_hosted?
       result.should be_nil
     else
-      result.should == "Pools refreshed for owner #{test_owner}"
+      result.should eq("Pools refreshed for owner #{test_owner}")
     end
   end
 
@@ -66,7 +66,7 @@ describe 'Refresh Pools' do
 
     events = @cp.list_owner_events(owner['key'])
     pool_created_events = events.find_all { |event| event['target'] == 'POOL' && event['type'] == 'CREATED'}
-    pool_created_events.size.should == 6
+    pool_created_events.size.should eq(6)
   end
 
   it 'detects changes in provided products' do

@@ -80,18 +80,16 @@ module ModifiedRSpec
     end
 
     def build_rspec_opts(rspec)
-      opts = %W{--color --format documentation}
-      opts.concat(%W{--require #{File.join(Dir.pwd, 'tasks', 'failure_formatter')}})
-      opts.concat(%W{--format ModifiedRSpec::Formatters::FailuresFormatter})
+      opts = %w(--color --format documentation)
+      opts.concat(%W(--require #{File.join(Dir.pwd, 'tasks', 'failure_formatter')}))
+      opts.concat(%w(--format ModifiedRSpec::FailuresFormatter))
 
       ruby_includes = rspec.ruby_includes.map { |dir| "-I #{dir}" }
       opts.concat(ruby_includes)
 
       @signifiers.each do |signifier|
-        if signifier =~ /\d+/
-          opts.concat(%W{-l #{signifier}})
-        else
-          opts.concat(%W{-e "#{signifier}"})
+        unless signifier =~ /\d+/
+          opts.concat(%W(-e "#{signifier}"))
         end
       end
 
@@ -154,6 +152,19 @@ module ModifiedRSpec
       if specs_to_run.empty?
         fail("No specs found matching #{@include}")
       end
+
+      @signifiers.each do |signifier|
+        if signifier =~ /\d+/
+          if specs_to_run.length == 1
+            specs_to_run.map! { |s| "#{s}:#{signifier}" }
+          else
+            # Kind of lame, but applying the same line number(s) to different files is a
+            # recipe for weird behavior
+            fail("Line numbers can't be applied to multiple spec files: #{specs_to_run}")
+          end
+        end
+      end
+
       specs_to_run
     end
 
@@ -257,7 +268,7 @@ module ModifiedRSpec
         ModifiedRSpecTask.include(included_tests)
         ModifiedRSpecTask.exclude(excluded_tests)
         ModifiedRSpecTask.signifiers(signifiers)
-        task('rspec').invoke()
+        task('rspec').invoke
       end
     end
 
@@ -283,6 +294,9 @@ module ModifiedRSpec
         else
           rspec_failures.signifiers(failures)
           rspec_failures.enhance(['rspec_clean'])
+          # TODO: Something about this task causes notify-send to fail with an
+          # "Invalid number of options" message.  Maybe something to do
+          # with shell expansion?
           rspec_failures.invoke
         end
       end
@@ -290,12 +304,12 @@ module ModifiedRSpec
       rspec_serial = ModifiedRSpecTask.define_task('rspec_serial')
       rspec_serial.send(:associate_with, project)
       rspec_serial.enhance do |task|
-        task.additional_opts = %w{--tag serial}
+        task.additional_opts = %w(--tag serial)
         task.fail_on_error = false if ENV.key?('all_tests')
       end
 
       rspec_parallel = ParallelRspecTask.define_task('rspec_parallel') do |task|
-        task.rspec_opts = rspec_serial.build_rspec_opts(project.rspec) + %w{--tag ~serial}
+        task.rspec_opts = rspec_serial.build_rspec_opts(project.rspec) + %w(--tag ~serial)
       end
       rspec_parallel.send(:associate_with, project)
 

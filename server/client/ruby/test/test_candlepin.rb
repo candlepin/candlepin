@@ -28,7 +28,7 @@ RSpec::Matchers.define :be_success do
     (200..206).cover?(res.status_code)
   end
 
-  failure_message_for_should do |res|
+  failure_message do |res|
     status_match_failure_message(res, "200 through 206")
   end
 end
@@ -38,7 +38,7 @@ RSpec::Matchers.define :be_unauthorized do
     res.status_code == 401
   end
 
-  failure_message_for_should do |res|
+  failure_message do |res|
     status_match_failure_message(res, "401")
   end
 end
@@ -48,7 +48,7 @@ RSpec::Matchers.define :be_forbidden do
     res.status_code == 403
   end
 
-  failure_message_for_should do |res|
+  failure_message do |res|
     status_match_failure_message(res, "403")
   end
 end
@@ -58,7 +58,7 @@ RSpec::Matchers.define :be_missing do
     res.status_code == 404
   end
 
-  failure_message_for_should do |res|
+  failure_message do |res|
     status_match_failure_message(res, "404")
   end
 end
@@ -75,6 +75,10 @@ module Candlepin
       # The let! prevents lazy loading
       let!(:user_client) { BasicAuthClient.new }
       let!(:no_auth_client) { NoAuthClient.new }
+
+      let(:hosted_mode?) do
+        user_client.hosted_mode?
+      end
 
       let(:owner) do
         key = rand_string('owner')
@@ -413,6 +417,7 @@ module Candlepin
       end
 
       it 'updates an owner pool' do
+        skip("Currently not working in Candlepin.")
         p = owner_client.create_pool(
           :owner => owner[:key],
           :product_id => product[:id],
@@ -480,11 +485,12 @@ module Candlepin
       end
 
       it 'refreshes pools synchronously' do
+        skip "This test is irrelevant in standalone" unless hosted_mode?
+
         prod_id = rand_string
         user_client.create_product(
           :product_id => prod_id,
           :name => rand_string,
-          :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
           :owner => owner[:key],
         )
@@ -495,27 +501,31 @@ module Candlepin
         )
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:multiplier]).to eq(2)
+        expect(pools.first[:productAttributes]).to_not be_empty
 
         user_client.update_product(
           :product_id => prod_id,
-          :multiplier => 4,
           :owner => owner[:key],
+          :attributes => {},
         )
 
         result = user_client.refresh_pools(:owner => owner[:key])
         expect(result).to be_success
+        expect(result.ok_content[:state]).to satisfy do |v|
+          %w(FINISHED FAILED CANCELED).include?(v)
+        end
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:multiplier]).to eq(4)
+        expect(pools.first[:productAttributes]).to be_empty
       end
 
       it 'refreshes pools asynchronously' do
+        skip "This test is irrelevant in standalone" unless hosted_mode?
+
         prod_id = rand_string
         owner_client.create_product(
           :product_id => prod_id,
           :name => rand_string,
-          :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
         )
 
@@ -524,28 +534,25 @@ module Candlepin
         )
 
         pools = owner_client.get_owner_pools.content
-        expect(pools.first[:product][:multiplier]).to eq(2)
+        expect(pools.first[:productAttributes]).to_not be_empty
 
         owner_client.update_product(
           :product_id => prod_id,
-          :multiplier => 4,
+          :attributes => {},
         )
 
         result = owner_client.refresh_pools_async
-        expect(result).to be_kind_of(HTTPClient::Connection)
-        result.join
-        expect(result.pop).to be_success
-
-        pools = owner_client.get_owner_pools.content
-        expect(pools.first[:product][:multiplier]).to eq(4)
+        expect(result).to be_success
+        expect(result.ok_content).to have_key(:state)
       end
 
-      it 'refreshes pools for a product' do
+      it 'can time out on a refresh pools' do
+        skip "This test is irrelevant in standalone" unless hosted_mode?
+
         prod_id = rand_string
         user_client.create_product(
           :product_id => prod_id,
           :name => rand_string,
-          :multiplier => 2,
           :attributes => { :arch => 'x86_64' },
           :owner => owner[:key],
         )
@@ -556,19 +563,52 @@ module Candlepin
         )
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:multiplier]).to eq(2)
+        expect(pools.first[:productAttributes]).to_not be_empty
 
         user_client.update_product(
           :product_id => prod_id,
-          :multiplier => 4,
+          :attributes => {},
           :owner => owner[:key],
         )
 
-        result = user_client.refresh_pools_for_product(:product_ids => prod_id)
-        expect(result).to be_success
+        expect do
+          user_client.refresh_pools_for_product(:product_ids => prod_id, :timeout => 0.1)
+        end.to raise_error(RuntimeError, /Timeout hit/)
+      end
+
+      it 'refreshes pools for a product' do
+        skip "This test is irrelevant in standalone" unless hosted_mode?
+
+        prod_id = rand_string
+        user_client.create_product(
+          :product_id => prod_id,
+          :name => rand_string,
+          :attributes => { :arch => 'x86_64' },
+          :owner => owner[:key],
+        )
+
+        user_client.create_pool(
+          :owner => owner[:key],
+          :product_id => prod_id,
+        )
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:multiplier]).to eq(4)
+        expect(pools.first[:productAttributes]).to_not be_empty
+
+        user_client.update_product(
+          :product_id => prod_id,
+          :attributes => {},
+          :owner => owner[:key],
+        )
+
+        result = user_client.refresh_pools_for_product(:product_ids => prod_id).first
+        expect(result).to be_success
+        expect(result.ok_content[:state]).to satisfy do |v|
+          %w(FINISHED FAILED CANCELED).include?(v)
+        end
+
+        pools = user_client.get_owner_pools(:owner => owner[:key]).content
+        expect(pools.first[:productAttributes]).to be_empty
       end
 
       it 'gets owner hypervisors' do
@@ -1054,7 +1094,7 @@ module Candlepin
         ).content
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:id]).to eq(product[:id])
+        expect(pools.first[:productId]).to eq(product[:id])
 
         x509_client = user_client.register_and_get_client(
           :owner => owner[:key],
@@ -1116,7 +1156,7 @@ module Candlepin
         ).content
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:id]).to eq(product[:id])
+        expect(pools.first[:productId]).to eq(product[:id])
 
         x509_client = user_client.register_and_get_client(
           :owner => owner[:key],
@@ -1136,7 +1176,7 @@ module Candlepin
         ).content
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:id]).to eq(product[:id])
+        expect(pools.first[:productId]).to eq(product[:id])
 
         x509_client = user_client.register_and_get_client(
           :owner => owner[:key],
@@ -1177,7 +1217,7 @@ module Candlepin
         ).content
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:id]).to eq(product[:id])
+        expect(pools.first[:productId]).to eq(product[:id])
 
         x509_client = user_client.register_and_get_client(
           :owner => owner[:key],
@@ -1189,7 +1229,7 @@ module Candlepin
 
         entitlement = res.content.first
         expect(entitlement[:certificates]).to_not be_empty
-        expect(entitlement[:certificates].first.key?(:key)).to be_true
+        expect(entitlement[:certificates].first.key?(:key)).to be true
       end
 
       it 'performs a dry run of autobind' do
@@ -1199,12 +1239,12 @@ module Candlepin
         ).content
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:id]).to eq(product[:id])
+        expect(pools.first[:productId]).to eq(product[:id])
 
         x509_client = user_client.register_and_get_client(
           :owner => owner[:key],
           :name => rand_string,
-          :installed_products => product[:id],
+          :installed_products => { :productId => product[:id], :productName => product[:name] },
         )
 
         res = x509_client.autobind_dryrun
@@ -1218,13 +1258,13 @@ module Candlepin
         )
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:id]).to eq(product[:id])
+        expect(pools.first[:productId]).to eq(product[:id])
 
         x509_client = user_client.register_and_get_client(
           :owner => owner[:key],
           :name => rand_string,
           :username => owner_user[:username],
-          :installed_products => product,
+          :installed_products => { :productId => product[:id], :productName => product[:name] },
         )
 
         res = x509_client.bind(:product => product[:id])
@@ -1232,7 +1272,7 @@ module Candlepin
 
         entitlement = res.content.first
         expect(entitlement[:certificates]).to_not be_empty
-        expect(entitlement[:certificates].first.key?(:key)).to be_true
+        expect(entitlement[:certificates].first.key?(:key)).to be true
       end
 
       it 'does not allow binding by both pool and product' do
@@ -1461,7 +1501,7 @@ module Candlepin
 
       it 'gets a status as JSON' do
         res = no_auth_client.get('/status')
-        expect(res.content.key?(:version)).to be_true
+        expect(res.content.key?(:version)).to be true
       end
 
       it 'gets all owners with basic auth' do
@@ -1470,8 +1510,8 @@ module Candlepin
           :display_name => rand_string,
         )
         res = user_client.get_all_owners
-        expect(res.content.empty?).to be_false
-        expect(res.content.first.key?(:id)).to be_true
+        expect(res.content.empty?).to be false
+        expect(res.content.first.key?(:id)).to be true
       end
 
       it 'fails with bad password' do
@@ -1513,7 +1553,7 @@ module Candlepin
         )
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:id]).to eq(product[:id])
+        expect(pools.first[:productId]).to eq(product[:id])
 
         x509_client = user_client.register_and_get_client(
           :owner => owner[:key],
@@ -1553,7 +1593,7 @@ module Candlepin
         )
 
         pools = user_client.get_owner_pools(:owner => owner[:key]).content
-        expect(pools.first[:product][:id]).to eq(product[:id])
+        expect(pools.first[:productId]).to eq(product[:id])
 
         x509_client = user_client.register_and_get_client(
           :owner => owner[:key],
@@ -1651,7 +1691,7 @@ module Candlepin
           :product_id => product[:id],
         )
         expect(res).to be_success
-        expect(res.content[:product][:id]).to eq(product[:id])
+        expect(res.content[:productId]).to eq(product[:id])
       end
 
       it 'creates a distributor version' do

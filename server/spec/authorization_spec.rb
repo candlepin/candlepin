@@ -18,8 +18,8 @@ describe 'Authorization' do
   end
 
   it 'does not return a 401 for the root level, since it is not protected' do
-    lambda { Candlepin.new('random', 'not valid')}.should \
-      be_true
+    lambda { Candlepin.new('random', 'not valid')}.should_not \
+      raise_error
   end
 
   it 'updates consumer\'s last checkin time' do
@@ -36,7 +36,7 @@ describe 'Authorization' do
     consumer = @cp.get_consumer(consumer_cp.uuid)
     last_checkin2 = consumer['lastCheckin']
 
-    (last_checkin2 > last_checkin1).should be_true
+    (last_checkin2 > last_checkin1).should be true
   end
 
   it 'allows trusted consumer clients' do
