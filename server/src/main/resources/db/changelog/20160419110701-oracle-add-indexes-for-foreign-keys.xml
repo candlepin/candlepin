@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20160419110701-1" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="cp2_actkeyprod_fk2" tableName="cp2_activation_key_products" unique="false">
+            <column name="product_uuid"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-2" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="cp2_environment_content_fk2" tableName="cp2_environment_content" unique="false">
+            <column name="environment_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-3" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="cp2_pool_derprov_products_fk2" tableName="cp2_pool_derprov_products" unique="false">
+            <column name="product_uuid"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-4" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="cp2_pool_provided_products_fk2" tableName="cp2_pool_provided_products" unique="false">
+            <column name="product_uuid"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-5" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="cp2_product_attributes_fk1" tableName="cp2_product_attributes" unique="false">
+            <column name="product_uuid"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-6" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_sub_branding_sub_id" tableName="cp_sub_branding" unique="false">
+            <column name="subscription_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-7" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="cp2_product_content_fk2" tableName="cp2_product_content" unique="false">
+            <column name="content_uuid"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-8" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_activation_key_pool_p" tableName="cp_activationkey_pool" unique="false">
+            <column name="pool_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-9" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk16370c54b9410fc" tableName="cp_certificate" unique="false">
+            <column name="serial_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-10" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk5820538861936445" tableName="cp_consumer" unique="false">
+            <column name="keypair_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-11" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk58205388a0b39916" tableName="cp_consumer" unique="false">
+            <column name="consumer_idcert_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-12" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_consumer_consumer_type" tableName="cp_consumer" unique="false">
+            <column name="type_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-13" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_consumer_env" tableName="cp_consumer" unique="false">
+            <column name="environment_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-14" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_consumer_owner" tableName="cp_consumer" unique="false">
+            <column name="owner_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-15" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_cnsmr_capability_cnsmr" tableName="cp_consumer_capability" unique="false">
+            <column name="consumer_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-16" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="cp_content_tags_consumer_fk" tableName="cp_consumer_content_tags" unique="false">
+            <column name="consumer_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-17" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_consumer_guests" tableName="cp_consumer_guests" unique="false">
+            <column name="consumer_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-18" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fkc93d6a8232912b37" tableName="cp_content_modified_products" unique="false">
+            <column name="cp_content_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-19" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_content_override_key" tableName="cp_content_override" unique="false">
+            <column name="key_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-20" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_dist_vrsn_capability" tableName="cp_dist_version_capability" unique="false">
+            <column name="dist_version_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-21" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_entitlement_consumer" tableName="cp_entitlement" unique="false">
+            <column name="consumer_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-22" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_entitlement_owner" tableName="cp_entitlement" unique="false">
+            <column name="owner_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-23" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_entitlement_pool" tableName="cp_entitlement" unique="false">
+            <column name="pool_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-24" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fke76508714b9410fc" tableName="cp_ent_certificate" unique="false">
+            <column name="serial_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-25" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_cert_entitlement" tableName="cp_ent_certificate" unique="false">
+            <column name="entitlement_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-26" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fkf06f6b8872cc5ca5" tableName="cp_export_metadata" unique="false">
+            <column name="owner_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-27" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk456324f64b9410fc" tableName="cp_id_cert" unique="false">
+            <column name="serial_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-28" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk9349dd972cc5ca5" tableName="cp_import_record" unique="false">
+            <column name="owner_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-29" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_imp_upstream_cnsmr_id" tableName="cp_import_record" unique="false">
+            <column name="upstream_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-30" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_import_upstream_cnsmr_type" tableName="cp_import_upstream_consumer" unique="false">
+            <column name="type_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-31" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_installed_product" tableName="cp_installed_products" unique="false">
+            <column name="consumer_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-32" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fkf93e9c616343755c" tableName="cp_owner" unique="false">
+            <column name="parent_owner"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-33" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_upstream_consumer_id" tableName="cp_owner" unique="false">
+            <column name="upstream_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-34" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_permission_owner" tableName="cp_permission" unique="false">
+            <column name="owner_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-35" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_permission_role" tableName="cp_permission" unique="false">
+            <column name="role_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-36" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="cp_pool_fk1" tableName="cp_pool" unique="false">
+            <column name="product_uuid"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-37" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="cp_pool_fk2" tableName="cp_pool" unique="false">
+            <column name="derived_product_uuid"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-38" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="cp_pool_fk3" tableName="cp_pool" unique="false">
+            <column name="cdn_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-39" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="cp_pool_fk4" tableName="cp_pool" unique="false">
+            <column name="certificate_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-40" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_pool_owner" tableName="cp_pool" unique="false">
+            <column name="owner_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-41" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_pool_source_entitlement" tableName="cp_pool" unique="false">
+            <column name="sourceentitlement_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-42" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_pool_id" tableName="cp_pool_attribute" unique="false">
+            <column name="pool_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-43" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_pool_branding_branding_id" tableName="cp_pool_branding" unique="false">
+            <column name="branding_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-44" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_pool_provided_product" tableName="cp_pool_products" unique="false">
+            <column name="pool_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-45" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk54b0f288a0b39916" tableName="cp_upstream_consumer" unique="false">
+            <column name="consumer_idcert_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-46" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_upstream_consumer_type" tableName="cp_upstream_consumer" unique="false">
+            <column name="type_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-47" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_product_attrib_product_id" tableName="cp_product_attribute" unique="false">
+            <column name="product_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-48" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_sub_branding_branding_id" tableName="cp_sub_branding" unique="false">
+            <column name="branding_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-49" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fkce093157574ef825" tableName="cp_product_content" unique="false">
+            <column name="content_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-50" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk9ef75306401fcf77" tableName="cp_product_dependent_products" unique="false">
+            <column name="cp_product_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-51" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_prdct_pool_attrib_pool_id" tableName="cp_product_pool_attribute" unique="false">
+            <column name="pool_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-52" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_role_id" tableName="cp_role_users" unique="false">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-53" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk27d80fafd8564fd9" tableName="cp_subscription" unique="false">
+            <column name="certificate_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-54" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_subscription_owner" tableName="cp_subscription" unique="false">
+            <column name="owner_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-55" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_subscription_product" tableName="cp_subscription" unique="false">
+            <column name="product_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-56" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_sub_derivedprod" tableName="cp_subscription" unique="false">
+            <column name="derivedproduct_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-57" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="fk_product_id" tableName="cp_subscription_products" unique="false">
+            <column name="product_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20160419110701-58" author="vrjain" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="qrtz_triggers_job_name_fkey" tableName="qrtz_triggers" unique="false">
+            <column name="job_group"/>
+            <column name="job_name"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->
