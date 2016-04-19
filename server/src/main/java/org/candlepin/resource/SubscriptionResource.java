@@ -234,6 +234,7 @@ public class SubscriptionResource {
      */
     @POST
     @Produces(MediaType.WILDCARD)
+    @Consumes(MediaType.WILDCARD)
     public Response activateSubscription(
         @QueryParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("email") String email,

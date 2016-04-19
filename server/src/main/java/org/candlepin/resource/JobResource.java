@@ -33,6 +33,7 @@ import org.xnap.commons.i18n.I18n;
 import java.util.Collection;
 import java.util.List;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -167,6 +168,7 @@ public class JobResource {
     @POST
     @Path("scheduler")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     public SchedulerStatus setSchedulerStatus(boolean running) {
         try {
             if (running) {
@@ -248,6 +250,7 @@ public class JobResource {
     @POST
     @Path("/{job_id}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.WILDCARD)
     public JobStatus getStatusAndDeleteIfFinished(
         @PathParam("job_id") @Verify(JobStatus.class) String jobId) {
         JobStatus status = curator.find(jobId);

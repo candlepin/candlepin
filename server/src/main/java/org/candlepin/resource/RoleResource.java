@@ -256,6 +256,7 @@ public class RoleResource {
     @POST
     @Path("/{role_id}/users/{username}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.WILDCARD)
     public Role addUser(@PathParam("role_id") String roleId,
         @PathParam("username") String username) {
         Role role = lookupRole(roleId);

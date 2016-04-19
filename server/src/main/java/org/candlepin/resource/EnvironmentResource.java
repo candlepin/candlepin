@@ -219,6 +219,7 @@ public class EnvironmentResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{env_id}/content")
     public JobDetail promoteContent(
         @PathParam("env_id") @Verify(Environment.class) String envId,

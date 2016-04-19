@@ -817,6 +817,7 @@ public class ConsumerResource {
     // to be set.
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
     @Transactional
     public void updateConsumer(
@@ -1881,6 +1882,7 @@ public class ConsumerResource {
      */
     @PUT
     @Produces(MediaType.WILDCARD)
+    @Consumes(MediaType.WILDCARD)
     @Path("/{consumer_uuid}/certificates")
     public void regenerateEntitlementCertificates(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
@@ -1959,6 +1961,7 @@ public class ConsumerResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.WILDCARD)
     @Path("{consumer_uuid}")
     public Consumer regenerateIdentityCertificates(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {

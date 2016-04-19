@@ -42,6 +42,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -135,6 +136,7 @@ public class GuestIdResource {
      */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     public void updateGuests(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         List<GuestId> guestIds) {
@@ -167,6 +169,7 @@ public class GuestIdResource {
      */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{guest_id}")
     public void updateGuest(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,

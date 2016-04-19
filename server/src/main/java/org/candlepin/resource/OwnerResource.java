@@ -303,6 +303,7 @@ public class OwnerResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     public Owner createOwner(Owner owner) {
         Owner parent = owner.getParentOwner();
         if (parent != null && ownerCurator.find(parent.getId()) == null) {
@@ -397,6 +398,7 @@ public class OwnerResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.WILDCARD)
     @Path("{owner_key}/entitlements")
     public JobDetail healEntire(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
@@ -471,6 +473,7 @@ public class OwnerResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/activation_keys")
     public ActivationKey createActivationKey(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
@@ -561,6 +564,7 @@ public class OwnerResource {
      */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.WILDCARD)
     @Path("{owner_key}/log")
     public Owner setLogLevel(@PathParam("owner_key") String ownerKey,
         @QueryParam("level") @DefaultValue("DEBUG") String level) {
@@ -802,6 +806,7 @@ public class OwnerResource {
      */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Path("{owner_key}")
     @Transactional
     public Owner updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key, Owner owner) {
@@ -906,6 +911,7 @@ public class OwnerResource {
      */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Path("/subscriptions")
     @Deprecated
     public void updateSubscription(Subscription subscription) {
@@ -939,6 +945,7 @@ public class OwnerResource {
      */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.WILDCARD)
     @Path("{owner_key}/subscriptions")
     public JobDetail refreshPools(
         // TODO: Can we verify with autocreate?
