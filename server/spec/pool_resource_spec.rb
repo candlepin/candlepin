@@ -162,7 +162,7 @@ describe 'Pool Resource' do
   end
 
   it 'should allow fetching content delivery network by pool id' do
-    pending("candlepin running in hosted mode") if is_hosted?
+    skip("candlepin running in hosted mode") if is_hosted?
     cdn_label = random_string("test-cdn")
     cdn = create_cdn(cdn_label,
                      "Test CDN",
