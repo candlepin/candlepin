@@ -18,7 +18,6 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.auth.SecurityHole;
-import org.candlepin.model.Owner;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.resteasy.filter.StoreFactory;
 import org.candlepin.resteasy.filter.VerifyAuthorizationFilter;
@@ -96,8 +95,7 @@ public class VerifyAuthorizationFilterFactory implements MethodInterceptor {
                 }
             }
 
-            Owner owner = findOwnerFromParams(argMap, principal, defaultAccess);
-            if (!hasAccess(argMap, principal, owner, defaultAccess)) {
+            if (!hasAccess(argMap, principal, defaultAccess)) {
                 denyAccess(principal, method);
             }
 

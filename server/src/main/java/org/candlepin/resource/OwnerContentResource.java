@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.PoolManager;
@@ -109,7 +110,7 @@ public class OwnerContentResource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Content> list(@PathParam("owner_key") String ownerKey) {
+    public List<Content> list(@Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
         Owner owner = this.getOwnerByKey(ownerKey);
         return contentCurator.listByOwner(owner);
     }
@@ -142,7 +143,8 @@ public class OwnerContentResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")
-    public Content getContent(@PathParam("owner_key") String ownerKey,
+    public Content getContent(
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
         @PathParam("content_id") String contentId) {
 
         Owner owner = this.getOwnerByKey(ownerKey);

@@ -73,13 +73,14 @@ public class StoreFactory {
         }
     }
 
-    public EntityStore<? extends Persisted> getFor(Class<?> clazz) {
-        if (storeMap.containsKey(clazz)) {
-            return storeMap.get(clazz);
-        }
-        else {
+    public EntityStore<? extends Persisted> getFor(Class<? extends Persisted> clazz) {
+        EntityStore<? extends Persisted> store = this.storeMap.get(clazz);
+
+        if (store == null) {
             throw new IllegalArgumentException("EntityStore for type '" + clazz + "' not found");
         }
+
+        return store;
     }
 
     public boolean canValidate(Class<?> clazz) {
@@ -90,13 +91,18 @@ public class StoreFactory {
         @Inject private OwnerCurator ownerCurator;
 
         @Override
-        public Owner lookup(String key, Owner owner) {
+        public Owner lookup(String key) {
             return this.ownerCurator.lookupByKey(key);
         }
 
         @Override
-        public List<Owner> lookup(Collection<String> keys, Owner owner) {
+        public List<Owner> lookup(Collection<String> keys) {
             return this.ownerCurator.lookupByKeys(keys);
+        }
+
+        @Override
+        public Owner getOwner(Owner entity) {
+            return entity;
         }
     }
 
@@ -104,13 +110,18 @@ public class StoreFactory {
         @Inject private EnvironmentCurator envCurator;
 
         @Override
-        public Environment lookup(String key, Owner owner) {
+        public Environment lookup(String key) {
             return envCurator.secureFind(key);
         }
 
         @Override
-        public List<Environment> lookup(Collection<String> keys, Owner owner) {
+        public List<Environment> lookup(Collection<String> keys) {
             return envCurator.listAllByIds(keys);
+        }
+
+        @Override
+        public Owner getOwner(Environment entity) {
+            return entity.getOwner();
         }
     }
 
@@ -120,7 +131,7 @@ public class StoreFactory {
         @Inject private Provider<I18n> i18nProvider;
 
         @Override
-        public Consumer lookup(String key, Owner owner) {
+        public Consumer lookup(String key) {
             if (deletedConsumerCurator.countByConsumerUuid(key) > 0) {
                 throw new GoneException(i18nProvider.get().tr("Unit {0} has been deleted", key), key);
             }
@@ -129,11 +140,16 @@ public class StoreFactory {
         }
 
         @Override
-        public List<Consumer> lookup(Collection<String> keys, Owner owner) {
+        public List<Consumer> lookup(Collection<String> keys) {
             // Do not look for deleted consumers because we do not want to throw
             // an exception and reject the whole request just because one of
             // the requested items is deleted.
             return consumerCurator.findByUuids(keys);
+        }
+
+        @Override
+        public Owner getOwner(Consumer entity) {
+            return entity.getOwner();
         }
     }
 
@@ -141,13 +157,18 @@ public class StoreFactory {
         @Inject private EntitlementCurator entitlementCurator;
 
         @Override
-        public Entitlement lookup(String key, Owner owner) {
+        public Entitlement lookup(String key) {
             return entitlementCurator.secureFind(key);
         }
 
         @Override
-        public List<Entitlement> lookup(Collection<String> keys, Owner owner) {
+        public List<Entitlement> lookup(Collection<String> keys) {
             return entitlementCurator.listAllByIds(keys);
+        }
+
+        @Override
+        public Owner getOwner(Entitlement entity) {
+            return entity.getOwner();
         }
     }
 
@@ -155,13 +176,18 @@ public class StoreFactory {
         @Inject private PoolCurator poolCurator;
 
         @Override
-        public Pool lookup(String key, Owner owner) {
+        public Pool lookup(String key) {
             return poolCurator.secureFind(key);
         }
 
         @Override
-        public List<Pool> lookup(Collection<String> keys, Owner owner) {
+        public List<Pool> lookup(Collection<String> keys) {
             return poolCurator.listAllByIds(keys);
+        }
+
+        @Override
+        public Owner getOwner(Pool entity) {
+            return entity.getOwner();
         }
     }
 
@@ -169,13 +195,18 @@ public class StoreFactory {
         @Inject private ActivationKeyCurator activationKeyCurator;
 
         @Override
-        public ActivationKey lookup(String key, Owner owner) {
+        public ActivationKey lookup(String key) {
             return activationKeyCurator.secureFind(key);
         }
 
         @Override
-        public List<ActivationKey> lookup(Collection<String> keys, Owner owner) {
+        public List<ActivationKey> lookup(Collection<String> keys) {
             return activationKeyCurator.listAllByIds(keys);
+        }
+
+        @Override
+        public Owner getOwner(ActivationKey entity) {
+            return entity.getOwner();
         }
     }
 
@@ -183,13 +214,18 @@ public class StoreFactory {
         @Inject private ProductCurator productCurator;
 
         @Override
-        public Product lookup(String key, Owner owner) {
-            return owner != null ? productCurator.lookupById(owner.getId(), key) : null;
+        public Product lookup(String key) {
+            return productCurator.lookupByUuid(key);
         }
 
         @Override
-        public List<Product> lookup(Collection<String> keys, Owner owner) {
-            return productCurator.listAllByIds(owner, keys);
+        public List<Product> lookup(Collection<String> keys) {
+            return productCurator.listAllByUuids(keys);
+        }
+
+        @Override
+        public Owner getOwner(Product entity) {
+            return null;
         }
     }
 
@@ -197,19 +233,24 @@ public class StoreFactory {
         @Inject private JobCurator jobCurator;
 
         @Override
-        public JobStatus lookup(String jobId, Owner owner) {
+        public JobStatus lookup(String jobId) {
             return jobCurator.find(jobId);
         }
 
         @Override
-        public List<JobStatus> lookup(Collection<String> jobIds, Owner owner) {
+        public List<JobStatus> lookup(Collection<String> jobIds) {
             return jobCurator.listAllByIds(jobIds);
+        }
+
+        @Override
+        public Owner getOwner(JobStatus entity) {
+            return null;
         }
     }
 
     private static class UserStore implements EntityStore<User> {
         @Override
-        public User lookup(String key, Owner owner) {
+        public User lookup(String key) {
             /* WARNING: Semi-risky business here, we need a user object for the security
              * code to validate, but in this area we seem to only need the username.
              */
@@ -217,13 +258,18 @@ public class StoreFactory {
         }
 
         @Override
-        public List<User> lookup(Collection<String> keys, Owner owner) {
+        public List<User> lookup(Collection<String> keys) {
             List<User> users = new ArrayList<User>();
             for (String username : keys) {
                 users.add(new User(username, null));
             }
 
             return users;
+        }
+
+        @Override
+        public Owner getOwner(User entity) {
+            return null;
         }
     }
 }

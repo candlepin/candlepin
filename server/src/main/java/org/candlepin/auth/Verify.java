@@ -14,6 +14,8 @@
  */
 package org.candlepin.auth;
 
+import org.candlepin.model.Persisted;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -28,7 +30,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.PARAMETER})
 @Documented
 public @interface Verify {
-    Class<?> value();
+    Class<? extends Persisted> value();
     Access require() default Access.NONE;
     boolean nullable() default false;
     SubResource subResource() default SubResource.NONE;

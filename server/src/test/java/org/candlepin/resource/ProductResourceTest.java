@@ -125,11 +125,11 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
         Product expected = (Product) product.clone();
 
-        Product actual = productResource.getProduct(product.getId());
+        Product actual = productResource.getProduct(product.getUuid());
         assertEquals(actual, expected);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void getProductCertificate() {
         Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
         Product p = productCurator.create(createProduct(owner));
@@ -143,7 +143,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         cert.setProduct(p);
         productCertificateCurator.create(cert);
 
-        ProductCertificate cert1 = productResource.getProductCertificate(p.getId());
+        ProductCertificate cert1 = productResource.getProductCertificate(p.getUuid());
         assertEquals(cert, cert1);
     }
 
