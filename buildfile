@@ -38,7 +38,7 @@ RESTEASY = [group('jaxrs-api',
                   #
                   # Note that we can go no higher.  Later versions require
                   # servlet spec 3.0 which Tomcat 6 does not support
-                  :version => '3.0.6.Final'),
+                  :version => '3.0.10.Final'),
             'org.scannotation:scannotation:jar:1.0.3',
             'org.apache.httpcomponents:httpclient:jar:4.2.1',
             'org.apache.james:apache-mime4j:jar:0.6',
