@@ -546,6 +546,36 @@ module Candlepin
         expect(result.ok_content).to have_key(:state)
       end
 
+      it 'can time out on a refresh pools' do
+        skip "This test is irrelevant in standalone" unless hosted_mode?
+
+        prod_id = rand_string
+        user_client.create_product(
+          :product_id => prod_id,
+          :name => rand_string,
+          :attributes => { :arch => 'x86_64' },
+          :owner => owner[:key],
+        )
+
+        user_client.create_pool(
+          :owner => owner[:key],
+          :product_id => prod_id,
+        )
+
+        pools = user_client.get_owner_pools(:owner => owner[:key]).content
+        expect(pools.first[:productAttributes]).to_not be_empty
+
+        user_client.update_product(
+          :product_id => prod_id,
+          :attributes => {},
+          :owner => owner[:key],
+        )
+
+        expect do
+          user_client.refresh_pools_for_product(:product_ids => prod_id, :timeout => 0.1)
+        end.to raise_error(RuntimeError, /Timeout hit/)
+      end
+
       it 'refreshes pools for a product' do
         skip "This test is irrelevant in standalone" unless hosted_mode?
 

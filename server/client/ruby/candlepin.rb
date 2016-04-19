@@ -397,23 +397,25 @@ module Candlepin
       def wait_for_job(opts = {})
         defaults = {
           :job_id => nil,
+          :timeout => 60,
         }
         opts = verify_and_merge(opts, defaults)
 
+        timeout_limit = Time.now + opts[:timeout]
         res = get_job(:job_id => opts[:job_id])
-        loop do
+        while Time.now <= timeout_limit
           job = res.ok_content
           case job[:state]
           when "CREATED", "PENDING", "WAITING", "RUNNING"
             sleep 1
             res = get_job(:job_id => opts[:job_id])
           when "FINISHED", "CANCELED", "FAILED"
-            break
+            return res
           else
             raise RuntimeError.new("Unknown job state returned.")
           end
         end
-        res
+        raise RuntimeError.new("Timeout hit.  Last response was #{res}")
       end
     end
 
@@ -1600,12 +1602,17 @@ module Candlepin
 
       # Same as refresh_pools_async but just block before returning
       def refresh_pools(opts = {})
-        res = refresh_pools_async(opts)
+        defaults = {
+          :timeout => 60,
+        }
+        res = refresh_pools_async(opts.except(:timeout))
+        opts = defaults.deep_merge(opts)
+
         # In standalone mode, refresh_pools does nothing
         return if res.status_code == 204
 
         job = res.ok_content
-        wait_for_job(:job_id => job[:id])
+        wait_for_job(:job_id => job[:id], :timeout => opts[:timeout])
       end
 
       def create_activation_key(opts = {})
@@ -2197,16 +2204,23 @@ module Candlepin
 
       # Same as async call but just block before returning
       def refresh_pools_for_product(opts = {})
-        res = refresh_pools_for_product_async(opts)
+        defaults = {
+          :timeout => 60,
+        }
+        res = refresh_pools_for_product_async(opts.except(:timeout))
+        opts = defaults.deep_merge(opts)
+
         # In standalone mode, refresh_pools does nothing
         return if res.status_code == 204
 
         job = res.ok_content
         responses = []
         job.each do |j|
-          responses << wait_for_job(:job_id => j[:id])
+          responses << wait_for_job(
+            :job_id => j[:id],
+            :timeout => opts[:timeout])
         end
-        # Kind of weird that we have to return an arry
+        # Kind of weird that we have to return an array
         # but I don't have any better ideas at the moment
         responses
       end
