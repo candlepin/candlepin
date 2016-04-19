@@ -156,6 +156,7 @@ public class ProductResource {
      * <p>
      * Returns either the new created Product or the Product that already existed.
      *
+     * @deprecated Use per-org version
      * @param product
      * @return a Product object
      * @httpcode 200
@@ -163,6 +164,7 @@ public class ProductResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
+    @Deprecated
     public Product createProduct(Product product) {
         throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic product write operations are not supported."
@@ -172,6 +174,7 @@ public class ProductResource {
     /**
      * Updates a Product
      *
+     * @deprecated Use per-org version
      * @return a Product object
      * @httpcode 400
      * @httpcode 200
@@ -179,7 +182,8 @@ public class ProductResource {
     @PUT
     @Path("/{product_uuid}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.WILDCARD)
+    @Deprecated
     public Product updateProduct(
         @PathParam("product_uuid") String productUuid,
         Product product) {
@@ -193,6 +197,7 @@ public class ProductResource {
      * <p>
      * Batch mode
      *
+     * @deprecated Use per-org version
      * @return a Product object
      * @httpcode 200
      */
@@ -200,6 +205,7 @@ public class ProductResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}/batch_content")
+    @Deprecated
     public Product addBatchContent(
         @PathParam("product_uuid") String productUuid,
         Map<String, Boolean> contentMap) {
@@ -214,6 +220,7 @@ public class ProductResource {
      * <p>
      * Single mode
      *
+     * @deprecated Use per-org version
      * @return a Product object
      * @httpcode 200
      */
@@ -221,6 +228,7 @@ public class ProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
     @Path("/{product_uuid}/content/{content_id}")
+    @Deprecated
     public Product addContent(
         @PathParam("product_uuid") String productUuid,
         @PathParam("content_id") String contentId,
@@ -234,11 +242,13 @@ public class ProductResource {
     /**
      * Removes Content from a Product
      *
+     * @deprecated Use per-org version
      * @httpcode 200
      */
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}/content/{content_id}")
+    @Deprecated
     public void removeContent(
         @PathParam("product_uuid") String productUuid,
         @PathParam("content_id") String contentId) {
@@ -251,6 +261,7 @@ public class ProductResource {
     /**
      * Removes a Product
      *
+     * @deprecated Use per-org version
      * @httpcode 400
      * @httpcode 404
      * @httpcode 200
@@ -258,6 +269,7 @@ public class ProductResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}")
+    @Deprecated
     public void deleteProduct(
         @PathParam("product_uuid") String productUuid) {
 

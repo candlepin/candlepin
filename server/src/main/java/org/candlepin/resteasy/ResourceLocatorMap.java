@@ -214,12 +214,15 @@ public class ResourceLocatorMap implements Map<Method, ResourceLocator> {
 
             if (m.isAnnotationPresent(GET.class) ||
                 m.isAnnotationPresent(HEAD.class) ||
-                m.isAnnotationPresent(DELETE.class)) {
+                m.isAnnotationPresent(DELETE.class) ||
+                m.isAnnotationPresent(Deprecated.class)) {
                 /* Technically GET, HEAD, and DELETE are allowed to have bodies (and therefore would
                  * need a Consumes annotation, but the HTTP 1.1 spec states in section 4.3 that any
                  * such body should be ignored.  See http://stackoverflow.com/a/983458/6124862
                  *
                  * Therefore, we won't print warnings on unannotated GET, HEAD, and DELETE methods.
+                 *
+                 * Deprecated methods are not expected to be updated.
                  */
                 continue;
             }
