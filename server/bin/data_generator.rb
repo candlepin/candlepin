@@ -771,7 +771,7 @@ class CandlepinDataGenerator
   end
 
   def generate_activation_keys(count)
-    # TODO: May not be necessary, as our current import_products doesn't do this.
+    # TODO: May not be necessary, as our current import_test_data doesn't do this.
   end
 end
 

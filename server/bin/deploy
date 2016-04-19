@@ -88,7 +88,9 @@ update_keystore() {
 
 upload_products() {
   if [ "$TESTDATA" = "1" ]; then
-      $SELF_DIR/import_products.rb $SELF_DIR/test_data.json
+      $SELF_DIR/import_test_data.rb $SELF_DIR/test_data.json
+  elif [ "$TESTDATA" = "MIN" ]; then
+      $SELF_DIR/import_test_data.rb $SELF_DIR/min_test_data.json
   fi
 }
 
@@ -132,6 +134,7 @@ OPTIONS:
   -f          force cert regeneration
   -g          generate database
   -t          import test data
+  -T          import minimal test data, some owners, users, and roles
   -H          include test resources for hosted mode
   -o          use Oracle
   -l          use Logdriver
@@ -183,12 +186,13 @@ init
 
 DBUSER="candlepin"
 
-while getopts ":fgtHolmavd:" opt; do
+while getopts ":fgtTHolmavd:" opt; do
     case $opt in
         f  ) FORCECERT="1" ;;
         g  ) GENDB="1";;
         H  ) HOSTEDTEST="hostedtest";;
         t  ) TESTDATA="1";;
+        T  ) TESTDATA="MIN";;
         o  ) USE_ORACLE="1";;
         l  ) LOGDRIVER="logdriver";;
         m  ) USE_MYSQL="1";;
