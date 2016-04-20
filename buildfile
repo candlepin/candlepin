@@ -35,7 +35,7 @@ RESTEASY = [group('jaxrs-api',
                   # XXX: this version requires us to use
                   # ContentTypeHackFilter.java when updating,
                   # please check if its still needed, and remove if not.
-                  :version => '2.3.7.Final'),
+                  :version => '2.3.10.Final'),
             'org.scannotation:scannotation:jar:1.0.2',
             'org.apache.httpcomponents:httpclient:jar:4.1.2',
             'org.apache.james:apache-mime4j:jar:0.6',
@@ -545,5 +545,11 @@ define "candlepin" do
   end
 end
 
+desc 'Run all the linters'
+task :lint => [:checkstyle, :rpmlint]
+
 desc 'Make sure eventhing is working as it should'
-task :check_all => [:clean, :checkstyle, :rpmlint, :test]
+task :check_all => [:clean, :lint, :validate_translation, :test]
+
+desc 'Miscellaneous validation tasks to be run on jenkins with every pull request'
+task :jenkins => [:validate_translation]
