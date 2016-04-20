@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.4
+Version: 0.9.54.5
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -215,6 +215,13 @@ fi
 
 #raw
 %changelog
+* Wed Apr 20 2016 Alex Wood <awood@redhat.com> 0.9.54.5-1
+- Upgrade to RestEasy 2.3.9. (awood@redhat.com)
+- Update ueber cert test for 0.9.54 (csnyder@redhat.com)
+- 1327220: Limit IN queries to no more than 500 {hypervisor, guest}Ids
+  (csnyder@redhat.com)
+- Update logrotate.conf files (wpoteat@redhat.com)
+
 * Thu Mar 17 2016 Alex Wood <awood@redhat.com> 0.9.54.4-1
 - 1242310: Do not issue ueber certs that expire after 2050. (awood@redhat.com)
 
