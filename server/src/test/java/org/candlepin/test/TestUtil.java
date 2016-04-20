@@ -50,6 +50,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -68,6 +69,14 @@ public class TestUtil {
 
     public static Owner createOwner() {
         return new Owner("Test Owner " + randomInt());
+    }
+
+    public static Owner createOwner(String key) {
+        return new Owner(key);
+    }
+
+    public static Owner createOwner(String key, String name) {
+        return new Owner(key, name);
     }
 
     public static Consumer createConsumer(ConsumerType type, Owner owner) {
@@ -125,12 +134,14 @@ public class TestUtil {
     }
 
     public static Content createContent(Owner owner, String id) {
-        String name = "test-content-" + randomInt();
+        return createContent(owner, id, "test-content-" + randomInt());
+    }
 
+    public static Content createContent(Owner owner, String id, String name) {
         return new Content(
             owner,
             name,
-            name,
+            id,
             name,
             "test-type",
             "test-vendor",
@@ -192,6 +203,10 @@ public class TestUtil {
         return sub;
     }
 
+    public static Pool createPool(Owner owner) {
+        return createPool(owner, createProduct(owner));
+    }
+
     public static Pool createPool(Product product) {
         return createPool(new Owner("Test Owner " + randomInt()), product);
     }
@@ -201,18 +216,23 @@ public class TestUtil {
     }
 
     public static Pool createPool(Owner owner, Product product, int quantity) {
-        return createPool(owner, product, new HashSet<Product>(), quantity);
+        return createPool(owner, product, null, quantity);
     }
 
-    public static Pool createPool(Owner owner, Product product, Set<Product> providedProducts,
+    public static Pool createPool(Owner owner, Product product, Collection<Product> providedProducts,
         int quantity) {
 
         String random = String.valueOf(randomInt());
 
+        Set<Product> provided = new HashSet<Product>();
+        if (providedProducts != null) {
+            provided.addAll(providedProducts);
+        }
+
         Pool pool = new Pool(
             owner,
             product,
-            providedProducts,
+            provided,
             Long.valueOf(quantity),
             TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 10, 11, 30),
@@ -226,12 +246,17 @@ public class TestUtil {
         return pool;
     }
 
-    public static Pool createPool(Owner owner, Product product, Set<Product> providedProducts,
-        Product derivedProduct, Set<Product> subProvidedProducts, int quantity) {
+    public static Pool createPool(Owner owner, Product product, Collection<Product> providedProducts,
+        Product derivedProduct, Collection<Product> subProvidedProducts, int quantity) {
 
         Pool pool = createPool(owner, product, providedProducts, quantity);
+        Set<Product> subProvided = new HashSet<Product>();
+        if (subProvidedProducts != null) {
+            subProvided.addAll(subProvidedProducts);
+        }
+
         pool.setDerivedProduct(derivedProduct);
-        pool.setDerivedProvidedProducts(subProvidedProducts);
+        pool.setDerivedProvidedProducts(subProvided);
 
         return pool;
     }
@@ -310,17 +335,20 @@ public class TestUtil {
         return idCert;
     }
 
-    public static Entitlement createEntitlement(Owner owner, Consumer consumer,
-        Pool pool, EntitlementCertificate cert) {
+    public static Entitlement createEntitlement(Owner owner, Consumer consumer, Pool pool,
+        EntitlementCertificate cert) {
+
         Entitlement toReturn = new Entitlement();
         toReturn.setOwner(owner);
         toReturn.setPool(pool);
-        toReturn.setOwner(owner);
+
         consumer.addEntitlement(toReturn);
+
         if (cert != null) {
             cert.setEntitlement(toReturn);
             toReturn.getCertificates().add(cert);
         }
+
         return toReturn;
     }
 

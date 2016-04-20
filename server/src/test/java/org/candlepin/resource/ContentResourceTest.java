@@ -62,9 +62,8 @@ public class ContentResourceTest {
         oc = mock(OwnerCurator.class);
         productCurator = mock(ProductCurator.class);
 
-        cr = new ContentResource(
-            cc, i18n, new DefaultUniqueIdGenerator(), envContentCurator, poolManager, productCurator, oc
-        );
+        cr = new ContentResource(cc, i18n, new DefaultUniqueIdGenerator(), envContentCurator,
+            poolManager, productCurator, oc);
     }
 
     @Test
@@ -149,14 +148,14 @@ public class ContentResourceTest {
         when(content.getId()).thenReturn(contentId);
 
         when(cc.find(any(String.class))).thenReturn(content);
-        when(cc.updateContent(any(Content.class), eq(owner))).thenReturn(content);
+        when(cc.merge(any(Content.class))).thenReturn(content);
         when(productCurator.getProductsWithContent(eq(owner), eq(Arrays.asList(contentId))))
             .thenReturn(Arrays.asList(product));
 
         cr.updateContent(contentId, content);
 
         verify(cc, never()).find(eq(contentId));
-        verify(cc, never()).updateContent(eq(content), eq(owner));
+        verify(cc, never()).merge(eq(content));
         verify(productCurator, never()).getProductsWithContent(owner, Arrays.asList(contentId));
     }
 

@@ -559,4 +559,64 @@
             referencedColumnNames="id"
         />
     </changeSet>
+
+    <changeSet id="20150210094558-42" author="crog">
+        <addForeignKeyConstraint constraintName="cp2_owner_products_fk1"
+            baseTableName="cp2_owner_products"
+            baseColumnNames="owner_id"
+            referencedTableName="cp_owner"
+            referencedColumnNames="id"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-43" author="crog">
+        <addForeignKeyConstraint constraintName="cp2_owner_products_fk2"
+            baseTableName="cp2_owner_products"
+            baseColumnNames="product_uuid"
+            referencedTableName="cp2_products"
+            referencedColumnNames="uuid"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-44" author="crog">
+        <addForeignKeyConstraint constraintName="cp2_owner_content_fk1"
+            baseTableName="cp2_owner_content"
+            baseColumnNames="owner_id"
+            referencedTableName="cp_owner"
+            referencedColumnNames="id"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-45" author="crog">
+        <addForeignKeyConstraint constraintName="cp2_owner_content_fk2"
+            baseTableName="cp2_owner_content"
+            baseColumnNames="content_uuid"
+            referencedTableName="cp2_content"
+            referencedColumnNames="uuid"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-46" author="crog" dbms="oracle">
+        <createIndex indexName="cp2_owner_products_idx1" tableName="cp2_owner_products" unique="false">
+            <column name="owner_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20150210094558-47" author="crog" dbms="oracle">
+        <createIndex indexName="cp2_owner_products_idx2" tableName="cp2_owner_products" unique="false">
+            <column name="product_uuid"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20150210094558-48" author="crog" dbms="oracle">
+        <createIndex indexName="cp2_owner_content_idx1" tableName="cp2_owner_content" unique="false">
+            <column name="owner_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20150210094558-49" author="crog" dbms="oracle">
+        <createIndex indexName="cp2_owner_content_idx2" tableName="cp2_owner_content" unique="false">
+            <column name="content_uuid"/>
+        </createIndex>
+    </changeSet>
 </databaseChangeLog>

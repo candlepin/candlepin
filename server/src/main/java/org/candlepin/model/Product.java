@@ -747,14 +747,14 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  The content to add to this product
      *
      * @return
-     *  a reference to this Product instance
+     *  true if the content is added successfully; false otherwise
      */
-    public Product addContent(Content content) {
+    public boolean addContent(Content content) {
         return this.addContent(content, false);
     }
 
     /**
-     * Adds the specified content to this product.
+     * Adds the specified content to this product, if it doesn't already exist.
      *
      * @param content
      *  The content to add to this product
@@ -763,17 +763,19 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  Whether or not the content should be added as an enabled or disabled source
      *
      * @return
-     *  a reference to this Product instance
+     *  true if the content is added successfully; false otherwise
      */
-    public Product addContent(Content content, boolean enabled) {
-        this.addProductContent(new ProductContent(this, content, enabled));
-        return this;
+    public boolean addContent(Content content, boolean enabled) {
+        return this.addProductContent(new ProductContent(this, content, enabled));
     }
 
     /**
      * @param productContent the productContent to set
+     *
+     * @return
+     *  a reference to this Product instance
      */
-    public void setProductContent(Collection<ProductContent> productContent) {
+    public Product setProductContent(Collection<ProductContent> productContent) {
         if (this.productContent == null) {
             this.productContent = new LinkedList<ProductContent>();
         }
@@ -785,6 +787,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
                 this.addProductContent(pc);
             }
         }
+
+        return this;
     }
 
     /**
@@ -794,15 +798,39 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         return productContent;
     }
 
-    public void addProductContent(ProductContent content) {
+    /**
+     * Adds the specified ProductContent to this product. If the content has already been added,
+     * this method does nothing.
+     *
+     * @param content
+     *  The ProductContent instance to add to this product
+     *
+     * @return
+     *  true if the ProductContent is added successfully; false otherwise
+     */
+    public boolean addProductContent(ProductContent content) {
         if (this.productContent == null) {
             this.productContent = new LinkedList<ProductContent>();
         }
 
         if (content != null) {
-            content.setProduct(this);
-            this.productContent.add(content);
+            boolean found = false;
+            for (ProductContent pc : this.productContent) {
+                if (pc.getContent().equals(content.getContent())) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                content.setProduct(this);
+                this.productContent.add(content);
+
+                return true;
+            }
         }
+
+        return false;
     }
 
     public void setContent(Set<Content> content) {
@@ -814,7 +842,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
         if (content != null) {
             for (Content newContent : content) {
-                this.productContent.add(new ProductContent(this, newContent, false));
+                this.addContent(newContent, false);
             }
         }
     }

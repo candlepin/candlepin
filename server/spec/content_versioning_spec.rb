@@ -22,7 +22,7 @@ describe 'Content Versioning' do
     content1 = @cp.create_content(owner1["key"], name, id, label, type, vendor)
     content2 = @cp.create_content(owner2["key"], name, id, label, type, vendor)
 
-    content1["uuid"].should == content2["uuid"]
+    content1["uuid"].should eq(content2["uuid"])
   end
 
   it "creates two distinct content instances when details differ" do
@@ -39,7 +39,7 @@ describe 'Content Versioning' do
     content1 = @cp.create_content(owner1["key"], name, id, label, type, vendor)
     content2 = @cp.create_content(owner2["key"], name + "-2", id, label, type, vendor)
 
-    content1["uuid"].should_not == content2["uuid"]
+    content1["uuid"].should_not eq(content2["uuid"])
   end
 
   it "creates a new content instance when an org updates a shared instance" do
@@ -58,24 +58,24 @@ describe 'Content Versioning' do
     content2 = @cp.create_content(owner2["key"], name, id, label, type, vendor)
     content3 = @cp.create_content(owner3["key"], name, id, label, type, vendor)
 
-    content1["uuid"].should == content2["uuid"]
-    content1["uuid"].should == content3["uuid"]
+    content1["uuid"].should eq(content2["uuid"])
+    content1["uuid"].should eq(content3["uuid"])
 
     content4 = @cp.update_content(owner2["key"], id, { :name => "new content name" })
-    content4["uuid"].should_not == content1["uuid"]
+    content4["uuid"].should_not eq(content1["uuid"])
 
     content = @cp.list_content(owner2["key"])
-    content.size.should == 1
-    content[0]["uuid"].should == content4["uuid"]
-    content[0]["uuid"].should_not == content2["uuid"]
+    content.size.should eq(1)
+    content[0]["uuid"].should eq(content4["uuid"])
+    content[0]["uuid"].should_not eq(content2["uuid"])
 
     content = @cp.list_content(owner1["key"])
-    content.size.should == 1
-    content[0]["uuid"].should == content1["uuid"]
+    content.size.should eq(1)
+    content[0]["uuid"].should eq(content1["uuid"])
 
     content = @cp.list_content(owner3["key"])
-    content.size.should == 1
-    content[0]["uuid"].should == content3["uuid"]
+    content.size.should eq(1)
+    content[0]["uuid"].should eq(content3["uuid"])
   end
 
   it "converges content when a given version already exists" do
@@ -93,25 +93,25 @@ describe 'Content Versioning' do
     content1 = @cp.create_content(owner1["key"], name, id, label, type, vendor)
     content2 = @cp.create_content(owner2["key"], name, id, label, type, vendor)
     content3 = @cp.create_content(owner3["key"], name + "-2", id, label, type, vendor)
-    content1["uuid"].should == content2["uuid"]
-    content2["uuid"].should_not == content3["uuid"]
+    content1["uuid"].should eq(content2["uuid"])
+    content2["uuid"].should_not eq(content3["uuid"])
 
     content4 = @cp.update_content(owner3["key"], id, { :name => name })
 
-    content4["uuid"].should == content1["uuid"]
+    content4["uuid"].should eq(content1["uuid"])
 
     content = @cp.list_content(owner1["key"])
-    content.size.should == 1
-    content[0]["uuid"].should == content1["uuid"]
+    content.size.should eq(1)
+    content[0]["uuid"].should eq(content1["uuid"])
 
     content = @cp.list_content(owner2["key"])
-    content.size.should == 1
-    content[0]["uuid"].should == content2["uuid"]
+    content.size.should eq(1)
+    content[0]["uuid"].should eq(content2["uuid"])
 
     content = @cp.list_content(owner3["key"])
-    content.size.should == 1
-    content[0]["uuid"].should == content1["uuid"]
-    content[0]["uuid"].should_not == content3["uuid"]
+    content.size.should eq(1)
+    content[0]["uuid"].should eq(content1["uuid"])
+    content[0]["uuid"].should_not eq(content3["uuid"])
   end
 
   it "deletes content without affecting other orgs" do
@@ -128,22 +128,20 @@ describe 'Content Versioning' do
     content1 = @cp.create_content(owner1["key"], name, id, label, type, vendor)
     content2 = @cp.create_content(owner2["key"], name, id, label, type, vendor)
 
-    content1["uuid"].should == content2["uuid"]
+    content1["uuid"].should eq(content2["uuid"])
 
     @cp.delete_content(owner1["key"], id)
 
     content = @cp.list_content(owner1["key"])
-    content.size.should == 0
+    content.size.should eq(0)
 
     lambda do
       @cp.get_content(owner1["key"], id)
     end.should raise_exception(RestClient::ResourceNotFound)
 
     content = @cp.list_content(owner2["key"])
-    content.size.should == 1
-    content[0]["uuid"].should == content2["uuid"]
+    content.size.should eq(1)
+    content[0]["uuid"].should eq(content2["uuid"])
   end
 
-
 end
-
