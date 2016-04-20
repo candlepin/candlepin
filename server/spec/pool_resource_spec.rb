@@ -179,8 +179,9 @@ describe 'Pool Resource' do
     result_cdn = @cp.get_cdn_from_pool(pool['id'])
     result_cdn.name.should == cdn.name
     result_cdn.url.should == cdn.url
-    @cp.delete_owner(@import_owner['key'])
-    @cp_export.cleanup
+    #@cp.delete_owner(@import_owner['key'])
+    #@cp_export.cleanup
+    puts pool.id
   end
 
 end
