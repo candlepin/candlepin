@@ -184,8 +184,13 @@ public class HypervisorResource {
                 else {
                     consumer = hypervisorConsumersMap.get(hypervisorId);
                 }
-
+                List<GuestId> startGuests =  consumer.getGuestIds();
                 boolean guestIdsUpdated = addGuestIds(consumer, hostEntry.getValue(), guestConsumersMap);
+
+                if (guestIdsUpdated) {
+                    consumerResource.checkForGuestsMigration(consumer, startGuests,
+                        consumer.getGuestIds(), guestConsumersMap);
+                }
 
                 // Populate the result with the processed consumer.
                 if (hostConsumerCreated) {

@@ -501,6 +501,7 @@ public class ConsumerResourceUpdateTest {
 
         when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
             thenReturn(mockVirtConsumerMap("Guest 1", guest1));
+
         // Ensure that the guests host is the existing.
 
         Consumer existingMigratedTo = createConsumerWithGuests("Guest 1");
@@ -564,7 +565,6 @@ public class ConsumerResourceUpdateTest {
         // Ensure that the guest was already reported by same host.
         when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
             thenReturn(mockVirtConsumerMap("Guest 1", guest1));
-
         this.resource.updateConsumer(host.getUuid(), updatedHost);
         verify(poolManager, never()).revokeEntitlement(eq(entitlement));
     }
@@ -680,7 +680,6 @@ public class ConsumerResourceUpdateTest {
 
         when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
-
         this.resource.updateConsumer(existing.getUuid(), updated);
         assertEquals(1, existing.getFacts().size());
         assertEquals(expectedFactValue, existing.getFact(expectedFactName));
