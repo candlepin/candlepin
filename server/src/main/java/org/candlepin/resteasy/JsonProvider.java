@@ -55,11 +55,16 @@ import javax.ws.rs.ext.Provider;
 @Consumes({"application/*+json", "text/json"})
 public class JsonProvider extends JacksonJsonProvider {
 
+    private static JsonProvider registeredInstance;
+
     public static void register(boolean indentJson) {
-        ResteasyProviderFactory rpf = ResteasyProviderFactory.getInstance();
-        JsonProvider jsonprovider = new JsonProvider(indentJson);
-        rpf.registerProviderInstance(jsonprovider);
-        RegisterBuiltin.register(rpf);
+        if (registeredInstance == null) {
+            registeredInstance = new JsonProvider(indentJson);
+
+            ResteasyProviderFactory rpf = ResteasyProviderFactory.getInstance();
+            rpf.registerProviderInstance(registeredInstance);
+            RegisterBuiltin.register(rpf);
+        }
     }
 
     @Inject

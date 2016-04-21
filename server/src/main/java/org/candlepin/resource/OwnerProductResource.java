@@ -32,12 +32,12 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.ResultIterator;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
+import org.candlepin.resteasy.IterableStreamingOutputFactory;
 import org.candlepin.resteasy.JsonProvider;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -91,6 +91,7 @@ public class OwnerProductResource {
 
     private Configuration config;
     private I18n i18n;
+    private IterableStreamingOutputFactory isoFactory;
     private OwnerContentCurator ownerContentCurator;
     private OwnerCurator ownerCurator;
     private OwnerProductCurator ownerProductCurator;
@@ -99,13 +100,14 @@ public class OwnerProductResource {
     private ProductManager productManager;
 
     @Inject
-    public OwnerProductResource(Configuration config, I18n i18n, OwnerCurator ownerCurator,
-        OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator,
-        ProductCertificateCurator productCertCurator, ProductCurator productCurator,
-        ProductManager productManager) {
+    public OwnerProductResource(Configuration config, I18n i18n, IterableStreamingOutputFactory isoFactory,
+        OwnerCurator ownerCurator, OwnerContentCurator ownerContentCurator,
+        OwnerProductCurator ownerProductCurator, ProductCertificateCurator productCertCurator,
+        ProductCurator productCurator, ProductManager productManager) {
 
         this.config = config;
         this.i18n = i18n;
+        this.isoFactory = isoFactory;
         this.ownerContentCurator = ownerContentCurator;
         this.ownerCurator = ownerCurator;
         this.ownerProductCurator = ownerProductCurator;
@@ -203,29 +205,13 @@ public class OwnerProductResource {
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
         @QueryParam("product") List<String> productIds) {
 
-        final Owner owner = this.getOwnerByKey(ownerKey);
-        final Collection<Product> products = productIds != null && productIds.size() > 0 ?
-            this.ownerProductCurator.getProductsByIds(owner, productIds) :
-            this.ownerProductCurator.getProductsByOwner(owner);
-        final ObjectMapper mapper = new JsonProvider(true)
-            .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
+        Owner owner = this.getOwnerByKey(ownerKey);
 
-        StreamingOutput output = new StreamingOutput() {
-            @Override
-            public void write(OutputStream stream) throws IOException, WebApplicationException {
-                JsonGenerator generator = mapper.getJsonFactory().createGenerator(stream);
-                generator.writeStartArray();
+        ResultIterator<Product> iterator = productIds != null && !productIds.isEmpty() ?
+            this.productCurator.iterateAllByIds(owner, productIds) :
+            this.productCurator.iterateByOwner(owner);
 
-                for (Product product : products) {
-                    mapper.writeValue(generator, product.toDTO());
-                }
-
-                generator.writeEndArray();
-                generator.flush();
-            }
-        };
-
-        return Response.ok(output).build();
+        return Response.ok(this.isoFactory.create(iterator)).build();
     }
 
     @ApiOperation(notes = "Retrieves a single Product", value = "getProduct")

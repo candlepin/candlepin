@@ -105,6 +105,7 @@ import org.candlepin.resource.StatusResource;
 import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.resource.UserResource;
 import org.candlepin.resource.util.ResolverUtil;
+import org.candlepin.resteasy.IterableStreamingOutputFactory;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.resteasy.filter.AuthenticationFilter;
@@ -267,6 +268,9 @@ public class CandlepinModule extends AbstractModule {
         // flexible end date for identity certificates
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
             .to(ExpiryDateFunction.class).in(Singleton.class);
+
+        // Streaming output factory
+        bind(IterableStreamingOutputFactory.class);
 
         // only initialize if we've enabled AMQP integration
         if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {

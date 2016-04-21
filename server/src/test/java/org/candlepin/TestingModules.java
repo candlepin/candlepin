@@ -58,6 +58,7 @@ import org.candlepin.resource.OwnerResource;
 import org.candlepin.resource.PoolResource;
 import org.candlepin.resource.ProductResource;
 import org.candlepin.resource.SubscriptionResource;
+import org.candlepin.resteasy.IterableStreamingOutputFactory;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.resteasy.filter.StoreFactory;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -254,21 +255,16 @@ public class TestingModules {
             bind(EnvironmentResource.class);
             bind(SubscriptionResource.class);
             bind(ActivationKeyResource.class);
-            bind(ProductServiceAdapter.class)
-                .to(DefaultProductServiceAdapter.class);
+            bind(ProductServiceAdapter.class).to(DefaultProductServiceAdapter.class);
             bind(ProductResource.class);
-            bind(DateSource.class).to(DateSourceForTesting.class)
-                .asEagerSingleton();
+            bind(DateSource.class).to(DateSourceForTesting.class).asEagerSingleton();
             bind(Enforcer.class).to(EnforcerForTesting.class); // .to(JavascriptEnforcer.class);
-            bind(SubjectKeyIdentifierWriter.class).to(
-                DefaultSubjectKeyIdentifierWriter.class);
+            bind(SubjectKeyIdentifierWriter.class).to(DefaultSubjectKeyIdentifierWriter.class);
             bind(PKIUtility.class).to(BouncyCastlePKIUtility.class);
             bind(PKIReader.class).to(PKIReaderForTesting.class).asEagerSingleton();
             bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
-            bind(OwnerServiceAdapter.class).to(
-                DefaultOwnerServiceAdapter.class);
-            bind(EntitlementCertServiceAdapter.class).to(
-                StubEntitlementCertServiceAdapter.class);
+            bind(OwnerServiceAdapter.class).to(DefaultOwnerServiceAdapter.class);
+            bind(EntitlementCertServiceAdapter.class).to(StubEntitlementCertServiceAdapter.class);
             bind(ScriptEngineProvider.class);
 
             bind(JobFactory.class).to(GuiceJobFactory.class);
@@ -294,8 +290,7 @@ public class TestingModules {
 
             bind(CertificateRevocationListTask.class);
             // temporary
-            bind(IdentityCertServiceAdapter.class).to(
-                DefaultIdentityCertServiceAdapter.class);
+            bind(IdentityCertServiceAdapter.class).to(DefaultIdentityCertServiceAdapter.class);
             bind(PoolRules.class);
             bind(CriteriaRules.class);
             bind(PoolManager.class).to(CandlepinPoolManager.class);
@@ -303,6 +298,9 @@ public class TestingModules {
 
             bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
                 .to(ExpiryDateFunction.class).in(Singleton.class);
+
+            // Streaming output factory
+            bind(IterableStreamingOutputFactory.class);
 
         }
     }
