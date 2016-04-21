@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.10
+Version: 2.0.11
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -215,6 +215,329 @@ fi
 
 #raw
 %changelog
+* Thu Apr 21 2016 Chris Rog <crog@redhat.com> 2.0.11-1
+- Stop lazy migration for guests on hypervisors (wpoteat@redhat.com)
+- Fix guest migration spec test - sleep appropriately for mysql
+  (adarshvritant@gmail.com)
+- Added automatic entitlement certificate regeneration on product/content
+  update (crog@redhat.com)
+- Loosen consumed content type on update product. (awood@redhat.com)
+- Add missing @Consumes annotations. (awood@redhat.com)
+- Skip pool cdn test (adarshvritant@gmail.com)
+- Add missing foreign key indexes in oracle (adarshvritant@gmail.com)
+- Add timeout parameter to wait_for_job in client. (awood@redhat.com)
+- Upgrade to RestEasy 3.0.10. (awood@redhat.com)
+- Updated CP's auth interceptors and product resources to use UUIDs
+  (crog@redhat.com)
+- Skip client test for feature not working in Candlepin. (awood@redhat.com)
+- Remove RSpec deprecation warning.  Fix client tests. (awood@redhat.com)
+- Fix JUnit issues introduced by Buildr update (awood@redhat.com)
+- Fix client issue with registering with or updating installed products.
+  (awood@redhat.com)
+- Upgrade Buildr and RSpec. (awood@redhat.com)
+- Handle response from refresh pools calls correctly. (awood@redhat.com)
+- Correct tests to account for pool JSON change. (awood@redhat.com)
+- Add a utility function to wrap parameters in an array. (awood@redhat.com)
+- Allow importing minimal test data (adarshvritant@gmail.com)
+- Fixed cdn test for pools (adarshvritant@gmail.com)
+- Fix test data file name in import products script (adarshvritant@gmail.com)
+- Add unique constraint to product certificate tables. (awood@redhat.com)
+- 1313036: Downgrade logging levels in hypervisor check in (wpoteat@redhat.com)
+- @JsonIgnore Cdn on a pool, provide a seperate API to fetch a pool's Cdn
+  (adarshvritant@gmail.com)
+- Added @JsonIgnore to getComplianceType and isUnmappedGuestPool
+  (crog@redhat.com)
+- allow specifying ca cert validity period via env. variables
+  (adarshvritant@gmail.com)
+- Correct indentation on line continuations. (awood@redhat.com)
+- Increase sleep time for one sub pool per stack spec (adarshvritant@gmail.com)
+- Move eventful to model for dependency on api jar (adarshvritant@gmail.com)
+- Products and Content now check the lock state when checking equality
+  (crog@redhat.com)
+- 1320690: Refactor code to eliminate duplicate consumer lookup
+  (wpoteat@redhat.com)
+- Fix locking in delete owners, move batch pessimistic locking to
+  AbstractHibernateCurator (adarshvritant@gmail.com)
+- Fix non deterministic job status spec and make owner deletion an atomic
+  transaction (adarshvritant@gmail.com)
+- Delete purged jobs from job tables in candlepin and qrtz
+  (adarshvritant@gmail.com)
+- Fixed Optimistic Lock issue with ConsumerComplianceJob (mstead@redhat.com)
+- checkstyle fix (wpoteat@redhat.com)
+- Provide explicit serialVersionUIDs. (awood@redhat.com)
+- Added entity versioning to product and content, allowing the curators to
+  converge identical entities used by multiple orgs and diverge when orgs
+  change their version. (crog@redhat.com)
+- Allow configurable delta for nextUpdate on the CRL. (awood@redhat.com)
+- 1320711: Fixed class cast exception in EntitleByProductsJob
+  (mstead@redhat.com)
+- Added a serialVersionUID to the SystemPrincipal class (crog@redhat.com)
+- 1312478: Rotate logs daily (wpoteat@redhat.com)
+- ProductServiceAdapter doc updates/cleanup (mstead@redhat.com)
+- Set nextUpdate correctly when modifying an empty CRL. (awood@redhat.com)
+- Remove no-op JsonIgnore (adarshvritant@gmail.com)
+- Added JsonIgnore to reduce amount of data serialized
+  (adarshvritant@gmail.com)
+- More tweaks based on reviews (adarshvritant@gmail.com)
+- Work around for HHH-1400 (adarshvritant@gmail.com)
+- Add subselect to product attributes (adarshvritant@gmail.com)
+- More post review fixes for batch attach and revoke (adarshvritant@gmail.com)
+- Rename of CandlepinSingleton* to CandlepinRequest* (fnguyen@redhat.com)
+- Request scope caching of rules updated time (fnguyen@redhat.com)
+- Save one hash lookup (adarshvritant@gmail.com)
+- use hamcrest matchers (adarshvritant@gmail.com)
+- 1313036: Changes log level of hypervisor update to DEBUG, logs INFO level
+  summary (csnyder@redhat.com)
+- Organize imports (adarshvritant@gmail.com)
+- CollectionUtils/ArrayUtils/MapUtils  is(Not)Empty (adarshvritant@gmail.com)
+- Increment commons collections version (adarshvritant@gmail.com)
+- More whitespace fixes and other things (adarshvritant@gmail.com)
+- Post review - remove nests where possible (adarshvritant@gmail.com)
+- Remove extra whitespacies - empty lines after braces
+  (adarshvritant@gmail.com)
+- Remove extra whitespacies - double empty lines (adarshvritant@gmail.com)
+- rename batch bind number of pools limit config param
+  (adarshvritant@gmail.com)
+- post review - performance scripts (adarshvritant@gmail.com)
+- 1311664: Ignore empty guest IDs and hypervisor IDs (csnyder@redhat.com)
+- Remove bind argument validation from ruby client (adarshvritant@gmail.com)
+- Correct threading issue seen in unit tests on Ruby 2.0.0 (awood@redhat.com)
+- Fixed broken option parsing (mstead@redhat.com)
+- 1242310: Do not issue ueber certs that expire after 2050. (awood@redhat.com)
+- Undo inClauseLimit as a config paramter (adarshvritant@gmail.com)
+- Add secure unboundedInCriterion and use it in all use cases of batch attach
+  (adarshvritant@gmail.com)
+- 1310173: Use su designation in logrotate config (wpoteat@redhat.com)
+- Persist entitlements before associating them with pools or Consumers
+  (adarshvritant@gmail.com)
+- Asynchronous compliance on revoke and bind (adarshvritant@gmail.com)
+- Remove redundant code and fix unit tests (adarshvritant@gmail.com)
+- Provide ability to search activation keys by name. (awood@redhat.com)
+- increase batch size to 500 (vrjain@redhat.com)
+- add batch bind capability (vrjain@redhat.com)
+- add max bind limit (vrjain@redhat.com)
+- fix batch bind script arguments (vrjain@redhat.com)
+- Add batch bind perf script (vrjain@redhat.com)
+- Fix spec test and failing unit test (vrjain@redhat.com)
+- Refresh hibernate cache after batch bind (vrjain@redhat.com)
+- Add and fix batch bind spec tests (vrjain@redhat.com)
+- Fix Fifo pool revocation (vrjain@redhat.com)
+- Adding unit tests (vrjain@redhat.com)
+- Fixing more Unit tests (vrjain@redhat.com)
+- Fix checkstyle (vrjain@redhat.com)
+- Fix misc. errors during batch attach implementation (vrjain@redhat.com)
+- Fix unit tests (vrjain@redhat.com)
+- Tests now compile (vrjain@redhat.com)
+- Null checks and other clean ups (vrjain@redhat.com)
+- Implement batch processing (vrjain@redhat.com)
+- Set result for consumer compliance job (vrjain@redhat.com)
+- Fix comment in consumer resource (vrjain@redhat.com)
+- Added ConsumerComplianceJob (vrjain@redhat.com)
+- rename UniqueByOwner job to UniqueByEntity job (vrjain@redhat.com)
+- Correct issue with activation keys and user names during register.
+  (awood@redhat.com)
+- Add better error messages to custom matchers. (awood@redhat.com)
+- Print better error message in validate_keys. (awood@redhat.com)
+- Refactor client to remove redundancy and dead code. (awood@redhat.com)
+- Correct issue with refresh_pools binding. (awood@redhat.com)
+- Provide better error messages from Candlepin client. (awood@redhat.com)
+- Fix bugs with error reporting, JSON decoding, and parameter naming.
+  (awood@redhat.com)
+- Use better name for 2xx status code expectation. (awood@redhat.com)
+- Fix style errors in bindings unit tests. (awood@redhat.com)
+- Add Rubocop and correct initial style violations. (awood@redhat.com)
+- Add manifest import functionality. (awood@redhat.com)
+- Retire deprecated Candlepin methods. (awood@redhat.com)
+- Add consumer export method. (awood@redhat.com)
+- Add update subscription method. (awood@redhat.com)
+- Compact query hashes. (awood@redhat.com)
+- Add autobind dry-run. (awood@redhat.com)
+- List and migrate entitlements. (awood@redhat.com)
+- Additional method binding. (awood@redhat.com)
+- Allow consumer search by type. (awood@redhat.com)
+- Regenerate entitlement certificates. (awood@redhat.com)
+- Fail gracefully if a consumer client can't be created. (awood@redhat.com)
+- Add method to update activation key. (awood@redhat.com)
+- Refresh pools for specific products. (awood@redhat.com)
+- Handle promotion and demotion of content. (awood@redhat.com)
+- Add setting to have client auto-fail on non-200 response. (awood@redhat.com)
+- Fail early if test fixtures are broken. (awood@redhat.com)
+- Correct typo in client spec tests. (awood@redhat.com)
+- Retire confusing parameter :key.  Replace with :owner (awood@redhat.com)
+- Add create consumer in environment method. (awood@redhat.com)
+- Update to work with HTTPClient 2.7.0.1 (awood@redhat.com)
+- Add TrustedUserAuth client. (awood@redhat.com)
+- Add bindings to get activation key info. (awood@redhat.com)
+- Add owners/{key}/consumers call. (awood@redhat.com)
+- More activation key bindings. (awood@redhat.com)
+- Methods to add/remove pools from activation keys. (awood@redhat.com)
+- Allow clients to set a "sticky" owner. (awood@redhat.com)
+- Organize unit tests for new API bindings. (awood@redhat.com)
+- Add create_activation_key. (awood@redhat.com)
+- Add content overrides and owner content. (awood@redhat.com)
+- Fix poorly named test. (awood@redhat.com)
+- Alias success_content to ok_content for brevity. (awood@redhat.com)
+- Fix binding by product. (awood@redhat.com)
+- Fix broken tests; improve binding. (awood@redhat.com)
+- Handle case of role already existing. (awood@redhat.com)
+- Add convenience methods to switch users. (awood@redhat.com)
+- Handle empty response bodies without throwing error. (awood@redhat.com)
+- Add bind function. (awood@redhat.com)
+- Add methods to create subscriptions. (awood@redhat.com)
+- Use ActiveRecord hash add-ons. (awood@redhat.com)
+- Correct misuse of validate_keys. (awood@redhat.com)
+- Correct improper method call. (awood@redhat.com)
+- Correct threading issue with test HTTP server. (awood@redhat.com)
+- Perform validations on several API calls (awood@redhat.com)
+- Use ActiveSupports hash verification methods. (awood@redhat.com)
+- Convert returned JSON hashes to use symbols as keys. (awood@redhat.com)
+- First pass at refresh pools. (awood@redhat.com)
+- Revise API for per-org product changes. (awood@redhat.com)
+- Add method to validate request parameters. (awood@redhat.com)
+- Convenience method for switching to a consumer client after registering.
+  (awood@redhat.com)
+- Fix syntax error. (awood@redhat.com)
+- Add content calls. (awood@redhat.com)
+- Correct and test role permissions API calls. (awood@redhat.com)
+- Use RSpec's let to memoize owner and user. (awood@redhat.com)
+- Add more methods. (awood@redhat.com)
+- Add distributor version methods and tests. (awood@redhat.com)
+- Add some product methods. (awood@redhat.com)
+- More simple get and delete methods. (awood@redhat.com)
+- Add a lot of simple get and delete methods. (awood@redhat.com)
+- Add generic get_by_id and delete_by_id methods. (awood@redhat.com)
+- Simplify getting owner subresources. (awood@redhat.com)
+- Add functionality to set Accept header. (awood@redhat.com)
+- Add methods for miscellaneous resources. (awood@redhat.com)
+- Add some owner methods. (awood@redhat.com)
+- Reorganize API methods into submodules. (awood@redhat.com)
+- Simplify HTTP verb api. (awood@redhat.com)
+- Use a CA and server cert instead of a self-signed server cert.
+  (awood@redhat.com)
+- Add role attribute CRUD methods. (awood@redhat.com)
+- Add role CRUD methods. (awood@redhat.com)
+- Add user CRUD methods. (awood@redhat.com)
+- Make status code matchers a more succinct. (awood@redhat.com)
+- Add guest id deletion. (awood@redhat.com)
+- Allow clients to pin themselves to a UUID. (awood@redhat.com)
+- Standardize on usage of 'path' and 'uri'. (awood@redhat.com)
+- Use RSpec's let feature.  Ban deprecated should matching. (awood@redhat.com)
+- Add method for updating consumer guest IDs. (awood@redhat.com)
+- Add a few utility methods for snake case to camel case conversion.
+  (awood@redhat.com)
+- Fix nasty bug where calls to rand_string were getting symbols in them.
+  (awood@redhat.com)
+- Add more Candlepin API methods. (awood@redhat.com)
+- Fix consumer registration and other miscellaneous fixes. (awood@redhat.com)
+- Add some utility methods and register function. (awood@redhat.com)
+- Switch Ruby client testing to RSpec. (awood@redhat.com)
+- Add methods to build query strings. (awood@redhat.com)
+- Use Forwardable to let users interactive with underlying HTTPClient.
+  (awood@redhat.com)
+- Add convenience methods to create X509Clients from files or JSON.
+  (awood@redhat.com)
+- Build the URL with Ruby's URI class. (awood@redhat.com)
+- Add client cert authentication. (awood@redhat.com)
+- First pass at rewriting Candlepin Ruby API. (awood@redhat.com)
+- Fix ImporterTest, clean up test files (vrjain@redhat.com)
+- Remove statistics from candlepin (adarshvritant@gmail.com)
+- Fix non deterministic test failure (vrjain@redhat.com)
+- Introducing batching to CRL job to workaround Postgres IN clause limit
+  (fnguyen@redhat.com)
+- removing initialization of pool.entitlements (fnguyen@redhat.com)
+- Fix apicrawler (awood@redhat.com)
+- Warn developers when they deploy hosted mode to not spec test in parallel
+  mode (vrjain@redhat.com)
+- Adding regen certificates flag back (fnguyen@redhat.com)
+- Adding usage of batch revoke during Expired Pools Job. Also adding more
+  logging. (fnguyen@redhat.com)
+- Correct comment (awood@redhat.com)
+- Make only single lock call (fnguyen@redhat.com)
+- Updated the auto configuration to respect a user-specified database name
+  (crog@redhat.com)
+- Remove some unnecessary code from the CRL streaming writer.
+  (awood@redhat.com)
+- First version of the Candlepin data generator (crog@redhat.com)
+- Implementation of revokeEntitlements(List) to improve speed of Manifest
+  Import in Standlone Mode with mass locking of modified pools.
+  (fnguyen@redhat.com)
+- Fixed deprecated API calls (vrjain@redhat.com)
+- Bugfixes for: BZ1292283, BZ1292282 (fnguyen@redhat.com)
+- 1302051: subscription type field for list --consumed (wpoteat@redhat.com)
+- Add missing RPM requires. (awood@redhat.com)
+- Allow X509CRLStreamWriter to change AuthorityKeyIdentifier extension.
+  (awood@redhat.com)
+- 1298237: Include dev_sku in error message (wpoteat@redhat.com)
+- Add special case code to handle empty CRLs. (awood@redhat.com)
+- 1302801: Surface pools by subscription id (wpoteat@redhat.com)
+- 1294044: Allow Subscription Manager Gui register process to work with Dev
+  client 1294049: Allow Firstboot register process to work with Dev client
+  (wpoteat@redhat.com)
+- 1303242: cant update subscription (vrjain@redhat.com)
+- Fix spec tests after blocking deprecated APIs (vrjain@redhat.com)
+- 1300705: Fix perf issue finding dev pools (mstead@redhat.com)
+- 1297863: Use calendar for expiry interval (wpoteat@redhat.com)
+- fix server/bin scripts broken since 2.0 (vrjain@redhat.com)
+- Updated generate_export.rb to work with the changes in CP2 (crog@redhat.com)
+- 1301812: Fixed an issue with event generation for stack derived pools
+  (crog@redhat.com)
+- 1297047: Candlepin allows import of expired manifest (vrjain@redhat.com)
+- Optimized CRL processing and output (crog@redhat.com)
+- use -H for hosted (vrjain@redhat.com)
+- Added bulk inserts to the per-org products migration (crog@redhat.com)
+- Major refactor to the per-org products migration (crog@redhat.com)
+- Updated the per-org products task to be repeatable (crog@redhat.com)
+- Major refactor to the liquibase tasks (crog@redhat.com)
+- 1295452: Look up dev sku by consumer only (mstead@redhat.com)
+- 1292877: Do not delete dev pool before we are done with it
+  (mstead@redhat.com)
+- Added an option to specify the db name in the deploy scripts
+  (crog@redhat.com)
+- Tweaked Subscription toString based on review (vrjain@redhat.com)
+- Allows date string comparisons when milliseconds are not in both strings
+  (wpoteat@redhat.com)
+- Implementing some CDK improvements (mstead@redhat.com)
+- Test milliseconds or not (wpoteat@redhat.com)
+- Adds the UTC timezone to the date serialization test. (csnyder@redhat.com)
+- Sets timezone to UTC for date time serialization (csnyder@redhat.com)
+- 1190814: typos in candlepin msgids (vrjain@redhat.com)
+- Updates spec tests that were failing due to lack of milliseconds
+  (csnyder@redhat.com)
+- Use our DateSerializer instead of the default one in JsonProvider
+  (csnyder@redhat.com)
+- Adds DateSerializer, A serializer for dates that removes milliseconds
+  (csnyder@redhat.com)
+- Do not run compliance rules on distributors. (awood@redhat.com)
+- 1285004: Adds remove_by_pool_id to manager_capabilities (csnyder@redhat.com)
+- Limit the number of binds per consumer that can run concurrently.
+  (awood@redhat.com)
+- 1274074: Fix deadlock during highly concurrent entitlement jobs.
+  (awood@redhat.com)
+- Clean up some tests. (awood@redhat.com)
+- Improving performance of bind() operation by introducing Hibernate batching
+  and adding a new method to Consumer currator that retrieves information
+  related to the Consumer more eagerly in lower amount of queries
+  (fnguyen@redhat.com)
+- Resolving a timing issue in hosted spec tests (fnguyen@redhat.com)
+- Fixing broken tests due to expiry date (mstead@redhat.com)
+- 1283401: 500 status (or an empty reply) when getting all consumers
+  (vrjain@redhat.com)
+- fix consumer resource spec, dont skip refresh pool (vrjain@redhat.com)
+- spec tests - punctuation (vrjain@redhat.com)
+- spec tests - skip refresh pool when possible (vrjain@redhat.com)
+- remove TODO. current code is good. (vrjain@redhat.com)
+- Several more improvements and fixes to the CandlepinPoolManager
+  (crog@redhat.com)
+- Fixed quantity issue - multiplier was being applied twice (vrjain@redhat.com)
+- Updated CandlepinPoolManager to properly update owners during refresh
+  (crog@redhat.com)
+- Added a delay in the guest entitlement spec tests (crog@redhat.com)
+- Refactor pool updates (vrjain@redhat.com)
+- Updates test to remove by pool id to use the new hosted methods
+  (csnyder@redhat.com)
+- 1198178: Adds api method to remove all entitlements for a consumer by pool id
+  (csnyder@redhat.com)
+
 * Wed Nov 18 2015 Michael Stead <mstead@redhat.com> 2.0.10-1
 - Updated the per-org products migration for performance with lots of data
   (crog@redhat.com)
