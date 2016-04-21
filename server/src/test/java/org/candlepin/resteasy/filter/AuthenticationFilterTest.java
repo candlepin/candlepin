@@ -15,8 +15,12 @@
 package org.candlepin.resteasy.filter;
 
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
@@ -24,6 +28,7 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotAuthorizedException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ConsumerCurator;
@@ -54,6 +59,7 @@ import java.lang.reflect.Method;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 
@@ -68,6 +74,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
     @Inject private Injector injector;
     @Inject private Configuration config;
 
+    @Mock private HttpServletRequest mockHttpServletRequest;
     @Mock private ContainerRequestContext mockRequestContext;
     @Mock private CandlepinSecurityContext mockSecurityContext;
     @Mock private ResourceInfo mockInfo;
@@ -100,6 +107,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         config.setProperty(ConfigProperties.TRUSTED_AUTHENTICATION, "true");
 
         interceptor = new AuthenticationFilter(config, consumerCurator, deletedConsumerCurator, injector);
+        interceptor.setHttpServletRequest(mockHttpServletRequest);
     }
 
     private void mockResourceMethod(Method method) {
@@ -114,8 +122,18 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         return new PostMatchContainerRequestContext(mockReq, invoker);
     }
 
+    @Test(expected = BadRequestException.class)
+    public void noSecurityHoleNoPrincipalNoSsl() throws Exception {
+        when(mockHttpServletRequest.isSecure()).thenReturn(false);
+        Method method = FakeResource.class.getMethod("someMethod", String.class);
+        mockResourceMethod(method);
+
+        interceptor.filter(getContext());
+    }
+
     @Test(expected = NotAuthorizedException.class)
     public void noSecurityHoleNoPrincipal() throws Exception {
+        when(mockHttpServletRequest.isSecure()).thenReturn(true);
         Method method = FakeResource.class.getMethod("someMethod", String.class);
         mockResourceMethod(method);
 
