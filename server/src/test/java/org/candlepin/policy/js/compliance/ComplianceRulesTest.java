@@ -27,6 +27,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -104,11 +105,9 @@ public class ComplianceRulesTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         Locale locale = new Locale("en_US");
-        i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale,
-            I18nFactory.FALLBACK);
+        i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale, I18nFactory.FALLBACK);
         // Load the default production rules:
-        InputStream is = this.getClass().getResourceAsStream(
-            RulesCurator.DEFAULT_RULES_FILE);
+        InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is));
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
@@ -145,8 +144,7 @@ public class ComplianceRulesTest {
         Consumer consumer = new Consumer();
         consumer.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
         for (Product product : installedProducts) {
-            consumer.addInstalledProduct(new ConsumerInstalledProduct(product.getId(),
-                product.getName()));
+            consumer.addInstalledProduct(new ConsumerInstalledProduct(product.getId(), product.getName()));
         }
         consumer.setFact("cpu.cpu_socket(s)", "8"); // 8 socket machine
         return consumer;
@@ -1083,8 +1081,7 @@ public class ComplianceRulesTest {
         c.setFact("cpu.cpu_socket(s)", "2");
 
         List<Entitlement> ents = new LinkedList<Entitlement>();
-        ents.add(mockStackedEntitlement(c, STACK_ID_1, TestUtil.createProduct("Awesome Product"),
-            PRODUCT_1));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, TestUtil.createProduct("Awesome Product"), PRODUCT_1));
         assertTrue(compliance.isStackCompliant(c, STACK_ID_1, ents));
     }
 
@@ -1094,8 +1091,7 @@ public class ComplianceRulesTest {
         c.setFact("cpu.cpu_socket(s)", "4");
 
         List<Entitlement> ents = new LinkedList<Entitlement>();
-        ents.add(mockStackedEntitlement(c, STACK_ID_1, TestUtil.createProduct("Awesome Product"),
-            PRODUCT_1));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, TestUtil.createProduct("Awesome Product"), PRODUCT_1));
         ents.add(mockEntitlement(c, TestUtil.createProduct("Another Product"), PRODUCT_3));
         assertFalse(compliance.isStackCompliant(c, STACK_ID_1, ents));
     }
@@ -1106,6 +1102,10 @@ public class ComplianceRulesTest {
         c.setFact("cpu.cpu_socket(s)", "2");
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(Arrays.asList(ent));
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(cqmock);
+
         assertTrue(compliance.isEntitlementCompliant(c, ent, new Date()));
     }
 
@@ -1116,6 +1116,11 @@ public class ComplianceRulesTest {
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
         ent.getPool().getProduct().setAttribute("sockets", "4");
+
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(Arrays.asList(ent));
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(cqmock);
+
         assertTrue(compliance.isEntitlementCompliant(c, ent, new Date()));
     }
 
@@ -1126,6 +1131,11 @@ public class ComplianceRulesTest {
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
         ent.getPool().getProduct().setAttribute("sockets", "4");
+
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(Arrays.asList(ent));
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(cqmock);
+
         assertFalse(compliance.isEntitlementCompliant(c, ent, new Date()));
     }
 
@@ -1134,14 +1144,10 @@ public class ComplianceRulesTest {
         Consumer c = mockConsumer();
         c.setFact("uname.machine", "x86_64");
         List<Entitlement> ents = new LinkedList<Entitlement>();
-        ents.add(mockStackedEntitlement(c, STACK_ID_1, TestUtil.createProduct("Awesome Product"),
-            PRODUCT_1));
-        ents.add(mockStackedEntitlement(c, STACK_ID_1, TestUtil.createProduct("Awesome Product"),
-            PRODUCT_1));
-        ents.add(mockStackedEntitlement(c, STACK_ID_1, TestUtil.createProduct("Awesome Product"),
-            PRODUCT_1));
-        ents.add(mockStackedEntitlement(c, STACK_ID_1, TestUtil.createProduct("Awesome Product"),
-            PRODUCT_1));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, TestUtil.createProduct("Awesome Product"), PRODUCT_1));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, TestUtil.createProduct("Awesome Product"), PRODUCT_1));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, TestUtil.createProduct("Awesome Product"), PRODUCT_1));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, TestUtil.createProduct("Awesome Product"), PRODUCT_1));
         ents.get(0).getPool().getProduct().setAttribute("arch", "x86_64");
         ents.get(1).getPool().getProduct().setAttribute("arch", "PPC64");
         ents.get(2).getPool().getProduct().setAttribute("arch", "x86_64");
@@ -2079,8 +2085,12 @@ public class ComplianceRulesTest {
     }
 
     private void mockEntCurator(Consumer c, List<Entitlement> ents) {
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+
         c.setEntitlements(new HashSet<Entitlement>(ents));
+
+        when(cqmock.list()).thenReturn(ents);
         when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(cqmock);
     }
 }

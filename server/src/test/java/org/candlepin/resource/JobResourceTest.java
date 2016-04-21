@@ -14,30 +14,28 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.JobCurator;
+import org.candlepin.model.TransformedCandlepinQuery;
 import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
+import org.candlepin.test.MockResultIterator;
+import org.candlepin.util.ElementTransformer;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -61,6 +59,16 @@ public class JobResourceTest {
         MockitoAnnotations.initMocks(this);
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         jobResource = new JobResource(jobCurator, pinsetterKernel, i18n);
+    }
+
+    private void mockCPQueryTransform(final CandlepinQuery query) {
+        doAnswer(new Answer<CandlepinQuery>() {
+            @Override
+            public CandlepinQuery answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                return new TransformedCandlepinQuery(query, (ElementTransformer) args[0]);
+            }
+        }).when(query).transform(any(ElementTransformer.class));
     }
 
     @Test
@@ -118,8 +126,15 @@ public class JobResourceTest {
         List<JobStatus> statuses = new ArrayList<JobStatus>();
         JobStatus status = new JobStatus();
         statuses.add(status);
-        when(jobCurator.findByPrincipalName(eq("admin"))).thenReturn(statuses);
-        Collection<JobStatus> real = jobResource.getStatuses(null, null, "admin");
+
+        CandlepinQuery query = mock(CandlepinQuery.class);
+        when(query.list()).thenReturn(statuses);
+        when(query.iterate()).thenReturn(new MockResultIterator(statuses.iterator()));
+        when(query.iterate(anyInt(), anyBoolean())).thenReturn(new MockResultIterator(statuses.iterator()));
+        when(jobCurator.findByPrincipalName(eq("admin"))).thenReturn(query);
+        this.mockCPQueryTransform(query);
+
+        Collection<JobStatus> real = jobResource.getStatuses(null, null, "admin").list();
         assertNotNull(real);
         assertEquals(1, real.size());
     }
@@ -129,8 +144,15 @@ public class JobResourceTest {
         List<JobStatus> statuses = new ArrayList<JobStatus>();
         JobStatus status = new JobStatus();
         statuses.add(status);
-        when(jobCurator.findByOwnerKey(eq("admin"))).thenReturn(statuses);
-        Collection<JobStatus> real = jobResource.getStatuses("admin", null, null);
+
+        CandlepinQuery query = mock(CandlepinQuery.class);
+        when(query.list()).thenReturn(statuses);
+        when(query.iterate()).thenReturn(new MockResultIterator(statuses.iterator()));
+        when(query.iterate(anyInt(), anyBoolean())).thenReturn(new MockResultIterator(statuses.iterator()));
+        when(jobCurator.findByOwnerKey(eq("admin"))).thenReturn(query);
+        this.mockCPQueryTransform(query);
+
+        Collection<JobStatus> real = jobResource.getStatuses("admin", null, null).list();
         assertNotNull(real);
         assertEquals(1, real.size());
     }
@@ -140,8 +162,15 @@ public class JobResourceTest {
         List<JobStatus> statuses = new ArrayList<JobStatus>();
         JobStatus status = new JobStatus();
         statuses.add(status);
-        when(jobCurator.findByConsumerUuid(eq("abcd"))).thenReturn(statuses);
-        Collection<JobStatus> real = jobResource.getStatuses(null, "abcd", null);
+
+        CandlepinQuery query = mock(CandlepinQuery.class);
+        when(query.list()).thenReturn(statuses);
+        when(query.iterate()).thenReturn(new MockResultIterator(statuses.iterator()));
+        when(query.iterate(anyInt(), anyBoolean())).thenReturn(new MockResultIterator(statuses.iterator()));
+        when(jobCurator.findByConsumerUuid(eq("abcd"))).thenReturn(query);
+        this.mockCPQueryTransform(query);
+
+        Collection<JobStatus> real = jobResource.getStatuses(null, "abcd", null).list();
         assertNotNull(real);
         assertEquals(1, real.size());
     }
@@ -179,7 +208,11 @@ public class JobResourceTest {
         List<JobStatus> statuses = new ArrayList<JobStatus>();
         JobStatus status = new JobStatus();
         statuses.add(status);
-        when(jobCurator.findByPrincipalName(eq("foo"))).thenReturn(statuses);
+
+        CandlepinQuery query = mock(CandlepinQuery.class);
+        when(query.list()).thenReturn(statuses);
+        when(jobCurator.findByPrincipalName(eq("foo"))).thenReturn(query);
+
         jobResource.getStatuses(null, "", "foo");
     }
 
@@ -204,6 +237,16 @@ public class JobResourceTest {
 
     @Test
     public void verifyInput() {
+        List<JobStatus> statuses = new ArrayList<JobStatus>();
+        JobStatus status = new JobStatus();
+        statuses.add(status);
+
+        CandlepinQuery query = mock(CandlepinQuery.class);
+        when(query.list()).thenReturn(statuses);
+        when(jobCurator.findByOwnerKey(any(String.class))).thenReturn(query);
+        when(jobCurator.findByConsumerUuid(any(String.class))).thenReturn(query);
+        when(jobCurator.findByPrincipalName(any(String.class))).thenReturn(query);
+
         assertFalse(expectException("owner", "uuid", "pname"));
         assertFalse(expectException("owner", null, "pname"));
         assertFalse(expectException("owner", "uuid", null));

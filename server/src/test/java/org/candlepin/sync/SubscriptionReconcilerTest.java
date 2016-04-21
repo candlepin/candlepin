@@ -14,8 +14,8 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -91,7 +92,11 @@ public class SubscriptionReconcilerTest {
         }
 
         // Mock these pools as the return value for the owner:
-        when(poolCurator.listByOwnerAndType(owner, PoolType.NORMAL)).thenReturn(pools);
+        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(pools);
+        when(cqmock.iterator()).thenReturn(pools.iterator());
+
+        when(poolCurator.listByOwnerAndType(owner, PoolType.NORMAL)).thenReturn(cqmock);
         return pools;
     }
 

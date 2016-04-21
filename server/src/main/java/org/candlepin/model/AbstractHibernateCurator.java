@@ -28,9 +28,9 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
-import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.SQLQuery;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
@@ -53,7 +53,6 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import javax.persistence.OptimisticLockException;
-import javax.persistence.Query;
 
 
 
@@ -71,6 +70,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public static final int CASE_OPERATOR_BLOCK_SIZE = 100;
     public static final int BATCH_BLOCK_SIZE = 500;
 
+    @Inject protected CandlepinQueryFactory cpQueryFactory;
     @Inject protected Provider<EntityManager> entityManager;
     @Inject protected I18n i18n;
     private final Class<E> entityType;
@@ -133,12 +133,17 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     /**
      * @return all entities for a particular type.
      */
-    public List<E> listAll() {
-        return listByCriteria(createSecureCriteria());
+    public CandlepinQuery<E> listAll() {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria();
+
+        return this.cpQueryFactory.<E>buildQuery(this.currentSession(), criteria);
     }
 
-    public List<E> listAllByIds(Collection<? extends Serializable> ids) {
-        return listByCriteria(createSecureCriteria().add(unboundedInCriterion("id", ids)));
+    public CandlepinQuery<E> listAllByIds(Collection<? extends Serializable> ids) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
+            .add(CPRestrictions.in("id", ids));
+
+        return this.cpQueryFactory.<E>buildQuery(this.currentSession(), criteria);
     }
 
     @SuppressWarnings("unchecked")
@@ -181,7 +186,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             page.setPageRequest(pageRequest);
         }
         else {
-            List<E> pageData = listAll();
+            List<E> pageData = this.listAll().list();
             page.setMaxRecords(pageData.size());
             page.setPageData(pageData);
         }
@@ -192,22 +197,23 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @SuppressWarnings("unchecked")
     private List<E> loadPageData(Criteria c, PageRequest pageRequest) {
         c.addOrder(createPagingOrder(pageRequest));
+
         if (pageRequest.isPaging()) {
             c.setFirstResult((pageRequest.getPage() - 1) * pageRequest.getPerPage());
             c.setMaxResults(pageRequest.getPerPage());
         }
+
         return c.list();
     }
 
     private Order createPagingOrder(PageRequest p) {
-        String sortBy = (p.getSortBy() == null) ?
-            AbstractHibernateObject.DEFAULT_SORT_FIELD : p.getSortBy();
-        PageRequest.Order order = (p.getOrder() == null) ?
-            PageRequest.DEFAULT_ORDER : p.getOrder();
+        String sortBy = (p.getSortBy() == null) ? AbstractHibernateObject.DEFAULT_SORT_FIELD : p.getSortBy();
+        PageRequest.Order order = (p.getOrder() == null) ? PageRequest.DEFAULT_ORDER : p.getOrder();
 
         switch (order) {
             case ASCENDING:
                 return Order.asc(sortBy);
+
             //DESCENDING
             default:
                 return Order.desc(sortBy);
@@ -220,6 +226,26 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     @SuppressWarnings("unchecked")
+    public Page<ResultIterator<E>> paginateResults(CandlepinQuery<E> query, PageRequest pageRequest) {
+        Page<ResultIterator<E>> page = new Page<ResultIterator<E>>();
+
+        if (pageRequest != null) {
+            page.setMaxRecords(query.getRowCount());
+
+            query.addOrder(this.createPagingOrder(pageRequest));
+            if (pageRequest.isPaging()) {
+                query.setFirstResult((pageRequest.getPage() - 1) * pageRequest.getPerPage());
+                query.setMaxResults(pageRequest.getPerPage());
+            }
+
+            page.setPageRequest(pageRequest);
+        }
+
+        page.setPageData(query.iterate());
+        return page;
+    }
+
+    @SuppressWarnings("unchecked")
     @Transactional
     public List<E> listByCriteria(Criteria query) {
         return query.list();
@@ -227,8 +253,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     @SuppressWarnings("unchecked")
     @Transactional
-    public Page<List<E>> listByCriteria(Criteria query,
-        PageRequest pageRequest, boolean postFilter) {
+    public Page<List<E>> listByCriteria(Criteria query, PageRequest pageRequest, boolean postFilter) {
         Page<List<E>> resultsPage;
         if (postFilter) {
             // Create a copy of the page request with just the order and sort by values.
@@ -347,8 +372,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      */
     protected DetachedCriteria createSecureDetachedCriteria(Class entityClass, String alias) {
         DetachedCriteria criteria = (alias != null && !alias.equals("")) ?
-            DetachedCriteria.forClass(this.entityType, alias) :
-            DetachedCriteria.forClass(this.entityType);
+            DetachedCriteria.forClass(entityClass, alias) :
+            DetachedCriteria.forClass(entityClass);
 
         Criterion restrictions = this.getSecureCriteriaRestrictions(entityClass);
 
@@ -458,8 +483,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     @Transactional
     protected final <T> T secureGet(Class<T> clazz, Serializable id) {
-        return clazz.cast(createSecureCriteria().
-            add(Restrictions.idEq(id)).uniqueResult());
+        return clazz.cast(createSecureCriteria().add(Restrictions.idEq(id)).uniqueResult());
     }
 
     @Transactional
@@ -683,28 +707,41 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     /**
-     * While hibernate does not have limits over how many values can be used in an in clause,
-     * the underlying databases sometimes do. This method builds an unbounded in clause
-     * by building logical or expressions out of batches of in-clauses.
+     * Performs a direct SQL update or delete operation with a collection by breaking the collection
+     * into chunks and repeatedly performing the update.
+     * <p></p>
+     * The parameter receiving the collection chunks must be the last parameter in the query and the
+     * provided collection must support the subList operation.
      *
-     * @param expression the string expression against which we are searching values
-     * @param values the values being searched for the expression
-     * @return the unbounded in criterion as described above
+     * @param sql
+     *  The SQL statement to execute; must be an UPDATE or DELETE operation
+     *
+     * @param collection
+     *  The collection to be broken up into chunks
+     *
+     * @return
+     *  the number of rows updated as a result of this query
      */
-    public <T extends Object> Criterion unboundedInCriterion(String expression, Iterable<T> values) {
-        Criterion criterion = null;
+    protected int safeSQLUpdateWithCollection(String sql, Collection<?> collection, Object... params) {
+        int count = 0;
 
-        if (values == null || !values.iterator().hasNext()) {
-            throw new IllegalArgumentException("values is null or empty");
+        Session session = this.currentSession();
+        SQLQuery query = session.createSQLQuery(sql);
+
+        for (List<?> block : Iterables.partition(collection, IN_OPERATOR_BLOCK_SIZE)) {
+            int index = 1;
+
+            if (params != null) {
+                for (; index <= params.length; ++index) {
+                    query.setParameter(String.valueOf(index), params[index - 1]);
+                }
+            }
+            query.setParameterList(String.valueOf(index), block);
+
+            count += query.executeUpdate();
         }
 
-        for (List<T> block : Iterables.partition(values, IN_OPERATOR_BLOCK_SIZE)) {
-            criterion = (criterion == null) ?
-                Restrictions.in(expression, block) :
-                Restrictions.or(criterion, Restrictions.in(expression, block));
-        }
-
-        return criterion;
+        return count;
     }
 
     public List<E> lockAndLoadBatch(Iterable<String> ids, String entityName, String keyName) {
@@ -717,7 +754,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                 .append(keyName)
                 .append(" IN (:ids)");
 
-            Query query = this.getEntityManager()
+            javax.persistence.Query query = this.getEntityManager()
                 .createQuery(hql.toString())
                 .setLockMode(LockModeType.PESSIMISTIC_WRITE);
 
@@ -725,6 +762,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                 query.setParameter("ids", block);
                 result.addAll((List<E>) query.getResultList());
             }
+
             //In some situations, even after locking the entity we
             //got stale in the entity e.g. Pool.consumed
             //This refresh reloads the entity after the lock has

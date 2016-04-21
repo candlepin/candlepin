@@ -25,6 +25,7 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Branding;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
@@ -981,6 +982,9 @@ public class CandlepinPoolManager implements PoolManager {
         return this.convertToMasterPoolImpl(sub, owner, productMap);
     }
 
+    // TODO:
+    // Remove these methods or update them to properly mirror the curator.
+
     @Override
     public Pool find(String poolId) {
         return this.poolCurator.find(poolId);
@@ -989,8 +993,9 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public List<Pool> secureFind(Collection<String> poolIds) {
         if (CollectionUtils.isNotEmpty(poolIds)) {
-            return this.poolCurator.listAllByIds(poolIds);
+            return this.poolCurator.listAllByIds(poolIds).list();
         }
+
         return new ArrayList<Pool>();
     }
 
@@ -1004,6 +1009,7 @@ public class CandlepinPoolManager implements PoolManager {
         if (CollectionUtils.isNotEmpty(subscriptionIds)) {
             return this.poolCurator.lookupBySubscriptionIds(subscriptionIds);
         }
+
         return new ArrayList<Pool>();
     }
 
@@ -2316,7 +2322,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public List<Pool> listPoolsByOwner(Owner owner) {
+    public CandlepinQuery<Pool> listPoolsByOwner(Owner owner) {
         return poolCurator.listByOwner(owner);
     }
 

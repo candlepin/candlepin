@@ -52,6 +52,7 @@ import javax.ws.rs.ext.Provider;
 @Produces({"application/*+json", "text/json"})
 @Consumes({"application/*+json", "text/json"})
 public class JsonProvider extends JacksonJsonProvider {
+
     @Inject
     public JsonProvider(Configuration config, ProductCachedSerializationModule productCachedModules) {
         this(config.getBoolean(ConfigProperties.PRETTY_PRINT), productCachedModules);
@@ -96,8 +97,7 @@ public class JsonProvider extends JacksonJsonProvider {
         mapper.setFilters(filterProvider);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary =
-            new JaxbAnnotationIntrospector(mapper.getTypeFactory());
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
         AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
         mapper.setAnnotationIntrospector(pair);
     }

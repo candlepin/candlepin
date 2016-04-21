@@ -19,6 +19,8 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.quartz.JobBuilder.*;
 
+import org.candlepin.model.CandlepinQuery;
+import org.candlepin.model.EmptyCandlepinQuery;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterKernel;
@@ -56,7 +58,7 @@ public class CancelJobJobTest {
 
     @Test
     public void noCancellationsTest() throws JobExecutionException {
-        when(j.findCanceledJobs(any(Set.class))).thenReturn(new ArrayList<JobStatus>());
+        when(j.findCanceledJobs(any(Set.class))).thenReturn(new EmptyCandlepinQuery<JobStatus>());
         cancelJobJob.execute(ctx);
         try {
             verify(pk, never()).cancelJob(any(Serializable.class), any(String.class));
@@ -75,7 +77,11 @@ public class CancelJobJobTest {
         JobStatus js = new JobStatus(jd);
         List<JobStatus> jl = new ArrayList<JobStatus>();
         jl.add(js);
-        when(j.findCanceledJobs(any(Set.class))).thenReturn(jl);
+
+        CandlepinQuery query = mock(CandlepinQuery.class);
+        when(query.list()).thenReturn(jl);
+        when(j.findCanceledJobs(any(Set.class))).thenReturn(query);
+
         cancelJobJob.execute(ctx);
         verify(pk, atLeastOnce()).cancelJob((Serializable) "Kayfabe", "Deluxe");
     }

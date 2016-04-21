@@ -21,12 +21,14 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
+import org.candlepin.model.ResultIterator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.test.TestUtil;
@@ -72,7 +74,14 @@ public class DefaultProductServiceAdapterTest {
     public void productsByIds() {
         Owner o = mock(Owner.class);
         List<String> ids = new ArrayList<String>();
+        CandlepinQuery<Product> ccmock = mock(CandlepinQuery.class);
+        ResultIterator<Product> iterator = mock(ResultIterator.class);
+
+        when(opc.getProductsByIds(any(Owner.class), anyCollection())).thenReturn(ccmock);
+        when(ccmock.iterate(anyInt(), anyBoolean())).thenReturn(iterator);
+
         ids.add(someid);
+
         dpsa.getProductsByIds(o, ids);
         verify(opc).getProductsByIds(eq(o), eq(ids));
     }

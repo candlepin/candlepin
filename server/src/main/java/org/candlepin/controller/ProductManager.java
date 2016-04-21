@@ -114,7 +114,8 @@ public class ProductManager {
 
         // Check if we have an alternate version we can use instead.
         List<Product> alternateVersions = this.productCurator
-            .getProductsByVersion(entity.getId(), entity.getEntityVersion());
+            .getProductsByVersion(entity.getId(), entity.getEntityVersion())
+            .list();
 
         for (Product alt : alternateVersions) {
             if (alt.equals(entity)) {
@@ -193,7 +194,8 @@ public class ProductManager {
         // their own version.
         // This is probably going to be a very expensive operation, though.
         List<Product> alternateVersions = this.productCurator
-            .getProductsByVersion(update.getId(), updated.getEntityVersion());
+            .getProductsByVersion(update.getId(), updated.getEntityVersion())
+            .list();
 
         log.debug("Checking {} alternate product versions", alternateVersions.size());
         for (Product alt : alternateVersions) {

@@ -121,8 +121,8 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         this.createOwnerProductMapping(owner1, product);
         this.createOwnerProductMapping(owner2, product);
 
-        Collection<Owner> ownersA = this.ownerProductCurator.getOwnersByProduct(product);
-        Collection<Owner> ownersB = this.ownerProductCurator.getOwnersByProduct(product.getId());
+        Collection<Owner> ownersA = this.ownerProductCurator.getOwnersByProduct(product).list();
+        Collection<Owner> ownersB = this.ownerProductCurator.getOwnersByProduct(product.getId()).list();
 
         assertTrue(ownersA.contains(owner1));
         assertTrue(ownersA.contains(owner2));
@@ -137,8 +137,8 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Owner owner3 = this.createOwner();
         Product product = this.createProduct();
 
-        Collection<Owner> ownersA = this.ownerProductCurator.getOwnersByProduct(product);
-        Collection<Owner> ownersB = this.ownerProductCurator.getOwnersByProduct(product.getId());
+        Collection<Owner> ownersA = this.ownerProductCurator.getOwnersByProduct(product).list();
+        Collection<Owner> ownersB = this.ownerProductCurator.getOwnersByProduct(product.getId()).list();
 
         assertTrue(ownersA.isEmpty());
         assertTrue(ownersB.isEmpty());
@@ -153,8 +153,8 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         this.createOwnerProductMapping(owner, product1);
         this.createOwnerProductMapping(owner, product2);
 
-        Collection<Product> productsA = this.ownerProductCurator.getProductsByOwner(owner);
-        Collection<Product> productsB = this.ownerProductCurator.getProductsByOwner(owner.getId());
+        Collection<Product> productsA = this.ownerProductCurator.getProductsByOwner(owner).list();
+        Collection<Product> productsB = this.ownerProductCurator.getProductsByOwner(owner.getId()).list();
 
         assertTrue(productsA.contains(product1));
         assertTrue(productsA.contains(product2));
@@ -169,8 +169,8 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Product product2 = this.createProduct();
         Product product3 = this.createProduct();
 
-        Collection<Product> productsA = this.ownerProductCurator.getProductsByOwner(owner);
-        Collection<Product> productsB = this.ownerProductCurator.getProductsByOwner(owner.getId());
+        Collection<Product> productsA = this.ownerProductCurator.getProductsByOwner(owner).list();
+        Collection<Product> productsB = this.ownerProductCurator.getProductsByOwner(owner.getId()).list();
 
         assertTrue(productsA.isEmpty());
         assertTrue(productsB.isEmpty());
@@ -186,8 +186,8 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         this.createOwnerProductMapping(owner, product2);
 
         Collection<String> ids = Arrays.asList(product1.getId(), product2.getId(), product3.getId(), "dud");
-        Collection<Product> productsA = this.ownerProductCurator.getProductsByIds(owner, ids);
-        Collection<Product> productsB = this.ownerProductCurator.getProductsByIds(owner.getId(), ids);
+        Collection<Product> productsA = this.ownerProductCurator.getProductsByIds(owner, ids).list();
+        Collection<Product> productsB = this.ownerProductCurator.getProductsByIds(owner.getId(), ids).list();
 
         assertEquals(2, productsA.size());
         assertTrue(productsA.contains(product1));
@@ -206,8 +206,8 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         this.createOwnerProductMapping(owner, product2);
 
         Collection<String> ids = null;
-        Collection<Product> productsA = this.ownerProductCurator.getProductsByIds(owner, ids);
-        Collection<Product> productsB = this.ownerProductCurator.getProductsByIds(owner.getId(), ids);
+        Collection<Product> productsA = this.ownerProductCurator.getProductsByIds(owner, ids).list();
+        Collection<Product> productsB = this.ownerProductCurator.getProductsByIds(owner.getId(), ids).list();
 
         assertTrue(productsA.isEmpty());
         assertTrue(productsB.isEmpty());
@@ -223,8 +223,8 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         this.createOwnerProductMapping(owner, product2);
 
         Collection<String> ids = Collections.<String>emptyList();
-        Collection<Product> productsA = this.ownerProductCurator.getProductsByIds(owner, ids);
-        Collection<Product> productsB = this.ownerProductCurator.getProductsByIds(owner.getId(), ids);
+        Collection<Product> productsA = this.ownerProductCurator.getProductsByIds(owner, ids).list();
+        Collection<Product> productsB = this.ownerProductCurator.getProductsByIds(owner.getId(), ids).list();
 
         assertTrue(productsA.isEmpty());
         assertTrue(productsB.isEmpty());

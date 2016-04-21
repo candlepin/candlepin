@@ -14,11 +14,11 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.Criteria;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
-import java.util.List;
+
 
 /**
  * Curator for {@link ImportRecord}s.
@@ -36,10 +36,11 @@ public class ImportRecordCurator extends AbstractHibernateCurator<ImportRecord> 
      * @param owner the {@link Owner}
      * @return the import records
      */
-    public List<ImportRecord> findRecords(Owner owner) {
-        Criteria query = currentSession().createCriteria(ImportRecord.class);
-        query.add(Restrictions.eq("owner", owner)).addOrder(Order.desc("created"));
+    public CandlepinQuery<ImportRecord> findRecords(Owner owner) {
+        DetachedCriteria criteria = DetachedCriteria.forClass(ImportRecord.class)
+            .add(Restrictions.eq("owner", owner))
+            .addOrder(Order.desc("created"));
 
-        return this.listByCriteria(query);
+        return this.cpQueryFactory.<ImportRecord>buildQuery(this.currentSession(), criteria);
     }
 }

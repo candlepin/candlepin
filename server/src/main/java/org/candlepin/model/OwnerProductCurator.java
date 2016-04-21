@@ -17,9 +17,9 @@ package org.candlepin.model;
 import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Query;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
@@ -30,7 +30,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
@@ -65,52 +64,49 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .uniqueResult();
     }
 
-    public Collection<Owner> getOwnersByProduct(Product product) {
+    public CandlepinQuery<Owner> getOwnersByProduct(Product product) {
         return this.getOwnersByProduct(product.getId());
     }
 
-    @Transactional
-    public Collection<Owner> getOwnersByProduct(String productId) {
-        return (List<Owner>) this.createSecureCriteria()
+    public CandlepinQuery<Owner> getOwnersByProduct(String productId) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .createAlias("product", "product")
             .setProjection(Projections.property("owner"))
-            .add(Restrictions.eq("product.id", productId))
-            .list();
+            .add(Restrictions.eq("product.id", productId));
+
+        return this.cpQueryFactory.<Owner>buildQuery(this.currentSession(), criteria);
     }
 
-    public Collection<Product> getProductsByOwner(Owner owner) {
+    public CandlepinQuery<Product> getProductsByOwner(Owner owner) {
         return this.getProductsByOwner(owner.getId());
     }
 
-    @Transactional
-    public Collection<Product> getProductsByOwner(String ownerId) {
-        return (List<Product>) this.createSecureCriteria()
+    public CandlepinQuery<Product> getProductsByOwner(String ownerId) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .createAlias("owner", "owner")
             .setProjection(Projections.property("product"))
-            .add(Restrictions.eq("owner.id", ownerId))
-            .list();
+            .add(Restrictions.eq("owner.id", ownerId));
+
+        return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
     }
 
-    public Collection<Product> getProductsByIds(Owner owner, Collection<String> productIds) {
+    public CandlepinQuery<Product> getProductsByIds(Owner owner, Collection<String> productIds) {
         return this.getProductsByIds(owner.getId(), productIds);
     }
 
-    @Transactional
-    public Collection<Product> getProductsByIds(String ownerId, Collection<String> productIds) {
-        Collection<Product> result = null;
-
-        if (productIds != null && productIds.size() > 0) {
-            Criteria criteria = this.createSecureCriteria()
-                .createAlias("owner", "owner")
-                .createAlias("product", "product")
-                .setProjection(Projections.property("product"))
-                .add(Restrictions.eq("owner.id", ownerId))
-                .add(this.unboundedInCriterion("product.id", productIds));
-
-            result = (Collection<Product>) criteria.list();
+    public CandlepinQuery<Product> getProductsByIds(String ownerId, Collection<String> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return this.cpQueryFactory.<Product>buildQuery();
         }
 
-        return result != null ? result : new LinkedList<Product>();
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
+            .createAlias("owner", "owner")
+            .createAlias("product", "product")
+            .setProjection(Projections.property("product"))
+            .add(Restrictions.eq("owner.id", ownerId))
+            .add(CPRestrictions.in("product.id", productIds));
+
+        return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
     }
 
     @Transactional
@@ -176,7 +172,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
                 .createAlias("product", "product")
                 .setProjection(Projections.property("product.id"))
                 .add(Restrictions.eq("owner.id", owner.getId()))
-                .add(this.unboundedInCriterion("product.id", productIds))
+                .add(CPRestrictions.in("product.id", productIds))
                 .list());
         }
 

@@ -19,12 +19,14 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.ResultIterator;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 
@@ -55,6 +57,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
+
 
 /**
  * API Gateway into /product
@@ -254,7 +258,7 @@ public class ProductResource {
     @GET
     @Path("/owners")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Owner> getProductOwners(
+    public CandlepinQuery<Owner> getProductOwners(
         @QueryParam("product") List<String> productUuids) {
 
         if (productUuids.isEmpty()) {
@@ -282,13 +286,26 @@ public class ProductResource {
             return null;
         }
 
-        List<Owner> owners = this.ownerCurator.lookupOwnersWithProduct(productUuids);
-        List<JobDetail> jobs = new LinkedList<JobDetail>();
-
-        for (Owner owner : owners) {
-            jobs.add(RefreshPoolsJob.forOwner(owner, lazyRegen));
+        // TODO:
+        // Replace this with the commented out block below once the job scheduling is no longer performed
+        // via PinsetterAsyncFilter
+        ResultIterator<Owner> iterator = this.ownerCurator.lookupOwnersWithProduct(productUuids).iterate();
+        List<JobDetail> details = new LinkedList<JobDetail>();
+        while (iterator.hasNext()) {
+            details.add(RefreshPoolsJob.forOwner(iterator.next(), lazyRegen));
         }
+        iterator.close();
 
-        return jobs.toArray(new JobDetail[0]);
+        return details.toArray(new JobDetail[0]);
+
+        // final Boolean lazy = lazyRegen; // Necessary to deal with Java's limitations with closures
+        // return this.ownerCurator.lookupOwnersWithProduct(productUuids).transform(
+        //     new ElementTransform<Owner, JobDetail>() {
+        //         @Override
+        //         public JobDetail transform(Owner owner) {
+        //             return RefreshPoolsJob.forOwner(owner, lazy);
+        //         }
+        //     }
+        // );
     }
 }

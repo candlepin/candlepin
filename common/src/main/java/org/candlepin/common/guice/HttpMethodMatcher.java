@@ -34,6 +34,6 @@ public class HttpMethodMatcher extends AbstractMatcher<Method> {
     @Override
     public boolean matches(Method m) {
         Set<String> verbs = IsHttpMethod.getHttpMethods(m);
-        return verbs != null && !verbs.isEmpty();
+        return verbs != null && !verbs.isEmpty() && !m.isSynthetic();
     }
 }

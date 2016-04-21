@@ -113,7 +113,8 @@ public class ContentManager {
 
         // Check if we have an alternate version we can use instead.
         List<Content> alternateVersions = this.contentCurator
-            .getContentByVersion(entity.getId(), entity.getEntityVersion());
+            .getContentByVersion(entity.getId(), entity.getEntityVersion())
+            .list();
 
         log.debug("Checking {} alternate content versions", alternateVersions.size());
         for (Content alt : alternateVersions) {
@@ -193,7 +194,8 @@ public class ContentManager {
         Content updated = this.applyContentChanges((Content) entity.clone(), update);
 
         List<Content> alternateVersions = this.contentCurator
-            .getContentByVersion(update.getId(), updated.getEntityVersion());
+            .getContentByVersion(update.getId(), updated.getEntityVersion())
+            .list();
 
         log.debug("Checking {} alternate content versions", alternateVersions.size());
         for (Content alt : alternateVersions) {
@@ -201,18 +203,19 @@ public class ContentManager {
                 log.debug("Converging product with existing: {} => {}", updated, alt);
 
                 // Make sure every product using the old version/entity are updated to use the new one
-                List<Product> affectedProducts = this.productCurator.getProductsWithContent(
-                    owner, Arrays.asList(updated.getId())
-                );
+                List<Product> affectedProducts = this.productCurator
+                    .getProductsWithContent(owner, Arrays.asList(updated.getId()))
+                    .list();
 
                 this.ownerContentCurator.updateOwnerContentReferences(owner,
                     Collections.<String, String>singletonMap(entity.getUuid(), alt.getUuid()));
 
                 log.debug("Updating {} affected products", affectedProducts.size());
                 ContentData cdata = updated.toDTO();
+
                 for (Product product : affectedProducts) {
-                    log.debug("Updating affected product: {}", product);
                     ProductData pdata = product.toDTO();
+                    log.debug("Updating affected product: {}", product);
 
                     // We're taking advantage of the mutable nature of our joining objects.
                     // Probably not the best idea for long-term maintenance, but it works for now.
@@ -240,9 +243,9 @@ public class ContentManager {
 
             if (regenerateEntitlementCerts) {
                 // Every owner with a pool using any of the affected products needs an update.
-                List<Product> affectedProducts = this.productCurator.getProductsWithContent(
-                    Arrays.asList(updated.getUuid())
-                );
+                List<Product> affectedProducts = this.productCurator
+                    .getProductsWithContent(Arrays.asList(updated.getUuid()))
+                    .list();
 
                 this.entitlementCertGenerator.regenerateCertificatesOf(
                     Arrays.asList(owner), affectedProducts, true
@@ -256,9 +259,9 @@ public class ContentManager {
         log.debug("Forking content and applying update: {}", updated);
 
         // Get products that currently use this content...
-        List<Product> affectedProducts = this.productCurator.getProductsWithContent(
-            owner, Arrays.asList(updated.getId())
-        );
+        List<Product> affectedProducts = this.productCurator
+            .getProductsWithContent(owner, Arrays.asList(updated.getId()))
+            .list();
 
         // Clear the UUID so Hibernate doesn't think our copy is a detached entity
         updated.setUuid(null);
@@ -267,14 +270,18 @@ public class ContentManager {
         this.ownerContentCurator.updateOwnerContentReferences(owner,
             Collections.<String, String>singletonMap(entity.getUuid(), updated.getUuid()));
 
-        log.debug("Updating {} affected products", affectedProducts.size());
+        // Impl note:
+        // This block is a consequence of products and contents not being strongly related.
+        log.debug("Updating affected products");
+
         ContentData cdata = updated.toDTO();
+
         for (Product product : affectedProducts) {
             log.debug("Updating affected product: {}", product);
-            ProductData pdata = product.toDTO();
 
             // We're taking advantage of the mutable nature of our joining objects.
             // Probably not the best idea for long-term maintenance, but it works for now.
+            ProductData pdata = product.toDTO();
             ProductContentData pcd = pdata.getProductContent(updated.getId());
             if (pcd != null) {
                 pcd.setContent(cdata);
@@ -442,9 +449,9 @@ public class ContentManager {
         this.ownerContentCurator.saveAll(ownerContentBuffer, true, true);
 
         // Fetch collection of products affected by this import that aren't being imported themselves
-        List<Product> affectedProducts = this.productCurator.getProductsWithContent(
-            owner, sourceContent.keySet(), importedProductIds
-        );
+        List<Product> affectedProducts = this.productCurator
+            .getProductsWithContent(owner, sourceContent.keySet(), importedProductIds)
+            .list();
 
         if (affectedProducts != null && !affectedProducts.isEmpty()) {
             // Get the collection of content those products use
@@ -535,8 +542,9 @@ public class ContentManager {
             throw new IllegalStateException("Content has not yet been created");
         }
 
-        List<Product> affectedProducts =
-            this.productCurator.getProductsWithContent(owner, Arrays.asList(existing.getId()));
+        List<Product> affectedProducts = this.productCurator
+            .getProductsWithContent(owner, Arrays.asList(existing.getId()))
+            .list();
 
         // Update affected products and regenerate their certs
         List<Content> contentList = Arrays.asList(existing);

@@ -97,17 +97,12 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testRetrieveToBeCollectedSerials1() {
-        createCS().withExpDate("01/10/2010").collected(false).revoked(true)
-            .save();
-        createCS().withExpDate("02/10/2010").collected(true).revoked(true)
-            .save();
-        createCS().withExpDate("03/10/2010").collected(false).revoked(false)
-            .save();
-        createCS().withExpDate("04/10/2010").collected(true).revoked(true)
-            .save();
+        createCS().withExpDate("01/10/2010").collected(false).revoked(true).save();
+        createCS().withExpDate("02/10/2010").collected(true).revoked(true).save();
+        createCS().withExpDate("03/10/2010").collected(false).revoked(false).save();
+        createCS().withExpDate("04/10/2010").collected(true).revoked(true).save();
 
-        List<CertificateSerial> lcs = this.certSerialCurator
-            .retrieveTobeCollectedSerials();
+        List<CertificateSerial> lcs = this.certSerialCurator.retrieveTobeCollectedSerials().list();
         Set<Date> dates = extractExpiredDates(lcs);
         assertEquals(1, lcs.size());
         assertTrue(dates.contains(toDate("01/10/2010")));
@@ -119,8 +114,7 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
      */
     private Set<Date> extractExpiredDates(List<CertificateSerial> lcs) {
         Set<Date> dates = newSet();
-        for (Iterator<CertificateSerial> iterator = lcs.iterator(); iterator
-            .hasNext();) {
+        for (Iterator<CertificateSerial> iterator = lcs.iterator(); iterator.hasNext();) {
             CertificateSerial certificateSerial = iterator.next();
             dates.add(certificateSerial.getExpiration());
         }
@@ -129,10 +123,8 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testRetrieveToBeCollectedSerials2() {
-        createCS().withExpDate("01/10/2010").collected(true).revoked(true)
-            .save();
-        List<CertificateSerial> lcs = this.certSerialCurator
-            .retrieveTobeCollectedSerials();
+        createCS().withExpDate("01/10/2010").collected(true).revoked(true).save();
+        List<CertificateSerial> lcs = this.certSerialCurator.retrieveTobeCollectedSerials().list();
         assertEquals(0, lcs.size());
     }
 
@@ -141,12 +133,9 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         Date yesterday = yesterday();
         Date threeDaysPrev = addDaysToDt(-3);
         createCS().withExpDate(yesterday).collected(true).revoked(true).save();
-        createCS().withExpDate(addDaysToDt(3)).collected(true).revoked(true)
-            .save();
-        createCS().withExpDate(threeDaysPrev).collected(true).revoked(true)
-            .save();
-        List<CertificateSerial> lcs = this.certSerialCurator
-            .getExpiredSerials();
+        createCS().withExpDate(addDaysToDt(3)).collected(true).revoked(true).save();
+        createCS().withExpDate(threeDaysPrev).collected(true).revoked(true).save();
+        List<CertificateSerial> lcs = this.certSerialCurator.getExpiredSerials().list();
         Set<Date> dates = extractExpiredDates(lcs);
         assertEquals(2, lcs.size());
         assertTrue(dates.contains(yesterday));
@@ -155,16 +144,14 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetExpiredSerialsWithEmptyDatabase() {
-        List<CertificateSerial> lcs = this.certSerialCurator
-            .getExpiredSerials();
+        List<CertificateSerial> lcs = this.certSerialCurator.getExpiredSerials().list();
         assertEquals(0, lcs.size());
     }
 
     @Test
     public void testGetExpiredSerialsWithNonRevokedButExpiredSerials() {
         createCS().withExpDate(yesterday()).revoked(false).save();
-        List<CertificateSerial> lcs = this.certSerialCurator
-            .getExpiredSerials();
+        List<CertificateSerial> lcs = this.certSerialCurator.getExpiredSerials().list();
         assertEquals(0, lcs.size());
     }
 
@@ -241,7 +228,7 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         ids[0] = String.valueOf(serial.getSerial());
         ids[1] = String.valueOf(serial1.getSerial());
 
-        List<CertificateSerial> serials = certSerialCurator.listBySerialIds(ids);
+        List<CertificateSerial> serials = certSerialCurator.listBySerialIds(ids).list();
         assertEquals(2, serials.size());
 
         // verify

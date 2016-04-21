@@ -14,12 +14,11 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 
 import com.google.inject.Inject;
-
-import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -30,13 +29,14 @@ import javax.ws.rs.core.MediaType;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
+
+
 /**
  * CertificateSerialResource
  */
 @Path("/serials")
 @Api("serials")
 public class CertificateSerialResource {
-
     private CertificateSerialCurator certificateSerialCurator;
 
     @Inject
@@ -47,7 +47,7 @@ public class CertificateSerialResource {
     @ApiOperation(notes = "Retrieves a list of Certificate Serials", value = "getCertificateSerials")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<CertificateSerial> getCertificateSerials() {
+    public CandlepinQuery<CertificateSerial> getCertificateSerials() {
         return this.certificateSerialCurator.listAll();
     }
 

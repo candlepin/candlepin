@@ -23,6 +23,7 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ConflictException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
@@ -79,7 +80,6 @@ import io.swagger.annotations.ApiResponses;
 @Path("/environments")
 @Api("environments")
 public class EnvironmentResource {
-
     private static Logger log = LoggerFactory.getLogger(AdminResource.class);
 
     private EnvironmentCurator envCurator;
@@ -153,8 +153,8 @@ public class EnvironmentResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "environments")
-    public List<Environment> getEnvironments() {
-        return envCurator.listAll();
+    public CandlepinQuery<Environment> getEnvironments() {
+        return this.envCurator.listAll();
     }
 
     /**
@@ -196,7 +196,7 @@ public class EnvironmentResource {
 
     @ApiOperation(notes = "Promotes a Content into an Environment. This call accepts multiple " +
         "content sets to promote at once, after which all affected certificates for consumers" +
-        " in the enironment will be regenerated. Consumers registered to this environment " +
+        " in the environment will be regenerated. Consumers registered to this environment " +
         "will now receive this content in their entitlement certificates. Because the" +
         " certificate regeneraiton can be quite time consuming, this is done as an " +
         "asynchronous job. The content will be promoted and immediately available for new " +
@@ -305,8 +305,7 @@ public class EnvironmentResource {
         }
         catch (RollbackException hibernateException) {
             if (rdbmsExceptionTranslator.isUpdateHadNoEffectException(hibernateException)) {
-                log.info("Concurrent content demotion will cause this request to fail.",
-                    hibernateException);
+                log.info("Concurrent content demotion will cause this request to fail.", hibernateException);
                 throw new NotFoundException(
                     i18n.tr("One of the content does not exist in the environment anymore: {0}",
                         demotedContent.values()));
@@ -383,8 +382,8 @@ public class EnvironmentResource {
 
         Environment e = lookupEnvironment(envId);
         consumer.setEnvironment(e);
-        return this.consumerResource.create(consumer, principal, userName,
-            e.getOwner().getKey(), activationKeys, true);
+        return this.consumerResource.create(consumer, principal, userName, e.getOwner().getKey(),
+            activationKeys, true);
     }
 
 }

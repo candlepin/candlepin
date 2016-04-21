@@ -47,7 +47,7 @@ public class RegenProductEntitlementCertsJob extends KingpinJob {
         boolean lazy = arg0.getJobDetail().getJobDataMap().getBoolean(LAZY_REGEN);
 
         // Regenerate entitlement for every owner
-        for (Owner owner : this.ownerCurator.listAll()) {
+        for (Owner owner : this.ownerCurator.listAll().list()) {
             this.poolManager.regenerateCertificatesOf(owner, productId, lazy);
         }
     }

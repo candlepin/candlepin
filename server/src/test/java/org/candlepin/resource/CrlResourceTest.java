@@ -16,12 +16,11 @@ package org.candlepin.resource;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.pki.PKIUtility;
@@ -93,12 +92,14 @@ public class CrlResourceTest {
     public void testUnrevokeWithArguments() throws Exception {
         String[] input = new String[] { "123", "456", "789" };
 
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
         List<CertificateSerial> serials = new LinkedList<CertificateSerial>();
         serials.add(new CertificateSerial(123L));
         serials.add(new CertificateSerial(456L));
         serials.add(new CertificateSerial(789L));
 
-        when(this.certSerialCurator.listBySerialIds(eq(input))).thenReturn(serials);
+        when(cqmock.iterator()).thenReturn(serials.iterator());
+        when(this.certSerialCurator.listBySerialIds(eq(input))).thenReturn(cqmock);
 
         this.resource.unrevoke(input);
 
@@ -110,9 +111,11 @@ public class CrlResourceTest {
     public void testUnrevokeWithNoArguments() throws Exception {
         String[] input = new String[] { };
 
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
         List<CertificateSerial> serials = new LinkedList<CertificateSerial>();
 
-        when(this.certSerialCurator.listBySerialIds(eq(input))).thenReturn(serials);
+        when(cqmock.iterator()).thenReturn(serials.iterator());
+        when(this.certSerialCurator.listBySerialIds(eq(input))).thenReturn(cqmock);
 
         this.resource.unrevoke(input);
 

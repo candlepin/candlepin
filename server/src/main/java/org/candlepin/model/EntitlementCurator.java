@@ -26,6 +26,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaSpecification;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
@@ -54,14 +55,19 @@ import javax.persistence.Query;
 public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     private static Logger log = LoggerFactory.getLogger(EntitlementCurator.class);
 
+    private CandlepinQueryFactory cpQueryFactory;
     private OwnerProductCurator ownerProductCurator;
     private ProductCurator productCurator;
+
     /**
      * default ctor
      */
     @Inject
-    public EntitlementCurator(OwnerProductCurator ownerProductCurator, ProductCurator productCurator) {
+    public EntitlementCurator(OwnerProductCurator ownerProductCurator, ProductCurator productCurator,
+        CandlepinQueryFactory cpQueryFactory) {
         super(Entitlement.class);
+
+        this.cpQueryFactory = cpQueryFactory;
         this.ownerProductCurator = ownerProductCurator;
         this.productCurator = productCurator;
     }
@@ -173,17 +179,19 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return entitlementsPage;
     }
 
-    public List<Entitlement> listByOwner(Owner owner) {
-        Criteria query = currentSession().createCriteria(Entitlement.class)
+    public CandlepinQuery<Entitlement> listByOwner(Owner owner) {
+        DetachedCriteria criteria = DetachedCriteria.forClass(Entitlement.class)
             .add(Restrictions.eq("owner", owner));
 
-        return listByCriteria(query);
+        return this.cpQueryFactory.<Entitlement>buildQuery(this.currentSession(), criteria);
     }
 
-    public List<Entitlement> listByEnvironment(Environment environment) {
-        Criteria criteria = currentSession().createCriteria(Entitlement.class)
-            .createCriteria("consumer").add(Restrictions.eq("environment", environment));
-        return criteria.list();
+    public CandlepinQuery<Entitlement> listByEnvironment(Environment environment) {
+        DetachedCriteria criteria = DetachedCriteria.forClass(Entitlement.class)
+            .createCriteria("consumer")
+            .add(Restrictions.eq("environment", environment));
+
+        return this.cpQueryFactory.<Entitlement>buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -193,7 +201,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * @param activeOn The date we want to see entitlements which are active on.
      * @return List of entitlements.
      */
-    public List<Entitlement> listByConsumerAndDate(Consumer consumer, Date activeOn) {
+    public CandlepinQuery<Entitlement> listByConsumerAndDate(Consumer consumer, Date activeOn) {
 
         /*
          * Essentially the opposite of the above query which searches for entitlement
@@ -202,13 +210,13 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
          * being granted. As such the logic is basically reversed.
          *
          */
-        Criteria criteria = currentSession().createCriteria(Entitlement.class)
+        DetachedCriteria criteria = DetachedCriteria.forClass(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer))
             .createCriteria("pool")
             .add(Restrictions.le("startDate", activeOn))
             .add(Restrictions.ge("endDate", activeOn));
-        List<Entitlement> entitlements = criteria.list();
-        return entitlements;
+
+        return this.cpQueryFactory.<Entitlement>buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -477,7 +485,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * @return the list of entitlements for the consumer that are in the stack.
      */
     @SuppressWarnings("unchecked")
-    public List<Entitlement> findByStackId(Consumer consumer, String stackId) {
+    public CandlepinQuery<Entitlement> findByStackId(Consumer consumer, String stackId) {
         return findByStackIds(consumer, Arrays.asList(stackId));
     }
 
@@ -490,23 +498,26 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * @return the list of entitlements for the consumer that are in the stack.
      */
     @SuppressWarnings("unchecked")
-    public List<Entitlement> findByStackIds(Consumer consumer, Collection stackIds) {
-        Criteria activeNowQuery = currentSession().createCriteria(Entitlement.class)
+    public CandlepinQuery<Entitlement> findByStackIds(Consumer consumer, Collection stackIds) {
+        DetachedCriteria criteria = DetachedCriteria.forClass(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer))
             .createAlias("pool", "ent_pool")
             .createAlias("ent_pool.product", "product")
             .createAlias("product.attributes", "attrs")
             .add(Restrictions.eq("attrs.name", "stacking_id"))
-            .add(unboundedInCriterion("attrs.value", stackIds))
+            .add(CPRestrictions.in("attrs.value", stackIds))
             .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
             .createAlias("ent_pool.sourceStack", "ss", JoinType.LEFT_OUTER_JOIN)
             .add(Restrictions.isNull("ss.id"));
-        return activeNowQuery.list();
+
+        return this.cpQueryFactory.<Entitlement>buildQuery(this.currentSession(), criteria);
     }
 
     @SuppressWarnings("unchecked")
-    public List<Entitlement> findByPoolAttribute(Consumer consumer, String attributeName, String value) {
-        Criteria criteria = currentSession().createCriteria(Entitlement.class)
+    public CandlepinQuery<Entitlement> findByPoolAttribute(Consumer consumer, String attributeName,
+        String value) {
+
+        DetachedCriteria criteria = DetachedCriteria.forClass(Entitlement.class)
             .createAlias("pool", "ent_pool")
             .createAlias("ent_pool.attributes", "attrs")
             .add(Restrictions.eq("attrs.name", attributeName))
@@ -516,11 +527,11 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             criteria.add(Restrictions.eq("consumer", consumer));
         }
 
-        return criteria.list();
+        return this.cpQueryFactory.<Entitlement>buildQuery(this.currentSession(), criteria);
     }
 
     @SuppressWarnings("unchecked")
-    public List<Entitlement> findByPoolAttribute(String attributeName, String value) {
+    public CandlepinQuery<Entitlement> findByPoolAttribute(String attributeName, String value) {
         return findByPoolAttribute(null, attributeName, value);
     }
 
@@ -550,6 +561,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .add(Restrictions.isNotNull("sourceSub.id"))
             .addOrder(Order.asc("created")) // eldest entitlement
             .setMaxResults(1);
+
         return (Entitlement) activeNowQuery.uniqueResult();
     }
 

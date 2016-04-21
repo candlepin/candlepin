@@ -627,15 +627,16 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void listForConsumerOnDate() {
-        List<Entitlement> ents = entitlementCurator.listByConsumerAndDate(
-            consumer, createDate(2015, 1, 1));
+        List<Entitlement> ents = entitlementCurator
+            .listByConsumerAndDate(consumer, createDate(2015, 1, 1))
+            .list();
+
         assertEquals(2, ents.size());
     }
 
     @Test
     public void listByEnvironment() {
-        List<Entitlement> ents = entitlementCurator.listByEnvironment(
-            environment);
+        List<Entitlement> ents = entitlementCurator.listByEnvironment(environment).list();
         assertEquals(2, ents.size());
     }
 
@@ -871,7 +872,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool);
         Entitlement created = bind(consumer, pool);
 
-        List<Entitlement> results = entitlementCurator.findByStackId(consumer, stackingId);
+        List<Entitlement> results = entitlementCurator.findByStackId(consumer, stackingId).list();
         assertEquals(1, results.size());
         assertTrue(results.contains(created));
     }
@@ -893,7 +894,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             Entitlement created = bind(consumer, pool);
         }
 
-        List<Entitlement> results = entitlementCurator.findByStackIds(consumer, stackingIds);
+        List<Entitlement> results = entitlementCurator.findByStackIds(consumer, stackingIds).list();
         assertEquals(3, results.size());
     }
 
@@ -913,7 +914,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             createdEntitlements.add(bind(consumer, pool));
         }
 
-        List<Entitlement> results = entitlementCurator.findByStackId(consumer, stackingId);
+        List<Entitlement> results = entitlementCurator.findByStackId(consumer, stackingId).list();
         assertEquals(ents, results.size());
         assertTrue(results.containsAll(createdEntitlements) &&
             createdEntitlements.containsAll(results));
@@ -944,7 +945,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             createdEntitlements.add(bind(consumer, pool));
         }
 
-        List<Entitlement> results = entitlementCurator.findByStackId(consumer, stackingId);
+        List<Entitlement> results = entitlementCurator.findByStackId(consumer, stackingId).list();
         assertEquals(1, results.size());
         assertEquals(createdEntitlements.get(4), results.get(0));
     }
@@ -1054,7 +1055,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             createEntitlementCertificate("key", "certificate"));
         entitlementCurator.create(eNoAttributes);
 
-        List<Entitlement> results = entitlementCurator.findByPoolAttribute("x", "true");
+        List<Entitlement> results = entitlementCurator.findByPoolAttribute("x", "true").list();
 
         assertThat(results, Matchers.hasItems(e1, e2));
     }

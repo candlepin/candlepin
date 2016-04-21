@@ -31,6 +31,7 @@ import org.candlepin.auth.PrincipalData;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.EventCurator;
 
 import com.google.inject.Guice;
@@ -72,8 +73,10 @@ public class AtomFeedResourceTest {
 
     @Test
     public void getFeed() {
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
         List<Event> events = getEvents(10);
-        when(ec.listMostRecent(eq(1000))).thenReturn(events);
+        when(cqmock.list()).thenReturn(events);
+        when(ec.listMostRecent(eq(1000))).thenReturn(cqmock);
         Feed f = afr.getFeed();
         assertNotNull(f);
         assertEquals(10, f.getEntries().size());
@@ -81,7 +84,9 @@ public class AtomFeedResourceTest {
 
     @Test
     public void getEmptyFeed() {
-        when(ec.listMostRecent(eq(1000))).thenReturn(new ArrayList<Event>());
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(new ArrayList<Event>());
+        when(ec.listMostRecent(eq(1000))).thenReturn(cqmock);
         Feed f = afr.getFeed();
         assertNotNull(f);
         assertTrue(f.getEntries().isEmpty());

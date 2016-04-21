@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -88,16 +89,15 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
      *  a criteria for fetching content by version
      */
     @SuppressWarnings("checkstyle:indentation")
-    public List<Content> getContentByVersion(String contentId, int hashcode) {
-        List<Content> result = this.createSecureCriteria()
+    public CandlepinQuery<Content> getContentByVersion(String contentId, int hashcode) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .add(Restrictions.eq("id", contentId))
             .add(Restrictions.or(
                 Restrictions.isNull("entityVersion"),
                 Restrictions.eq("entityVersion", hashcode)
-            ))
-            .list();
+            ));
 
-        return result != null ? result : new LinkedList<Content>();
+        return this.cpQueryFactory.<Content>buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -152,7 +152,7 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
 
         return this.createSecureCriteria(ProductContent.class, "productContent")
                 .createAlias("content", "content")
-                .add(this.unboundedInCriterion("product", products))
+                .add(CPRestrictions.in("product", products))
                 .setProjection(Projections.property("content"))
                 .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
                 .list();

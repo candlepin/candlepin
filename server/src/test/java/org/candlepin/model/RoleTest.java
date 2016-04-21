@@ -72,7 +72,7 @@ public class RoleTest extends DatabaseTestFixture {
         Role r1 = createRole(owner);
         createRole(o2);
 
-        List<Role> roles = roleCurator.listForOwner(owner);
+        List<Role> roles = roleCurator.listForOwner(owner).list();
         assertEquals(1, roles.size());
         assertEquals(r1, roles.get(0));
         assertEquals(1, roles.get(0).getUsers().size());

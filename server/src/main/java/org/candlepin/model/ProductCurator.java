@@ -24,6 +24,7 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -32,10 +33,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,7 +50,6 @@ import javax.persistence.TypedQuery;
  * interact with Products.
  */
 public class ProductCurator extends AbstractHibernateCurator<Product> {
-
     private static Logger log = LoggerFactory.getLogger(ProductCurator.class);
 
     private Configuration config;
@@ -140,6 +140,13 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .uniqueResult();
     }
 
+    public CandlepinQuery<Product> listAllByUuids(Collection<? extends Serializable> uuids) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
+            .add(CPRestrictions.in("uuid", uuids));
+
+        return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
+    }
+
     public Set<Product> getPoolDerivedProvidedProductsCached(Pool pool) {
         return getPoolDerivedProvidedProductsCached(pool.getId());
     }
@@ -219,10 +226,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         return products;
     }
 
-    public List<Product> listAllByUuids(Collection<String> uuids) {
-        return listByCriteria(createSecureCriteria().add(unboundedInCriterion("uuid", uuids)));
-    }
-
     /**
      * Loads the set of products from database and triggers all lazy loads.
      * @param uuids
@@ -233,13 +236,13 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             return new HashMap<String, Product>();
         }
 
-        List<Product> products = listAllByUuids(uuids);
         Map<String, Product> productsByUuid = new HashMap<String, Product>();
 
-        for (Product p : products) {
+        for (Product p : this.listAllByUuids(uuids)) {
             if (p == null) {
                 continue;
             }
+
             p.getAttributes().size();
             for (ProductContent cont : p.getProductContent()) {
                 cont.getContent().getModifiedProductIds().size();
@@ -266,16 +269,15 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      *  a criteria for fetching product by version
      */
     @SuppressWarnings("checkstyle:indentation")
-    public List<Product> getProductsByVersion(String productId, int hashcode) {
-        List<Product> result = this.createSecureCriteria()
+    public CandlepinQuery<Product> getProductsByVersion(String productId, int hashcode) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .add(Restrictions.eq("id", productId))
             .add(Restrictions.or(
                 Restrictions.isNull("entityVersion"),
                 Restrictions.eq("entityVersion", hashcode)
-            ))
-            .list();
+            ));
 
-        return result != null ? result : new LinkedList<Product>();
+        return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -290,27 +292,25 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      *  a criteria for fetching products by version
      */
     @SuppressWarnings("checkstyle:indentation")
-    public List<Product> getProductByVersions(Map<String, Integer> productVersions) {
-        List<Product> result = null;
-
-        if (productVersions != null && !productVersions.isEmpty()) {
-            Disjunction disjunction = Restrictions.disjunction();
-            Criteria criteria = this.createSecureCriteria().add(disjunction);
-
-            for (Map.Entry<String, Integer> entry : productVersions.entrySet()) {
-                disjunction.add(Restrictions.and(
-                    Restrictions.eq("id", entry.getKey()),
-                    Restrictions.or(
-                        Restrictions.isNull("entityVersion"),
-                        Restrictions.eq("entityVersion", entry.getValue())
-                    )
-                ));
-            }
-
-            result = criteria.list();
+    public CandlepinQuery<Product> getProductByVersions(Map<String, Integer> productVersions) {
+        if (productVersions == null || productVersions.isEmpty()) {
+            return this.cpQueryFactory.<Product>buildQuery();
         }
 
-        return result != null ? result : new LinkedList<Product>();
+        Disjunction disjunction = Restrictions.disjunction();
+        DetachedCriteria criteria = this.createSecureDetachedCriteria().add(disjunction);
+
+        for (Map.Entry<String, Integer> entry : productVersions.entrySet()) {
+            disjunction.add(Restrictions.and(
+                Restrictions.eq("id", entry.getKey()),
+                Restrictions.or(
+                    Restrictions.isNull("entityVersion"),
+                    Restrictions.eq("entityVersion", entry.getValue())
+                )
+            ));
+        }
+
+        return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
     }
 
     // TODO:
@@ -445,49 +445,72 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .uniqueResult()) > 0;
     }
 
-    @SuppressWarnings("unchecked")
-    public List<Product> getProductsWithContent(Owner owner, Collection<String> contentIds) {
+    public CandlepinQuery<Product> getProductsWithContent(Owner owner, Collection<String> contentIds) {
         return this.getProductsWithContent(owner, contentIds, null);
     }
 
     @SuppressWarnings("unchecked")
-    public List<Product> getProductsWithContent(Owner owner, Collection<String> contentIds,
+    public CandlepinQuery<Product> getProductsWithContent(Owner owner, Collection<String> contentIds,
         Collection<String> productsToOmit) {
+        if (owner != null && contentIds != null && !contentIds.isEmpty()) {
+            // Impl note:
+            // We have to break this up into two queries for proper cursor and pagination support.
+            // Hibernate currently has two nasty "features" which break these in their own special
+            // way:
+            // - Distinct, when applied in any way outside of direct SQL, happens in Hibernate
+            //   *after* the results are pulled down, if and only if the results are fetched as a
+            //   list. The filtering does not happen when the results are fetched with a cursor.
+            // - Because result limiting (first+last result specifications) happens at the query
+            //   level and distinct filtering does not, cursor-based pagination breaks due to
+            //   potential results being removed after a page of results is fetched.
+            Criteria idCriteria = this.createSecureCriteria(OwnerProduct.class, null)
+                .createAlias("product", "product")
+                .createAlias("product.productContent", "pcontent")
+                .createAlias("pcontent.content", "content")
+                .createAlias("owner", "owner")
+                .add(Restrictions.eq("owner.id", owner.getId()))
+                .add(CPRestrictions.in("content.id", contentIds))
+                .setProjection(Projections.distinct(Projections.property("product.uuid")));
 
-        if (owner == null || contentIds == null || contentIds.isEmpty()) {
-            return new LinkedList<Product>();
+            if (productsToOmit != null && !productsToOmit.isEmpty()) {
+                idCriteria.add(Restrictions.not(CPRestrictions.in("product.id", productsToOmit)));
+            }
+
+            List<String> productUuids = idCriteria.list();
+
+            if (productUuids != null && !productUuids.isEmpty()) {
+                DetachedCriteria criteria = this.createSecureDetachedCriteria()
+                    .add(CPRestrictions.in("uuid", productUuids));
+
+                return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
+            }
         }
 
-        Criteria criteria = this.createSecureCriteria(OwnerProduct.class, null)
-            .createAlias("product", "product")
-            .createAlias("product.productContent", "pcontent")
-            .createAlias("pcontent.content", "content")
-            .createAlias("owner", "owner")
-            .add(Restrictions.eq("owner.id", owner.getId()))
-            .add(this.unboundedInCriterion("content.id", contentIds))
-            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
-            .setProjection(Projections.property("product"));
-
-        if (productsToOmit != null && !productsToOmit.isEmpty()) {
-            criteria.add(Restrictions.not(this.unboundedInCriterion("product.id", productsToOmit)));
-        }
-
-        return criteria.list();
+        return this.cpQueryFactory.<Product>buildQuery();
     }
 
     @SuppressWarnings("unchecked")
-    public List<Product> getProductsWithContent(Collection<String> contentUuids) {
-        if (contentUuids == null || contentUuids.isEmpty()) {
-            return new LinkedList<Product>();
+    public CandlepinQuery<Product> getProductsWithContent(Collection<String> contentUuids) {
+        if (contentUuids != null && !contentUuids.isEmpty()) {
+            // See note above in getProductsWithContent for details on why we do two queries here
+            // instead of one.
+            Criteria idCriteria = this.createSecureCriteria()
+                .createAlias("productContent", "pcontent")
+                .createAlias("pcontent.content", "content")
+                .add(CPRestrictions.in("content.uuid", contentUuids))
+                .setProjection(Projections.distinct(Projections.id()));
+
+            List<String> productUuids = idCriteria.list();
+
+            if (productUuids != null && !productUuids.isEmpty()) {
+                DetachedCriteria criteria = this.createSecureDetachedCriteria()
+                    .add(CPRestrictions.in("uuid", productUuids));
+
+                return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
+            }
         }
 
-        return this.createSecureCriteria()
-            .createAlias("productContent", "pcontent")
-            .createAlias("pcontent.content", "content")
-            .add(this.unboundedInCriterion("content.uuid", contentUuids))
-            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
-            // .setProjection(Projections.id())
-            .list();
+        return this.cpQueryFactory.<Product>buildQuery();
     }
 
 

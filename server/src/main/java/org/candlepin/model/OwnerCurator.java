@@ -14,10 +14,12 @@
  */
 package org.candlepin.model;
 
+import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
 import org.hibernate.ReplicationMode;
+import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
@@ -31,10 +33,14 @@ import java.util.List;
 
 import javax.persistence.LockModeType;
 
+
+
 /**
  * OwnerCurator
  */
 public class OwnerCurator extends AbstractHibernateCurator<Owner> {
+
+    @Inject private CandlepinQueryFactory cpQueryFactory;
 
     public OwnerCurator() {
         super(Owner.class);
@@ -96,9 +102,11 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     }
 
     @Transactional
-    public List<Owner> lookupByKeys(Collection<String> keys) {
-        return listByCriteria(
-            createSecureCriteria().add(Restrictions.in("key", keys)));
+    public CandlepinQuery<Owner> lookupByKeys(Collection<String> keys) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
+            .add(CPRestrictions.in("key", keys));
+
+        return this.cpQueryFactory.<Owner>buildQuery(this.currentSession(), criteria);
     }
 
     public Owner lookupWithUpstreamUuid(String upstreamUuid) {
@@ -113,12 +121,11 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
      * @param productIds
      * @return a list of owners
      */
-    public List<Owner> lookupOwnersByActiveProduct(List<String> productIds) {
+    public CandlepinQuery<Owner> lookupOwnersByActiveProduct(Collection<String> productIds) {
         // NOTE: only used by superadmin API calls, no permissions filtering needed here.
-        DetachedCriteria poolIdQuery = DetachedCriteria.forClass(Pool.class, "pool");
-        poolIdQuery.createAlias("pool.providedProducts", "providedProducts");
-
-        poolIdQuery.add(Restrictions.in("providedProducts.id", productIds))
+        DetachedCriteria poolIdQuery = DetachedCriteria.forClass(Pool.class, "pool")
+            .createAlias("pool.providedProducts", "providedProducts")
+            .add(CPRestrictions.in("providedProducts.id", productIds))
             .setProjection(Property.forName("pool.id"));
 
         DetachedCriteria ownerIdQuery = DetachedCriteria.forClass(Entitlement.class, "e")
@@ -130,9 +137,10 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
             .add(Subqueries.propertyIn("o2.id", ownerIdQuery))
             .setProjection(Projections.distinct(Projections.property("o2.key")));
 
-        return currentSession().createCriteria(Owner.class, "o")
-            .add(Subqueries.propertyIn("o.key", distinctQuery))
-            .list();
+        DetachedCriteria criteria = DetachedCriteria.forClass(Owner.class, "o")
+            .add(Subqueries.propertyIn("o.key", distinctQuery));
+
+        return this.cpQueryFactory.<Owner>buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -146,31 +154,58 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
      *  a list of owners associated with the specified products
      */
     @SuppressWarnings("checkstyle:indentation")
-    public List<Owner> lookupOwnersWithProduct(List<String> productIds) {
-        return this.currentSession().createCriteria(Owner.class, "Owner")
-            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
-            .createAlias("Owner.pools", "Pool")
-            .createAlias("Pool.product", "Prod", JoinType.LEFT_OUTER_JOIN)
-            .createAlias("Pool.derivedProduct", "DProd", JoinType.LEFT_OUTER_JOIN)
-            .createAlias("Pool.providedProducts", "PProd", JoinType.LEFT_OUTER_JOIN)
-            .createAlias("Pool.derivedProvidedProducts", "DPProd", JoinType.LEFT_OUTER_JOIN)
-            .add(Restrictions.or(
-                Restrictions.in("Prod.id", productIds),
-                Restrictions.in("DProd.id", productIds),
-                Restrictions.in("PProd.id", productIds),
-                Restrictions.in("DPProd.id", productIds)
-            ))
-            .list();
+    public CandlepinQuery<Owner> lookupOwnersWithProduct(Collection<String> productIds) {
+        if (productIds != null && !productIds.isEmpty()) {
+            Session session = this.currentSession();
+
+            // Impl note:
+            // We have to break this up into two queries for proper cursor and pagination support.
+            // Hibernate currently has two nasty "features" which break these in their own special
+            // way:
+            // - Distinct, when applied in any way outside of direct SQL, happens in Hibernate
+            //   *after* the results are pulled down, if and only if the results are fetched as a
+            //   list. The filtering does not happen when the results are fetched with a cursor.
+            // - Because result limiting (first+last result specifications) happens at the query
+            //   level and distinct filtering does not, cursor-based pagination breaks due to
+            //   potential results being removed after a page of results is fetched.
+            Criteria idCriteria = session.createCriteria(Owner.class, "Owner")
+                .setProjection(Projections.distinct(Projections.id()))
+                .createAlias("Owner.pools", "Pool")
+                .createAlias("Pool.product", "Prod", JoinType.LEFT_OUTER_JOIN)
+                .createAlias("Pool.derivedProduct", "DProd", JoinType.LEFT_OUTER_JOIN)
+                .createAlias("Pool.providedProducts", "PProd", JoinType.LEFT_OUTER_JOIN)
+                .createAlias("Pool.derivedProvidedProducts", "DPProd", JoinType.LEFT_OUTER_JOIN)
+                .add(Restrictions.or(
+                    CPRestrictions.in("Prod.id", productIds),
+                    CPRestrictions.in("DProd.id", productIds),
+                    CPRestrictions.in("PProd.id", productIds),
+                    CPRestrictions.in("DPProd.id", productIds)
+                ));
+
+            List<String> ownerIds = idCriteria.list();
+
+            if (ownerIds != null && !ownerIds.isEmpty()) {
+                DetachedCriteria criteria = DetachedCriteria.forClass(Owner.class)
+                    .add(CPRestrictions.in("id", ownerIds));
+
+                return this.cpQueryFactory.<Owner>buildQuery(session, criteria);
+            }
+        }
+
+        return this.cpQueryFactory.<Owner>buildQuery();
     }
 
     @SuppressWarnings("unchecked")
-    public List<String> getConsumerUuids(String ownerKey) {
-        DetachedCriteria ownerQuery = DetachedCriteria.forClass(Owner.class).add(
-            Restrictions.eq("key", ownerKey)).setProjection(Property.forName("id"));
+    public CandlepinQuery<String> getConsumerUuids(String ownerKey) {
+        DetachedCriteria ownerQuery = DetachedCriteria.forClass(Owner.class)
+            .add(Restrictions.eq("key", ownerKey))
+            .setProjection(Property.forName("id"));
 
-        return this.currentSession().createCriteria(Consumer.class)
+        DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
             .add(Subqueries.propertyEq("owner.id", ownerQuery))
-            .setProjection(Property.forName("uuid"))
-            .list();
+            .setProjection(Property.forName("uuid"));
+
+        return this.cpQueryFactory.<String>buildQuery(this.currentSession(), criteria);
     }
 }
+

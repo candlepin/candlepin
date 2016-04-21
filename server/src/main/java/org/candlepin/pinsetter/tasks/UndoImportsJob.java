@@ -121,7 +121,7 @@ public class UndoImportsJob extends UniqueByEntityJob {
 
             log.info("Deleting all pools originating from manifests for owner/org: {}", ownerKey);
 
-            List<Pool> pools = this.poolManager.listPoolsByOwner(owner);
+            List<Pool> pools = this.poolManager.listPoolsByOwner(owner).list();
             for (Pool pool : pools) {
                 if (pool.getSourceSubscription() != null && !pool.getType().isDerivedType()) {
                     this.poolManager.deletePool(pool);

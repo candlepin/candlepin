@@ -102,7 +102,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         List<String> productIds = new ArrayList<String>();
         productIds.add(provided.getId());
         productIds.add(provided2.getId());
-        List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds);
+        List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds).list();
 
         assertEquals(2, results.size());
     }
@@ -118,7 +118,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
         List<String> productIds = new ArrayList<String>();
         productIds.add(provided.getId());
-        List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds);
+        List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds).list();
 
         assertEquals(1, results.size());
         assertEquals(owner, results.get(0));
@@ -158,7 +158,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
         List<String> productIds = new ArrayList<String>();
         productIds.add(provided.getId());
-        List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds);
+        List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds).list();
 
         assertTrue(results.isEmpty());
     }
@@ -200,7 +200,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         consumerCurator.create(c2);
         consumerCurator.create(c3);
 
-        List<String> result = ownerCurator.getConsumerUuids(owner.getKey());
+        List<String> result = ownerCurator.getConsumerUuids(owner.getKey()).list();
         assertEquals(2, result.size());
         assertTrue(result.contains(c1.getUuid()));
         assertTrue(result.contains(c2.getUuid()));
@@ -274,22 +274,22 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         Owner owner2 = owners.get(1);
         Owner owner3 = owners.get(2);
 
-        owners = this.ownerCurator.lookupOwnersWithProduct(Arrays.asList("p4"));
+        owners = this.ownerCurator.lookupOwnersWithProduct(Arrays.asList("p4")).list();
         assertEquals(Arrays.asList(owner1), owners);
 
-        owners = this.ownerCurator.lookupOwnersWithProduct(Arrays.asList("p5d"));
+        owners = this.ownerCurator.lookupOwnersWithProduct(Arrays.asList("p5d")).list();
         assertEquals(Arrays.asList(owner2), owners);
 
-        owners = this.ownerCurator.lookupOwnersWithProduct(Arrays.asList("p1"));
+        owners = this.ownerCurator.lookupOwnersWithProduct(Arrays.asList("p1")).list();
         assertEquals(Arrays.asList(owner1, owner2, owner3), owners);
 
-        owners = this.ownerCurator.lookupOwnersWithProduct(Arrays.asList("p3"));
+        owners = this.ownerCurator.lookupOwnersWithProduct(Arrays.asList("p3")).list();
         assertEquals(Arrays.asList(owner2, owner3), owners);
 
-        owners = this.ownerCurator.lookupOwnersWithProduct(Arrays.asList("p4", "p6"));
+        owners = this.ownerCurator.lookupOwnersWithProduct(Arrays.asList("p4", "p6")).list();
         assertEquals(Arrays.asList(owner1, owner3), owners);
 
-        owners = this.ownerCurator.lookupOwnersWithProduct(Arrays.asList("nope"));
+        owners = this.ownerCurator.lookupOwnersWithProduct(Arrays.asList("nope")).list();
         assertEquals(0, owners.size());
     }
 }

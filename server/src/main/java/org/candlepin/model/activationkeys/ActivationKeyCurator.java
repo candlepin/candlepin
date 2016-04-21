@@ -51,6 +51,9 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
             .uniqueResult();
     }
 
+    // TODO:
+    // Move this method to the ActivationKeyResource. The curator should not be returning resource-level
+    // exceptions
     public ActivationKey verifyAndLookupKey(String activationKeyId) {
         ActivationKey key = this.secureFind(activationKeyId);
 

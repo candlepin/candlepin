@@ -130,7 +130,9 @@ public class ManifestManager {
      */
     public File generateManifest(String consumerUuid, String cdnLabel, String webUrl, String apiUrl,
         Map<String, String> extensionData) throws ExportCreationException {
+
         log.info("Exporting consumer {}", consumerUuid);
+
         Consumer consumer = validateConsumerForExport(consumerUuid, cdnLabel);
         poolManager.regenerateDirtyEntitlements(entitlementCurator.listByConsumer(consumer));
         File export = exporter.getFullExport(consumer, cdnLabel, webUrl, apiUrl, extensionData);
@@ -295,9 +297,7 @@ public class ManifestManager {
         if (consumer.getType() == null ||
             !consumer.getType().isManifest()) {
             throw new ForbiddenException(
-                i18n.tr(
-                    "Unit {0} cannot be exported. " +
-                    "A manifest cannot be made for units of type ''{1}''.",
+                i18n.tr("Unit {0} cannot be exported. A manifest cannot be made for units of type ''{1}''.",
                     consumerUuid, consumer.getType().getLabel()));
         }
 

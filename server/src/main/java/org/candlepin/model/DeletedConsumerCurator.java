@@ -14,18 +14,19 @@
  */
 package org.candlepin.model;
 
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.Date;
-import java.util.List;
+
+
 
 /**
  * DeletedConsumerCurator
  */
-public class DeletedConsumerCurator extends
-    AbstractHibernateCurator<DeletedConsumer> {
+public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedConsumer> {
 
     public DeletedConsumerCurator() {
         super(DeletedConsumer.class);
@@ -41,16 +42,17 @@ public class DeletedConsumerCurator extends
             .uniqueResult();
     }
 
-    public List<DeletedConsumer> findByOwner(Owner o) {
+    public CandlepinQuery<DeletedConsumer> findByOwner(Owner o) {
         return findByOwnerId(o.getId());
     }
 
     @SuppressWarnings("unchecked")
-    public List<DeletedConsumer> findByOwnerId(String oid) {
-        return currentSession().createCriteria(DeletedConsumer.class)
+    public CandlepinQuery<DeletedConsumer> findByOwnerId(String oid) {
+        DetachedCriteria criteria = DetachedCriteria.forClass(DeletedConsumer.class)
             .add(Restrictions.eq("ownerId", oid))
-            .addOrder(Order.desc("created"))
-            .list();
+            .addOrder(Order.desc("created"));
+
+        return this.cpQueryFactory.<DeletedConsumer>buildQuery(this.currentSession(), criteria);
     }
 
     public int countByConsumer(Consumer c) {
@@ -59,16 +61,16 @@ public class DeletedConsumerCurator extends
 
     public int countByConsumerUuid(String uuid) {
         return ((Long) currentSession().createCriteria(DeletedConsumer.class)
-                       .add(Restrictions.eq("consumerUuid", uuid))
-                       .setProjection(Projections.rowCount()).uniqueResult()).intValue();
-
+            .add(Restrictions.eq("consumerUuid", uuid))
+            .setProjection(Projections.rowCount()).uniqueResult()).intValue();
     }
 
     @SuppressWarnings("unchecked")
-    public List<DeletedConsumer> findByDate(Date date) {
-        return currentSession().createCriteria(DeletedConsumer.class)
+    public CandlepinQuery<DeletedConsumer> findByDate(Date date) {
+        DetachedCriteria criteria = DetachedCriteria.forClass(DeletedConsumer.class)
             .add(Restrictions.ge("created", date))
-            .addOrder(Order.desc("created"))
-            .list();
+            .addOrder(Order.desc("created"));
+
+        return this.cpQueryFactory.<DeletedConsumer>buildQuery(this.currentSession(), criteria);
     }
 }

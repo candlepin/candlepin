@@ -29,9 +29,6 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.hamcrest.Matchers;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.InExpression;
-import org.hibernate.criterion.LogicalExpression;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -483,10 +480,10 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void testProductNameViaFindAll() {
         Product p = this.createProduct("another", "A Great Operating System", owner);
 
-        Pool pool = createPool(owner, p, 25L,
-            TestUtil.createDate(1999, 1, 10), TestUtil.createDate(2099, 1, 9));
+        Pool pool = createPool(owner, p, 25L, TestUtil.createDate(1999, 1, 10),
+            TestUtil.createDate(2099, 1, 9));
         poolCurator.create(pool);
-        pool = poolCurator.listAll().get(0);
+        pool = poolCurator.listAll().list().get(0);
 
         assertEquals("A Great Operating System", pool.getProductName());
     }
@@ -598,45 +595,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void buildInCriteriaTestBatch() {
-        List<String> items = new ArrayList<String>();
-        StringBuilder expected = new StringBuilder("taylor in (");
-
-        for (int i = 0; i < AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE * 3; ++i) {
-            items.add(String.valueOf(i));
-
-            if (items.size() % AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE == 0) {
-                expected.append(i).append(") or taylor in (");
-            }
-            else {
-                expected.append(i).append(", ");
-            }
-        }
-        expected.setLength(expected.length() - 15);
-
-        Criterion crit = poolCurator.unboundedInCriterion("taylor", items);
-        LogicalExpression le = (LogicalExpression) crit;
-        assertEquals("or", le.getOp());
-        assertEquals(expected.toString(), le.toString());
-    }
-
-    @Test
-    public void buildInCriteriaTestSimple() {
-        List<String> items = new ArrayList<String>();
-        String expected = "swift in (";
-        int i = 0;
-        for (; i < AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE - 1; i++) {
-            expected += i + ", ";
-            items.add("" + i);
-        }
-        expected += i + ")";
-        items.add("" + i);
-        Criterion crit = poolCurator.unboundedInCriterion("swift", items);
-        InExpression ie = (InExpression) crit;
-        assertEquals(expected, ie.toString());
-    }
-
-    @Test
     public void testListBySourceEntitlement() {
 
         Pool sourcePool = TestUtil.createPool(owner, product);
@@ -652,8 +610,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
         poolCurator.create(pool3);
 
-        assertEquals(2, poolCurator.listBySourceEntitlement(e).size());
-
+        assertEquals(2, poolCurator.listBySourceEntitlement(e).list().size());
     }
 
     @Test

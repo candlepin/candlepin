@@ -20,11 +20,13 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
+import org.candlepin.model.ResultIterator;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -57,12 +59,19 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     }
 
     @Override
+    @Transactional
     public Collection<ProductData> getProductsByIds(Owner owner, Collection<String> ids) {
         Collection<ProductData> productData = new LinkedList<ProductData>();
 
-        for (Product product : this.ownerProductCurator.getProductsByIds(owner, ids)) {
-            productData.add(product.toDTO());
+        ResultIterator<Product> iterator = this.ownerProductCurator
+            .getProductsByIds(owner, ids)
+            .iterate(0, true);
+
+        while (iterator.hasNext()) {
+            productData.add(iterator.next().toDTO());
         }
+
+        iterator.close();
 
         return productData;
     }
