@@ -1246,7 +1246,7 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         @Context Principal principal) {
         log.debug("Deleting consumer_uuid {}", uuid);
-        Consumer toDelete = consumerCurator.verifyAndLookupConsumer(uuid);
+        Consumer toDelete = consumerCurator.lockAndLoadByUuid(uuid);
         try {
             this.poolManager.revokeAllEntitlements(toDelete);
         }
