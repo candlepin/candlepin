@@ -1,5 +1,5 @@
 FROM candlepin/candlepin-base
-MAINTAINER Devan Goodwin <dgoodwin@redhat.com>
+#MAINTAINER Devan Goodwin <dgoodwin@redhat.com>
 MAINTAINER Chris Rog <crog@redhat.com>
 
 # Configure postgresql:
