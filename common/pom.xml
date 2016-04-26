@@ -16,7 +16,7 @@
   <properties>
     <commons-codec-commons-codec.version>1.4</commons-codec-commons-codec.version>
     <commons-collections-commons-collections.version>3.2</commons-collections-commons-collections.version>
-    <commons-io-commons-io.version>1.3.2</commons-io-commons-io.version>
+    <commons-io-commons-io.version>1.4</commons-io-commons-io.version>
     <commons-lang-commons-lang.version>2.5</commons-lang-commons-lang.version>
     <ch.qos.logback-logback-core.version>1.1.3</ch.qos.logback-logback-core.version>
     <ch.qos.logback-logback-classic.version>1.1.3</ch.qos.logback-logback-classic.version>
@@ -41,7 +41,7 @@
     <org.jboss.resteasy-resteasy-atom-provider.version>3.0.10.Final</org.jboss.resteasy-resteasy-atom-provider.version>
     <org.jboss.resteasy-resteasy-multipart-provider.version>3.0.10.Final</org.jboss.resteasy-resteasy-multipart-provider.version>
     <org.scannotation-scannotation.version>1.0.3</org.scannotation-scannotation.version>
-    <org.apache.httpcomponents-httpclient.version>4.2.1</org.apache.httpcomponents-httpclient.version>
+    <org.apache.httpcomponents-httpclient.version>4.3.2</org.apache.httpcomponents-httpclient.version>
     <org.apache.james-apache-mime4j.version>0.6</org.apache.james-apache-mime4j.version>
     <javax.mail-mail.version>1.4.4</javax.mail-mail.version>
     <javax.ws.rs-javax.ws.rs-api.version>2.0.1</javax.ws.rs-javax.ws.rs-api.version>

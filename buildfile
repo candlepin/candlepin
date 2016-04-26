@@ -40,7 +40,7 @@ RESTEASY = [group('jaxrs-api',
                   # servlet spec 3.0 which Tomcat 6 does not support
                   :version => '3.0.10.Final'),
             'org.scannotation:scannotation:jar:1.0.3',
-            'org.apache.httpcomponents:httpclient:jar:4.2.1',
+            'org.apache.httpcomponents:httpclient:jar:4.3.2',
             'org.apache.james:apache-mime4j:jar:0.6',
             'javax.mail:mail:jar:1.4.4',
             'javax.ws.rs:javax.ws.rs-api:jar:2.0.1']
@@ -117,7 +117,7 @@ ORACLE = ['com.oracle:ojdbc6:jar:11.2.0', 'org.quartz-scheduler:quartz-oracle:ja
 
 COMMONS = ['commons-codec:commons-codec:jar:1.4',
            'commons-collections:commons-collections:jar:3.2',
-           'commons-io:commons-io:jar:1.3.2',
+           'commons-io:commons-io:jar:1.4',
            'commons-lang:commons-lang:jar:2.5']
 
 LIQUIBASE = 'org.liquibase:liquibase-core:jar:3.1.0'
