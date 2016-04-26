@@ -27,27 +27,45 @@ the `mead` directory.
 
 ## Maven Build
 Mead will not just download JAR files willy-nilly.  You must first import them
-into the buildroot.  You must have the maven-import and regen-repo permissions
-in Brew.  You can see your permissions with `brew list-permissions --mine`
+into the buildroot.  You must have the `maven-import` and `regen-repo`
+permissions in Brew.  You can see your permissions with `brew list-permissions
+--mine`
 
 To import just one artifact
 
 ```
-$ ./get-maven-artifacts group:artifactId:packaging:version
-$ ./import-maven --tag YOUR_DEPENDENCIES_TAG ARTIFACT_FILES*
-$ ./brew regen-repo YOUR_BUILDROOT
+$ cd $UTILITY_SCRIPTS_DIR
+$ ./mead/get-maven-artifacts group:artifactId:packaging:version
+$ ./mead/import-maven --tag YOUR_DEPENDENCIES_TAG ARTIFACT_FILES*
+$ brew regen-repo YOUR_BUILDROOT
 ```
 
 For example:
+
 ```
-$ get-maven-artifacts org.apache:apache:pom:11
-$ ./import-maven --tag candlepin-mead-rhel-6-deps apache-11*
-$ ./brew regen-repo candlepin-mead-rhel-6-build
+$ cd $UTILITY_SCRIPTS_DIR
+$ ./mead/get-maven-artifacts org.apache:apache:pom:11
+$ ./mead/import-maven --tag candlepin-mead-rhel-6-deps apache-11*
+$ brew regen-repo candlepin-mead-rhel-6-build
 ```
 
-Importing everything one at a time is slow, so the fastest way is to run your
-build against an empty local repository and send the build log to
-`mead-load-build-dependencies`.
+However, I *never* import artifacts one at a time since so many of them have
+other transitive dependencies.  You end up in stuck in is a cycle where you
+import, build, hit a missing dependency, import it, build, hit a missing
+dependency in the newly imported dependency, etc.  Instead, doing a local build
+against a completely empty local repository allows you to avoid this scenario
+since Maven will download (and therefore print a message in the build log)
+everything that is needed.  You can then send that log to
+`mead-load-build-dependencies` which will import everything that is missing.
+
+The snippet below tells Maven to use an empty repository in `/tmp/m2_repo` and
+then runs a Maven build.  All the output is teed to `/tmp/build.log`.  Since the
+repository used is empty and some other Maven options are enabled, that log file
+will contain the URL of every dependency the build requires.  Subsequently, go
+to the checkout you made of the utility scripts git repository and run the
+`mead-load-build-dependencies` script.  That script scrapes the log file of
+the build and imports any missing dependencies into MEAD.  Finally, you need to
+regenerate the repository meta-data.
 
 ```
 $ cat > mead_settings.xml <<SETTINGS
@@ -56,7 +74,8 @@ $ cat > mead_settings.xml <<SETTINGS
 </settings>
 SETTINGS
 $ mvn -B dependency:resolve-plugins deploy -Dmaven.test.skip=true -s mead_settings.xml -DaltDeploymentRepository=local-output::default::file:///tmp/output | tee /tmp/build.log
-$ ./mead-load-build-dependencies --tag candlepin-mead-rhel-6-deps /tmp/build.log
+$ cd $UTILITY_SCRIPTS_DIR
+$ ./mead/mead-load-build-dependencies --tag candlepin-mead-rhel-6-deps /tmp/build.log
 $ brew regen-repo candlepin-mead-rhel-6-build
 ```
 
@@ -65,23 +84,19 @@ show up in the build log.  If you use a repository that already has some of
 your dependencies, `mead-load-build-dependencies` won't pick them up (since
 Maven doesn't download them) and you'll be stuck importing them one at a time.
 
-The worst situation to get stuck in is a cycle where you import, build, hit a
-missing dependency, import it, build, hit a missing dependency in the newly
-imported dependency, etc.  Doing a local build against a completely empty local
-repository allows you to avoid this scenario since Maven will download (and
-therefore print a message in the build log) everything that is needed.
-
-Once you have all your dependencies imported, you need to create a git
-repository somewhere that Brew can access it since Mead builds pull the source
-from a git repository.  However, github is not on the whitelist.  The easiest
-solution is to set up a repository off of git.engineering.redhat.com like so:
+## Scratch Builds
+MEAD is set up to pull our source from a git repository rather than from a
+tarball like rpmbuild.  If you are doing a scratch build, you don't want to push
+your code to our official MEAD git repository.  Instead you need to create a git
+repository somewhere else that Brew can access.  GitHub is not on the
+whitelist, so the easiest solution is to set up a repository off of
+git.engineering.redhat.com like so:
 
 ```
 $ ssh KERB_ID@file.rdu.redhat.com
 $ mkdir public_git
 $ cd public_git
 $ git clone --bare git://github.com/candlepin/candlepin
-
 ```
 
 With the source available, you're ready to actually try a build using Brew's
@@ -94,15 +109,16 @@ however, you'll want to use `maven-chain` which gets around some of the
 limitations of Maven.
 
 Maven does not handle sibling dependencies well (if at all) such as the ones we
-have with the code in the "common" project.  Building from the root of the source
-tree would solve the problem, but would result in the final build artifact being
-marked as "org.candlepin-candlepin-parent" (the project name in the top level POM
-file) instead of as "gutterball" or "candlepin".  The solution is to chain several
-MEAD builds together so that we can build the dependencies we need.  Each shipped
-project has a `mead.chain` file.  The file is an INI style with each section as
-a different link in the chain.  The section title is in the "groupId-artifactId"
-format and contains a value for `scmurl` which is a pointer to the SCM containing
-the code and a pointer to the git ref to use.  For example
+have with the code in the "common" project.  Building from the root of the
+source tree would solve the problem, but would result in the final build
+artifact being marked as "org.candlepin-candlepin-parent" (the project name in
+the top level POM file) instead of as "gutterball" or "candlepin".  The solution
+is to chain several MEAD builds together so that we can build the dependencies
+we need.  Each shipped project has a `mead.chain` file.  The file is an INI
+style with each section as a different link in the chain.  The section title is
+in the "groupId-artifactId" format and contains a value for `scmurl` which is a
+pointer to the SCM containing the code and a pointer to the git ref to use.  For
+example
 
 ```
 scmurl=git://example.com/candlepin?server#candlepin-2.0.0-1
