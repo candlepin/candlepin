@@ -3,14 +3,23 @@ Mead is a Maven-based build system for Brew.  It works by building your
 project via Maven, rendering a RPM spec file from a template, and then packaging
 everything as an RPM with the rendered spec file.
 
-## TL;DR
-
-Adjust second command's parent version, and candlepin tag version per your build results from the first command:
+## Master Builds
+Building for the master branch for EL6 is available in Tito.
 
 ```
 $ tito release mead
+```
+
+To build in EL6, you must adjust explicitly tell brew to create another wrapper
+RPM using the tag you just build from.  For example, if I had just built
+candlepin-2.0.4-1:
+
+```
 $ brew wrapper-rpm --create-build candlepin-mead-rhel-7-maven-candidate org.candlepin-candlepin-2.0.4-1 "git://git.app.eng.bos.redhat.com/candlepin.git?server#candlepin-2.0.4-1"
 ```
+
+This additional wrapper-rpm step for EL7 is not automated in Tito (yet) because
+it is reliant on the first build running successfully.
 
 ## Getting Started
 Clone the RCM utility-scripts repository.  All the scripts you'll need are in
@@ -41,13 +50,14 @@ build against an empty local repository and send the build log to
 `mead-load-build-dependencies`.
 
 ```
-$ cat > my_settings.xml <<SETTINGS
+$ cat > mead_settings.xml <<SETTINGS
 <settings>
   <localRepository>/tmp/m2_repo/</localRepository>
 </settings>
 SETTINGS
-$ mvn -B dependency:resolve-plugins deploy -Dmaven.test.skip=true -s settings.xml -DaltDeploymentRepository=local-output::default::file:///tmp/output | tee /tmp/build.log
-$ ./mead-load-build-dependencies --tag YOUR_DEPENDENCIES_TAG /tmp/build.log
+$ mvn -B dependency:resolve-plugins deploy -Dmaven.test.skip=true -s mead_settings.xml -DaltDeploymentRepository=local-output::default::file:///tmp/output | tee /tmp/build.log
+$ ./mead-load-build-dependencies --tag candlepin-mead-rhel-6-deps /tmp/build.log
+$ brew regen-repo candlepin-mead-rhel-6-build
 ```
 
 It is important to use an empty local repository so that all dependencies will
