@@ -46,6 +46,16 @@ public class ConfigProperties {
 
     public static final String CANDLEPIN_URL = "candlepin.url";
 
+    /**
+     * Whether we allow users to authenticate (e.g. HTTP Basic) over insecure
+     * channel such as HTTP.
+     * The default is false.
+     * A user might set this to 'true' for easier debugging of the Candlepin
+     * server.
+     * If kept in default (false) setting, then Candlepin will disallow any
+     * attempt to authenticate over insecure channel.
+     */
+    public static final String AUTH_OVER_HTTP = "candlepin.allow_auth_over_http";
     public static final String CA_KEY = "candlepin.ca_key";
     public static final String CA_CERT = "candlepin.ca_cert";
     public static final String FAIL_ON_UNKNOWN_IMPORT_PROPERTIES =
@@ -300,7 +310,7 @@ public class ConfigProperties {
                 this.put(SSL_AUTHENTICATION, "true");
                 this.put(OAUTH_AUTHENTICATION, "false");
                 this.put(BASIC_AUTHENTICATION, "true");
-
+                this.put(AUTH_OVER_HTTP, "false");
                 // By default, environments should be hidden so clients do not need to
                 // submit one when registering.
                 this.put(HIDDEN_RESOURCES, "environments");
@@ -377,4 +387,6 @@ public class ConfigProperties {
                 this.put(PINSETTER_MAX_RETRIES, Integer.toString(PINSETTER_MAX_RETRIES_DEFAULT));
             }
         };
+
+
 }

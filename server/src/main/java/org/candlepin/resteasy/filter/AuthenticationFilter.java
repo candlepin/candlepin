@@ -142,7 +142,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
                 log.debug("No auth allowed for resource; setting NoAuth principal");
                 principal = new NoAuthPrincipal();
             }
-            else if (!request.isSecure()) {
+            else if (!config.getBoolean(ConfigProperties.AUTH_OVER_HTTP) && !request.isSecure()) {
                 throw new BadRequestException("Please use SSL when accessing protected resources");
             }
             else {
@@ -164,4 +164,5 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         // Push the principal into the context for the PrincipalProvider to access directly
         ResteasyProviderFactory.pushContext(Principal.class, principal);
     }
+
 }

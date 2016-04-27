@@ -132,6 +132,23 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
     }
 
     @Test(expected = NotAuthorizedException.class)
+    public void noSecurityHoleNoPrincipalNoSslButOverridenByConfig() throws Exception {
+        config.setProperty(ConfigProperties.AUTH_OVER_HTTP, "true");
+        try {
+            when(mockHttpServletRequest.isSecure()).thenReturn(false);
+            Method method = FakeResource.class.getMethod("someMethod", String.class);
+            mockResourceMethod(method);
+            interceptor.filter(getContext());
+        }
+        finally {
+            /**
+             * Revert default settings
+             */
+            config.setProperty(ConfigProperties.AUTH_OVER_HTTP, "false");
+        }
+    }
+
+    @Test(expected = NotAuthorizedException.class)
     public void noSecurityHoleNoPrincipal() throws Exception {
         when(mockHttpServletRequest.isSecure()).thenReturn(true);
         Method method = FakeResource.class.getMethod("someMethod", String.class);
