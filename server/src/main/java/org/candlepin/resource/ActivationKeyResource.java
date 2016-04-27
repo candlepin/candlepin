@@ -25,7 +25,12 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
+import org.candlepin.resource.dto.ActivationKeyData;
+import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.util.ServiceLevelValidator;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.google.inject.Inject;
 
@@ -33,6 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,7 +52,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+
+
 
 /**
  * ActivationKeyResource
@@ -66,6 +78,7 @@ public class ActivationKeyResource {
         ServiceLevelValidator serviceLevelValidator,
         ActivationKeyRules activationKeyRules,
         ProductCurator productCurator) {
+
         this.activationKeyCurator = activationKeyCurator;
         this.i18n = i18n;
         this.poolManager = poolManager;
@@ -101,12 +114,13 @@ public class ActivationKeyResource {
     @GET
     @Path("{activation_key_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ActivationKey getActivationKey(
+    public ActivationKeyData getActivationKey(
         @PathParam("activation_key_id")
         @Verify(ActivationKey.class) String activationKeyId) {
+
         ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
 
-        return key;
+        return new ActivationKeyData(key);
     }
 
     /**
@@ -121,11 +135,14 @@ public class ActivationKeyResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<Pool> getActivationKeyPools(
         @PathParam("activation_key_id") String activationKeyId) {
+
         ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
         List<Pool> pools = new ArrayList<Pool>();
+
         for (ActivationKeyPool akp : key.getPools()) {
             pools.add(akp.getPool());
         }
+
         return pools;
     }
 
@@ -140,30 +157,31 @@ public class ActivationKeyResource {
     @Path("{activation_key_id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public ActivationKey updateActivationKey(
+    public ActivationKeyData updateActivationKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
-        ActivationKey key) {
+        ActivationKeyData update) {
+
         ActivationKey toUpdate = activationKeyCurator.verifyAndLookupKey(activationKeyId);
-        if (key.getName() != null) {
-            toUpdate.setName(key.getName());
+        if (update.getName() != null) {
+            toUpdate.setName(update.getName());
         }
-        String serviceLevel = key.getServiceLevel();
+        String serviceLevel = update.getServiceLevel();
         if (serviceLevel != null) {
             serviceLevelValidator.validate(toUpdate.getOwner(), serviceLevel);
             toUpdate.setServiceLevel(serviceLevel);
         }
-        if (key.getReleaseVer() != null) {
-            toUpdate.setReleaseVer(key.getReleaseVer());
+        if (update.getReleaseVersion() != null) {
+            toUpdate.setReleaseVer(update.getReleaseVersion());
         }
-        if (key.getDescription() != null) {
-            toUpdate.setDescription(key.getDescription());
+        if (update.getDescription() != null) {
+            toUpdate.setDescription(update.getDescription());
         }
-        if (key.isAutoAttach() != null) {
-            toUpdate.setAutoAttach(key.isAutoAttach());
+        if (update.isAutoAttach() != null) {
+            toUpdate.setAutoAttach(update.isAutoAttach());
         }
         activationKeyCurator.merge(toUpdate);
 
-        return toUpdate;
+        return new ActivationKeyData(toUpdate);
     }
 
     /**
@@ -177,7 +195,7 @@ public class ActivationKeyResource {
     @Path("{activation_key_id}/pools/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
-    public ActivationKey addPoolToKey(
+    public ActivationKeyData addPoolToKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("pool_id") @Verify(Pool.class) String poolId,
         @QueryParam("quantity") Long quantity) {
@@ -197,7 +215,8 @@ public class ActivationKeyResource {
 
         key.addPool(pool, quantity);
         activationKeyCurator.update(key);
-        return key;
+
+        return new ActivationKeyData(key);
     }
 
     /**
@@ -210,15 +229,17 @@ public class ActivationKeyResource {
     @DELETE
     @Path("{activation_key_id}/pools/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ActivationKey removePoolFromKey(
+    public ActivationKeyData removePoolFromKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("pool_id")
         @Verify(Pool.class) String poolId) {
+
         ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
         Pool pool = findPool(poolId);
         key.removePool(pool);
         activationKeyCurator.update(key);
-        return key;
+
+        return new ActivationKeyData(key);
     }
 
     /**
@@ -232,7 +253,7 @@ public class ActivationKeyResource {
     @Path("{activation_key_id}/product/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
-    public ActivationKey addProductIdToKey(
+    public ActivationKeyData addProductIdToKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("product_id") String productId) {
 
@@ -248,7 +269,8 @@ public class ActivationKeyResource {
 
         key.addProduct(product);
         activationKeyCurator.update(key);
-        return key;
+
+        return new ActivationKeyData(key);
     }
 
     /**
@@ -261,14 +283,15 @@ public class ActivationKeyResource {
     @DELETE
     @Path("{activation_key_id}/product/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ActivationKey removeProductIdFromKey(
+    public ActivationKeyData removeProductIdFromKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("product_id") String productId) {
         ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
         Product product = confirmProduct(key.getOwner(), productId);
         key.removeProduct(product);
         activationKeyCurator.update(key);
-        return key;
+
+        return new ActivationKeyData(key);
     }
 
     /**
@@ -279,9 +302,28 @@ public class ActivationKeyResource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<ActivationKey> findActivationKey() {
-        List<ActivationKey> keyList = activationKeyCurator.listAll();
-        return keyList;
+    public Response findActivationKey() {
+        // TODO: Replace this with use of a cursor/iterator
+        final List<ActivationKey> keyList = activationKeyCurator.listAll();
+        final ObjectMapper mapper = new JsonProvider(true)
+            .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
+
+        StreamingOutput output = new StreamingOutput() {
+            @Override
+            public void write(OutputStream stream) throws IOException, WebApplicationException {
+                JsonGenerator generator = mapper.getJsonFactory().createGenerator(stream);
+                generator.writeStartArray();
+
+                for (ActivationKey key : keyList) {
+                    mapper.writeValue(generator, new ActivationKeyData(key));
+                }
+
+                generator.writeEndArray();
+                generator.flush();
+            }
+        };
+
+        return Response.ok(output).build();
     }
 
     /**
@@ -298,7 +340,7 @@ public class ActivationKeyResource {
         @Verify(ActivationKey.class) String activationKeyId) {
         ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
 
-        log.debug("Deleting info " + activationKeyId);
+        log.debug("Deleting activation key: {}", activationKeyId);
 
         activationKeyCurator.delete(key);
     }
@@ -307,9 +349,9 @@ public class ActivationKeyResource {
         Pool pool = poolManager.find(poolId);
 
         if (pool == null) {
-            throw new BadRequestException(i18n.tr(
-                "Pool with id {0} could not be found.", poolId));
+            throw new BadRequestException(i18n.tr("Pool with id {0} could not be found.", poolId));
         }
+
         return pool;
     }
 
@@ -317,9 +359,9 @@ public class ActivationKeyResource {
         Product prod = productCurator.lookupById(o, prodId);
 
         if (prod == null) {
-            throw new BadRequestException(i18n.tr(
-                "Product with id {0} could not be found.", prodId));
+            throw new BadRequestException(i18n.tr("Product with id {0} could not be found.", prodId));
         }
+
         return prod;
     }
 
