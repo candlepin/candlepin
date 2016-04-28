@@ -26,10 +26,13 @@ import org.xnap.commons.i18n.I18n;
 
 import javax.ws.rs.Path;
 
+import io.swagger.annotations.Api;
+
 /**
  * ActivationKeyContentOverrideResource
  */
 @Path("/activation_keys/{activation_key_id}/content_overrides")
+@Api("activation_keys")
 public class ActivationKeyContentOverrideResource extends
     ContentOverrideResource<ActivationKeyContentOverride,
     ActivationKeyContentOverrideCurator,

@@ -27,10 +27,14 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+
 /**
  * CertificateSerialResource
  */
 @Path("/serials")
+@Api("serials")
 public class CertificateSerialResource {
 
     private CertificateSerialCurator certificateSerialCurator;
@@ -40,28 +44,14 @@ public class CertificateSerialResource {
         this.certificateSerialCurator = certificateSerialCurator;
     }
 
-    /**
-     * Retrieves a list of Certificate Serials
-     *
-     * @return a list of CertificateSerial objects
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a list of Certificate Serials", value = "getCertificateSerials")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<CertificateSerial> getCertificateSerials() {
         return this.certificateSerialCurator.listAll();
     }
 
-    /**
-     * Retrieves single Certificate Serial
-     * <p>
-     * <pre>
-     * {'serial': 'MYSERIALNUMBER'}
-     * </pre>
-     *
-     * @return a CertificateSerial object
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves single Certificate Serial", value = "getCertificateSerial")
     @GET
     @Path("/{serial_id}")
     @Produces(MediaType.APPLICATION_JSON)

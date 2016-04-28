@@ -43,8 +43,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.HashSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,10 +61,16 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  * REST API for managing Environments.
  */
 @Path("/environments")
+@Api("environments")
 public class EnvironmentResource {
 
     private static Logger log = LoggerFactory.getLogger(AdminResource.class);
@@ -91,14 +97,8 @@ public class EnvironmentResource {
         this.contentCurator = contentCurator;
     }
 
-    /**
-     * Retrieves a single Environment
-     *
-     * @param envId
-     * @httpcode 200
-     * @httpcode 404
-     * @return an Environment object
-     */
+    @ApiOperation(notes = "Retrieves a single Environment", value = "getEnv")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Path("/{env_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -111,15 +111,11 @@ public class EnvironmentResource {
         return e;
     }
 
-    /**
-     * Deletes an environment.
-     * <p>
-     * WARNING: this will delete all consumers in the environment and revoke their
-     * entitlement certificates.
-     *
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(
+        notes = "Deletes an environment. WARNING: this will delete all consumers in the environment and " +
+        "revoke their entitlement certificates.",
+        value = "deleteEnv")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @DELETE
     @Produces(MediaType.WILDCARD)
     @Path("/{env_id}")
@@ -142,14 +138,8 @@ public class EnvironmentResource {
         envCurator.delete(e);
     }
 
-    /**
-     * Lists the Environments
-     * <p>
-     * Only available to super admins.
-     *
-     * @return a list of Environment objects
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Lists the Environments.  Only available to super admins.",
+        value = "getEnvironments")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "environments")
@@ -165,14 +155,6 @@ public class EnvironmentResource {
      *
      * @param contentId
      *  The ID of the content to resolve
-     *
-     * @throws BadRequestException
-     *  if either environment or contentId is null, or the given environment is not associated with
-     *  a valid owner
-     *
-     * @throws NotFoundException
-     *  if the specified content object does not represent a valid content object for the given
-     *  environment
      *
      * @return
      *  the resolved content instance.
@@ -202,25 +184,15 @@ public class EnvironmentResource {
     }
 
 
-    /**
-     * Promotes a Content into an Environment.
-     * <p>
-     * This call accepts multiple content sets to promote at once, after which
-     * all affected certificates for consumers in the enironment will be
-     * regenerated.
-     * <p>
-     * Consumers registered to this environment will now receive this content in
-     * their entitlement certificates.
-     * <p>
-     * Because the certificate regeneraiton can be quite time consuming, this
-     * is done as an asynchronous job. The content will be promoted and immediately
-     * available for new entitlements, but existing entitlements could take some time
-     * to be regenerated and sent down to clients as they check in.
-     *
-     * @httpcode 200
-     * @httpcode 404
-     * @return a A JobDetail object
-     */
+    @ApiOperation(notes = "Promotes a Content into an Environment. This call accepts multiple " +
+        "content sets to promote at once, after which all affected certificates for consumers" +
+        " in the enironment will be regenerated. Consumers registered to this environment " +
+        "will now receive this content in their entitlement certificates. Because the" +
+        " certificate regeneraiton can be quite time consuming, this is done as an " +
+        "asynchronous job. The content will be promoted and immediately available for new " +
+        "entitlements, but existing entitlements could take some time to be regenerated and " +
+        "sent down to clients as they check in.", value = "promoteContent")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -281,24 +253,15 @@ public class EnvironmentResource {
         return detail;
     }
 
-    /**
-     * Demotes a Content from an Environment.
-     * <p>
-     * Consumer's registered to this environment will no see this content in their
-     * entitlement certificates. (after they are regenerated and synced to clients)
-     * <p>
-     * This call accepts multiple content IDs to demote at once, allowing us to
-     * mass demote, then trigger a cert regeneration.
-     * <p>
-     * NOTE: This call expects the actual content IDs, *not* the ID created for
-     * each EnvironmentContent object created after a promotion. This is to help
-     * integrate with other management apps which should not have to track/lookup
-     * a specific ID for the content to demote.
-     *
-     * @httpcode 200
-     * @httpcode 404
-     * @return a JobDetail object
-     */
+    @ApiOperation(notes = "Demotes a Content from an Environment. Consumer's registered to " +
+        "this environment will no see this content in their entitlement certificates. (after" +
+        " they are regenerated and synced to clients) This call accepts multiple content IDs" +
+        " to demote at once, allowing us to mass demote, then trigger a cert regeneration." +
+        " NOTE: This call expects the actual content IDs, *not* the ID created for each " +
+        "EnvironmentContent object created after a promotion. This is to help integrate " +
+        "with other management apps which should not have to track/lookup a specific ID " +
+        "for the content to demote.", value = "demoteContent")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{env_id}/content")
@@ -351,18 +314,7 @@ public class EnvironmentResource {
         return e;
     }
 
-    /**
-     * Creates an Environment
-     *
-     * @param envId
-     * @param consumer
-     * @param principal
-     * @param userName
-     * @param ownerKey
-     * @param activationKeys
-     * @return an Environment object
-     * @throws BadRequestException if the Environment cannot be created
-     */
+    @ApiOperation(notes = "Creates an Environment", value = "create")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

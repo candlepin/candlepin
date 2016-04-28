@@ -144,10 +144,17 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  * API Gateway for Consumers
  */
 @Path("/consumers")
+@Api("consumers")
 public class ConsumerResource {
     private Pattern consumerSystemNamePattern;
     private Pattern consumerPersonNamePattern;
@@ -235,14 +242,8 @@ public class ConsumerResource {
         this.consumerBindUtil = consumerBindUtil;
     }
 
-    /**
-     * Retrieves a list of the Consumers
-     *
-     * @return list of Consumer objects
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a list of the Consumers", value = "list")
+    @ApiResponses({ @ApiResponse(code =  400, message = ""), @ApiResponse(code =  404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "consumers")
@@ -288,16 +289,13 @@ public class ConsumerResource {
         return page.getPageData();
     }
 
-    /**
-     * Checks for the existence of a Consumer
-     * <p>
-     * This method is used to check if a consumer is available on a particular
-     * shard.  There is no need to do a full GET for the consumer for this check.
-     *
-     * @param uuid uuid of the consumer sought.
-     * @httpcode 404 If the consumer doesn't exist or cannot be accessed
-     * @httpcode 204 If the consumer exists and can be accessed
-     */
+    @ApiOperation(
+        notes = "Checks for the existence of a Consumer. This method is used to check if a consumer" +
+        " is available on a particular shard.  There is no need to do a full " +
+        "GET for the consumer for this check.",
+        value = "")
+    @ApiResponses({ @ApiResponse(code = 404, message = "If the consumer doesn't exist or cannot be accessed"),
+        @ApiResponse(code = 204, message = "If the consumer exists and can be accessed") })
     @HEAD
     @Produces(MediaType.WILDCARD)
     @Path("{consumer_uuid}/exists")
@@ -309,44 +307,8 @@ public class ConsumerResource {
         }
     }
 
-    /**
-     * Retrieves a single Consumer
-     * <p>
-     * <pre>
-     * {
-     *   "id" : "database_id",
-     *   "uuid" : "consumer_id",
-     *   "name" : "client.rdu.redhat.com",
-     *   "username" : "admin",
-     *   "entitlementStatus" : "invalid",
-     *   "serviceLevel" : "",
-     *   "releaseVer" : {},
-     *   "type" : {
-     *     "id" : "database_id",
-     *     "label" : "system",
-     *     "manifest" : false
-     *   },
-     *   "owner" : {},
-     *   "environment" : null,
-     *   "entitlementCount" : 1,
-     *   "lastCheckin" : "",
-     *   "installedProducts" : [],
-     *   "canActivate" : false,
-     *   "guestIds" : [ ],
-     *   "capabilities" : [ ],
-     *   "hypervisorId" : null,
-     *   "autoheal" : true,
-     *   "href" : "/consumers/consumer_id",
-     *   "created" : [date],
-     *   "updated" : [date]
-     * }
-     * </pre>
-     *
-     * @param uuid uuid of the consumer sought
-     * @return a Consumer object
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a single Consumer", value = "getConsumer")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
@@ -380,25 +342,15 @@ public class ConsumerResource {
         return consumer;
     }
 
-    /**
-     * Creates a Consumer
-     * <p>
-     * NOTE: Opening this method up to everyone, as we have
-     * nothing we can reliably verify in the method signature. Instead we have
-     * to figure out what owner this consumer is destined for (due to backward
-     * compatability with existing clients which do not specify an owner during
-     * registration), and then check the access to the specified owner in the
-     * method itself.
-     *
-     * @param consumer Consumer metadata
-     * @return a Consumer object
-     * @throws BadRequestException generic exception type for web services We
-     *         are calling this "registerConsumer" in the api discussions
-     * @httpcode 400
-     * @httpcode 403
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Creates a Consumer. NOTE: Opening this method up " +
+        "to everyone, as we have nothing we can reliably " +
+        "verify in the method signature. Instead we have to " +
+        "figure out what owner this consumer is destined for " +
+        "(due to backward compatability with existing clients " +
+        "which do not specify an owner during registration), " +
+        "and then check the access to the specified owner in " + "the method itself.", value = "create")
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 403, message = ""),
+        @ApiResponse(code = 404, message = "") })
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -806,15 +758,12 @@ public class ConsumerResource {
         return type;
     }
 
-    /**
-     * Updates a Consumer
-     *
-     * @httpcode 404
-     * @httpcode 200
-     */
+
     // While this is a PUT, we are treating it as a PATCH until this operation
     // becomes more prevalent. We only update the portions of the consumer that appear
     // to be set.
+    @ApiOperation(notes = "Updates a Consumer", value = "updateConsumer")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -1230,14 +1179,8 @@ public class ConsumerResource {
             "true".equals(pool.getAttributeValue("unmapped_guests_only"));
     }
 
-    /**
-     * Removes a Consumer
-     *
-     * @param uuid uuid of the consumer to delete.
-     * @httpcode 403
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Removes a Consumer", value = "deleteConsumer")
+    @ApiResponses({ @ApiResponse(code = 403, message = ""), @ApiResponse(code = 404, message = "") })
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
@@ -1265,14 +1208,9 @@ public class ConsumerResource {
         sink.queueEvent(event);
     }
 
-    /**
-     * Retrieves a list of Entitlement Certificates for the Consumer
-     *
-     * @param consumerUuid UUID of the consumer
-     * @return a list of EntitlementCertificate  objects
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a list of Entitlement Certificates for the Consumer",
+        value = "getEntitlementCertificates")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Path("{consumer_uuid}/certificates")
     @Produces(MediaType.APPLICATION_JSON)
@@ -1299,14 +1237,9 @@ public class ConsumerResource {
         return returnCerts;
     }
 
-    /**
-     * Retrieves a Compressed File of Entitlement Certificates
-     *
-     * @return a File of EntitlementCertificate objects
-     * @httpcode 500
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a Compressed File of Entitlement Certificates",
+        value = "exportCertificates")
+    @ApiResponses({ @ApiResponse(code = 500, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Produces("application/zip")
     @Path("/{consumer_uuid}/certificates")
@@ -1364,18 +1297,13 @@ public class ConsumerResource {
         return keys;
     }
 
-    /**
-     * Retrieves a list of Certiticate Serials
-     * <p>
-     * Return the client certificate metadata a for the given consumer. This
-     * is a small subset of data clients can use to determine which certificates
-     * they need to update/fetch.
-     *
-     * @param consumerUuid UUID of the consumer
-     * @return a list of CertificateSerial objects
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(
+        notes = "Retrieves a list of Certiticate Serials Return the " +
+        "client certificate metadata a for the given consumer. This is a small" +
+        " subset of data clients can use to determine which certificates they" +
+        " need to update/fetch.",
+        value = "getEntitlementCertificateSerials")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Path("{consumer_uuid}/certificates/serials")
     @Produces(MediaType.APPLICATION_JSON)
@@ -1432,35 +1360,20 @@ public class ConsumerResource {
 
     }
 
-    /**
-     * Binds Entitlements
-     * <p>
-     * If a pool ID is specified, we know we're binding to that exact pool. Specifying
-     * an entitle date in this case makes no sense and will throw an error.
-     * <p>
-     * If a list of product IDs are specified, we attempt to auto-bind to subscriptions
-     * which will provide those products. An optional date can be specified allowing
-     * the consumer to get compliant for some date in the future. If no date is specified
-     * we assume the current date.
-     * <p>
-     * If neither a pool nor an ID is specified, this is a healing request. The path
-     * is similar to the bind by products, but in this case we use the installed products
-     * on the consumer, and their current compliant status, to determine which product IDs
-     * should be requested. The entitle date is used the same as with bind by products.
-     * <p>
-     * The Respose will contain a list of Entitlement objects if async is false, or a
-     * JobDetail object if async is true.
-     *
-     * @param consumerUuid Consumer identifier to be entitled
-     * @param poolIdString Entitlement pool id.
-     * @param async True if bind should be asynchronous, defaults to false.
-     * @param entitleDateStr specific date to entitle by.
-     * @return a Response object
-     * @httpcode 400
-     * @httpcode 403
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "If a pool ID is specified, we know we're binding to that exact pool. " +
+        "Specifying an entitle date in this case makes no sense and will throw an " +
+        "error. If a list of product IDs are specified, we attempt to auto-bind to" +
+        " subscriptions which will provide those products. An optional date can be" +
+        " specified allowing the consumer to get compliant for some date in the " +
+        "future. If no date is specified we assume the current date. If neither a " +
+        "pool nor an ID is specified, this is a healing request. The path is similar " +
+        "to the bind by products, but in this case we use the installed products on " +
+        "the consumer, and their current compliant status, to determine which product" +
+        " IDs should be requested. The entitle date is used the same as with bind by " +
+        "products. The Respose will contain a list of Entitlement objects if async is" +
+        " false, or a JobDetail object if async is true.", value = "Bind Entitlements")
+    @ApiResponses({ @ApiResponse(code = 400, message = ""),
+        @ApiResponse(code = 403, message = "Binds Entitlements"), @ApiResponse(code = 404, message = "") })
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -1591,27 +1504,15 @@ public class ConsumerResource {
             .type(MediaType.APPLICATION_JSON).entity(entitlements).build();
     }
 
-    /**
-     * Retrieves a list of Pools and quantities that would be the result of an auto-bind.
-     * <p>
-     * This is a dry run of an autobind. It allows the client to see what would be the
-     * result of an autobind without executing it. It can only do this for the prevously
-     * established list of installed products for the consumer
-     * <p>
-     * If a service level is included in the request, then that level will override the
-     * one stored on the consumer. If no service level is included then the existing
-     * one will be used.
-     * <p>
-     * The Response has a list of PoolQuantity objects
-     *
-     * @param consumerUuid Consumer identifier to be entitled
-     * @param serviceLevel String service level override to be used for run
-     * @return a Response object
-     * @httpcode 400
-     * @httpcode 403
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a list of Pools and quantities that would be the " +
+        "result of an auto-bind. This is a dry run of an autobind. It allows the client " +
+        "to see what would be the result of an autobind without executing it. It can only" +
+        " do this for the prevously established list of installed products for the consumer" +
+        " If a service level is included in the request, then that level will override " +
+        "the one stored on the consumer. If no service level is included then the existing " +
+        "one will be used. The Response has a list of PoolQuantity objects", value = "dryBind")
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 403, message = ""),
+        @ApiResponse(code = 404, message = "") })
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -1655,14 +1556,8 @@ public class ConsumerResource {
         return entitlement;
     }
 
-    /**
-     * Retrives a list of Entitlements
-     *
-     * @return a list of Entitlement objects
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrives a list of Entitlements", value = "listEntitlements")
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
@@ -1702,13 +1597,8 @@ public class ConsumerResource {
         return entitlementsPage.getPageData();
     }
 
-    /**
-     * Retrieves the Owner associated to a Consumer
-     *
-     * @return an Owner object
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves the Owner associated to a Consumer", value = "getOwner")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/owner")
@@ -1719,16 +1609,11 @@ public class ConsumerResource {
         return consumer.getOwner();
     }
 
-    /**
-     * Unbinds all Entitlements for a Consumer
-     * <p>
-     * Result contains the total number of entitlements unbound.
-     *
-     * @param consumerUuid Unique id for the Consumer.
-     * @return a DeleteResult object
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(
+        notes = "Unbinds all Entitlements for a Consumer Result contains the " +
+        "total number of entitlements unbound.",
+        value = "unbindAll")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
@@ -1755,16 +1640,8 @@ public class ConsumerResource {
         // entitlement pool)
     }
 
-    /**
-     * Removes an Entitlement from a Consumer
-     * <p>
-     * By the Entitlement ID
-     *
-     * @param dbid the entitlement to delete.
-     * @httpcode 403
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Removes an Entitlement from a Consumer By the Entitlement ID", value = "unbind")
+    @ApiResponses({ @ApiResponse(code = 403, message = ""), @ApiResponse(code = 404, message = "") })
     @DELETE
     @Produces(MediaType.WILDCARD)
     @Path("/{consumer_uuid}/entitlements/{dbid}")
@@ -1786,15 +1663,9 @@ public class ConsumerResource {
         ));
     }
 
-    /**
-     * Removes an Entitlement from a Consumer
-     * <p>
-     * By the Certificate Serial
-     *
-     * @httpcode 403
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Removes an Entitlement from a Consumer By the Certificate Serial",
+        value = "unbindBySerial")
+    @ApiResponses({ @ApiResponse(code = 403, message = ""), @ApiResponse(code = 404, message = "") })
     @DELETE
     @Produces(MediaType.WILDCARD)
     @Path("/{consumer_uuid}/certificates/{serial}")
@@ -1815,15 +1686,8 @@ public class ConsumerResource {
             serial.toString())); // prevent serial number formatting.
     }
 
-    /**
-     * Removes all Entitlements from a Consumer
-     * <p>
-     * By Pool Id
-     *
-     * @httpcode 403
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Removes all Entitlements from a Consumer. By Pool Id", value = "unbindByPool")
+    @ApiResponses({ @ApiResponse(code = 403, message = ""), @ApiResponse(code = 404, message = "") })
     @DELETE
     @Produces(MediaType.WILDCARD)
     @Path("/{consumer_uuid}/entitlements/pool/{pool_id}")
@@ -1844,13 +1708,8 @@ public class ConsumerResource {
         }
     }
 
-    /**
-     * Retrieves a list of Consumer Events
-     *
-     * @return a list of Event objects
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a list of Consumer Events", value = "getConsumerEvents")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}/events")
@@ -1865,13 +1724,8 @@ public class ConsumerResource {
         return events;
     }
 
-    /**
-     * Retrieves and Event Atom Feed for a Consumer
-     *
-     * @return a Feed object
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves and Event Atom Feed for a Consumer", value = "getConsumerAtomFeed")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Produces("application/atom+xml")
     @Path("/{consumer_uuid}/atom")
@@ -1885,12 +1739,9 @@ public class ConsumerResource {
         return feed;
     }
 
-    /**
-     * Regenerates the Entitlement Certificates for a Consumer
-     *
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Regenerates the Entitlement Certificates for a Consumer",
+        value = "regenerateEntitlementCertificates")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @PUT
     @Produces(MediaType.WILDCARD)
     @Consumes(MediaType.WILDCARD)
@@ -1909,15 +1760,9 @@ public class ConsumerResource {
         }
     }
 
-    /**
-     * Retrieves a Compressed File representation of a Consumer
-     *
-     * @return a File
-     * @httpcode 403
-     * @httpcode 500
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a Compressed File representation of a Consumer", value = "exportData")
+    @ApiResponses({ @ApiResponse(code = 403, message = ""), @ApiResponse(code = 500, message = ""),
+        @ApiResponse(code = 404, message = "") })
     @GET
     @Produces("application/zip")
     @Path("{consumer_uuid}/export")
@@ -1961,15 +1806,8 @@ public class ConsumerResource {
         }
     }
 
-    /**
-     * Retrieves a single Consumer
-     *
-     * @param uuid uuid of the consumer sought.
-     * @return a Consumer object
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a single Consumer", value = "regenerateIdentityCertificates")
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
@@ -2050,13 +1888,8 @@ public class ConsumerResource {
         return idCert;
     }
 
-    /**
-     * Retrieves a list of Guest Consumers of a Consumer
-     *
-     * @return a list of Consumer objects
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a list of Guest Consumers of a Consumer", value = "getGuests")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/guests")
@@ -2066,13 +1899,8 @@ public class ConsumerResource {
         return consumerCurator.getGuests(consumer);
     }
 
-    /**
-     * Retrieves a Host Consumer of a Consumer
-     *
-     * @return a Consumer object
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a Host Consumer of a Consumer", value = "getHost")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/host")
@@ -2088,12 +1916,7 @@ public class ConsumerResource {
         return consumerCurator.getHost(consumer.getFact("virt.uuid"), consumer.getOwner());
     }
 
-    /**
-     * Retrieves the Release of a Consumer
-     *
-     * @param consumerUuid
-     * @return a Release object
-     */
+    @ApiOperation(notes = "Retrieves the Release of a Consumer", value = "getRelease")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/release")
@@ -2106,33 +1929,24 @@ public class ConsumerResource {
         return new Release("");
     }
 
-    /**
-     * Retireves the Compliance Status of a Consumer.
-     *
-     * @param uuid uuid of the consumer to get status for.
-     * @param onDate Date to get compliance information for, default is now.
-     * @return a ComplianceStatus object
-     * @httpcode 404
-     * @httpcode 200
-     */
+
+    @ApiOperation(notes = "Retireves the Compliance Status of a Consumer.", value = "getComplianceStatus")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}/compliance")
     @Transactional
     public ComplianceStatus getComplianceStatus(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
+        @ApiParam("Date to get compliance information for, default is now.")
         @QueryParam("on_date") String onDate) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
         Date date = ResourceDateParser.parseDateString(onDate);
         return this.complianceRules.getStatus(consumer, date);
     }
 
-    /**
-     * Retrieves a Compliance Status list for a list of Consumers
-     *
-     * @param uuids
-     * @return a list of ComplianceStatus objects
-     */
+    @ApiOperation(notes = "Retrieves a Compliance Status list for a list of Consumers",
+        value = "getComplianceStatusList")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/compliance")
@@ -2179,18 +1993,13 @@ public class ConsumerResource {
             }
         }
     }
-    /**
-     * Removes the Deletion Record for a Consumer
-     * <p>
-     * Allowed for a superadmin. The main use case for this would be if
-     * a user accidently deleted a non-RHEL hypervisor, causing it to no
-     * longer be auto-detected via virt-who.
-     *
-     * @param uuid
-     *
-     * @httpcode 404
-     * @httpcode 200
-     */
+
+    @ApiOperation(
+        notes = "Removes the Deletion Record for a Consumer Allowed for a superadmin." +
+        " The main use case for this would be if a user accidently deleted a " +
+        "non-RHEL hypervisor, causing it to no longer be auto-detected via virt-who.",
+        value = "removeDeletionRecord")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @DELETE
     @Path("{consumer_uuid}/deletionrecord")
     @Produces(MediaType.APPLICATION_JSON)
