@@ -17,10 +17,14 @@ package org.candlepin.common.exceptions.mappers;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import org.jboss.resteasy.spi.ReaderException;
 import org.junit.Test;
 
 import javax.ws.rs.core.Response;
+
+
+
 /**
  * ReaderExceptionMapperTest
  */
@@ -44,6 +48,17 @@ public class ReaderExceptionMapperTest extends TestExceptionMapperBase {
         Response r = nfem.toResponse(nfe);
         assertEquals(400, r.getStatus());
         verifyMessage(r, rtmsg("unacceptable"));
+    }
+
+    @Test
+    public void handleJsonMappingExceptionWithResponse() {
+        Response mockr = mock(Response.class);
+        when(mockr.getStatus()).thenReturn(400);
+        ReaderException nfe = new ReaderException("kaboom", new JsonMappingException("nope"));
+        ReaderExceptionMapper nfem = injector.getInstance(ReaderExceptionMapper.class);
+        Response r = nfem.toResponse(nfe);
+        assertEquals(400, r.getStatus());
+        verifyMessage(r, rtmsg("kaboom"));
     }
 
     @Override

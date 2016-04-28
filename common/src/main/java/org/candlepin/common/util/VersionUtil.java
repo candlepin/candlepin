@@ -41,8 +41,7 @@ public class VersionUtil {
         map.put("version", "Unknown");
         map.put("release", "Unknown");
 
-        InputStream in = VersionUtil.class.getClassLoader()
-            .getResourceAsStream("version.properties");
+        InputStream in = VersionUtil.class.getClassLoader().getResourceAsStream("version.properties");
 
         Properties props = new Properties();
 
@@ -81,9 +80,7 @@ public class VersionUtil {
         return Integer.parseInt(tokens[0]);
     }
 
-    public static boolean getRulesVersionCompatibility(String oldVersion,
-        String newVersion) {
-
+    public static boolean getRulesVersionCompatibility(String oldVersion, String newVersion) {
         // if the import version is older than our version, the
         // rules are not compatible
         RpmVersionComparator rpmcmp = new RpmVersionComparator();

@@ -84,7 +84,6 @@ public abstract class AbstractAuthorizationFilter
                 }
             }
         }
-
     }
 
     abstract void runFilter(ContainerRequestContext requestContext);

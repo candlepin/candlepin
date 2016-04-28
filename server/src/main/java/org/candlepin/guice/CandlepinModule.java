@@ -171,10 +171,8 @@ public class CandlepinModule extends AbstractModule {
 
         configureJPA();
 
-        bind(PKIUtility.class).to(BouncyCastlePKIUtility.class)
-            .asEagerSingleton();
-        bind(PKIReader.class).to(BouncyCastlePKIReader.class)
-            .asEagerSingleton();
+        bind(PKIUtility.class).to(BouncyCastlePKIUtility.class).asEagerSingleton();
+        bind(PKIReader.class).to(BouncyCastlePKIReader.class).asEagerSingleton();
         bind(X509ExtensionUtil.class);
         bind(ResolverUtil.class);
         bind(ConsumerResource.class);
@@ -227,8 +225,8 @@ public class CandlepinModule extends AbstractModule {
         bind(WriterExceptionMapper.class);
         bind(CandlepinExceptionMapper.class);
         bind(RuntimeExceptionMapper.class);
-        bind(JAXBUnmarshalExceptionMapper.class);
         bind(JAXBMarshalExceptionMapper.class);
+        bind(JAXBUnmarshalExceptionMapper.class);
         bind(Principal.class).toProvider(PrincipalProvider.class);
         bind(JsRunnerProvider.class).asEagerSingleton();
         bind(JsRunner.class).toProvider(JsRunnerProvider.class);
@@ -305,8 +303,7 @@ public class CandlepinModule extends AbstractModule {
         bind(LinkHeaderResponseFilter.class);
         bind(DynamicJsonFilter.class);
 
-        bindConstant().annotatedWith(Names.named("PREFIX_APIURL_KEY"))
-            .to(ConfigProperties.PREFIX_APIURL);
+        bindConstant().annotatedWith(Names.named("PREFIX_APIURL_KEY")).to(ConfigProperties.PREFIX_APIURL);
     }
 
     private void configurePinsetter() {
@@ -331,8 +328,7 @@ public class CandlepinModule extends AbstractModule {
 
     private void configureAmqp() {
         // for lazy loading:
-        bind(AMQPBusPublisher.class).toProvider(AMQPBusPubProvider.class)
-                .in(Singleton.class);
+        bind(AMQPBusPublisher.class).toProvider(AMQPBusPubProvider.class).in(Singleton.class);
     }
 
     private void configureEventSink() {
