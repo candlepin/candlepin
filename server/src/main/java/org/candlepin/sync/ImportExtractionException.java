@@ -14,6 +14,8 @@
  */
 package org.candlepin.sync;
 
+import java.util.Map;
+
 /**
  * ImportExtractionException
  */
@@ -29,6 +31,10 @@ public class ImportExtractionException extends ImporterException {
      */
     public ImportExtractionException(String msg, Throwable e) {
         super(msg, e);
+    }
+
+    public ImportExtractionException(String msg, Throwable e, Map<String, Object> collectedData) {
+        super(msg, e, collectedData);
     }
 
     private static final long serialVersionUID = -4004706290899144021L;

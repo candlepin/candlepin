@@ -207,6 +207,21 @@ public class UtilTest {
         assertEquals(past, c.get(Calendar.DAY_OF_MONTH));
     }
 
+    @Test
+    public void hoursAgoSubtractsHoursFromCurrentTime() {
+        Calendar c = Calendar.getInstance();
+        int expectedMinute = c.get(Calendar.MINUTE);
+
+        c.add(Calendar.HOUR_OF_DAY, -26);
+        int expectedDay = c.get(Calendar.DATE);
+        int expectedHour = c.get(Calendar.HOUR_OF_DAY);
+
+        c.setTime(Util.hoursAgo(26));
+        assertEquals(expectedDay, c.get(Calendar.DATE));
+        assertEquals(expectedHour, c.get(Calendar.HOUR_OF_DAY));
+        assertEquals(expectedMinute, c.get(Calendar.MINUTE));
+    }
+
     @Ignore("This will fail on the last day of each month, or any time after July!")
     @Test
     public void addToFields() {

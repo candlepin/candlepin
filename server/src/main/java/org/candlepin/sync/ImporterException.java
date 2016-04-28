@@ -14,10 +14,21 @@
  */
 package org.candlepin.sync;
 
+import java.util.HashMap;
+import java.util.Map;
+
+
 /**
  * ImporterException
  */
 public class ImporterException extends SyncException {
+
+    private static final long serialVersionUID = -9086462704164995593L;
+
+    /**
+     * The data that was collected from an import before this exception was thrown.
+     */
+    private Map<String, Object> collectedData = new HashMap<String, Object>();
 
     public ImporterException(String msg) {
         super(msg);
@@ -27,5 +38,13 @@ public class ImporterException extends SyncException {
         super(msg, e);
     }
 
-    private static final long serialVersionUID = -9086462704164995593L;
+    public ImporterException(String msg, Throwable e, Map<String, Object> collectedData) {
+        super(msg, e);
+        this.collectedData = collectedData;
+    }
+
+    public Map<String, Object> getCollectedData() {
+        return this.collectedData;
+    }
+
 }

@@ -26,6 +26,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ManifestManager;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.CdnCurator;
@@ -110,6 +111,7 @@ public class ExporterTest {
     private PrincipalProvider pprov;
     private ProductCurator pc;
     private SyncUtils su;
+    private ManifestManager manifestManager;
 
     @Before
     public void setUp() {
@@ -137,6 +139,8 @@ public class ExporterTest {
         pc = mock(ProductCurator.class);
         ProductCachedSerializationModule productCachedModule = new ProductCachedSerializationModule(pc);
         su = new SyncUtils(config, productCachedModule);
+        manifestManager = mock(ManifestManager.class);
+
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
     }
 

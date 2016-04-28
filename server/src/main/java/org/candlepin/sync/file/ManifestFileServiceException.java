@@ -12,21 +12,22 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.sync;
+package org.candlepin.sync.file;
 
 /**
- * ExportCreationException
+ * Thrown when there is an issue on the {@link ManifestFileService}.
  */
-public class ExportCreationException extends SyncException {
+public class ManifestFileServiceException extends RuntimeException {
 
-    private static final long serialVersionUID = 1126642027355176388L;
-
-    public ExportCreationException(String msg, Throwable e) {
-        super(msg, e);
+    public ManifestFileServiceException(String message) {
+        super(message);
     }
 
-    public ExportCreationException(String msg) {
-        super(msg);
+    public ManifestFileServiceException(String message, Throwable e) {
+        super(message, e);
     }
 
+    public ManifestFileServiceException(Throwable e) {
+        super(e);
+    }
 }

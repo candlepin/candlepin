@@ -491,16 +491,18 @@ class Candlepin
   def export_consumer(dest_dir, params={}, uuid=nil)
     uuid = @uuid unless uuid
     path = "/consumers/#{uuid}/export"
-    path += "?" if params
-    path += "cdn_label=#{params[:cdn_label]}&" if params[:cdn_label]
-    path += "webapp_prefix=#{params[:webapp_prefix]}&" if params[:webapp_prefix]
-    path += "api_url=#{params[:api_url]}&" if params[:api_url]
+    do_consumer_export(path, dest_dir, params)
+  end
 
-    begin
-      get_file(path, dest_dir)
-    rescue Exception => e
-      puts e.response
-    end
+  def export_consumer_async(params={}, uuid=nil)
+    uuid = @uuid unless uuid
+    path = "/consumers/#{uuid}/export/async"
+    do_consumer_export(path, nil, params)
+  end
+
+  def download_consumer_export(uuid, export_id, dest_dir)
+    path = "/consumers/#{uuid}/export/#{export_id}"
+    get_file(path, dest_dir)
   end
 
   def get_entitlement(entitlement_id)
@@ -1193,19 +1195,11 @@ class Candlepin
   end
 
   def import(owner_key, filename, params = {})
-    path = "/owners/#{owner_key}/imports?"
-    if params.has_key? :force
-      if params[:force].kind_of? Array
-        # New style, array of conflict keys to force:
-        params[:force].each do |f|
-          path += "force=#{f}&"
-        end
-      else
-        # Old style, force=true/false:
-        path += "force=#{params[:force]}"
-      end
-    end
-    post_file path, File.new(filename)
+    do_import("/owners/#{owner_key}/imports", filename, params)
+  end
+
+  def import_async(owner_key, filename, params = {})
+    do_import("/owners/#{owner_key}/imports/async", filename, params)
   end
 
   def undo_import(owner_key)
@@ -1407,6 +1401,41 @@ class Candlepin
                                        :headers => {"cp-user" => username,
                                                     :accept_language => @lang}
                                         )
+  end
+
+  private
+
+  def do_import(path, filename, params = {})
+    path += "?"
+    if params.has_key? :force
+      if params[:force].kind_of? Array
+        # New style, array of conflict keys to force:
+        params[:force].each do |f|
+          path += "force=#{f}&"
+        end
+      else
+        # Old style, force=true/false:
+        path += "force=#{params[:force]}"
+      end
+    end
+    post_file path, File.new(filename)
+  end
+
+  def do_consumer_export(path, dest_dir, params)
+    path += "?" if params
+    path += "cdn_label=#{params[:cdn_label]}&" if params[:cdn_label]
+    path += "webapp_prefix=#{params[:webapp_prefix]}&" if params[:webapp_prefix]
+    path += "api_url=#{params[:api_url]}&" if params[:api_url]
+    begin
+      if dest_dir.nil?
+        # support async call
+        get(path)
+      else
+        get_file(path, dest_dir)
+      end
+    rescue Exception => e
+      puts e.response
+    end
   end
 
 end
