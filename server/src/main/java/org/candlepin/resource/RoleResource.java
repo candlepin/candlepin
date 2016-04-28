@@ -44,10 +44,16 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  *
  */
 @Path("/roles")
+@Api("roles")
 public class RoleResource {
 
     private UserServiceAdapter userService;
@@ -64,13 +70,8 @@ public class RoleResource {
         this.permissionCurator = permCurator;
     }
 
-    /**
-     * Creates a Role
-     *
-     * @return a Role object
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Creates a Role", value = "createRole")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -90,18 +91,11 @@ public class RoleResource {
         return r;
     }
 
-    /**
-     * Updates a Role
-     * <p>
-     * To avoid race conditions, we do not support updating the user or permission
-     * collections. Currently this call will only update the role name.
-     * <p>
-     * See the specific nested POST/DELETE calls for modifying users and permissions.
-     *
-     * @return a Role object
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Updates a Role.  To avoid race conditions, we do not support " +
+        "updating the user or permission collections. Currently this call will only update " +
+        "the role name. See the specific nested POST/DELETE calls for modifying users and" +
+        " permissions.", value = "updateRole")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @PUT
     @Path("{role_id}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -118,16 +112,9 @@ public class RoleResource {
         return this.userService.updateRole(existingRole);
     }
 
-    /**
-     * Adds a Permission to a Role
-     * <p>
-     * Returns the updated Role.
-     *
-     * @return a Role object
-     * @httpcode 404
-     * @httpcode 400
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Adds a Permission to a Role. Returns the updated Role.",
+        value = "addRolePermission")
+    @ApiResponses({ @ApiResponse(code = 404, message = ""), @ApiResponse(code = 400, message = "") })
     @POST
     @Path("{role_id}/permissions")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -153,16 +140,9 @@ public class RoleResource {
         return r;
     }
 
-    /**
-     * Removes a Permission from a Role
-     * <p>
-     * Returns the updated Role.
-     *
-     * @return a Role object
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @DELETE
+    @ApiOperation(notes = "Removes a Permission from a Role. Returns the updated Role.",
+        value = "removeRolePermission")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })    @DELETE
     @Path("{role_id}/permissions/{perm_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Role removeRolePermission(@PathParam("role_id") String roleId,
@@ -210,23 +190,7 @@ public class RoleResource {
         return user;
     }
 
-    /**
-     * Retrieves a single Role
-     * <p>
-     * <pre>
-     * {
-     *     "id" : "database_id",
-     *     "owner" : {},
-     *     "access" : "READ_ONLY",
-     *     "type" : "OWNER",
-     *     "created" : [date],
-     *     "updated" : [date]
-     * }
-     * </pre>
-     *
-     * @return a Role object
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a single Role", value = "getRole")
     @GET
     @Path("{role_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -234,11 +198,7 @@ public class RoleResource {
         return lookupRole(roleId);
     }
 
-    /**
-     * Removes a Role
-     *
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Removes a Role", value = "deleteRole")
     @DELETE
     @Path("/{role_id}")
     @Produces(MediaType.WILDCARD)
@@ -246,13 +206,8 @@ public class RoleResource {
         this.userService.deleteRole(roleId);
     }
 
-    /**
-     * Adds a User to a Role
-     *
-     * @return a Role object
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Adds a User to a Role", value = "addUser")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @POST
     @Path("/{role_id}/users/{username}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -265,12 +220,8 @@ public class RoleResource {
         return role;
     }
 
-    /**
-     * Removes a User from a Role
-     *
-     * @return a Role object
-     * @httpcode 404
-     */
+    @ApiOperation(notes = "Removes a User from a Role", value = "deleteUser")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @DELETE
     @Path("/{role_id}/users/{username}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -282,12 +233,7 @@ public class RoleResource {
         return role;
     }
 
-    /**
-     * Retrieves a list of Roles
-     *
-     * @return a list of Role objects
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a list of Roles", value = "getRoles")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "roles")

@@ -144,7 +144,7 @@ import io.swagger.annotations.ApiResponses;
  * Owner Resource
  */
 @Path("/owners")
-@Api("/owners")
+@Api("owners")
 public class OwnerResource {
 
     private static Logger log = LoggerFactory.getLogger(OwnerResource.class);

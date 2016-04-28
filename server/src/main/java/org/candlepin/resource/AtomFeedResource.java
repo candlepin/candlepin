@@ -29,10 +29,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+
 /**
  * Resource exposing an Atom feed of Candlepin events.
  */
 @Path("/atom")
+@Api("atom")
 public class AtomFeedResource {
 
     private static final int ATOM_FEED_LIMIT = 1000;
@@ -45,12 +49,7 @@ public class AtomFeedResource {
         this.adapter = adapter;
     }
 
-    /**
-     * Retrieves an Event Atom Feed
-     *
-     * @return a Feed object
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves an Event Atom Feed", value = "getFeed")
     @GET
     @Produces({"application/atom+xml", MediaType.APPLICATION_JSON})
     public Feed getFeed() {

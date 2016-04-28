@@ -47,11 +47,17 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  * SubscriptionResource
  */
 
 @Path("/subscriptions")
+@Api("subscriptions")
 @Consumes(MediaType.APPLICATION_JSON)
 public class SubscriptionResource {
     private static Logger log = LoggerFactory.getLogger(SubscriptionResource.class);
@@ -124,12 +130,7 @@ public class SubscriptionResource {
         return pool.getCertificate();
     }
 
-    /**
-     * Retrieves a list of Subscriptions
-     *
-     * @return a list of Subscription objects
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a list of Subscriptions", value = "getSubscriptions")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Subscription> getSubscriptions() {
@@ -142,41 +143,8 @@ public class SubscriptionResource {
         return subscriptions;
     }
 
-    /**
-     * Retrieves a single Subscription
-     * <p>
-     * <pre>
-     * {
-     *   "id" : "8a8d0986458ef80101458ef87a27057a",
-     *   "owner" : {},
-     *   "product" : {},
-     *   "derivedProduct" : null,
-     *   "providedProducts" : [ ],
-     *   "derivedProvidedProducts" : [ ],
-     *   "branding" : [ ],
-     *   "quantity" : 15,
-     *   "startDate" : [date],
-     *   "endDate" : [date],
-     *   "contractNumber" : "5",
-     *   "accountNumber" : "12331131231",
-     *   "modified" : null,
-     *   "orderNumber" : "order-8675309",
-     *   "upstreamPoolId" : null,
-     *   "upstreamEntitlementId" : null,
-     *   "upstreamConsumerId" : null,
-     *   "cdn" : {},
-     *   "certificate" : {},
-     *   "stacked" : false,
-     *   "stackId" : null,
-     *   "created" : [date],
-     *   "updated" : [date]
-     * }
-     * </pre>
-     *
-     * @return a Subscription object
-     * @httpcode 400
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a single Subscription", value = "getSubscription")
+    @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @GET
     @Path("/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -186,14 +154,7 @@ public class SubscriptionResource {
         return this.poolManager.fabricateSubscriptionFromPool(pool);
     }
 
-     /**
-      * Retrieves a Subscription Certificate
-     * <p>
-      * As a PEM
-      *
-      * @param subscriptionId
-      * @return a String object
-      */
+    @ApiOperation(notes = "Retrieves a Subscription Certificate As a PEM", value = "getSubCertAsPem")
     @DoNotUseJAXBProvider
     @GET
     @Path("{subscription_id}/cert")
@@ -207,12 +168,7 @@ public class SubscriptionResource {
         return cert.getCert() + cert.getKey();
     }
 
-    /**
-     * Retrieves a Subscription Certificate
-     *
-     * @param subscriptionId
-     * @return a SubscriptionCertificate object
-     */
+    @ApiOperation(notes = "Retrieves a Subscription Certificate", value = "getSubCert")
     @GET
     @Path("{subscription_id}/cert")
     @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
@@ -223,15 +179,9 @@ public class SubscriptionResource {
         return this.getSubscriptionCertificate(subscriptionId);
     }
 
-    /**
-     * Activates a Subscription
-     *
-     * @httpcode 400
-     * @httpcode 503
-     * @httpcode 202
-     *
-     * @return A Response object (with status code 202)
-     */
+    @ApiOperation(notes = "Activates a Subscription", value = "activateSubscription")
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 503, message = ""),
+        @ApiResponse(code = 202, message = "") })
     @POST
     @Produces(MediaType.WILDCARD)
     @Consumes(MediaType.WILDCARD)
@@ -260,12 +210,9 @@ public class SubscriptionResource {
         // exist yet, but is currently being processed
         return Response.status(Status.ACCEPTED).build();
     }
-    /**
-     * Removes a Subscription
-     *
-     * @httpcode 400
-     * @httpcode 200
-     */
+
+    @ApiOperation(notes = "Removes a Subscription", value = "deleteSubscription")
+    @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @DELETE
     @Path("/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
