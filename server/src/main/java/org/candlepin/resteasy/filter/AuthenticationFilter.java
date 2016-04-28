@@ -25,6 +25,7 @@ import org.candlepin.auth.TrustedConsumerAuth;
 import org.candlepin.auth.TrustedUserAuth;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotAuthorizedException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ConsumerCurator;
@@ -44,10 +45,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Priority;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.Provider;
 
@@ -59,6 +62,9 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class AuthenticationFilter implements ContainerRequestFilter {
     private static Logger log = LoggerFactory.getLogger(AuthenticationFilter.class);
+
+    @Context
+    private HttpServletRequest request;
 
     private ConsumerCurator consumerCurator;
     private Injector injector;
@@ -74,6 +80,13 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         this.config = config;
 
         setupAuthStrategies();
+    }
+
+    /**
+     * Used to pass mock object during unit testing
+     */
+    public void setHttpServletRequest(HttpServletRequest request) {
+        this.request = request;
     }
 
     public void setupAuthStrategies() {
@@ -129,6 +142,9 @@ public class AuthenticationFilter implements ContainerRequestFilter {
                 log.debug("No auth allowed for resource; setting NoAuth principal");
                 principal = new NoAuthPrincipal();
             }
+            else if (!config.getBoolean(ConfigProperties.AUTH_OVER_HTTP) && !request.isSecure()) {
+                throw new BadRequestException("Please use SSL when accessing protected resources");
+            }
             else {
                 throw new NotAuthorizedException("Invalid credentials.");
             }
@@ -148,4 +164,5 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         // Push the principal into the context for the PrincipalProvider to access directly
         ResteasyProviderFactory.pushContext(Principal.class, principal);
     }
+
 }
