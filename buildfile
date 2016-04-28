@@ -100,7 +100,8 @@ HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0'
              'cglib:cglib:jar:2.2',
              'javassist:javassist:jar:3.12.0.GA',
              'org.freemarker:freemarker:jar:2.3.15',
-             'c3p0:c3p0:jar:0.9.1.2',
+             'com.mchange:c3p0:jar:0.9.5.2',
+             'com.mchange:mchange-commons-java:jar:0.2.11',
              'dom4j:dom4j:jar:1.6.1',
              'org.jboss.logging:jboss-logging:jar:3.1.1.GA'] + JAVAX
 
