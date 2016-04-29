@@ -274,8 +274,15 @@ install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/
 install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/upstream/
 install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/amqp/
 install -m 644 conf/candlepin-redhat-ca.crt %{buildroot}%{_sysconfdir}/%{name}/certs/upstream/
+
 install -d 755 %{buildroot}%{_sysconfdir}/logrotate.d/
 install -m 644 conf/logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
+## logrotate 3.8 requires the su directive,
+## where as prior versions do not recognize it.
+%if 0%{?fedora} || 0%{?rhel} > 6
+sed -i 's/#LOGROTATE-3.8#//' %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
+%endif
+
 install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/
 install -d -m 755 %{buildroot}/%{_datadir}/%{name}/
 install -m 755 code/setup/cpsetup %{buildroot}/%{_datadir}/%{name}/cpsetup
