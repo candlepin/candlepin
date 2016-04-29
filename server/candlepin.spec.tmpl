@@ -120,6 +120,11 @@ rm -rf %{buildroot}
 
 %{__install} -d 755 %{buildroot}%{_sysconfdir}/logrotate.d/
 %{__install} -m 644 conf/logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
+## logrotate 3.8 requires the su directive,
+## where as prior versions do not recognize it.
+%if 0%{?fedora} || 0%{?rhel} > 6
+sed -i 's/#LOGROTATE-3.8#//' %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
+%endif
 
 %{__install} -d -m 755 %{buildroot}/%{_datadir}/%{name}/
 
