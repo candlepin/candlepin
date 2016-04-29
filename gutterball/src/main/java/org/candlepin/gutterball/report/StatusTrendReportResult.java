@@ -21,7 +21,7 @@ import java.util.TreeMap;
 
 /**
  * StatusTrendReportResult represents the result set returned by the status trend report.
- * <p/>
+ * <p></p>
  * The result is a map of maps, with the outer map mapping the dates to the inner map which maps the
  * statuses to their respective counts.
  */

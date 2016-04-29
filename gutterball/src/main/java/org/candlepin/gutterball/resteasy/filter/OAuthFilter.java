@@ -56,7 +56,7 @@ import javax.ws.rs.core.Response;
 
 /**
  * The OAuthFilter provides authentication using the OAuth protocol.
- * <p/>
+ * <p></p>
  * Any method annotated with the SecurityHole annotation will not be protected by this class, and
  * OAuth as a whole may be disabled by setting the <tt>gutterball.auth.oauth.enable</tt>
  * configuration to false.

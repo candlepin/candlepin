@@ -176,7 +176,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     /**
      * Creates a shallow copy of the specified source content. Owners, attributes and content are
      * not duplicated, but the joining objects are (ContentAttribute, ContentContent, etc.).
-     * <p/>
+     * <p></p>
      * Unlike the merge method, all properties from the source content are copied, including the
      * state of any null collections and any identifier fields.
      *
@@ -365,7 +365,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     /**
      * Retrieves the owners with which this content is associated. If this content is not associated
      * with any owners, this method returns an empty set.
-     * <p/>
+     * <p></p>
      * Note that changes made to the set returned by this method will be reflected by this object
      * and its backing data store.
      *

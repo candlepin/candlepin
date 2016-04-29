@@ -46,7 +46,7 @@ public class ActivationKeyData {
 
     /**
      * DTO class representing activation key pool data.
-     * <p/>
+     * <p></p>
      * Every method provided by this class is a vanilla getter or setter and only performs simple
      * data validation on set and returns the current value (if any) on fetch.
      */
@@ -88,7 +88,7 @@ public class ActivationKeyData {
 
     /**
      * DTO class representing activation key product data.
-     * <p/>
+     * <p></p>
      * Every method provided by this class is a vanilla getter or setter and only performs simple
      * data validation on set and returns the current value (if any) on fetch.
      */
@@ -119,7 +119,7 @@ public class ActivationKeyData {
 
     /**
      * DTO class representing activation key content overrides.
-     * <p/>
+     * <p></p>
      * Every method provided by this class is a vanilla getter or setter and only performs simple
      * data validation on set and returns the current value (if any) on fetch.
      */
@@ -361,7 +361,7 @@ public class ActivationKeyData {
      * Sets the pools to be associated with the activation key for this DTO, clearing any
      * previously associated pools. The pools must be provided as a collection of AKPoolData
      * instances referencing the pools and their respective quantity.
-     * <p/>
+     * <p></p>
      * Note: The collection provided will be used to populate an internal collection and further
      * changes to it after calling this method will not be reflected by this instance.
      *
@@ -452,7 +452,7 @@ public class ActivationKeyData {
      * Sets the products to be associated with the activation key for this DTO, clearing any
      * previously associated products. The products must be provided as a collection of
      * AKProductData instances referencing the products.
-     * <p/>
+     * <p></p>
      * Note: The collection provided will be used to populate an internal collection and further
      * changes to it after calling this method will not be reflected by this instance.
      *
@@ -539,7 +539,7 @@ public class ActivationKeyData {
      * Sets the content overrides to be associated with the activation key for this DTO, clearing
      * any previously associated overrides. The content overrides must be provided as a collection
      * of AKContentOverride instances representing the overrides.
-     * <p/>
+     * <p></p>
      * Note: The collection provided will be used to populate an internal collection and further
      * changes to it after calling this method will not be reflected by this instance.
      *

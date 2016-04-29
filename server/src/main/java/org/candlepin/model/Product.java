@@ -178,7 +178,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     /**
      * Creates a shallow copy of the specified source product. Owners, attributes and content are
      * not duplicated, but the joining objects are (ProductAttribute, ProductContent, etc.).
-     * <p/>
+     * <p></p>
      * Unlike the merge method, all properties from the source product are copied, including the
      * state of any null collections and any identifier fields.
      *
@@ -437,7 +437,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     /**
      * Retrieves the owners with which this product is associated. If this product is not associated
      * with any owners, this method may return an empty set, or null.
-     * <p/>
+     * <p></p>
      * Note that changes made to the set returned by this method will be reflected by this object
      * and its backing data store.
      *

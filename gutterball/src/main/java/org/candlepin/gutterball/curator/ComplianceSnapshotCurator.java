@@ -445,7 +445,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      * Retrieves the compliance status counts over the given time span with the specified criteria.
      * The counts are returned in a map of maps, with the outer map mapping the dates to the inner
      * map which maps the statuses to their respective counts.
-     * <p/>
+     * <p></p>
      * If the start and/or end dates are null, the time span will be similarly unrestricted. Note
      * that the time within a given Date object is ignored. If neither the start nor end dates are
      * provided, all known compliance status data will be used.
@@ -503,7 +503,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      * Retrieves the compliance status counts over the given time span with the specified criteria.
      * The counts are returned in a map of maps, with the outer map mapping the dates to the inner
      * map which maps the statuses to their respective counts.
-     * <p/>
+     * <p></p>
      * If the start and/or end dates are null, the time span will be similarly unrestricted. Note
      * that the time within a given Date object is ignored. If neither the start nor end dates are
      * provided, all known compliance status data will be used.
@@ -665,9 +665,9 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
     /**
      * Builds the Query object to be used by the getComplianceStatusCounts method.
-     * <p/>
+     * <p></p>
      * The Query object is constructed with HQL translated from the following SQL:
-     * <p/><pre>
+     * <p></p><pre>
      *  SELECT
      *    ConsumerState.uuid,
      *    ComplianceStatusSnap.status,
@@ -1112,7 +1112,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
     /**
      * Compares the date, without time, represented by the two Calendar objects.
-     * <p/>
+     * <p></p>
      * <strong>Note:</strong><br/>
      * This method <em>does not</em> check that the calendars provided are not null. Passing a null
      * calendar will result in a NullPointerException.
@@ -1137,7 +1137,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
     /**
      * Compares the date, without time, represented by the two Date objects.
-     * <p/>
+     * <p></p>
      * <strong>Note:</strong><br/>
      * This method <em>does not</em> check that the dates provided are not null. Passing a null date
      * will result in a NullPointerException.
