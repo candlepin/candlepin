@@ -29,6 +29,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
+import org.candlepin.resource.dto.ActivationKeyData;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ServiceLevelValidator;
@@ -79,18 +80,22 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         activationKeyCurator.create(key);
 
         assertNotNull(key.getId());
-        key = activationKeyResource.getActivationKey(key.getId());
-        assertNotNull(key);
-        key.setName("JarJarBinks");
-        key.setServiceLevel("level2");
-        key.setReleaseVer(new Release("release2"));
-        key = activationKeyResource.updateActivationKey(key.getId(), key);
-        key = activationKeyResource.getActivationKey(key.getId());
-        assertEquals("JarJarBinks", key.getName());
-        assertEquals("level2", key.getServiceLevel());
-        assertEquals("release2", key.getReleaseVer().getReleaseVer());
+        ActivationKeyData output = activationKeyResource.getActivationKey(key.getId());
+        assertNotNull(output);
+
+        output.setName("JarJarBinks");
+        output.setServiceLevel("level2");
+        output.setReleaseVersion(new Release("release2"));
+        activationKeyResource.updateActivationKey(key.getId(), output);
+
+        output = activationKeyResource.getActivationKey(key.getId());
+        assertEquals("JarJarBinks", output.getName());
+        assertEquals("level2", output.getServiceLevel());
+        assertEquals("release2", output.getReleaseVersion().getReleaseVer());
+
         activationKeyResource.deleteActivationKey(key.getId());
-        key = activationKeyResource.getActivationKey(key.getId());
+        output = activationKeyResource.getActivationKey(key.getId());
+        assertNull(output);
     }
 
     @Test(expected = BadRequestException.class)
@@ -327,12 +332,13 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         key.setReleaseVer(new Release("release1"));
         activationKeyCurator.create(key);
 
-        ActivationKey key2 = new ActivationKey();
-        key2.setOwner(owner);
-        key2.setName("dd");
-        key2.setServiceLevel("level1");
-        key2.setReleaseVer(new Release(TestUtil.getStringOfSize(256)));
-        key = activationKeyResource.updateActivationKey(key.getId(), key2);
+        ActivationKeyData update = new ActivationKeyData();
+        update.setOwner(owner);
+        update.setName("dd");
+        update.setServiceLevel("level1");
+        update.setReleaseVersion(new Release(TestUtil.getStringOfSize(256)));
+
+        activationKeyResource.updateActivationKey(key.getId(), update);
     }
 
     @Test

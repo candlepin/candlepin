@@ -37,7 +37,7 @@ import java.util.List;
  * The ContentManager class provides methods for creating, updating and removing content instances
  * which also perform the cleanup and general maintenance necessary to keep content state in sync
  * with other objects which reference them.
- * <p/>
+ * <p></p>
  * The methods provided by this class are the prefered methods to use for CRUD operations on
  * content, to ensure content versioning and linking is handled properly.
  */

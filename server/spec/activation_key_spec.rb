@@ -202,4 +202,51 @@ describe 'Activation Keys' do
       @cp.create_activation_key(@owner['key'], "name", "a" * 256)
     }.should raise_exception(RestClient::BadRequest)
   end
+
+  it 'should throw an exception with malformed data' do
+    @activation_key['name'] = "ObiWan"
+    @activation_key['pools'] = [
+      {:poolId => @pool['id'], :quantity => nil},
+      {:poolId => @pool_2['id'], :quantity => 5},
+    ]
+    @activation_key['products'] = [{:productId => @some_product['id'] }]
+    @activation_key['contentOverrides'] = [{:contentLabel => 'hello', :name => 'value', :value => '123' }]
+
+    output = @cp.update_activation_key(@activation_key)
+
+    output['name'].should eq(@activation_key['name'])
+    # Note: At the time of writing, updateActivationKey does not add pools, products or content overrides to
+    # activation keys, so we can never verify these get added, but we CAN verify that they are deserialized
+    # properly (by way of checking for exceptions)
+    # output['pools'].should eq(@activation_key['pools'])
+    # output['products'].should eq(@activation_key['products'])
+    # output['contentOverrides'].should eq(@activation_key['contentOverrides'])
+
+    @activation_key['pools'] = [{:poolId => nil, :quantity => nil}]
+
+    lambda {
+      @cp.update_activation_key(@activation_key)
+    }.should raise_exception(RestClient::BadRequest)
+
+    @activation_key['pools'] = []
+    @activation_key['products'] = [{:productId => nil }]
+
+    lambda {
+      @cp.update_activation_key(@activation_key)
+    }.should raise_exception(RestClient::BadRequest)
+
+    @activation_key['products'] = []
+    @activation_key['contentOverrides'] = [{:contentLabel => 'hello', :name => nil, :value => '123' }]
+
+    lambda {
+      @cp.update_activation_key(@activation_key)
+    }.should raise_exception(RestClient::BadRequest)
+
+
+    @activation_key['contentOverrides'] = [{:contentLabel => nil, :name => 'value', :value => '123' }]
+
+    lambda {
+      @cp.update_activation_key(@activation_key)
+    }.should raise_exception(RestClient::BadRequest)
+  end
 end

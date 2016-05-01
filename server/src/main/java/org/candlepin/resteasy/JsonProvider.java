@@ -84,6 +84,7 @@ public class JsonProvider extends JacksonJsonProvider {
         configureHateoasObjectMapper(mapper, indentJson);
         setMapper(mapper);
     }
+
     private void configureHateoasObjectMapper(ObjectMapper mapper, boolean indentJson) {
         mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 

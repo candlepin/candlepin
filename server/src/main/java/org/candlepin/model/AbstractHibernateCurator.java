@@ -508,7 +508,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     /**
      * Performs a direct SQL update or delete operation with a collection by breaking the collection
      * into chunks and repeatedly performing the update.
-     * <p/>
+     * <p></p>
      * The parameter receiving the collection chunks must be the last parameter in the query and the
      * provided collection must support the subList operation.
      *

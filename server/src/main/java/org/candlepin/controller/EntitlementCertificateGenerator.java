@@ -50,7 +50,7 @@ import java.util.Set;
 /**
  * The EntitlementCertificateGenerator class provides utility methods for regenerating the
  * certificates for entitlements associated with various model objects.
- * <p/>
+ * <p></p>
  * It should be noted that due to the amount of graph traversal that can occur when performing these
  * operations, the number of calls to methods provided by this class should be minimized. The majority
  * are incredibly expensive and, in the case of immediate regeneration, can hold database locks for the

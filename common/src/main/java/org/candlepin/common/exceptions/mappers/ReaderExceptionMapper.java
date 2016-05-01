@@ -14,6 +14,8 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
+
 import org.jboss.resteasy.spi.ReaderException;
 
 import javax.ws.rs.core.Response;
@@ -32,11 +34,28 @@ public class ReaderExceptionMapper extends CandlepinExceptionMapper
 
     @Override
     public Response toResponse(ReaderException exception) {
-        Status status = Response.Status.INTERNAL_SERVER_ERROR;
+        Status status = null;
+
         if (exception.getResponse() != null) {
-            status = Response.Status.fromStatusCode(
-                exception.getResponse().getStatus());
+            status = Response.Status.fromStatusCode(exception.getResponse().getStatus());
         }
-        return getDefaultBuilder(exception, status, determineBestMediaType()).build();
+
+        // Impl note:
+        // JsonMappingExceptions that occur as a result of user input are wrapped in a
+        // ReaderException. We'll have to step through the exception chain and see if we find a
+        // mapping exception (should be at the first iteration). If not, we'll just use our
+        // default below.
+        for (Throwable cause = exception.getCause(); cause != null; cause = cause.getCause()) {
+            if (cause instanceof JsonMappingException) {
+                status = Response.Status.BAD_REQUEST;
+                break;
+            }
+        }
+
+        if (status == null) {
+            status = Response.Status.INTERNAL_SERVER_ERROR;
+        }
+
+        return this.getDefaultBuilder(exception, status, determineBestMediaType()).build();
     }
 }

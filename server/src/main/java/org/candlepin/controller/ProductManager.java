@@ -39,7 +39,7 @@ import java.util.Set;
  * The ProductManager class provides methods for creating, updating and removing product instances
  * which also perform the cleanup and general maintenance necessary to keep product state in sync
  * with other objects which reference them.
- * <p/>
+ * <p></p>
  * The methods provided by this class are the prefered methods to use for CRUD operations on
  * products, to ensure product versioning and linking is handled properly.
  */

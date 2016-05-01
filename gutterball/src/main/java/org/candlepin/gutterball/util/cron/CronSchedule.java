@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
  * The CronSchedule class represents a cron-like schedule parser and matcher. It accepts schedules
  * in a simplified cron format and can find dates matching the given schedule relative to other
  * dates.
- * <p/>
+ * <p></p>
  *
  * The schedule format accepted by this class is as follows:
  * <pre>

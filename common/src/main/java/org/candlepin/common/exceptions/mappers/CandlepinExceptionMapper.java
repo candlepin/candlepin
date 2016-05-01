@@ -39,18 +39,20 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
 
+
 /**
  * CandlepinExceptionMapper
  */
 public class CandlepinExceptionMapper {
-    private static final List<MediaType> DESIRED_RESPONSE_TYPES =
-        new LinkedList<MediaType>() {
-            {
-                add(MediaType.APPLICATION_JSON_TYPE);
-                add(MediaType.TEXT_PLAIN_TYPE);
-                add(MediaType.APPLICATION_ATOM_XML_TYPE);
-            }
-        };
+    private static Logger log = LoggerFactory.getLogger(CandlepinExceptionMapper.class);
+
+    private static final List<MediaType> DESIRED_RESPONSE_TYPES = new LinkedList<MediaType>() {
+        {
+            add(MediaType.APPLICATION_JSON_TYPE);
+            add(MediaType.TEXT_PLAIN_TYPE);
+            add(MediaType.APPLICATION_ATOM_XML_TYPE);
+        }
+    };
 
     // Use a provider so we get a scoped HttpServletRequest
     @Inject
@@ -59,13 +61,9 @@ public class CandlepinExceptionMapper {
     @Inject
     protected Provider<I18n> i18n;
 
-    private static Logger log = LoggerFactory.getLogger(CandlepinExceptionMapper.class);
-
     public MediaType determineBestMediaType() {
         HttpServletRequest request = requestProvider.get();
-
         String header = request.getHeader(HttpHeaderNames.ACCEPT);
-
         MediaType mediaType = null;
 
         if (header != null) {
@@ -82,13 +80,12 @@ public class CandlepinExceptionMapper {
         return mediaType;
     }
 
-    protected ResponseBuilder getDefaultBuilder(Throwable exception,
-        Status status) {
+    protected ResponseBuilder getDefaultBuilder(Throwable exception, Status status) {
         return getDefaultBuilder(exception, status, determineBestMediaType());
     }
 
-    protected ResponseBuilder getDefaultBuilder(Throwable exception,
-        Status status, MediaType responseMediaType) {
+    protected ResponseBuilder getDefaultBuilder(Throwable exception, Status status,
+        MediaType responseMediaType) {
 
         Throwable cause = exception;
         while (cause.getCause() != null) {
@@ -96,7 +93,6 @@ public class CandlepinExceptionMapper {
         }
 
         String message = "";
-
         StackTraceElement[] stes = cause.getStackTrace();
 
         // 1051215: the exception may not have a stacktrace, rare but could
@@ -117,6 +113,7 @@ public class CandlepinExceptionMapper {
         if (!(exception instanceof CandlepinException) || ((CandlepinException) exception).isLogException()) {
             log.error(message, exception);
         }
+
         if (status == null) {
             status = Status.INTERNAL_SERVER_ERROR;
         }
@@ -126,7 +123,6 @@ public class CandlepinExceptionMapper {
         return Response.status(status)
             .entity(new ExceptionMessage(message))
             .type(responseMediaType)
-            .header(VersionUtil.VERSION_HEADER,
-                map.get("version") + "-" + map.get("release"));
+            .header(VersionUtil.VERSION_HEADER, map.get("version") + "-" + map.get("release"));
     }
 }
