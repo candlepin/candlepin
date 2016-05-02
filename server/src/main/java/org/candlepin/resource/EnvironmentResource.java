@@ -37,6 +37,8 @@ import com.google.inject.Inject;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.HashSet;
@@ -60,6 +62,7 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("/environments")
 public class EnvironmentResource {
+    private static Logger log = LoggerFactory.getLogger(EnvironmentResource.class);
 
     private EnvironmentCurator envCurator;
     private I18n i18n;
@@ -120,11 +123,15 @@ public class EnvironmentResource {
         }
 
         // Cleanup all consumers and their entitlements:
+        log.info("Deleting consumers in environment {}", e);
         for (Consumer c : e.getConsumers()) {
+            log.info("Deleting consumer: {}", c);
+
             poolManager.revokeAllEntitlements(c);
             consumerCurator.delete(c);
         }
 
+        log.info("Deleting environment: {}", e);
         envCurator.delete(e);
     }
 
