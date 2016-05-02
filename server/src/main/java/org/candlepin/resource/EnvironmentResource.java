@@ -130,11 +130,15 @@ public class EnvironmentResource {
         }
 
         // Cleanup all consumers and their entitlements:
+        log.info("Deleting consumers in environment {}", e);
         for (Consumer c : e.getConsumers()) {
+            log.info("Deleting consumer: {}", c);
+
             poolManager.revokeAllEntitlements(c);
             consumerCurator.delete(c);
         }
 
+        log.info("Deleting environment: {}", e);
         envCurator.delete(e);
     }
 
