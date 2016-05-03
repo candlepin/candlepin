@@ -436,15 +436,21 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/entitlements")
     public List<Entitlement> ownerEntitlements(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        @QueryParam("product") String productId,
+        @QueryParam("matches") String matches,
+        @QueryParam("attribute") @CandlepinParam(type = KeyValueParameter.class)
+            List<KeyValueParameter> attrFilters,
+        @Context PageRequest pageRequest) {
         Owner owner = findOwner(ownerKey);
 
-        List<Entitlement> toReturn = new LinkedList<Entitlement>();
-        for (Pool pool : owner.getPools()) {
-            toReturn.addAll(poolManager.findEntitlements(pool));
-        }
+        Page<List<Entitlement>> entitlementsPage = entitlementCurator.listFilteredPages(owner,
+            attrFilters, matches, productId, pageRequest);
 
-        return toReturn;
+        // Store the page for the LinkHeaderPostInterceptor
+        ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);
+
+        return entitlementsPage.getPageData();
     }
 
     /**

@@ -33,12 +33,16 @@ import javax.inject.Inject;
 
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+
 import org.hamcrest.Matchers;
 import org.hibernate.Hibernate;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.mockito.Mockito.*;
 
 /**
  * EntitlementCuratorTest
@@ -419,32 +423,20 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertEquals(2, ents.size());
     }
 
-    @Test
-    public void testListByConsumerAndProduct() {
-        PageRequest req = new PageRequest();
-        req.setPage(1);
-        req.setPerPage(10);
-        req.setOrder(PageRequest.Order.ASCENDING);
-        req.setSortBy("id");
-
-        Product product = TestUtil.createProduct();
+    private void setupTestByEntityAndProduct(Product product) {
         productCurator.create(product);
 
-        Pool pool = createPoolAndSub(owner, product, 1L,
-            dateSource.currentDate(), createDate(2020, 1, 1));
+        Pool pool = createPoolAndSub(owner, product, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
         poolCurator.create(pool);
 
         for (int i = 0; i < 10; i++) {
-            EntitlementCertificate cert =
-                createEntitlementCertificate("key", "certificate");
+            EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
             Entitlement ent = createEntitlement(owner, consumer, pool, cert);
             entitlementCurator.create(ent);
         }
+    }
 
-        Page<List<Entitlement>> page =
-            entitlementCurator.listByConsumerAndProduct(consumer, product.getId(), req);
-        assertEquals(Integer.valueOf(10), page.getMaxRecords());
-
+    private void verifyTestByEntityAndProduct(Page<List<Entitlement>> page, PageRequest req) {
         List<Entitlement> ents = page.getPageData();
         assertEquals(10, ents.size());
 
@@ -458,6 +450,54 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
                 assertTrue(ents.get(i).getId().compareTo(ents.get(i + 1).getId()) < 1);
             }
         }
+    }
+
+    private PageRequest createPageRequest() {
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+        req.setOrder(PageRequest.Order.ASCENDING);
+        req.setSortBy("id");
+        return req;
+    }
+
+    @Test
+    public void testListFilteredPagesConsumerUsingProductId() {
+        Product product = TestUtil.createProduct();
+        setupTestByEntityAndProduct(product);
+
+        PageRequest req = createPageRequest();
+
+        Page<List<Entitlement>> page =
+            entitlementCurator.listFilteredPages(consumer, null, null, product.getId(), req);
+
+        verifyTestByEntityAndProduct(page, req);
+    }
+
+    @Test
+    public void testListFilteredPagesOwnerUsingProductId() {
+        Product product = TestUtil.createProduct();
+        setupTestByEntityAndProduct(product);
+
+        PageRequest req = createPageRequest();
+
+        Page<List<Entitlement>> page = entitlementCurator.listFilteredPages(owner, null, null,
+                product.getId(), req);
+
+        verifyTestByEntityAndProduct(page, req);
+    }
+
+    @Test
+    public void testListByConsumerAndProduct() {
+        Product product = TestUtil.createProduct();
+        setupTestByEntityAndProduct(product);
+
+        PageRequest req = createPageRequest();
+
+        Page<List<Entitlement>> page =
+            entitlementCurator.listByConsumerAndProduct(consumer, product.getId(), req);
+        assertEquals(Integer.valueOf(10), page.getMaxRecords());
+        verifyTestByEntityAndProduct(page, req);
     }
 
     @Test
@@ -576,6 +616,12 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertEquals(testProduct.getId(), ents.get(0).getPool().getProductId());
     }
 
+    private void verifyListFiltersUsingMatches(List<Entitlement> ents) {
+        assertEquals(1, ents.size());
+        assertEquals(ents.get(0).getPool().getName(), testProduct.getName());
+        assertEquals(ents.get(0).getPool().getProductId(), testProduct.getId());
+    }
+
     @Test
     public void listByConsumerFilterByMatches() {
         EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
@@ -583,9 +629,31 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         // Should be 2 entitlements already
         List<Entitlement> ents = entitlementCurator.listByConsumer(consumer, filters);
+        verifyListFiltersUsingMatches(ents);
+    }
+
+    @Test
+    public void testListFilteredPagesConsumerUsingMatches() {
+        Page<List<Entitlement>> page = entitlementCurator
+                .listFilteredPages(consumer, null, testProduct.getName(), null, createPageRequest());
+        // Should be 2 entitlements already
+        verifyListFiltersUsingMatches(page.getPageData());
+    }
+
+    @Test
+    public void testListFilteredPagesOwnerUsingMatches() {
+        Page<List<Entitlement>> page = entitlementCurator
+                .listFilteredPages(owner, null, testProduct.getName(), null, createPageRequest());
+        // Should be 2 entitlements already
+        verifyListFiltersUsingMatches(page.getPageData());
+    }
+
+    private void verifyFilteringByPoolAttribute(List<Entitlement> ents) {
         assertEquals(1, ents.size());
-        assertEquals(ents.get(0).getPool().getName(), testProduct.getName());
-        assertEquals(ents.get(0).getPool().getProductId(), testProduct.getId());
+
+        Pool p = ents.get(0).getPool();
+        assertTrue("Did not find ent by pool attribute 'pool_attr_1'", p.hasAttribute("pool_attr_1"));
+        assertEquals(p.getAttributeValue("pool_attr_1"), "attr1");
     }
 
     @Test
@@ -595,11 +663,31 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         // Should be 2 entitlements already
         List<Entitlement> ents = entitlementCurator.listByConsumer(consumer, filters);
-        assertEquals(1, ents.size());
+        verifyFilteringByPoolAttribute(ents);
+    }
 
-        Pool p = ents.get(0).getPool();
-        assertTrue("Did not find ent by pool attribute 'pool_attr_1'", p.hasAttribute("pool_attr_1"));
-        assertEquals(p.getAttributeValue("pool_attr_1"), "attr1");
+    @Test
+    public void testListFilteredPagesConsumerUsingPoolAttribute() {
+        KeyValueParameter param = mock(KeyValueParameter.class);
+        when(param.key()).thenReturn("pool_attr_1");
+        when(param.value()).thenReturn("attr1");
+        List<KeyValueParameter> attrFilters = Arrays.asList(param);
+        // Should be 2 entitlements already
+        List<Entitlement> ents = entitlementCurator.listFilteredPages(consumer, attrFilters, null, null,
+                createPageRequest()).getPageData();
+        verifyFilteringByPoolAttribute(ents);
+    }
+
+    @Test
+    public void testListFilteredPagesOwnerUsingPoolAttribute() {
+        KeyValueParameter param = mock(KeyValueParameter.class);
+        when(param.key()).thenReturn("pool_attr_1");
+        when(param.value()).thenReturn("attr1");
+        List<KeyValueParameter> attrFilters = Arrays.asList(param);
+        // Should be 2 entitlements already
+        List<Entitlement> ents = entitlementCurator.listFilteredPages(owner, attrFilters, null, null,
+                createPageRequest()).getPageData();
+        verifyFilteringByPoolAttribute(ents);
     }
 
     @Test

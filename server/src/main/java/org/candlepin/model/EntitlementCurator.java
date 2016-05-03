@@ -14,13 +14,16 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaSpecification;
@@ -75,12 +78,57 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
     public Page<List<Entitlement>> listByConsumer(Consumer consumer,
         EntitlementFilterBuilder filterBuilder, PageRequest pageRequest) {
+        return listByEntity(consumer, "consumer", filterBuilder, pageRequest);
+    }
+
+    private Page<List<Entitlement>> listByEntity(AbstractHibernateObject object,
+        String objectType, EntitlementFilterBuilder filterBuilder,
+        PageRequest pageRequest) {
         Criteria query = createSecureCriteria().createAlias("pool", "p");
-        query.add(Restrictions.eq("consumer", consumer));
+        query.add(Restrictions.eq(objectType, object));
         // Never show a consumer expired entitlements
         query.add(Restrictions.ge("p.endDate", new Date()));
         filterBuilder.applyTo(query);
         return listByCriteria(query, pageRequest);
+    }
+
+    public Page<List<Entitlement>> listFilteredPages(Owner owner, List<KeyValueParameter> attrFilters,
+            String matches, String productId, PageRequest pageRequest) {
+        return listFilteredPages(owner, "owner", attrFilters, matches, productId, pageRequest);
+    }
+
+    public Page<List<Entitlement>> listFilteredPages(Consumer consumer,
+            List<KeyValueParameter> attrFilters, String matches, String productId, PageRequest pageRequest) {
+        return listFilteredPages(consumer, "consumer", attrFilters, matches, productId, pageRequest);
+    }
+
+    private Page<List<Entitlement>> listFilteredPages(AbstractHibernateObject object,
+            String objectType, List<KeyValueParameter> attrFilters, String matches,
+            String productId, PageRequest pageRequest) {
+        Page<List<Entitlement>> entitlementsPage;
+        // No need to add filters when matching by product.
+        if (productId != null) {
+            Product p = productAdapter.getProductById(productId);
+            if (p == null) {
+                throw new BadRequestException(i18n.tr("Product with ID ''{0}'' could not be found.",
+                        productId));
+            }
+            entitlementsPage = listByEntityAndProduct(object, objectType, productId, pageRequest);
+        }
+        else {
+            // Build up any provided entitlement filters from query params.
+            EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
+            if (attrFilters != null) {
+                for (KeyValueParameter filterParam : attrFilters) {
+                    filters.addAttributeFilter(filterParam.key(), filterParam.value());
+                }
+            }
+            if (!StringUtils.isEmpty(matches)) {
+                filters.addMatchesFilter(matches);
+            }
+            entitlementsPage = listByEntity(object, objectType, filters, pageRequest);
+        }
+        return entitlementsPage;
     }
 
     /**
@@ -408,18 +456,22 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return pidEnts;
     }
 
+    public Page<List<Entitlement>> listByConsumerAndProduct(Consumer consumer, String productId,
+        PageRequest pageRequest) {
+        return listByEntityAndProduct(consumer, "consumer", productId, pageRequest);
+    }
+
     @Transactional
-    public Page<List<Entitlement>> listByConsumerAndProduct(Consumer consumer,
-        String productId, PageRequest pageRequest) {
+    private Page<List<Entitlement>> listByEntityAndProduct(AbstractHibernateObject object,
+            String objectType, String productId, PageRequest pageRequest) {
         Criteria query = createSecureCriteria()
-            .add(Restrictions.eq("consumer", consumer))
-            .createAlias("pool", "p")
-            .createAlias("p.providedProducts", "pp",
-                CriteriaSpecification.LEFT_JOIN)
-            // Never show a consumer expired entitlements
-            .add(Restrictions.ge("p.endDate", new Date()))
-            .add(Restrictions.or(Restrictions.eq("p.productId", productId),
-                Restrictions.eq("pp.productId", productId)));
+                .add(Restrictions.eq(objectType, object))
+                .createAlias("pool", "p")
+                .createAlias("p.providedProducts", "pp", CriteriaSpecification.LEFT_JOIN)
+                // Never show expired entitlements
+                .add(Restrictions.ge("p.endDate", new Date()))
+                .add(Restrictions.or(Restrictions.eq("p.productId", productId),
+                        Restrictions.eq("pp.productId", productId)));
 
         Page<List<Entitlement>> page = listByCriteria(query, pageRequest);
 
