@@ -42,6 +42,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import io.swagger.annotations.ApiModelProperty;
+
 
 
 /**
@@ -66,6 +68,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     @NotNull
+    @ApiModelProperty(readOnly = true)
     private String id;
 
     @Column(name = "account", nullable = false, unique = true)
