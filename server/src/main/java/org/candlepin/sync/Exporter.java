@@ -436,7 +436,7 @@ public class Exporter {
         entCertDir.mkdir();
 
         for (Entitlement ent : entitlementCurator.listByConsumer(consumer)) {
-            if (ent.getDirty()) {
+            if (ent.isDirty()) {
                 log.error("Entitlement " + ent.getId() + " is marked as dirty.");
                 throw new ExportCreationException("Attempted to export dirty entitlements");
             }

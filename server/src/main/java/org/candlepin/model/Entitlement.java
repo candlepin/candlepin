@@ -324,7 +324,7 @@ public class Entitlement extends AbstractHibernateObject
     }
 
     @XmlTransient
-    public boolean getDirty() {
+    public boolean isDirty() {
         return dirty;
     }
 

@@ -23,6 +23,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.util.Util;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
@@ -197,6 +198,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     public VirtConsumerMap getGuestConsumersMap(Owner owner, Set<String> guestIds) {
         VirtConsumerMap guestConsumersMap = new VirtConsumerMap();
+
         if (guestIds.size() == 0) {
             return guestConsumersMap;
         }
@@ -214,24 +216,22 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         // We need to filter down to only the most recently registered consumer with
         // each guest ID.
 
-        Query q = currentSession().createSQLQuery(sql);
-        List<String> consumerUuids = new ArrayList<String>();
+        List<String> consumerUuids = new LinkedList<String>();
 
-        int fromIndex = 0;
-        int toIndex = fromIndex + MAX_IN_QUERY_LENGTH;
+        Iterable<List<String>> blocks = Iterables.partition(
+            possibleGuestIds, AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE
+        );
 
-        while (fromIndex < possibleGuestIds.size()) {
-            if (toIndex > possibleGuestIds.size()) {
-                toIndex = possibleGuestIds.size();
-            }
-            List<String> subList = possibleGuestIds.subList(fromIndex, toIndex);
-            q.setParameterList("guestids", subList);
-            q.setParameter("ownerid", owner.getId());
-            consumerUuids.addAll(q.list());
-            fromIndex = toIndex;
-            toIndex += MAX_IN_QUERY_LENGTH;
+        Query query = this.currentSession()
+            .createSQLQuery(sql)
+            .setParameter("ownerid", owner.getId());
+
+        for (List<String> block : blocks) {
+            query.setParameterList("guestids", block);
+            consumerUuids.addAll(query.list());
         }
-        if (consumerUuids == null || consumerUuids.size() == 0) {
+
+        if (consumerUuids.isEmpty()) {
             return guestConsumersMap;
         }
 
@@ -263,6 +263,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public Consumer findByUser(User user) {
         ConsumerType person = consumerTypeCurator
             .lookupByLabel(ConsumerType.ConsumerTypeEnum.PERSON.getLabel());
+
         return (Consumer) createSecureCriteria()
             .add(Restrictions.eq("username", user.getUsername()))
             .add(Restrictions.eq("type", person)).uniqueResult();
@@ -585,32 +586,19 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      *
      * This is an unsecured query, manually limited to an owner by the parameter given.
      * @param owner Owner to limit results to.
-     * @param hypervisorIds List of hypervisor IDs as reported by the virt fabric.
+     * @param hypervisorIds Collection of hypervisor IDs as reported by the virt fabric.
      *
      * @return VirtConsumerMap of hypervisor ID to it's consumer, or null if none exists.
      */
     @Transactional
-    public VirtConsumerMap getHostConsumersMap(Owner owner, Set<String> hypervisorIds) {
-        List<String> idList = new ArrayList<String>();
-        idList.addAll(hypervisorIds);
-        List<Consumer> results = new ArrayList<Consumer>();
-        int fromIndex = 0;
-        int toIndex = fromIndex + MAX_IN_QUERY_LENGTH;
-
-        while (fromIndex < idList.size()) {
-            if (toIndex > idList.size()) {
-                toIndex = idList.size();
-            }
-            List<String> subList = idList.subList(fromIndex, toIndex);
-            log.debug("getHostConsumersMap - sub id list size: " + subList.size());
-            results.addAll(getHypervisorsBulk(subList, owner.getKey()));
-            fromIndex = toIndex;
-            toIndex += MAX_IN_QUERY_LENGTH;
-        }
+    public VirtConsumerMap getHostConsumersMap(Owner owner, Iterable<String> hypervisorIds) {
         VirtConsumerMap hypervisorMap = new VirtConsumerMap();
-        for (Consumer c : results) {
-            hypervisorMap.add(c.getHypervisorId().getHypervisorId(), c);
+
+        // TODO: Replace this with cursor bits when they're available!
+        for (Consumer consumer : this.getHypervisorsBulk(hypervisorIds, owner.getKey())) {
+            hypervisorMap.add(consumer.getHypervisorId().getHypervisorId(), consumer);
         }
+
         return hypervisorMap;
     }
 
@@ -621,19 +609,21 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @SuppressWarnings("unchecked")
     @Transactional
-    public List<Consumer> getHypervisorsBulk(Collection<String> hypervisorIds, String ownerKey) {
-        if (hypervisorIds == null || hypervisorIds.isEmpty()) {
+    public List<Consumer> getHypervisorsBulk(Iterable<String> hypervisorIds, String ownerKey) {
+        if (hypervisorIds == null || !hypervisorIds.iterator().hasNext()) {
             return new LinkedList<Consumer>();
         }
-        return currentSession().createCriteria(Consumer.class)
+
+        return this.currentSession()
+            .createCriteria(Consumer.class)
             .createAlias("owner", "o")
-            .add(Restrictions.eq("o.key", ownerKey))
             .createAlias("hypervisorId", "hvsr")
-            .add(getHypervisorIdRestriction(hypervisorIds))
+            .add(Restrictions.eq("o.key", ownerKey))
+            .add(this.getHypervisorIdRestriction(hypervisorIds))
             .list();
     }
 
-    private Criterion getHypervisorIdRestriction(Collection<String> hypervisorIds) {
+    private Criterion getHypervisorIdRestriction(Iterable<String> hypervisorIds) {
         List<Criterion> ors = new LinkedList<Criterion>();
         for (String hypervisorId : hypervisorIds) {
             ors.add(Restrictions.eq("hvsr.hypervisorId", hypervisorId).ignoreCase());
@@ -646,8 +636,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public List<Consumer> getHypervisorsForOwner(String ownerKey) {
         return createSecureCriteria()
             .createAlias("owner", "o")
-            .add(Restrictions.eq("o.key", ownerKey))
             .createAlias("hypervisorId", "hvsr")
+            .add(Restrictions.eq("o.key", ownerKey))
             .add(Restrictions.isNotNull("hvsr.hypervisorId"))
             .list();
     }
@@ -657,6 +647,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .add(Restrictions.eq("uuid", uuid))
             .setProjection(Projections.count("id"))
             .uniqueResult();
+
         return result != 0;
     }
 
@@ -664,17 +655,16 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         Consumer consumer = this.findByUuid(consumerUuid);
 
         if (consumer == null) {
-            throw new NotFoundException(i18n.tr(
-                "Unit with ID ''{0}'' could not be found.", consumerUuid));
+            throw new NotFoundException(i18n.tr("Unit with ID ''{0}'' could not be found.", consumerUuid));
         }
+
         return consumer;
     }
 
     public Consumer verifyAndLookupConsumerWithEntitlements(String consumerUuid) {
         Consumer consumer = this.findByUuid(consumerUuid);
         if (consumer == null) {
-            throw new NotFoundException(i18n.tr(
-                    "Unit with ID ''{0}'' could not be found.", consumerUuid));
+            throw new NotFoundException(i18n.tr("Unit with ID ''{0}'' could not be found.", consumerUuid));
         }
 
         for (Entitlement e : consumer.getEntitlements()) {

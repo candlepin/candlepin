@@ -271,7 +271,7 @@ public class ExporterTest {
         when(principal.getUsername()).thenReturn("testUser");
 
         when(ec.listByConsumer(consumer)).thenReturn(entitlements);
-        when(ent.getDirty()).thenReturn(true);
+        when(ent.isDirty()).thenReturn(true);
         idcert.setSerial(new CertificateSerial(10L, new Date()));
         idcert.setKey("euh0876puhapodifbvj094");
         idcert.setCert("hpj-08ha-w4gpoknpon*)&^%#");

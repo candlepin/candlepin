@@ -865,7 +865,7 @@ public class PoolManagerTest {
         pools.add(p);
 
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(p);
-        when(mockPoolCurator.listExpiredPools()).thenReturn(pools);
+        when(mockPoolCurator.listExpiredPools(anyInt())).thenReturn(pools);
         when(mockPoolCurator.entitlementsIn(p)).thenReturn(new ArrayList<Entitlement>(p.getEntitlements()));
         Subscription sub = new Subscription();
         sub.setId(p.getSubscriptionId());
@@ -889,7 +889,7 @@ public class PoolManagerTest {
         pools.add(p);
 
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(p);
-        when(mockPoolCurator.listExpiredPools()).thenReturn(pools);
+        when(mockPoolCurator.listExpiredPools(anyInt())).thenReturn(pools);
         when(mockPoolCurator.entitlementsIn(p)).thenReturn(new ArrayList<Entitlement>(p.getEntitlements()));
         Subscription sub = new Subscription();
         sub.setId(p.getSubscriptionId());
