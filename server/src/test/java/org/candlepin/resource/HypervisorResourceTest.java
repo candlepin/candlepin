@@ -353,7 +353,6 @@ public class HypervisorResourceTest {
         HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(
             hostGuestMap, principal, owner.getKey(), true);
         assertNotNull(result);
-        System.out.println(result);
         assertEquals(1, result.getCreated().size());
 
         List<Consumer> created = new ArrayList<Consumer>(result.getCreated());
@@ -389,10 +388,43 @@ public class HypervisorResourceTest {
             hostGuestMap, principal, owner.getKey(), true);
         assertNotNull(result);
         assertNotNull(result.getCreated());
-        System.out.println(result);
         List<Consumer> created = new ArrayList<Consumer>(result.getCreated());
         assertEquals(1, created.size());
         List<GuestId> gids = created.get(0).getGuestIds();
         assertEquals(1, gids.size());
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
+    @Test
+    public void treatNullGuestListsAsEmptyGuestLists() throws Exception {
+        Owner owner = new Owner("admin");
+
+        Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
+        hostGuestMap.put("HYPERVISOR_A", null);
+        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+
+        when(consumerCurator.getHostConsumersMap(any(Owner.class), any(Set.class)))
+            .thenReturn(new VirtConsumerMap());
+        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class)))
+            .thenReturn(new VirtConsumerMap());
+        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(Set.class))).
+            thenReturn(new VirtConsumerMap());
+
+        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+        when(principal.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE)))
+            .thenReturn(true);
+        when(consumerTypeCurator.lookupByLabel(eq(ConsumerTypeEnum.HYPERVISOR.getLabel())))
+            .thenReturn(hypervisorType);
+        when(idCertService.generateIdentityCert(any(Consumer.class)))
+            .thenReturn(new IdentityCertificate());
+
+        HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(
+            hostGuestMap, principal, owner.getKey(), true);
+        assertNotNull(result);
+        assertNotNull(result.getCreated());
+        List<Consumer> created = new ArrayList<Consumer>(result.getCreated());
+        assertEquals(1, created.size());
+        List<GuestId> gids = created.get(0).getGuestIds();
+        assertEquals(0, gids.size());
     }
 }
