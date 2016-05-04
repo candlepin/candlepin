@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.5
+Version: 0.9.54.6
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,10 @@ fi
 
 #raw
 %changelog
+* Wed May 04 2016 Christopher Snyder <csnyder@redhat.com> 0.9.54.6-1
+- 1332635: Treat null guest lists as empty lists (csnyder@redhat.com)
+- 1330245:  Candlepin logrotate error on RHEL6.7 (vrjain@redhat.com)
+
 * Wed Apr 20 2016 Alex Wood <awood@redhat.com> 0.9.54.5-1
 - Upgrade to RestEasy 2.3.9. (awood@redhat.com)
 - Update ueber cert test for 0.9.54 (csnyder@redhat.com)
