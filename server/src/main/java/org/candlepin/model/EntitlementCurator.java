@@ -293,6 +293,10 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return criteria;
     }
 
+    public Set<Entitlement> batchListModifying(List<Entitlement> entitlements) {
+        return batchListModifying(entitlements, false);
+    }
+
     /**
      * A version of list Modifying that finds Entitlements that modify
      * input entitlements.
@@ -301,7 +305,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * @param entitlement
      * @return Entitlements that are being modified by the input entitlements
      */
-    public Set<Entitlement> batchListModifying(List<Entitlement> entitlements) {
+    public Set<Entitlement> batchListModifying(List<Entitlement> entitlements,
+        boolean evict) {
         Set<Entitlement> modifying = new HashSet<Entitlement>();
         // Get the map of product Ids to the set of
         // overlapping entitlements that provide them
@@ -332,6 +337,21 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 // Return all entitlements for the modified product
                 modifying.addAll(pidEnts.getEntitlementsByProductId(overlappingProduct.getId()));
             }
+        }
+
+        if (evict) {
+            // Evict overlapping products that are no longer used in other
+            // parts of the code, but may consume a lot of memory
+            for (Product p : overlappingProducts) {
+                productCurator.evict(p);
+            }
+
+            // Evict overlapping entitlements
+//            for (Entitlement e : pidEnts.allEntitlements()) {
+//                if (!modifying.contains(e)) {
+//                    evict(e);
+//                }
+//            }
         }
 
         return modifying;
