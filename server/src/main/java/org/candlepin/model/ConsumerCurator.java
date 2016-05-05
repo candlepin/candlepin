@@ -736,7 +736,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                     Product p = productMap.get(sku);
                     int isMkt = 1;
                     if (!p.getAttributeValue("type").equals("MKT")) {
-                        log.info("Attempted to search for consumers with SKU " + sku + " which is not an MKT product");
+                        log.info("Attempted to search for consumers with SKU: {} which is not an MKT product",
+                            sku);
                         isMkt = 0;
                     }
 

@@ -687,11 +687,7 @@ class Candlepin
     post(path)
   end
 
-  # TODO: Could also fetch from /entitlements, a bit ambiguous:
-  def list_entitlements(params={})
-    uuid = params[:uuid] || @uuid
-
-    path = "/consumers/#{uuid}/entitlements?"
+  def parse_entitlement_path(path, params={})
     path << "product=#{params[:product_id]}&" if params[:product_id]
     path << "page=#{params[:page]}&" if params[:page]
     path << "per_page=#{params[:per_page]}&" if params[:per_page]
@@ -704,6 +700,23 @@ class Candlepin
       path << "attribute=#{attr_name}:#{attr_value}&"
     end
     path << "matches=#{params[:matches]}" if params[:matches]
+    return path
+  end
+
+  def list_ents_via_owners_resource(params={})
+    owner_key = params[:owner_key] || @owner
+    path = "/owners/#{owner_key}/entitlements?"
+    path = parse_entitlement_path(path, params)
+    results = get(path)
+    return results
+  end
+
+  # TODO: Could also fetch from /entitlements, a bit ambiguous:
+  def list_entitlements(params={})
+    uuid = params[:uuid] || @uuid
+
+    path = "/consumers/#{uuid}/entitlements?"
+    path = parse_entitlement_path(path, params)
     results = get(path)
     return results
   end

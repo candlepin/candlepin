@@ -59,7 +59,6 @@ import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.EventCurator;
@@ -1571,28 +1570,8 @@ public class ConsumerResource {
             checkForGuestMigration(consumer);
         }
 
-        Page<List<Entitlement>> entitlementsPage;
-        // No need to add filters when matching by product.
-        if (productId != null) {
-            Product p = productAdapter.getProductById(productId);
-            if (p == null) {
-                throw new BadRequestException(i18n.tr(
-                    "Product with ID ''{0}'' could not be found.", productId));
-            }
-            entitlementsPage = entitlementCurator.listByConsumerAndProduct(consumer,
-                productId, pageRequest);
-        }
-        else {
-            // Build up any provided entitlement filters from query params.
-            EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
-            for (KeyValueParameter filterParam : attrFilters) {
-                filters.addAttributeFilter(filterParam.key(), filterParam.value());
-            }
-            if (!StringUtils.isEmpty(matches)) {
-                filters.addMatchesFilter(matches);
-            }
-            entitlementsPage = entitlementCurator.listByConsumer(consumer, filters, pageRequest);
-        }
+        Page<List<Entitlement>> entitlementsPage = entitlementCurator.listFilteredPages(consumer,
+                attrFilters, matches, productId, pageRequest);
 
         // Store the page for the LinkHeaderPostInterceptor
         ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);
