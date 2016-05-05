@@ -1,22 +1,67 @@
+- name: Checkout Candlepin
+  git:
+    repo: "{{candlepin_git_repo}}"
+    dest: "{{candlepin_checkout}}"
+    force: yes
+  when: "{{candlepin_git_pull}}"
+  tags:
+    - candlepin-user
+
 - name: Run Bundle install
   command: /usr/local/bin/bundle install
   args:
-      chdir: /vagrant
-# The bundle install should be updated to use the following line once the packaged ansible 
-# includes the bundler module
-# - bundler: state=latest user_install=True chdir=/vagrant
-- lineinfile: dest=/home/vagrant/.bashrc line="export JAVA_HOME=/usr/lib/jvm/java-1.8.0/"
+      chdir: "{{candlepin_checkout}}"
+  tags:
+    - candlepin-user
+  ## TODO: new way whenever we want to switch to >= ansible-2.0.0 :
+  # - name: Run Bundle install
+  # bundler:
+  #   executable: /usr/local/bin/bundle
+  #   state: latest
+  #   user_install: true
+  #   chdir: "{{candlepin_checkout}}"
+  # tags:
+  #   - candlepin-user
+
+- name: Add JAVA_HOME to bashrc
+  lineinfile:
+    dest: "{{candlepin_user_home}}/.bashrc"
+    line: "export JAVA_HOME=/usr/lib/jvm/java-1.8.0/"
+  tags:
+    - candlepin-user
+
+- name: Check for zshrc
+  stat:
+    path: "{{candlepin_user_home}}/.zshrc"
+  register: zshrc_file
+  tags:
+    - candlepin-user
+
+- name: Add JAVA_HOME to zshrc
+  lineinfile:
+    dest: "{{candlepin_user_home}}/.zshrc"
+    line: "export JAVA_HOME=/usr/lib/jvm/java-1.8.0/"
+  when: zshrc_file.stat.exists
+  tags:
+    - candlepin-user
+
 - name: Perform a clean build of the source tree
   command: ~/bin/buildr clean test=no package
   args:
-      chdir: /vagrant
-      creates: /vagrant/server/target/*.zip
-- name: Deploy the server 
-  shell: ./server/bin/deploy -g -a
+    chdir: "{{candlepin_checkout}}"
+    creates: "{{candlepin_checkout}}/server/target/*.zip"
+  tags:
+    - candlepin-user
+
+- name: Deploy the candlepin server
+  shell: "./server/bin/deploy {{candlepin_deploy_args}}"
   args:
-    chdir: /vagrant
+    chdir: "{{candlepin_checkout}}"
     creates: /etc/candlepin/candlepin.conf
   environment:
-    PATH: "{{ ansible_env.PATH }}:/home/{{ ansible_ssh_user }}/bin"
+    PATH: "{{ ansible_env.PATH }}:{{ candlepin_user_home }}/bin"
     JAVA_HOME: "/usr/lib/jvm/java-1.8.0/"
-    
+    TERM: "xterm-256color"
+  tags:
+    - candlepin-user
+    - candlepin-deploy

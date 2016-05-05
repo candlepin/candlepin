@@ -1,7 +1,21 @@
-- selinux: state=disabled
-- yum: name=epel-release
-- name: base packages
-  yum: name={{item}}
+---
+- name: Disable SELINUX
+  selinux:
+    state: disabled
+  tags:
+    - candlepin-root
+
+- name: Enable EPEL
+  package:
+    name: epel-release
+    state: present
+  tags:
+    - candlepin-root
+
+- name: Install base packages
+  package:
+    name: "{{item}}"
+    state: present
   with_items:
     - make
     - gcc
@@ -19,24 +33,96 @@
     - python-psycopg2
     - libxml2-python
     - wget
+  tags:
+    - candlepin-root
+
+- name: Ensure that all packages are up2date
+  package:
+    name: "*"
+    state: latest
+  tags:
+    - candlepin-root
+    - system_update
+
 - name: Add remote debugging config to tomcat
-  lineinfile: dest=/etc/tomcat/tomcat.conf line="JAVA_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n"
+  lineinfile:
+    dest: /etc/tomcat/tomcat.conf
+    line: "JAVA_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n"
+  tags:
+    - candlepin-root
+
 - name: Initiate database
   command: service postgresql initdb
-           creates=/var/lib/pgsql/data/postgresql.conf
-- replace: dest=/var/lib/pgsql/data/pg_hba.conf regexp='(ident|peer)' replace='trust' backup=yes
+  args:
+    creates: /var/lib/pgsql/data/postgresql.conf
+  tags:
+    - candlepin-root
+
+- name: Set postgresql to trust
+  replace:
+    dest: /var/lib/pgsql/data/pg_hba.conf
+    regexp: '(ident|peer)'
+    replace: 'trust'
+    backup: yes
+  tags:
+    - candlepin-root
+
 - name: Start PostgreSQL and enable at boot
-  service: name=postgresql
-           enabled=yes
-           state=started
+  service:
+    name: postgresql
+    enabled: yes
+    state: started
+  tags:
+    - candlepin-root
+
+- name: Check if firewalld is on
+  shell: "systemctl is-active firewalld.service"
+  ignore_errors: true
+  register: firewalld_status
+  tags:
+    - candlepin-root
+
+- name: Punch holes in firewall
+  firewalld:
+    port: "{{item}}/tcp"
+    permanent: True
+    state: enabled
+    immediate: True
   with_items:
-  - 22
-  - 5432
-  - 443
-  - 8443
+    - 22
+    - 5432
+    - 443
+    - 8443
+    - 8080
+  when: firewalld_status.rc == 0
+  tags:
+    - candlepin-root
+
 - name: Gem refreshing
   command: gem update --system
-- gem: name=json_pure user_install=False
-- gem: name=bundler user_install=False
-- postgresql_user: name=candlepin role_attr_flags=CREATEDB
-- postgresql_db: name=candlepin owner=candlepin
+  tags:
+    - candlepin-root
+
+- name: Install gem dependencies
+  gem:
+    name: "{{item}}"
+    user_install: False
+  with_items:
+    - json_pure
+    - bundler
+  tags:
+    - candlepin-root
+
+- name: Create postgresql user
+  postgresql_user:
+    name: candlepin
+    role_attr_flags: CREATEDB
+  tags:
+    - candlepin-root
+
+- name: Create postgresql db
+  postgresql_db:
+    name: candlepin
+    owner: candlepin
+  tags:
+    - candlepin-root
