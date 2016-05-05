@@ -280,8 +280,10 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             criteria = criteria.add(Restrictions.not(unboundedInCriterion("id", ids)));
         }
 
+        Date today = new Date();
         criteria = criteria.createCriteria("pool")
-                .add(Restrictions.or(
+                .add(Restrictions.and(Restrictions.ge("endDate", today),
+                    Restrictions.or(
                     // Dates overlap if the start or end date is in our range
                     Restrictions.or(
                         Restrictions.between("startDate", startDate, endDate),
@@ -289,7 +291,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                     Restrictions.and(
                         // The dates overlap if our range is completely encapsulated
                         Restrictions.le("startDate", startDate),
-                        Restrictions.ge("endDate", endDate))));
+                        Restrictions.ge("endDate", endDate)))));
         return criteria;
     }
 
@@ -342,11 +344,11 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         if (evict) {
             // Evict overlapping products that are no longer used in other
             // parts of the code, but may consume a lot of memory
-            for (Product p : overlappingProducts) {
-                productCurator.evict(p);
-            }
+//            for (Product p : overlappingProducts) {
+//                productCurator.evict(p);
+//            }
 
-            // Evict overlapping entitlements
+//             Evict overlapping entitlements
 //            for (Entitlement e : pidEnts.allEntitlements()) {
 //                if (!modifying.contains(e)) {
 //                    evict(e);
