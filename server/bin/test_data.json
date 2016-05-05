@@ -2,7 +2,7 @@
     "content": [
         {
             "name": "never-enabled-content",
-            "id": 0,
+            "id": 100,
             "label": "never-enabled-content",
             "type": "yum",
             "vendor": "test-vendor",
@@ -783,7 +783,7 @@
             },
             "content": [
                 [1111, false],
-                [0, false],
+                [100, false],
                 [2, false],
                 [234, false],
                 [235, false]
@@ -813,7 +813,7 @@
             },
             "content": [
                 [1111, false],
-                [0, false],
+                [100, false],
                 [2, false],
                 [234, false],
                 [235, false]
@@ -832,7 +832,7 @@
             },
             "content": [
                 [1111, false],
-                [0, false]
+                [100, false]
             ]
         },
         {
@@ -994,7 +994,7 @@
             "name": "Awesome OS Developer Bits",
             "id": "1",
             "content": [
-                [0, false]
+                [100, false]
             ]
         },
         {
@@ -1069,7 +1069,7 @@
                 "warning_period": 30
             },
             "content": [
-                [0, false]
+                [100, false]
             ]
         },
         {
@@ -1085,7 +1085,7 @@
             },
             "content": [
                 [11113, false],
-                [0, false],
+                [100, false],
                 [11121, false]
             ]
         },
@@ -1117,7 +1117,7 @@
             },
             "content": [
                 [11113, false],
-                [0, false],
+                [100, false],
                 [11121, false]
             ]
         },
@@ -1149,7 +1149,7 @@
             },
             "content": [
                 [11113, false],
-                [0, false],
+                [100, false],
                 [11122, false]
             ]
         },
@@ -1182,7 +1182,7 @@
             },
             "content": [
                 [11113, false],
-                [0, false],
+                [100, false],
                 [11122, false]
             ]
         },
@@ -1215,7 +1215,7 @@
             },
             "content": [
                 [11113, false],
-                [0, false],
+                [100, false],
                 [11123, false]
             ]
         },
@@ -1249,7 +1249,7 @@
             },
             "content": [
                 [11113, false],
-                [0, false],
+                [100, false],
                 [11124, false]
             ]
         },
@@ -1288,7 +1288,7 @@
                 [68000, false],
                 [64000, false],
                 [39001, false],
-                [0, false]
+                [100, false]
             ]
         },
         {
@@ -1327,7 +1327,7 @@
                 [68000, false],
                 [64000, false],
                 [39001, false],
-                [0, false]
+                [100, false]
             ]
         },
         {
@@ -1363,7 +1363,7 @@
             },
             "content": [
                 [38664, false],
-                [0, false]
+                [100, false]
             ]
         },
         {
@@ -1398,7 +1398,7 @@
             },
             "content": [
                 [6401, false],
-                [0, false]
+                [100, false]
             ]
         },
         {
@@ -1431,7 +1431,7 @@
             },
             "content": [
                 [11113, false],
-                [0, false],
+                [100, false],
                 [11124, false]
             ]
         },
@@ -1466,7 +1466,7 @@
             },
             "content": [
                 [11113, false],
-                [0, false],
+                [100, false],
                 [11125, false]
             ]
         },
@@ -1500,7 +1500,7 @@
             },
             "content": [
                 [11113, false],
-                [0, false],
+                [100, false],
                 [11126, false]
             ]
         },
@@ -1532,7 +1532,7 @@
             },
             "content": [
                 [11113, false],
-                [0, false],
+                [100, false],
                 [11120, false]
             ]
         },
@@ -1564,7 +1564,7 @@
             },
             "content": [
                 [11113, false],
-                [0, false],
+                [100, false],
                 [11124, false],
                 [11123, false],
                 [11125, false],
@@ -1674,7 +1674,7 @@
             "name": "Multiplier Product Bits",
             "id": "917571",
             "content": [
-                [0, false]
+                [100, false]
             ]
         },
         {
@@ -1724,7 +1724,7 @@
             },
             "content": [
                 [11113, false],
-                [0, false],
+                [100, false],
                 [11124, false],
                 [11123, false],
                 [11125, false],
