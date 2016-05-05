@@ -140,6 +140,11 @@ public class HypervisorResource {
 
         Collection<List<GuestId>> idsLists = hostGuestMap.values();
         for (List<GuestId> guestIds : idsLists) {
+            // ignore null guest lists
+            // See bzs 1332637, 1332635
+            if (guestIds == null) {
+                continue;
+            }
             for (Iterator<GuestId> guestIdsItr = guestIds.iterator(); guestIdsItr.hasNext();) {
                 String id = guestIdsItr.next().getGuestId();
 
@@ -164,6 +169,14 @@ public class HypervisorResource {
         HypervisorCheckInResult result = new HypervisorCheckInResult();
         for (Entry<String, List<GuestId>> hostEntry : hostGuestMap.entrySet()) {
             String hypervisorId = hostEntry.getKey();
+            // Treat null guest list as an empty list.
+            // We can get an empty list here from katello due to an update
+            // to ruby on rails.
+            // (https://github.com/rails/rails/issues/13766#issuecomment-32730270)
+            // See bzs 1332637, 1332635
+            if (hostEntry.getValue() == null) {
+                hostEntry.setValue(new ArrayList<GuestId>());
+            }
             try {
                 log.debug("Syncing virt host: {} ({} guest IDs)", hypervisorId, hostEntry.getValue().size());
 
