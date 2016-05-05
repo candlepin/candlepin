@@ -379,8 +379,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         productCurator.create(providedProductEnt3);
         productCurator.create(providedProductEnt4);
 
-        ent1modif = createPool("p1", createDate(1999, 1, 1), createDate(1999, 2, 1), providedProductEnt1);
-        ent2modif = createPool("p2", createDate(2000, 4, 4), createDate(2001, 3, 3), providedProductEnt2);
+        ent1modif = createPool("p1", createDate(1999, 1, 1), createDate(1999+50, 2, 1), providedProductEnt1);
+        ent2modif = createPool("p2", createDate(2000, 4, 4), createDate(2001+50, 3, 3), providedProductEnt2);
 
         /**
          * Ent1 and Ent2 entitlements are being modified by contentPool1 and
@@ -406,32 +406,39 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         providedProductEnt3.addContent(contentPool1);
         providedProductEnt4.addContent(contentPool2);
 
-        createPool("p3", createDate(1998, 1, 1), createDate(2003, 2, 1),
+        /**
+         * The pool p3 overlaps with p1 and p2 completely
+         */
+        createPool("p3", createDate(1998, 1, 1), createDate(2003+50, 2, 1),
             providedProductEnt3);
-        createPool("p4", createDate(2001, 2, 30), createDate(2002, 1, 10),
+        /**
+         * The pool p4 overlaps with p2
+         */
+        createPool("p4", createDate(2001+50, 2, 30), createDate(2002+50, 1, 10),
             providedProductEnt4);
 
-        createPool("p5", createDate(2000, 5, 5), createDate(2000, 5, 10), null);
+        /**
+         * p5 overlaps with just p2 as well (is contained in it
+         */
+        createPool("p5", createDate(2000+50, 5, 5), createDate(2000+50, 5, 10), null);
 
+        /**
+         * p6 is expired and doesn't overlap at all
+         */
         createPool("p6", createDate(1998, 1, 1), createDate(1998, 12, 31), null);
-        createPool("p7", createDate(2003, 2, 2), createDate(2003, 3, 3), null);
+        /**
+         * p7 is not expired but doesnt overlap
+         */
+        createPool("p7", createDate(2003+50, 2, 2), createDate(2003+50, 3, 3), null);
     }
 
     @Test
-    public void getOverlappingForModifying() {
+    public void getModifierProducts() {
         prepareEntitlementsForModifying();
-
-        ProductEntitlements pents = entitlementCurator.getOverlappingForModifying(
-            Arrays.asList(ent1modif, ent2modif));
-
-        assertTrue(!pents.isEmpty());
-        assertEquals(5, pents.getAllProductIds().size());
-        for (String id : Arrays.asList("prod-p3", "prod-p4", "prod-p5", "ppent3", "ppent4")) {
-            assertTrue("Overlapping entitlements [" + pents + "] " +
-                "doesn't contain product id [" + id + "]", pents.getAllProductIds().contains(id));
-        }
+        Set<Entitlement> ents = entitlementCurator.batchListModifying( Arrays.asList(ent1modif, ent2modif));
+        //TODO asserts!
     }
-
+    
     private Entitlement createPool(String id, Date startDate, Date endDate, Product provided) {
         EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
         Product poolProd = TestUtil.createProduct("prod-" + id, "prod-" + id, owner);

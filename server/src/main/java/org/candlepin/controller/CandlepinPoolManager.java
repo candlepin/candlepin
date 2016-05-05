@@ -1696,7 +1696,7 @@ public class CandlepinPoolManager implements PoolManager {
 
             // We work in batches of maximum size 1000.
             if (i % 100 == 0) {
-                Set<Entitlement> modifiedEnts = entitlementCurator.batchListModifying(batch, true);
+                Set<Entitlement> modifiedEnts = entitlementCurator.batchListModifying(batch);
                 if (log.isDebugEnabled() && modifiedEnts.size() > 0) {
                     log.debug("Found modifying entitlements for which we " +
                         "need to regenerate certificates: {}", getEntIds(modifiedEnts));
