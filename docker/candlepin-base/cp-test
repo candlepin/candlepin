@@ -140,7 +140,14 @@ while getopts ":dtrHulsb:c:p:v" opt; do
             RSPEC="1"
             DEPLOY="1"
             ;;
-        u  ) UNITTEST=$((UNITTEST + 1));;
+        u  ) UNITTEST=$((UNITTEST + 1))
+
+            ARG="${ARGV[$OPTIND - 1]}"
+            if [ "${ARG:0:1}" != "-" ] && [ "${ARG:0:1}" != "" ]; then
+                UNITTEST_FILTER="$ARG"
+                OPTIND=$((OPTIND + 1))
+            fi
+            ;;
         l  ) LINTER="1";;
         s  ) LAUNCHSHELL="1";;
         b  ) ARBITRARY="${OPTARG}";;
@@ -204,11 +211,18 @@ cd "$CP_HOME/$PROJECT"
 if [ "$UNITTEST" -gt 0 ]; then
     echo "Running unit tests $UNITTEST time(s)"
     # run $UNITTEST time(s) to increase chance of capturing
-    # non deterministic unit test failures.
+    # non-deterministic unit test failures.
+
+    UTCMD="test"
+
+    if [ ! -z "${UNITTEST_FILTER}" ]; then
+        UTCMD="${UTCMD}:${UNITTEST_FILTER}"
+    fi
+
     for (( i=1; i<=$UNITTEST; i++ ))
     do
         tee /var/log/candlepin/unit_tests.log < /tmp/teepipe &
-        buildr test > /tmp/teepipe 2>&1
+        buildr $UTCMD > /tmp/teepipe 2>&1
         rm -f /tmp/teepipe
         mkfifo /tmp/teepipe
     done
