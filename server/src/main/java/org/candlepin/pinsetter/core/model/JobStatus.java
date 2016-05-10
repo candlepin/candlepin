@@ -319,10 +319,22 @@ public class JobStatus extends AbstractHibernateObject {
                 // unable to close streams
             }
         }
+
         return result;
     }
 
     public void cloakResultData(boolean cloak) {
         this.cloakData = cloak;
+    }
+
+    public String toString() {
+        return String.format("JobStatus [id: %s, type: %s, owner: %s, target: %s (%s), state: %s]",
+            this.id,
+            this.jobClass != null ? this.jobClass.getSimpleName() : null,
+            this.ownerId,
+            this.targetId,
+            this.targetType,
+            this.state
+        );
     }
 }
