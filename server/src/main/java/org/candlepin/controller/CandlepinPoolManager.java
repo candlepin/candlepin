@@ -1664,6 +1664,37 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
+        /**
+         * Before deleting the entitlements, we need to find out if there are any
+         * modifier entitlements that need to have their certificates regenerated
+         */
+        if (regenCertsAndStatuses) {
+            log.debug("Searching for modifier entitlements.");
+            List<Entitlement> batch = new ArrayList<Entitlement>();
+            for (int i = 0; i < entsToRevoke.size(); i++) {
+                Entitlement entitlement = entsToRevoke.get(i);
+                batch.add(entitlement);
+
+                // We work in batches of maximum size 1000.
+                if (i % 1000 == 0) {
+                    Set<Entitlement> modifiedEnts = entitlementCurator.batchListModifying(batch);
+                    if (log.isDebugEnabled() && modifiedEnts.size() > 0) {
+                        log.debug("Found modifying entitlements for which we " +
+                            "need to regenerate certificates: {}", getEntIds(modifiedEnts));
+                    }
+
+                    this.regenerateCertificatesOf(modifiedEnts, true);
+                    batch.clear();
+                }
+            }
+
+            if (!batch.isEmpty()) {
+                this.regenerateCertificatesOf(entitlementCurator.batchListModifying(batch), true);
+            }
+
+            log.debug("Modifier entitlements done.");
+        }
+
         log.info("Starting batch delete of pools");
         poolCurator.batchDelete(poolsToDelete);
         log.info("Starting batch delete of entitlements");
@@ -1688,30 +1719,6 @@ public class CandlepinPoolManager implements PoolManager {
             sendDeletedEvents(entsToRevoke);
             return;
         }
-
-        List<Entitlement> batch = new ArrayList<Entitlement>();
-        for (int i = 0; i < entsToRevoke.size(); i++) {
-            Entitlement entitlement = entsToRevoke.get(i);
-            batch.add(entitlement);
-
-            // We work in batches of maximum size 1000.
-            if (i % 1000 == 0) {
-                Set<Entitlement> modifiedEnts = entitlementCurator.batchListModifying(batch);
-                if (log.isDebugEnabled() && modifiedEnts.size() > 0) {
-                    log.debug("Found modifying entitlements for which we " +
-                        "need to regenerate certificates: {}", getEntIds(modifiedEnts));
-                }
-
-                this.regenerateCertificatesOf(modifiedEnts, true);
-                batch.clear();
-            }
-        }
-
-        if (!batch.isEmpty()) {
-            this.regenerateCertificatesOf(entitlementCurator.batchListModifying(batch), true);
-        }
-
-        log.debug("Modifier entitlements done.");
 
         log.info("Scheduling Compliance status for {} consumers.", consumerSortedEntitlements.size());
         for (Consumer consumer : consumerSortedEntitlements.keySet()) {
