@@ -195,33 +195,48 @@ public class JobCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void getLatestByClassAndOwner() {
-        newJobStatus().state(JobStatus.JobState.WAITING)
+        long offset = System.currentTimeMillis() - 7000;
+
+        newJobStatus(new Date(offset + 1000)).state(JobStatus.JobState.WAITING)
             .owner("my_owner")
-            .jobClass(HealEntireOrgJob.class).create();
-        newJobStatus().state(JobStatus.JobState.RUNNING)
-            .owner("my_owner")
-            .jobClass(HealEntireOrgJob.class).create();
-        newJobStatus().state(JobStatus.JobState.RUNNING)
-            .owner("my_owner")
-            .jobClass(HealEntireOrgJob.class).create();
-        JobStatus expected = newJobStatus().state(JobStatus.JobState.CREATED)
             .jobClass(HealEntireOrgJob.class)
-            .owner("my_owner").create();
+            .create();
+
+        newJobStatus(new Date(offset + 2000)).state(JobStatus.JobState.RUNNING)
+            .owner("my_owner")
+            .jobClass(HealEntireOrgJob.class)
+            .create();
+
+        newJobStatus(new Date(offset + 3000)).state(JobStatus.JobState.RUNNING)
+            .owner("my_owner")
+            .jobClass(HealEntireOrgJob.class)
+            .create();
+
+        JobStatus expected = newJobStatus(new Date(offset + 4000)).state(JobStatus.JobState.CREATED)
+            .jobClass(HealEntireOrgJob.class)
+            .owner("my_owner")
+            .create();
 
         // Would be chosen if the job class was correct
-        newJobStatus().state(JobStatus.JobState.WAITING)
+        newJobStatus(new Date(offset + 5000)).state(JobStatus.JobState.WAITING)
             .owner("my_owner")
-            .jobClass(RefreshPoolsJob.class).create();
+            .jobClass(RefreshPoolsJob.class)
+            .create();
+
         // Would be chosen if the owner was correct
-        newJobStatus().state(JobStatus.JobState.WAITING)
+        newJobStatus(new Date(offset + 6000)).state(JobStatus.JobState.WAITING)
             .owner("some_owner")
-            .jobClass(HealEntireOrgJob.class).create();
-        // Would be chosen if the jobstate wasn't done
-        newJobStatus().state(JobStatus.JobState.FINISHED)
             .jobClass(HealEntireOrgJob.class)
-            .owner("my_owner").create();
-        JobStatus result = curator.getByClassAndTarget("my_owner",
-            HealEntireOrgJob.class);
+            .create();
+
+        // Would be chosen if the jobstate wasn't done
+        newJobStatus(new Date(offset + 7000)).state(JobStatus.JobState.FINISHED)
+            .jobClass(HealEntireOrgJob.class)
+            .owner("my_owner")
+            .create();
+
+        JobStatus result = curator.getByClassAndTarget("my_owner", HealEntireOrgJob.class);
+
         assertEquals(expected, result);
     }
 
@@ -384,8 +399,14 @@ public class JobCuratorTest extends DatabaseTestFixture {
         return new JobStatusBuilder();
     }
 
+    private JobStatusBuilder newJobStatus(Date creationDate) {
+        return new JobStatusBuilder(creationDate);
+    }
+
     private class JobStatusBuilder{
         private String id;
+        private Date creationDate;
+
         private Date startDt;
         private Date endDt;
         private String result;
@@ -399,13 +420,19 @@ public class JobCuratorTest extends DatabaseTestFixture {
         private JobDataMap map;
         private Class<? extends Job> jobClass = Job.class;
 
-        public JobStatusBuilder() {
+        public JobStatusBuilder(Date creationDate) {
+            this.creationDate = creationDate;
+
             id("id" + Math.random());
             map = new JobDataMap();
 
             contextOwner = "an-owner-key";
             targetValue = contextOwner;
             targetType = JobStatus.TargetType.OWNER;
+        }
+
+        public JobStatusBuilder() {
+            this(null);
         }
 
         public JobStatusBuilder id(String id) {
@@ -483,6 +510,9 @@ public class JobCuratorTest extends DatabaseTestFixture {
             if (state != null) {
                 status.setState(state);
             }
+
+            status.setCreated(this.creationDate);
+
             return curator.create(status);
         }
 

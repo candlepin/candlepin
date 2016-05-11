@@ -155,6 +155,9 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
     }
 
     public JobStatus getByClassAndTarget(String target, Class<? extends KingpinJob> jobClass) {
+        // FIXME:
+        // This is not guaranteed to find the intended target if more than one job in the DB
+        // matches the input criteria
 
         return (JobStatus) this.currentSession().createCriteria(JobStatus.class)
             .addOrder(Order.desc("created"))
