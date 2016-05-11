@@ -170,11 +170,13 @@ else
     echo "Using /candlepin."
     CP_HOME="/candlepin"
     cd $CP_HOME
+
     # In case $CP_HOME contains local changes its better to use 'clean'
     # to remove any untracked files before proceeding
     git fetch
-    git reset --hard origin master
+    git reset --hard
     git clean -df
+
     if [ ! -z "$CHECKOUT" ]; then
         echo "Checking out: $CHECKOUT"
         git checkout "$CHECKOUT"
@@ -204,7 +206,7 @@ if [ "$UNITTEST" -gt 0 ]; then
     # run $UNITTEST time(s) to increase chance of capturing
     # non deterministic unit test failures.
     for (( i=1; i<=$UNITTEST; i++ ))
-    do 
+    do
         tee /var/log/candlepin/unit_tests.log < /tmp/teepipe &
         buildr test > /tmp/teepipe 2>&1
         rm -f /tmp/teepipe

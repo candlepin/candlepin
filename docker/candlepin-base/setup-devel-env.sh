@@ -19,8 +19,6 @@ PACKAGES=(
     python-pip
     git
     tig
-    rubygems
-    ruby-devel
     gcc
     tomcat
     java-$JAVA_VERSION-openjdk-devel
@@ -55,7 +53,15 @@ cd /candlepin
 git config --add remote.origin.fetch "+refs/pull/*:refs/remotes/origin/pr/*"
 git pull
 
-# Install all ruby deps:
+# Setup and install rvm, ruby and pals
+gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
+curl -sSL https://get.rvm.io | bash -s stable
+source /etc/profile.d/rvm.sh
+
+rvm install 2.0.0
+rvm use --default 2.0.0
+
+# Install all ruby deps
 gem install bundler
 bundle install
 
