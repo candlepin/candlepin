@@ -1989,6 +1989,31 @@
                 "support_type" : "Level 3",
                 "expires_after" : "75"
             }
+        },
+        {
+            "name": "Awesome OS Unlimited Quantity",
+            "id": "awesomeos-unlimited-quantity",
+            "type": "MKT",
+            "quantity": "-1",
+            "attributes": {
+                "multi-entitlement": "yes"
+            },
+            "provided_products": [
+                "37060"
+            ]
+        },
+        {
+            "name": "Awesome OS Unlimited Quantity Virt Limit",
+            "id": "awesomeos-ul-quantity-virt",
+            "type": "MKT",
+            "quantity": "-1",
+            "attributes": {
+                "multi-entitlement": "yes",
+                "virt_limit": "unlimited"
+            },
+            "provided_products": [
+                "37060"
+            ]
         }
     ]
 }
