@@ -170,7 +170,11 @@ else
     echo "Using /candlepin."
     CP_HOME="/candlepin"
     cd $CP_HOME
-    git pull
+    # In case $CP_HOME contains local changes its better to use 'clean'
+    # to remove any untracked files before proceeding
+    git fetch
+    git reset --hard origin master
+    git clean -df
     if [ ! -z "$CHECKOUT" ]; then
         echo "Checking out: $CHECKOUT"
         git checkout "$CHECKOUT"
