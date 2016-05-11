@@ -36,7 +36,7 @@
             <property name="hibernate.connection.url" value="jdbc:hsqldb:mem:unit-testing-jpa;sql.enforce_strict_size=true;shutdown=true;"/>
             <property name="hibernate.connection.username" value="sa"/>
             <property name="hibernate.connection.password" value=""/>
-            <property name="hibernate.show_sql" value="false" />
+            <property name="hibernate.show_sql" value="true" />
 
             <property name="hibernate.ejb.interceptor" value="org.candlepin.hibernate.EmptyStringInterceptor"/>
         </properties>
