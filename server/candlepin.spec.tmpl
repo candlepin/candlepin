@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.51.17
+Version: 0.9.51.18
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -218,6 +218,9 @@ fi
 
 #raw
 %changelog
+* Wed May 11 2016 Vritant Jain <vrjain@redhat.com> 0.9.51.18-1
+- 1332270: Paginate owner entitlements (vrjain@redhat.com)
+
 * Thu May 05 2016 Vritant Jain <vrjain@redhat.com> 0.9.51.17-1
 - 1332270: Ability to quickly associate entitlements with consumers
   (vrjain@redhat.com)
