@@ -14,8 +14,16 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
@@ -48,6 +56,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Inject private ConsumerCurator consumerCurator;
     @Inject private EntitlementCurator entitlementCurator;
     @Inject private EnvironmentCurator envCurator;
+    @Inject private ModifierTestDataGenerator modifierData;
 
     private Entitlement ent1modif;
     private Entitlement ent2modif;
@@ -55,6 +64,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     private Entitlement firstEntitlement;
     private EntitlementCertificate firstCertificate;
     private EntitlementCertificate secondCertificate;
+    //Owner for modifying tests
+    private Owner modifyOwner;
     private Owner owner;
     private Consumer consumer;
     private Environment environment;
@@ -114,6 +125,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
+        modifyOwner = createOwner();
+        modifierData.createTestData(modifyOwner);
         owner = createOwner();
         ownerCurator.create(owner);
 
@@ -437,6 +450,97 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(e1);
 
         return e1;
+    }
+
+
+    /**
+     * Entitlement 2 doesn't have any provided products, but marketing product of Entitlement 2
+     * is being modified by entitlement 6
+     */
+    @Test
+    public void testModifyMarketingProduct() {
+        Collection<String> result = entitlementCurator.batchListModifying(modifierData.getEntitlements(2));
+        assertEquals("Entitlement 2 should be modified  by exactly one entitlement", 1, result.size());
+        String e6Id = modifierData.getEntitlementId(6);
+        assertEquals("Entitlement 6 should modify entitlement 2", e6Id, result.iterator().next());
+    }
+
+    /**
+     * Output of batchListModifying shouldn't return any entitlement present in the input even if it modifies
+     * some input entitlements
+     */
+    @Test
+    public void testModifyShouldntIncludeInput() {
+        Collection<String> result = entitlementCurator.batchListModifying(modifierData.getEntitlements(2, 6));
+        assertEquals(0, result.size());
+    }
+
+    /**
+     * Expired pools shouldn't be outputed, because it makes no sense to regenerate certificates
+     * for them.
+     *
+     * Entitlement 3 is modified only by entitlement 1. Entitlement 1 entitles a pool that has
+     * already expired. So we shouldn't output it.
+     *
+     * Entitlement 13 is modified by entitlement 16
+     */
+    @Test
+    public void testOutNonExpired() {
+        Collection<String> result = entitlementCurator.
+            batchListModifying(modifierData.getEntitlements(3, 13));
+        assertEquals("Entitlements 3 and 13 are modified by entitlements 1,6, 11, 16. 1 and 11 is expired!",
+            2, result.size());
+        String e6Id = modifierData.getEntitlementId(6);
+        String e16Id = modifierData.getEntitlementId(16);
+        for (String e  : result) {
+            assertTrue("Entitlement 3 is modified by entitlements 1 and 6. 1 is expired!",
+                e.equals(e6Id) || e.equals(e16Id));
+        }
+    }
+
+    /**
+     * Entitlement 17 is modified by 14 and 15, but it doesn't overlap with them.
+     * Entitlement 19 is modified by 14 and 15 as well, but it does overlap with them.
+     * Entitlement 14 is owned by a different consumer so it shouldn't be outputed
+     */
+    @Test
+    public void testEntitlementThatDoesntOverlap() {
+        Collection<String> result = entitlementCurator.batchListModifying(modifierData.getEntitlements(17));
+        assertEquals("Entitlement 17 shouldn't overlap with any entitlements.", 0, result.size());
+        result = entitlementCurator.batchListModifying(modifierData.getEntitlements(19));
+        assertEquals("Entitlement 19 should overlap with 15", 1, result.size());
+    }
+
+
+    /**
+     * Entitlement 8 is modified by E4 and E5, additionally, E3 is modified by E6
+     */
+    @Test
+    public void testModifyOnlyConsumers() {
+        Collection<String> result = entitlementCurator.batchListModifying(modifierData.getEntitlements(3, 8));
+        assertEquals("Entitlements 3, 8 are modified by entitlements 6, 4 and 5", 3, result.size());
+        String e6Id = modifierData.getEntitlementId(6);
+        String e4Id = modifierData.getEntitlementId(4);
+        String e5Id = modifierData.getEntitlementId(5);
+
+        for (String e : result) {
+            assertTrue(e.equals(e4Id) || e.equals(e5Id) || e.equals(e6Id));
+        }
+    }
+
+    /**
+     * Entitlement 18 is owned by consumer 1 but that consumer doesn't have any other entitlements!
+     *
+     * Entitlement 19 is owned by consumer 2 and he does have only  Content 5 so E19 will be modified by
+     * only E15
+     */
+    @Test
+    public void testModifyConsumerDoesntHaveEntitlement() {
+        Collection<String> result = entitlementCurator
+            .batchListModifying(modifierData.getEntitlements(18, 19));
+        assertEquals(1, result.size());
+        String e15id = modifierData.getEntitlementId(15);
+        assertEquals("Expected entitlement is E15", e15id, result.iterator().next());
     }
 
     @Test
