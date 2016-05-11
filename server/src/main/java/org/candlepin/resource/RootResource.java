@@ -39,9 +39,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-
 
 /**
  * A root resource, responsible for returning client a struct of links to the
@@ -49,7 +46,6 @@ import io.swagger.annotations.ApiOperation;
  * permissions of the caller.
  */
 @Path("/")
-@Api("root")
 public class RootResource {
 
     private static Logger log = LoggerFactory.getLogger(RootResource.class);
@@ -154,8 +150,6 @@ public class RootResource {
         }
     }
 
-    @ApiOperation(notes = "Retrives a list of Links. Corresponds to the Root Resources",
-        value = "getRootResources")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole(noAuth = true, anon = true)
