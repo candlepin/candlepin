@@ -545,5 +545,12 @@ define "candlepin" do
   end
 end
 
+desc 'Run all the linters'
+task :lint => [:checkstyle, :rpmlint]
+
 desc 'Make sure eventhing is working as it should'
-task :check_all => [:clean, :checkstyle, :rpmlint, :test]
+task :check_all => [:clean, :lint, :test]
+
+#no-op task for forward compatibility
+desc 'Miscellaneous validation tasks to be run on jenkins with every pull request'
+task :jenkins => []
