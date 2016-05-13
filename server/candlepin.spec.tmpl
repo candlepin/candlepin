@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.11
+Version: 2.0.12
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,25 @@ fi
 
 #raw
 %changelog
+* Fri May 13 2016 Vritant Jain <vrjain@redhat.com> 2.0.12-1
+- 1331793: Optimized expired pool cleanup and entitlement revocation
+  (crog@redhat.com)
+- Fixed periodic failures in JobCuratorTest and ConsumerCuratorTest
+  (crog@redhat.com)
+- 1332637: Treat null guest lists as empty guest lists (csnyder@redhat.com)
+- Changed the content set id to reduce confusion in testing
+  (wpoteat@redhat.com)
+- 1306628: Added additional logging to environment deletion (crog@redhat.com)
+- 1330246: Candlepin logrotate error on RHEL6.7 (vrjain@redhat.com)
+- Added documentation and proper error routing and improved encapsulation
+  (crog@redhat.com)
+- Added a DTO for activation keys (crog@redhat.com)
+- Config AUTH_OVER_HTTP (nguyen.filip@gmail.com)
+- Updated component versions for commons-io and httpclient (crog@redhat.com)
+- Added script to manipulate manifests (adarshvritant@gmail.com)
+- Authenticate over SSL only (nguyen.filip@gmail.com)
+- Lock consumer upon delete (adarshvritant@gmail.com)
+
 * Thu Apr 21 2016 Chris Rog <crog@redhat.com> 2.0.11-1
 - Stop lazy migration for guests on hypervisors (wpoteat@redhat.com)
 - Fix guest migration spec test - sleep appropriately for mysql
