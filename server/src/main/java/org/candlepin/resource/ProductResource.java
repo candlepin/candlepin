@@ -50,12 +50,18 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  * API Gateway into /product
  *
  * @version $Rev$
  */
 @Path("/products")
+@Api("products")
 public class ProductResource {
 
     private static Logger log = LoggerFactory.getLogger(ProductResource.class);
@@ -101,33 +107,8 @@ public class ProductResource {
         return product;
     }
 
-    /**
-     * Retrieves a single Product
-     * <p>
-     * <pre>
-     * {
-     *   "id" : "product_uuid",
-     *   "name" : "product_name",
-     *   "multiplier" : 1,
-     *   "attributes" : [ {
-     *     "name" : "version",
-     *     "value" : "1.0",
-     *     "created" : [date],
-     *     "updated" : [date]
-     *   } ],
-     *   "productContent" : [ ],
-     *   "dependentproductUuids" : [ ],
-     *   "href" : "/products/product_uuid",
-     *   "created" : [date],
-     *   "updated" : [date]
-     * }
-     * </pre>
-     *
-     * @param productUuid uuid of the product sought.
-     * @return a Product object
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a single Product", value = "getProduct")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Path("/{product_uuid}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -137,13 +118,8 @@ public class ProductResource {
         return product;
     }
 
-    /**
-     * Retreives a Certificate for a Product
-     *
-     * @return a ProductCertificate object
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retreives a Certificate for a Product", value = "getProductCertificate")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Path("/{product_uuid}/certificate")
     @Produces(MediaType.APPLICATION_JSON)
@@ -156,15 +132,12 @@ public class ProductResource {
     }
 
     /**
-     * Creates a Product
-     * <p>
-     * Returns either the new created Product or the Product that already existed.
-     *
      * @deprecated Use per-org version
-     * @param product
-     * @return a Product object
-     * @httpcode 200
+     * @return Product
      */
+    @ApiOperation(notes = "Creates a Product. Returns either the new created " +
+        "Product or the Product that already existed. @deprecated Use per-org" +
+        " version", value = "createProduct")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -176,13 +149,11 @@ public class ProductResource {
     }
 
     /**
-     * Updates a Product
-     *
      * @deprecated Use per-org version
-     * @return a Product object
-     * @httpcode 400
-     * @httpcode 200
+     * @return Product
      */
+    @ApiOperation(notes = "Updates a Product @deprecated Use per-org version", value = "updateProduct")
+    @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @PUT
     @Path("/{product_uuid}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -196,15 +167,13 @@ public class ProductResource {
         ));
     }
 
+
     /**
-     * Adds Content to a Product
-     * <p>
-     * Batch mode
-     *
      * @deprecated Use per-org version
-     * @return a Product object
-     * @httpcode 200
+     * @return Product
      */
+    @ApiOperation(notes = "Adds Content to a Product Batch mode @deprecated Use per-org version",
+        value = "addBatchContent")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -219,15 +188,14 @@ public class ProductResource {
         ));
     }
 
+
     /**
-     * Adds Content to a Product
-     * <p>
-     * Single mode
-     *
      * @deprecated Use per-org version
-     * @return a Product object
-     * @httpcode 200
+     * @return Product
      */
+    @ApiOperation(notes = "Adds Content to a Product. Single mode @deprecated Use " +
+        "per-org version", value = "addContent")
+    @ApiResponses({  })
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
@@ -243,12 +211,12 @@ public class ProductResource {
         ));
     }
 
+
     /**
-     * Removes Content from a Product
-     *
      * @deprecated Use per-org version
-     * @httpcode 200
      */
+    @ApiOperation(notes = "Removes Content from a Product @deprecated Use per-org version",
+        value = "removeContent")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}/content/{content_id}")
@@ -263,13 +231,10 @@ public class ProductResource {
     }
 
     /**
-     * Removes a Product
-     *
      * @deprecated Use per-org version
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 200
      */
+    @ApiOperation(notes = "Removes a Product @deprecated Use per-org version", value = "deleteProduct")
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}")
@@ -282,13 +247,8 @@ public class ProductResource {
         ));
     }
 
-    /**
-     * Retrieves a list of Owners by Product
-     *
-     * @return a list of Owner objects
-     * @httpcode 200
-     * @httpcode 400
-     */
+    @ApiOperation(notes = "Retrieves a list of Owners by Product", value = "getProductOwners")
+    @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @GET
     @Path("/owners")
     @Produces(MediaType.APPLICATION_JSON)
@@ -302,13 +262,7 @@ public class ProductResource {
         return this.ownerCurator.lookupOwnersWithProduct(productUuids);
     }
 
-    /**
-     * Refreshes Pools by Product
-     *
-     * @param productUuids
-     * @param lazyRegen
-     * @return a JobDetail object
-     */
+    @ApiOperation(notes = "Refreshes Pools by Product", value = "refreshPoolsForProduct")
     @PUT
     @Path("/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)

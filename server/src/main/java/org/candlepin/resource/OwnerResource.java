@@ -134,10 +134,17 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  * Owner Resource
  */
 @Path("/owners")
+@Api("owners")
 public class OwnerResource {
 
     private static Logger log = LoggerFactory.getLogger(OwnerResource.class);
@@ -239,6 +246,8 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "owners")
+    @ApiOperation(notes = "Retrieves a list of Owners", value = "List Owners",
+        responseContainer = "owners")
     public List<Owner> list(@QueryParam("key") String keyFilter) {
 
         // For now, assuming key filter is just one key:
@@ -281,6 +290,8 @@ public class OwnerResource {
     @GET
     @Path("/{owner_key}")
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(notes = "Retrieves a single Owner", value = "Get Owner")
+    @ApiResponses({ @ApiResponse(code = 404, message = "An owner not found") })
     public Owner getOwner(@PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         return findOwner(ownerKey);
     }
@@ -296,6 +307,8 @@ public class OwnerResource {
     @GET
     @Path("/{owner_key}/info")
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(notes = "Retrieves the Owner Info for an Owner", value = "Get Owner Info")
+    @ApiResponses({ @ApiResponse(code = 404, message = "An owner not found") })
     public OwnerInfo getOwnerInfo(@PathParam("owner_key")
         @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey) {
         Owner owner = findOwner(ownerKey);
@@ -312,6 +325,8 @@ public class OwnerResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
+    @ApiOperation(notes = "Creates an Owner", value = "Create Owner")
+    @ApiResponses({ @ApiResponse(code = 400, message = "Invalid owner specified in body") })
     public Owner createOwner(Owner owner) {
         Owner parent = owner.getParentOwner();
         if (parent != null && ownerCurator.find(parent.getId()) == null) {
@@ -340,6 +355,8 @@ public class OwnerResource {
     @DELETE
     @Path("/{owner_key}")
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(notes = "Removes an Owner", value = "Delete Owner")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public void deleteOwner(@PathParam("owner_key") String ownerKey,
         @QueryParam("revoke") @DefaultValue("true") boolean revoke) {
         Owner owner = findOwner(ownerKey);
@@ -372,6 +389,9 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/entitlements")
     @Paginate
+    @ApiOperation(notes = "Retrieves the list of Entitlements for an Owner",
+        value = "List Owner Entitlements")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public List<Entitlement> ownerEntitlements(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("product") String productId,
@@ -408,7 +428,12 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
     @Path("{owner_key}/entitlements")
+    @ApiOperation(notes = "Starts an asynchronous healing for the given Owner." +
+        " At the end of the process the idea is that all of the consumers " +
+        "in the owned by the Owner will be up to date.", value = "Heal owner")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public JobDetail healEntire(
+        @ApiParam("ownerKey id of the owner to be healed.")
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         return HealEntireOrgJob.healEntireOrg(ownerKey, new Date());
     }
@@ -424,7 +449,10 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/servicelevels")
+    @ApiOperation(notes = "Retrieves a list of Support Levels for an Owner", value = "Get Service Levels")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public Set<String> ownerServiceLevels(
+        @ApiParam("ownerKey id of the owner whose support levels are sought.")
         @PathParam("owner_key") @Verify(value = Owner.class,
         subResource = SubResource.SERVICE_LEVELS) String ownerKey,
         @Context Principal principal,
@@ -454,6 +482,8 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/activation_keys")
+    @ApiOperation(notes = "Retrieves a list of Activation Keys for an Owner", value = "Owner Activation Keys")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public List<ActivationKey> ownerActivationKeys(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("name") String keyName) {
@@ -482,8 +512,10 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/activation_keys")
-    public ActivationKey createActivationKey(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+    @ApiOperation(notes = "Creates an Activation Key for the Owner", value = "Create Activation Key")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found"),
+        @ApiResponse(code = 400, message = "Invalid activation key") })
+    public ActivationKey createActivationKey(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         ActivationKey activationKey) {
 
         Owner owner = findOwner(ownerKey);
@@ -530,6 +562,8 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/environments")
+    @ApiOperation(notes = "Creates an Environment for an Owner", value = "Create environment")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
     public Environment createEnv(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey, Environment env) {
         Owner owner = findOwner(ownerKey);
@@ -549,8 +583,12 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/environments")
     @Wrapped(element = "environments")
+    @ApiOperation(notes = "Retrieves a list of Environments for an Owner", value = "List environments")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
     public List<Environment> listEnvironments(@PathParam("owner_key")
-        @Verify(Owner.class) String ownerKey, @QueryParam("name") String envName) {
+        @Verify(Owner.class) String ownerKey,
+        @ApiParam("Environment name filter to search for.")
+        @QueryParam("name") String envName) {
         Owner owner = findOwner(ownerKey);
         List<Environment> envs = null;
         if (envName == null) {
@@ -573,6 +611,8 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
     @Path("{owner_key}/log")
+    @ApiOperation(notes = "Sets the Log Level for an Owner", value = "Set Log Level")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
     public Owner setLogLevel(@PathParam("owner_key") String ownerKey,
         @QueryParam("level") @DefaultValue("DEBUG") String level) {
         Owner owner = findOwner(ownerKey);
@@ -604,6 +644,8 @@ public class OwnerResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/log")
+    @ApiOperation(notes = "Remove the Log Level of an Owner", value = "Remove Log Level")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
     public void deleteLogLevel(@PathParam("owner_key") String ownerKey) {
         Owner owner = findOwner(ownerKey);
         owner.setLogLevel(null);
@@ -624,6 +666,9 @@ public class OwnerResource {
     @Path("{owner_key}/consumers")
     @Paginate
     @SuppressWarnings("checkstyle:indentation")
+    @ApiOperation(notes = "Retrieve a list of Consumers for the Owner", value = "List Consumers")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found"),
+            @ApiResponse(code = 400, message = "Invalid request")})
     public List<Consumer> listConsumers(
         @PathParam("owner_key")
         @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey,
@@ -670,6 +715,9 @@ public class OwnerResource {
     @Path("{owner_key}/pools")
     @Paginate
     @SuppressWarnings("checkstyle:indentation")
+    @ApiOperation(notes = "Retrieves a list of Pools for an Owner", value = "List Pools")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found"),
+            @ApiResponse(code = 400, message = "Invalid request")})
     public List<Pool> listPools(
         @PathParam("owner_key") @Verify(value = Owner.class, subResource = SubResource.POOLS) String ownerKey,
         @QueryParam("consumer") String consumerUuid,
@@ -678,6 +726,8 @@ public class OwnerResource {
         @QueryParam("subscription") String subscriptionId,
         @QueryParam("listall") @DefaultValue("false") boolean listAll,
         @QueryParam("activeon") String activeOn,
+        @ApiParam("Find pools matching the given pattern in a variety of fields" +
+                " * and ? wildcards are supported.")
         @QueryParam("matches") String matches,
         @QueryParam("attribute") @CandlepinParam(type = KeyValueParameter.class)
             List<KeyValueParameter> attrFilters,
@@ -742,7 +792,7 @@ public class OwnerResource {
     }
 
     /**
-     * Retrieves an Event Atom Feed for an owner
+     * Retrieves an Event
      *
      * @return a Feed object
      * @httpcode 404
@@ -751,7 +801,10 @@ public class OwnerResource {
     @GET
     @Produces("application/atom+xml")
     @Path("{owner_key}/atom")
-    public Feed getOwnerAtomFeed(@PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+    @ApiOperation(notes = "Retrieves an Event Atom Feed for an owner", value = "Get Atom Feed")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
+    public Feed getOwnerAtomFeed(@PathParam("owner_key")
+        @Verify(Owner.class) String ownerKey) {
         Owner o = findOwner(ownerKey);
         String path = String.format("/owners/%s/atom", ownerKey);
         Feed feed = this.eventAdapter.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT, o), path);
@@ -769,7 +822,10 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/events")
-    public List<Event> getEvents(@PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+    @ApiOperation(notes = "Retrieves a list of Events for an Owner", value = "Get Events")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
+    public List<Event> getEvents(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner o = findOwner(ownerKey);
         List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT, o);
         if (events != null) {
@@ -814,6 +870,9 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("{owner_key}")
     @Transactional
+    @ApiOperation(notes = "To un-set the defaultServiceLevel for an owner, submit an empty string.",
+        value = "Update Owner")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public Owner updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key, Owner owner) {
         Owner toUpdate = findOwner(key);
         EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.OWNER, Type.MODIFIED)
@@ -858,6 +917,8 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/subscriptions")
+    @ApiOperation(notes = "Retrieves a list of Subscriptions for an Owner", value = "List Subscriptions")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public List<Subscription> getSubscriptions(@PathParam("owner_key") String ownerKey) {
         Owner owner = this.findOwner(ownerKey);
 
@@ -889,6 +950,9 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/subscriptions")
     @Deprecated
+    @ApiOperation(notes = "Creates a Subscription for an Owner DEPRECATED: Please create " +
+        "pools directly with POST /pools.", value = "Create Subscription")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public Subscription createSubscription(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         Subscription subscription) {
@@ -919,6 +983,10 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/subscriptions")
     @Deprecated
+    @ApiOperation(
+        notes = "Updates a Subscription for an Owner.  Please " + "update pools directly with POST /pools.",
+        value = "Update Subscription")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public void updateSubscription(Subscription subscription) {
         Pool existingPool = this.poolManager.getMasterPoolBySubscriptionId(subscription.getId());
         if (existingPool == null) {
@@ -952,6 +1020,14 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
     @Path("{owner_key}/subscriptions")
+    @ApiOperation(notes = "Tickle an owner to have all of their entitlement pools synced with their " +
+        "subscriptions. This method (and the one below may not be entirely RESTful, " +
+        "as the updated data is not supplied as an argument. " +
+        "This API call is only relevant in a top level hosted deployment where " +
+        "subscriptions and products are sourced from adapters. Calling this in " +
+        "an on-site deployment is just a no-op.", value = "Update Subscription")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found"),
+        @ApiResponse(code = 202, message = "") })
     public JobDetail refreshPools(
         // TODO: Can we verify with autocreate?
         @PathParam("owner_key") String ownerKey,
@@ -990,6 +1066,10 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
+    @ApiOperation(notes = "Creates a custom pool for an Owner. Floating pools are not tied to any " +
+        "upstream subscription, and are most commonly used for custom content delivery " +
+        "in Satellite. Also helps in on-site deployment testing", value = "Create Pool")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public Pool createPool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey, Pool pool) {
 
         log.info("Creating custom pool for owner {}: {}" + ownerKey, pool);
@@ -1017,7 +1097,16 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
-    public void updatePool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey, Pool newPool) {
+    @ApiOperation(
+        notes = "Updates a pool for an Owner. assumes this is a normal pool, and " +
+        "errors out otherwise cause we cannot create master pools from bonus pools " +
+        "TODO: while this method replaces the now deprecated updateSubsciption, it " +
+        "still uses it underneath. We need to re-implement the wheel like we did in " + "createPool ",
+        value = "Update Pool")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
+    public void updatePool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        Pool newPool) {
+
         Pool currentPool = this.poolManager.find(newPool.getId());
         if (currentPool == null) {
             throw new NotFoundException(i18n.tr(
@@ -1066,6 +1155,16 @@ public class OwnerResource {
     @DELETE
     @Path("{owner_key}/imports")
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(notes = "Removes Imports for an Owner. Cleans out all imported subscriptions " +
+        "and triggers a background refresh pools. Link to an upstream distributor is " +
+        "removed for the owner, so they can import from another distributor. Other " +
+        "owners can also now import the manifests originally used in this owner. This  " +
+        "call does not differentiate between any specific import, it just destroys all " +
+        "subscriptions with an upstream pool ID, essentially anything from an import." +
+        " Custom subscriptions will be left alone. Imports do carry rules and product " +
+        "information which is global to the candlepin server. This import data is *not* " +
+        "undone, we assume that updates to this data can be safely kept. ", value = "Undo Imports")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
     public JobDetail undoImports(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey, @Context Principal principal) {
 
@@ -1095,6 +1194,12 @@ public class OwnerResource {
     @Path("{owner_key}/imports")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @ApiOperation(notes = "Imports a manifest zip file for the given organization. " +
+        "This will bring in any products, content, and subscriptions that were " +
+        "assigned to the distributor who generated the manifest.", value = "Import Manifest")
+    @ApiResponses({ @ApiResponse(code = 400, message = ""),
+        @ApiResponse(code = 404, message = "Owner not found"), @ApiResponse(code = 500, message = ""),
+        @ApiResponse(code = 409, message = "") })
     public ImportRecord importManifest(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("force") String[] overrideConflicts, MultipartInput input) {
@@ -1185,6 +1290,8 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/imports")
+    @ApiOperation(notes = " Retrieves a list of Import Records for an Owner", value = "Get Imports")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public List<ImportRecord> getImports(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwner(ownerKey);
@@ -1204,6 +1311,10 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/uebercert")
+    @ApiOperation(notes = "Creates an Ueber Entitlement Certificate",
+        value = "Create Ueber Entitlement Certificate")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found"),
+        @ApiResponse(code = 400, message = "") })
     public EntitlementCertificate createUeberCertificate(@Context Principal principal,
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
 
@@ -1246,6 +1357,9 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/uebercert")
+    @ApiOperation(notes = "Retrieves the Ueber Entitlement Certificate",
+        value = "Get Ueber Entitlement Certificate")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public EntitlementCertificate getUeberCertificate(@Context Principal principal,
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
 
@@ -1281,6 +1395,9 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/upstream_consumers")
+    @ApiOperation(notes = " Retrieves a list of Upstream Consumers for an Owner",
+        value = "Get Upstream Consumers")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public List<UpstreamConsumer> getUpstreamConsumers(@Context Principal principal,
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
         Owner o = findOwner(ownerKey);
@@ -1308,6 +1425,8 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{owner_key}/hypervisors")
+    @ApiOperation(notes = "Retrieves a list of Hypervisors for an Owner", value = "Get Hypervisors")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public List<Consumer> getHypervisors(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("hypervisor_id") List<String> hypervisorIds) {

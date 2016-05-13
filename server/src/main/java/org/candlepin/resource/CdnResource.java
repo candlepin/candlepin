@@ -38,10 +38,16 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  * CdnResource
  */
 @Path("/cdn")
+@Api("cdn")
 public class CdnResource {
 
     private I18n i18n;
@@ -54,44 +60,15 @@ public class CdnResource {
         this.curator = curator;
     }
 
-    /**
-     * Retrieves a list of CDN's
-     * <p>
-     * <pre>
-     * {
-     *   "id" : "database_id",
-     *   "label" : "the-cdn",
-     *   "name" : "The CDN",
-     *   "url" : "https://location.cdn.redhat.com",
-     *   "certificate" : {
-     *     "key" : "",
-     *     "cert" : "",
-     *     "id" : "",
-     *     "serial" : "serial number",
-     *     "created" : [date],
-     *     "updated" : [date]
-     *   },
-     *   "created" : [date],
-     *   "updated" : [date]
-     * }
-     * </pre>
-     *
-     * @return a list of Cdn objects
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a list of CDN's", value = "getContentDeliveryNetworks")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Cdn> getContentDeliveryNetworks() {
         return curator.list();
     }
 
-    /**
-     * Removes a CDN
-     *
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Removes a CDN", value = "delete")
+    @ApiResponses({ @ApiResponse(code =  400, message = ""), @ApiResponse(code =  404, message = "") })
     @DELETE
     @Produces(MediaType.WILDCARD)
     @Path("/{label}")
@@ -103,12 +80,7 @@ public class CdnResource {
         }
     }
 
-    /**
-     * Creates a CDN
-     *
-     * @return a Cdn object
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Creates a CDN @return a Cdn object", value = "create")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -123,12 +95,7 @@ public class CdnResource {
         return curator.create(cdn);
     }
 
-    /**
-     * Updates a CDN
-     *
-     * @return a Cdn object
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Updates a CDN @return a Cdn object", value = "update")
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

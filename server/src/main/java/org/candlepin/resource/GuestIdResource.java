@@ -54,10 +54,17 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  * API Gateway for registered consumers guests
  */
 @Path("/consumers/{consumer_uuid}/guestids")
+@Api("consumers")
 public class GuestIdResource {
 
     private static Logger log = LoggerFactory.getLogger(GuestIdResource.class);
@@ -81,14 +88,8 @@ public class GuestIdResource {
         this.sink = sink;
     }
 
-    /**
-     * Retrieves the List of a Consumer's Guests
-     *
-     * @return a list of GuestId objects
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves the List of a Consumer's Guests", value = "getGuestIds")
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<GuestId> getGuestIds(
@@ -103,15 +104,7 @@ public class GuestIdResource {
         return result;
     }
 
-    /**
-     * Retrieves a single Guest
-     * <p>
-     * By its consumer and the guest UUID
-     *
-     * @param consumerUuid consumer who owns or hosts the guest in question
-     * @param guestId guest virtual uuid
-     * @return a GuestId object
-     */
+    @ApiOperation(notes = "Retrieves a single Guest By its consumer and the guest UUID", value = "getGuestId")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{guest_id}")
@@ -124,16 +117,10 @@ public class GuestIdResource {
         return result;
     }
 
-    /**
-     * Updates the List of Guests on a Consumer
-     * <p>
-     * This method should work just like updating the consumer, except that it only
-     * updates GuestIds.  Eventually we should move All the logic here, and depricate
-     * updating guests through the consumer update.
-     *
-     * @param consumerUuid Id of consumer who owns the guests
-     * @param guestIds List of guests from which to update the consumer
-     */
+    @ApiOperation(notes = "Updates the List of Guests on a Consumer This method should work " +
+        "just like updating the consumer, except that it only updates GuestIds. " +
+        " Eventually we should move All the logic here, and depricate updating guests " +
+        "through the consumer update.", value = "updateGuests")
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -161,22 +148,18 @@ public class GuestIdResource {
         }
     }
 
-    /**
-     * Updates a single Guest on a Consumer
-     * <p>
-     * Allows virt-who to avoid uploading an entire list of guests
-     *
-     * @param consumerUuid consumer who owns or hosts the guest in question
-     * @param guestId guest virtual uuid
-     * @param updated updated guest data to use
-     */
+    @ApiOperation(notes = "Updates a single Guest on a Consumer. Allows virt-who to avoid uploading" +
+        " an entire list of guests", value = "updateGuest")
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{guest_id}")
     public void updateGuest(
+        @ApiParam("consumer who owns or hosts the guest in question")
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        @ApiParam("guest virtual uuid")
         @PathParam("guest_id") String guestId,
+        @ApiParam("updated guest data to use")
         GuestId updated) {
 
         // I'm not sure this can happen
@@ -220,17 +203,12 @@ public class GuestIdResource {
         }
     }
 
-    /**
-     * Removes the Guest from the Consumer
-     *
-     * @param consumerUuid consumer who owns or hosts the guest in question
-     * @param guestId guest virtual uuid
-     * @param unregister Optionally unregister the guests consumer if it exists
-     */
+    @ApiOperation(notes = "Removes the Guest from the Consumer", value = "deleteGuest")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{guest_id}")
     public void deleteGuest(
+        @ApiParam("consumer who owns or hosts the guest in question")
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @PathParam("guest_id") String guestId,
         @QueryParam("unregister") @DefaultValue("false") boolean unregister,

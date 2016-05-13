@@ -150,14 +150,6 @@ public class RootResource {
         }
     }
 
-    /**
-     * Retrieves a list of Links
-     * <p>
-     * Corresponds to the Root Resources
-     *
-     * @httpcode 200
-     * @return a list of Link objects
-     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole(noAuth = true, anon = true)

@@ -44,12 +44,16 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+
 
 
 /**
  * CrlResource
  */
 @Path("/crl")
+@Api("crl")
 public class CrlResource {
 
     private Configuration config;
@@ -68,14 +72,7 @@ public class CrlResource {
         this.certificateSerialCurator = certificateSerialCurator;
     }
 
-    /**
-     * Retrieves the Certificate Revocation List
-     *
-     * @return a String object
-     * @throws CRLException if there is issue generating the CRL
-     * @throws IOException if there is a problem serializing the CRL
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves the Certificate Revocation List", value = "getCurrentCrl")
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public Response getCurrentCrl(@Context Principal principal) throws CRLException {
@@ -100,13 +97,7 @@ public class CrlResource {
         }
     }
 
-    /**
-     * Deletes a Certificate from the Revocation List
-     *
-     * @param serialIds list of certificate serial ids
-     * @throws CRLException if there is a problem updating the CRL object
-     * @throws IOException if there is a problem reading the CRL file
-     */
+    @ApiOperation(notes = "Deletes a Certificate from the Revocation List", value = "unrevoke")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     public void unrevoke(@QueryParam("serial") String[] serialIds)

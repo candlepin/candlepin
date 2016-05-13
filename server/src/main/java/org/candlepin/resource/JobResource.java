@@ -44,10 +44,16 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  * JobResource
  */
 @Path("/jobs")
+@Api("jobs")
 public class JobResource {
 
     private JobCurator curator;
@@ -90,14 +96,8 @@ public class JobResource {
         return true;
     }
 
-    /**
-     * Retrieves a list of Job Status
-     *
-     * @return a list of JobStatus objects
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a list of Job Status", value = "getStatuses")
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<JobStatus> getStatuses(
@@ -137,12 +137,7 @@ public class JobResource {
         return statuses;
     }
 
-    /**
-     * Retrieves the Scheduler Status
-     *
-     * @return a SchedulerStatus object
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves the Scheduler Status", value = "getSchedulerStatus")
     @GET
     @Path("scheduler")
     @Produces(MediaType.APPLICATION_JSON)
@@ -158,13 +153,8 @@ public class JobResource {
         return ss;
     }
 
-    /**
-     * Updates the Scheduler Status
-     *
-     * @return a SchedulerStatus object
-     * @httpcode 500
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Updates the Scheduler Status", value = "setSchedulerStatus")
+    @ApiResponses({ @ApiResponse(code = 500, message = "") })
     @POST
     @Path("scheduler")
     @Produces(MediaType.APPLICATION_JSON)
@@ -184,30 +174,7 @@ public class JobResource {
         return getSchedulerStatus();
     }
 
-    /**
-     * Retrieves a single Job Status
-     * <p>
-     * <pre>
-     * {
-     *   "id" : "refresh_pools_uuid",
-     *   "state" : "FINISHED",
-     *   "startTime" : [date],
-     *   "finishTime" : [date],
-     *   "result" : "Pools refreshed for owner Admin Owner",
-     *   "principalName" : "admin",
-     *   "targetType" : "owner",
-     *   "targetId" : "admin",
-     *   "group" : "async group",
-     *   "done" : true,
-     *   "statusPath" : "/jobs/refresh_pools_uuid",
-     *   "created" : [date],
-     *   "updated" : [date]
-     * } *
-     * </pre>
-     *
-     * @return a JobStatus object
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a single Job Status", value = "getStatus")
     @GET
     @Path("/{job_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -218,14 +185,8 @@ public class JobResource {
         return js;
     }
 
-    /**
-     * Cancels a Job Status
-     *
-     * @return a JobStatus object
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Cancels a Job Status", value = "cancel")
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @DELETE
     @Path("/{job_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -241,12 +202,8 @@ public class JobResource {
         return curator.cancel(jobId);
     }
 
-    /**
-     * Retrieves a Job Status and Removes if finished
-     *
-     * @return a JobStatus object
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a Job Status and Removes if finished",
+        value = "getStatusAndDeleteIfFinished")
     @POST
     @Path("/{job_id}")
     @Produces(MediaType.APPLICATION_JSON)

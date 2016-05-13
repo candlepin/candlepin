@@ -38,10 +38,16 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  * Access Path for consumer types
  */
 @Path("/consumertypes")
+@Api("consumertypes")
 public class ConsumerTypeResource {
     private static Logger log = LoggerFactory.getLogger(ConsumerTypeResource.class);
     private ConsumerTypeCurator consumerTypeCurator;
@@ -53,12 +59,7 @@ public class ConsumerTypeResource {
         this.i18n = i18n;
     }
 
-    /**
-     * Retrieves a list of Consumer Types
-     *
-     * @return a list of ConsumerType objects
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a list of Consumer Types", value = "list")
     @GET
     @Produces({MediaType.APPLICATION_JSON })
     @Wrapped(element = "consumertypes")
@@ -66,21 +67,8 @@ public class ConsumerTypeResource {
         return consumerTypeCurator.listAll();
     }
 
-    /**
-     * Retrieves a single Consumer Type
-     * <p>
-     * <pre>
-     *  {
-     *    "id" : "database_id",
-     *    "label" : "candlepin",
-     *    "manifest" : true
-     * }
-     * </pre>
-     *
-     * @return a ConsumerType object
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a single Consumer Type", value = "getConsumerType")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}")
@@ -96,14 +84,8 @@ public class ConsumerTypeResource {
         );
     }
 
-    /**
-     * Creates a Consumer Type
-     *
-     * @return a ConsumerType object
-     * @throws BadRequestException When the type is not found
-     * @httpcode 400
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Creates a Consumer Type", value = "create")
+    @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -119,14 +101,8 @@ public class ConsumerTypeResource {
         }
     }
 
-    /**
-     * Updates a Consumer Type
-     *
-     * @return a ConsumerType object
-     * @throws BadRequestException When the type is not found
-     * @httpcode 400
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Updates a Consumer Type", value = "update")
+    @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @PUT
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -143,12 +119,7 @@ public class ConsumerTypeResource {
         return in;
     }
 
-    /**
-     * Removes a Consumer Type
-     *
-     * @httpcode 400
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Removes a Consumer Type", value = "deleteConsumerType")
     @DELETE
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)

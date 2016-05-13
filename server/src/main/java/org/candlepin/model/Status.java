@@ -23,19 +23,34 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * Status
  */
+@ApiModel(description = "Version and Status information about running Candlepin server")
 @XmlRootElement(name = "status")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class Status {
 
+    @ApiModelProperty(example = "true")
     private boolean result;
+
+    @ApiModelProperty(example = "0.9.10")
     private String version;
+
+    @ApiModelProperty(example = "5.8")
     private String rulesVersion;
+
+    @ApiModelProperty(example = "1")
     private String release;
+
     private boolean standalone;
+
     private Date timeUTC;
+
+    @ApiModelProperty(example = "[ \"cores\", \"ram\", \"instance_multiplier\" ]")
     private String[] managerCapabilities = {"cores", "ram", "instance_multiplier",
         "derived_product", "cert_v3", "guest_limit", "vcpu", "hypervisors_async",
         "storage_band", "remove_by_pool_id", "batch_bind"};
