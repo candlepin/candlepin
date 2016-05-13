@@ -28,7 +28,6 @@ import com.google.inject.persist.Transactional;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
-import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
@@ -681,13 +680,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public void batchDelete(List<Pool> pools) {
         for (Pool pool : pools) {
             currentSession().delete(pool);
-        }
-        for (Pool pool : pools) {
-            // Maintain runtime consistency. The entitlements for the pool
-            // have been deleted on the database because delete is cascaded on
-            // Pool.entitlements relation
-            Hibernate.initialize(pool.getEntitlements());
-            pool.getEntitlements().clear();
         }
     }
 
