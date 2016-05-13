@@ -47,10 +47,16 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  * ActivationKeyResource
  */
 @Path("/activation_keys")
+@Api("activation_keys")
 public class ActivationKeyResource {
     private static Logger log = LoggerFactory.getLogger(ActivationKeyResource.class);
     private ActivationKeyCurator activationKeyCurator;
@@ -74,30 +80,8 @@ public class ActivationKeyResource {
         this.productCurator = productCurator;
     }
 
-    /**
-     * Retrieves a single Activation Key
-     * <p>
-     * <pre>
-     * {
-     *   "id" : "database_id",
-     *   "name" : "default_key",
-     *   "owner" : {},
-     *   "pools" : [ ],
-     *   "productIds" : [ ],
-     *   "autoAttach" : false,
-     *   "contentOverrides" : [ ],
-     *   "releaseVer" : {},
-     *   "serviceLevel" : null,
-     *   "description" : null,
-     *   "updated" : [date]
-     *   "created" : [date],
-     * }
-     * </pre>
-     *
-     * @return an ActivationKey object
-     * @httpcode 400
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a single Activation Key", value = "Get Activation Key")
+    @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @GET
     @Path("{activation_key_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -109,13 +93,9 @@ public class ActivationKeyResource {
         return key;
     }
 
-    /**
-     * Retrieves a list of Pools based on the Activation Key
-     *
-     * @return a list of Pool objects
-     * @httpcode 400
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a list of Pools based on the Activation Key",
+        value = "Get Activation Key Pools")
+    @ApiResponses({ @ApiResponse(code = 400, message = "")})
     @GET
     @Path("{activation_key_id}/pools")
     @Produces(MediaType.APPLICATION_JSON)
@@ -129,13 +109,8 @@ public class ActivationKeyResource {
         return pools;
     }
 
-    /**
-     * Updates an Activation Key
-     *
-     * @return an ActivationKey object
-     * @httpcode 400
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Updates an Activation Key", value = "Update Activation Key")
+    @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @PUT
     @Path("{activation_key_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -166,13 +141,8 @@ public class ActivationKeyResource {
         return toUpdate;
     }
 
-    /**
-     * Adds a Pool to an Activation Key
-     *
-     * @return an ActivationKey object
-     * @httpcode 400
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Adds a Pool to an Activation Key", value = "Add Pool to Key")
+    @ApiResponses({ @ApiResponse(code = 400, message = "")})
     @POST
     @Path("{activation_key_id}/pools/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -200,13 +170,8 @@ public class ActivationKeyResource {
         return key;
     }
 
-    /**
-     * Removes a Pool from an Activation Key
-     *
-     * @return an ActivationKey object
-     * @httpcode 400
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Removes a Pool from an Activation Key", value = "Remove Pool From Key")
+    @ApiResponses({ @ApiResponse(code =  400, message = "")})
     @DELETE
     @Path("{activation_key_id}/pools/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -221,13 +186,8 @@ public class ActivationKeyResource {
         return key;
     }
 
-    /**
-     * Adds an Product ID to an Activation Key
-     *
-     * @return an Activation Key object
-     * @httpcode 400
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Adds an Product ID to an Activation Key", value = "Add Product ID to key")
+    @ApiResponses({ @ApiResponse(code = 400, message = "")})
     @POST
     @Path("{activation_key_id}/product/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -251,13 +211,8 @@ public class ActivationKeyResource {
         return key;
     }
 
-    /**
-     * Removes a Product ID from an Activation Key
-     *
-     * @return an ActivationKey object
-     * @httpcode 400
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Removes a Product ID from an Activation Key", value = "Remove Product Id from Key")
+    @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @DELETE
     @Path("{activation_key_id}/product/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -271,12 +226,8 @@ public class ActivationKeyResource {
         return key;
     }
 
-    /**
-     * Retrieves a list of Activation Keys
-     *
-     * @return a list of ActivationKey objects
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a list of Activation Keys", value = "findActivationKey")
+    @ApiResponses({ @ApiResponse(code = 200, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<ActivationKey> findActivationKey() {
@@ -284,12 +235,8 @@ public class ActivationKeyResource {
         return keyList;
     }
 
-    /**
-     * Removes an Activation Key
-     *
-     * @httpcode 400
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Removes an Activation Key", value = "deleteActivationKey")
+    @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @DELETE
     @Path("{activation_key_id}")
     @Produces(MediaType.APPLICATION_JSON)

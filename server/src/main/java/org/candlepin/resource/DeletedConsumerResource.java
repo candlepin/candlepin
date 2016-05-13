@@ -28,10 +28,16 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  * DeletedConsumerResource
  */
 @Path("/deleted_consumers")
+@Api("deleted_consumers")
 public class DeletedConsumerResource {
     private DeletedConsumerCurator deletedConsumerCurator;
 
@@ -40,16 +46,11 @@ public class DeletedConsumerResource {
         this.deletedConsumerCurator = deletedConsumerCurator;
     }
 
-    /**
-     * Retrieves a list of Deleted Consumers
-     * <p>
-     * By deletion date or all. List returned is the deleted Consumers.
-     *
-     * @return a list of Consumer objects
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(
+        notes = "Retrieves a list of Deleted Consumers By deletion date or all. " +
+        "List returned is the deleted Consumers.",
+        value = "listByDate")
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<DeletedConsumer> listByDate(@QueryParam("date") String dateStr) {

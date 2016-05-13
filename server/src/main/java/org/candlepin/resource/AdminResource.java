@@ -38,10 +38,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+
 /**
  * Candlepin server administration REST calls.
  */
 @Path("/admin")
+@Api("admin")
 public class AdminResource {
 
     private static Logger log = LoggerFactory.getLogger(AdminResource.class);
@@ -60,22 +64,16 @@ public class AdminResource {
         this.config = config;
     }
 
-    /**
-     * Initializes the Candlepin database
-     * <p>
-     * Currently this just creates the admin user for standalone deployments using the
-     * default user service adapter. It must be called once after candlepin is installed,
-     * repeat calls are not required, but will be harmless.
-     * <p>
-     * The String returned is the description if the db was or already is initialized.
-     *
-     * @return a String object
-     * @httpcode 200
-     */
     @GET
     @Produces({MediaType.TEXT_PLAIN})
     @Path("init")
     @SecurityHole(noAuth = true)
+    @ApiOperation(notes = "Initializes the Candlepin database. Currently this just" +
+        " creates the admin user for standalone deployments using the" +
+        " default user service adapter. It must be called once after" +
+        " candlepin is installed, repeat calls are not required, but" +
+        " will be harmless. The String returned is the description if" +
+        " the db was or already is initialized.", value = "initialize")
     public String initialize() {
         log.debug("Called initialize()");
 
@@ -100,17 +98,12 @@ public class AdminResource {
         }
     }
 
-    /**
-     * @return Basic information on the HornetQ queues and how many messages are
-     * pending in each.
-     *
-     * NOTE: This does not report on any pending messages in the AMQP bus.
-     *
-     * @httpcode 200
-     */
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     @Path("queues")
+    @ApiOperation(
+        notes = "Basic information on the HornetQ queues and how many messages are pending in each.",
+        value = "Get Queue Stats")
     public List<QueueStatus> getQueueStats() {
         return sink.getQueueInfo();
     }

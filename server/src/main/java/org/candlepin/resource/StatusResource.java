@@ -41,8 +41,8 @@ import io.swagger.annotations.ApiOperation;
  * Status Resource
  */
 
-@Api("/status")
 @Path("/status")
+@Api("status")
 public class StatusResource {
     private static Logger log = LoggerFactory.getLogger(StatusResource.class);
 
