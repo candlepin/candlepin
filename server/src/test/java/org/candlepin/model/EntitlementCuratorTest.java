@@ -29,6 +29,7 @@ import org.junit.Test;
 
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -209,9 +210,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(ent1);
 
         // The ent we just created should *not* be returned as modifying itself:
-        Set<Entitlement> ents = entitlementCurator.listModifying(ent);
-        assertEquals(1, ents.size());
-        String id = ents.iterator().next().getId();
+        Collection<String> entIds = entitlementCurator.listModifying(ent);
+        assertEquals(1, entIds.size());
+        String id = entIds.iterator().next();
         assertFalse(id.contentEquals(ent.getId()));
         assertTrue(id.contentEquals(ent1.getId()));
     }
@@ -223,9 +224,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Entitlement ent = setUpModifyingEntitlements(startDate, endDate, 4, "1");
 
         // The ent we just created should *not* be returned as modifying itself:
-        Set<Entitlement> ents = entitlementCurator.listModifying(ent);
-        assertEquals(4, ents.size());
-        assertThat(ents, not(hasItem(ent)));
+        Collection<String> entIds = entitlementCurator.listModifying(ent);
+        assertEquals(4, entIds.size());
+        assertThat(entIds, not(hasItem(ent.getId())));
     }
 
     @Test
@@ -239,11 +240,11 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Entitlement ent1 = setUpModifyingEntitlements(startDate1, endDate1, 2, "2");
 
         // The ent we just created should *not* be returned as modifying itself:
-        Set<Entitlement> ents = entitlementCurator.listModifying(Arrays.asList(ent, ent1));
-        assertEquals(6, ents.size());
+        Collection<String> entIds = entitlementCurator.listModifying(Arrays.asList(ent, ent1));
+        assertEquals(6, entIds.size());
 
-        assertThat(ents, not(hasItem(ent)));
-        assertThat(ents, not(hasItem(ent1)));
+        assertThat(entIds, not(hasItem(ent.getId())));
+        assertThat(entIds, not(hasItem(ent1.getId())));
     }
 
     @Test
@@ -257,10 +258,10 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Entitlement ent1 = setUpModifyingEntitlements(startDate1, endDate1, 2, "2");
 
         // The ent we just created should *not* be returned as modifying itself:
-        Set<Entitlement> ents = entitlementCurator.listModifying(Arrays.asList(ent, ent1));
-        assertEquals(5, ents.size());
-        assertThat(ents, not(hasItems(ent)));
-        assertThat(ents, not(hasItems(ent1)));
+        Collection<String> entIds = entitlementCurator.listModifying(Arrays.asList(ent, ent1));
+        assertEquals(5, entIds.size());
+        assertThat(entIds, not(hasItems(ent.getId())));
+        assertThat(entIds, not(hasItems(ent1.getId())));
     }
 
     @Test
@@ -278,11 +279,11 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Entitlement ent2 = setUpModifyingEntitlements(startDate2, endDate2, 2, "3");
 
         // The ent we just created should *not* be returned as modifying itself:
-        Set<Entitlement> ents = entitlementCurator.listModifying(Arrays.asList(ent, ent1));
-        assertEquals(5, ents.size());
-        assertThat(ents, not(hasItems(ent)));
-        assertThat(ents, not(hasItems(ent1)));
-        assertThat(ents, not(hasItems(ent2)));
+        Collection<String> entIds = entitlementCurator.listModifying(Arrays.asList(ent, ent1));
+        assertEquals(5, entIds.size());
+        assertThat(entIds, not(hasItems(ent.getId())));
+        assertThat(entIds, not(hasItems(ent1.getId())));
+        assertThat(entIds, not(hasItems(ent2.getId())));
     }
 
     @Test
@@ -310,11 +311,11 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(ent2);
 
         // The ent we just created should *not* be returned as modifying itself:
-        Set<Entitlement> ents = entitlementCurator.listModifying(Arrays.asList(ent));
-        assertEquals(4, ents.size());
-        assertThat(ents, not(hasItems(ent)));
-        assertThat(ents, hasItems(ent1));
-        assertThat(ents, not(hasItems(ent2)));
+        Collection<String> entIds = entitlementCurator.listModifying(Arrays.asList(ent));
+        assertEquals(4, entIds.size());
+        assertThat(entIds, not(hasItems(ent.getId())));
+        assertThat(entIds, hasItems(ent1.getId()));
+        assertThat(entIds, not(hasItems(ent2.getId())));
     }
 
     private Entitlement setUpModifyingEntitlements(Date startDate, Date endDate, Integer howMany,
@@ -379,8 +380,10 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         productCurator.create(providedProductEnt3);
         productCurator.create(providedProductEnt4);
 
-        ent1modif = createPool("p1", createDate(1999, 1, 1), createDate(1999, 2, 1), providedProductEnt1);
-        ent2modif = createPool("p2", createDate(2000, 4, 4), createDate(2001, 3, 3), providedProductEnt2);
+        ent1modif = createPool("p1", createDate(1999, 1, 1), createDate(1999 + 50, 2, 1)
+            , providedProductEnt1);
+        ent2modif = createPool("p2", createDate(2000, 4, 4), createDate(2001 + 50, 3, 3)
+            , providedProductEnt2);
 
         /**
          * Ent1 and Ent2 entitlements are being modified by contentPool1 and
@@ -406,30 +409,15 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         providedProductEnt3.addContent(contentPool1);
         providedProductEnt4.addContent(contentPool2);
 
-        createPool("p3", createDate(1998, 1, 1), createDate(2003, 2, 1),
+        createPool("p3", createDate(1998, 1, 1), createDate(2003 + 50, 2, 1),
             providedProductEnt3);
-        createPool("p4", createDate(2001, 2, 30), createDate(2002, 1, 10),
+        createPool("p4", createDate(2001, 2, 30), createDate(2002 + 50, 1, 10),
             providedProductEnt4);
 
-        createPool("p5", createDate(2000, 5, 5), createDate(2000, 5, 10), null);
+        createPool("p5", createDate(2000 + 50, 5, 5), createDate(2000 + 50, 5, 10), null);
 
         createPool("p6", createDate(1998, 1, 1), createDate(1998, 12, 31), null);
-        createPool("p7", createDate(2003, 2, 2), createDate(2003, 3, 3), null);
-    }
-
-    @Test
-    public void getOverlappingForModifying() {
-        prepareEntitlementsForModifying();
-
-        ProductEntitlements pents = entitlementCurator.getOverlappingForModifying(
-            Arrays.asList(ent1modif, ent2modif));
-
-        assertTrue(!pents.isEmpty());
-        assertEquals(5, pents.getAllProductIds().size());
-        for (String id : Arrays.asList("prod-p3", "prod-p4", "prod-p5", "ppent3", "ppent4")) {
-            assertTrue("Overlapping entitlements [" + pents + "] " +
-                "doesn't contain product id [" + id + "]", pents.getAllProductIds().contains(id));
-        }
+        createPool("p7", createDate(2003, 2, 2), createDate(2003 + 50, 3, 3), null);
     }
 
     private Entitlement createPool(String id, Date startDate, Date endDate, Product provided) {
@@ -454,11 +442,17 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Test
     public void batchListModifying() {
         prepareEntitlementsForModifying();
-        Set<Entitlement> ents = entitlementCurator.batchListModifying(Arrays.asList(ent1modif, ent2modif));
 
-        assertEquals(2, ents.size());
+        Collection<String> entIds = entitlementCurator.batchListModifying(
+            Arrays.asList(ent1modif, ent2modif)
+        );
 
-        for (Entitlement ent : ents) {
+        assertEquals(2, entIds.size());
+
+        for (String entId : entIds) {
+            Entitlement ent = entitlementCurator.find(entId);
+
+            assertNotNull(ent);
             assertTrue(ent.getPool().getProductId().equals("prod-p3") ||
                 ent.getPool().getProductId().equals("prod-p4"));
         }
@@ -985,5 +979,26 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             createEntitlementCertificate("key", "certificate");
         Entitlement ent = createEntitlement(owner, consumer, pool, cert);
         return entitlementCurator.create(ent);
+    }
+
+    @Test
+    public void testMarkEntitlementsDirty() {
+        Entitlement ent1 = this.setupListProvidingEntitlement();
+        Entitlement ent2 = this.setupListProvidingEntitlement();
+        Entitlement ent3 = this.setupListProvidingEntitlement();
+
+        assertFalse(ent1.isDirty());
+        assertFalse(ent2.isDirty());
+        assertFalse(ent3.isDirty());
+
+        this.entitlementCurator.markEntitlementsDirty(Arrays.asList(ent1.getId(), ent2.getId()));
+
+        this.entitlementCurator.refresh(ent1);
+        this.entitlementCurator.refresh(ent2);
+        this.entitlementCurator.refresh(ent3);
+
+        assertTrue(ent1.isDirty());
+        assertTrue(ent2.isDirty());
+        assertFalse(ent3.isDirty());
     }
 }

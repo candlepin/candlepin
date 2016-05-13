@@ -61,6 +61,10 @@ import java.util.TreeSet;
  */
 public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
+    /** The recommended number of expired pools to fetch in a single call to listExpiredPools */
+    public static final int EXPIRED_POOL_BLOCK_SIZE = 2048;
+
+
     private static Logger log = LoggerFactory.getLogger(PoolCurator.class);
     private CriteriaRules poolCriteria;
     @Inject
@@ -195,16 +199,53 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return listAvailableEntitlementPools(null, owner, productId, null, false);
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * Fetches a block of non-derived, expired pools
+     *
+     * @return
+     *  the list of non-derived, expired pools pools
+     */
     public List<Pool> listExpiredPools() {
-        Date today = new Date();
-        Criteria crit = createSecureCriteria().add(
-            Restrictions.lt("endDate", today));
-        List<Pool> results = crit.list();
-        if (results == null) {
-            results = new LinkedList<Pool>();
+        return this.listExpiredPools(-1);
+    }
+
+    /**
+     * Fetches a block of non-derived, expired pools from the database, using the specified block
+     * size. If the given block size is a non-positive integer, all non-derived, expired pools will
+     * be retrieved.
+     * <p></p>
+     * <strong>Note:</strong> This method does not set the offset (first result) for the block.
+     * Unless the pools are being deleted, this method will repeatedly return the same pools. To
+     * fetch all expired pools in blocks, the calling method must ensure that the pools are deleted
+     * between calls to this method.
+     *
+     * @param blockSize
+     *  The maximum number of pools to fetch; if block size is less than 1, no limit will be applied
+     *
+     * @return
+     *  a list of non-derived, expired pools no larger than the specified block size
+     */
+    @Transactional
+    @SuppressWarnings("checkstyle:indentation")
+    public List<Pool> listExpiredPools(int blockSize) {
+        Date now = new Date();
+
+        Criteria criteria = this.createSecureCriteria("pool")
+            .createAlias("pool.entitlements", "entitlement")
+            .createAlias("pool.attributes", "attributes")
+            .add(Restrictions.lt("pool.endDate", now))
+            .add(Restrictions.ne("attributes.name", "derived_pool"))
+            .add(Restrictions.or(
+                Restrictions.isNull("entitlement.endDateOverride"),
+                Restrictions.lt("entitlement.endDateOverride", now)
+            ));
+
+        if (blockSize > 0) {
+            criteria.setMaxResults(blockSize);
         }
-        return results;
+
+        List<Pool> results = (List<Pool>) criteria.list();
+        return results != null ? results : new LinkedList<Pool>();
     }
 
     @SuppressWarnings("unchecked")
@@ -680,14 +721,18 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     public void batchDelete(List<Pool> pools) {
         for (Pool pool : pools) {
-            currentSession().delete(pool);
-        }
-        for (Pool pool : pools) {
-            // Maintain runtime consistency. The entitlements for the pool
-            // have been deleted on the database because delete is cascaded on
-            // Pool.entitlements relation
-            Hibernate.initialize(pool.getEntitlements());
-            pool.getEntitlements().clear();
+            this.currentSession().delete(pool);
+
+            // Maintain runtime consistency. The entitlements for the pool have been deleted on the
+            // database because delete is cascaded on Pool.entitlements relation
+
+            // While it'd be nice to be able to skip this for every pool, we have no guarantee that
+            // the pools came fresh from the DB with uninitialized entitlement collections. Since
+            // it could be initialized, we should clear it so other bits using the pool don't
+            // attempt to use the entitlements.
+            if (Hibernate.isInitialized(pool.getEntitlements())) {
+                pool.getEntitlements().clear();
+            }
         }
     }
 

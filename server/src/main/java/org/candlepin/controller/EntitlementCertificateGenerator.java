@@ -225,21 +225,34 @@ public class EntitlementCertificateGenerator {
      * @param entitlementIds
      *  An iterable collection of entitlement IDs for which to regenerate certificates
      *
+     * @param ueberCertificate
+     *  Whether or not to generate an ueber certificate
+     *
      * @param lazy
      *  Whether or not to generate the certificate immediately, or mark it dirty and allow it to be
      *  regenerated on-demand
      */
     @Transactional
-    void regenerateCertificatesByEntitlementIds(Iterable<String> entitlementIds, boolean lazy) {
-        for (String entitlementId : entitlementIds) {
-            Entitlement entitlement = entitlementCurator.find(entitlementId);
+    public void regenerateCertificatesByEntitlementIds(Iterable<String> entitlementIds,
+        boolean ueberCertificate, boolean lazy) {
 
-            if (entitlement != null) {
-                this.regenerateCertificatesOf(entitlement, false, lazy);
-            }
-            else {
-                // If it has been deleted, that's fine, one less to regenerate
-                log.info("Couldn't load Entitlement \"{}\" to regenerate, assuming deleted", entitlementId);
+        // If we're regenerating these lazily, we can avoid loading all of them by just updating the
+        // DB directly.
+
+        if (lazy) {
+            this.entitlementCurator.markEntitlementsDirty(entitlementIds);
+        }
+        else {
+            for (String entitlementId : entitlementIds) {
+                Entitlement entitlement = entitlementCurator.find(entitlementId);
+
+                if (entitlement == null) {
+                    // If it has been deleted, that's fine; one less to regenerate
+                    log.info("Unable to load entitlement for regeneration: {}", entitlementId);
+                    continue;
+                }
+
+                this.regenerateCertificatesOf(entitlement, ueberCertificate, false);
             }
         }
     }

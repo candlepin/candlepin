@@ -21,6 +21,7 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.guice.PrincipalProvider;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.persist.Transactional;
@@ -43,13 +44,14 @@ import org.xnap.commons.i18n.I18n;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import javax.persistence.OptimisticLockException;
+import javax.persistence.Query;
 
 
 
@@ -61,13 +63,13 @@ import javax.persistence.OptimisticLockException;
  * @param <E> Entity specific curator.
  */
 public abstract class AbstractHibernateCurator<E extends Persisted> {
-    private static final int IN_OPERATOR_BLOCK_SIZE = 30000;
+    public static final int IN_OPERATOR_BLOCK_SIZE = 8192;
 
     @Inject protected Provider<EntityManager> entityManager;
     @Inject protected I18n i18n;
     private final Class<E> entityType;
     protected int batchSize = 500;
-    protected int inClauseLimit = 999;
+
     @Inject private PrincipalProvider principalProvider;
     private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
 
@@ -88,13 +90,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public void enableFilterList(String filterName, String parameterName,
         Collection value) {
         currentSession().enableFilter(filterName).setParameterList(parameterName, value);
-    }
-
-    /*
-     * helps to speed up unit tests
-     */
-    public void overrideInClauseLimit(int limit) {
-        inClauseLimit = limit;
     }
 
     /**
@@ -525,12 +520,9 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         int count = 0;
 
         Session session = this.currentSession();
+        SQLQuery query = session.createSQLQuery(sql);
 
-        for (int block = 0; block * IN_OPERATOR_BLOCK_SIZE < collection.size(); ++block) {
-            int start = block * IN_OPERATOR_BLOCK_SIZE;
-            int end = Math.min(start + IN_OPERATOR_BLOCK_SIZE, collection.size() - start);
-
-            SQLQuery query = session.createSQLQuery(sql);
+        for (List<?> block : Iterables.partition(collection, IN_OPERATOR_BLOCK_SIZE)) {
             int index = 1;
 
             if (params != null) {
@@ -538,18 +530,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                     query.setParameter(String.valueOf(index), params[index - 1]);
                 }
             }
-            query.setParameterList(String.valueOf(index), collection.subList(start, end));
+            query.setParameterList(String.valueOf(index), block);
 
             count += query.executeUpdate();
         }
 
         return count;
-    }
-
-    public <T extends Object> Criterion unboundedInCriterion(String expression, Collection<T> values) {
-        List<T> list = new ArrayList<T>();
-        list.addAll(values);
-        return unboundedInCriterion(expression, list);
     }
 
     /**
@@ -561,53 +547,43 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @param values the values being searched for the expression
      * @return the unbounded in criterion as described above
      */
-    public <T extends Object> Criterion unboundedInCriterion(String expression, List<T> values) {
+    public <T extends Object> Criterion unboundedInCriterion(String expression, Iterable<T> values) {
         Criterion criterion = null;
 
-        int listSize = values.size();
-        for (int i = 0; i < listSize; i += inClauseLimit) {
-            // consume at most inClauseLimit values
-            List<T> subList = values.subList(i, Math.min(listSize, i + inClauseLimit));
-            criterion = (criterion == null) ?
-                    Restrictions.in(expression, subList) :
-                    Restrictions.or(criterion, Restrictions.in(expression, subList));
+        if (values == null || !values.iterator().hasNext()) {
+            throw new IllegalArgumentException("values is null or empty");
         }
+
+        for (List<T> block : Iterables.partition(values, IN_OPERATOR_BLOCK_SIZE)) {
+            criterion = (criterion == null) ?
+                Restrictions.in(expression, block) :
+                Restrictions.or(criterion, Restrictions.in(expression, block));
+        }
+
         return criterion;
     }
 
-    public List<E> lockAndLoadBatch(Collection<String> ids, String entityName, String keyName) {
-        List<E> result = new ArrayList<E>();
-        if (CollectionUtils.isNotEmpty(ids)) {
-            List<String> idsList = new ArrayList<String>(ids);
-            Collections.sort(idsList);
+    public List<E> lockAndLoadBatch(Iterable<String> ids, String entityName, String keyName) {
+        List<E> result = new LinkedList<E>();
 
-            log.debug("Locking entities");
-            int listSize = idsList.size();
-            for (int i = 0; i < listSize; i += inClauseLimit) {
-                result.addAll(lockAndLoadInternalOnly(
-                    idsList.subList(i, Math.min(listSize, i + inClauseLimit)),
-                    entityName, keyName));
+        if (ids != null && ids.iterator().hasNext()) {
+            StringBuilder hql = new StringBuilder("SELECT obj FROM ")
+                .append(entityName)
+                .append(" obj WHERE ")
+                .append(keyName)
+                .append(" IN (:ids)");
+
+            Query query = this.getEntityManager()
+                .createQuery(hql.toString())
+                .setLockMode(LockModeType.PESSIMISTIC_WRITE);
+
+            for (List<String> block : Iterables.partition(ids, IN_OPERATOR_BLOCK_SIZE)) {
+                query.setParameter("ids", block);
+                result.addAll((List<E>) query.getResultList());
             }
         }
+
         return result;
-    }
-
-    /*
-     * Because does not sort, so could lead to dead locks.
-     * also this allows unlimited ids in the inclause which is not safe.
-     * Hence, Not for external use, meant only for supporting the above method.
-     */
-    @SuppressWarnings("unchecked")
-    private List<E> lockAndLoadInternalOnly(List<String> ids, String entityName, String keyName) {
-
-        if (CollectionUtils.isEmpty(ids)) {
-            return new ArrayList<E>();
-        }
-        return getEntityManager()
-                .createQuery("SELECT x FROM " + entityName + " x WHERE " + keyName + " in :ids")
-                .setParameter("ids", ids)
-                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
-                .getResultList();
     }
 
 }

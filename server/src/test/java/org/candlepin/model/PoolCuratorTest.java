@@ -544,7 +544,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             subIds.add(createPoolForCriteriaTest(product));
         }
 
-        poolCurator.overrideInClauseLimit(5);
         List<Pool> pools = poolCurator.lookupBySubscriptionIds(subIds);
         assertEquals(30, pools.size());
 
@@ -566,19 +565,25 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void buildInCriteriaTestBatch() {
-        poolCurator.overrideInClauseLimit(5);
         List<String> items = new ArrayList<String>();
-        String expected = "taylor in (0, 1, 2, 3, 4)" +
-            " or taylor in (5, 6, 7, 8, 9)" +
-            " or taylor in (10, 11, 12, 13, 14)" +
-            " or taylor in (15)";
-        for (int i = 0; i < 16; i++) {
-            items.add("" + i);
+        StringBuilder expected = new StringBuilder("taylor in (");
+
+        for (int i = 0; i < AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE * 3; ++i) {
+            items.add(String.valueOf(i));
+
+            if (items.size() % AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE == 0) {
+                expected.append(i).append(") or taylor in (");
+            }
+            else {
+                expected.append(i).append(", ");
+            }
         }
+        expected.setLength(expected.length() - 15);
+
         Criterion crit = poolCurator.unboundedInCriterion("taylor", items);
         LogicalExpression le = (LogicalExpression) crit;
         assertEquals("or", le.getOp());
-        assertEquals(expected, le.toString());
+        assertEquals(expected.toString(), le.toString());
     }
 
     @Test
@@ -586,7 +591,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         List<String> items = new ArrayList<String>();
         String expected = "swift in (";
         int i = 0;
-        for (; i < 998; i++) {
+        for (; i < AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE - 1; i++) {
             expected += i + ", ";
             items.add("" + i);
         }

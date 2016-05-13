@@ -18,10 +18,10 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaSpecification;
@@ -37,10 +37,14 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.persistence.Query;
+
+
 
 /**
  * EntitlementCurator
@@ -242,6 +246,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 }
             }
         }
+
         return entitledProductIds;
     }
 
@@ -263,36 +268,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return false;
     }
 
-    /*
-     * Creates date filtering criteria to for checking if an entitlement has any overlap
-     * with a "modifying" entitlement that has just been granted.
-     */
-    private Criteria createModifiesDateFilteringCriteria(Set<Consumer> consumers, Date startDate,
-        Date endDate, List<Entitlement> excludeEnts) {
-        Criteria criteria = currentSession().createCriteria(Entitlement.class)
-            .add(unboundedInCriterion("consumer", consumers));
-
-        if (CollectionUtils.isNotEmpty(excludeEnts)) {
-            Set<String> ids = new HashSet<String>();
-            for (Entitlement entitlement : excludeEnts) {
-                ids.add(entitlement.getId());
-            }
-            criteria = criteria.add(Restrictions.not(unboundedInCriterion("id", ids)));
-        }
-
-        criteria = criteria.createCriteria("pool")
-                .add(Restrictions.or(
-                    // Dates overlap if the start or end date is in our range
-                    Restrictions.or(
-                        Restrictions.between("startDate", startDate, endDate),
-                        Restrictions.between("endDate", startDate, endDate)),
-                    Restrictions.and(
-                        // The dates overlap if our range is completely encapsulated
-                        Restrictions.le("startDate", startDate),
-                        Restrictions.ge("endDate", endDate))));
-        return criteria;
-    }
-
     /**
      * A version of list Modifying that finds Entitlements that modify
      * input entitlements.
@@ -301,52 +276,57 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * @param entitlement
      * @return Entitlements that are being modified by the input entitlements
      */
-    public Set<Entitlement> batchListModifying(List<Entitlement> entitlements) {
-        Set<Entitlement> modifying = new HashSet<Entitlement>();
-        // Get the map of product Ids to the set of
-        // overlapping entitlements that provide them
-        ProductEntitlements pidEnts = getOverlappingForModifying(entitlements);
-        if (pidEnts.isEmpty()) {
-            // Empty collections break hibernate queries
-            return modifying;
-        }
+    public Collection<String> batchListModifying(Iterable<Entitlement> entitlements) {
+        List<String> eids = new LinkedList<String>();
 
-        List<Product> overlappingProducts = productCurator.listAllByIds(pidEnts.getAllProductIds());
+        if (entitlements != null && entitlements.iterator().hasNext()) {
+            String hql =
+                "SELECT DISTINCT eOut.id" +
+                "    FROM Entitlement eOut" +
+                "        JOIN eOut.pool outPool" +
+                "        JOIN outPool.providedProducts outProvided" +
+                "        JOIN outProvided.productContent outProvContent" +
+                "        JOIN outProvContent.content outContent" +
+                "        JOIN outContent.modifiedProductIds outModProdId" +
+                "    WHERE" +
+                "        outPool.endDate >= current_date AND" +
+                "        eOut NOT IN (:ein) AND" +
+                "        EXISTS (" +
+                "            SELECT eIn" +
+                "                FROM Entitlement eIn" +
+                "                    JOIN eIn.consumer inConsumer" +
+                "                    JOIN eIn.pool inPool" +
+                "                    JOIN inPool.product inMktProd" +
+                "                    LEFT JOIN inPool.providedProducts inProvidedProd" +
+                "                WHERE eIn in (:ein) AND inConsumer = eOut.consumer AND" +
+                "                    inPool.endDate >= outPool.startDate AND" +
+                "                    inPool.startDate <= outPool.endDate AND" +
+                "                    (inProvidedProd.id = outModProdId OR inMktProd.id = outModProdId)" +
+                "        )";
 
-        Set<String> entitlementProducts = new HashSet<String>();
-        for (Entitlement entitlement : entitlements) {
-            entitlementProducts.add(entitlement.getPool().getProductId());
-            for (Product product : entitlement.getPool().getProvidedProducts()) {
-                entitlementProducts.add(product.getId());
+            Query query = this.getEntityManager().createQuery(hql);
+
+            Iterable<List<Entitlement>> blocks = Iterables.partition(
+                entitlements, AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE
+            );
+
+            for (List<Entitlement> block : blocks) {
+                eids.addAll(query.setParameter("ein", entitlements).getResultList());
             }
         }
 
-        for (Product overlappingProduct : overlappingProducts) {
-            boolean modifies = false;
-            Iterator<String> ppit = entitlementProducts.iterator();
-            // No need to continue checking once we have found a modified product
-            while (!modifies && ppit.hasNext()) {
-                modifies = overlappingProduct.modifies(ppit.next());
-            }
-            if (modifies) {
-                // Return all entitlements for the modified product
-                modifying.addAll(pidEnts.getEntitlementsByProductId(overlappingProduct.getId()));
-            }
-        }
-
-        return modifying;
+        return eids;
     }
 
-    public Set<Entitlement> listModifying(Entitlement entitlement) {
+    public Collection<String> listModifying(Entitlement entitlement) {
         return batchListModifying(java.util.Arrays.asList(entitlement));
     }
 
-    public Set<Entitlement> listModifying(Collection entitlements) {
-        return batchListModifying(new ArrayList<Entitlement>(entitlements));
+    public Collection<String> listModifying(Collection entitlements) {
+        return batchListModifying(entitlements);
     }
 
-    public Map<Consumer, List<Entitlement>> getDistinctConsumers(
-        List<Entitlement> entsToRevoke) {
+    public Map<Consumer, List<Entitlement>> getDistinctConsumers(List<Entitlement> entsToRevoke) {
         Map<Consumer, List<Entitlement>> result = new HashMap<Consumer, List<Entitlement>>();
         for (Entitlement ent : entsToRevoke) {
             List<Entitlement> ents = result.get(ent.getConsumer());
@@ -357,38 +337,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             ents.add(ent);
         }
         return result;
-    }
-    @SuppressWarnings("unchecked")
-    public ProductEntitlements getOverlappingForModifying(List<Entitlement> e) {
-        Date earliestStartDate = findEarliestStartDate(e);
-        Date latestEndDate = findLatestEndDate(e);
-        Set<Consumer> consumers = getDistinctConsumers(e).keySet();
-
-        List<Entitlement> overlapEnts = createModifiesDateFilteringCriteria(
-            consumers, earliestStartDate, latestEndDate, e).list();
-
-        return new ProductEntitlements(overlapEnts);
-    }
-
-    private Date findLatestEndDate(List<Entitlement> entitlements) {
-        Date max = null;
-        for (Entitlement e : entitlements) {
-            if (max == null || max.before(e.getEndDate())) {
-                max = e.getEndDate();
-            }
-        }
-
-        return max;
-    }
-
-    private Date findEarliestStartDate(List<Entitlement> entitlements) {
-        Date min = null;
-        for (Entitlement e : entitlements) {
-            if (min == null || min.after(e.getStartDate())) {
-                min = e.getStartDate();
-            }
-        }
-        return min;
     }
 
     public Page<List<Entitlement>> listByConsumerAndProduct(Consumer consumer,
@@ -512,10 +460,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             }
             ent.getCertificates().clear();
             getEntityManager().remove(ent);
-        }
 
-        // Maintain runtime consistency.
-        for (Entitlement ent : entitlements) {
+            // Maintain runtime consistency.
             ent.getCertificates().clear();
             ent.getConsumer().getEntitlements().remove(ent);
         }
@@ -555,4 +501,32 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return (Entitlement) activeNowQuery.uniqueResult();
     }
 
+    /**
+     * Marks the given entitlements as dirty; forcing a regeneration the next time it is requested.
+     *
+     * @param entitlementIds
+     *  A collection of IDs of the entitlements to mark dirty
+     *
+     * @return
+     *  The number of certificates updated
+     */
+    @Transactional
+    public int markEntitlementsDirty(Iterable<String> entitlementIds) {
+        int count = 0;
+
+        if (entitlementIds != null && entitlementIds.iterator().hasNext()) {
+            Iterable<List<String>> blocks = Iterables.partition(
+                entitlementIds, AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE
+            );
+
+            String hql = "UPDATE Entitlement SET dirty = true WHERE id IN (:entIds)";
+            Query query = this.getEntityManager().createQuery(hql);
+
+            for (List<String> block : blocks) {
+                count += query.setParameter("entIds", block).executeUpdate();
+            }
+        }
+
+        return count;
+    }
 }

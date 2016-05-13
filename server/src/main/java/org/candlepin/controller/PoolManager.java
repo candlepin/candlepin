@@ -155,7 +155,7 @@ public interface PoolManager {
 
     Pool setPoolQuantity(Pool pool, long set);
 
-    void regenerateDirtyEntitlements(List<Entitlement> entitlements);
+    void regenerateDirtyEntitlements(Iterable<Entitlement> entitlements);
 
     Entitlement adjustEntitlementQuantity(Consumer consumer, Entitlement entitlement,
         Integer quantity) throws EntitlementRefusedException;

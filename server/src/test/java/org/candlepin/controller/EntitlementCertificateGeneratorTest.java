@@ -47,6 +47,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -139,7 +140,7 @@ public class EntitlementCertificateGeneratorTest {
     public void testLazyRegenerateForEntitlement() {
         Entitlement entitlement = new Entitlement();
         this.ecGenerator.regenerateCertificatesOf(entitlement, false, true);
-        assertTrue(entitlement.getDirty());
+        assertTrue(entitlement.isDirty());
         verifyZeroInteractions(this.mockEntCertAdapter);
     }
 
@@ -152,7 +153,7 @@ public class EntitlementCertificateGeneratorTest {
         this.ecGenerator.regenerateCertificatesOf(entitlements, true);
 
         for (Entitlement entitlement : entitlements) {
-            assertTrue(entitlement.getDirty());
+            assertTrue(entitlement.isDirty());
         }
 
         verifyZeroInteractions(this.mockEntCertAdapter);
@@ -206,9 +207,9 @@ public class EntitlementCertificateGeneratorTest {
 
         this.ecGenerator.regenerateCertificatesOf(environment, Arrays.asList("c1", "c2", "c4"), true);
 
-        assertTrue(entitlements.get(0).getDirty());
-        assertTrue(entitlements.get(1).getDirty());
-        assertFalse(entitlements.get(2).getDirty());
+        assertTrue(entitlements.get(0).isDirty());
+        assertTrue(entitlements.get(1).isDirty());
+        assertFalse(entitlements.get(2).isDirty());
 
         verifyZeroInteractions(this.mockEntCertAdapter);
     }
@@ -229,9 +230,9 @@ public class EntitlementCertificateGeneratorTest {
 
         this.ecGenerator.regenerateCertificatesOf(environment, Arrays.asList("c1", "c2", "c4"), false);
 
-        assertFalse(entitlements.get(0).getDirty());
-        assertFalse(entitlements.get(1).getDirty());
-        assertFalse(entitlements.get(2).getDirty());
+        assertFalse(entitlements.get(0).isDirty());
+        assertFalse(entitlements.get(1).isDirty());
+        assertFalse(entitlements.get(2).isDirty());
 
         verify(this.mockEntCertAdapter, times(2)).generateEntitlementCerts(any(Consumer.class),
             this.entMapCaptor.capture(), this.productMapCaptor.capture());
@@ -255,7 +256,7 @@ public class EntitlementCertificateGeneratorTest {
 
         this.ecGenerator.regenerateCertificatesOf(owner, product.getId(), true);
 
-        assertTrue(entitlement.getDirty());
+        assertTrue(entitlement.isDirty());
 
         verifyZeroInteractions(this.mockEntCertAdapter);
     }
@@ -281,7 +282,7 @@ public class EntitlementCertificateGeneratorTest {
 
         this.ecGenerator.regenerateCertificatesOf(owner, product.getId(), false);
 
-        assertFalse(entitlement.getDirty());
+        assertFalse(entitlement.isDirty());
 
         verify(this.mockEntCertAdapter, times(1)).generateEntitlementCerts(any(Consumer.class),
             this.entMapCaptor.capture(), this.productMapCaptor.capture());
@@ -297,7 +298,7 @@ public class EntitlementCertificateGeneratorTest {
 
         this.ecGenerator.regenerateCertificatesOf(consumer, true);
 
-        assertTrue(entitlement.getDirty());
+        assertTrue(entitlement.isDirty());
         verifyZeroInteractions(this.mockEntCertAdapter);
     }
 
@@ -321,7 +322,7 @@ public class EntitlementCertificateGeneratorTest {
         entitlement.setDirty(true);
 
         this.ecGenerator.regenerateCertificatesOf(entitlement, false, false);
-        assertFalse(entitlement.getDirty());
+        assertFalse(entitlement.isDirty());
 
         verify(this.mockEntCertAdapter).generateEntitlementCerts(eq(consumer),
             this.entMapCaptor.capture(), this.productMapCaptor.capture());
@@ -331,5 +332,59 @@ public class EntitlementCertificateGeneratorTest {
 
         verify(this.mockEventSink, times(1)).queueEvent(any(Event.class));
     }
+
+
+    @Test
+    public void testLazyRegenerationByEntitlementId() throws Exception {
+        Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
+        Consumer consumer = TestUtil.createConsumer(owner);
+        Product product = TestUtil.createProduct(owner);
+        Pool pool = TestUtil.createPool(owner, product);
+        Entitlement entitlement = TestUtil.createEntitlement(owner, consumer, pool, null);
+        entitlement.setId("lazy-ent-id");
+        Collection<String> entitlements = Arrays.asList(entitlement.getId());
+
+        this.ecGenerator.regenerateCertificatesByEntitlementIds(entitlements, false, true);
+
+        // We're expecting the DB to update the state, and since we're mocking all of the curators, we can't
+        // do a flush to verify this. We're, instead, relying on the backing DB functionality to be working
+        // correctly.
+        // assertTrue(entitlement.isDirty());
+
+        verify(this.mockEntitlementCurator, times(1)).markEntitlementsDirty(eq(entitlements));
+
+        verifyZeroInteractions(this.mockEntCertAdapter);
+    }
+
+    @Test
+    public void testNonLazyRegenerationByEntitlementId() throws Exception {
+        Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
+        Consumer consumer = TestUtil.createConsumer(owner);
+        Product product = TestUtil.createProduct(owner);
+        Pool pool = TestUtil.createPool(owner, product);
+        Entitlement entitlement = TestUtil.createEntitlement(owner, consumer, pool, null);
+        entitlement.setId("test-ent-id");
+        Collection<String> entitlements = Arrays.asList(entitlement.getId());
+        pool.setEntitlements(new HashSet(Arrays.asList(entitlement)));
+
+        HashMap<String, EntitlementCertificate> ecMap = new HashMap<String, EntitlementCertificate>();
+        ecMap.put(pool.getId(), new EntitlementCertificate());
+
+        when(this.mockEntitlementCurator.find(eq(entitlement.getId()))).thenReturn(entitlement);
+        when(this.mockEntCertAdapter.generateEntitlementCerts(any(Consumer.class), any(Map.class),
+            any(Map.class))).thenReturn(ecMap);
+
+        this.ecGenerator.regenerateCertificatesByEntitlementIds(entitlements, false, false);
+
+        assertFalse(entitlement.isDirty());
+
+        verify(this.mockEntCertAdapter, times(1)).generateEntitlementCerts(any(Consumer.class),
+            this.entMapCaptor.capture(), this.productMapCaptor.capture());
+
+        verify(this.mockEventSink, times(1)).queueEvent(any(Event.class));
+    }
+
+
+
 
 }

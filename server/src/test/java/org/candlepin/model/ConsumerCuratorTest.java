@@ -497,7 +497,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void getGuestConsumerMap() {
-
         String guestId1 = "06F81B41-AAC0-7685-FBE9-79AA4A326511";
         String guestId1ReverseEndian = "411bf806-c0aa-8576-fbe9-79aa4a326511";
         Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
@@ -512,20 +511,15 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Set<String> guestIds = new HashSet<String>();
         guestIds.add(guestId1ReverseEndian); // reversed endian match
         guestIds.add(guestId2); // direct match
-        VirtConsumerMap guestMap = consumerCurator.getGuestConsumersMap(
-            owner, guestIds);
+        VirtConsumerMap guestMap = consumerCurator.getGuestConsumersMap(owner, guestIds);
 
         assertEquals(2, guestMap.size());
 
-        assertEquals(gConsumer1.getId(), guestMap.get(
-            guestId1.toLowerCase()).getId());
-        assertEquals(gConsumer1.getId(), guestMap.get(
-            guestId1ReverseEndian).getId());
+        assertEquals(gConsumer1.getId(), guestMap.get(guestId1.toLowerCase()).getId());
+        assertEquals(gConsumer1.getId(), guestMap.get(guestId1ReverseEndian).getId());
 
-        assertEquals(gConsumer2.getId(), guestMap.get(
-            guestId2.toLowerCase()).getId());
-        assertEquals(gConsumer2.getId(), guestMap.get(
-            Util.transformUuid(guestId2.toLowerCase())).getId());
+        assertEquals(gConsumer2.getId(), guestMap.get(guestId2.toLowerCase()).getId());
+        assertEquals(gConsumer2.getId(), guestMap.get(Util.transformUuid(guestId2.toLowerCase())).getId());
     }
 
     @Test

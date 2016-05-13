@@ -16,6 +16,9 @@ package org.candlepin.model;
 
 import org.candlepin.util.Util;
 
+import com.google.common.collect.Iterables;
+
+import org.hibernate.Query;
 import org.hibernate.criterion.Conjunction;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
@@ -78,25 +81,20 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
             .add(Restrictions.le("expiration", Util.yesterday()))
             .add(getRevokedCriteria())
             .setProjection(Projections.id())
-            .addOrder(Order.asc("id")).list();
+            .addOrder(Order.asc("id"))
+            .list();
+
         if (ids.isEmpty()) {
             return 0;
         }
 
-        String hql = "DELETE from CertificateSerial " +
-            "WHERE id IN (:expiredids)";
+        String hql = "DELETE from CertificateSerial WHERE id IN (:expiredIds)";
+        Query query = this.currentSession().createQuery(hql);
 
-        int batchStart = 0;
-        int batchEnd = inClauseLimit;
         int removed = 0;
-        while (batchStart < ids.size()) {
-            removed += this.currentSession()
-                    .createQuery(hql)
-                    .setParameterList("expiredids",
-                            ids.subList(batchStart, Math.min(batchEnd, ids.size())))
-                    .executeUpdate();
-            batchStart += inClauseLimit;
-            batchEnd += inClauseLimit;
+
+        for (List<String> block : Iterables.partition(ids, AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE)) {
+            removed += query.setParameterList("expiredIds", block).executeUpdate();
         }
 
         return removed;
