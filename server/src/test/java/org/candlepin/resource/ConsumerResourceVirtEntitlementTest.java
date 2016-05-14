@@ -149,9 +149,9 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             if (null != p.getAttributeValue("pool_derived")) {
                 // consume 2 times so one can get revoked later.
                 consumerResource.bind(guestConsumer.getUuid(), p.getId(), null,
-                    10, null, null, false, null, null, null, null);
+                    10, null, null, false, null, null);
                 consumerResource.bind(guestConsumer.getUuid(), p.getId(), null,
-                    10, null, null, false, null, null, null, null);
+                    10, null, null, false, null, null);
                 p = poolManager.find(p.getId());
                 // ensure the correct # consumed from the bonus pool
                 assertTrue(p.getConsumed() == 20);
@@ -165,7 +165,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         }
         // manifest consume from the physical pool and then check bonus pool quantities
         consumerResource.bind(manifestConsumer.getUuid(), parentPool.getId(), null, 7, null,
-            null, false, null, null, null, null);
+            null, false, null, null);
         for (Pool p : subscribedTo) {
             p = poolManager.find(p.getId());
             assertTrue(p.getConsumed() == 20);
@@ -174,7 +174,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         // manifest consume from the physical pool and then check bonus pool quantities.
         //   Should result in a revocation of one of the 10 count entitlements.
         consumerResource.bind(manifestConsumer.getUuid(), parentPool.getId(), null, 2, null,
-            null, false, null, null, null, null);
+            null, false, null, null);
         for (Pool p : subscribedTo) {
             p = poolManager.find(p.getId());
             assertTrue(p.getConsumed() == 10);
@@ -183,7 +183,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         // system consume from the physical pool and then check bonus pool quantities.
         //   Should result in no change in the entitlements for the guest.
         consumerResource.bind(systemConsumer.getUuid(), parentPool.getId(), null, 1, null,
-            null, false, null, null, null, null);
+            null, false, null, null);
         for (Pool p : subscribedTo) {
             p = poolManager.find(p.getId());
             assertTrue(p.getConsumed() == 10);
@@ -206,9 +206,9 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             if (null != p.getAttributeValue("pool_derived")) {
                 // consume 2 times so they can get revoked separately.
                 consumerResource.bind(guestConsumer.getUuid(), p.getId(), null,
-                    10, null, null, false, null, null, null, null);
+                    10, null, null, false, null, null);
                 consumerResource.bind(guestConsumer.getUuid(), p.getId(), null,
-                    10, null, null, false, null, null, null, null);
+                    10, null, null, false, null, null);
                 p = poolManager.find(p.getId());
                 assertTrue(p.getConsumed() == 20);
                 assertTrue(p.getQuantity() == -1);
@@ -224,7 +224,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         }
         // Incomplete consumption of physical pool leaves unlimited pool unchanged.
         consumerResource.bind(manifestConsumer.getUuid(), parentPool.getId(), null, 7, null,
-            null, false, null, null, null, null);
+            null, false, null, null);
         for (Pool p : subscribedTo) {
             assertTrue(p.getConsumed() == 20);
             assertTrue(p.getQuantity() == -1);
@@ -232,7 +232,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         // Full consumption of physical pool causes revocation of bonus pool entitlements
         //   and quantity change to 0
         consumerResource.bind(manifestConsumer.getUuid(), parentPool.getId(), null, 3, null,
-            null, false, null, null, null, null);
+            null, false, null, null);
         for (Pool p : subscribedTo) {
             p = poolManager.find(p.getId());
             assertEquals(new Long(0), p.getConsumed());

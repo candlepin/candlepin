@@ -1494,6 +1494,17 @@ public class CandlepinPoolManager implements PoolManager {
             handler = new UpdateHandler();
         }
 
+        boolean isDistributor = consumer.getType().isManifest();
+
+        /*
+         * Grab an exclusive lock on the consumer to prevent deadlock.
+         * No need to lock for distributors as we wont compute compliance for
+         * it.
+         */
+        if (!isDistributor) {
+            consumer = consumerCurator.lockAndLoad(consumer);
+        }
+
         // Persist the entitlement after it has been created.  It requires an ID in order to
         // create an entitlement-derived subpool
         log.info("Processing entitlements and persisting.");
@@ -1510,6 +1521,16 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
+        /*
+         * If the consumer is not a distributor, check consumer's new compliance
+         * status and save. the getStatus call does that internally, so we only
+         * need to check for the update.
+         */
+        complianceRules.getStatus(consumer, null, false, false);
+        if (!isDistributor) {
+            consumerCurator.update(consumer);
+        }
+
         handler.handlePostEntitlement(this, consumer, entitlements);
         handler.handleSelfCertificates(consumer, poolQuantities, entitlements, generateUeberCert);
 
@@ -1519,19 +1540,6 @@ public class CandlepinPoolManager implements PoolManager {
 
         // we might have changed the bonus pool quantities, lets find out.
         handler.handleBonusPools(poolQuantities, entitlements);
-
-        JobDetail detail = ConsumerComplianceJob.scheduleWithForceUpdate(consumer);
-        detail.getJobDataMap().put(PinsetterJobListener.PRINCIPAL_KEY, new SystemPrincipal());
-
-        log.info("Triggering ConsumerComplianceJob: {} for consumer: {}", detail.getKey(),
-            consumer.getUuid());
-
-        try {
-            pinsetterKernel.scheduleSingleJob(detail);
-        }
-        catch (PinsetterException e) {
-            log.error("ConsumerComplianceJob schedule failed", e.getMessage());
-        }
 
         poolCurator.flush();
 
