@@ -23,8 +23,10 @@ import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.candlepin.pinsetter.core.model.JobStatus.TargetType;
 import org.candlepin.pinsetter.tasks.KingpinJob;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.criterion.Order;
@@ -70,6 +72,33 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
         if (updated == 0) {
             throw new NotFoundException("job not found");
         }
+    }
+
+    public int cancelIfNotRunning(List<String> jobIds) {
+        int cancelled = 0;
+
+        if (CollectionUtils.isEmpty(jobIds)) {
+            return cancelled;
+        }
+
+        String hql = "update JobStatus j " +
+            "set j.state = :canceled " +
+            "where j.id in (:jobids) and j.state in (:created, :pending)";
+
+        Query query = this.currentSession()
+            .createQuery(hql)
+            .setInteger("canceled", JobState.CANCELED.ordinal())
+            .setInteger("created", JobState.CREATED.ordinal())
+            .setInteger("pending", JobState.PENDING.ordinal());
+
+        Iterable<List<String>> blocks = Iterables.partition(jobIds,
+            AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE);
+
+        for (List<String> block : blocks) {
+            cancelled += query.setParameterList("jobids", block).executeUpdate();
+        }
+
+        return cancelled;
     }
 
     public int deleteJobNoStatusReturn(String jobId) {
@@ -169,6 +198,21 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
             .add(Restrictions.eq("jobClass", jobClass))
             .setMaxResults(1)
             .uniqueResult();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<JobStatus> getUnfinishedJobsByTargetIds(Class<? extends KingpinJob> jobClass,
+        List<String> targetIds) {
+
+        return (List<JobStatus>) this.currentSession().createCriteria(JobStatus.class)
+            .addOrder(Order.desc("created"))
+            .add(Restrictions.ge("updated", getBlockingCutoff()))
+            .add(Restrictions.ne("state", JobState.FINISHED))
+            .add(Restrictions.ne("state", JobState.FAILED))
+            .add(Restrictions.ne("state", JobState.CANCELED))
+            .add(unboundedInCriterion("targetId", targetIds))
+            .add(Restrictions.eq("jobClass", jobClass))
+            .list();
     }
 
     /*

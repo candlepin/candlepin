@@ -26,7 +26,9 @@ import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
+import org.candlepin.pinsetter.tasks.ConsumerComplianceJob;
 import org.candlepin.pinsetter.tasks.HealEntireOrgJob;
+import org.candlepin.pinsetter.tasks.HypervisorUpdateJob;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -38,6 +40,7 @@ import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -370,6 +373,120 @@ public class JobCuratorTest extends DatabaseTestFixture {
         List<JobStatus> found = curator.findByConsumerUuid("c2");
         assertEquals(1, found.size());
         assertEquals(job, found.get(0));
+    }
+
+    @Test
+    public void cancelIfNotRunning() {
+
+        String j1 = newJobStatus().jobClass(ConsumerComplianceJob.class).state(JobState.CREATED)
+            .consumer("Taylor", "Swift").create().getId();
+
+        String j2 = newJobStatus()
+            .jobClass(ConsumerComplianceJob.class)
+            .state(JobState.PENDING)
+            .consumer("Taylor", "Swift")
+            .create()
+            .getId();
+
+        String j3 = newJobStatus()
+            .jobClass(ConsumerComplianceJob.class)
+            .state(JobState.RUNNING)
+            .consumer("Taylor", "Swift")
+            .create()
+            .getId();
+
+        int result = curator.cancelIfNotRunning(
+            Arrays.asList(j1, j2, j3));
+
+        assertEquals(2, result);
+        JobStatus j1s = curator.find(j1);
+        JobStatus j2s = curator.find(j2);
+        JobStatus j3s = curator.find(j3);
+        curator.refresh(j1s);
+        curator.refresh(j2s);
+        curator.refresh(j3s);
+        assertEquals(JobState.CANCELED, curator.find(j1).getState());
+        assertEquals(JobState.CANCELED, curator.find(j2).getState());
+        assertEquals(JobState.RUNNING, curator.find(j3).getState());
+    }
+
+    @Test
+    public void getUnfinishedJobsByTargetIdsReturnsUnfinishedOnly() {
+        newJobStatus()
+             .jobClass(ConsumerComplianceJob.class)
+             .state(JobState.FINISHED)
+             .consumer("Taylor", "Swift")
+             .create();
+
+        newJobStatus()
+             .jobClass(ConsumerComplianceJob.class)
+            .state(JobState.CANCELED)
+            .consumer("Taylor", "Swift")
+            .create();
+
+        JobStatus expected = newJobStatus()
+            .jobClass(ConsumerComplianceJob.class)
+            .state(JobState.CREATED)
+            .consumer("Taylor", "Swift")
+            .create();
+
+        List<JobStatus> result = curator.getUnfinishedJobsByTargetIds(ConsumerComplianceJob.class,
+            Arrays.asList("Taylor"));
+
+        assertEquals(1, result.size());
+        assertEquals(expected, result.get(0));
+    }
+
+    @Test
+    public void getUnfinishedJobsByTargetIdsReturnsCorrectJobClass() {
+
+        newJobStatus()
+            .jobClass(HypervisorUpdateJob.class)
+            .state(JobState.CREATED)
+            .consumer("Taylor", "Swift")
+            .create();
+
+        JobStatus expected = newJobStatus()
+            .jobClass(ConsumerComplianceJob.class)
+            .state(JobState.CREATED)
+            .consumer("Taylor", "Swift")
+            .create();
+
+        List<JobStatus> result = curator.getUnfinishedJobsByTargetIds(ConsumerComplianceJob.class,
+            Arrays.asList("Taylor"));
+
+        assertEquals(1, result.size());
+        assertEquals(expected, result.get(0));
+    }
+
+    @Test
+    public void getUnfinishedJobsByTargetIdsReturnsOnlyConsumersSpecified() {
+
+        JobStatus expected1 = newJobStatus()
+            .jobClass(ConsumerComplianceJob.class)
+            .state(JobState.CREATED)
+            .consumer("Taylor", "Swift")
+            .create();
+
+        JobStatus expected2 = newJobStatus()
+            .jobClass(ConsumerComplianceJob.class)
+            .state(JobState.CREATED)
+            .consumer("Doctor", "Who")
+            .create();
+
+        JobStatus expected3 = newJobStatus()
+            .jobClass(ConsumerComplianceJob.class)
+            .state(JobState.CREATED)
+            .consumer("Master", "Mistress")
+            .create();
+
+        List<JobStatus> result = curator.getUnfinishedJobsByTargetIds(ConsumerComplianceJob.class,
+            Arrays.asList("Taylor", "Doctor"));
+
+        assertEquals(2, result.size());
+        assertTrue(result.contains(expected1));
+        assertTrue(result.contains(expected2));
+        assertFalse(result.contains(expected3));
     }
 
     @Test
