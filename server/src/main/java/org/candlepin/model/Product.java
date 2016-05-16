@@ -185,7 +185,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @param source
      *  The Product instance to copy
      */
-    protected Product(Product source) {
+    public Product(Product source) {
         this.setUuid(source.getUuid());
         this.setId(source.getId());
 
