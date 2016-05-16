@@ -28,8 +28,8 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
-import org.hibernate.Session;
 import org.hibernate.SQLQuery;
+import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
@@ -581,6 +581,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             for (List<String> block : Iterables.partition(ids, IN_OPERATOR_BLOCK_SIZE)) {
                 query.setParameter("ids", block);
                 result.addAll((List<E>) query.getResultList());
+            }
+            //In some situations, even after locking the entity we
+            //got stale in the entity e.g. Pool.consumed
+            //This refresh reloads the entity after the lock has
+            //been issued.
+            for (E e : result) {
+                getEntityManager().refresh(e);
             }
         }
 
