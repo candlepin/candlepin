@@ -311,7 +311,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             );
 
             for (List<Entitlement> block : blocks) {
-                eids.addAll(query.setParameter("ein", entitlements).getResultList());
+                eids.addAll(query.setParameter("ein", block).getResultList());
             }
         }
 
