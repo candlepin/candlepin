@@ -34,10 +34,15 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+
 /**
  * Status Resource
  */
+
 @Path("/status")
+@Api("status")
 public class StatusResource {
     private static Logger log = LoggerFactory.getLogger(StatusResource.class);
 
@@ -92,6 +97,7 @@ public class StatusResource {
      * @httpcode 200
      */
     @GET
+    @ApiOperation(value = "Status", notes = "Returns status of the server", authorizations = {})
     @Produces({ MediaType.APPLICATION_JSON})
     @SecurityHole(noAuth = true, anon = true)
     public Status status() {

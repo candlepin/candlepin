@@ -60,12 +60,18 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  * API Gateway into /product
  *
  * @version $Rev$
  */
 @Path("/owners/{owner_key}/products")
+@Api("owners")
 public class OwnerProductResource {
     private static Logger log = LoggerFactory.getLogger(OwnerProductResource.class);
 
@@ -173,13 +179,7 @@ public class OwnerProductResource {
         return content;
     }
 
-    /**
-     * Retrieves a list of Products
-     *
-     * @param productIds if specified, the list of product IDs to return product info for
-     * @return a list of Product objects
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a list of Products", value = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Product> list(
@@ -193,33 +193,8 @@ public class OwnerProductResource {
             productCurator.listAllByIds(owner, productIds);
     }
 
-    /**
-     * Retrieves a single Product
-     * <p>
-     * <pre>
-     * {
-     *   "id" : "product_id",
-     *   "name" : "product_name",
-     *   "multiplier" : 1,
-     *   "attributes" : [ {
-     *     "name" : "version",
-     *     "value" : "1.0",
-     *     "created" : [date],
-     *     "updated" : [date]
-     *   } ],
-     *   "productContent" : [ ],
-     *   "dependentProductIds" : [ ],
-     *   "href" : "/products/product_id",
-     *   "created" : [date],
-     *   "updated" : [date]
-     * }
-     * </pre>
-     *
-     * @param productId id of the product sought.
-     * @return a Product object
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a single Product", value = "getProduct")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Path("/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -232,13 +207,9 @@ public class OwnerProductResource {
         return this.fetchProduct(owner, productId);
     }
 
-    /**
-     * Retreives a Certificate for a Product
-     *
-     * @return a ProductCertificate object
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retreives a Certificate for a Product",
+        value = "getProductCertificate")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Path("/{product_id}/certificate")
     @Produces(MediaType.APPLICATION_JSON)
@@ -252,15 +223,8 @@ public class OwnerProductResource {
         return this.productCertCurator.getCertForProduct(product);
     }
 
-    /**
-     * Creates a Product
-     * <p>
-     * Returns either the new created Product or the Product that already existed.
-     *
-     * @param product
-     * @return a Product object
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Creates a Product.  Returns either the new created Product or " +
+        "the Product that already existed.", value = "createProduct")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -274,13 +238,8 @@ public class OwnerProductResource {
         return productManager.createProduct(product, owner);
     }
 
-    /**
-     * Updates a Product
-     *
-     * @return a Product object
-     * @httpcode 400
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Updates a Product", value = "updateProduct")
+    @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @PUT
     @Path("/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -301,14 +260,7 @@ public class OwnerProductResource {
         return this.productManager.updateProduct(((Product) existing.clone()).merge(product), owner, true);
     }
 
-    /**
-     * Adds Content to a Product
-     * <p>
-     * Batch mode
-     *
-     * @return a Product object
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Adds Content to a Product  Batch mode", value = "addBatchContent")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -339,14 +291,7 @@ public class OwnerProductResource {
         return change ? this.productManager.updateProduct(product, owner, true) : product;
     }
 
-    /**
-     * Adds Content to a Product
-     * <p>
-     * Single mode
-     *
-     * @return a Product object
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Adds Content to a Product  Single mode", value = "addContent")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
@@ -374,11 +319,7 @@ public class OwnerProductResource {
             product;
     }
 
-    /**
-     * Removes Content from a Product
-     *
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Removes Content from a Product", value = "removeContent")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/content/{content_id}")
@@ -400,13 +341,8 @@ public class OwnerProductResource {
         this.productManager.removeProductContent(product, Arrays.asList(content), owner, true);
     }
 
-    /**
-     * Removes a Product
-     *
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Removes a Product", value = "deleteProduct")
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}")
@@ -434,14 +370,7 @@ public class OwnerProductResource {
         this.productManager.removeProduct(product, owner);
     }
 
-    /**
-     * Refreshes Pools by Product
-     *
-     * @param productId
-     * @param lazyRegen
-     * @return a JobDetail object
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Refreshes Pools by Product", value = "refreshPoolsForProduct")
     @PUT
     @Path("/{product_id}/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)

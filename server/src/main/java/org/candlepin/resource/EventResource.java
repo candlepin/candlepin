@@ -32,10 +32,16 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  * Candlepin Events Resource
  */
 @Path("/events")
+@Api("events")
 public class EventResource {
 
     private EventCurator eventCurator;
@@ -50,12 +56,7 @@ public class EventResource {
         this.eventAdapter = eventAdapter;
     }
 
-    /**
-     * Retrieves a list of Events
-     *
-     * @return a list of Event objects
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a list of Events", value = "listEvents")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Event> listEvents() {
@@ -66,33 +67,8 @@ public class EventResource {
         return events;
     }
 
-    /**
-     * Retrieves a single Event
-     * <p>
-     * <pre>
-     * {
-     *   "id" : "database_id",
-     *   "type" : "MODIFIED",
-     *   "target" : "CONSUMER",
-     *   "targetName" : "client.rdu.redhat.com",
-     *   "timestamp" : [date],
-     *   "entityId" : "entity_id",
-     *   "ownerId" : "owner_id",
-     *   "consumerId" : "consumer_id",
-     *   "referenceId" : null,
-     *   "referenceType" : null,
-     *   "messageText" : "text",
-     *   "principal" : {
-     *     "type" : "consumer",
-     *     "name" : "consumer_uuid"
-     *   }
-     * }
-     * </pre>
-     *
-     * @return an Event object
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a single Event", value = "getEvent")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Path("{uuid}")
     @Produces(MediaType.APPLICATION_JSON)

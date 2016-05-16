@@ -58,14 +58,14 @@
     <org.hornetq-hornetq-commons.version>2.4.7.Final</org.hornetq-hornetq-commons.version>
     <org.hornetq-hornetq-journal.version>2.4.7.Final</org.hornetq-hornetq-journal.version>
     <io.netty-netty-all.version>4.0.13.Final</io.netty-netty-all.version>
-    <com.fasterxml.jackson.core-jackson-annotations.version>2.3.0</com.fasterxml.jackson.core-jackson-annotations.version>
-    <com.fasterxml.jackson.core-jackson-core.version>2.3.0</com.fasterxml.jackson.core-jackson-core.version>
-    <com.fasterxml.jackson.core-jackson-databind.version>2.3.0</com.fasterxml.jackson.core-jackson-databind.version>
-    <com.fasterxml.jackson.jaxrs-jackson-jaxrs-base.version>2.3.0</com.fasterxml.jackson.jaxrs-jackson-jaxrs-base.version>
-    <com.fasterxml.jackson.jaxrs-jackson-jaxrs-json-provider.version>2.3.0</com.fasterxml.jackson.jaxrs-jackson-jaxrs-json-provider.version>
-    <com.fasterxml.jackson.module-jackson-module-jsonSchema.version>2.3.0</com.fasterxml.jackson.module-jackson-module-jsonSchema.version>
-    <com.fasterxml.jackson.module-jackson-module-jaxb-annotations.version>2.3.0</com.fasterxml.jackson.module-jackson-module-jaxb-annotations.version>
-    <com.fasterxml.jackson.datatype-jackson-datatype-hibernate4.version>2.3.0</com.fasterxml.jackson.datatype-jackson-datatype-hibernate4.version>
+    <com.fasterxml.jackson.core-jackson-annotations.version>2.4.5</com.fasterxml.jackson.core-jackson-annotations.version>
+    <com.fasterxml.jackson.core-jackson-core.version>2.4.5</com.fasterxml.jackson.core-jackson-core.version>
+    <com.fasterxml.jackson.core-jackson-databind.version>2.4.5</com.fasterxml.jackson.core-jackson-databind.version>
+    <com.fasterxml.jackson.jaxrs-jackson-jaxrs-base.version>2.4.5</com.fasterxml.jackson.jaxrs-jackson-jaxrs-base.version>
+    <com.fasterxml.jackson.jaxrs-jackson-jaxrs-json-provider.version>2.4.5</com.fasterxml.jackson.jaxrs-jackson-jaxrs-json-provider.version>
+    <com.fasterxml.jackson.module-jackson-module-jsonSchema.version>2.4.5</com.fasterxml.jackson.module-jackson-module-jsonSchema.version>
+    <com.fasterxml.jackson.module-jackson-module-jaxb-annotations.version>2.4.5</com.fasterxml.jackson.module-jackson-module-jaxb-annotations.version>
+    <com.fasterxml.jackson.datatype-jackson-datatype-hibernate4.version>2.4.5</com.fasterxml.jackson.datatype-jackson-datatype-hibernate4.version>
     <org.liquibase-liquibase-core.version>3.1.0</org.liquibase-liquibase-core.version>
     <ch.qos.logback-logback-core.version>1.1.3</ch.qos.logback-logback-core.version>
     <ch.qos.logback-logback-classic.version>1.1.3</ch.qos.logback-logback-classic.version>
@@ -89,6 +89,14 @@
     <javax.ws.rs-javax.ws.rs-api.version>2.0.1</javax.ws.rs-javax.ws.rs-api.version>
     <org.mozilla-rhino.version>1.7R3</org.mozilla-rhino.version>
     <com.sun.xml.bind-jaxb-impl.version>2.1.12</com.sun.xml.bind-jaxb-impl.version>
+    <io.swagger-swagger-jaxrs.version>1.5.7</io.swagger-swagger-jaxrs.version>
+    <io.swagger-swagger-core.version>1.5.7</io.swagger-swagger-core.version>
+    <io.swagger-swagger-models.version>1.5.7</io.swagger-swagger-models.version>
+    <io.swagger-swagger-annotations.version>1.5.7</io.swagger-swagger-annotations.version>
+    <org.reflections-reflections.version>0.9.10</org.reflections-reflections.version>
+    <org.apache.commons-commons-lang3.version>3.2.1</org.apache.commons-commons-lang3.version>
+    <com.fasterxml.jackson.dataformat-jackson-dataformat-yaml.version>2.4.5</com.fasterxml.jackson.dataformat-jackson-dataformat-yaml.version>
+    <com.fasterxml.jackson.dataformat-jackson-dataformat-xml.version>2.4.5</com.fasterxml.jackson.dataformat-jackson-dataformat-xml.version>
     <org.candlepin-candlepin-common.version>2.0.3</org.candlepin-candlepin-common.version>
     <postgresql-postgresql.version>9.0-801.jdbc4</postgresql-postgresql.version>
     <mysql-mysql-connector-java.version>5.1.26</mysql-mysql-connector-java.version>
@@ -903,6 +911,94 @@
       <groupId>com.sun.xml.bind</groupId>
       <artifactId>jaxb-impl</artifactId>
       <version>${com.sun.xml.bind-jaxb-impl.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>io.swagger</groupId>
+      <artifactId>swagger-jaxrs</artifactId>
+      <version>${io.swagger-swagger-jaxrs.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>io.swagger</groupId>
+      <artifactId>swagger-core</artifactId>
+      <version>${io.swagger-swagger-core.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>io.swagger</groupId>
+      <artifactId>swagger-models</artifactId>
+      <version>${io.swagger-swagger-models.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>io.swagger</groupId>
+      <artifactId>swagger-annotations</artifactId>
+      <version>${io.swagger-swagger-annotations.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.reflections</groupId>
+      <artifactId>reflections</artifactId>
+      <version>${org.reflections-reflections.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>${org.apache.commons-commons-lang3.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-yaml</artifactId>
+      <version>${com.fasterxml.jackson.dataformat-jackson-dataformat-yaml.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-xml</artifactId>
+      <version>${com.fasterxml.jackson.dataformat-jackson-dataformat-xml.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>

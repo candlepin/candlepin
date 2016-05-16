@@ -48,10 +48,16 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  * UserResource
  */
 @Path("/users")
+@Api("users")
 public class UserResource {
 
     private UserServiceAdapter userService;
@@ -66,35 +72,14 @@ public class UserResource {
         this.ownerCurator = ownerCurator;
     }
 
-    /**
-     * Retrieves a list of Users
-     *
-     * @return a list of User objects
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a list of Users", value = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<User> list() {
         return userService.listUsers();
     }
 
-    /**
-     * Retrieves a single User
-     * <p>
-     * <pre>
-     * {
-     *   "id" : "database_id",
-     *   "username" : "user_name",
-     *   "hashedPassword" : "05557a2aaec7cb676df574d2eb080691949a6752",
-     *   "superAdmin" : false,
-     *   "created" : [date],
-     *   "updated" : [date]
-     * }
-     * </pre>
-     *
-     * @return a User object
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a single User", value = "getUserInfo")
     @GET
     @Path("/{username}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -103,16 +88,11 @@ public class UserResource {
         return userService.findByLogin(username);
     }
 
-    /**
-     * Retrieves a list of Roles by User
-     *
-     * @return a list of Role objects
-     * @httpcode 200
-     */
     /*
      * getUserRoles will only return roles for one user. If you want a
      * full view of a role, use /roles/ instead.
      */
+    @ApiOperation(notes = "Retrieves a list of Roles by User", value = "getUserRoles")
     @GET
     @Path("/{username}/roles")
     @Produces(MediaType.APPLICATION_JSON)
@@ -134,12 +114,7 @@ public class UserResource {
         return roles;
     }
 
-    /**
-     * Creates a User
-     *
-     * @return a User object
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Creates a User", value = "createUser")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -150,13 +125,8 @@ public class UserResource {
         return userService.createUser(user);
     }
 
-    /**
-     * Updates a User
-     *
-     * @return a User object
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Updates a User", value = "updateUser")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -173,12 +143,8 @@ public class UserResource {
     }
 
 
-    /**
-     * Removes a User
-     *
-     * @httpcode 410
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Removes a User", value = "deleteUser")
+    @ApiResponses({ @ApiResponse(code = 410, message = "") })
     @DELETE
     @Path("/{username}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -192,17 +158,12 @@ public class UserResource {
         }
     }
 
-    /**
-     * Retrieve a list of owners the user can register systems to.
-     * <p>
-     * Previously this represented owners the user was an admin for. Because the client uses
-     * this API call to list the owners a user can register to, when we introduced "my
-     * systems" administrator, we have to change its meaning to listing the owners that
-     * can be registered to by default to maintain compatability with released clients.
-     *
-     * @return a list of Owner objects
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieve a list of owners the user can register systems to. " +
+        "Previously this represented owners the user was an admin for. Because the " +
+        "client uses this API call to list the owners a user can register to, when " +
+        "we introduced 'my systems' administrator, we have to change its meaning to " +
+        "listing the owners that can be registered to by default to maintain " +
+        "compatability with released clients.", value = "listUsersOwners")
     // TODO: should probably accept access level and sub-resource query params someday
     @GET
     @Path("/{username}/owners")

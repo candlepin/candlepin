@@ -70,10 +70,16 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  * REST api gateway for the User object.
  */
 @Path("/entitlements")
+@Api("entitlements")
 public class EntitlementResource {
     private static Logger log = LoggerFactory.getLogger(EntitlementResource.class);
     private final ConsumerCurator consumerCurator;
@@ -107,15 +113,8 @@ public class EntitlementResource {
         }
     }
 
-    /**
-     * Checks Consumer for Product Entitlement
-     *
-     * @param consumerUuid consumerUuid to check if entitled or not
-     * @param productId productLabel to check if entitled or not
-     * @return a boolean
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Checks Consumer for Product Entitlement", value = "hasEntitlement")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("consumer/{consumer_uuid}/product/{product_id}")
@@ -136,13 +135,8 @@ public class EntitlementResource {
                 consumerUuid, productId));
     }
 
-    /**
-     * Retrieves list of Entitlements
-     *
-     * @return a list of Entitlement objects
-     * @httpcode 400
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves list of Entitlements", value = "listAllForConsumer")
+    @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Paginate
@@ -173,34 +167,13 @@ public class EntitlementResource {
         return p.getPageData();
     }
 
-    /**
-     * Retrieves a single Entitlement
-     * <p>
-     * <pre>
-     * {
-     *   "id" : "database_id",
-     *   "consumer" : {},
-     *   "pool" : {},
-     *   "certificates" : [ ],
-     *   "quantity" : 1,
-     *   "startDate" : [date],
-     *   "endDate" : [date],
-     *   "href" : "/entitlements/database_id",
-     *   "created" : [date],
-     *   "updated" : [date]
-     * }
-     * </pre>
-     *
-     * @param dbid entitlement id.
-     * @return an Entitlement object
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a single Entitlement", value = "getEntitlement")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("{dbid}")
+    @Path("{entitlement_id}")
     public Entitlement getEntitlement(
-        @PathParam("dbid") @Verify(Entitlement.class) String dbid) {
+        @PathParam("entitlement_id") @Verify(Entitlement.class) String dbid) {
         Entitlement toReturn = entitlementCurator.find(dbid);
         List<Entitlement> tempList = Arrays.asList(toReturn);
         poolManager.regenerateDirtyEntitlements(tempList);
@@ -211,14 +184,9 @@ public class EntitlementResource {
             i18n.tr("Entitlement with ID ''{0}'' could not be found.", dbid));
     }
 
-    /**
-     * Updates an Entitlement
-     * <p>
-     * This only works for the quantity.
-     *
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Updates an Entitlement. This only works for the quantity.",
+        value = "updateEntitlement")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -250,21 +218,11 @@ public class EntitlementResource {
     }
 
 
-    /**
-     * Retrieves a Subscription Certificate
-     * <p>
-     * We can't return CdnInfo at this time, but when the time comes this
-     * is the implementation we want to start from. It will require changes
-     * to thumbslug.
-     * <p>
-     * public CdnInfo getEntitlementUpstreamCert
-     * will also @Produces(MediaType.APPLICATION_JSON)
-     *
-     * @param entitlementId entitlement id.
-     * @return a String object
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves a Subscription Certificate.  We can't return CdnInfo " +
+        "at this time, but when the time comes this is the implementation we want to start" +
+        " from. It will require changes to thumbslug.  will also" +
+        " @Produces(MediaType.APPLICATION_JSON)", value = "getUpstreamCert")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     @Path("{dbid}/upstream_cert")
@@ -303,14 +261,8 @@ public class EntitlementResource {
         return cert.getCert() + cert.getKey();
     }
 
-    /**
-     * Deletes an Entitlement
-     *
-     * @param dbid the entitlement to delete.
-     * @httpcode 403
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Deletes an Entitlement", value = "unbind")
+    @ApiResponses({ @ApiResponse(code = 403, message = ""), @ApiResponse(code = 404, message = "") })
     @DELETE
     @Produces(MediaType.WILDCARD)
     @Path("/{dbid}")
@@ -324,12 +276,9 @@ public class EntitlementResource {
             i18n.tr("Entitlement with ID ''{0}'' could not be found.", dbid));
     }
 
-    /**
-     * Regenerates the Entitlement Certificates for a Product
-     *
-     * @return a JobDetail object
-     * @httpcode 202
-     */
+    @ApiOperation(notes = "Regenerates the Entitlement Certificates for a Product",
+        value = "regenerateEntitlementCertificatesForProduct")
+    @ApiResponses({ @ApiResponse(code = 202, message = "") })
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
@@ -350,16 +299,10 @@ public class EntitlementResource {
         return detail;
     }
 
-    /**
-     *  Migrate entitlements from one distributor consumer to another
-     *
-     *  Can specify full or partial quantity. No specified quantity
-     *   will lead to full migration of the entitlement.
-     *
-     * @return a Response object
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Migrate entitlements from one distributor consumer to another." +
+        " Can specify full or partial quantity. No specified quantity " +
+        "will lead to full migration of the entitlement.", value = "migrateEntitlement")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)

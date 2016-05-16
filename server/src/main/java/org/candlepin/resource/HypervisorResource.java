@@ -60,10 +60,17 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  * HypervisorResource
  */
 @Path("/hypervisors")
+@Api("hypervisors")
 public class HypervisorResource {
     private static Logger log = LoggerFactory.getLogger(HypervisorResource.class);
     private ConsumerCurator consumerCurator;
@@ -81,30 +88,18 @@ public class HypervisorResource {
     }
 
     /**
-     * Updates the list of Hypervisor Guests
-     * <p>
-     * Allows agents such as virt-who to update its host list and associate the
-     * guests for each host. This is typically used when a host is unable to
-     * register to candlepin via subscription manager.
-     * <p>
-     * In situations where consumers already exist it is probably best not to
-     * allow creation of new hypervisor consumers.  Most consumers do not
-     * have a hypervisorId attribute, so that should be added manually
-     * when necessary by the management environment.
-     *
      * @deprecated Use the asynchronous method
-     * @param hostGuestMap a mapping of host_id to list of guestIds
-     * @param principal
-     * @param ownerKey key of owner to update
-     * @param createMissing specify whether or not to create missing hypervisors.
-     * Default is true.  If false is specified, hypervisorIds that are not found
-     * will result in failed entries in the resulting HypervisorCheckInResult
-     * @return a HypervisorCheckInResult object
-     *
-     * @httpcode 202
-     * @httpcode 200
-     *
+     * @return HypervisorCheckInResult
      */
+    @ApiOperation(notes = "Updates the list of Hypervisor Guests Allows agents such as " +
+        "virt-who to update its host list and associate the guests for each host. This is " +
+        "typically used when a host is unable to register to candlepin via subscription" +
+        " manager.  In situations where consumers already exist it is probably best not " +
+        "to allow creation of new hypervisor consumers.  Most consumers do not have a" +
+        " hypervisorId attribute, so that should be added manually when necessary by the " +
+        "management environment. @deprecated Use the asynchronous method",
+        value = "hypervisorUpdate")
+    @ApiResponses({ @ApiResponse(code = 202, message = "") })
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -116,6 +111,9 @@ public class HypervisorResource {
         @QueryParam("owner") @Verify(value = Owner.class,
             require = Access.READ_ONLY,
             subResource = SubResource.HYPERVISOR) String ownerKey,
+        @ApiParam("specify whether or not to create missing hypervisors." +
+            "Default is true.  If false is specified, hypervisorIds that are not found" +
+            "will result in failed entries in the resulting HypervisorCheckInResult")
         @QueryParam("create_missing") @DefaultValue("true") boolean createMissing) {
         log.debug("Hypervisor check-in by principal: " + principal);
 
@@ -225,29 +223,15 @@ public class HypervisorResource {
         return result;
     }
 
-    /**
-     * Creates or Updates the list of Hypervisor hosts
-     * <p>
-     * Allows agents such as virt-who to update hosts' information . This is typically
-     * used when a host is unable to register to candlepin via subscription manager.
-     * <p>
-     * In situations where consumers already exist it is probably best not to
-     * allow creation of new hypervisor consumers.  Most consumers do not
-     * have a hypervisorId attribute, so that should be added manually
-     * when necessary by the management environment.
-     *
-     * @param hypervisorJson the json representation of the hypervisors
-     * @param principal
-     * @param ownerKey key of owner to update
-     * @param createMissing specify whether or not to create missing hypervisors.
-     * Default is true.  If false is specified, hypervisorIds that are not found
-     * will result in a failed state of the job.
-     * @return a JobDetail object
-     *
-     * @httpcode 202
-     * @httpcode 200
-     *
-     */
+    @ApiOperation(notes = "Creates or Updates the list of Hypervisor hosts Allows agents such" +
+        " as virt-who to update hosts' information . This is typically used when a host is" +
+        " unable to register to candlepin via subscription manager. In situations where " +
+        "consumers already exist it is probably best not to allow creation of new hypervisor" +
+        " consumers.  Most consumers do not have a hypervisorId attribute, so that should be" +
+        " added manually when necessary by the management environment. Default is true.  " +
+        "If false is specified, hypervisorIds that are not found will result in a failed " +
+        "state of the job.", value = "hypervisorUpdateAsync")
+    @ApiResponses({ @ApiResponse(code = 202, message = "") })
     @POST
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.APPLICATION_JSON)
@@ -259,6 +243,10 @@ public class HypervisorResource {
         @PathParam("owner") @Verify(value = Owner.class,
             require = Access.READ_ONLY,
             subResource = SubResource.HYPERVISOR) String ownerKey,
+        @ApiParam("specify whether or not to create missing hypervisors." +
+            "Default is true.  If false is specified, hypervisorIds that are not found" +
+            "will result in failed entries in the resulting HypervisorCheckInResult")
+
         @QueryParam("create_missing") @DefaultValue("true") boolean createMissing,
         @QueryParam("reporter_id") String reporterId) {
 

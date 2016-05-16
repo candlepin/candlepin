@@ -39,10 +39,16 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  * Rules API entry path
  */
 @Path("/rules")
+@Api("rules")
 public class RulesResource {
     private static Logger log = LoggerFactory.getLogger(RulesResource.class);
     private RulesCurator rulesCurator;
@@ -63,16 +69,8 @@ public class RulesResource {
         this.jsProvider = jsProvider;
     }
 
-    /**
-     * Uploads the Rules
-     * <p>
-     * Returns a copy of the uploaded rules.
-     *
-     * @param rulesBuffer rules to upload.
-     * @return a String object
-     * @httpcode 400
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Uploads the Rules Returns a copy of the uploaded rules.", value = "upload")
+    @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @POST
     @Consumes({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
     @Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON })
@@ -103,13 +101,8 @@ public class RulesResource {
         return rulesBuffer;
     }
 
-    /**
-     * Retrieves the Rules
-     *
-     * @return a String object
-     * @httpcode 503
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves the Rules", value = "get")
+    @ApiResponses({ @ApiResponse(code = 503, message = "") })
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
     public String get() {
@@ -126,13 +119,8 @@ public class RulesResource {
         }
     }
 
-    /**
-     * Removes the Rules
-     * <p>
-     * Deletes any uploaded rules, uses bundled rules instead
-     *
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Removes the Rules  Deletes any uploaded rules, uses bundled rules instead",
+        value = "delete")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     public void delete() {

@@ -57,11 +57,18 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  * API gateway for the EntitlementPool
  */
 
 @Path("/pools")
+@Api("pools")
 public class PoolResource {
 
     private ConsumerCurator consumerCurator;
@@ -83,25 +90,18 @@ public class PoolResource {
     }
 
     /**
-     * Retrieves a list of Pools
-     *
      * @deprecated Use the method on /owners
-     * @param ownerId optional parameter to limit the search by owner
-     * @param productId optional parameter to limit the search by product
-     * @param consumerUuid optional parameter to limit the search by consumer,
-     *        and only for applicable pools
-     * @param listAll Use with consumerUuid to list all pools available to the
-     *        consumer. This will include pools which would otherwise be omitted
-     *        due to a rules warning. (i.e. not recommended) Pools that trigger
-     *        an error however will still be omitted. (no entitlements
-     *        available, consumer type mismatch, etc)
-     * @return a list of Pool objects
-     * @httpcode 200 if the request succeeded
-     * @httpcode 400 if both consumer(unit) and owner are given, or if a product id is
-     *           specified without a consumer(unit) or owner
-     * @httpcode 404 if a specified consumer(unit) or owner is not found
-     * @httpcode 403
+     * @return List of pools
      */
+    @ApiOperation(
+        notes = "Retrieves a list of Pools @deprecated Use the method on /owners",
+        value = "")
+    @ApiResponses({
+        @ApiResponse(code = 400,
+        message = "if both consumer(unit) and owner are given, or if a" +
+        " product id is specified without a consumer(unit) or owner"),
+        @ApiResponse(code = 404, message = "if a specified consumer(unit) or owner is not found"),
+        @ApiResponse(code = 403, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "pools")
@@ -111,6 +111,10 @@ public class PoolResource {
     public List<Pool> list(@QueryParam("owner") String ownerId,
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("product") String productId,
+        @ApiParam("Use with consumerUuid to list all pools available to the consumer. " +
+        "This will include pools which would otherwise be omitted due to a rules" +
+        " warning. (i.e. not recommended) Pools that trigger an error however will" +
+        " still be omitted. (no entitlements available, consumer type mismatch, etc)")
         @QueryParam("listall") @DefaultValue("false") boolean listAll,
         @QueryParam("activeon") String activeOn,
         @Context Principal principal,
@@ -182,32 +186,9 @@ public class PoolResource {
         return poolList;
     }
 
-    /**
-     * Retrieves a single Pool
-     * <p>
-     * <pre>
-     * {
-     *   "id" : "database_id",
-     *   "active" : "true",
-     *   "startDate" : [date]
-     *   "endDate" : [date],
-     *   "quantity" : "20000",
-     *   "consumed" : "20000",
-     *   "productId" : "product_id",
-     *   "productName": "product_name",
-     *   "sourceEntitlement": null,
-     *   "unlimited": false,
-     *   "created": [date],
-     *   "updated": [date],
-     * }
-     * </pre>
-     *
-     * @param id the id of the pool
-     * @return a Pool object
-     * @httpcode 200 if the request succeeded
-     * @httpcode 404 if the pool with the specified id is not found
-     * @httpcode 404
-     */
+    @ApiOperation(notes = "Retrieves a single Pool", value = "getPool")
+    @ApiResponses({ @ApiResponse(code = 404, message = "if the pool with the specified id is not found"),
+        @ApiResponse(code = 404, message = "") })
     @GET
     @Path("/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -247,13 +228,8 @@ public class PoolResource {
             "Subscription Pool with ID ''{0}'' could not be found.", id));
     }
 
-    /**
-     * Remove a Pool
-     *
-     * @param id the id of the pool
-     * @httpcode 200 if the request succeeded
-     * @httpcode 404 if the pool with the specified id is not found
-     */
+    @ApiOperation(notes = "Remove a Pool", value = "deletePool")
+    @ApiResponses({ @ApiResponse(code = 404, message = "if the pool with the specified id is not found") })
     @DELETE
     @Path("/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -267,13 +243,8 @@ public class PoolResource {
         poolManager.deletePool(pool);
     }
 
-    /**
-     * Retrieve a CDN for a Pool
-     *
-     * @return the cdn for a pool
-     * @httpcode 400
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieve a CDN for a Pool", value = "getPoolCdn")
+    @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @GET
     @Path("{pool_id}/cdn")
     @Produces(MediaType.APPLICATION_JSON)
@@ -290,13 +261,8 @@ public class PoolResource {
         return pool.getCdn();
     }
 
-    /**
-     * Retrieve a list of Entitlements for a Pool
-     *
-     * @return a list of Entitlement objects
-     * @httpcode 400
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieve a list of Entitlements for a Pool", value = "getPoolEntitlements")
+    @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @GET
     @Path("{pool_id}/entitlements")
     @Produces(MediaType.APPLICATION_JSON)

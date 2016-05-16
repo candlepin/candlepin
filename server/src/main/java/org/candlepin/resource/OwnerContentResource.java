@@ -46,6 +46,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 
 
 /**
@@ -54,6 +59,7 @@ import javax.ws.rs.core.MediaType;
  * Manage the content that exists in an organization.
  */
 @Path("/owners/{owner_key}/content")
+@Api("owners")
 public class OwnerContentResource {
     private static Logger log = LoggerFactory.getLogger(OwnerContentResource.class);
 
@@ -104,12 +110,7 @@ public class OwnerContentResource {
         return owner;
     }
 
-    /**
-     * Retrieves list of Content
-     *
-     * @return a list of Content objects
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves list of Content", value = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Content> list(@Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
@@ -117,31 +118,8 @@ public class OwnerContentResource {
         return contentCurator.listByOwner(owner);
     }
 
-    /**
-     * Retrieves a single Content
-     * <p>
-     * <pre>
-     * {
-     *   "id" : "database_id",
-     *   "type" : "yum",
-     *   "label" : "content_label",
-     *   "name" : "content_name",
-     *   "vendor" : "test-vendor",
-     *   "contentUrl" : "/foo/path/always",
-     *   "requiredTags" : "TAG1,TAG2",
-     *   "releaseVer" : null,
-     *   "gpgUrl" : "/foo/path/always/gpg",
-     *   "metadataExpire" : null,
-     *   "modifiedProductIds" : [ ],
-     *   "arches" : null,
-     *   "created" : [date],
-     *   "updated" : [date]
-     * }
-     * </pre>
-     *
-     * @return a Content object
-     * @httpcode 400
-     */
+    @ApiOperation(notes = "Retrieves a single Content", value = "getContent")
+    @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")
@@ -196,12 +174,7 @@ public class OwnerContentResource {
         return content;
     }
 
-    /**
-     * Creates a Content
-     *
-     * @return a Content object
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Creates a Content", value = "createContent")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -210,12 +183,7 @@ public class OwnerContentResource {
         return this.createContentImpl(owner, content);
     }
 
-    /**
-     * Creates Contents in bulk
-     *
-     * @return a list of Content objects
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Creates Contents in bulk", value = "createBatchContent")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -233,13 +201,7 @@ public class OwnerContentResource {
         return result;
     }
 
-    /**
-     * Updates a Content
-     *
-     * @param contentId
-     * @param content
-     * @return a Content object
-     */
+    @ApiOperation(notes = "Updates a Content", value = "updateContent")
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -258,11 +220,7 @@ public class OwnerContentResource {
         return this.contentManager.updateContent(((Content) existing.clone()).merge(content), owner, true);
     }
 
-    /**
-     * Deletes a Content
-     *
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Deletes a Content", value = "remove")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")

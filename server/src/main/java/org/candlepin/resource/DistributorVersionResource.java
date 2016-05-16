@@ -39,10 +39,16 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 /**
  * DistributorVersionResource
  */
 @Path("/distributor_versions")
+@Api("distributor_versions")
 public class DistributorVersionResource {
 
     private I18n i18n;
@@ -55,38 +61,7 @@ public class DistributorVersionResource {
         this.curator = curator;
     }
 
-    /**
-     * Retrieves list of Distributor Versions
-     * <p>
-     * <pre>
-     * {
-     *   "id" : "database_id",
-     *   "name" : "sat-5.6",
-     *   "displayName" : "Satellite 5.6",
-     *   "capabilities" : [ {
-     *     "id" : "database_id",
-     *     "name" : "derived_product"
-     *   }, {
-     *     "id" : "database_id",
-     *     "name" : "ram"
-     *   }, {
-     *     "id" : "database_id",
-     *     "name" : "cert_v3"
-     *   }, {
-     *     "id" : "database_id",
-     *     "name" : "cores"
-     *   }, {
-     *     "id" : "database_id",
-     *     "name" : "instance_multiplier"
-     *   } ],
-     *   "created" : [date],
-     *   "updated" : [date]
-     * }
-     * </pre>
-     *
-     * @return a list of DistributorVersion objects
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Retrieves list of Distributor Versions", value = "getVersions")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<DistributorVersion> getVersions(
@@ -103,13 +78,8 @@ public class DistributorVersionResource {
         return curator.findAll();
     }
 
-    /**
-     * Deletes a Distributor Version
-     *
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Deletes a Distributor Version", value = "delete")
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @DELETE
     @Produces(MediaType.WILDCARD)
     @Path("/{id}")
@@ -121,12 +91,7 @@ public class DistributorVersionResource {
         }
     }
 
-    /**
-     * Creates a Distributor Version
-     *
-     * @return a DistributorVersion object
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Creates a Distributor Version", value = "create")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -141,12 +106,7 @@ public class DistributorVersionResource {
         return curator.create(dv);
     }
 
-    /**
-     * Updates a Distributor Version
-     *
-     * @return a DistributorVersion object
-     * @httpcode 200
-     */
+    @ApiOperation(notes = "Updates a Distributor Version", value = "update")
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
