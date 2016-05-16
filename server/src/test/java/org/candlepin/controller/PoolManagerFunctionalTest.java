@@ -663,6 +663,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testBatchBindError() throws EntitlementRefusedException {
         Owner owner = createOwner();
         Product p = new Product("test-product", "Test Product", owner);
+        p.addAttribute(new ProductAttribute(Pool.MULTI_ENTITLEMENT_ATTRIBUTE, "yes"));
         productCurator.create(p);
 
         Consumer devSystem = new Consumer("dev", "user", owner, systemType);
@@ -674,14 +675,23 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             TestUtil.createDate(2050, 3, 2));
         pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
         pool1.addAttribute(new PoolAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, devSystem.getUuid()));
-        pool1.setConsumed(1L);
         poolCurator.create(pool1);
-
+        Entitlement ent = createEntitlement(owner, devSystem, pool1,
+            createEntitlementCertificate("keycert", "cert"));
+        ent.setQuantity(1);
+        entitlementCurator.create(ent);
+        //To recompute 'consumed' field
+        poolCurator.refresh(pool1);
         assertEquals(1, poolCurator.find(pool1.getId()).getConsumed().intValue());
         Pool pool2 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),
             TestUtil.createDate(2050, 3, 2));
-        pool2.setConsumed(1L);
         poolCurator.create(pool2);
+        Entitlement ent2 = createEntitlement(owner, devSystem, pool2,
+            createEntitlementCertificate("keycert", "cert"));
+        ent2.setQuantity(1);
+        entitlementCurator.create(ent2);
+        //To recompute 'consumed' field
+        poolCurator.refresh(pool2);
 
         Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
         poolQuantities.put(pool1.getId(), 1);
