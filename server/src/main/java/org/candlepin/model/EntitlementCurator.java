@@ -476,7 +476,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .createAlias("ent_pool.product", "product")
             .createAlias("product.attributes", "attrs")
             .add(Restrictions.eq("attrs.name", "stacking_id"))
-            .add(unboundedInCriterion("attrs.value", stackIds))
+            .add(CPRestrictions.in("attrs.value", stackIds))
             .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
             .createAlias("ent_pool.sourceStack", "ss", JoinType.LEFT_OUTER_JOIN)
             .add(Restrictions.isNull("ss.id"));

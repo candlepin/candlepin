@@ -140,7 +140,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     public List<E> listAllByIds(Collection<? extends Serializable> ids) {
-        return listByCriteria(createSecureCriteria().add(unboundedInCriterion("id", ids)));
+        return listByCriteria(createSecureCriteria().add(CPRestrictions.in("id", ids)));
     }
 
     @SuppressWarnings("unchecked")
@@ -1052,31 +1052,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
 
         return count;
-    }
-
-    /**
-     * While hibernate does not have limits over how many values can be used in an in clause,
-     * the underlying databases sometimes do. This method builds an unbounded in clause
-     * by building logical or expressions out of batches of in-clauses.
-     *
-     * @param expression the string expression against which we are searching values
-     * @param values the values being searched for the expression
-     * @return the unbounded in criterion as described above
-     */
-    public <T extends Object> Criterion unboundedInCriterion(String expression, Iterable<T> values) {
-        Criterion criterion = null;
-
-        if (values == null || !values.iterator().hasNext()) {
-            throw new IllegalArgumentException("values is null or empty");
-        }
-
-        for (List<T> block : Iterables.partition(values, IN_OPERATOR_BLOCK_SIZE)) {
-            criterion = (criterion == null) ?
-                Restrictions.in(expression, block) :
-                Restrictions.or(criterion, Restrictions.in(expression, block));
-        }
-
-        return criterion;
     }
 
     public List<E> lockAndLoadBatch(Iterable<String> ids, String entityName, String keyName) {
