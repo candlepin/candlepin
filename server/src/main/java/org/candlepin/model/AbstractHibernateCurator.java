@@ -63,7 +63,8 @@ import javax.persistence.Query;
  * @param <E> Entity specific curator.
  */
 public abstract class AbstractHibernateCurator<E extends Persisted> {
-    public static final int IN_OPERATOR_BLOCK_SIZE = 8192;
+    // oracle has a limit of 1000
+    public static final int IN_OPERATOR_BLOCK_SIZE = 999;
 
     @Inject protected Provider<EntityManager> entityManager;
     @Inject protected I18n i18n;
