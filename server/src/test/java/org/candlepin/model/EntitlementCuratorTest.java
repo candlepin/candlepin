@@ -420,17 +420,17 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     private Entitlement createPool(String id, Date startDate, Date endDate, Product provided) {
         EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
         Product poolProd = this.createProduct("prod-" + id, "prod-" + id, owner);
-        Pool p = TestUtil.createPool(owner, poolProd);
+        Pool pool = TestUtil.createPool(owner, poolProd);
 
         if (provided != null) {
-            p.addProvidedProduct(provided);
+            pool.addProvidedProduct(provided);
         }
 
-        p.setStartDate(startDate);
-        p.setEndDate(endDate);
-        Entitlement e1 = createEntitlement(owner, consumer, p, cert);
-        poolCurator.create(p);
-        entitlementCurator.create(e1);
+        pool.setStartDate(startDate);
+        pool.setEndDate(endDate);
+        poolCurator.create(pool);
+
+        Entitlement e1 = createEntitlement(owner, consumer, pool, cert);
 
         return e1;
     }

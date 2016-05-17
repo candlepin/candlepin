@@ -568,6 +568,20 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return object;
     }
 
+    /**
+     * Evicts all of the given entities from the level-one cache.
+     *
+     * @param collection
+     *  An iterable collection of entities to evict from the session
+     */
+    public void evictAll(Iterable<E> collection) {
+        Session session = this.currentSession();
+
+        for (E entity : collection) {
+            session.evict(entity);
+        }
+    }
+
     public List<E> takeSubList(PageRequest pageRequest, List<E> results) {
         int fromIndex = (pageRequest.getPage() - 1) * pageRequest.getPerPage();
         if (fromIndex >= results.size()) {
