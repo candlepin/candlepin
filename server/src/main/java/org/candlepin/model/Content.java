@@ -380,7 +380,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     /**
      * Associates this content with the specified owner. If the given owner is already associated
-     * with this content, the request is silently ignored.
+     * with this content, the association will be updated with the given owner instance.
      *
      * @param owner
      *  An owner to be associated with this content
@@ -394,6 +394,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
                 this.owners = new HashSet<Owner>();
             }
 
+            this.owners.remove(owner);
             return this.owners.add(owner);
         }
 

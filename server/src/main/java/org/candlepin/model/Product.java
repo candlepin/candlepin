@@ -452,7 +452,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
     /**
      * Associates this product with the specified owner. If the given owner is already associated
-     * with this product, the request is silently ignored.
+     * with this product, the association will be updated with the given owner instance.
      *
      * @param owner
      *  An owner to be associated with this product
@@ -466,6 +466,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
                 this.owners = new HashSet<Owner>();
             }
 
+            this.owners.remove(owner);
             return this.owners.add(owner);
         }
 
