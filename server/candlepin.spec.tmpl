@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.12
+Version: 2.0.13
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,11 @@ fi
 
 #raw
 %changelog
+* Tue May 17 2016 Vritant Jain <vrjain@redhat.com> 2.0.13-1
+- 1336054: Overconsumption Fix (nguyen.filip@gmail.com)
+- Candlepin specific changes to ModelConverter (nguyen.filip@gmail.com)
+- Initial swagger integration (nguyen.filip@gmail.com)
+
 * Fri May 13 2016 Vritant Jain <vrjain@redhat.com> 2.0.12-1
 - 1331793: Optimized expired pool cleanup and entitlement revocation
   (crog@redhat.com)
