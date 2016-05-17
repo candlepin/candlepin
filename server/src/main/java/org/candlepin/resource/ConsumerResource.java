@@ -1389,9 +1389,15 @@ public class ConsumerResource {
         @QueryParam("email_locale") String emailLocale,
         @QueryParam("async") @DefaultValue("false") boolean async,
         @QueryParam("entitle_date") String entitleDateStr,
-        @QueryParam("from_pool") List<String> fromPools,
-        PoolIdAndQuantity[] poolQuantities,
-        @Context Principal principal) {
+        @QueryParam("from_pool") List<String> fromPools) {
+
+        /*
+         * TODO batch-bind: temporarily reverting batch bind. untill we can find a way
+         * to compute compliance without the need to lock a consumer.
+         * Move this to method signature once that is done.
+         */
+        PoolIdAndQuantity[] poolQuantities = null;
+
         boolean hasPoolQuantities = (poolQuantities != null && poolQuantities.length > 0);
         // TODO: really should do this in a before we get to this call
         // so the method takes in a real Date object and not just a String.
@@ -1406,6 +1412,7 @@ public class ConsumerResource {
 
         log.debug("Consumer (post verify): {}", consumer);
 
+        /* TODO batch-bind: uncomment when we can re-introduce batch bind.
         if (hasPoolQuantities) {
             Map<String, PoolIdAndQuantity> pqMap = new HashMap<String, PoolIdAndQuantity>();
             for (PoolIdAndQuantity poolQuantity : poolQuantities) {
@@ -1422,12 +1429,14 @@ public class ConsumerResource {
                         "Cannot bind more than {0} pools per request, found: {1}", batchBindLimit,
                         pqMap.keySet().size()));
             }
+
             List<Pool> pools = poolManager.secureFind(pqMap.keySet());
             if (!principal.canAccessAll(pools, SubResource.ENTITLEMENTS, Access.CREATE)) {
                 throw new NotFoundException(i18n.tr("Pools with ids {0} could not be found.",
                         pqMap.keySet()));
             }
         }
+        */
 
         try {
             // I hate double negatives, but if they have accepted all

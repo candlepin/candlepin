@@ -71,6 +71,8 @@ describe 'Consumer Resource' do
       @consumer2.consume_pool(pool.id, {:quantity => 1}).size.should == 1
     }.should raise_exception(RestClient::ResourceNotFound)
 
+=begin
+    TODO batch-bind: uncomment when re-implementing batch bind
     another_pool = create_pool_and_subscription(@owner1['key'], product.id)
     poolAndQuantities = []
     poolAndQuantity = { 'poolId' => pool.id, 'quantity' => 1}
@@ -80,6 +82,7 @@ describe 'Consumer Resource' do
     lambda {
       status = @consumer2.consume_pools(poolAndQuantities)
     }.should raise_exception(RestClient::ResourceNotFound)
+=end
   end
 
   it "should expose a consumer's event atom feed" do
@@ -401,6 +404,8 @@ describe 'Consumer Resource' do
     new_updated = @cp.get_consumer(consumer['uuid'])['updated']
     new_updated.should_not == old_updated
 
+=begin
+    TODO batch-bind uncomment when re-implementing batch bind
     sleep 1
 
     pool1 = create_pool_and_subscription(@owner1['key'], prod.id)
@@ -414,6 +419,7 @@ describe 'Consumer Resource' do
     # wait for job to complete, or test clean up will conflict with the asynchronous job.
     wait_for_job(status['id'], 15)
     @cp.get_consumer(consumer['uuid'])['updated'].should_not == new_updated
+=end
   end
 
   it 'consumer can async bind by product id' do
@@ -840,6 +846,8 @@ describe 'Consumer Resource' do
     @cp.get_pool(pool.id).consumed.should == 0
   end
 
+=begin
+TODO batch-bind uncomment when re-implementing batch bind
   it 'should allow a consumer to unregister and free up the pools consumed in a batch' do
     owner = create_owner(random_string('zowner'))
     user = user_client(owner, random_string('cukebuster'))
@@ -875,6 +883,7 @@ describe 'Consumer Resource' do
       @cp.get_pool(pool.id).consumed.should == 0
     end
   end
+=end
 
   it 'should allow a consumer fact to be removed when updated badly' do
     # typing for certain facts. violation means value for fact is entirely removed
