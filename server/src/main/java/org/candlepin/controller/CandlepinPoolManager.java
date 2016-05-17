@@ -185,7 +185,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Transactional
     void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter, Owner owner, boolean lazy) {
         long start = System.currentTimeMillis();
-        owner = refreshOwner(owner);
+        owner = this.refreshOwner(owner);
         log.info("Refreshing pools for owner: {}", owner);
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
 
@@ -244,7 +244,8 @@ public class CandlepinPoolManager implements PoolManager {
     private Owner refreshOwner(Owner owner) {
         if (owner == null || (owner.getKey() == null && owner.getId() == null)) {
             throw new IllegalArgumentException(
-                    i18n.tr("No owner specified, or owner lacks identifying information"));
+                i18n.tr("No owner specified, or owner lacks identifying information")
+            );
         }
 
         if (owner.getKey() != null) {
@@ -252,8 +253,9 @@ public class CandlepinPoolManager implements PoolManager {
             owner = ownerCurator.lookupByKey(owner.getKey());
 
             if (owner == null) {
-                throw new IllegalStateException(i18n.tr("Unable to find an owner with the key \"{0}\"",
-                        ownerKey));
+                throw new IllegalStateException(
+                    i18n.tr("Unable to find an owner with the key \"{0}\"", ownerKey)
+                );
             }
         }
         else {
@@ -397,8 +399,8 @@ public class CandlepinPoolManager implements PoolManager {
             Content incoming = contentCache.get(cid);
             Content existing = this.contentCurator.lookupById(owner, cid);
 
-            // Ensure the incoming product is linked to the owner that initiated the refresh
-            incoming.addOwner(owner);
+            // Ensure the incoming content is linked to the owner that initiated the refresh
+            incoming.setOwners(Arrays.asList(owner));
 
             if (existing == null) {
                 log.info("Creating new content for org {}: {}", owner.getKey(), cid);
@@ -520,8 +522,8 @@ public class CandlepinPoolManager implements PoolManager {
             Product incoming = productCache.get(pid);
             Product existing = this.productCurator.lookupById(owner, pid);
 
-            // Ensure the inbound product is linked to the owner that initiated the refresh
-            incoming.addOwner(owner);
+            // Ensure the incoming content is linked to the owner that initiated the refresh
+            incoming.setOwners(Arrays.asList(owner));
 
             if (existing == null) {
                 log.info("Creating new product for org {}: {}", owner.getKey(), pid);

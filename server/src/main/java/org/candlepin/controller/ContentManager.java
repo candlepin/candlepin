@@ -96,9 +96,6 @@ public class ContentManager {
         }
 
         // Check if we have an alternate version we can use instead.
-
-        // TODO: Not sure if we really even need the version check. If we have any other matching
-        // content, we should probably use it -- regardless of the actual version value.
         List<Content> alternateVersions = this.contentCurator.getContentByVersion(
             entity.getId(), entity.hashCode()
         );
@@ -112,7 +109,10 @@ public class ContentManager {
             }
         }
 
-        entity.addOwner(owner);
+        // No other owners have matching version of this content. Since it's net new, we set the
+        // owners explicitly to the owner given to ensure we don't accidentally clobber other owner
+        // mappings
+        entity.setOwners(Arrays.asList(owner));
         return this.contentCurator.create(entity);
     }
 
