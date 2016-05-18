@@ -89,9 +89,6 @@ public class ProductManager {
         }
 
         // Check if we have an alternate version we can use instead.
-
-        // TODO: Not sure if we really even need the version check. If we have any other matching
-        // product, we should probably use it -- regardless of the actual version value.
         List<Product> alternateVersions = this.productCurator.getProductsByVersion(
             entity.getId(), entity.hashCode()
         );
@@ -106,7 +103,10 @@ public class ProductManager {
             }
         }
 
-        entity.addOwner(owner);
+        // No other owners have matching version of this product. Since it's net new, we set the
+        // owners explicitly to the owner given to ensure we don't accidentally clobber other owner
+        // mappings
+        entity.setOwners(Arrays.asList(owner));
         return this.productCurator.create(entity);
     }
 
@@ -229,9 +229,6 @@ public class ProductManager {
                     );
                 }
             }
-        }
-        else {
-            log.debug("Somehow they were equal...? Something's not quite right here.");
         }
 
         return entity;
