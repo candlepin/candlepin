@@ -99,7 +99,6 @@ describe 'Export', :serial => true do
       @exporter.candlepin_client.list_certificates.each do |c|
         available_certs[c['serial']] = c
       end
-
       exported_entitlement_certs.size.should == 6
 
       exported_entitlement_certs.each do |file|

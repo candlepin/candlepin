@@ -1468,10 +1468,42 @@ public class PoolManagerTest {
         Pool p = TestUtil.createPool(prod);
         p.setSourceSubscription(new SourceSubscription(s.getId(), "derived"));
         existingPools.add(p);
+        when(mockPoolCurator.lockAndLoad(eq(p))).thenReturn(p);
         pRules.createAndEnrichPools(s, existingPools);
         List<Pool> newPools = pRules.createAndEnrichPools(s, existingPools);
         assertEquals(newPools.size(), 1);
         assertEquals(newPools.get(0).getSourceSubscription().getSubscriptionSubKey(), "master");
+    }
+
+    @Test
+    public void updatePoolsForExistingSubscriptionsBonusExist() {
+        Owner owner = this.getOwner();
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
+            mockOwnerProductCurator, mockProductCurator);
+        List<Subscription> subscriptions = Util.newList();
+        Product prod = TestUtil.createProduct();
+        prod.setAttribute("virt_limit", "4");
+        this.mockProducts(owner, prod);
+        Subscription s = TestUtil.createSubscription(owner, prod);
+        subscriptions.add(s);
+        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(subscriptions);
+        when(mockConfig.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
+
+        List<Pool> existingPools = new LinkedList<Pool>();
+        Pool p = TestUtil.createPool(prod);
+        p.setSourceSubscription(new SourceSubscription(s.getId(), "derived"));
+        existingPools.add(p);
+        when(mockPoolCurator.lockAndLoad(eq(p))).thenReturn(p);
+        pRules.createAndEnrichPools(s, existingPools);
+        List<Pool> newPools = pRules.createAndEnrichPools(s, existingPools);
+        assertEquals(newPools.size(), 1);
+        assertEquals(newPools.get(0).getSourceSubscription().getSubscriptionSubKey(), "master");
+        assertEquals(p.getQuantity(), new Long(5));
+
+        prod.setAttribute("virt_limit", "8");
+        existingPools.add(newPools.get(0));
+        pRules.createAndEnrichPools(s, existingPools);
+        assertEquals(p.getQuantity(), new Long(5));
     }
 
     @Test(expected = IllegalStateException.class)
