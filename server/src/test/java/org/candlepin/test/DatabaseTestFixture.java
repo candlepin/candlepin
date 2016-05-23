@@ -210,14 +210,13 @@ public class DatabaseTestFixture {
     protected void rollbackTransaction() {
         entityManager().getTransaction().rollback();
     }
+
     /**
      * Create an entitlement pool.
      *
      * @return an entitlement pool
      */
-    protected Pool createPool(Owner owner, Product product, Long quantity, Date startDate,
-        Date endDate) {
-
+    protected Pool createPool(Owner owner, Product product, Long quantity, Date startDate, Date endDate) {
         Pool p = new Pool(
             owner,
             product,
@@ -238,6 +237,20 @@ public class DatabaseTestFixture {
         Owner o = new Owner("Test Owner " + TestUtil.randomInt());
         ownerCurator.create(o);
         return o;
+    }
+
+    protected Owner createOwner(String key, String name) {
+        Owner owner = TestUtil.createOwner(key, name);
+        this.ownerCurator.create(owner);
+
+        return owner;
+    }
+
+    protected Product createProduct(String id, String name, Owner owner) {
+        Product product = TestUtil.createProduct(id, name, owner);
+        this.productCurator.create(product);
+
+        return product;
     }
 
     protected Consumer createConsumer(Owner owner) {

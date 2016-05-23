@@ -257,7 +257,7 @@ public class OwnerProductResource {
             throw new ForbiddenException(i18n.tr("product \"{1}\" is locked", product.getId()));
         }
 
-        return this.productManager.updateProduct(((Product) existing.clone()).merge(product), owner, true);
+        return this.productManager.updateProduct(existing.merge(product), owner, true);
     }
 
     @ApiOperation(notes = "Adds Content to a Product  Batch mode", value = "addBatchContent")
@@ -280,7 +280,6 @@ public class OwnerProductResource {
         }
 
         this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
-        product = (Product) product.clone();
         boolean change = false;
 
         for (Entry<String, Boolean> entry : contentMap.entrySet()) {
@@ -313,7 +312,6 @@ public class OwnerProductResource {
 
         this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
 
-        product = (Product) product.clone();
         return product.addContent(content, enabled) ?
             this.productManager.updateProduct(product, owner, true) :
             product;

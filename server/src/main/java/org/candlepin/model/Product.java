@@ -19,6 +19,7 @@ import org.candlepin.util.Util;
 
 import org.hibernate.LazyInitializationException;
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
@@ -72,8 +73,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp2_products")
 public class Product extends AbstractHibernateObject implements SharedEntity, Linkable, Cloneable {
-
-    public static final  String UEBER_PRODUCT_POSTFIX = "_ueber_product";
+    public static final String UEBER_PRODUCT_POSTFIX = "_ueber_product";
 
     // Object ID
     @Id
@@ -108,8 +108,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     private Long multiplier;
 
     @OneToMany(mappedBy = "product")
-    @Cascade({ org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN })
+    @Cascade({ CascadeType.ALL, CascadeType.DELETE_ORPHAN })
     @Fetch(FetchMode.SUBSELECT)
     private Set<ProductAttribute> attributes;
 
@@ -129,7 +128,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
     @LazyCollection(LazyCollectionOption.FALSE)
-    private Set<String> dependentProductIds; // Should these be product references?
+    private Set<String> dependentProductIds;
 
     @XmlTransient
     @Column(name = "entity_version")
@@ -713,12 +712,21 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         }
 
         try {
+            // Impl note:
+            // Stepping through the collections here is as painful as it looks, but Hibernate, once
+            // again, doesn't implement .hashCode reliably on the proxy collections. So, we have to
+            // manually step through these and add the elements to ensure the hash code is
+            // generated properly.
             if (this.productContent != null && this.productContent.size() > 0) {
-                builder.append(this.productContent);
+                for (ProductContent pc : this.productContent) {
+                    builder.append(pc);
+                }
             }
 
             if (this.dependentProductIds != null && this.dependentProductIds.size() > 0) {
-                builder.append(this.dependentProductIds);
+                for (String pid : this.dependentProductIds) {
+                    builder.append(pid);
+                }
             }
         }
         catch (LazyInitializationException e) {

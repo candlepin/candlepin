@@ -316,8 +316,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @return
      *  a reference to the updated product
      */
-    public Product updateOwnerProductReferences(Product current, Product updated,
-        Collection<Owner> owners) {
+    public Product updateOwnerProductReferences(Product current, Product updated, Collection<Owner> owners) {
         // Impl note:
         // We're doing this in straight SQL because direct use of the ORM would require querying all
         // of these objects and the available HQL refuses to do any joining (implicit or otherwise),

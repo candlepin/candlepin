@@ -136,8 +136,8 @@ public class ContentManager {
      *  if this method is called with an entity does not exist in the backing database for the given
      *  owner
      *
-     * @throws NullPointerException
-     *  if the provided content entity is null
+     * @throws IllegalArgumentException
+     *  if either the provided content entity or owner are null
      *
      * @return
      *  the updated content entity, or a new content entity
@@ -146,8 +146,13 @@ public class ContentManager {
     public Content updateContent(Content entity, Owner owner, boolean regenerateEntitlementCerts) {
         log.debug("Applying content update for org: {}, {}", entity, owner);
 
+
         if (entity == null) {
-            throw new NullPointerException("entity");
+            throw new IllegalArgumentException("entity");
+        }
+
+        if (owner == null) {
+            throw new IllegalArgumentException("owner");
         }
 
         // This has to fetch a new instance, or we'll be unable to compare the objects
@@ -158,11 +163,12 @@ public class ContentManager {
             throw new IllegalStateException("Content has not yet been created");
         }
 
-        if (existing == entity) {
-            // Nothing to do, really. The caller likely intends for the changes to be persisted, so
-            // we can do that for them.
-            return this.contentCurator.merge(entity);
+        if (existing != entity) {
+            // We're operating on a copy of the entity. We'll merge the changes into the existing
+            // entity and then continue working with that.
+            existing.merge(entity);
         }
+
 
         // Check for newer versions of the same content. We want to try to dedupe as much data as we
         // can, and if we have a newer version of the content (which matches the version provided by
@@ -174,18 +180,22 @@ public class ContentManager {
         );
 
         for (Content alt : alternateVersions) {
-            if (alt.equals(entity)) {
-                log.debug("Merging content with existing version: {} => {}", entity, alt);
+            if (alt == existing) {
+                continue;
+            }
+
+            if (alt.equals(existing)) {
+                log.debug("Merging content with existing version: {} => {}", existing, alt);
 
                 alt.addOwner(owner);
                 this.contentCurator.merge(alt);
 
                 // Make sure every product using the old version/entity are updated to use the new one
                 List<Product> affectedProducts = this.productCurator.getProductsWithContent(
-                    owner, Arrays.asList(entity.getId())
+                    owner, Arrays.asList(existing.getId())
                 );
 
-                entity = this.contentCurator.updateOwnerContentReferences(
+                existing = this.contentCurator.updateOwnerContentReferences(
                     existing, alt, Arrays.asList(owner)
                 );
 
@@ -193,7 +203,7 @@ public class ContentManager {
                     product = (Product) product.clone();
 
                     for (ProductContent pc : product.getProductContent()) {
-                        if (entity.equals(pc.getContent())) {
+                        if (existing.equals(pc.getContent())) {
                             pc.setContent(alt);
                         }
                     }
@@ -202,72 +212,206 @@ public class ContentManager {
                     this.productManager.updateProduct(product, owner, regenerateEntitlementCerts);
                 }
 
-                return entity;
+                return existing;
             }
         }
 
-        // Make sure we actually have something to update.
-        if (!existing.equals(entity)) {
-            // If we're making the update for every owner using the content, don't bother creating
-            // a new version -- just do a raw update.
-            if (existing.getOwners().size() == 1) {
-                log.debug("Applying in-place update to content: {}", entity);
+        // No alternate versions with which to converge. Check if we can do an in-place update instead
+        if (existing.getOwners().size() == 1) {
+            log.debug("Applying in-place update to content: {}", existing);
 
-                existing.merge(entity);
-                entity = existing;
+            this.contentCurator.merge(existing);
 
-                this.contentCurator.merge(entity);
-
-                if (regenerateEntitlementCerts) {
-                    // Every owner with a pool using any of the affected products needs an update.
-                    this.entitlementCertGenerator.regenerateCertificatesOf(
-                        this.productCurator.getProductsWithContent(Arrays.asList(existing.getUuid())), true
-                    );
-                }
-            }
-            else {
-                log.debug("Forking content and applying update: {}", entity);
-
-                // This org isn't the only org using the content. We need to create a new content
-                // instance and move the org over to the new content.
-                List<Owner> owners = Arrays.asList(owner);
-                Content copy = (Content) entity.clone();
-
-                // Clear the UUID so Hibernate doesn't think our copy is a detached entity
-                copy.setUuid(null);
-
-                // Get products that currently use this content...
-                List<Product> affectedProducts = this.productCurator.getProductsWithContent(
-                    owner, Arrays.asList(existing.getId())
+            if (regenerateEntitlementCerts) {
+                // Every owner with a pool using any of the affected products needs an update.
+                this.entitlementCertGenerator.regenerateCertificatesOf(
+                    this.productCurator.getProductsWithContent(Arrays.asList(existing.getUuid())), true
                 );
-
-                // Set the owner so when we create it, we don't end up with duplicate keys...
-                existing.removeOwner(owner);
-                copy.setOwners(owners);
-
-                this.contentCurator.merge(existing);
-                copy = this.contentCurator.create(copy);
-
-                // Update the products using this content so they are regenerated using the new
-                // content
-                for (Product product : affectedProducts) {
-                    product = (Product) product.clone();
-
-                    for (ProductContent pc : product.getProductContent()) {
-                        if (existing.equals(pc.getContent())) {
-                            pc.setContent(copy);
-                        }
-                    }
-
-                    // Impl note: This should also take care of our entitlement cert regeneration ??
-                    this.productManager.updateProduct(product, owner, regenerateEntitlementCerts);
-                }
-
-                entity = this.contentCurator.updateOwnerContentReferences(existing, copy, owners);
             }
+
+            return existing;
         }
 
-        return entity;
+        log.debug("Forking content and applying update: {}", existing);
+
+        // This org isn't the only org using the content. We need to create a new content
+        // instance and move the org over to the new content.
+        List<Owner> owners = Arrays.asList(owner);
+        Content copy = (Content) existing.clone();
+
+        // Now that we have a copy with the pending changes, refresh the existing version so we
+        // don't apply those changes for other orgs
+        this.contentCurator.refresh(existing);
+
+        // Clear the UUID so Hibernate doesn't think our copy is a detached entity
+        copy.setUuid(null);
+
+        // Get products that currently use this content...
+        List<Product> affectedProducts = this.productCurator.getProductsWithContent(
+            owner, Arrays.asList(existing.getId())
+        );
+
+        // Set the owner so when we create it, we don't end up with duplicate keys...
+        existing.removeOwner(owner);
+        copy.setOwners(owners);
+
+        this.contentCurator.merge(existing);
+        copy = this.contentCurator.create(copy);
+
+        // Update the products using this content so they are regenerated using the new
+        // content
+        for (Product product : affectedProducts) {
+            product = (Product) product.clone();
+
+            for (ProductContent pc : product.getProductContent()) {
+                if (existing.equals(pc.getContent())) {
+                    pc.setContent(copy);
+                }
+            }
+
+            // Impl note: This should also take care of our entitlement cert regeneration ??
+            this.productManager.updateProduct(product, owner, regenerateEntitlementCerts);
+        }
+
+        return this.contentCurator.updateOwnerContentReferences(existing, copy, owners);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // if (entity == null) {
+        //     throw new NullPointerException("entity");
+        // }
+
+        // // This has to fetch a new instance, or we'll be unable to compare the objects
+        // Content existing = this.contentCurator.lookupById(owner, entity.getId());
+
+        // if (existing == null) {
+        //     // If we're doing an exclusive update, this should be an error condition
+        //     throw new IllegalStateException("Content has not yet been created");
+        // }
+
+        // if (existing == entity) {
+        //     // Nothing to do, really. The caller likely intends for the changes to be persisted, so
+        //     // we can do that for them.
+        //     return this.contentCurator.merge(entity);
+        // }
+
+        // // Check for newer versions of the same content. We want to try to dedupe as much data as we
+        // // can, and if we have a newer version of the content (which matches the version provided by
+        // // the caller), we can just point the given orgs to the new content instead of giving them
+        // // their own version.
+        // // This is probably going to be a very expensive operation, though.
+        // List<Content> alternateVersions = this.contentCurator.getContentByVersion(
+        //     entity.getId(), entity.hashCode()
+        // );
+
+        // for (Content alt : alternateVersions) {
+        //     if (alt.equals(entity)) {
+        //         log.debug("Merging content with existing version: {} => {}", entity, alt);
+
+        //         alt.addOwner(owner);
+        //         this.contentCurator.merge(alt);
+
+        //         // Make sure every product using the old version/entity are updated to use the new one
+        //         List<Product> affectedProducts = this.productCurator.getProductsWithContent(
+        //             owner, Arrays.asList(entity.getId())
+        //         );
+
+        //         entity = this.contentCurator.updateOwnerContentReferences(
+        //             existing, alt, Arrays.asList(owner)
+        //         );
+
+        //         for (Product product : affectedProducts) {
+        //             product = (Product) product.clone();
+
+        //             for (ProductContent pc : product.getProductContent()) {
+        //                 if (entity.equals(pc.getContent())) {
+        //                     pc.setContent(alt);
+        //                 }
+        //             }
+
+        //             // Impl note: This should also take care of our entitlement cert regeneration
+        //             this.productManager.updateProduct(product, owner, regenerateEntitlementCerts);
+        //         }
+
+        //         return entity;
+        //     }
+        // }
+
+        // // Make sure we actually have something to update.
+        // if (!existing.equals(entity)) {
+        //     // If we're making the update for every owner using the content, don't bother creating
+        //     // a new version -- just do a raw update.
+        //     if (existing.getOwners().size() == 1) {
+        //         log.debug("Applying in-place update to content: {}", entity);
+
+        //         existing.merge(entity);
+        //         entity = existing;
+
+        //         this.contentCurator.merge(entity);
+
+        //         if (regenerateEntitlementCerts) {
+        //             // Every owner with a pool using any of the affected products needs an update.
+        //             this.entitlementCertGenerator.regenerateCertificatesOf(
+        //                 this.productCurator.getProductsWithContent(Arrays.asList(existing.getUuid())), true
+        //             );
+        //         }
+        //     }
+        //     else {
+        //         log.debug("Forking content and applying update: {}", entity);
+
+        //         // This org isn't the only org using the content. We need to create a new content
+        //         // instance and move the org over to the new content.
+        //         List<Owner> owners = Arrays.asList(owner);
+        //         Content copy = (Content) entity.clone();
+
+        //         // Clear the UUID so Hibernate doesn't think our copy is a detached entity
+        //         copy.setUuid(null);
+
+        //         // Get products that currently use this content...
+        //         List<Product> affectedProducts = this.productCurator.getProductsWithContent(
+        //             owner, Arrays.asList(existing.getId())
+        //         );
+
+        //         // Set the owner so when we create it, we don't end up with duplicate keys...
+        //         existing.removeOwner(owner);
+        //         copy.setOwners(owners);
+
+        //         this.contentCurator.merge(existing);
+        //         copy = this.contentCurator.create(copy);
+
+        //         // Update the products using this content so they are regenerated using the new
+        //         // content
+        //         for (Product product : affectedProducts) {
+        //             product = (Product) product.clone();
+
+        //             for (ProductContent pc : product.getProductContent()) {
+        //                 if (existing.equals(pc.getContent())) {
+        //                     pc.setContent(copy);
+        //                 }
+        //             }
+
+        //             // Impl note: This should also take care of our entitlement cert regeneration ??
+        //             this.productManager.updateProduct(product, owner, regenerateEntitlementCerts);
+        //         }
+
+        //         entity = this.contentCurator.updateOwnerContentReferences(existing, copy, owners);
+        //     }
+        // }
+
+        // return entity;
     }
 
     /**

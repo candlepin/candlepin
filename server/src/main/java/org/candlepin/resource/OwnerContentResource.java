@@ -217,7 +217,7 @@ public class OwnerContentResource {
             throw new ForbiddenException(i18n.tr("content \"{1}\" is locked", content.getId()));
         }
 
-        return this.contentManager.updateContent(((Content) existing.clone()).merge(content), owner, true);
+        return this.contentManager.updateContent(existing.merge(content), owner, true);
     }
 
     @ApiOperation(notes = "Deletes a Content", value = "remove")
