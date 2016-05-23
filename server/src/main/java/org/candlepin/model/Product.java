@@ -97,7 +97,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         name = "cp2_owner_products",
         joinColumns = {@JoinColumn(name = "product_uuid", insertable = true, updatable = true)},
         inverseJoinColumns = {@JoinColumn(name = "owner_id")})
-    @LazyCollection(LazyCollectionOption.FALSE)
+    @LazyCollection(LazyCollectionOption.EXTRA)
     @XmlTransient
     private Set<Owner> owners;
 
