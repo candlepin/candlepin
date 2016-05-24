@@ -24,6 +24,8 @@ import org.candlepin.model.ProductCurator;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.hibernate.Session;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,9 +91,9 @@ public class ProductManager {
         }
 
         // Check if we have an alternate version we can use instead.
-        List<Product> alternateVersions = this.productCurator.getProductsByVersion(
-            entity.getId(), entity.hashCode()
-        );
+        List<Product> alternateVersions = this.productCurator
+            .getProductsByVersion(entity.getId(), entity.hashCode())
+            .list();
 
         for (Product alt : alternateVersions) {
             if (alt.equals(entity)) {
@@ -148,40 +150,49 @@ public class ProductManager {
             throw new IllegalArgumentException("owner");
         }
 
+        // Open a new session so we can ensure we get a fresh state from the DB
+        Session session = this.productCurator.openSession();
+
         // This has to fetch a new instance, or we'll be unable to compare the objects
-        Product existing = this.productCurator.lookupById(owner, entity.getId());
+        Product existing = this.productCurator.fetchById(owner.getId(), entity.getId())
+            .useSession(session)
+            .uniqueResult();
 
         if (existing == null) {
             // If we're doing an exclusive update, this should be an error condition
             throw new IllegalStateException("Product has not yet been created");
         }
 
-        if (existing != entity) {
-            // We're operating on a copy of the entity. We'll merge the changes into the existing
-            // entity and then continue working with that.
-            existing.merge(entity);
+        if (existing.equals(entity)) {
+            // The specified product is already in this state. Just return what we were given
+            return entity;
         }
+
+        // Merge the changes into our managed object
+        existing.merge(entity);
 
         // Check for newer versions of the same product. We want to try to dedupe as much data as we
         // can, and if we have a newer version of the product (which matches the version provided by
         // the caller), we can just point the given orgs to the new product instead of giving them
         // their own version.
         // This is probably going to be a very expensive operation, though.
-        List<Product> alternateVersions = this.productCurator.getProductsByVersion(
-            existing.getId(), existing.hashCode()
-        );
+        List<Product> alternateVersions = this.productCurator
+            .getProductsByVersion(existing.getId(), existing.hashCode())
+            .useSession(session)
+            .list();
 
         log.debug("Checking {} alternate versions", alternateVersions.size());
         for (Product alt : alternateVersions) {
             log.debug("Checking alternate version: {}", alt);
 
             // Skip ourselves if we happen across it
-            if (alt != existing && alt.equals(existing)) {
+            if (existing.equals(alt)) {
                 log.debug("Converging product with existing: {} => {}", existing, alt);
 
                 List<Owner> owners = Arrays.asList(owner);
 
                 existing = this.productCurator.updateOwnerProductReferences(existing, alt, owners);
+                session.refresh(existing);
 
                 if (regenerateEntitlementCerts) {
                     this.entitlementCertGenerator.regenerateCertificatesOf(
@@ -191,22 +202,13 @@ public class ProductManager {
 
                 return existing;
             }
-            else {
-                if (alt == existing) {
-                    log.debug("Found own product; skipping");
-                } else if (!alt.equals(existing)) {
-                    log.debug("Products are not actually equal");
-                } else {
-                    log.debug("Something else entirely happened here");
-                }
-            }
         }
 
         // No alternate versions with which to converge. Check if we can do an in-place update instead
         if (existing.getOwners().size() == 1) {
             log.debug("Applying in-place update to product: {}", existing);
 
-            this.productCurator.merge(existing);
+            existing = this.productCurator.merge(existing);
 
             if (regenerateEntitlementCerts) {
                 this.entitlementCertGenerator.regenerateCertificatesOf(Arrays.asList(existing), true);
@@ -223,22 +225,13 @@ public class ProductManager {
         List<Owner> owners = Arrays.asList(owner);
         Product copy = (Product) existing.clone();
 
-        // Now that we have a copy with the pending changes, refresh the existing version so we
-        // don't apply those changes for other orgs
-        log.debug("CONTENT BEFORE REFRESH: {}", existing.getProductContent());
-        log.debug("NAME BEFORE REFRESH: {}", existing.getName());
-
-        this.productCurator.refresh(existing);
-
-        log.debug("AFTER REFRESH: {}", existing.getProductContent());
-        log.debug("AFTER REFRESH: {}", existing.getName());
-
         // Clear the UUID so Hibernate doesn't think our copy is a detached entity
         copy.setUuid(null);
         copy.setOwners(null);
 
         copy = this.productCurator.create(copy);
         copy = this.productCurator.updateOwnerProductReferences(existing, copy, owners);
+        session.refresh(copy);
 
         if (regenerateEntitlementCerts) {
             this.entitlementCertGenerator.regenerateCertificatesOf(
@@ -491,7 +484,7 @@ public class ProductManager {
 
             if (remove.size() > 0) {
                 log.debug("Removing {} content", remove.size());
-
+                product = (Product) product.clone();
                 product.getProductContent().removeAll(remove);
 
                 return this.updateProduct(product, owner, regenerateEntitlementCerts);

@@ -24,6 +24,7 @@ import com.google.inject.persist.Transactional;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
@@ -126,6 +127,27 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
+     * Returns a criteria that will fetch a single Product using the given owner and product IDs.
+     *
+     * @param ownerId
+     *  The ID of the owner for which to lookup a product
+     *
+     * @param productId
+     *  The RedHat ID of the product to lookup (not to be confused with the product's UUID)
+     *
+     * @return
+     *  a criteria for fetching a single product by owner and product ID
+     */
+    public CandlepinCriteria<Product> fetchById(String ownerId, String productId) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
+            .createAlias("owners", "owner")
+            .add(Restrictions.eq("owner.id", ownerId))
+            .add(Restrictions.eq("id", productId));
+
+        return new CandlepinCriteria<Product>(criteria, this.currentSession());
+    }
+
+    /**
      * Retrieves a Product instance for the specified product UUID. If a matching product could not
      * be found, this method returns null.
      *
@@ -197,15 +219,15 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @return
      *  a list of products matching the given product ID and entity version
      */
-    public List<Product> getProductsByVersion(String productId, int hashcode) {
-        return this.listByCriteria(
-            this.createSecureCriteria()
-                .add(Restrictions.eq("id", productId))
-                .add(Restrictions.or(
-                    Restrictions.isNull("entityVersion"),
-                    Restrictions.eq("entityVersion", hashcode)
-                ))
-        );
+    public CandlepinCriteria<Product> getProductsByVersion(String productId, int hashcode) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
+            .add(Restrictions.eq("id", productId))
+            .add(Restrictions.or(
+                Restrictions.isNull("entityVersion"),
+                Restrictions.eq("entityVersion", hashcode)
+            ));
+
+        return new CandlepinCriteria<Product>(criteria, this.currentSession());
     }
 
     // TODO:
@@ -409,8 +431,8 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         // Looks like we don't need to do anything here, since we generate them on request. By
         // leaving them alone, they'll be generated as needed and we save some overhead here.
 
-        this.refresh(current);
-        this.refresh(updated);
+        // this.refresh(current);
+        // this.refresh(updated);
 
         return updated;
     }

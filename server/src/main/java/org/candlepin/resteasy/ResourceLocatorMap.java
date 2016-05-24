@@ -271,7 +271,7 @@ public class ResourceLocatorMap implements Map<Method, ResourceLocator> {
         }
 
         if (log.isDebugEnabled()) {
-            log.debug(registered.toString());
+            log.trace(registered.toString());
         }
 
         if (missingProduces.length() != 0) {

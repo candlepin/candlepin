@@ -30,7 +30,9 @@ import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.Projections;
@@ -316,6 +318,72 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return query;
     }
 
+    /**
+     * Creates a detached criteria object to use as the basis of a permission-oriented entity
+     * lookup query.
+     *
+     * @return
+     *  a detached criteria object containing permission restrictions
+     */
+    protected DetachedCriteria createSecureDetachedCriteria() {
+        return this.createSecureDetachedCriteria(null);
+    }
+
+    /**
+     * Creates a detached criteria object to use as the basis of a permission-oriented entity
+     * lookup query.
+     *
+     * @param alias
+     *  The alias to use for the main entity, or null to omit an alias
+     *
+     * @return
+     *  a detached criteria object containing permission restrictions
+     */
+    protected DetachedCriteria createSecureDetachedCriteria(String alias) {
+        // Yes, sadly, this entire copy/paste is necessary because Criteria and DetachedCriteria
+        // do not have a common parent.
+
+        Principal principal = principalProvider.get();
+        DetachedCriteria query = (alias != null && !alias.equals("")) ?
+            DetachedCriteria.forClass(this.entityType, alias) :
+            DetachedCriteria.forClass(this.entityType);
+
+        /*
+         * There are situations where consumer queries are run before there is a principal,
+         * i.e. during authentication when we're looking up the consumer itself.
+         */
+        if (principal == null) {
+            return query;
+        }
+
+        // Admins do not need query filtering enabled.
+        if (principal.hasFullAccess()) {
+            return query;
+        }
+
+        Criterion finalCriterion = null;
+        for (Permission perm : principal.getPermissions()) {
+
+            Criterion crit = perm.getCriteriaRestrictions(entityType);
+            if (crit != null) {
+                log.debug("Got criteria restrictions from permissions {} for {}: {}",
+                    new Object [] {perm, entityType, crit});
+                if (finalCriterion == null) {
+                    finalCriterion = crit;
+                }
+                else {
+                    finalCriterion = Restrictions.or(finalCriterion, crit);
+                }
+            }
+        }
+
+        if (finalCriterion != null) {
+            query.add(finalCriterion);
+        }
+
+        return query;
+    }
+
     @SuppressWarnings("unchecked")
     @Transactional
     public Page<List<E>> listByCriteria(Criteria c,
@@ -408,12 +476,17 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
     }
 
-    protected Session currentSession() {
+    public Session currentSession() {
         Session sess = (Session) entityManager.get().getDelegate();
         return sess;
     }
 
-    protected EntityManager getEntityManager() {
+    public Session openSession() {
+        SessionFactory factory = this.currentSession().getSessionFactory();
+        return factory.openSession();
+    }
+
+    public EntityManager getEntityManager() {
         return entityManager.get();
     }
 
