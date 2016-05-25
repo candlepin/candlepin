@@ -426,8 +426,12 @@ public class EntitlementCertificateGenerator {
     public void regenerateCertificatesOf(Collection<Product> products, boolean lazy) {
         Set<Owner> owners = new HashSet<Owner>();
 
+        // TODO: This could fall over if a product is mapped to many owners.
         for (Product product : products) {
-            owners.addAll(product.getOwners());
+            // FIXME: THIS IS BROKEN AT THE MOMENT. UPDATE IT ONCE WE FIGURE OUT WHAT WE'RE DOING WITH
+            // CONTENT MANAGER
+            //owners.addAll();
+            throw new RuntimeException("We're broken right now; check back in 15 minutes.");
         }
 
         this.regenerateCertificatesOf(owners, products, lazy);

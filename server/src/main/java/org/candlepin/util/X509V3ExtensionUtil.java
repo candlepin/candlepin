@@ -406,7 +406,7 @@ public class X509V3ExtensionUtil extends X509Util {
             }
             content.setArches(archesList);
 
-            Boolean enabled = pc.getEnabled();
+            Boolean enabled = pc.isEnabled();
             // sku level content enable override. if on both lists, active wins.
             if (skuDisabled.contains(pc.getContent().getId())) {
                 enabled = false;

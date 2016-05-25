@@ -92,29 +92,19 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @NotNull
     private String name;
 
-    @OneToMany
-    @JoinTable(
-        name = "cp2_owner_products",
-        joinColumns = {@JoinColumn(name = "product_uuid", insertable = true, updatable = true)},
-        inverseJoinColumns = {@JoinColumn(name = "owner_id")})
-    @LazyCollection(LazyCollectionOption.FALSE)
-    @XmlTransient
-    private Set<Owner> owners;
-
     /**
      * How many entitlements per quantity
      */
     @Column
     private Long multiplier;
 
-    @OneToMany(mappedBy = "product")
-    @Cascade({ CascadeType.ALL, CascadeType.DELETE_ORPHAN })
+    @OneToMany(mappedBy = "product", orphanRemoval = true)
+    @Cascade({ CascadeType.ALL })
     @Fetch(FetchMode.SUBSELECT)
     private Set<ProductAttribute> attributes;
 
-    @ElementCollection
-    @CollectionTable(name = "cp2_product_content", joinColumns = @JoinColumn(name = "product_uuid"))
-    @Column(name = "element")
+    @OneToMany(mappedBy = "product", orphanRemoval = true)
+    @Cascade({ CascadeType.ALL })
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
     private List<ProductContent> productContent;
 
@@ -140,7 +130,11 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     private Boolean locked;
 
     protected Product() {
+        // Intentionally left empty
     }
+
+    // TODO:
+    // Remove the Owner parameter from these constructors; we no longer need it.
 
     /**
      * Constructor Use this variant when creating a new object to persist.
@@ -155,13 +149,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     public Product(String productId, String name, Owner owner, Long multiplier) {
         setId(productId);
         setName(name);
-        setOwners(new HashSet<Owner>());
         setMultiplier(multiplier);
         setAttributes(new HashSet<ProductAttribute>());
         setProductContent(new LinkedList<ProductContent>());
         setDependentProductIds(new HashSet<String>());
-
-        this.addOwner(owner);
     }
 
     public Product(String productId, String name, Owner owner, String variant, String version,
@@ -194,7 +185,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         // collection.
 
         this.setName(source.getName());
-        this.setOwners(source.getOwners());
         this.setMultiplier(source.getMultiplier());
 
         // Copy attributes
@@ -219,7 +209,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         if (source.getProductContent() != null) {
             List<ProductContent> content = new LinkedList<ProductContent>();
             for (ProductContent src : source.getProductContent()) {
-                ProductContent dest = new ProductContent(this, src.getContent(), src.getEnabled());
+                ProductContent dest = new ProductContent(this, src.getContent(), src.isEnabled());
                 dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
                 dest.setUpdated(src.getUpdated() != null ? (Date) src.getUpdated().clone() : null);
 
@@ -282,7 +272,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
             List<ProductContent> content = new LinkedList<ProductContent>();
             for (ProductContent src : source.getProductContent()) {
-                ProductContent dest = new ProductContent(this, src.getContent(), src.getEnabled());
+                ProductContent dest = new ProductContent(this, src.getContent(), src.isEnabled());
                 dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
                 dest.setUpdated(src.getUpdated() != null ? (Date) src.getUpdated().clone() : null);
 
@@ -314,7 +304,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         }
 
         // Clear the collections, since this and copy will be sharing a single instance initially
-        copy.owners = null;
         copy.attributes = null;
         copy.productContent = null;
         copy.dependentProductIds = null;
@@ -323,11 +312,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         // In most cases, our collection setters copy the contents of the input collections to their
         // own internal collections, so we don't need to worry about our two instances sharing a
         // collection.
-
-        // Copy owners
-        if (this.getOwners() != null) {
-            copy.setOwners(this.getOwners());
-        }
 
         // Copy attributes
         if (this.getAttributes() != null) {
@@ -348,7 +332,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         if (this.getProductContent() != null) {
             List<ProductContent> content = new LinkedList<ProductContent>();
             for (ProductContent src : this.getProductContent()) {
-                ProductContent dest = new ProductContent(copy, src.getContent(), src.getEnabled());
+                ProductContent dest = new ProductContent(copy, src.getContent(), src.isEnabled());
                 dest.setCreated(src.getCreated());
                 dest.setUpdated(src.getUpdated());
 
@@ -431,80 +415,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      */
     public void setName(String name) {
         this.name = name;
-    }
-
-    /**
-     * Retrieves the owners with which this product is associated. If this product is not associated
-     * with any owners, this method may return an empty set, or null.
-     * <p></p>
-     * Note that changes made to the set returned by this method will be reflected by this object
-     * and its backing data store.
-     *
-     * @return
-     *  The set of owners with which this product is associated
-     */
-    @XmlTransient
-    @Override
-    public Collection<Owner> getOwners() {
-        return this.owners;
-    }
-
-    /**
-     * Associates this product with the specified owner. If the given owner is already associated
-     * with this product, the request is silently ignored.
-     *
-     * @param owner
-     *  An owner to be associated with this product
-     *
-     * @return
-     *  True if this product was successfully associated with the given owner; false otherwise
-     */
-    public boolean addOwner(Owner owner) {
-        if (owner != null) {
-            if (this.owners == null) {
-                this.owners = new HashSet<Owner>();
-            }
-
-            return this.owners.add(owner);
-        }
-
-        return false;
-    }
-
-    /**
-     * Disassociates this product with the specified owner. If the given owner is not associated
-     * with this product, the request is silently ignored.
-     *
-     * @param owner
-     *  The owner to disassociate from this product
-     *
-     * @return
-     *  True if the product was disassociated successfully; false otherwise
-     */
-    public boolean removeOwner(Owner owner) {
-        return (this.owners != null && owner != null) ? this.owners.remove(owner) : false;
-    }
-
-    /**
-     * Sets the owners with which this product is associated.
-     *
-     * @param owners
-     *  A collection of owners to be associated with this product
-     *
-     * @return
-     *  A reference to this product
-     */
-    public Product setOwners(Collection<Owner> owners) {
-        if (this.owners == null) {
-            this.owners = new HashSet<Owner>();
-        }
-
-        this.owners.clear();
-        if (owners != null) {
-            this.owners.addAll(owners);
-        }
-
-        return this;
     }
 
     /**
@@ -719,7 +629,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             // generated properly.
             if (this.productContent != null && this.productContent.size() > 0) {
                 for (ProductContent pc : this.productContent) {
-                    builder.append(pc);
+                    builder.append(pc.getContent());
                 }
             }
 

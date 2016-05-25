@@ -252,7 +252,7 @@ public class X509ExtensionUtil  extends X509Util{
                 OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_GPG_URL_KEY), false,
                 pc.getContent().getGpgUrl()));
 
-            Boolean enabled = pc.getEnabled();
+            Boolean enabled = pc.isEnabled();
             log.debug("default enabled flag = " + enabled);
 
             // sku level content enable override. if on both lists, active wins.

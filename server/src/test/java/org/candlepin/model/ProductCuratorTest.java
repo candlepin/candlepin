@@ -605,6 +605,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         // Technically the same product:
         Product p2 = createTestProduct();
+        p2.setUuid(p.getUuid());
 
         // The content isn't quite the same. We just care about matching
         // product ids with content ids
@@ -613,6 +614,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         );
 
         contentUpdate.setUuid(content.getUuid());
+        this.contentCurator.create(content);
 
         p2.addContent(contentUpdate);
         productCurator.merge(p2);

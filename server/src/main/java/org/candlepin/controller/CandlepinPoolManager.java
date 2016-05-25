@@ -522,9 +522,6 @@ public class CandlepinPoolManager implements PoolManager {
             Product incoming = productCache.get(pid);
             Product existing = this.productCurator.lookupById(owner, pid);
 
-            // Ensure the incoming content is linked to the owner that initiated the refresh
-            incoming.setOwners(Arrays.asList(owner));
-
             if (existing == null) {
                 log.info("Creating new product for org {}: {}", owner.getKey(), pid);
 

@@ -97,6 +97,7 @@ public class DatabaseTestFixture {
     public static CandlepinLiquibaseResource liquibase = new CandlepinLiquibaseResource();
 
     @Inject protected OwnerCurator ownerCurator;
+    @Inject protected OwnerProductCurator ownerProductCurator;
     @Inject protected ProductCurator productCurator;
     @Inject protected PoolCurator poolCurator;
     @Inject protected ConsumerCurator consumerCurator;

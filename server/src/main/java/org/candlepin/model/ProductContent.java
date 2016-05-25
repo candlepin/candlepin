@@ -16,13 +16,15 @@ package org.candlepin.model;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.hibernate.annotations.Parent;
 
 import java.io.Serializable;
 
 import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -31,13 +33,17 @@ import javax.xml.bind.annotation.XmlTransient;
 /**
  * ProductContent
  */
-@Embeddable
+@Entity
+@Table(name = "cp2_product_content")
 public class ProductContent extends AbstractHibernateObject {
 
-    @Parent
+    @Id
+    @ManyToOne
+    @JoinColumn(name = "product_uuid", nullable = false, updatable = false)
     @NotNull
     private Product product;
 
+    @Id
     @ManyToOne
     @JoinColumn(name = "content_uuid", nullable = false, updatable = false)
     @NotNull
@@ -46,7 +52,7 @@ public class ProductContent extends AbstractHibernateObject {
     private Boolean enabled;
 
     public ProductContent() {
-
+        // Intentionally left empty
     }
 
     public ProductContent(Product product, Content content, Boolean enabled) {
@@ -56,9 +62,10 @@ public class ProductContent extends AbstractHibernateObject {
     }
 
     public String toString() {
-        return "ProductContent [product = " + getProduct() +
-                ", content = " + content +
-                ", enabled = " + enabled + "]";
+        return String.format(
+            "ProductContent [product = %s, content = %s, enabled = %s]",
+            this.getProduct(), this.getContent(), this.isEnabled()
+        );
     }
 
     @XmlTransient
@@ -110,14 +117,17 @@ public class ProductContent extends AbstractHibernateObject {
     /**
      * @return the enabled
      */
-    public Boolean getEnabled() {
+    public Boolean isEnabled() {
         return enabled;
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(3, 23).append(this.enabled)
-            .append(this.content.hashCode()).toHashCode();
+        return new HashCodeBuilder(3, 23)
+            // .append(this.product != null ? this.product.getUuid() : null)
+            // .append(this.content != null ? this.content.getUuid() : null)
+            .append(this.enabled)
+            .toHashCode();
     }
 
     @Override
@@ -125,11 +135,22 @@ public class ProductContent extends AbstractHibernateObject {
         if (this == other) {
             return true;
         }
+
         if (other instanceof ProductContent) {
             ProductContent that = (ProductContent) other;
-            return new EqualsBuilder().append(this.enabled, that.enabled)
-                .isEquals() && this.content.equals(that.content);
+
+            String thisProductUuid = this.product != null ? this.product.getUuid() : null;
+            String thisContentUuid = this.content != null ? this.content.getUuid() : null;
+            String thatProductUuid = that.product != null ? that.product.getUuid() : null;
+            String thatContentUuid = that.content != null ? that.content.getUuid() : null;
+
+            return new EqualsBuilder()
+                // .append(thisProductUuid, thatProductUuid)
+                // .append(thisContentUuid, thatContentUuid)
+                .append(this.enabled, that.enabled)
+                .isEquals();
         }
+
         return false;
     }
 

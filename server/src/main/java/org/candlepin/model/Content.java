@@ -373,7 +373,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      *  The set of owners with which this content is associated
      */
     @XmlTransient
-    @Override
     public Collection<Owner> getOwners() {
         return this.owners;
     }

@@ -57,7 +57,7 @@ public class ModifierTestDataGenerator {
     @Inject
     private EntitlementCurator entitlementCurator;
     @Inject
-    private ContentCurator contentCurrator;
+    private ContentCurator contentCurator;
     private Owner owner;
 
     private List<Consumer> consumers = new ArrayList<Consumer>();
@@ -71,7 +71,7 @@ public class ModifierTestDataGenerator {
         this.owner = owner;
         for (int i = 0; i < 10; i++) {
             Product prod = TestUtil.createProduct("E" + i, "EName" + i, owner);
-            productCurator.create(prod);
+            prod = productCurator.create(prod);
             engProducts.add(prod);
         }
 
@@ -112,7 +112,7 @@ public class ModifierTestDataGenerator {
 
 
             content.setModifiedProductIds(modified);
-            contentCurrator.create(content);
+            content = contentCurator.create(content);
             contents.add(content);
         }
 
@@ -126,6 +126,13 @@ public class ModifierTestDataGenerator {
          */
         for (int i = 0; i < 10; i++) {
             engProducts.get(i).addContent(contents.get(i));
+
+            org.candlepin.controller.ProductManager.log.debug("STARTING ISSUE THING. PRODUCT: {}, CONTENT: {}", engProducts.get(i), engProducts.get(i).getProductContent());
+
+
+
+
+
             productCurator.merge(engProducts.get(i));
         }
 

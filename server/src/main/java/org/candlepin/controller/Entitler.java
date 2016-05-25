@@ -315,14 +315,8 @@ public class Entitler {
         Set<Product> products = new HashSet<Product>();
 
         for (Product product : productAdapter.getProductsByIds(consumer.getOwner(), devProductIds)) {
-            for (ProductContent pc : product.getProductContent()) {
-                pc.getContent().addOwner(owner);
-
-                // VERSIONING TODO: We may need to hit the content curator here. Hopefully the update on
-                // product will cascade down.
-            }
-
-            product.addOwner(owner);
+            // This product is coming from an upstream source. Lock it so only the upstream can
+            // make changes to it
             product.setLocked(true);
 
             if (sku.equals(product.getId()) &&
