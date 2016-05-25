@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -72,12 +73,17 @@ public class AutobindRules {
             poolsBeforeContentFilter, pools.size());
 
         if (pools.size() == 0) {
-            List<String> fullList = new ArrayList<String>();
-            fullList.addAll(Arrays.asList(productIds));
-            for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
-                fullList.add(cip.getId());
+            if (compliance.getReasons().size() == 0) {
+                log.info("Consumer is compliant and does not require more entitlements.");
             }
-            log.info("No pools available to rules for products: " + fullList);
+            else {
+                Set<String> fullList = new HashSet<String>();
+                fullList.addAll(Arrays.asList(productIds));
+                for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
+                    fullList.add(cip.getProductId());
+                }
+                log.info("No pools available to complete compliance for the set of proudcts: " + fullList);
+            }
             return null;
         }
 
