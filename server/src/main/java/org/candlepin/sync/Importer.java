@@ -339,6 +339,8 @@ public class Importer {
         ConflictOverrides overrides)
         throws IOException, ImporterException {
 
+        ownerCurator.lockAndLoad(owner);
+
         File metadata = importFiles.get(ImportFile.META.fileName());
         if (metadata == null) {
             throw new ImporterException(i18n.tr("The archive does not contain the " +
