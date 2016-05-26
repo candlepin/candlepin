@@ -142,6 +142,70 @@ describe 'Refresh Pools' do
     @cp.get_consumer(consumer.uuid).entitlementCount.should == 1
   end
 
+  it 'handle remove single stacked subpools when entitlement is revoked' do
+    #1337906
+    owner = create_owner random_string
+    # create subscription with sub-pool data:
+    datacenter_product = create_product('vdc', 'vdc', {
+      :attributes => {
+        :virt_limit => "unlimited",
+        :stacking_id => "stackme",
+        :sockets => "2",
+        'multi-entitlement' => "yes"
+      }
+    })
+    derived_product = create_product('vdc-derived', 'vdc-derived', {
+      :attributes => {
+          :cores => 2,
+          :stacking_id => "stackme-derived",
+          :sockets=>4
+      }
+    })
+
+    sub1 = @cp.create_subscription(owner['key'], datacenter_product.id,
+      10, [], '', '', '', nil, nil,
+      {
+        'derived_product_id' => derived_product['id']
+      })
+    # refresh so the owner has it
+    @cp.refresh_pools(owner['key'])
+
+    consumer_id = random_string("consumer")
+    user = user_client(owner, random_string("user"))
+    consumer = consumer_client(user, consumer_id)
+
+    #Now the owner should have UNMAPPED_GUEST pool
+    #and a NORMAL pool
+    pools = @cp.list_pools({:owner => owner.id})
+    pools.length.should == 2
+
+    normal_pool = @cp.list_pools({:owner => owner.id, 
+          :product => datacenter_product.id})[0]
+
+    #Consume the normal pool, that should create a 
+    #STACK_DERIVED pool 
+    consumer.consume_pool(normal_pool.id, {:quantity => 1}).size.should == 1
+ 
+    #Extra stack derived pool is created 
+    #Now the owner has UNMAPPED_GUEST pool
+    #and STACK_DERIVED pool
+    @cp.list_pools({:owner => owner.id, 
+          :product => derived_product.id}).length.should == 2
+ 
+    #We delete a subscription. This should cause removal of the
+    #pools during refresh pool
+    @cp.delete_subscription(sub1['id']) 
+
+    #This refresh should remove all the pools
+    @cp.refresh_pools(owner['key'])
+
+    # All the pools should be deleted, especially the stack
+    # derived pool.
+    pools = @cp.list_pools({:owner => owner.id})
+    pools.length.should == 0
+  end
+
+
   it 'handle derived products being removed' do
    # 998317: is caused by refresh pools dying with an NPE
    # this happens when subscriptions no longer have
