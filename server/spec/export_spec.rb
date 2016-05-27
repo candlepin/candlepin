@@ -91,7 +91,7 @@ describe 'Export', :serial => true do
       available_certs[c['serial']] = c
     end
 
-    exported_entitlement_certs.size.should == 5
+    exported_entitlement_certs.size.should == 6
 
     exported_entitlement_certs.each do |file|
       exported_cert = File.read(File.join(entitlement_certs_dir, file))
@@ -126,7 +126,7 @@ describe 'Export', :serial => true do
     end
 
     # All 5 should be there, despite one cert is for a virt product
-    exported_entitlement_certs.size.should == 5
+    exported_entitlement_certs.size.should == 6
 
     exported_entitlement_certs.each do |file|
       exported_cert = File.read(File.join(entitlement_certs_dir, file))
