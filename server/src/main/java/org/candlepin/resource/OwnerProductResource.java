@@ -198,7 +198,8 @@ public class OwnerProductResource {
         return content;
     }
 
-    @ApiOperation(notes = "Retrieves a list of Products", value = "list")
+    @ApiOperation(notes = "Retrieves a list of Products", response=Product.class,
+        responseContainer="List", value = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response list(

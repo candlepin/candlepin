@@ -46,7 +46,7 @@ public class ResultIteratorTest extends DatabaseTestFixture {
         this.ownerCurator.create(TestUtil.createOwner());
         Query query = this.session.createQuery("SELECT o FROM Owner o");
 
-        ResultIterator<Owner> iterator = new ResultIterator(
+        ResultIterator<Owner> iterator = new ResultIterator<Owner>(
             this.session, query.scroll(ScrollMode.FORWARD_ONLY), 0, false
         );
 
@@ -62,7 +62,7 @@ public class ResultIteratorTest extends DatabaseTestFixture {
     public void testHasNextWithoutElements() {
         Query query = this.session.createQuery("SELECT o FROM Owner o");
 
-        ResultIterator<Owner> iterator = new ResultIterator(
+        ResultIterator<Owner> iterator = new ResultIterator<Owner>(
             this.session, query.scroll(ScrollMode.FORWARD_ONLY), 0, false
         );
 
@@ -85,7 +85,7 @@ public class ResultIteratorTest extends DatabaseTestFixture {
 
         Query query = this.session.createQuery("SELECT o FROM Owner o");
 
-        ResultIterator<Owner> iterator = new ResultIterator(
+        ResultIterator<Owner> iterator = new ResultIterator<Owner>(
             this.session, query.scroll(ScrollMode.FORWARD_ONLY), 0, false
         );
 
@@ -111,7 +111,7 @@ public class ResultIteratorTest extends DatabaseTestFixture {
     public void testNextWithoutElements() {
         Query query = this.session.createQuery("SELECT o FROM Owner o");
 
-        ResultIterator<Owner> iterator = new ResultIterator(
+        ResultIterator<Owner> iterator = new ResultIterator<Owner>(
             this.session, query.scroll(ScrollMode.FORWARD_ONLY), 0, false
         );
 
@@ -128,7 +128,7 @@ public class ResultIteratorTest extends DatabaseTestFixture {
         this.ownerCurator.create(TestUtil.createOwner());
         Query query = this.session.createQuery("SELECT o FROM Owner o");
 
-        ResultIterator<Owner> iterator = new ResultIterator(
+        ResultIterator<Owner> iterator = new ResultIterator<Owner>(
             this.session, query.scroll(ScrollMode.FORWARD_ONLY), 0, false
         );
 
