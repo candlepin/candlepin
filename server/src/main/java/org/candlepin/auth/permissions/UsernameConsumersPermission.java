@@ -53,7 +53,7 @@ public class UsernameConsumersPermission implements Permission, Serializable {
         // Implied full access to the relevant Consumers:
         if (target.getClass().equals(Consumer.class)) {
             return ((Consumer) target).getOwner().getKey().equals(owner.getKey()) &&
-                ((Consumer) target).getUsername().equals(user.getUsername()) &&
+                ((Consumer) target).getUsername().equalsIgnoreCase(user.getUsername()) &&
                 Access.ALL.provides(required);
         }
 
