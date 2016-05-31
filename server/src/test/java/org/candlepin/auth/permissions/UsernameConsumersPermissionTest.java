@@ -48,7 +48,7 @@ public class UsernameConsumersPermissionTest {
     }
 
     @Test
-    public void allowsMismatchedUsernameComparisons() {
+    public void allowsMismatchedUsernameCaseComparison() {
         Consumer c = new Consumer("consumer", username.toUpperCase(), owner, null);
         assertTrue(perm.canAccess(c, SubResource.NONE, Access.ALL));
         assertTrue(perm.canAccess(c, SubResource.NONE, Access.CREATE));
