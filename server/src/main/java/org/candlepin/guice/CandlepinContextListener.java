@@ -220,7 +220,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         });
 
         modules.add(new CandlepinModule(config));
-        modules.add(new CandlepinFilterModule());
+        modules.add(new CandlepinFilterModule(config));
 
         return modules;
     }
