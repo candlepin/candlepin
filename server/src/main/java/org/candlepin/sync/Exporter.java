@@ -36,6 +36,7 @@ import org.candlepin.model.ProvidedProduct;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
+import org.candlepin.service.ExportExtensionAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -86,12 +87,14 @@ public class Exporter {
     private EntitlementCertServiceAdapter entCertAdapter;
     private ProductServiceAdapter productAdapter;
     private EntitlementCurator entitlementCurator;
+    private ExportExtensionAdapter exportExtensionAdapter;
     private PKIUtility pki;
     private Configuration config;
     private ExportRules exportRules;
     private PrincipalProvider principalProvider;
 
     private static final String LEGACY_RULES_FILE = "/rules/default-rules.js";
+    private static final String EXTENSIONS_BASE_DIR = "extensions";
 
     @Inject
     public Exporter(ConsumerTypeCurator consumerTypeCurator, MetaExporter meta,
@@ -104,7 +107,8 @@ public class Exporter {
         PrincipalProvider principalProvider, DistributorVersionCurator distVerCurator,
         DistributorVersionExporter distVerExporter,
         CdnCurator cdnCurator,
-        CdnExporter cdnExporter) {
+        CdnExporter cdnExporter,
+        ExportExtensionAdapter exportExtensionAdapter) {
 
         this.consumerTypeCurator = consumerTypeCurator;
 
@@ -118,6 +122,7 @@ public class Exporter {
         this.productAdapter = productAdapter;
         this.productCertExporter = productCertExporter;
         this.entitlementCurator = entitlementCurator;
+        this.exportExtensionAdapter = exportExtensionAdapter;
         this.entExporter = entExporter;
         this.pki = pki;
         this.config = config;
@@ -131,12 +136,24 @@ public class Exporter {
         mapper = SyncUtils.getObjectMapper(this.config);
     }
 
+    // Currently only used in testing.
     public File getFullExport(Consumer consumer) throws ExportCreationException {
-        return getFullExport(consumer, null, null, null);
+        return getFullExport(consumer, null, null, null, new HashMap<String, String>());
     }
 
-    public File getFullExport(Consumer consumer, String cdnKey, String webAppPrefix,
-        String apiUrl)
+    /**
+     * Creates a manifest archive for the target {@link Consumer}.
+     *
+     * @param consumer the target consumer to export.
+     * @param cdnKey the CDN key to store in the meta file.
+     * @param webUrl the URL pointing to the manifest's originating web application.
+     * @param apiUrl the API URL pointing to the manifest's originating candlepin API.
+     * @param extensionData the data to pass to the {@link ExportExtensionAdapter}
+     * @return a newly created manifest file for the target consumer.
+     * @throws ExportCreationException when an error occurs while creating the manifest file.
+     */
+    public File getFullExport(Consumer consumer, String cdnKey, String webUrl,
+        String apiUrl, Map<String, String> extensionData)
         throws ExportCreationException {
         // TODO: need to delete tmpDir (which contains the archive,
         // which we need to return...)
@@ -146,7 +163,7 @@ public class Exporter {
             baseDir.mkdir();
 
             exportMeta(baseDir, cdnKey);
-            exportConsumer(baseDir, consumer, webAppPrefix, apiUrl);
+            exportConsumer(baseDir, consumer, webUrl, apiUrl);
             exportIdentityCertificate(baseDir, consumer);
             exportEntitlements(baseDir, consumer);
             exportEntitlementsCerts(baseDir, consumer, null, true);
@@ -155,6 +172,7 @@ public class Exporter {
             exportRules(baseDir);
             exportDistributorVersions(baseDir);
             exportContentDeliveryNetworks(baseDir);
+            exportExtensionData(baseDir, consumer, extensionData);
             return makeArchive(consumer, tmpDir, baseDir);
         }
         catch (IOException e) {
@@ -646,5 +664,20 @@ public class Exporter {
                 }
             }
         }
+    }
+
+    /**
+     * Extend the manifest via the {@link ExportExtensionAdapter}. The default implementation does
+     * nothing.
+     * @param baseDir the base directory of the manifest contents.
+     * @param targetConsumer the consumer that is being exported.
+     * @param extensionData provided extension data.
+     * @throws IOException when an error occurs in the adapter.
+     */
+    private void exportExtensionData(File baseDir, Consumer targetConsumer, Map<String, String> extensionData)
+        throws IOException {
+        File extensionDir = new File(baseDir.getCanonicalPath(), EXTENSIONS_BASE_DIR);
+        extensionDir.mkdir();
+        exportExtensionAdapter.extendManifest(extensionDir, targetConsumer, extensionData);
     }
 }
