@@ -168,7 +168,6 @@ public class OwnerContentResourceTest {
         content.setUuid(contentUuid);
 
         when(product.getId()).thenReturn(productId);
-        when(product.getOwners()).thenReturn(Util.asSet(owner));
 
         content.addOwner(owner);
 

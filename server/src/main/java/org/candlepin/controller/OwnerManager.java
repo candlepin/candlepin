@@ -26,11 +26,11 @@ import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 
@@ -56,7 +56,7 @@ public class OwnerManager {
     @Inject private ExporterMetadataCurator exportCurator;
     @Inject private ImportRecordCurator importRecordCurator;
     @Inject private PermissionBlueprintCurator permissionCurator;
-    @Inject private ProductCurator prodCurator;
+    @Inject private OwnerProductCurator ownerProductCurator;
     @Inject private ProductManager prodManager;
     @Inject private ContentCurator contentCurator;
     @Inject private ContentManager contentManager;
@@ -133,7 +133,7 @@ public class OwnerManager {
             permissionCurator.delete(perm);
         }
 
-        for (Product p : prodCurator.listByOwner(owner)) {
+        for (Product p : this.ownerProductCurator.getProductsByOwner(owner)) {
             log.info("Deleting product: {}", p);
             this.prodManager.removeProduct(p, owner);
         }

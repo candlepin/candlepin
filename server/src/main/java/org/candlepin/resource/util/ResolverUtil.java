@@ -18,9 +18,9 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.dto.Subscription;
 
@@ -37,13 +37,13 @@ public class ResolverUtil {
 
     private I18n i18n;
     private OwnerCurator ownerCurator;
-    private ProductCurator productCurator;
+    private OwnerProductCurator ownerProductCurator;
 
     @Inject
-    public ResolverUtil(I18n i18n, OwnerCurator ownerCurator, ProductCurator productCurator) {
+    public ResolverUtil(I18n i18n, OwnerCurator ownerCurator, OwnerProductCurator ownerProductCurator) {
         this.i18n = i18n;
         this.ownerCurator = ownerCurator;
-        this.productCurator = productCurator;
+        this.ownerProductCurator = ownerProductCurator;
     }
 
     public Owner resolveOwner(Owner owner) {
@@ -91,7 +91,7 @@ public class ResolverUtil {
     }
 
     public Product findProduct(Owner owner, String productId) {
-        Product product = productCurator.lookupById(owner, productId);
+        Product product = this.ownerProductCurator.getProductById(owner, productId);
 
         if (product == null) {
             throw new NotFoundException(i18n.tr(

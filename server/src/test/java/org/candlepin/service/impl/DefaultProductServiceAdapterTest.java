@@ -23,10 +23,10 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.X509ExtensionUtil;
@@ -47,7 +47,7 @@ import java.util.List;
 public class DefaultProductServiceAdapterTest {
     private String someid = "deadbeef";
     private DefaultProductServiceAdapter dpsa;
-    private ProductCurator pc;
+    private OwnerProductCurator opc;
     private ProductCertificateCurator pcc;
     private UniqueIdGenerator idgen;
     private PKIUtility pki;
@@ -56,7 +56,7 @@ public class DefaultProductServiceAdapterTest {
 
     @Before
     public void init() {
-        pc = mock(ProductCurator.class);
+        opc = mock(OwnerProductCurator.class);
         idgen = mock(UniqueIdGenerator.class);
         Configuration config = mock(Configuration.class);
         pki = mock(PKIUtility.class);
@@ -64,7 +64,7 @@ public class DefaultProductServiceAdapterTest {
         cc = mock(ContentCurator.class);
         pcc = spy(new ProductCertificateCurator(pki, extUtil));
         when(config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING)).thenReturn(false);
-        dpsa = new DefaultProductServiceAdapter(pc, pcc, cc, idgen);
+        dpsa = new DefaultProductServiceAdapter(opc, pcc, cc, idgen);
     }
 
     @Test
@@ -73,7 +73,7 @@ public class DefaultProductServiceAdapterTest {
         List<String> ids = new ArrayList<String>();
         ids.add(someid);
         dpsa.getProductsByIds(o, ids);
-        verify(pc).listAllByIds(eq(o), eq(ids));
+        verify(opc).getProductsByIds(eq(o), eq(ids));
     }
 
     @Test

@@ -136,8 +136,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     public List<E> listAllByIds(Collection<? extends Serializable> ids) {
-        return listByCriteria(
-            createSecureCriteria().add(unboundedInCriterion("id", ids)));
+        return listByCriteria(createSecureCriteria().add(unboundedInCriterion("id", ids)));
     }
 
     @SuppressWarnings("unchecked")
@@ -263,7 +262,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return this.createSecureCriteria(null);
     }
 
-
     /**
      * Gives the permissions a chance to add aliases and then restrictions to the query.
      * Uses an "or" so a principal could carry permissions for multiple owners
@@ -276,46 +274,52 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return Criteria Final criteria query with all filters applied.
      */
     protected Criteria createSecureCriteria(String alias) {
-        Principal principal = principalProvider.get();
-        Criteria query = (alias != null && !alias.equals("")) ?
-            currentSession().createCriteria(entityType, alias) :
-            currentSession().createCriteria(entityType);
+        return this.createSecureCriteria(this.entityType, alias);
+    }
 
-        /*
-         * There are situations where consumer queries are run before there is a principal,
-         * i.e. during authentication when we're looking up the consumer itself.
-         */
-        if (principal == null) {
-            return query;
-        }
+    /**
+     * Creates a "secure" criteria for the given entity class. The criteria object returned will
+     * have zero or more restrictions applied to the entity class based on the current principal's
+     * permissions.
+     *
+     * @param entityClass
+     *  The class of entity to be retrieved and restricted by the generated criteria
+     *
+     * @param alias
+     *  The alias to assign to the root entity; ignored if null
+     *
+     * @return
+     *  a new Criteria instance with any applicable entity restrictions
+     */
+    protected Criteria createSecureCriteria(Class entityClass, String alias) {
+        Criteria criteria = (alias != null && alias.length() > 0) ?
+            this.currentSession().createCriteria(entityClass, alias) :
+            this.currentSession().createCriteria(entityClass);
 
+        Principal principal = this.principalProvider.get();
+        Criterion restrictions = null;
 
-        // Admins do not need query filtering enabled.
-        if (principal.hasFullAccess()) {
-            return query;
-        }
+        // If we do not yet have a principal (during authentication) or the principal has full
+        // access, skip the restriction building
+        if (principal != null && !principal.hasFullAccess()) {
+            for (Permission permission : principal.getPermissions()) {
+                Criterion restriction = permission.getCriteriaRestrictions(entityClass);
 
-        Criterion finalCriterion = null;
-        for (Permission perm : principal.getPermissions()) {
+                if (restriction != null) {
+                    log.debug("Adding criteria restriction from permission {} for {}: {}",
+                        permission, entityClass, restriction);
 
-            Criterion crit = perm.getCriteriaRestrictions(entityType);
-            if (crit != null) {
-                log.debug("Got criteria restrictions from permissions {} for {}: {}",
-                    new Object [] {perm, entityType, crit});
-                if (finalCriterion == null) {
-                    finalCriterion = crit;
-                }
-                else {
-                    finalCriterion = Restrictions.or(finalCriterion, crit);
+                    restrictions = (restrictions != null) ?
+                        Restrictions.or(restrictions, restriction) : restriction;
                 }
             }
         }
 
-        if (finalCriterion != null) {
-            query.add(finalCriterion);
+        if (restrictions != null) {
+            criteria.add(restrictions);
         }
 
-        return query;
+        return criteria;
     }
 
     /**

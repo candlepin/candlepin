@@ -16,10 +16,10 @@ package org.candlepin.service.impl;
 
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 
@@ -33,18 +33,18 @@ import java.util.List;
  */
 public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
-    private ProductCurator prodCurator;
+    private OwnerProductCurator ownerProductCurator;
 
     // for product cert storage/generation - not sure if this should go in
     // a separate service?
     private ProductCertificateCurator prodCertCurator;
 
     @Inject
-    public DefaultProductServiceAdapter(ProductCurator prodCurator,
+    public DefaultProductServiceAdapter(OwnerProductCurator ownerProductCurator,
         ProductCertificateCurator prodCertCurator, ContentCurator contentCurator,
         UniqueIdGenerator idGenerator) {
 
-        this.prodCurator = prodCurator;
+        this.ownerProductCurator = ownerProductCurator;
         this.prodCertCurator = prodCertCurator;
     }
 
@@ -55,7 +55,7 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
     @Override
     public List<Product> getProductsByIds(Owner owner, Collection<String> ids) {
-        return prodCurator.listAllByIds(owner, ids);
+        return this.ownerProductCurator.getProductsByIds(owner, ids);
     }
 
 }

@@ -96,7 +96,7 @@ public class ProductResource {
      *  the Product instance for the product with the specified id
      */
     protected Product fetchProduct(String productUuid) {
-        Product product = this.productCurator.lookupByUuid(productUuid);
+        Product product = this.productCurator.find(productUuid);
 
         if (product == null) {
             throw new NotFoundException(

@@ -152,7 +152,7 @@ public class TestUtil {
     }
 
     public static Product createProduct(String id, String name, Owner owner) {
-        Product rhel = new Product(id, name, owner);
+        Product rhel = new Product(id, name, null);
 
         ProductAttribute a1 = new ProductAttribute("a1", "a1");
         rhel.addAttribute(a1);

@@ -68,6 +68,7 @@ import org.candlepin.model.HypervisorId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
@@ -160,9 +161,12 @@ public class ConsumerResource {
     private Pattern consumerPersonNamePattern;
 
     private static Logger log = LoggerFactory.getLogger(ConsumerResource.class);
+    private static final int FEED_LIMIT = 1000;
+
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductCurator productCurator;
+    private OwnerProductCurator ownerProductCurator;
     private SubscriptionServiceAdapter subAdapter;
     private EntitlementCurator entitlementCurator;
     private IdentityCertServiceAdapter identityCertService;
@@ -173,7 +177,6 @@ public class ConsumerResource {
     private EventFactory eventFactory;
     private EventCurator eventCurator;
     private EventAdapter eventAdapter;
-    private static final int FEED_LIMIT = 1000;
     private Exporter exporter;
     private PoolManager poolManager;
     private ConsumerRules consumerRules;
@@ -193,6 +196,7 @@ public class ConsumerResource {
     public ConsumerResource(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
         ProductCurator productCurator,
+        OwnerProductCurator ownerProductCurator,
         SubscriptionServiceAdapter subAdapter,
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
@@ -212,6 +216,7 @@ public class ConsumerResource {
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
         this.productCurator = productCurator;
+        this.ownerProductCurator = ownerProductCurator;
         this.subAdapter = subAdapter;
         this.entitlementCurator = entitlementCurator;
         this.identityCertService = identityCertService;
@@ -1986,7 +1991,7 @@ public class ConsumerResource {
 
         for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
             String prodId = cip.getProductId();
-            Product prod = this.productCurator.lookupById(consumer.getOwner(), prodId);
+            Product prod = this.ownerProductCurator.getProductById(consumer.getOwner(), prodId);
 
             if (prod != null) {
                 enricher.enrich(cip, prod);

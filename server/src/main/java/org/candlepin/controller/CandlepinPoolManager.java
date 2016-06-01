@@ -37,6 +37,7 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
@@ -123,6 +124,7 @@ public class CandlepinPoolManager implements PoolManager {
     private ContentCurator contentCurator;
     private ContentManager contentManager;
     private OwnerCurator ownerCurator;
+    private OwnerProductCurator ownerProductCurator;
     private PinsetterKernel pinsetterKernel;
 
     /**
@@ -152,6 +154,7 @@ public class CandlepinPoolManager implements PoolManager {
         ContentCurator contentCurator,
         ContentManager contentManager,
         OwnerCurator ownerCurator,
+        OwnerProductCurator ownerProductCurator,
         PinsetterKernel pinsetterKernel,
         I18n i18n) {
 
@@ -174,6 +177,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.contentCurator = contentCurator;
         this.contentManager = contentManager;
         this.ownerCurator = ownerCurator;
+        this.ownerProductCurator = ownerProductCurator;
         this.pinsetterKernel = pinsetterKernel;
         this.i18n = i18n;
     }
@@ -498,7 +502,7 @@ public class CandlepinPoolManager implements PoolManager {
         Product resolved = null;
 
         if (product != null) {
-            resolved = this.productCurator.lookupById(owner, product.getId());
+            resolved = this.ownerProductCurator.getProductById(owner, product.getId());
 
             if (resolved == null) {
                 // This should never happen.
@@ -518,9 +522,11 @@ public class CandlepinPoolManager implements PoolManager {
         Set<Product> changedProducts = Util.newSet();
 
         for (String pid : productCache.keySet()) {
+            log.debug("...?");
+
             // If the pid key and product.getId() don't match, we'll have some serious issues here.
             Product incoming = productCache.get(pid);
-            Product existing = this.productCurator.lookupById(owner, pid);
+            Product existing = this.ownerProductCurator.getProductById(owner, pid);
 
             if (existing == null) {
                 log.info("Creating new product for org {}: {}", owner.getKey(), pid);
@@ -537,6 +543,9 @@ public class CandlepinPoolManager implements PoolManager {
                 incoming = this.productManager.updateProduct(incoming, owner, false);
 
                 changedProducts.add(incoming);
+            }
+            else {
+                log.debug("products must be equal...??? {}, {}", existing, incoming);
             }
         }
 

@@ -77,127 +77,13 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      *  was not found.
      */
     public Product lookupByName(Owner owner, String name) {
-        return (Product) this.createSecureCriteria()
-            .createAlias("owners", "owner")
+        return (Product) this.createSecureCriteria(OwnerProduct.class, null)
+            .createAlias("owner", "owner")
+            .createAlias("product", "product")
+            .setProjection(Projections.property("product"))
             .add(Restrictions.eq("owner.id", owner.getId()))
-            .add(Restrictions.eq("name", name))
+            .add(Restrictions.eq("product.name", name))
             .uniqueResult();
-    }
-
-    /**
-     * Performs an owner-agnostic product lookup by product ID.
-     *
-     * @deprecated
-     *  This method is provided for legacy functionality only and may return the incorrect product
-     *  instance in situations where multiple owners exist with the same product.Use lookupById with
-     *  a specific owner to get accurate results.
-     *
-     * @param id Product ID to lookup. (note: not the database ID)
-     * @return the Product which matches the given id.
-     */
-    @Deprecated
-    @Transactional
-    public Product lookupById(String id) {
-        List<Product> products = (List<Product>) this.createSecureCriteria().add(Restrictions.eq("id", id));
-        return products.size() > 0 ? products.get(0) : null;
-    }
-
-    /**
-     * @param owner owner to lookup product for
-     * @param id Product ID to lookup. (note: not the database ID)
-     * @return the Product which matches the given id.
-     */
-    @Transactional
-    public Product lookupById(Owner owner, String id) {
-        return this.lookupById(owner.getId(), id);
-    }
-
-    /**
-     * @param ownerId The ID of the owner for which to lookup a product
-     * @param productId The ID of the product to lookup. (note: not the database ID)
-     * @return the Product which matches the given id.
-     */
-    @Transactional
-    public Product lookupById(String ownerId, String productId) {
-        return (Product) this.createSecureCriteria()
-            .createAlias("owners", "owner")
-            .add(Restrictions.eq("owner.id", ownerId))
-            .add(Restrictions.eq("id", productId))
-            .uniqueResult();
-    }
-
-    /**
-     * Returns a criteria that will fetch a single Product using the given owner and product IDs.
-     *
-     * @param ownerId
-     *  The ID of the owner for which to lookup a product
-     *
-     * @param productId
-     *  The RedHat ID of the product to lookup (not to be confused with the product's UUID)
-     *
-     * @return
-     *  a criteria for fetching a single product by owner and product ID
-     */
-    public CandlepinCriteria<Product> fetchById(String ownerId, String productId) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .createAlias("owners", "owner")
-            .add(Restrictions.eq("owner.id", ownerId))
-            .add(Restrictions.eq("id", productId));
-
-        return new CandlepinCriteria<Product>(criteria, this.currentSession());
-    }
-
-    /**
-     * Retrieves a Product instance for the specified product UUID. If a matching product could not
-     * be found, this method returns null.
-     *
-     * @param uuid
-     *  The UUID of the product to retrieve
-     *
-     * @return
-     *  the Product instance for the product with the specified UUID or null if a matching product
-     *  was not found.
-     */
-    @Transactional
-    public Product lookupByUuid(String uuid) {
-        return (Product) this.createSecureCriteria()
-            .add(Restrictions.eq("uuid", uuid)).uniqueResult();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Transactional
-    public List<Product> listByOwner(Owner owner) {
-        return this.createSecureCriteria()
-            .createAlias("owners", "owner")
-            .add(Restrictions.eq("owner.id", owner.getId()))
-            .list();
-    }
-
-    public List<Product> listAllByIds(Owner owner, Collection<? extends Serializable> ids) {
-        return this.listByCriteria(
-            this.createSecureCriteria()
-                .createAlias("owners", "owner")
-                .add(Restrictions.eq("owner.id", owner.getId()))
-                .add(Restrictions.in("id", ids))
-        );
-    }
-
-    /**
-     * List all products with a Red Hat ID matching any of the IDs provided. Note that this method
-     * may return multiple products for a given ID if multiple owners have a product with the same
-     * ID.
-     *
-     * @param ids
-     *  A collection of product IDs for which to search
-     *
-     * @return
-     *  a list of Product instances with IDs matching those provided
-     */
-    @Override
-    public List<Product> listAllByIds(Collection<? extends Serializable> ids) {
-        return this.listByCriteria(
-            this.createSecureCriteria().add(Restrictions.in("id", ids))
-        );
     }
 
     public List<Product> listAllByUuids(Collection<? extends Serializable> uuids) {
@@ -368,14 +254,15 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             return new LinkedList<Product>();
         }
 
-        return this.createSecureCriteria()
-            .createAlias("productContent", "pcontent")
+        return this.createSecureCriteria(OwnerProduct.class, null)
+            .createAlias("product", "product")
+            .createAlias("product.productContent", "pcontent")
             .createAlias("pcontent.content", "content")
-            .createAlias("owners", "owner")
+            .createAlias("owner", "owner")
             .add(Restrictions.eq("owner.id", owner.getId()))
             .add(Restrictions.in("content.id", contentIds))
             .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
-            // .setProjection(Projections.id())
+            .setProjection(Projections.property("product"))
             .list();
     }
 

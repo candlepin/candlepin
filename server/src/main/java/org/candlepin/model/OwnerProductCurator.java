@@ -17,10 +17,14 @@ package org.candlepin.model;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Session;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Restrictions;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -42,51 +46,106 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         super(OwnerProduct.class);
     }
 
+    public Product getProductById(Owner owner, String productId) {
+        return this.getProductById(owner.getId(), productId);
+    }
+
+    @Transactional
+    public Product getProductById(String ownerId, String productId) {
+        // String hql = "SELECT p " +
+        //     "FROM OwnerProduct op " +
+        //     "  JOIN op.product p " +
+        //     "  JOIN op.owner o "+
+        //     "WHERE o = :owner " +
+        //     "  p.id = :pid";
+
+        // return (Product) this.getEntityManager()
+        //     .createQuery(hql, Product.class)
+        //     .setParameter("owner", owner)
+        //     .setParameter("pid", productId)
+        //     .getSingleResult();
+
+        return (Product) this.createSecureCriteria()
+            .createAlias("owner", "owner")
+            .createAlias("product", "product")
+            .setProjection(Projections.property("product"))
+            .add(Restrictions.eq("owner.id", ownerId))
+            .add(Restrictions.eq("product.id", productId))
+            .uniqueResult();
+    }
+
     @Transactional
     public List<Owner> getOwnersByProduct(Product product) {
-        String hql = "SELECT o " +
-            "FROM OwnerProduct op " +
-            "  JOIN op.product p " +
-            "  JOIN op.owner o "+
-            "WHERE p = :product";
+        // String hql = "SELECT o " +
+        //     "FROM OwnerProduct op " +
+        //     "  JOIN op.product p " +
+        //     "  JOIN op.owner o "+
+        //     "WHERE p = :product";
 
-        return (List<Owner>) this.getEntityManager()
-            .createQuery(hql, Owner.class)
-            .setParameter("product", product)
-            .getResultList();
+        // return (List<Owner>) this.getEntityManager()
+        //     .createQuery(hql, Owner.class)
+        //     .setParameter("product", product)
+        //     .getResultList();
+
+        return (List<Owner>) this.createSecureCriteria()
+            .createAlias("product", "product")
+            .setProjection(Projections.property("owner"))
+            .add(Restrictions.eq("product.id", product.getId()))
+            .list();
     }
 
     @Transactional
     public List<Product> getProductsByOwner(Owner owner) {
-        String hql = "SELECT o " +
-            "FROM OwnerProduct op " +
-            "  JOIN op.product p " +
-            "  JOIN op.owner o "+
-            "WHERE o = :owner";
+        // String hql = "SELECT p " +
+        //     "FROM OwnerProduct op " +
+        //     "  JOIN op.product p " +
+        //     "  JOIN op.owner o "+
+        //     "WHERE o = :owner";
 
-        return (List<Product>) this.getEntityManager()
-            .createQuery(hql, Product.class)
-            .setParameter("owner", owner)
-            .getResultList();
+        // return (List<Product>) this.getEntityManager()
+        //     .createQuery(hql, Product.class)
+        //     .setParameter("owner", owner)
+        //     .getResultList();
+
+        return (List<Product>) this.createSecureCriteria()
+            .createAlias("owner", "owner")
+            .setProjection(Projections.property("product"))
+            .add(Restrictions.eq("owner.id", owner.getId()))
+            .list();
+    }
+
+    @Transactional
+    public List<Product> getProductsByIds(Owner owner, Collection<? extends Serializable> productIds) {
+        Criteria criteria = this.createSecureCriteria()
+            .createAlias("owner", "owner")
+            .createAlias("product", "product")
+            .setProjection(Projections.property("product"))
+            .add(Restrictions.eq("owner.id", owner.getId()));
+
+        if (productIds != null && productIds.size() > 0) {
+            criteria.add(this.unboundedInCriterion("product.id", productIds));
+        }
+
+        return (List<Product>) criteria.list();
     }
 
     @Transactional
     public Long getOwnerCount(Product product) {
         return this.getEntityManager()
-            .createQuery("SELECT count(op) FROM OwnerProduct op WHERE op.product = :product", Long.class)
-            .setParameter("product", product)
+            .createQuery("SELECT count(op) FROM OwnerProduct op WHERE op.product.id = :product_id", Long.class)
+            .setParameter("product_id", product.getId())
             .getSingleResult();
     }
 
     @Transactional
     public boolean isProductMappedToOwner(Product product, Owner owner) {
         String hql = "SELECT count(op) FROM OwnerProduct op " +
-            "WHERE op.owner = :owner AND op.product = :product";
+            "WHERE op.owner.id = :owner_id AND op.product.id = :product_uuid";
 
-        int count = (Integer) this.getEntityManager()
+        long count = (Long) this.getEntityManager()
             .createQuery(hql)
-            .setParameter("owner", owner)
-            .setParameter("product", product)
+            .setParameter("owner_id", owner.getId())
+            .setParameter("product_uuid", product.getUuid())
             .getSingleResult();
 
         return count > 0;
@@ -104,14 +163,40 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
     }
 
     @Transactional
+    public int mapProductToOwners(Product product, Owner... owners) {
+        int count = 0;
+
+        for (Owner owner : owners) {
+            if (this.mapProductToOwner(product, owner)) {
+                ++count;
+            }
+        }
+
+        return count;
+    }
+
+    @Transactional
+    public int mapOwnerToProducts(Owner owner, Product... products) {
+        int count = 0;
+
+        for (Product product : products) {
+            if (this.mapProductToOwner(product, owner)) {
+                ++count;
+            }
+        }
+
+        return count;
+    }
+
+    @Transactional
     public boolean removeOwnerFromProduct(Product product, Owner owner) {
         String hql = "DELETE FROM OwnerProduct op " +
-            "WHERE op.product = :product AND op.owner = :owner";
+            "WHERE op.product.uuid = :product_uuid AND op.owner.id = :owner_id";
 
         int rows = this.getEntityManager()
             .createQuery(hql)
-            .setParameter("owner", owner)
-            .setParameter("product", product)
+            .setParameter("owner_id", owner.getId())
+            .setParameter("product_uuid", product.getUuid())
             .executeUpdate();
 
         return rows > 0;
@@ -120,22 +205,22 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
     @Transactional
     public int clearOwnersForProduct(Product product) {
         String hql = "DELETE FROM OwnerProduct op " +
-            "WHERE op.product = :product";
+            "WHERE op.product.id = :product_uuid";
 
         return this.getEntityManager()
             .createQuery(hql)
-            .setParameter("product", product)
+            .setParameter("product_uuid", product.getUuid())
             .executeUpdate();
     }
 
     @Transactional
     public int clearProductsForOwner(Owner owner) {
         String hql = "DELETE FROM OwnerProduct op " +
-            "WHERE op.owner = :owner";
+            "WHERE op.owner.id = :owner";
 
         return this.getEntityManager()
             .createQuery(hql)
-            .setParameter("owner", owner)
+            .setParameter("owner_id", owner.getId())
             .executeUpdate();
     }
 

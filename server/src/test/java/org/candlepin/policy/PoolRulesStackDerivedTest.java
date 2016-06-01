@@ -30,10 +30,10 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.dto.Subscription;
@@ -72,7 +72,7 @@ public class PoolRulesStackDerivedTest {
     private Consumer consumer;
 
     @Mock private RulesCurator rulesCuratorMock;
-    @Mock private ProductCurator productCuratorMock;
+    @Mock private OwnerProductCurator ownerProductCuratorMock;
     @Mock private PoolManager poolManagerMock;
     @Mock private Configuration configMock;
     @Mock private EntitlementCurator entCurMock;
@@ -121,8 +121,7 @@ public class PoolRulesStackDerivedTest {
 
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
 
-        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock,
-                productCuratorMock);
+        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, ownerProductCuratorMock);
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);
 
@@ -134,19 +133,19 @@ public class PoolRulesStackDerivedTest {
         prod1.addAttribute(new ProductAttribute("virt_limit", "2"));
         prod1.addAttribute(new ProductAttribute("stacking_id", STACK));
         prod1.addAttribute(new ProductAttribute("testattr1", "1"));
-        when(productCuratorMock.find(prod1.getUuid())).thenReturn(prod1);
+        when(ownerProductCuratorMock.getProductById(owner, prod1.getId())).thenReturn(prod1);
 
         prod2 = TestUtil.createProduct("prod2", "prod2", owner);
         prod2.addAttribute(new ProductAttribute("virt_limit", "unlimited"));
         prod2.addAttribute(new ProductAttribute("stacking_id", STACK));
         prod2.addAttribute(new ProductAttribute("testattr2", "2"));
-        when(productCuratorMock.find(prod2.getUuid())).thenReturn(prod2);
+        when(ownerProductCuratorMock.getProductById(owner, prod2.getId())).thenReturn(prod2);
 
         prod3 = TestUtil.createProduct("prod3", "prod3", owner);
         prod3.addAttribute(new ProductAttribute("virt_limit", "9"));
         prod3.addAttribute(new ProductAttribute("stacking_id", STACK + "3"));
         prod3.addAttribute(new ProductAttribute("testattr2", "2"));
-        when(productCuratorMock.find(prod3.getUuid())).thenReturn(prod3);
+        when(ownerProductCuratorMock.getProductById(owner, prod3.getId())).thenReturn(prod3);
 
         provided1 = TestUtil.createProduct(owner);
         provided2 = TestUtil.createProduct(owner);

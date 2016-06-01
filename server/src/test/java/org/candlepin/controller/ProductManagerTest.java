@@ -97,8 +97,8 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         assertEquals(output.getUuid(), product2.getUuid());
         assertEquals(output, product2);
-        assertTrue(output.getOwners().contains(owner1));
-        assertTrue(output.getOwners().contains(owner2));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner1));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner2));
     }
 
     // @Test
@@ -156,8 +156,8 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Product output = this.productManager.updateProduct(update, owner1, false);
 
         assertEquals(output.getUuid(), product2.getUuid());
-        assertTrue(output.getOwners().contains(owner1));
-        assertTrue(output.getOwners().contains(owner2));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner1));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner2));
 
         verifyZeroInteractions(this.mockEntCertGenerator);
     }
@@ -173,8 +173,8 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Product output = this.productManager.updateProduct(update, owner1, true);
 
         assertEquals(output.getUuid(), product2.getUuid());
-        assertTrue(output.getOwners().contains(owner1));
-        assertTrue(output.getOwners().contains(owner2));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner1));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner2));
 
         verify(this.mockEntCertGenerator, times(1))
             .regenerateCertificatesOf(eq(Arrays.asList(owner1)), eq(Arrays.asList(product2)), anyBoolean());
@@ -184,19 +184,16 @@ public class ProductManagerTest extends DatabaseTestFixture {
     public void testUpdateProductDivergeFromExisting() {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
-        Product product = TestUtil.createProduct("p1", "prod1", owner1);
-        product.addOwner(owner2);
-        this.productCurator.create(product);
-
+        Product product = this.createProduct("p1", "prod1", owner1, owner2);
         Product update = TestUtil.createProduct("p1", "updated product", owner1);
 
         Product output = this.productManager.updateProduct(update, owner1, false);
 
         assertNotEquals(output.getUuid(), product.getUuid());
-        assertTrue(output.getOwners().contains(owner1));
-        assertFalse(output.getOwners().contains(owner2));
-        // assertFalse(product.getOwners().contains(owner1));
-        // assertTrue(product.getOwners().contains(owner2));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner1));
+        assertFalse(this.ownerProductCurator.isProductMappedToOwner(output, owner2));
+        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
 
         verifyZeroInteractions(this.mockEntCertGenerator);
     }
@@ -205,19 +202,16 @@ public class ProductManagerTest extends DatabaseTestFixture {
     public void testUpdateProductDivergeFromExistingWithCertRegeneration() {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
-        Product product = TestUtil.createProduct("p1", "prod1", owner1);
-        product.addOwner(owner2);
-        this.productCurator.create(product);
-
+        Product product = this.createProduct("p1", "prod1", owner1, owner2);
         Product update = TestUtil.createProduct("p1", "updated product", owner1);
 
         Product output = this.productManager.updateProduct(update, owner1, true);
 
         assertNotEquals(output.getUuid(), product.getUuid());
-        assertTrue(output.getOwners().contains(owner1));
-        assertFalse(output.getOwners().contains(owner2));
-        // assertFalse(product.getOwners().contains(owner1));
-        // assertTrue(product.getOwners().contains(owner2));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner1));
+        assertFalse(this.ownerProductCurator.isProductMappedToOwner(output, owner2));
+        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
 
         verify(this.mockEntCertGenerator, times(1))
             .regenerateCertificatesOf(eq(Arrays.asList(owner1)), eq(Arrays.asList(output)), anyBoolean());
@@ -238,7 +232,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         this.productManager.removeProduct(product, owner);
 
-        assertFalse(product.getOwners().contains(owner));
+        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner));
         assertNull(this.productCurator.find(product.getUuid()));
 
         verifyZeroInteractions(this.mockEntCertGenerator);
@@ -248,14 +242,12 @@ public class ProductManagerTest extends DatabaseTestFixture {
     public void testRemoveProductDivergeFromExisting() {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
-        Product product = TestUtil.createProduct("p1", "prod1", owner1);
-        product.addOwner(owner2);
-        this.productCurator.create(product);
+        Product product = this.createProduct("p1", "prod1", owner1, owner2);
 
         this.productManager.removeProduct(product, owner1);
 
-        assertFalse(product.getOwners().contains(owner1));
-        assertTrue(product.getOwners().contains(owner2));
+        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
         assertNotNull(this.productCurator.find(product.getUuid()));
 
         verifyZeroInteractions(this.mockEntCertGenerator);
@@ -326,13 +318,11 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
         Product product = TestUtil.createProduct("p1", "prod1", owner1);
-        product.addOwner(owner2);
-
         Content content = TestUtil.createContent(owner1, "c1");
-        content.addOwner(owner2);
         product.addContent(content);
-        this.contentCurator.create(content);
-        this.productCurator.create(product);
+        content = this.contentCurator.create(content);
+        product = this.productCurator.create(product);
+        this.ownerProductCurator.mapProductToOwners(product, owner1, owner2);
 
         Product output = this.productManager.removeProductContent(
             product, Arrays.asList(content), owner1, false
@@ -342,10 +332,10 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertFalse(output.hasContent(content.getId()));
         assertTrue(product.hasContent(content.getId()));
 
-        // assertFalse(product.getOwners().contains(owner1));
-        // assertTrue(product.getOwners().contains(owner2));
-        assertTrue(output.getOwners().contains(owner1));
-        assertFalse(output.getOwners().contains(owner2));
+        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner1));
+        assertFalse(this.ownerProductCurator.isProductMappedToOwner(output, owner2));
 
         verifyZeroInteractions(this.mockEntCertGenerator);
     }
@@ -355,13 +345,11 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
         Product product = TestUtil.createProduct("p1", "prod1", owner1);
-        product.addOwner(owner2);
-
         Content content = TestUtil.createContent(owner1, "c1");
-        content.addOwner(owner2);
         product.addContent(content);
-        this.contentCurator.create(content);
-        this.productCurator.create(product);
+        content = this.contentCurator.create(content);
+        product = this.productCurator.create(product);
+        this.ownerProductCurator.mapProductToOwners(product, owner1, owner2);
 
         Product output = this.productManager.removeProductContent(
             product, Arrays.asList(content), owner1, true
@@ -371,10 +359,10 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertFalse(output.hasContent(content.getId()));
         assertTrue(product.hasContent(content.getId()));
 
-        // assertFalse(product.getOwners().contains(owner1));
-        // assertTrue(product.getOwners().contains(owner2));
-        assertTrue(output.getOwners().contains(owner1));
-        assertFalse(output.getOwners().contains(owner2));
+        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner1));
+        assertFalse(this.ownerProductCurator.isProductMappedToOwner(output, owner2));
 
         verify(this.mockEntCertGenerator, times(1))
             .regenerateCertificatesOf(eq(Arrays.asList(owner1)), eq(Arrays.asList(output)), anyBoolean());
@@ -389,6 +377,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         product.addContent(content);
         this.contentCurator.create(content);
         this.productCurator.create(product);
+        this.ownerProductCurator.mapProductToOwner(product, owner);
 
         Product output = this.productManager.removeProductContent(
             product, Arrays.asList(content), owner2, false

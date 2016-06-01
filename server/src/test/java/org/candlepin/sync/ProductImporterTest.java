@@ -47,8 +47,6 @@ public class ProductImporterTest {
 
     private ObjectMapper mapper;
     private ProductImporter importer;
-    private ProductCurator productCuratorMock;
-    private ContentCurator contentCuratorMock;
     private Owner owner = new Owner("Test Corporation");
 
     @Before
@@ -60,9 +58,8 @@ public class ProductImporterTest {
                 }
             }
         ));
-        productCuratorMock = mock(ProductCurator.class);
-        contentCuratorMock = mock(ContentCurator.class);
-        importer = new ProductImporter(productCuratorMock, contentCuratorMock);
+
+        importer = new ProductImporter();
     }
 
     @Test
@@ -79,31 +76,12 @@ public class ProductImporterTest {
     @Test
     public void testNewProductCreated() throws Exception {
         Product product = TestUtil.createProduct(owner);
-
-        String json = getJsonForProduct(product);
-        Reader reader = new StringReader(json);
-        Product created = importer.createObject(mapper, reader, owner);
-        Set<Product> storeThese = new HashSet<Product>();
-        storeThese.add(created);
-    }
-
-    @Test
-    public void testExistingProductUpdated() throws Exception {
-        Product product = TestUtil.createProduct(owner);
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
 
         Product created = importer.createObject(mapper, reader, owner);
 
-        // Dummy up some changes to this product:
-        String newProductName = "New Name";
-        created.setName(newProductName);
-
-        Set<Product> storeThese = new HashSet<Product>();
-        storeThese.add(created);
-
-        // Simulate the pre-existing product:
-        when(productCuratorMock.lookupById(owner, product.getId())).thenReturn(product);
+        assertEquals(product, created);
     }
 
     @Test
@@ -115,27 +93,9 @@ public class ProductImporterTest {
         Reader reader = new StringReader(json);
         Product created = importer.createObject(mapper, reader, owner);
         Content c = created.getProductContent().iterator().next().getContent();
-        Set<Product> storeThese = new HashSet<Product>();
-        storeThese.add(created);
 
         // Metadata expiry should be overridden to 0 on import:
         assertEquals(new Long(1), c.getMetadataExpire());
-    }
-
-    @Test
-    public void testExistingProductContentAdded() throws Exception {
-        Owner owner = new Owner("Test Corporation");
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name", owner);
-        Product newProduct = TestUtil.createProduct("fake id", "fake name", owner);
-
-        addContentTo(newProduct);
-        Content c = newProduct.getProductContent().iterator().next().getContent();
-
-        when(productCuratorMock.find(oldProduct.getUuid()))
-            .thenReturn(oldProduct);
-
-        Set<Product> storeThese = new HashSet<Product>();
-        storeThese.add(newProduct);
     }
 
     @Test
@@ -147,8 +107,6 @@ public class ProductImporterTest {
         Reader reader = new StringReader(json);
         Product created = importer.createObject(mapper, reader, owner);
         Content c = created.getProductContent().iterator().next().getContent();
-        Set<Product> storeThese = new HashSet<Product>();
-        storeThese.add(created);
         assertEquals("unknown", c.getVendor());
     }
 

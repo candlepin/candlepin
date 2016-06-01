@@ -145,8 +145,8 @@ public class ProductContent extends AbstractHibernateObject {
             String thatContentUuid = that.content != null ? that.content.getUuid() : null;
 
             return new EqualsBuilder()
-                // .append(thisProductUuid, thatProductUuid)
-                // .append(thisContentUuid, thatContentUuid)
+                .append(thisProductUuid, thatProductUuid)
+                .append(thisContentUuid, thatContentUuid)
                 .append(this.enabled, that.enabled)
                 .isEquals();
         }

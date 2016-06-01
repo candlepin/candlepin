@@ -15,12 +15,10 @@
 package org.candlepin.sync;
 
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
-import org.candlepin.model.ProductCurator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -39,17 +37,14 @@ import java.io.Reader;
 public class ProductImporter {
     private static Logger log = LoggerFactory.getLogger(ProductImporter.class);
 
-    private ProductCurator curator;
-    private ContentCurator contentCurator;
-
-    public ProductImporter(ProductCurator curator, ContentCurator contentCurator) {
-        this.curator = curator;
-        this.contentCurator = contentCurator;
+    public ProductImporter() {
+        // Intentionally left empty
     }
 
     public Product createObject(ObjectMapper mapper, Reader reader, Owner owner) throws IOException {
 
-        final Product importedProduct = mapper.readValue(reader, Product.class);
+        Product importedProduct = mapper.readValue(reader, Product.class);
+
         // Make sure the (UU)ID's are null, otherwise Hibernate thinks these are
         // detached entities.
         importedProduct.setUuid(null);

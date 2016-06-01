@@ -228,7 +228,7 @@ public class ContentManagerTest {
         content.addOwner(owner2);
         Content update = TestUtil.createContent(owner1, "c1", "updated content");
         Product product = TestUtil.createProduct("p1", "test product", owner1);
-        product.addOwner(owner2);
+        // product.addOwner(owner2);
         product.addContent(content);
 
         when(this.mockContentCurator.lookupById(eq(owner1), eq(content.getId()))).thenReturn(content);
@@ -254,7 +254,7 @@ public class ContentManagerTest {
         content.addOwner(owner2);
         Content update = TestUtil.createContent(owner1, "c1", "updated content");
         Product product = TestUtil.createProduct("p1", "test product", owner1);
-        product.addOwner(owner2);
+        // product.addOwner(owner2);
 
         when(this.mockContentCurator.lookupById(eq(owner1), eq(content.getId()))).thenReturn(content);
         when(this.mockProductCurator.getProductsWithContent(eq(owner1), eq(Arrays.asList(content.getId()))))
@@ -326,7 +326,7 @@ public class ContentManagerTest {
         Content content = TestUtil.createContent(owner1, "c1", "content-1");
         content.addOwner(owner2);
         Product product = TestUtil.createProduct("p1", "test prod", owner1);
-        product.addOwner(owner2);
+        // product.addOwner(owner2);
 
         when(this.mockContentCurator.lookupById(eq(owner1), eq(content.getId()))).thenReturn(content);
         when(this.mockProductCurator.getProductsWithContent(eq(owner1), eq(Arrays.asList(content.getId()))))
@@ -350,7 +350,7 @@ public class ContentManagerTest {
         Content content = TestUtil.createContent(owner1, "c1", "content-1");
         content.addOwner(owner2);
         Product product = TestUtil.createProduct("p1", "test prod", owner1);
-        product.addOwner(owner2);
+        // product.addOwner(owner2);
 
         when(this.mockContentCurator.lookupById(eq(owner1), eq(content.getId()))).thenReturn(content);
         when(this.mockProductCurator.getProductsWithContent(eq(owner1), eq(Arrays.asList(content.getId()))))

@@ -25,12 +25,13 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.Util;
@@ -100,18 +101,19 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
 
     @Test(expected = BadRequestException.class)
     public void testDeleteProductWithSubscriptions() {
-        ProductCurator pc = mock(ProductCurator.class);
         OwnerCurator oc = mock(OwnerCurator.class);
+        OwnerProductCurator opc = mock(OwnerProductCurator.class);
+        ProductCurator pc = mock(ProductCurator.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        OwnerProductResource pr = new OwnerProductResource(pc, null, oc, null, productManager,
-            config, i18n);
+        OwnerProductResource pr = new OwnerProductResource(
+            pc, null, oc, null, productManager, opc, config, i18n
+        );
 
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);
 
         when(oc.lookupByKey(eq("owner"))).thenReturn(o);
-        when(pc.lookupById(eq(o), eq("10"))).thenReturn(p);
-        when(p.getOwners()).thenReturn(Util.asSet(o));
+        when(opc.getProductById(eq(o), eq("10"))).thenReturn(p);
 
         Set<Subscription> subs = new HashSet<Subscription>();
         Subscription s = mock(Subscription.class);

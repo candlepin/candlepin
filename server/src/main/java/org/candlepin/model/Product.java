@@ -34,6 +34,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -74,6 +75,19 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = "cp2_products")
 public class Product extends AbstractHibernateObject implements SharedEntity, Linkable, Cloneable {
     public static final String UEBER_PRODUCT_POSTFIX = "_ueber_product";
+
+    public static final Comparator<ProductContent> CONTENT_COMPARATOR = new Comparator<ProductContent>() {
+        public int compare(ProductContent lhs, ProductContent rhs) {
+            if (lhs != null && lhs.equals(rhs)) {
+                Content lhc = lhs.getContent();
+                Content rhc = rhs.getContent();
+
+                return (lhc == rhc) || (lhc != null && lhc.equals(rhc)) ? 0 : -1;
+            }
+
+            return lhs == rhs ? 0 : -1;
+        }
+    };
 
     // Object ID
     @Id
@@ -542,13 +556,13 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     }
 
     @Override
-    public boolean equals(Object comp) {
-        if (this == comp) {
+    public boolean equals(Object obj) {
+        if (this == obj) {
             return true;
         }
 
-        if (comp instanceof Product) {
-            Product that = (Product) comp;
+        if (obj instanceof Product) {
+            Product that = (Product) obj;
 
             // TODO:
             // Maybe it would be better to check the UUID field and only check the following if
@@ -580,17 +594,20 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
                     }
                 }
 
-                if (!Util.collectionsAreEqual(this.productContent, that.productContent)) {
-                    if (!(this.productContent == null && that.productContent.size() == 0) &&
-                        !(that.productContent == null && this.productContent.size() == 0)) {
+
+                if (!Util.collectionsAreEqual(this.dependentProductIds, that.dependentProductIds)) {
+                    if (!(this.dependentProductIds == null && that.dependentProductIds.size() == 0) &&
+                        !(that.dependentProductIds == null && this.dependentProductIds.size() == 0)) {
 
                         return false;
                     }
                 }
 
-                if (!Util.collectionsAreEqual(this.dependentProductIds, that.dependentProductIds)) {
-                    if (!(this.dependentProductIds == null && that.dependentProductIds.size() == 0) &&
-                        !(that.dependentProductIds == null && this.dependentProductIds.size() == 0)) {
+                // We do this check last, in the hopes that if we're going to fail, we fail on the
+                // faster checks.
+                if (!Util.collectionsAreEqual(this.productContent, that.productContent, CONTENT_COMPARATOR)) {
+                    if (!(this.productContent == null && that.productContent.size() == 0) &&
+                        !(that.productContent == null && this.productContent.size() == 0)) {
 
                         return false;
                     }

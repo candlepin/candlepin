@@ -102,7 +102,7 @@ public class ConsumerResourceUpdateTest {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         this.resource = new ConsumerResource(this.consumerCurator,
-            this.consumerTypeCurator, null, this.subscriptionService, null,
+            this.consumerTypeCurator, null, null, this.subscriptionService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
             this.userService, null, poolManager, null, null,
             this.activationKeyCurator, this.entitler, this.complianceRules,

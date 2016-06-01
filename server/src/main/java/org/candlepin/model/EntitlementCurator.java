@@ -51,15 +51,16 @@ import javax.persistence.Query;
  */
 public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     private static Logger log = LoggerFactory.getLogger(EntitlementCurator.class);
-    private ProductCurator productCurator;
+
+    private OwnerProductCurator ownerProductCurator;
 
     /**
      * default ctor
      */
     @Inject
-    public EntitlementCurator(ProductCurator productCurator) {
+    public EntitlementCurator(OwnerProductCurator ownerProductCurator) {
         super(Entitlement.class);
-        this.productCurator = productCurator;
+        this.ownerProductCurator = ownerProductCurator;
     }
 
     // TODO: handles addition of new entitlements only atm!
@@ -150,7 +151,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
         // No need to add filters when matching by product.
         if (object != null && productId != null) {
-            Product p = productCurator.lookupById(owner, productId);
+            Product p = this.ownerProductCurator.getProductById(owner, productId);
             if (p == null) {
                 throw new BadRequestException(i18n.tr(
                     "Product with ID ''{0}'' could not be found.", productId));

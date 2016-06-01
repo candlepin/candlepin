@@ -86,7 +86,7 @@ public class ProductManager {
     public Product createProduct(Product entity, Owner owner) {
         log.debug("Creating new product for org: {}, {}", entity, owner);
 
-        Product existing = this.productCurator.lookupById(owner, entity.getId());
+        Product existing = this.ownerProductCurator.getProductById(owner, entity.getId());
 
         if (existing != null) {
             // If we're doing an exclusive creation, this should be an error condition
@@ -155,9 +155,7 @@ public class ProductManager {
         }
 
         // This has to fetch a new instance, or we'll be unable to compare the objects
-        Product existing = this.productCurator
-            .fetchById(owner.getId(), entity.getId())
-            .uniqueResult();
+        Product existing = this.ownerProductCurator.getProductById(owner.getId(), entity.getId());
 
         if (existing == null) {
             // If we're doing an exclusive update, this should be an error condition
@@ -277,7 +275,7 @@ public class ProductManager {
         }
 
         // This has to fetch a new instance, or we'll be unable to compare the objects
-        Product existing = this.productCurator.lookupById(owner, entity.getId());
+        Product existing = this.ownerProductCurator.getProductById(owner, entity.getId());
 
         if (existing == null) {
             // If we're doing an exclusive update, this should be an error condition

@@ -143,8 +143,6 @@ public class ContentResourceTest {
         Content content = mock(Content.class);
 
         when(product.getId()).thenReturn(productId);
-        when(product.getOwners()).thenReturn(Util.asSet(owner));
-
         when(content.getId()).thenReturn(contentId);
 
         when(cc.find(any(String.class))).thenReturn(content);
