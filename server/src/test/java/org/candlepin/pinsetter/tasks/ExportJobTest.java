@@ -17,6 +17,9 @@ package org.candlepin.pinsetter.tasks;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.pinsetter.core.model.JobStatus;
@@ -51,7 +54,10 @@ public class ExportJobTest {
         String webappPrefix = "webapp-prefix";
         String apiUrl = "url";
 
-        JobDetail detail = job.scheduleExport(distributor, cdnLabel, webappPrefix, apiUrl);
+        Map<String, String> extData = new HashMap<String, String>();
+        extData.put("version", "sat-6.2");
+
+        JobDetail detail = job.scheduleExport(distributor, cdnLabel, webappPrefix, apiUrl, extData);
         JobDataMap dataMap = detail.getJobDataMap();
 
         assertEquals(dataMap.get(JobStatus.OWNER_ID), distributor.getOwner().getKey());
@@ -60,6 +66,7 @@ public class ExportJobTest {
         assertEquals(dataMap.get(ExportJob.CDN_LABEL), cdnLabel);
         assertEquals(dataMap.get(ExportJob.WEBAPP_PREFIX), webappPrefix);
         assertEquals(dataMap.get(ExportJob.API_URL), apiUrl);
+        assertEquals(dataMap.get(ExportJob.EXTENSION_DATA), extData);
     }
 
     @Test
@@ -69,17 +76,18 @@ public class ExportJobTest {
         String webappPrefix = "webapp-prefix";
         String apiUrl = "url";
         String manifestId = "1234";
+        Map<String, String> extData = new HashMap<String, String>();
 
         ExportResult result = new ExportResult(distributor.getUuid(), manifestId);
         when(manifestManager.generateAndStoreManifest(eq(distributor.getUuid()), eq(cdnLabel),
-            eq(webappPrefix), eq(apiUrl))).thenReturn(result);
+            eq(webappPrefix), eq(apiUrl),  eq(extData))).thenReturn(result);
 
-        JobDetail detail = job.scheduleExport(distributor, cdnLabel, webappPrefix, apiUrl);
+        JobDetail detail = job.scheduleExport(distributor, cdnLabel, webappPrefix, apiUrl, extData);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         job.execute(ctx);
 
         verify(manifestManager).generateAndStoreManifest(eq(distributor.getUuid()), eq(cdnLabel),
-            eq(webappPrefix), eq(apiUrl));
+            eq(webappPrefix), eq(apiUrl), eq(extData));
         verify(ctx).setResult(eq(result));
     }
 
