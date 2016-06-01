@@ -63,12 +63,14 @@ import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.resteasy.filter.StoreFactory;
 import org.candlepin.service.EntitlementCertServiceAdapter;
+import org.candlepin.service.ExportExtensionAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.impl.DefaultExportExtensionAdapter;
 import org.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultProductServiceAdapter;
@@ -291,6 +293,8 @@ public class TestingModules {
             bind(PrincipalProvider.class).to(TestPrincipalProvider.class);
             bind(Principal.class).toProvider(TestPrincipalProvider.class);
             bind(EventSink.class).to(NoopEventSinkImpl.class);
+
+            bind(ExportExtensionAdapter.class).to(DefaultExportExtensionAdapter.class);
 
             bind(ResourceLocatorMap.class);
             bind(StoreFactory.class);

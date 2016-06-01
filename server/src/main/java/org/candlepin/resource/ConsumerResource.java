@@ -1815,7 +1815,8 @@ public class ConsumerResource {
         @QueryParam("api_url") String apiUrl) {
 
         try {
-            File archive = manifestManager.generateManifest(consumerUuid, cdnLabel, webAppPrefix, apiUrl);
+            File archive = manifestManager.generateManifest(consumerUuid, cdnLabel, webAppPrefix, apiUrl,
+                new HashMap<String, String>());
             response.addHeader("Content-Disposition", "attachment; filename=" + archive.getName());
             return archive;
         }
@@ -1829,11 +1830,11 @@ public class ConsumerResource {
      * The response will contain the id of the job from which its result data will contain the href to
      * download the generated file.
      *
-     * @param response
+     * @param response the response to send back from the server.
      * @param consumerUuid the uuid of the target consumer.
-     * @param cdnLabel
-     * @param webAppPrefix
-     * @param apiUrl
+     * @param cdnLabel the CDN label to store in the meta file.
+     * @param webAppPrefix the URL pointing to the manifest's originating web application.
+     * @param apiUrl the API URL pointing to the manifest's originating candlepin API.
      * @return the details of the async export job that is to be started.
      */
     @ApiOperation(
@@ -1849,11 +1850,38 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/export/async")
     public JobDetail exportDataAsync(
         @Context HttpServletResponse response,
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("cdn_label") String cdnLabel,
-        @QueryParam("webapp_prefix") String webAppPrefix,
-        @QueryParam("api_url") String apiUrl) {
-        return manifestManager.generateManifestAsync(consumerUuid, cdnLabel, webAppPrefix, apiUrl);
+        @PathParam("consumer_uuid") @Verify(Consumer.class)
+        @ApiParam(value = "The UUID of the target consumer", required = true) String consumerUuid,
+        @QueryParam("cdn_label")
+        @ApiParam(value = "The lable of the target CDN", required = false)
+        String cdnLabel,
+        @QueryParam("webapp_prefix")
+        @ApiParam(value = "the URL pointing to the manifest's originating web application", required = false)
+        String webAppPrefix,
+        @QueryParam("api_url")
+        @ApiParam(value = "the URL pointing to the manifest's originating candlepin API", required = false)
+        String apiUrl,
+        @QueryParam("ext") @CandlepinParam(type = KeyValueParameter.class)
+        @ApiParam(value = "Key/Value pairs to be passed to the extension adapter when generating a manifest",
+        required = false, example = "ext=version:1.2.3&ext=extension_key:EXT1")
+        List<KeyValueParameter> extensionArgs) {
+        return manifestManager.generateManifestAsync(consumerUuid, cdnLabel, webAppPrefix, apiUrl,
+            getExtensionParamMap(extensionArgs));
+    }
+
+    /**
+     * Builds a map of String -> String from a list of {@link KeyValueParameter} query parameters
+     * where param.key is the map key and param.value is the map value.
+     *
+     * @param params the query parameters to build the map from.
+     * @return a Map<String, String> of the key/value pairs in the specified parameters.
+     */
+    private Map<String, String> getExtensionParamMap(List<KeyValueParameter> params) {
+        Map<String, String> paramMap = new HashMap<String, String>();
+        for (KeyValueParameter param : params) {
+            paramMap.put(param.key(), param.value());
+        }
+        return paramMap;
     }
 
     /**

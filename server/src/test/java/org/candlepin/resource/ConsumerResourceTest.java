@@ -71,6 +71,7 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ResourceDateParser;
+import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -821,6 +822,7 @@ public class ConsumerResourceTest {
             null, null, null, new CandlepinCommonTestConfig(),
             null, mockedCdnCurator, null, null, productCurator, manifestManager);
 
+        List<KeyValueParameter> extParams = new ArrayList<KeyValueParameter>();
         Owner owner = TestUtil.createOwner();
         Consumer consumer = TestUtil.createConsumer(
             new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN), owner);
@@ -829,9 +831,9 @@ public class ConsumerResourceTest {
         when(mockedConsumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
         when(mockedCdnCurator.lookupByLabel(eq(cdn.getLabel()))).thenReturn(cdn);
 
-        cr.exportDataAsync(null, consumer.getUuid(), cdn.getLabel(), "prefix", cdn.getUrl());
+        cr.exportDataAsync(null, consumer.getUuid(), cdn.getLabel(), "prefix", cdn.getUrl(), extParams);
         verify(manifestManager).generateManifestAsync(eq(consumer.getUuid()), eq(cdn.getLabel()),
-            eq("prefix"), eq(cdn.getUrl()));
+            eq("prefix"), eq(cdn.getUrl()), any(Map.class));
     }
 
 }

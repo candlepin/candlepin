@@ -18,6 +18,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
@@ -101,34 +102,38 @@ public class ManifestManager {
      * Asynchronously generates a manifest for the target consumer.
      *
      * @param consumerUuid the target consumer's UUID.
-     * @param cdnLabel
-     * @param webAppPrefix
-     * @param apiUrl
+     * @param cdnLabel the CDN label to store in the meta file.
+     * @param webUrl the URL pointing to the manifest's originating web application.
+     * @param apiUrl the API URL pointing to the manifest's originating candlepin API.
+     * @param extensionData data to be passed to the {@link ExportExtensionAdapter} when creating
+     *                      a new export of the target consumer.
      * @return the details of the async export job.
      */
-    public JobDetail generateManifestAsync(String consumerUuid, String cdnLabel, String webAppPrefix,
-        String apiUrl) {
+    public JobDetail generateManifestAsync(String consumerUuid, String cdnLabel, String webUrl,
+        String apiUrl, Map<String, String> extensionData) {
         log.info("Scheduling Async Export for consumer {}", consumerUuid);
         Consumer consumer = validateConsumerForExport(consumerUuid, cdnLabel);
-        return ExportJob.scheduleExport(consumer, cdnLabel, webAppPrefix, apiUrl);
+        return ExportJob.scheduleExport(consumer, cdnLabel, webUrl, apiUrl, extensionData);
     }
 
     /**
      * Generates a manifest for the specified consumer.
      *
      * @param consumerUuid the target consumer's UUID.
-     * @param cdnLabel
-     * @param webAppPrefix
-     * @param apiUrl
+     * @param cdnLabel the CDN label to store in the meta file.
+     * @param webUrl the URL pointing to the manifest's originating web application.
+     * @param apiUrl the API URL pointing to the manifest's originating candlepin API.
+     * @param extensionData data to be passed to the {@link ExportExtensionAdapter} when creating
+     *                      a new export of the target consumer.
      * @return an archive of the target consumer
      * @throws ExportCreationException when an export fails.
      */
-    public File generateManifest(String consumerUuid, String cdnLabel, String webAppPrefix, String apiUrl)
-        throws ExportCreationException {
+    public File generateManifest(String consumerUuid, String cdnLabel, String webUrl, String apiUrl,
+        Map<String, String> extensionData) throws ExportCreationException {
         log.info("Exporting consumer {}", consumerUuid);
         Consumer consumer = validateConsumerForExport(consumerUuid, cdnLabel);
         poolManager.regenerateDirtyEntitlements(entitlementCurator.listByConsumer(consumer));
-        File export = exporter.getFullExport(consumer, cdnLabel, webAppPrefix, apiUrl);
+        File export = exporter.getFullExport(consumer, cdnLabel, webUrl, apiUrl, extensionData);
         sink.queueEvent(eventFactory.exportCreated(consumer));
         return export;
     }
@@ -310,21 +315,23 @@ public class ManifestManager {
      * {@link ManifestFileService}.
      *
      * @param consumerUuid the target consumer's UUID.
-     * @param cdnKey
-     * @param webAppPrefix
-     * @param apiUrl
+     * @param cdnLabel the CDN label to store in the meta file.
+     * @param webUrl the URL pointing to the manifest's originating web application.
+     * @param apiUrl the API URL pointing to the manifest's originating candlepin API.
+     * @param extensionData data to be passed to the {@link ExportExtensionAdapter} when creating
+     *                      a new export of the target consumer.
      * @return an {@link ExportResult} containing the details of the stored file.
      * @throws ExportCreationException if there are any issues generating the manifest.
      */
-    public ExportResult generateAndStoreManifest(String consumerUuid, String cdnLabel, String webAppPrefix,
-        String apiUrl) throws ExportCreationException {
+    public ExportResult generateAndStoreManifest(String consumerUuid, String cdnLabel, String webUrl,
+        String apiUrl, Map<String, String> extensionData) throws ExportCreationException {
 
         Consumer consumer = validateConsumerForExport(consumerUuid, cdnLabel);
 
         File export = null;
         try {
             poolManager.regenerateDirtyEntitlements(entitlementCurator.listByConsumer(consumer));
-            export = exporter.getFullExport(consumer, cdnLabel, webAppPrefix, apiUrl);
+            export = exporter.getFullExport(consumer, cdnLabel, webUrl, apiUrl, extensionData);
             ManifestFile manifestFile = storeExport(export, consumer);
             sink.queueEvent(eventFactory.exportCreated(consumer));
             return new ExportResult(consumer.getUuid(), manifestFile.getId());
