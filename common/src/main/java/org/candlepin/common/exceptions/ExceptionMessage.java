@@ -29,6 +29,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ExceptionMessage implements Serializable {
 
+    private static final long serialVersionUID = 6758808334936389511L;
+
     private String displayMessage;
     private String requestUuid;
 

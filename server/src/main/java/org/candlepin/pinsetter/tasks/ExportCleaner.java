@@ -55,7 +55,7 @@ public class ExportCleaner extends KingpinJob {
 
     @Override
     public void toExecute(JobExecutionContext arg0) throws JobExecutionException {
-        log.warn("ExportCleaner job has been depricated. Please unschedule.");
+        log.warn("ExportCleaner job has been deprecated. Please unschedule.");
     }
 
 }

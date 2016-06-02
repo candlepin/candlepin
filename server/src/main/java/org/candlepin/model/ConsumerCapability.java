@@ -49,6 +49,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 public class ConsumerCapability implements Serializable {
 
+    private static final long serialVersionUID = -7690166510977579116L;
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")

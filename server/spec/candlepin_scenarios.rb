@@ -436,7 +436,7 @@ class StandardExporter < Exporter
     create_pool_and_subscription(@owner['key'], @products[:product_up].id, 10, [], '', '12345', '6789', nil, end_date, true)
     create_pool_and_subscription(@owner['key'], @products[:product_vdc].id, 5, [], '', '12345', '6789', nil, end_date, false,
       {:derived_product_id => @products[:product_dc]['id']})
- 
+
     # Pool names is a list of names of instance variables that will be created
     pool_names = ["pool1", "pool2", "pool3", "pool4", "pool_up", "pool_vdc"]
     pool_products = [:product1, :product2, :product3, :virt_product, :product_up, :product_vdc]
@@ -508,10 +508,6 @@ class StandardExporter < Exporter
 end
 
 class AsyncStandardExporter < StandardExporter
-
-  def initialize
-    super()
-  end
 
   def do_export(client, dest_dir, opts={}, uuid=nil)
     job = client.export_consumer_async(opts, uuid)

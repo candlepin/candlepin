@@ -497,23 +497,6 @@ class Candlepin
     get_file(path, dest_dir)
   end
 
-  def do_consumer_export(path, dest_dir, params)
-    path += "?" if params
-    path += "cdn_label=#{params[:cdn_label]}&" if params[:cdn_label]
-    path += "webapp_prefix=#{params[:webapp_prefix]}&" if params[:webapp_prefix]
-    path += "api_url=#{params[:api_url]}&" if params[:api_url]
-    begin
-      if dest_dir.nil?
-        # support async call
-        get(path)
-      else
-        get_file(path, dest_dir)
-      end
-    rescue Exception => e
-      puts e.response
-    end
-  end
-
   def get_entitlement(entitlement_id)
     get("/entitlements/#{entitlement_id}")
   end
@@ -1206,22 +1189,6 @@ class Candlepin
     do_import("/owners/#{owner_key}/imports/async", filename, params)
   end
 
-  def do_import(path, filename, params = {})
-    path += "?"
-    if params.has_key? :force
-      if params[:force].kind_of? Array
-        # New style, array of conflict keys to force:
-        params[:force].each do |f|
-          path += "force=#{f}&"
-        end
-      else
-        # Old style, force=true/false:
-        path += "force=#{params[:force]}"
-      end
-    end
-    post_file path, File.new(filename)
-  end
-
   def undo_import(owner_key)
     path = "/owners/#{owner_key}/imports"
     delete(path)
@@ -1421,6 +1388,41 @@ class Candlepin
                                        :headers => {"cp-user" => username,
                                                     :accept_language => @lang}
                                         )
+  end
+
+  private
+
+  def do_import(path, filename, params = {})
+    path += "?"
+    if params.has_key? :force
+      if params[:force].kind_of? Array
+        # New style, array of conflict keys to force:
+        params[:force].each do |f|
+          path += "force=#{f}&"
+        end
+      else
+        # Old style, force=true/false:
+        path += "force=#{params[:force]}"
+      end
+    end
+    post_file path, File.new(filename)
+  end
+
+  def do_consumer_export(path, dest_dir, params)
+    path += "?" if params
+    path += "cdn_label=#{params[:cdn_label]}&" if params[:cdn_label]
+    path += "webapp_prefix=#{params[:webapp_prefix]}&" if params[:webapp_prefix]
+    path += "api_url=#{params[:api_url]}&" if params[:api_url]
+    begin
+      if dest_dir.nil?
+        # support async call
+        get(path)
+      else
+        get_file(path, dest_dir)
+      end
+    rescue Exception => e
+      puts e.response
+    end
   end
 
 end

@@ -23,6 +23,8 @@ import java.io.Serializable;
  */
 public class ExportResult implements Serializable {
 
+    private static final long serialVersionUID = -352738548332088053L;
+
     private String exportedConsumer;
     private String exportId;
     private String href;
