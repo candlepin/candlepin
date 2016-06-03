@@ -428,8 +428,7 @@ public class TestUtil {
         return p;
     }
 
-    public static ActivationKey createActivationKey(Owner owner,
-        List<Pool> pools) {
+    public static ActivationKey createActivationKey(Owner owner, List<Pool> pools) {
         ActivationKey key = new ActivationKey();
         key.setOwner(owner);
         key.setName("A Test Key");

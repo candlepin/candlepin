@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -186,7 +187,7 @@ public class OwnerProductResource {
     @ApiOperation(notes = "Retrieves a list of Products", value = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Product> list(
+    public Collection<Product> list(
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
         @QueryParam("product") List<String> productIds) {
 

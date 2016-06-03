@@ -26,7 +26,8 @@ import org.candlepin.service.UniqueIdGenerator;
 import com.google.inject.Inject;
 
 import java.util.Collection;
-import java.util.List;
+
+
 
 /**
  * Default implementation of the ProductserviceAdapter.
@@ -54,7 +55,7 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     }
 
     @Override
-    public List<Product> getProductsByIds(Owner owner, Collection<String> ids) {
+    public Collection<Product> getProductsByIds(Owner owner, Collection<String> ids) {
         return this.ownerProductCurator.getProductsByIds(owner, ids);
     }
 

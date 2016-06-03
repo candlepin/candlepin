@@ -64,16 +64,11 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        config.setProperty(ConfigProperties.INTEGER_ATTRIBUTES,
-            "product.count, product.multiplier");
-        config.setProperty(ConfigProperties.NON_NEG_INTEGER_ATTRIBUTES,
-            "product.pos_count");
-        config.setProperty(ConfigProperties.LONG_ATTRIBUTES,
-            "product.long_count, product.long_multiplier");
-        config.setProperty(ConfigProperties.NON_NEG_LONG_ATTRIBUTES,
-            "product.long_pos_count");
-        config.setProperty(ConfigProperties.BOOLEAN_ATTRIBUTES,
-            "product.bool_val_str, product.bool_val_num");
+        config.setProperty(ConfigProperties.INTEGER_ATTRIBUTES, "product.count, product.multiplier");
+        config.setProperty(ConfigProperties.NON_NEG_INTEGER_ATTRIBUTES, "product.pos_count");
+        config.setProperty(ConfigProperties.LONG_ATTRIBUTES, "product.long_count, product.long_multiplier");
+        config.setProperty(ConfigProperties.NON_NEG_LONG_ATTRIBUTES, "product.long_pos_count");
+        config.setProperty(ConfigProperties.BOOLEAN_ATTRIBUTES, "product.bool_val_str, product.bool_val_num");
 
         this.owner = createOwner();
         ownerCurator.create(owner);
@@ -509,29 +504,6 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         original.addAttribute(new ProductAttribute("product.pos", "-5"));
         productCurator.create(original);
     }
-
-    // @Test
-    // public void listByIds() {
-    //     List<Product> products = new ArrayList<Product>();
-    //     List<String> pids = new ArrayList<String>();
-    //     for (int i = 0; i < 5; i++) {
-    //         Product p = TestUtil.createProduct(owner);
-    //         productCurator.create(p);
-    //         products.add(p);
-    //         pids.add(p.getId());
-    //     }
-
-    //     // ok get first 3 items to lookup
-    //     List<Product> returned = productCurator.listAllByIds(owner, pids.subList(0, 3));
-    //     assertEquals(3, returned.size());
-
-    //     // verify the first 3 were actually returned, and only those 3.
-    //     assertTrue(returned.contains(products.get(0)));
-    //     assertTrue(returned.contains(products.get(1)));
-    //     assertTrue(returned.contains(products.get(2)));
-    //     assertFalse(returned.contains(products.get(3)));
-    //     assertFalse(returned.contains(products.get(4)));
-    // }
 
     @Test
     public void testGetProductIdFromContentId() {

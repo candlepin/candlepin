@@ -1431,8 +1431,6 @@ public class PoolManagerTest {
 
         this.mockProduct(this.owner, oldProduct);
 
-        CandlepinPoolManager.log.debug("STARTING TEST");
-
         Set<Product> changed = manager.getChangedProducts(this.owner, products);
 
         assertEquals(1, changed.size());

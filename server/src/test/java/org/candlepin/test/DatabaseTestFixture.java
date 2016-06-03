@@ -48,6 +48,7 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.DateSource;
@@ -97,6 +98,7 @@ public class DatabaseTestFixture {
     @Rule
     public static CandlepinLiquibaseResource liquibase = new CandlepinLiquibaseResource();
 
+    @Inject protected ActivationKeyCurator activationKeyCurator;
     @Inject protected OwnerCurator ownerCurator;
     @Inject protected OwnerProductCurator ownerProductCurator;
     @Inject protected ProductCurator productCurator;
@@ -213,6 +215,12 @@ public class DatabaseTestFixture {
         entityManager().getTransaction().rollback();
     }
 
+    protected Pool createPool(Owner owner, Product product) {
+        return this.createPool(
+            owner, product, 1L, TestUtil.createDate(2000, 1, 1), TestUtil.createDate(2100, 1, 1)
+        );
+    }
+
     /**
      * Create an entitlement pool.
      *
@@ -265,8 +273,7 @@ public class DatabaseTestFixture {
     }
 
     protected Consumer createConsumer(Owner owner) {
-        ConsumerType type = new ConsumerType("test-consumer-type-" +
-            TestUtil.randomInt());
+        ConsumerType type = new ConsumerType("test-consumer-type-" + TestUtil.randomInt());
         consumerTypeCurator.create(type);
         Consumer c = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(c);

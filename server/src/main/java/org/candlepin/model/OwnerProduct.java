@@ -96,10 +96,15 @@ public class OwnerProduct implements Persisted, Serializable {
         // Intentionally left empty
     }
 
-    public OwnerProduct(String ownerId, String productUuid) {
-        this.ownerId = ownerId;
-        this.productUuid = productUuid;
+    public OwnerProduct(Owner owner, Product product) {
+        this.setOwner(owner);
+        this.setProduct(product);
     }
+
+    // public OwnerProduct(String ownerId, String productUuid) {
+    //     this.ownerId = ownerId;
+    //     this.productUuid = productUuid;
+    // }
 
     @Override
     public Serializable getId() {
@@ -118,7 +123,7 @@ public class OwnerProduct implements Persisted, Serializable {
         }
 
         this.owner = owner;
-        ownerId = owner.getId();
+        this.ownerId = owner.getId();
     }
 
     public Product getProduct() {
@@ -133,7 +138,7 @@ public class OwnerProduct implements Persisted, Serializable {
         }
 
         this.product = product;
-        productUuid = product.getUuid();
+        this.productUuid = product.getUuid();
     }
 
 }

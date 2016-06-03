@@ -19,7 +19,8 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 
 import java.util.Collection;
-import java.util.List;
+
+
 
 /**
  * Product data may originate from a separate service outside Candlepin in some
@@ -48,7 +49,7 @@ public interface ProductServiceAdapter {
      * @return list of products matching the given string IDs,
      *         empty list if none were found.
      */
-    List<Product> getProductsByIds(Owner owner, Collection<String> ids);
+    Collection<Product> getProductsByIds(Owner owner, Collection<String> ids);
 
     /**
      * Gets the certificate that defines the given product, creating one
