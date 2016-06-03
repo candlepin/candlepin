@@ -19,9 +19,6 @@ import java.io.IOException;
 import java.util.Date;
 
 import org.candlepin.model.ManifestFileRecordCurator;
-import org.candlepin.model.ManifestFileRecordType;
-import org.candlepin.sync.ManifestFileService;
-import org.candlepin.sync.ManifestServiceException;
 
 import com.google.inject.Inject;
 
@@ -38,23 +35,23 @@ public class DBManifestService implements ManifestFileService {
     }
 
     @Override
-    public ManifestFile get(String id) throws ManifestServiceException {
+    public ManifestFile get(String id) throws ManifestFileServiceException {
         return curator.findFile(id);
     }
 
     @Override
-    public boolean delete(String id) throws ManifestServiceException {
+    public boolean delete(String id) throws ManifestFileServiceException {
         return curator.deleteById(id);
     }
 
     @Override
-    public ManifestFile store(ManifestFileRecordType type, File fileToStore, String principalName,
-        String targetId) throws ManifestServiceException {
+    public ManifestFile store(ManifestFileType type, File fileToStore, String principalName,
+        String targetId) throws ManifestFileServiceException {
         try {
             return curator.createFile(type, fileToStore, principalName, targetId);
         }
         catch (IOException e) {
-            throw new ManifestServiceException(e);
+            throw new ManifestFileServiceException(e);
         }
     }
 
@@ -64,7 +61,7 @@ public class DBManifestService implements ManifestFileService {
     }
 
     @Override
-    public int delete(ManifestFileRecordType type, String targetId) {
+    public int delete(ManifestFileType type, String targetId) {
         return curator.deleteMatching(type, targetId);
     }
 

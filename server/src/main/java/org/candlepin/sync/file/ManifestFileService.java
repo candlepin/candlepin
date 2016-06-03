@@ -12,13 +12,10 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.sync;
+package org.candlepin.sync.file;
 
 import java.io.File;
 import java.util.Date;
-
-import org.candlepin.model.ManifestFileRecordType;
-import org.candlepin.sync.file.ManifestFile;
 
 /**
  * A service providing access to manifest files that have been
@@ -33,9 +30,9 @@ public interface ManifestFileService {
      *
      * @param id the id of the target manifest.
      * @return a {@link ManifestFile} matching the id, null otherwise.
-     * @throws ManifestServiceException if there is a service issue while looking for the file.
+     * @throws ManifestFileServiceException if there is a service issue while looking for the file.
      */
-    ManifestFile get(String id) throws ManifestServiceException;
+    ManifestFile get(String id) throws ManifestFileServiceException;
 
     /**
      * Stores the specified file.
@@ -46,28 +43,28 @@ public interface ManifestFileService {
      * @param targetId the id of the target entity (will change based on operation). Import: Owner.id
      *                 Export: Consumer.uuid
      * @return the id of the stored file.
-     * @throws ManifestServiceException if there is a service issue while storing the file.
+     * @throws ManifestFileServiceException if there is a service issue while storing the file.
      */
-    ManifestFile store(ManifestFileRecordType type, File fileToStore, String principalName, String targetId)
-        throws ManifestServiceException;
+    ManifestFile store(ManifestFileType type, File fileToStore, String principalName, String targetId)
+        throws ManifestFileServiceException;
 
     /**
      * Deletes a manifest matching the specified id.
      *
      * @param id the id of the target manifest file.
      * @return true if the file was deleted, false otherwise.
-     * @throws ManifestServiceException if there is a service issue while deleting the file.
+     * @throws ManifestFileServiceException if there is a service issue while deleting the file.
      */
-    boolean delete(String id) throws ManifestServiceException;
+    boolean delete(String id) throws ManifestFileServiceException;
 
     /**
      * Deletes any manifests files that are older than the specified expiry date.
      *
      * @param expiryDate the target expiry date.
      * @return the number of files deleted.
-     * @throws ManifestServiceException if there is a service issue while deleting the files.
+     * @throws ManifestFileServiceException if there is a service issue while deleting the files.
      */
-    int deleteExpired(Date expiryDate) throws ManifestServiceException;
+    int deleteExpired(Date expiryDate) throws ManifestFileServiceException;
 
     /**
      * Delete all files matching the type and targetId.
@@ -75,8 +72,8 @@ public interface ManifestFileService {
      * @param type the type of file.
      * @param targetId the ID of the file target (consumer UUID (export) or Owner key (import))
      * @return the number of files deleted.
-     * @throws ManifestServiceException if there is a service issue while deleting the files.
+     * @throws ManifestFileServiceException if there is a service issue while deleting the files.
      */
-    int delete(ManifestFileRecordType type, String targetId) throws ManifestServiceException;
+    int delete(ManifestFileType type, String targetId) throws ManifestFileServiceException;
 
 }

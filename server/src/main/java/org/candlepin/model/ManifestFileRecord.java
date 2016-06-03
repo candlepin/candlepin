@@ -33,6 +33,7 @@ import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.candlepin.sync.file.ManifestFile;
+import org.candlepin.sync.file.ManifestFileType;
 import org.hibernate.annotations.GenericGenerator;
 
 /**
@@ -56,7 +57,7 @@ public class ManifestFileRecord extends AbstractHibernateObject implements Manif
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "type")
-    private ManifestFileRecordType type;
+    private ManifestFileType type;
 
     @Column(name = "principal_name")
     private String principalName;
@@ -79,7 +80,7 @@ public class ManifestFileRecord extends AbstractHibernateObject implements Manif
         // For hibernate.
     }
 
-    public ManifestFileRecord(ManifestFileRecordType type, String filename, String principalName,
+    public ManifestFileRecord(ManifestFileType type, String filename, String principalName,
         String targetId, Blob data) {
         this.type = type;
         this.filename = filename;
@@ -97,11 +98,11 @@ public class ManifestFileRecord extends AbstractHibernateObject implements Manif
         this.id = id;
     }
 
-    public ManifestFileRecordType getType() {
+    public ManifestFileType getType() {
         return type;
     }
 
-    public void setType(ManifestFileRecordType type) {
+    public void setType(ManifestFileType type) {
         this.type = type;
     }
 

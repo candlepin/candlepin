@@ -43,6 +43,8 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.sync.file.ManifestFile;
+import org.candlepin.sync.file.ManifestFileService;
+import org.candlepin.sync.file.ManifestFileServiceException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -194,7 +196,7 @@ public class Importer {
             ImportRecord result = doExport(owner, extractFromService(export), overrides, uploadedFileName);
             return result;
         }
-        catch (ManifestServiceException e) {
+        catch (ManifestFileServiceException e) {
             throw new ImporterException("Could not load stored manifest file for async import", e);
         }
     }
@@ -280,12 +282,12 @@ public class Importer {
      *
      * @param storedFileId the manifest's file ID.
      * @return a {@link File} pointing to the unpacked manifest directory.
-     * @throws ManifestServiceException
+     * @throws ManifestFileServiceException
      * @throws ImporterException
      */
     @Transactional
     protected File extractFromService(ManifestFile export)
-        throws ManifestServiceException, ImporterException {
+        throws ManifestFileServiceException, ImporterException {
         return unpackExportFile(export.getId(), export.getInputStream());
     }
 

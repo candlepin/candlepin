@@ -39,7 +39,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.ManifestFileRecordType;
 import org.candlepin.model.Owner;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.sync.ConflictOverrides;
@@ -47,8 +46,9 @@ import org.candlepin.sync.ExportResult;
 import org.candlepin.sync.Exporter;
 import org.candlepin.sync.Importer;
 import org.candlepin.sync.Importer.Conflict;
-import org.candlepin.sync.ManifestFileService;
 import org.candlepin.sync.file.ManifestFile;
+import org.candlepin.sync.file.ManifestFileService;
+import org.candlepin.sync.file.ManifestFileType;
 import org.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
@@ -139,7 +139,7 @@ public class ManifestManagerTest {
         when(principalProvider.get()).thenReturn(principal);
 
         ManifestFile manifest = mock(ManifestFile.class);
-        when(fileService.store(eq(ManifestFileRecordType.EXPORT), any(File.class),
+        when(fileService.store(eq(ManifestFileType.EXPORT), any(File.class),
             eq(principal.getName()), any(String.class))).thenReturn(manifest);
 
         manager.generateAndStoreManifest(consumer, cdnLabel, webAppPrefix, apiUrl);
@@ -191,7 +191,7 @@ public class ManifestManagerTest {
         String exportId = "export-id";
         ManifestFile manifest = mock(ManifestFile.class);
         when(manifest.getId()).thenReturn(exportId);
-        when(fileService.store(eq(ManifestFileRecordType.EXPORT), any(File.class),
+        when(fileService.store(eq(ManifestFileType.EXPORT), any(File.class),
             eq(principal.getName()), any(String.class))).thenReturn(manifest);
 
         List<Entitlement> ents = new ArrayList<Entitlement>();
@@ -205,7 +205,7 @@ public class ManifestManagerTest {
         verify(exporter).getFullExport(eq(consumer), eq(cdnLabel), eq(webAppPrefix), eq(apiUrl));
         verify(eventFactory).exportCreated(eq(consumer));
         verify(eventSink).queueEvent(eq(event));
-        verify(fileService).delete(eq(ManifestFileRecordType.EXPORT), eq(consumer.getUuid()));
+        verify(fileService).delete(eq(ManifestFileType.EXPORT), eq(consumer.getUuid()));
     }
 
     @Test
@@ -219,7 +219,7 @@ public class ManifestManagerTest {
         when(principalProvider.get()).thenReturn(principal);
 
         ManifestFile manifest = mock(ManifestFile.class);
-        when(fileService.store(ManifestFileRecordType.IMPORT, file, principal.getName(),
+        when(fileService.store(ManifestFileType.IMPORT, file, principal.getName(),
             owner.getKey())).thenReturn(manifest);
 
         JobDetail job = manager.importManifestAsync(owner, file, filename, overrides);
@@ -234,7 +234,7 @@ public class ManifestManagerTest {
             new ConflictOverrides((String[]) jobData.get("conflict_overrides"));
         assertTrue(retrievedOverrides.isForced(Conflict.DISTRIBUTOR_CONFLICT));
 
-        verify(fileService).store(eq(ManifestFileRecordType.IMPORT), eq(file), eq(principal.getName()),
+        verify(fileService).store(eq(ManifestFileType.IMPORT), eq(file), eq(principal.getName()),
             eq(owner.getKey()));
     }
 

@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Calendar;
 
+import org.candlepin.sync.file.ManifestFileType;
 import org.candlepin.test.DatabaseTestFixture;
 import org.junit.After;
 import org.junit.Before;
@@ -38,7 +39,7 @@ public class ManifestFileRecordCuratorTest extends DatabaseTestFixture {
     public void setupTest() throws Exception {
         Path temp = Files.createTempFile("test-manifest", ".zip");
         tempFile = temp.toFile();
-        record = curator.createFile(ManifestFileRecordType.EXPORT, tempFile,
+        record = curator.createFile(ManifestFileType.EXPORT, tempFile,
             "principalId", "ownerId");
     }
 
@@ -61,7 +62,7 @@ public class ManifestFileRecordCuratorTest extends DatabaseTestFixture {
     @Test
     public void testDeleteExpired() throws Exception {
         Calendar cal = Calendar.getInstance();
-        curator.createFile(ManifestFileRecordType.EXPORT, tempFile, "principalId", "ownerId");
+        curator.createFile(ManifestFileType.EXPORT, tempFile, "principalId", "ownerId");
 
         cal.add(Calendar.HOUR_OF_DAY, -4);
         assertEquals(0, curator.deleteExpired(cal.getTime()));

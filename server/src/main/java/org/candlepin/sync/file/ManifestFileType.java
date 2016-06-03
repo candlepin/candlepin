@@ -12,12 +12,12 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.model;
+package org.candlepin.sync.file;
 
 /**
  * Defines the manifest type of a stored file record.
  */
-public enum ManifestFileRecordType {
+public enum ManifestFileType {
     IMPORT,
     EXPORT
 }

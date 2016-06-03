@@ -28,8 +28,8 @@ import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
-import org.candlepin.sync.ManifestFileService;
 import org.candlepin.sync.file.DBManifestService;
+import org.candlepin.sync.file.ManifestFileService;
 
 import com.google.inject.AbstractModule;
 

@@ -12,22 +12,22 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.sync;
+package org.candlepin.sync.file;
 
 /**
  * Thrown when there is an issue on the {@link ManifestFileService}.
  */
-public class ManifestServiceException extends RuntimeException {
+public class ManifestFileServiceException extends RuntimeException {
 
-    public ManifestServiceException(String message) {
+    public ManifestFileServiceException(String message) {
         super(message);
     }
 
-    public ManifestServiceException(String message, Throwable e) {
+    public ManifestFileServiceException(String message, Throwable e) {
         super(message, e);
     }
 
-    public ManifestServiceException(Throwable e) {
+    public ManifestFileServiceException(Throwable e) {
         super(e);
     }
 }

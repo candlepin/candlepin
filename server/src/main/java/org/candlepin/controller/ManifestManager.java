@@ -33,7 +33,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.ImportRecord;
-import org.candlepin.model.ManifestFileRecordType;
 import org.candlepin.pinsetter.tasks.ExportJob;
 import org.candlepin.pinsetter.tasks.ImportJob;
 import org.candlepin.model.Owner;
@@ -43,9 +42,10 @@ import org.candlepin.sync.ExportResult;
 import org.candlepin.sync.Exporter;
 import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
-import org.candlepin.sync.ManifestFileService;
-import org.candlepin.sync.ManifestServiceException;
 import org.candlepin.sync.file.ManifestFile;
+import org.candlepin.sync.file.ManifestFileService;
+import org.candlepin.sync.file.ManifestFileType;
+import org.candlepin.sync.file.ManifestFileServiceException;
 import org.candlepin.util.Util;
 import org.quartz.JobDetail;
 import org.slf4j.Logger;
@@ -134,10 +134,10 @@ public class ManifestManager {
      * @param uploadedFileName the name of the file as uploaded (archive will contain the cached name).
      * @param overrides any {@link ConflictOverrides}s to apply during the import process.
      * @return the {@link JobDetail} that represents the asynchronous import job to start.
-     * @throws ManifestServiceException if the archive could not be stored.
+     * @throws ManifestFileServiceException if the archive could not be stored.
      */
     public JobDetail importManifestAsync(Owner owner, File archive, String uploadedFileName,
-        ConflictOverrides overrides) throws ManifestServiceException {
+        ConflictOverrides overrides) throws ManifestFileServiceException {
         ManifestFile manifestRecordId = storeImport(archive, owner);
         return ImportJob.scheduleImport(owner, manifestRecordId.getId(), uploadedFileName, overrides);
     }
@@ -202,10 +202,10 @@ public class ManifestManager {
      * @param maxAgeInMinutes the maximum age of the file in minutes. A negative value
      *                        indicates no expiry.
      * @return the number of expired exports that were deleted.
-     * @throws ManifestServiceException if an error occurs when cleaning up records.
+     * @throws ManifestFileServiceException if an error occurs when cleaning up records.
      */
     @Transactional
-    public int cleanup(int maxAgeInMinutes) throws ManifestServiceException {
+    public int cleanup(int maxAgeInMinutes) throws ManifestFileServiceException {
         if (maxAgeInMinutes < 0) {
             return 0;
         }
@@ -219,7 +219,7 @@ public class ManifestManager {
      * @param exportId the id of the manifest file to find.
      * @param exportedConsumer the consumer the export was generated for.
      * @param response the response to write the file to.
-     * @throws ManifestServiceException if there was an issue getting the file from the service
+     * @throws ManifestFileServiceException if there was an issue getting the file from the service
      * @throws NotFoundException if the manifest file is not found
      * @throws BadRequestException if the manifests target consumer does not match the specified
      *                             consumer.
@@ -227,7 +227,7 @@ public class ManifestManager {
      */
     @Transactional
     public void writeStoredExportToResponse(String exportId, Consumer exportedConsumer,
-        HttpServletResponse response) throws ManifestServiceException, NotFoundException,
+        HttpServletResponse response) throws ManifestFileServiceException, NotFoundException,
             BadRequestException, IseException {
         // In order to stream the results from the DB to the client
         // we write the file contents directly to the response output stream.
@@ -294,7 +294,7 @@ public class ManifestManager {
             sink.queueEvent(eventFactory.exportCreated(consumer));
             return new ExportResult(consumer.getUuid(), manifestFile.getId());
         }
-        catch (ManifestServiceException e) {
+        catch (ManifestFileServiceException e) {
             throw new ExportCreationException("Unable to create export archive", e);
         }
         finally {
@@ -357,9 +357,9 @@ public class ManifestManager {
      * @return the id of the stored manifest file.
      */
     @Transactional
-    protected ManifestFile storeImport(File importFile, Owner targetOwner) throws ManifestServiceException {
+    protected ManifestFile storeImport(File importFile, Owner targetOwner) throws ManifestFileServiceException {
         // Store the manifest record, and then store the file.
-        return storeFile(importFile, ManifestFileRecordType.IMPORT, targetOwner.getKey());
+        return storeFile(importFile, ManifestFileType.IMPORT, targetOwner.getKey());
     }
 
     /**
@@ -367,20 +367,20 @@ public class ManifestManager {
      *
      * @param exportFile the manifest export {@link File} to store.
      * @return the id of the stored manifest file.
-     * @throws ManifestServiceException
+     * @throws ManifestFileServiceException
      */
     @Transactional
     protected ManifestFile storeExport(File exportFile, Consumer distributor)
-        throws ManifestServiceException {
+        throws ManifestFileServiceException {
         // Only allow a single export for a consumer at a time. Delete all others before
         // storing the new one.
-        int count = manifestFileService.delete(ManifestFileRecordType.EXPORT, distributor.getUuid());
+        int count = manifestFileService.delete(ManifestFileType.EXPORT, distributor.getUuid());
         log.debug("Deleted {} existing export files for distributor {}.", count, distributor.getUuid());
-        return storeFile(exportFile, ManifestFileRecordType.EXPORT, distributor.getUuid());
+        return storeFile(exportFile, ManifestFileType.EXPORT, distributor.getUuid());
     }
 
-    private ManifestFile storeFile(File targetFile, ManifestFileRecordType type, String targetId)
-        throws ManifestServiceException {
+    private ManifestFile storeFile(File targetFile, ManifestFileType type, String targetId)
+        throws ManifestFileServiceException {
         return manifestFileService.store(type, targetFile, principalProvider.get().getName(), targetId);
     }
 

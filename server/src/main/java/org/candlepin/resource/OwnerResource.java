@@ -82,8 +82,8 @@ import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ImporterException;
-import org.candlepin.sync.ManifestServiceException;
 import org.candlepin.sync.SyncDataFormatException;
+import org.candlepin.sync.file.ManifestFileServiceException;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.Util;
@@ -1287,7 +1287,7 @@ public class OwnerResource {
             manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
             throw new IseException(i18n.tr("Error reading export archive"), e);
         }
-        catch (ManifestServiceException e) {
+        catch (ManifestFileServiceException e) {
             manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
             throw new IseException(i18n.tr("Error storing uploaded archive for asynchronous processing."), e);
         }

@@ -22,6 +22,8 @@ import java.util.Date;
 
 import javax.persistence.Query;
 
+import org.candlepin.sync.file.ManifestFileType;
+
 import com.google.inject.persist.Transactional;
 
 /**
@@ -53,7 +55,7 @@ public class ManifestFileRecordCurator extends AbstractHibernateCurator<Manifest
     }
 
     @Transactional
-    public ManifestFileRecord createFile(ManifestFileRecordType type, File fileToStore, String principalName,
+    public ManifestFileRecord createFile(ManifestFileType type, File fileToStore, String principalName,
         String targetId) throws IOException {
         Blob data = currentSession().getLobHelper().createBlob(new FileInputStream(fileToStore),
             fileToStore.length());
@@ -69,7 +71,7 @@ public class ManifestFileRecordCurator extends AbstractHibernateCurator<Manifest
         return q.executeUpdate();
     }
 
-    public int deleteMatching(ManifestFileRecordType type, String targetId) {
+    public int deleteMatching(ManifestFileType type, String targetId) {
         String queryString = String.format("delete from %s r where r.type=:type and r.targetId=:target",
             QUERY_CLASS_NAME);
         Query q = getEntityManager().createQuery(queryString);
