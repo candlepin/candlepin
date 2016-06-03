@@ -53,7 +53,6 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.persist.Transactional;
 
 /**
@@ -79,7 +78,7 @@ public class ManifestManager {
     @Inject
     public ManifestManager(ManifestFileService manifestFileService, Exporter exporter, Importer importer,
         ConsumerCurator consumerCurator, EntitlementCurator entitlementCurator, PoolManager poolManager,
-        PrincipalProvider principalProvider, Provider<I18n> i18nProvider, EventSink eventSink,
+        PrincipalProvider principalProvider, I18n i18n, EventSink eventSink,
         EventFactory eventFactory) {
         this.manifestFileService = manifestFileService;
         this.exporter = exporter;
@@ -88,7 +87,7 @@ public class ManifestManager {
         this.entitlementCurator = entitlementCurator;
         this.poolManager = poolManager;
         this.principalProvider = principalProvider;
-        this.i18n = i18nProvider.get();
+        this.i18n = i18n;
         this.sink = eventSink;
         this.eventFactory = eventFactory;
     }

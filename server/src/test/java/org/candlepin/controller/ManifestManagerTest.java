@@ -60,8 +60,6 @@ import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import com.google.inject.Provider;
-
 @RunWith(MockitoJUnitRunner.class)
 public class ManifestManagerTest {
 
@@ -73,7 +71,7 @@ public class ManifestManagerTest {
     @Mock private PoolManager poolManager;
     @Mock private EntitlementCurator entitlementCurator;
     @Mock private PrincipalProvider principalProvider;
-    @Mock private Provider<I18n> i18nProvider;
+    @Mock private I18n i18n;
     @Mock private EventSink eventSink;
     @Mock private EventFactory eventFactory;
 
@@ -81,10 +79,9 @@ public class ManifestManagerTest {
 
     @Before
     public void setupTest() {
-        I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        when(i18nProvider.get()).thenReturn(i18n);
+        i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         manager = new ManifestManager(fileService, exporter, importer, consumerCurator,
-            entitlementCurator, poolManager, principalProvider, i18nProvider, eventSink, eventFactory);
+            entitlementCurator, poolManager, principalProvider, i18n, eventSink, eventFactory);
     }
 
     @Test
