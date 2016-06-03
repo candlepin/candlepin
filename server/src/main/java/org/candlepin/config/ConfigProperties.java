@@ -252,6 +252,8 @@ public class ConfigProperties {
      */
     public static final String IDENTITY_CERT_EXPIRY_THRESHOLD = "candlepin.identityCert.expiry.threshold";
 
+    public static final String SWAGGER_ENABLED = "candlepin.swagger.enabled";
+
     public static final Map<String, String> DEFAULT_PROPERTIES =
         new HashMap<String, String>() {
 
@@ -385,8 +387,11 @@ public class ConfigProperties {
                 // Default 20 minutes
                 this.put(PINSETTER_ASYNC_JOB_TIMEOUT, Integer.toString(1200));
                 this.put(PINSETTER_MAX_RETRIES, Integer.toString(PINSETTER_MAX_RETRIES_DEFAULT));
+                this.put(SWAGGER_ENABLED, Boolean.toString(true));
             }
         };
+
+
 
 
 }

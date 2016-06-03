@@ -14,7 +14,9 @@
  */
 package org.candlepin.guice;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.filter.LoggingFilter;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.servlet.filter.CandlepinPersistFilter;
 import org.candlepin.servlet.filter.CandlepinScopeFilter;
 import org.candlepin.servlet.filter.ContentTypeHackFilter;
@@ -31,17 +33,27 @@ import java.util.Map;
  * Candlepin-specific {@link ServletModule} that configures servlet filters.
  */
 public class CandlepinFilterModule extends ServletModule {
+    private Configuration config;
+
+    public CandlepinFilterModule(Configuration config) {
+        this.config = config;
+    }
 
     @Override
     protected void configureServlets() {
         Map<String, String> loggingFilterConfig = new HashMap<String, String>();
         loggingFilterConfig.put("header.name", "x-candlepin-request-uuid");
 
+
+        String regex = ".*";
+
         /**
          * A negative lookeahead regex that makes sure that we can serve
          * static content at docs/
          */
-        String regex = "^(?!/docs).*";
+        if (config.getBoolean(ConfigProperties.SWAGGER_ENABLED)) {
+            regex = "^(?!/docs).*";
+        }
 
         filterRegex(regex).through(CandlepinScopeFilter.class);
         filterRegex(regex).through(CandlepinPersistFilter.class);
