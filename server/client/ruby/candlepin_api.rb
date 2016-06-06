@@ -493,7 +493,7 @@ class Candlepin
   end
 
   def download_consumer_export(uuid, export_id, dest_dir)
-    path = "/consumers/#{uuid}/export/download?export_id=#{export_id}"
+    path = "/consumers/#{uuid}/export/#{export_id}"
     get_file(path, dest_dir)
   end
 

@@ -16,6 +16,8 @@ package org.candlepin.sync;
 
 import java.io.Serializable;
 
+import org.candlepin.resource.ConsumerResource;
+
 /**
  * Represents the result from an async export job. This class simply defines
  * the appropriate meta data to create a link to download the manifest.
@@ -32,7 +34,7 @@ public class ExportResult implements Serializable {
     public ExportResult(String exportedConsumer, String exportId) {
         this.exportedConsumer = exportedConsumer;
         this.exportId = exportId;
-        this.href = String.format("/consumers/%s/export/download?export_id=%s", this.exportedConsumer,
+        this.href = ConsumerResource.buildAsyncDownloadManifestHref(this.exportedConsumer,
             this.exportId);
     }
 

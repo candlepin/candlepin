@@ -1842,21 +1842,16 @@ public class ConsumerResource {
         @ApiResponse(code = 404, message = "") })
     @GET
     @Produces("application/zip")
-    @Path("{consumer_uuid}/export/download")
+    @Path("{consumer_uuid}/export/{export_id}")
     public void downloadExistingExport(
         @Context HttpServletResponse response,
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("export_id") String exportId) {
+        @PathParam("export_id") String exportId) {
 
         // *******************************************************************************
-        // NOTE: If changing the path or parameters of this endpoint, be sure to update
-        // the HREF generation in ExportResult.
+        // NOTE: If changing the path or parameters of this end point, be sure to update
+        // the HREF generation in ConsumerResource.buildAsyncDownloadManifestHref.
         // *******************************************************************************
-
-        // If an exception happens during a download request, always report a
-        // NotFound exception.
-        NotFoundException toThrow = new NotFoundException(
-            i18n.tr("The specified file does not exist, or can not be accessed."));
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         if (consumer.getType() == null || !consumer.getType().isManifest()) {
@@ -1880,6 +1875,17 @@ public class ConsumerResource {
         // On successful manifest read, delete the record. The manifest can only be
         // downloaded once and must then be regenerated.
         manifestManager.deleteStoredManifest(exportId);
+    }
+
+    /**
+     * Builds an HREF to a stored manifest file.
+     *
+     * @param consumerUuid the target consumer UUID.
+     * @param manifestId the target manifest ID.
+     * @return the HREF string for the specified manifest
+     */
+    public static String buildAsyncDownloadManifestHref(String consumerUuid, String manifestId) {
+        return String.format("/consumers/%s/export/%s", consumerUuid, manifestId);
     }
 
     /**
