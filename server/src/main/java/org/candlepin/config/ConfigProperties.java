@@ -256,6 +256,8 @@ public class ConfigProperties {
      */
     public static final String IDENTITY_CERT_EXPIRY_THRESHOLD = "candlepin.identityCert.expiry.threshold";
 
+    public static final String SWAGGER_ENABLED = "candlepin.swagger.enabled";
+
     public static final Map<String, String> DEFAULT_PROPERTIES =
         new HashMap<String, String>() {
 
@@ -393,8 +395,12 @@ public class ConfigProperties {
                 // ExportCleaner job config
                 // Max Age: 24 hours
                 this.put(EXPORT_CLEANER_JOB_MAX_AGE_IN_MINUTES, "1440");
+
+                this.put(SWAGGER_ENABLED, Boolean.toString(true));
             }
         };
+
+
 
 
 }
