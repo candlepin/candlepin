@@ -25,9 +25,12 @@ import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.Util;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -280,11 +283,11 @@ public class ProductManagerTest extends DatabaseTestFixture {
         product.addContent(content);
         this.contentCurator.create(content);
         this.productCurator.create(product);
+        this.ownerProductCurator.mapProductToOwners(product, owner);
 
         Product output = this.productManager.removeProductContent(
             product, Arrays.asList(content), owner, false
         );
-
         assertFalse(output.hasContent(content.getId()));
         assertNotNull(this.productCurator.find(product.getUuid()));
         assertNotNull(this.contentCurator.find(content.getUuid()));
@@ -300,6 +303,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         product.addContent(content);
         this.contentCurator.create(content);
         this.productCurator.create(product);
+        this.ownerProductCurator.mapProductToOwners(product, owner);
 
         Product output = this.productManager.removeProductContent(
             product, Arrays.asList(content), owner, true
@@ -386,4 +390,148 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertTrue(output == product);
         assertTrue(product.hasContent(content.getId()));
     }
+
+
+
+
+
+    @Test
+    public void testAddContentToProduct() {
+        Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
+        Product product = this.createProduct("p1", "prod1", owner);
+        Content content = this.createContent("c1", "content1", owner);
+        this.ownerProductCurator.mapProductToOwners(product, owner);
+
+        Product output = this.productManager.addContentToProduct(
+            product, Arrays.asList(new ProductContent(null, content, true)), owner, false
+        );
+
+        assertEquals(product, output);
+        assertTrue(product.hasContent(content.getId()));
+        assertTrue(output.hasContent(content.getId()));
+
+        verifyZeroInteractions(this.mockEntCertGenerator);
+    }
+
+    @Test
+    public void testAddContentToSharedProduct() {
+        Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
+        Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
+        Product product = this.createProduct("p1", "prod1", owner1);
+        Content content = this.createContent("c1", "content1", owner1);
+        this.ownerProductCurator.mapProductToOwners(product, owner1, owner2);
+
+        Product output = this.productManager.addContentToProduct(
+            product, Arrays.asList(new ProductContent(null, content, true)), owner1, false
+        );
+
+        assertNotEquals(product, output);
+        assertFalse(product.hasContent(content.getId()));
+        assertTrue(output.hasContent(content.getId()));
+
+        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner1));
+        assertFalse(this.ownerProductCurator.isProductMappedToOwner(output, owner2));
+
+        verifyZeroInteractions(this.mockEntCertGenerator);
+    }
+
+    @Test
+    public void testAddContentToSharedProductWithRegeneration() {
+        Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
+        Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
+        Product product = this.createProduct("p1", "prod1", owner1);
+        Content content = this.createContent("c1", "content1", owner1);
+        this.ownerProductCurator.mapProductToOwners(product, owner1, owner2);
+
+        Product output = this.productManager.addContentToProduct(
+            product, Arrays.asList(new ProductContent(null, content, true)), owner1, true
+        );
+
+        assertNotEquals(product, output);
+        assertFalse(product.hasContent(content.getId()));
+        assertTrue(output.hasContent(content.getId()));
+
+        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner1));
+        assertFalse(this.ownerProductCurator.isProductMappedToOwner(output, owner2));
+
+        verify(this.mockEntCertGenerator, times(1))
+            .regenerateCertificatesOf(eq(Arrays.asList(owner1)), eq(Arrays.asList(output)), anyBoolean());
+    }
+
+    @Test
+    public void testUpdateProductContentOnSharedProduct() {
+        Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
+        Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
+        Product product = this.createProduct("p1", "prod1", owner1);
+        Content content = this.createContent("c1", "content1", owner1);
+        this.ownerProductCurator.mapProductToOwners(product, owner1, owner2);
+
+        product.setProductContent(Arrays.asList(new ProductContent(product, content, true)));
+        this.productCurator.merge(product);
+
+        Product output = this.productManager.addContentToProduct(
+            product, Arrays.asList(new ProductContent(null, content, false)), owner1, false
+        );
+
+        assertNotEquals(product, output);
+        assertTrue(product.hasContent(content.getId()));
+        assertTrue(output.hasContent(content.getId()));
+        assertTrue(product.getProductContent().get(0).isEnabled());
+        assertFalse(output.getProductContent().get(0).isEnabled());
+
+        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
+        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner1));
+        assertFalse(this.ownerProductCurator.isProductMappedToOwner(output, owner2));
+
+        verifyZeroInteractions(this.mockEntCertGenerator);
+    }
+
+
+    // @Test
+    // public void testRemoveProductAttributes() {
+    //     Owner owner1 = this.createOwner("test-owner-1", "Test Owner");
+    //     Owner owner2 = this.createOwner("test-owner-2", "Test Owner");
+    //     Product product = TestUtil.createProduct("p1", "prod1", owner1);
+    //     ProductAttribute attrib = new ProductAttribute("test-attrib", "test-value");
+    //     product.addAttribute(attrib);
+    //     this.productCurator.create(product);
+    //     this.ownerProductCurator.mapProductToOwners(product, owner1, owner2);
+
+    //     assertTrue(product.hasAttribute(attrib.getName()));
+
+    //     ProductManager.log.debug("STARTING REMOVE PRODUCT ATTRIB TEST");
+    //     product.removeAttribute(attrib.getName());
+    //     Product output = this.productManager.updateProduct(product, owner1, false);
+
+    //     assertTrue(product.hasAttribute(attrib.getName()));
+    //     assertFalse(output.hasAttribute(attrib.getName()));
+
+    //     verifyZeroInteractions(this.mockEntCertGenerator);
+    // }
+
+    // @Test
+    // public void testRemoveProductDependentIds() {
+    //     Owner owner1 = this.createOwner("test-owner-1", "Test Owner");
+    //     Owner owner2 = this.createOwner("test-owner-2", "Test Owner");
+    //     Product product = TestUtil.createProduct("p1", "prod1", owner1);
+    //     product.setDependentProductIds(Util.asSet("dp1", "dp2"));
+    //     this.productCurator.create(product);
+    //     this.ownerProductCurator.mapProductToOwners(product, owner1, owner2);
+
+    //     assertEquals(Util.asSet("dp1", "dp2"), product.getDependentProductIds());
+
+    //     ProductManager.log.debug("STARTING REMOVE PRODUCT DEP IDS TEST");
+    //     product.setDependentProductIds(Util.asSet("dp2"));
+    //     Product output = this.productManager.updateProduct(product, owner1, false);
+
+    //     assertEquals(Util.asSet("dp1", "dp2"), product.getDependentProductIds());
+    //     assertEquals(Util.asSet("dp2"), output.getDependentProductIds());
+
+    //     verifyZeroInteractions(this.mockEntCertGenerator);
+    // }
 }

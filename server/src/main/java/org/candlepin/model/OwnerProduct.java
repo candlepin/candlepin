@@ -108,7 +108,7 @@ public class OwnerProduct implements Persisted, Serializable {
 
     @Override
     public Serializable getId() {
-        return new OwnerProductKey(ownerId, productUuid);
+        return new OwnerProductKey(this.ownerId, this.productUuid);
     }
 
     public Owner getOwner() {

@@ -17,14 +17,19 @@ package org.candlepin.model;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
+import org.hibernate.annotations.Parent;
+
 import java.io.Serializable;
 
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
+import javax.persistence.Column;
 import javax.persistence.Id;
+import javax.persistence.IdClass;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -33,19 +38,15 @@ import javax.xml.bind.annotation.XmlTransient;
 /**
  * ProductContent
  */
-@Entity
-@Table(name = "cp2_product_content")
+@Embeddable
 public class ProductContent extends AbstractHibernateObject {
 
-    @Id
-    @ManyToOne
-    @JoinColumn(name = "product_uuid", nullable = false, updatable = false)
+    @Parent
     @NotNull
     private Product product;
 
-    @Id
     @ManyToOne
-    @JoinColumn(name = "content_uuid", nullable = false, updatable = false)
+    @JoinColumn(name = "content_uuid", nullable = false)
     @NotNull
     private Content content;
 
@@ -61,21 +62,10 @@ public class ProductContent extends AbstractHibernateObject {
         this.setEnabled(enabled);
     }
 
-    public String toString() {
-        return String.format(
-            "ProductContent [product = %s, content = %s, enabled = %s]",
-            this.getProduct(), this.getContent(), this.isEnabled()
-        );
-    }
-
+    @Override
     @XmlTransient
     public Serializable getId() {
-        // TODO: just here to appease AbstractHibernateObject
-        return null;
-    }
-
-    public void setId(String s) {
-        // TODO: just here to appease jackson
+        return null; // return new ProductContentKey(this.productUuid, this.contentUuid);
     }
 
     /**
@@ -122,22 +112,13 @@ public class ProductContent extends AbstractHibernateObject {
     }
 
     @Override
-    public int hashCode() {
-        return new HashCodeBuilder(3, 23)
-            // .append(this.product != null ? this.product.getUuid() : null)
-            // .append(this.content != null ? this.content.getUuid() : null)
-            .append(this.enabled)
-            .toHashCode();
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (this == other) {
+    public boolean equals(Object obj) {
+        if (this == obj) {
             return true;
         }
 
-        if (other instanceof ProductContent) {
-            ProductContent that = (ProductContent) other;
+        if (obj instanceof ProductContent) {
+            ProductContent that = (ProductContent) obj;
 
             String thisProductUuid = this.product != null ? this.product.getUuid() : null;
             String thisContentUuid = this.content != null ? this.content.getUuid() : null;
@@ -154,4 +135,19 @@ public class ProductContent extends AbstractHibernateObject {
         return false;
     }
 
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(3, 23)
+            .append(this.product != null ? this.product.getUuid() : null)
+            .append(this.content != null ? this.content.getUuid() : null)
+            .append(this.enabled)
+            .toHashCode();
+    }
+
+    public String toString() {
+        return String.format(
+            "ProductContent [product = %s, content = %s, enabled = %s]",
+            this.getProduct(), this.getContent(), this.isEnabled()
+        );
+    }
 }

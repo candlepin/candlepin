@@ -21,6 +21,9 @@ import java.io.Serializable;
 
 
 
+/**
+ * Class representing the composite key for OwnerProduct instances
+ */
 public class OwnerProductKey implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -61,25 +64,20 @@ public class OwnerProductKey implements Serializable {
     }
 
     @Override
-    public boolean equals(Object value) {
-        if (this == value) {
+    public boolean equals(Object obj) {
+        if (this == obj) {
             return true;
         }
 
-        if (value == null) {
+        if (obj == null || this.getClass() != obj.getClass()) {
             return false;
         }
 
-        if (this.getClass() != value.getClass()) {
-            return false;
-        }
-
-        OwnerProductKey that = (OwnerProductKey) value;
+        OwnerProductKey that = (OwnerProductKey) obj;
 
         return new EqualsBuilder()
             .append(this.ownerId, that.ownerId)
             .append(this.productUuid, that.productUuid)
             .isEquals();
     }
-
 }

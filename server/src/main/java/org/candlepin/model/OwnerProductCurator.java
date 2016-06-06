@@ -18,6 +18,7 @@ import com.google.inject.persist.Transactional;
 
 import org.hibernate.Session;
 import org.hibernate.Criteria;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
@@ -175,8 +176,6 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
     @Transactional
     public boolean removeOwnerFromProduct(Product product, Owner owner) {
-        log.debug("REMOVING WITH ENTITY MANAGER: {}", this.getEntityManager());
-
         String jpql = "DELETE FROM OwnerProduct op " +
             "WHERE op.product.uuid = :product_uuid AND op.owner.id = :owner_id";
 

@@ -35,8 +35,10 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlTransient;
 
+
+
 /**
- * See Attributes interface for documentation.f
+ * See Attributes interface for documentation.
  */
 @Entity
 @Table(name = "cp2_product_attributes")

@@ -117,8 +117,9 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @Fetch(FetchMode.SUBSELECT)
     private Set<ProductAttribute> attributes;
 
-    @OneToMany(mappedBy = "product", orphanRemoval = true)
-    @Cascade({ CascadeType.ALL })
+    @ElementCollection
+    @CollectionTable(name = "cp2_product_content", joinColumns = @JoinColumn(name = "product_uuid"))
+    @Column(name = "element")
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
     private List<ProductContent> productContent;
 
@@ -501,6 +502,11 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         return null;
     }
 
+    public boolean removeAttribute(String key) {
+        ProductAttribute attrib = this.getAttribute(key);
+        return attrib != null && this.attributes.remove(attrib);
+    }
+
     public String getAttributeValue(String key) {
         if (attributes != null) {
             for (ProductAttribute a : attributes) {
@@ -585,7 +591,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
                 // have to step through each collection and do a manual comparison. Ugh.
                 // We also do an extra check here so null values and empty collections are
                 // considered equal. If we ever move to real DTOs, those checks should be dropped.
-
                 if (!Util.collectionsAreEqual(this.attributes, that.attributes)) {
                     if (!(this.attributes == null && that.attributes.size() == 0) &&
                         !(that.attributes == null && this.attributes.size() == 0)) {
@@ -593,7 +598,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
                         return false;
                     }
                 }
-
 
                 if (!Util.collectionsAreEqual(this.dependentProductIds, that.dependentProductIds)) {
                     if (!(this.dependentProductIds == null && that.dependentProductIds.size() == 0) &&
@@ -633,7 +637,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         // Because we handle the collections specially in .equals, we have to do the same special
         // treatment here to ensure our output doesn't give us wonky results when compared to the
         // output of .equals
-
         if (this.attributes != null && this.attributes.size() > 0) {
             builder.append(this.attributes);
         }
@@ -644,15 +647,15 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             // again, doesn't implement .hashCode reliably on the proxy collections. So, we have to
             // manually step through these and add the elements to ensure the hash code is
             // generated properly.
-            if (this.productContent != null && this.productContent.size() > 0) {
-                for (ProductContent pc : this.productContent) {
-                    builder.append(pc.getContent());
-                }
-            }
-
             if (this.dependentProductIds != null && this.dependentProductIds.size() > 0) {
                 for (String pid : this.dependentProductIds) {
                     builder.append(pid);
+                }
+            }
+
+            if (this.productContent != null && this.productContent.size() > 0) {
+                for (ProductContent pc : this.productContent) {
+                    builder.append(pc.getContent());
                 }
             }
         }
@@ -678,6 +681,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     /**
      * Adds the specified content to this product as a disabled source.
      *
+     * @deprecated
+     *  Product content should not be managed directly. The methods provided by the ProductManager
+     *  for managing content should be used instead.
+     *
      * @param content
      *  The content to add to this product
      *
@@ -691,6 +698,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     /**
      * Adds the specified content to this product, if it doesn't already exist.
      *
+     * @deprecated
+     *  Product content should not be managed directly. The methods provided by the ProductManager
+     *  for managing content should be used instead.
+     *
      * @param content
      *  The content to add to this product
      *
@@ -701,7 +712,11 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  true if the content is added successfully; false otherwise
      */
     public boolean addContent(Content content, boolean enabled) {
-        return this.addProductContent(new ProductContent(this, content, enabled));
+        if (content != null) {
+            return this.productContent.add(new ProductContent(this, content, enabled));
+        }
+
+        return false;
     }
 
     /**
@@ -718,9 +733,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         this.productContent.clear();
 
         if (productContent != null) {
-            for (ProductContent pc : productContent) {
-                this.addProductContent(pc);
-            }
+            this.productContent.addAll(productContent);
         }
 
         return this;
@@ -731,41 +744,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      */
     public List<ProductContent> getProductContent() {
         return productContent;
-    }
-
-    /**
-     * Adds the specified ProductContent to this product. If the content has already been added,
-     * this method does nothing.
-     *
-     * @param content
-     *  The ProductContent instance to add to this product
-     *
-     * @return
-     *  true if the ProductContent is added successfully; false otherwise
-     */
-    public boolean addProductContent(ProductContent content) {
-        if (this.productContent == null) {
-            this.productContent = new LinkedList<ProductContent>();
-        }
-
-        if (content != null) {
-            boolean found = false;
-            for (ProductContent pc : this.productContent) {
-                if (pc.getContent().equals(content.getContent())) {
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found) {
-                content.setProduct(this);
-                this.productContent.add(content);
-
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public void setContent(Set<Content> content) {

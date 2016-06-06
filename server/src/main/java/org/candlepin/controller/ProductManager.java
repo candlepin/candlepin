@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -154,6 +155,10 @@ public class ProductManager {
             throw new IllegalArgumentException("owner");
         }
 
+        // TODO:
+        // We, currently, do not trigger a refresh after updating a product. At present this is an
+        // exercise left to the caller, but perhaps we should be doing that here automatically?
+
         // This has to fetch a new instance, or we'll be unable to compare the objects
         Product existing = this.ownerProductCurator.getProductById(owner.getId(), entity.getId());
 
@@ -177,10 +182,8 @@ public class ProductManager {
             .getProductsByVersion(existing.getId(), existing.hashCode())
             .list();
 
-        log.debug("Checking {} alternate versions", alternateVersions.size());
+        log.debug("Checking {} alternate product versions", alternateVersions.size());
         for (Product alt : alternateVersions) {
-            log.debug("Checking alternate version: {}", alt);
-
             // Skip ourselves if we happen across it
             if (alt != existing && alt.equals(existing)) {
                 log.debug("Converging product with existing: {} => {}", existing, alt);
@@ -196,15 +199,6 @@ public class ProductManager {
                 }
 
                 return existing;
-            }
-            else {
-                if (alt == existing) {
-                    log.debug("Found own product; skipping");
-                } else if (!alt.equals(existing)) {
-                    log.debug("Products are not actually equal");
-                } else {
-                    log.debug("Something else entirely happened here");
-                }
             }
         }
 
@@ -231,6 +225,8 @@ public class ProductManager {
 
         // Now that we have a copy with the pending changes, refresh the existing version so we
         // don't apply those changes for other orgs
+        //
+        // NOTE: This won't revert changes made to collections which have automatic orphan removal.
         this.productCurator.refresh(existing);
 
         // Clear the UUID so Hibernate doesn't think our copy is a detached entity
@@ -266,7 +262,6 @@ public class ProductManager {
      * @throws NullPointerException
      *  if the provided product entity is null
      */
-    @Transactional
     public void removeProduct(Product entity, Owner owner) {
         log.debug("Removing product from owner: {}, {}", entity, owner);
 
@@ -297,6 +292,129 @@ public class ProductManager {
         }
     }
 
+
+    // TODO:
+    // Not sure if we'll need this or not. Don't feel like writing a test for it at the moment, so
+    // I'm leaving it disabled until we have a need for it. -C
+    // public Product addContentToProduct(Product product, Collection<Content> content, boolean enabled,
+    //     Owner owner, boolean regenerateEntitlementCerts) {
+
+    //     Collection<ProductContent> productContent = new LinkedList<ProductContent>();
+
+    //     for (Content current : content) {
+    //         productContent.add(new ProductContent(product, current, enabled));
+    //     }
+
+    //     return this.addContentToProduct(product, productContent, owner, regenerateEntitlementCerts);
+    // }
+
+    /**
+     * Adds the specified content to the product, effective for the given owner. If the product is
+     * already mapped to one of the content instances provided, the mapping will be updated to
+     * reflect the configuration of the mapping provided.
+     *
+     * @param product
+     *  The product to which content should be added
+     *
+     * @param content
+     *  A collection of ProductContent instances referencing the content to add to the product
+     *
+     * @param owner
+     *  The owner of the product to update
+     *
+     * @param regenerateEntitlementCerts
+     *  Whether or not changes made to the product should trigger the regeneration of entitlement
+     *  certificates for affected consumers
+     *
+     * @return
+     *  the updated product entity, or a new product entity
+     */
+    public Product addContentToProduct(Product product, Collection<ProductContent> content, Owner owner,
+        boolean regenerateEntitlementCerts) {
+
+        if (this.ownerProductCurator.isProductMappedToOwner(product, owner)) {
+            boolean changed = false;
+            Collection<ProductContent> original = new LinkedList<ProductContent>(product.getProductContent());
+            Collection<ProductContent> modified = new LinkedList<ProductContent>();
+
+            for (ProductContent pc : content) {
+                ProductContent current = null;
+                Content lcref = pc.getContent();
+
+                for (ProductContent test : original) {
+                    Content rcref = test.getContent();
+
+                    // Check if the two objects are referencing the same content...
+                    boolean cequal = (lcref == rcref || (lcref != null && rcref != null &&
+                        lcref.getId() != null && lcref.getId().equals(rcref.getId())));
+
+                    if (cequal) {
+                        current = test;
+                        break;
+                    }
+                }
+
+                if (current == null) {
+                    pc.setProduct(product);
+                    modified.add(pc);
+
+                    changed = true;
+                }
+                else if (current.isEnabled() != pc.isEnabled() || !current.getContent().equals(lcref)) {
+                    // If the enabled state or content state differs, update them.
+                    // Note that we're assuming the products are already equal here.
+                    pc.setProduct(product);
+                    modified.add(pc);
+
+                    changed = true;
+                }
+                else {
+                    modified.add(current);
+                }
+            }
+
+            if (changed) {
+                product.setProductContent(modified);
+                Product updated = this.updateProduct(product, owner, regenerateEntitlementCerts);
+
+                // If the product instance changed as a result of a call to update product, we
+                // need to restore the content set so we don't erroneously affect other owners
+                // using the old instance.
+                if (product != updated) {
+                    product.setProductContent(original);
+                }
+
+                return updated;
+            }
+        }
+
+        return product;
+    }
+
+    // TODO:
+    // Not sure if needed; also, likely broken. This should probably be axed before merging.
+    // public Product setProductContent(Product product, Collection<Content> content, Owner owner,
+    //     boolean regenerateEntitlementCerts) {
+
+    //     if (this.ownerProductCurator.isProductMappedToOwner(product, owner)) {
+    //         Collection<ProductContent> original = product.getProductContent();
+
+    //         product.setContent(content);
+    //         Product updated = this.updateProduct(product, owner, regenerateEntitlementCerts);
+
+    //         if (product != updated) {
+    //             // We got a different instance out, which likely means a convergence or divergence.
+    //             // Restore the original content on our input product so we don't accidentally apply
+    //             // the change to every owner using it.
+    //             product.setProductContent(original);
+    //         }
+
+    //         return updated;
+    //     }
+
+    //     return product;
+    // }
+
     /**
      * Removes the specified content from the given product for a single owner. The changes made to
      * the product may result in the convergence or divergence of product versions.
@@ -317,7 +435,6 @@ public class ProductManager {
      * @return
      *  the updated product instance
      */
-    @Transactional
     public Product removeProductContent(Product product, Collection<Content> content, Owner owner,
         boolean regenerateEntitlementCerts) {
 
@@ -334,11 +451,20 @@ public class ProductManager {
 
             if (remove.size() > 0) {
                 product.getProductContent().removeAll(remove);
-                return this.updateProduct(product, owner, regenerateEntitlementCerts);
+                Product updated = this.updateProduct(product, owner, regenerateEntitlementCerts);
+
+                // Impl note:
+                // The product changed, but it's likely orphan removal botched our content set for
+                // the base product. We should fix that here. If Hibernate ever stops using goofy
+                // timing for when it performs orphan removal, this can be removed.
+                if (product != updated) {
+                    product.getProductContent().addAll(remove);
+                }
+
+                return updated;
             }
         }
 
         return product;
     }
-
 }

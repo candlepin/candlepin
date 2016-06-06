@@ -34,6 +34,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
@@ -270,6 +271,27 @@ public class DatabaseTestFixture {
         }
 
         return product;
+    }
+
+    protected Content createContent(Owner... owners) {
+        String contentId = "test-content-" + TestUtil.randomInt();
+        return this.createContent(contentId, contentId, owners);
+    }
+
+    protected Content createContent(String id, String name, Owner... owners) {
+        Content content = TestUtil.createContent(null, id, name);
+
+        for (Owner owner : owners) {
+            content.addOwner(owner);
+        }
+
+        content = this.contentCurator.create(content);
+
+        // for (Owner owner : owners) {
+        //     this.ownerContentCurator.mapContentToOwner(content, owner);
+        // }
+
+        return content;
     }
 
     protected Consumer createConsumer(Owner owner) {

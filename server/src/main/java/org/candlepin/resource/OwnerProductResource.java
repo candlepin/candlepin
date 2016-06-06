@@ -275,7 +275,7 @@ public class OwnerProductResource {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Product product = this.fetchProduct(owner, productId);
-        List<ProductContent> productContent = new LinkedList<ProductContent>();
+        Collection<ProductContent> productContent = new LinkedList<ProductContent>();
 
         if (product.isLocked()) {
             throw new ForbiddenException(i18n.tr("product \"{1}\" is locked", product.getId()));
@@ -286,10 +286,10 @@ public class OwnerProductResource {
 
         for (Entry<String, Boolean> entry : contentMap.entrySet()) {
             Content content = this.fetchContent(owner, entry.getKey());
-            change = product.addContent(content, entry.getValue()) || change;
+            productContent.add(new ProductContent(product, content, entry.getValue()));
         }
 
-        return change ? this.productManager.updateProduct(product, owner, true) : product;
+        return this.productManager.addContentToProduct(product, productContent, owner, true);
     }
 
     @ApiOperation(notes = "Adds Content to a Product  Single mode", value = "addContent")
@@ -314,9 +314,9 @@ public class OwnerProductResource {
 
         this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
 
-        return product.addContent(content, enabled) ?
-            this.productManager.updateProduct(product, owner, true) :
-            product;
+        return this.productManager.addContentToProduct(
+            product, Arrays.asList(new ProductContent(product, content, enabled)), owner, true
+        );
     }
 
     @ApiOperation(notes = "Removes Content from a Product", value = "removeContent")
