@@ -122,21 +122,12 @@ import javax.ws.rs.core.MultivaluedMap;
 public class OwnerResourceTest extends DatabaseTestFixture {
     private static final String OWNER_NAME = "Jar Jar Binks";
 
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private PoolCurator poolCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private EntitlementCurator entitlementCurator;
-    @Inject private EventCurator eventCurator;
-    @Inject private RoleCurator roleCurator;
     @Inject private CandlepinPoolManager poolManager;
     @Inject private ServiceLevelValidator serviceLevelValidator;
     @Inject private I18n i18n;
     @Inject private OwnerResource ownerResource;
     @Inject private EventFactory eventFactory;
     @Inject private Configuration config;
-    @Inject private ImportRecordCurator importRecordCurator;
     @Inject private ContentOverrideValidator contentOverrideValidator;
     @Inject private ProductManager productManager;
     @Inject private ContentManager contentManager;
@@ -1424,7 +1415,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Owner owner = TestUtil.createOwner();
         Consumer consumer = TestUtil.createConsumer(owner);
-        Pool pool = TestUtil.createPool(owner, TestUtil.createProduct(owner));
+        Pool pool = TestUtil.createPool(owner, TestUtil.createProduct());
 
         Entitlement e = TestUtil.createEntitlement(owner, consumer, pool, null);
         e.setId("getAllEntitlementsForOwner");

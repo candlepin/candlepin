@@ -52,37 +52,34 @@ import javax.inject.Inject;
  * OwnerProductResourceTest
  */
 public class OwnerProductResourceTest extends DatabaseTestFixture {
-    @Inject private ProductCertificateCurator productCertificateCurator;
-    @Inject private ContentCurator contentCurator;
     @Inject private OwnerProductResource ownerProductResource;
-    @Inject private OwnerCurator ownerCurator;
     @Inject private ProductManager productManager;
     @Inject private Configuration config;
 
-    private Product createProduct(Owner owner) {
+    private Product buildTestProduct() {
         String label = "test_product";
         String name = "Test Product";
         String variant = "server";
         String version = "1.0";
         String arch = "ALL";
         String type = "SVC";
-        Product prod = new Product(label, name, owner, variant, version, arch, type);
+        Product prod = new Product(label, name, variant, version, arch, type);
         return prod;
     }
 
     @Test
     public void testCreateProductResource() {
-        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
+        Owner owner = this.createOwner("Example-Corporation");
 
-        Product toSubmit = createProduct(owner);
+        Product toSubmit = buildTestProduct();
         ownerProductResource.createProduct(owner.getKey(), toSubmit);
     }
 
     @Test
     public void testCreateProductWithContent() {
-        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
+        Owner owner = this.createOwner("Example-Corporation");
 
-        Product toSubmit = createProduct(owner);
+        Product toSubmit = buildTestProduct();
         String  contentHash = String.valueOf(
             Math.abs(Long.valueOf("test-content".hashCode())));
 
@@ -125,9 +122,9 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
 
     @Test
     public void getProduct() {
-        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
+        Owner owner = this.createOwner("Example-Corporation");
 
-        Product p = createProduct(owner);
+        Product p = buildTestProduct();
         p = ownerProductResource.createProduct(owner.getKey(), p);
         securityInterceptor.enable();
 
@@ -137,10 +134,10 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
 
     @Test
     public void getProductCertificate() {
-        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
+        Owner owner = this.createOwner("Example-Corporation");
 
-        Product p = createProduct(owner);
-        p = ownerProductResource.createProduct(owner.getKey(), p);
+        Product p = this.createProduct(owner);
+        // p = ownerProductResource.createProduct(owner.getKey(), p);
         // ensure we check SecurityHole
         securityInterceptor.enable();
 

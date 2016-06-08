@@ -374,11 +374,11 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
     private Pool genPool() {
         Pool pool = new Pool();
-        pool.setId("" + poolid++);
+        pool.setId(String.valueOf(poolid++));
         pool.setQuantity(10L);
         pool.setConsumed(4L);
         pool.setAttribute("multi-entitlement", "yes");
-        pool.setProduct(TestUtil.createProduct(owner));
+        pool.setProduct(TestUtil.createProduct());
         return pool;
     }
 

@@ -24,21 +24,18 @@ import org.junit.Test;
 import javax.inject.Inject;
 
 public class AttributeTest extends DatabaseTestFixture {
-    @Inject private ProductCurator productCurator;
-    @Inject private ProductAttributeCurator attributeCurator;
-    @Inject private OwnerCurator ownerCurator;
 
     @Test
     public void testLookup() {
         Owner o = new Owner("test");
         ownerCurator.create(o);
-        Product p = TestUtil.createProduct(o);
+        Product p = TestUtil.createProduct();
         productCurator.create(p);
         ProductAttribute newAttr = new ProductAttribute("OwesUsMoney_100", "100");
         newAttr.setProduct(p);
-        attributeCurator.create(newAttr);
+        productAttributeCurator.create(newAttr);
 
-        ProductAttribute foundAttr = attributeCurator.find(newAttr.getId());
+        ProductAttribute foundAttr = productAttributeCurator.find(newAttr.getId());
         assertEquals(newAttr.getName(), foundAttr.getName());
         assertEquals(newAttr.getValue(), foundAttr.getValue());
     }

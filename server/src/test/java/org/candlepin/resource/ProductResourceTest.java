@@ -67,30 +67,30 @@ public class ProductResourceTest extends DatabaseTestFixture {
     @Inject private Configuration config;
     @Inject private I18n i18n;
 
-    private Product createProduct(Owner owner) {
+    private Product buildTestProduct() {
         String label = "test_product";
         String name = "Test Product";
         String variant = "server";
         String version = "1.0";
         String arch = "ALL";
         String type = "SVC";
-        Product prod = new Product(label, name, owner, variant, version, arch, type);
+        Product prod = new Product(label, name, variant, version, arch, type);
         return prod;
     }
 
     @Test(expected = BadRequestException.class)
     public void testCreateProductResource() {
-        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
+        Owner owner = this.createOwner("Example-Corporation");
 
-        Product toSubmit = createProduct(owner);
+        Product toSubmit = buildTestProduct();
         productResource.createProduct(toSubmit);
     }
 
     @Test(expected = BadRequestException.class)
     public void testCreateProductWithContent() {
-        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
+        Owner owner = this.createOwner("Example-Corporation");
 
-        Product toSubmit = createProduct(owner);
+        Product toSubmit = buildTestProduct();
         String  contentHash = String.valueOf(Math.abs(Long.valueOf("test-content".hashCode())));
 
         Content testContent = new Content(
@@ -124,8 +124,8 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
     @Test
     public void getProduct() {
-        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
-        Product product = productCurator.create(createProduct(owner));
+        Owner owner = this.createOwner("Example-Corporation");
+        Product product = this.createProduct(buildTestProduct(), owner);
 
         securityInterceptor.enable();
 
@@ -137,8 +137,8 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
     @Test
     public void getProductCertificate() {
-        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
-        Product p = productCurator.create(createProduct(owner));
+        Owner owner = this.createOwner("Example-Corporation");
+        Product p = this.createProduct(buildTestProduct(), owner);
 
         // ensure we check SecurityHole
         securityInterceptor.enable();
@@ -158,17 +158,17 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Owner owner2 = this.ownerCurator.create(new Owner("TestCorp-02"));
         Owner owner3 = this.ownerCurator.create(new Owner("TestCorp-03"));
 
-        Product prod1 = this.productCurator.create(TestUtil.createProduct("p1", "p1", owner1));
-        Product prod2 = this.productCurator.create(TestUtil.createProduct("p1", "p1", owner2));
-        Product prod3 = this.productCurator.create(TestUtil.createProduct("p2", "p2", owner2));
-        Product prod4 = this.productCurator.create(TestUtil.createProduct("p2", "p2", owner3));
-        Product prod5 = this.productCurator.create(TestUtil.createProduct("p3", "p3", owner3));
+        Product prod1 = this.createProduct("p1", "p1", owner1);
+        Product prod2 = this.createProduct("p1", "p1", owner2);
+        Product prod3 = this.createProduct("p2", "p2", owner2);
+        Product prod4 = this.createProduct("p2", "p2", owner3);
+        Product prod5 = this.createProduct("p3", "p3", owner3);
 
-        Product poolProd1 = this.productCurator.create(TestUtil.createProduct(owner1));
-        Product poolProd2 = this.productCurator.create(TestUtil.createProduct(owner2));
-        Product poolProd3 = this.productCurator.create(TestUtil.createProduct(owner2));
-        Product poolProd4 = this.productCurator.create(TestUtil.createProduct(owner3));
-        Product poolProd5 = this.productCurator.create(TestUtil.createProduct(owner3));
+        Product poolProd1 = this.createProduct(owner1);
+        Product poolProd2 = this.createProduct(owner2);
+        Product poolProd3 = this.createProduct(owner2);
+        Product poolProd4 = this.createProduct(owner3);
+        Product poolProd5 = this.createProduct(owner3);
 
         Pool pool1 = this.poolCurator.create(TestUtil.createPool(
             owner1, poolProd1, new HashSet(Arrays.asList(prod1)), 5));

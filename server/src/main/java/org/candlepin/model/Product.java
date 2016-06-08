@@ -157,11 +157,11 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @param productId The Red Hat product ID for the new product.
      * @param name Human readable Product name
      */
-    public Product(String productId, String name, Owner owner) {
-        this(productId, name, owner, 1L);
+    public Product(String productId, String name) {
+        this(productId, name, 1L);
     }
 
-    public Product(String productId, String name, Owner owner, Long multiplier) {
+    public Product(String productId, String name, Long multiplier) {
         setId(productId);
         setName(name);
         setMultiplier(multiplier);
@@ -170,14 +170,13 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         setDependentProductIds(new HashSet<String>());
     }
 
-    public Product(String productId, String name, Owner owner, String variant, String version,
-        String arch, String type) {
-        this(productId, name, owner, 1L);
+    public Product(String productId, String name, String variant, String version, String arch, String type) {
+        this(productId, name, 1L);
 
-        setAttribute("version", version);
-        setAttribute("variant", variant);
-        setAttribute("type", type);
-        setAttribute("arch", arch);
+        this.setAttribute("version", version);
+        this.setAttribute("variant", variant);
+        this.setAttribute("type", type);
+        this.setAttribute("arch", arch);
     }
 
     /**
@@ -368,7 +367,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     }
 
     public static Product createUeberProductForOwner(UniqueIdGenerator idGenerator, Owner owner) {
-        return new Product(idGenerator.generateId(), ueberProductNameForOwner(owner), owner, 1L);
+        return new Product(idGenerator.generateId(), ueberProductNameForOwner(owner), 1L);
     }
 
     /**
@@ -811,8 +810,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         return false;
     }
 
-    public static String ueberProductNameForOwner(Owner o) {
-        return o.getKey() + UEBER_PRODUCT_POSTFIX;
+    public static String ueberProductNameForOwner(Owner owner) {
+        return owner.getKey() + UEBER_PRODUCT_POSTFIX;
     }
 
     @XmlTransient

@@ -30,15 +30,13 @@ import java.util.Set;
 import javax.inject.Inject;
 
 public class OwnerTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
 
     @Test
     public void testCreate() throws Exception {
         String ownerName = "Example-Corporation";
         String prefix = "PhredPrefix";
-        Owner o = new Owner(ownerName);
+
+        Owner o = TestUtil.createOwner(ownerName);
         o.setContentPrefix(prefix);
         ownerCurator.create(o);
 
@@ -60,7 +58,7 @@ public class OwnerTest extends DatabaseTestFixture {
             "select o from Owner as o").getResultList().size();
 
         for (int i = 0; i < 10; i++) {
-            ownerCurator.create(new Owner("Corp " + i));
+            this.createOwner("Corp " + i);
         }
 
         int afterCount = entityManager().createQuery("select o from Owner as o").getResultList().size();
@@ -69,9 +67,10 @@ public class OwnerTest extends DatabaseTestFixture {
 
     @Test
     public void testObjectRelationships() throws Exception {
-        Owner owner = new Owner("test-owner");
+        Owner owner = TestUtil.createOwner("test-owner");
+
         // Product
-        Product rhel = new Product("Red Hat Enterprise Linux", "Red Hat Enterprise Linux", owner);
+        Product rhel = TestUtil.createProduct("Red Hat Enterprise Linux", "Red Hat Enterprise Linux");
 
         // Consumer
         Consumer c = new Consumer();

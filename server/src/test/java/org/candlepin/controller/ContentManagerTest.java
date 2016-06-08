@@ -155,7 +155,7 @@ public class ContentManagerTest {
         Content update = TestUtil.createContent(owner, "c1", "new content name");
         update.setUuid("test-uuid");
 
-        Product product = TestUtil.createProduct("p1", "test product", owner);
+        Product product = TestUtil.createProduct("p1", "test product");
 
         when(this.mockContentCurator.lookupById(eq(owner), eq(content.getId()))).thenReturn(content);
         when(this.mockProductCurator.getProductsWithContent(eq(Arrays.asList(content.getUuid()))))
@@ -177,7 +177,7 @@ public class ContentManagerTest {
         Content content1 = TestUtil.createContent(owner1, "c1", "content-1");
         Content content2 = TestUtil.createContent(owner2, "c1", "updated content");
         Content update = TestUtil.createContent(owner1, "c1", "updated content");
-        Product product = TestUtil.createProduct("p1", "test product", owner1);
+        Product product = TestUtil.createProduct("p1", "test product");
 
         when(this.mockContentCurator.lookupById(eq(owner1), eq(content1.getId()))).thenReturn(content1);
         when(this.mockContentCurator.lookupById(eq(owner2), eq(content2.getId()))).thenReturn(content2);
@@ -202,7 +202,7 @@ public class ContentManagerTest {
         Content content1 = TestUtil.createContent(owner1, "c1", "content-1");
         Content content2 = TestUtil.createContent(owner2, "c1", "updated content");
         Content update = TestUtil.createContent(owner1, "c1", "updated content");
-        Product product = TestUtil.createProduct("p1", "test product", owner1);
+        Product product = TestUtil.createProduct("p1", "test product");
 
         when(this.mockContentCurator.lookupById(eq(owner1), eq(content1.getId()))).thenReturn(content1);
         when(this.mockContentCurator.lookupById(eq(owner2), eq(content2.getId()))).thenReturn(content2);
@@ -227,7 +227,7 @@ public class ContentManagerTest {
         Content content = TestUtil.createContent(owner1, "c1", "content-1");
         content.addOwner(owner2);
         Content update = TestUtil.createContent(owner1, "c1", "updated content");
-        Product product = TestUtil.createProduct("p1", "test product", owner1);
+        Product product = TestUtil.createProduct("p1", "test product");
         // product.addOwner(owner2);
         product.addContent(content);
 
@@ -253,7 +253,7 @@ public class ContentManagerTest {
         Content content = TestUtil.createContent(owner1, "c1", "content-1");
         content.addOwner(owner2);
         Content update = TestUtil.createContent(owner1, "c1", "updated content");
-        Product product = TestUtil.createProduct("p1", "test product", owner1);
+        Product product = TestUtil.createProduct("p1", "test product");
         // product.addOwner(owner2);
 
         when(this.mockContentCurator.lookupById(eq(owner1), eq(content.getId()))).thenReturn(content);
@@ -283,7 +283,7 @@ public class ContentManagerTest {
     public void testRemoveContent() {
         Owner owner = TestUtil.createOwner("test-owner-1", "Test Owner 1");
         Content content = TestUtil.createContent(owner, "c1", "content-1");
-        Product product = TestUtil.createProduct("p1", "test prod", owner);
+        Product product = TestUtil.createProduct("p1", "test prod");
 
         when(this.mockContentCurator.lookupById(eq(owner), eq(content.getId()))).thenReturn(content);
         when(this.mockProductCurator.getProductsWithContent(eq(owner), eq(Arrays.asList(content.getId()))))
@@ -303,7 +303,7 @@ public class ContentManagerTest {
     public void testRemoveContentWithCertRegeneration() {
         Owner owner = TestUtil.createOwner("test-owner-1", "Test Owner 1");
         Content content = TestUtil.createContent(owner, "c1", "content-1");
-        Product product = TestUtil.createProduct("p1", "test prod", owner);
+        Product product = TestUtil.createProduct("p1", "test prod");
 
         when(this.mockContentCurator.lookupById(eq(owner), eq(content.getId()))).thenReturn(content);
         when(this.mockProductCurator.getProductsWithContent(eq(owner), eq(Arrays.asList(content.getId()))))
@@ -325,7 +325,7 @@ public class ContentManagerTest {
         Owner owner2 = TestUtil.createOwner("test-owner-2", "Test Owner 2");
         Content content = TestUtil.createContent(owner1, "c1", "content-1");
         content.addOwner(owner2);
-        Product product = TestUtil.createProduct("p1", "test prod", owner1);
+        Product product = TestUtil.createProduct("p1", "test prod");
         // product.addOwner(owner2);
 
         when(this.mockContentCurator.lookupById(eq(owner1), eq(content.getId()))).thenReturn(content);
@@ -349,7 +349,7 @@ public class ContentManagerTest {
         Owner owner2 = TestUtil.createOwner("test-owner-2", "Test Owner 2");
         Content content = TestUtil.createContent(owner1, "c1", "content-1");
         content.addOwner(owner2);
-        Product product = TestUtil.createProduct("p1", "test prod", owner1);
+        Product product = TestUtil.createProduct("p1", "test prod");
         // product.addOwner(owner2);
 
         when(this.mockContentCurator.lookupById(eq(owner1), eq(content.getId()))).thenReturn(content);

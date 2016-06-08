@@ -251,7 +251,7 @@ public class EntitlementResourceTest {
 
         Owner owner = TestUtil.createOwner();
         Consumer consumer = TestUtil.createConsumer(owner);
-        Pool pool = TestUtil.createPool(owner, TestUtil.createProduct(owner));
+        Pool pool = TestUtil.createPool(owner, TestUtil.createProduct());
 
         Entitlement e = TestUtil.createEntitlement(owner, consumer, pool, null);
         e.setId("getAllEntitlementsForConsumer");

@@ -90,21 +90,10 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     private static final String CONSUMER_NAME = "consumer_name";
     private static final String USER_NAME = "testing user";
 
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private UserCurator userCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private EntitlementCurator entitlementCurator;
-    @Inject private EntitlementCertificateCurator entCertCurator;
-    @Inject private RoleCurator roleCurator;
-    @Inject private CertificateSerialCurator certSerialCurator;
     @Inject private CandlepinPoolManager poolManager;
     @Inject private PermissionFactory permFactory;
     @Inject private ConsumerResource consumerResource;
-    @Inject private IdentityCertificateCurator idCurator;
     @Inject private IdentityCertServiceAdapter icsa;
-
 
     private ConsumerType standardSystemType;
     private ConsumerType personType;
@@ -150,7 +139,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(consumer);
 
-        product = TestUtil.createProduct(owner);
+        product = TestUtil.createProduct();
         product.addAttribute(new ProductAttribute("support_level", DEFAULT_SERVICE_LEVEL));
         productCurator.create(product);
 
@@ -293,7 +282,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         idCert.setId(null); // needs to be null to persist
         idCert.getSerial().setId(null);  // needs to be null to persist
         certSerialCurator.create(idCert.getSerial());
-        idCurator.create(idCert);
+        identityCertificateCurator.create(idCert);
         consumer.setIdCert(idCert);
 
         consumer.setType(consumerTypeCurator.create(
@@ -322,8 +311,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals(Long.valueOf(1), pool.getConsumed());
         assertEquals(1, resultList.size());
         assertEquals(pool.getId(), resultList.get(0).getPool().getId());
-        assertEquals(1, entCertCurator.listForEntitlement(resultList.get(0))
-            .size());
+        assertEquals(1, entitlementCertificateCurator.listForEntitlement(resultList.get(0)).size());
     }
 
     @Test

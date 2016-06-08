@@ -64,7 +64,7 @@ public class ProductImporterTest {
 
     @Test
     public void testCreateObject() throws Exception {
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
         Product created = importer.createObject(mapper, reader, owner);
@@ -75,7 +75,7 @@ public class ProductImporterTest {
 
     @Test
     public void testNewProductCreated() throws Exception {
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
 
@@ -86,7 +86,7 @@ public class ProductImporterTest {
 
     @Test
     public void testContentCreated() throws Exception {
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
         addContentTo(product);
 
         String json = getJsonForProduct(product);
@@ -100,7 +100,7 @@ public class ProductImporterTest {
 
     @Test
     public void testVendorSetToUnknown() throws Exception {
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
         addNoVendorContentTo(product);
 
         String json = getJsonForProduct(product);

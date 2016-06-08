@@ -354,7 +354,7 @@ public class EntitlerTest {
     public void testRevokesLapsedUnmappedGuestEntitlementsOnAutoHeal() throws Exception {
         Owner owner1 = new Owner("o1");
 
-        Product product = TestUtil.createProduct(owner1);
+        Product product = TestUtil.createProduct();
 
         Pool p1 = TestUtil.createPool(owner1, product);
 
@@ -392,8 +392,8 @@ public class EntitlerTest {
         Owner owner1 = new Owner("o1");
         Owner owner2 = new Owner("o2");
 
-        Product product1 = TestUtil.createProduct(owner1);
-        Product product2 = TestUtil.createProduct(owner2);
+        Product product1 = TestUtil.createProduct();
+        Product product2 = TestUtil.createProduct();
 
         Pool p1 = TestUtil.createPool(owner1, product1);
         Pool p2 = TestUtil.createPool(owner2, product2);
@@ -439,7 +439,7 @@ public class EntitlerTest {
     public void testDevPoolCreationAtBind() throws EntitlementRefusedException {
         Owner owner = new Owner("o");
         List<Product> devProds = new ArrayList<Product>();
-        Product p = new Product("test-product", "Test Product", owner);
+        Product p = TestUtil.createProduct("test-product", "Test Product");
         p.setAttribute("support_level", "Premium");
         devProds.add(p);
         Pool activePool = TestUtil.createPool(owner, p);
@@ -466,7 +466,7 @@ public class EntitlerTest {
     public void testDevPoolCreationAtBindFailStandalone() throws EntitlementRefusedException {
         Owner owner = new Owner("o");
         List<Product> devProds = new ArrayList<Product>();
-        Product p = new Product("test-product", "Test Product", owner);
+        Product p = TestUtil.createProduct("test-product", "Test Product");
         devProds.add(p);
         Pool activePool = TestUtil.createPool(owner, p);
         List<Pool> activeList = new ArrayList<Pool>();
@@ -488,7 +488,7 @@ public class EntitlerTest {
     public void testDevPoolCreationAtBindFailNotActive() throws EntitlementRefusedException {
         Owner owner = new Owner("o");
         List<Product> devProds = new ArrayList<Product>();
-        Product p = new Product("test-product", "Test Product", owner);
+        Product p = TestUtil.createProduct("test-product", "Test Product");
         devProds.add(p);
 
         Consumer devSystem = TestUtil.createConsumer(owner);
@@ -507,8 +507,8 @@ public class EntitlerTest {
     public void testDevPoolCreationAtBindFailNoSkuProduct() throws EntitlementRefusedException {
         Owner owner = new Owner("o");
         List<Product> devProds = new ArrayList<Product>();
-        Product p = new Product("test-product", "Test Product", owner);
-        Product ip = new Product("test-product-installed", "Installed Test Product", owner);
+        Product p = TestUtil.createProduct("test-product", "Test Product");
+        Product ip = TestUtil.createProduct("test-product-installed", "Installed Test Product");
         devProds.add(ip);
         Pool activePool = TestUtil.createPool(owner, p);
         List<Pool> activeList = new ArrayList<Pool>();
@@ -540,9 +540,9 @@ public class EntitlerTest {
             throws EntitlementRefusedException {
         Owner owner = new Owner("o");
         List<Product> devProds = new ArrayList<Product>();
-        Product p = new Product("test-product", "Test Product", owner);
-        Product ip1 = new Product("test-product-installed-1", "Installed Test Product 1", owner);
-        Product ip2 = new Product("test-product-installed-2", "Installed Test Product 2", owner);
+        Product p = TestUtil.createProduct("test-product", "Test Product");
+        Product ip1 = TestUtil.createProduct("test-product-installed-1", "Installed Test Product 1");
+        Product ip2 = TestUtil.createProduct("test-product-installed-2", "Installed Test Product 2");
         devProds.add(p);
         devProds.add(ip1);
         Pool activePool = TestUtil.createPool(owner, p);
@@ -572,11 +572,11 @@ public class EntitlerTest {
     public void testCreatedDevPoolAttributes() {
         Owner owner = new Owner("o");
         List<Product> devProds = new ArrayList<Product>();
-        Product p1 = new Product("dev-product", "Dev Product", owner);
+        Product p1 = TestUtil.createProduct("dev-product", "Dev Product");
         p1.setAttribute("support_level", "Premium");
         p1.setAttribute("expires_after", "47");
-        Product p2 = new Product("provided-product1", "Provided Product 1", owner);
-        Product p3 = new Product("provided-product2", "Provided Product 2", owner);
+        Product p2 = TestUtil.createProduct("provided-product1", "Provided Product 1");
+        Product p3 = TestUtil.createProduct("provided-product2", "Provided Product 2");
         devProds.add(p1);
         devProds.add(p2);
         devProds.add(p3);
@@ -606,7 +606,7 @@ public class EntitlerTest {
     public void testCreatedDevSkuWithNoSla() {
         Owner owner = new Owner("o");
         List<Product> devProds = new ArrayList<Product>();
-        Product p1 = new Product("dev-product", "Dev Product", null);
+        Product p1 = TestUtil.createProduct("dev-product", "Dev Product");
         devProds.add(p1);
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p1.getId());
@@ -624,11 +624,11 @@ public class EntitlerTest {
     // public void testEnsureOwnerOnDevProduct() {
     //     Owner owner = new Owner("o");
     //     List<Product> devProds = new ArrayList<Product>();
-    //     Product p1 = new Product("dev-product-1", "Dev Product 1", null);
+    //     Product p1 = TestUtil.createProduct("dev-product-1", "Dev Product 1");
     //     Content c1 = new Content();
     //     p1.addContent(c1);
     //     devProds.add(p1);
-    //     Product p2 = new Product("dev-product-2", "Dev Product 2", null);
+    //     Product p2 = TestUtil.createProduct("dev-product-2", "Dev Product 2");
     //     Content c2 = new Content();
     //     p2.addContent(c2);
     //     devProds.add(p2);

@@ -165,28 +165,28 @@ public class ExporterTest {
 
         Owner owner = new Owner("Example-Corporation");
 
-        Product prod = new Product("12345", "RHEL Product", owner);
+        Product prod = new Product("12345", "RHEL Product");
         prod.setMultiplier(1L);
         prod.setCreated(new Date());
         prod.setUpdated(new Date());
         prod.setHref("http://localhost");
         prod.setAttributes(Collections.EMPTY_SET);
 
-        Product prod1 = new Product("MKT-prod", "RHEL Product", owner);
+        Product prod1 = new Product("MKT-prod", "RHEL Product");
         prod1.setMultiplier(1L);
         prod1.setCreated(new Date());
         prod1.setUpdated(new Date());
         prod1.setHref("http://localhost");
         prod1.setAttributes(Collections.EMPTY_SET);
 
-        Product subProduct = new Product("MKT-sub-prod", "Sub Product", owner);
+        Product subProduct = new Product("MKT-sub-prod", "Sub Product");
         subProduct.setMultiplier(1L);
         subProduct.setCreated(new Date());
         subProduct.setUpdated(new Date());
         subProduct.setHref("http://localhost");
         subProduct.setAttributes(Collections.EMPTY_SET);
 
-        Product subProvidedProduct = new Product("332211", "Sub Product", owner);
+        Product subProvidedProduct = new Product("332211", "Sub Product");
         subProvidedProduct.setMultiplier(1L);
         subProvidedProduct.setCreated(new Date());
         subProvidedProduct.setUpdated(new Date());

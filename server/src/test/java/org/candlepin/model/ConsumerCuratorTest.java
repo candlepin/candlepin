@@ -44,11 +44,7 @@ import javax.persistence.EntityManager;
  * ConsumerCuratorTest JUnit tests for Consumer database code
  */
 public class ConsumerCuratorTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private EntitlementCurator entitlementCurator;
+
     @Inject private Configuration config;
     @Inject private DeletedConsumerCurator dcc;
     @Inject private EntityManager em;
@@ -663,8 +659,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetConsumerIdsWithStartedEnts() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumerCurator.create(consumer);
-        Product prod = new Product("1", "2", owner);
-        this.productCurator.create(prod);
+        Product prod = this.createProduct("1", "2", owner);
+
         Pool p = createPool(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
         Entitlement ent = this.createEntitlement(owner, consumer, p,
             createEntitlementCertificate("entkey", "ecert"));
@@ -680,8 +676,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetConsumerIdsWithStartedEntsAlreadyDone() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumerCurator.create(consumer);
-        Product prod = new Product("1", "2", owner);
-        this.productCurator.create(prod);
+        Product prod = this.createProduct("1", "2", owner);
+
         Pool p = createPool(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
         Entitlement ent = this.createEntitlement(owner, consumer, p,
             createEntitlementCertificate("entkey", "ecert"));

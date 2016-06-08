@@ -42,11 +42,6 @@ import javax.inject.Inject;
  * TestActiveEntitlementJob
  */
 public class ActiveEntitlementJobTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private EntitlementCurator entitlementCurator;
     @Inject private ActiveEntitlementJob job;
 
     private Owner owner;
@@ -59,8 +54,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
         owner = new Owner("test-owner", "Test Owner");
         owner = ownerCurator.create(owner);
 
-        prod = new Product("1", "2", owner);
-        productCurator.create(prod);
+        prod = this.createProduct("1", "2", owner);
 
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ct = consumerTypeCurator.create(ct);

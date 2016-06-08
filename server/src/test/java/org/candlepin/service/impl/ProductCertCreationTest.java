@@ -37,8 +37,6 @@ import javax.inject.Inject;
  */
 public class ProductCertCreationTest extends DatabaseTestFixture {
     @Inject private ProductServiceAdapter productAdapter;
-    @Inject private ProductCurator productCurator;
-    @Inject private OwnerCurator ownerCurator;
 
     @Override
     protected Module getGuiceOverrideModule() {
@@ -62,7 +60,7 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
     @Test
     public void validProduct() {
         Owner owner = new Owner("Example-Corporation");
-        Product product = new Product("50", "Test Product", owner, "Standard", "1", "x86_64", "Base");
+        Product product = new Product("50", "Test Product", "Standard", "1", "x86_64", "Base");
 
         this.ownerCurator.create(owner);
 
@@ -76,12 +74,12 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
 
         this.ownerCurator.create(owner);
 
-        createCert(new Product("thin", "Not Much Here", owner));
+        createCert(new Product("thin", "Not Much Here"));
     }
 
     private ProductCertificate createDummyCert() {
         Owner owner = new Owner("Example-Corporation");
-        Product product = new Product("50", "Test Product", owner, "Standard", "1", "x86_64", "Base");
+        Product product = new Product("50", "Test Product", "Standard", "1", "x86_64", "Base");
 
         this.ownerCurator.create(owner);
 

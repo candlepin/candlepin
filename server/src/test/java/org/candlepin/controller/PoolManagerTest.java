@@ -148,7 +148,7 @@ public class PoolManagerTest {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         owner = new Owner("key", "displayname");
-        product = TestUtil.createProduct(owner);
+        product = TestUtil.createProduct();
         pool = TestUtil.createPool(owner, product);
 
         when(mockConfig.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
@@ -185,7 +185,7 @@ public class PoolManagerTest {
     @Test
     public void deletePoolsTest() {
         List<Pool> pools = new ArrayList<Pool>();
-        pools.add(TestUtil.createPool(TestUtil.createProduct(owner)));
+        pools.add(TestUtil.createPool(TestUtil.createProduct()));
         doNothing().when(mockPoolCurator).batchDelete(pools);
         manager.deletePools(pools);
         verify(mockPoolCurator).batchDelete(eq(pools));
@@ -197,7 +197,7 @@ public class PoolManagerTest {
         List<Subscription> subscriptions = Util.newList();
 
         Owner owner = this.getOwner();
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
         Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setId("testing-subid");
         subscriptions.add(sub);
@@ -211,7 +211,7 @@ public class PoolManagerTest {
         pools.add(p);
 
         // Should be regenerated because it has no subscription id
-        Pool floating = TestUtil.createPool(TestUtil.createProduct(owner));
+        Pool floating = TestUtil.createPool(TestUtil.createProduct());
         floating.setSourceSubscription(null);
         pools.add(floating);
         mockSubsList(subscriptions);
@@ -235,7 +235,7 @@ public class PoolManagerTest {
         List<Subscription> subscriptions = Util.newList();
 
         Owner owner = this.getOwner();
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
         Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setId("testing-subid");
         subscriptions.add(sub);
@@ -271,7 +271,7 @@ public class PoolManagerTest {
     public void productAttributesCopiedOntoPoolWhenCreatingNewPool() {
 
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, mockOwnerProductCurator);
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
         Subscription sub = TestUtil.createSubscription(owner, product);
         String testAttributeKey = "multi-entitlement";
         String expectedAttributeValue = "yes";
@@ -290,8 +290,8 @@ public class PoolManagerTest {
 
     @Test
     public void subProductAttributesCopiedOntoPoolWhenCreatingNewPool() {
-        Product product = TestUtil.createProduct(owner);
-        Product subProduct = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
+        Product subProduct = TestUtil.createProduct();
 
         Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setDerivedProduct(subProduct);
@@ -315,8 +315,8 @@ public class PoolManagerTest {
 
     @Test
     public void subProductIdCopiedOntoPoolWhenCreatingNewPool() {
-        Product product = TestUtil.createProduct(owner);
-        Product subProduct = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
+        Product subProduct = TestUtil.createProduct();
 
         Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setDerivedProduct(subProduct);
@@ -334,9 +334,9 @@ public class PoolManagerTest {
 
     @Test
     public void derivedProvidedProductsCopiedOntoMasterPoolWhenCreatingNewPool() {
-        Product product = TestUtil.createProduct(owner);
-        Product subProduct = TestUtil.createProduct(owner);
-        Product subProvidedProduct = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
+        Product subProduct = TestUtil.createProduct();
+        Product subProvidedProduct = TestUtil.createProduct();
 
         Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setDerivedProduct(subProduct);
@@ -357,7 +357,7 @@ public class PoolManagerTest {
 
     @Test
     public void brandingCopiedWhenCreatingPools() {
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
 
         Subscription sub = TestUtil.createSubscription(owner, product);
         Branding b1 = new Branding("8000", "OS", "Branded Awesome OS");
@@ -381,7 +381,7 @@ public class PoolManagerTest {
     public void testRefreshPoolsDeletesOrphanedPools() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Pool p = TestUtil.createPool(TestUtil.createProduct(owner));
+        Pool p = TestUtil.createPool(TestUtil.createProduct());
         p.setSourceSubscription(new SourceSubscription("112", "master"));
         pools.add(p);
         mockSubsList(subscriptions);
@@ -399,7 +399,7 @@ public class PoolManagerTest {
     public void testRefreshPoolsDeletesOrphanedHostedVirtBonusPool() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Pool p = TestUtil.createPool(TestUtil.createProduct(owner));
+        Pool p = TestUtil.createPool(TestUtil.createProduct());
         p.setSourceSubscription(new SourceSubscription("112", "master"));
 
         // Make it look like a hosted virt bonus pool:
@@ -424,7 +424,7 @@ public class PoolManagerTest {
     public void testRefreshPoolsSkipsOrphanedEntitlementDerivedPools() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Pool p = TestUtil.createPool(TestUtil.createProduct(owner));
+        Pool p = TestUtil.createPool(TestUtil.createProduct());
         p.setSourceSubscription(new SourceSubscription("112", "master"));
 
         // Mock a pool with a source entitlement:
@@ -446,7 +446,7 @@ public class PoolManagerTest {
     public void testRefreshPoolsSkipsOrphanedStackDerivedPools() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Pool p = TestUtil.createPool(TestUtil.createProduct(owner));
+        Pool p = TestUtil.createPool(TestUtil.createProduct());
         p.setSourceSubscription(new SourceSubscription("112", "master"));
 
         // Mock a pool with a source stack ID:
@@ -468,7 +468,7 @@ public class PoolManagerTest {
     public void testRefreshPoolsSkipsDevelopmentPools() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Pool p = TestUtil.createPool(TestUtil.createProduct(owner));
+        Pool p = TestUtil.createPool(TestUtil.createProduct());
         p.setSourceSubscription(null);
 
         // Mock a development pool
@@ -492,7 +492,7 @@ public class PoolManagerTest {
         List<Pool> pools = Util.newList();
 
         // Pool has no subscription ID:
-        Pool p = TestUtil.createPool(TestUtil.createProduct(owner));
+        Pool p = TestUtil.createPool(TestUtil.createProduct());
         p.setSourceStack(new SourceStack(new Consumer(), "a"));
 
         pools.add(p);
@@ -515,7 +515,7 @@ public class PoolManagerTest {
         List<Pool> pools = Util.newList();
 
         Owner owner = this.getOwner();
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
 
         Subscription s = TestUtil.createSubscription(owner, product);
         subscriptions.add(s);
@@ -543,7 +543,7 @@ public class PoolManagerTest {
         List<Pool> pools = Util.newList();
 
         Owner owner = getOwner();
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
 
         Subscription s = TestUtil.createSubscription(owner, product);
         s.setId("01923");
@@ -585,7 +585,7 @@ public class PoolManagerTest {
 
     @Test
     public void testCreatePoolForSubscription() {
-        final Subscription s = TestUtil.createSubscription(getOwner(), TestUtil.createProduct(owner));
+        final Subscription s = TestUtil.createSubscription(getOwner(), TestUtil.createProduct());
 
         List<Pool> newPools = new LinkedList<Pool>();
         Pool p = TestUtil.createPool(s.getProduct());
@@ -600,7 +600,7 @@ public class PoolManagerTest {
     @Test
     public void testCreateAndEnrichPoolForPool() {
         List<Pool> newPools = new LinkedList<Pool>();
-        Pool p = TestUtil.createPool(TestUtil.createProduct(TestUtil.createOwner()));
+        Pool p = TestUtil.createPool(TestUtil.createProduct());
         newPools.add(p);
         when(poolRulesMock.createAndEnrichPools(eq(p), any(List.class))).thenReturn(newPools);
 
@@ -684,7 +684,7 @@ public class PoolManagerTest {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void testEntitleWithADate() throws Exception {
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
         List<Pool> pools = Util.newList();
         Pool pool1 = TestUtil.createPool(product);
         pools.add(pool1);
@@ -727,7 +727,7 @@ public class PoolManagerTest {
 
     @Test
     public void testEntitlebyProductRetry() throws Exception {
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
         List<Pool> pools = Util.newList();
         Pool pool1 = TestUtil.createPool(product);
         pool1.setId("poolId1");
@@ -789,7 +789,7 @@ public class PoolManagerTest {
         List<Subscription> subscriptions = Util.newList();
 
         Owner owner = this.getOwner();
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
 
         Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setStartDate(expiredStart);
@@ -926,7 +926,7 @@ public class PoolManagerTest {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void testEntitleByProductsEmptyArray() throws Exception {
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
         List<Pool> pools = Util.newList();
         Pool pool1 = TestUtil.createPool(product);
         pools.add(pool1);
@@ -981,7 +981,7 @@ public class PoolManagerTest {
         List<Subscription> subscriptions = Util.newList();
 
         Owner owner = this.getOwner();
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
         Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setId("123");
         subscriptions.add(sub);
@@ -1081,7 +1081,7 @@ public class PoolManagerTest {
         Owner owner = this.getOwner();
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, mockOwnerProductCurator);
         List<Subscription> subscriptions = Util.newList();
-        Product prod = TestUtil.createProduct(owner);
+        Product prod = TestUtil.createProduct();
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
         prod.setAttribute("virt_limit", "4");
@@ -1109,7 +1109,7 @@ public class PoolManagerTest {
     public void createPoolsForExistingPoolNoneExist() {
         Owner owner = this.getOwner();
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, mockOwnerProductCurator);
-        Product prod = TestUtil.createProduct(owner);
+        Product prod = TestUtil.createProduct();
         prod.setAttribute("virt_limit", "4");
         Pool p = TestUtil.createPool(owner, prod);
         List<Pool> existingPools = new LinkedList<Pool>();
@@ -1128,7 +1128,7 @@ public class PoolManagerTest {
         Owner owner = this.getOwner();
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, mockOwnerProductCurator);
         List<Subscription> subscriptions = Util.newList();
-        Product prod = TestUtil.createProduct(owner);
+        Product prod = TestUtil.createProduct();
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
         // productCache.addProducts(products);
@@ -1152,7 +1152,7 @@ public class PoolManagerTest {
     @Test
     public void createPoolsForPoolMasterExist() {
         Owner owner = this.getOwner();
-        Product prod = TestUtil.createProduct(owner);
+        Product prod = TestUtil.createProduct();
         prod.setAttribute("virt_limit", "4");
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, mockOwnerProductCurator);
         List<Pool> existingPools = new LinkedList<Pool>();
@@ -1169,7 +1169,7 @@ public class PoolManagerTest {
         Owner owner = this.getOwner();
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, mockOwnerProductCurator);
         List<Subscription> subscriptions = Util.newList();
-        Product prod = TestUtil.createProduct(owner);
+        Product prod = TestUtil.createProduct();
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
         // productCache.addProducts(products);
@@ -1194,7 +1194,7 @@ public class PoolManagerTest {
     public void createPoolsForPoolBonusExist() {
         Owner owner = this.getOwner();
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, mockOwnerProductCurator);
-        Product prod = TestUtil.createProduct(owner);
+        Product prod = TestUtil.createProduct();
         prod.setAttribute("virt_limit", "4");
         List<Pool> existingPools = new LinkedList<Pool>();
         Pool p = TestUtil.createPool(prod);
@@ -1208,7 +1208,7 @@ public class PoolManagerTest {
 
     @Test
     public void testGetChangedProductsNoNewProducts() {
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name", owner);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
 
         Map<String, Product> products = new HashMap<String, Product>();
 
@@ -1225,7 +1225,7 @@ public class PoolManagerTest {
     public void testGetChangedProductsAllBrandNew() {
         this.mockOwner(this.owner);
 
-        Product newProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
+        Product newProduct = TestUtil.createProduct("fake id", "fake name");
 
         Map<String, Product> products = new HashMap<String, Product>();
         products.put(newProduct.getId(), newProduct);
@@ -1245,7 +1245,7 @@ public class PoolManagerTest {
     public void testGetChangedProductsAllIdentical() {
         this.mockOwner(this.owner);
 
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
         mockProduct(this.owner, oldProduct);
 
         Map<String, Product> products = new HashMap<String, Product>();
@@ -1260,8 +1260,8 @@ public class PoolManagerTest {
     public void testGetChangedProductsNameChanged() {
         this.mockOwner(this.owner);
 
-        Product newProduct = TestUtil.createProduct("fake id", "fake name new", this.owner);
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
+        Product newProduct = TestUtil.createProduct("fake id", "fake name new");
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
 
         Map<String, Product> products = new HashMap<String, Product>();
         products.put(newProduct.getId(), newProduct);
@@ -1277,8 +1277,8 @@ public class PoolManagerTest {
     public void testGetChangedProductsMultiplierChanged() {
         this.mockOwner(this.owner);
 
-        Product newProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
+        Product newProduct = TestUtil.createProduct("fake id", "fake name");
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
 
         oldProduct.setMultiplier(1L);
         newProduct.setMultiplier(2L);
@@ -1297,8 +1297,8 @@ public class PoolManagerTest {
     public void testGetChangedProductsAttributeAdded() {
         this.mockOwner(this.owner);
 
-        Product newProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
+        Product newProduct = TestUtil.createProduct("fake id", "fake name");
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
 
         newProduct.setAttribute("fake attr", "value");
 
@@ -1316,8 +1316,8 @@ public class PoolManagerTest {
     public void testGetChangedProductsAttributeRemoved() {
         this.mockOwner(this.owner);
 
-        Product newProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
+        Product newProduct = TestUtil.createProduct("fake id", "fake name");
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
 
         oldProduct.setAttribute("fake attr", "value");
 
@@ -1335,8 +1335,8 @@ public class PoolManagerTest {
     public void testGetChangedProductsAttributeModified() {
         this.mockOwner(this.owner);
 
-        Product newProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
+        Product newProduct = TestUtil.createProduct("fake id", "fake name");
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
 
         oldProduct.setAttribute("fake attr", "value");
         newProduct.setAttribute("fake attr", "value new");
@@ -1355,8 +1355,8 @@ public class PoolManagerTest {
     public void testGetChangedProductsAttributeSwapped() {
         this.mockOwner(this.owner);
 
-        Product newProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
+        Product newProduct = TestUtil.createProduct("fake id", "fake name");
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
 
         oldProduct.setAttribute("fake attr", "value");
         newProduct.setAttribute("other fake attr", "value");
@@ -1375,8 +1375,8 @@ public class PoolManagerTest {
     public void testGetChangedProductsContentAdded() {
         this.mockOwner(this.owner);
 
-        Product newProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
+        Product newProduct = TestUtil.createProduct("fake id", "fake name");
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
 
         Content content = new Content();
 
@@ -1396,8 +1396,8 @@ public class PoolManagerTest {
     public void testGetChangedProductsContentRemoved() {
         this.mockOwner(this.owner);
 
-        Product newProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
+        Product newProduct = TestUtil.createProduct("fake id", "fake name");
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
 
         Content content = new Content();
 
@@ -1417,8 +1417,8 @@ public class PoolManagerTest {
     public void testGetChangedProductsContentSwapped() {
         this.mockOwner(this.owner);
 
-        Product newProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
+        Product newProduct = TestUtil.createProduct("fake id", "fake name");
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
 
         Content content = new Content(this.owner, "foobar", null, null, null, null, null, null, null);
         Content content2 = new Content(this.owner, "baz", null, null, null, null, null, null, null);
@@ -1440,8 +1440,8 @@ public class PoolManagerTest {
     public void testGetChangedProductsContentEnabledToggled() {
         this.mockOwner(this.owner);
 
-        Product newProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name", this.owner);
+        Product newProduct = TestUtil.createProduct("fake id", "fake name");
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
 
         Content content = new Content(this.owner, "foobar", null, null, null, null, null, null, null);
 
@@ -1460,9 +1460,9 @@ public class PoolManagerTest {
 
     @Test
     public void testFabricateSubscriptionFromPool() {
-        Product product = TestUtil.createProduct("product", "Product", owner);
-        Product provided1 = TestUtil.createProduct("provided-1", "Provided 1", owner);
-        Product provided2 = TestUtil.createProduct("provided-2", "Provided 2", owner);
+        Product product = TestUtil.createProduct("product", "Product");
+        Product provided1 = TestUtil.createProduct("provided-1", "Provided 1");
+        Product provided2 = TestUtil.createProduct("provided-2", "Provided 2");
 
         Pool pool = mock(Pool.class);
 
@@ -1506,7 +1506,7 @@ public class PoolManagerTest {
      */
     @Test
     public void testFabricateSubWithMultiplier() {
-        Product product = TestUtil.createProduct("product", "Product", owner);
+        Product product = TestUtil.createProduct("product", "Product");
 
         Pool pool = mock(Pool.class);
 
@@ -1523,7 +1523,7 @@ public class PoolManagerTest {
 
     @Test
     public void testFabricateSubWithZeroInstanceMultiplier() {
-        Product product = TestUtil.createProduct("product", "Product", owner);
+        Product product = TestUtil.createProduct("product", "Product");
 
         Pool pool = mock(Pool.class);
 
@@ -1542,7 +1542,7 @@ public class PoolManagerTest {
 
     @Test
     public void testFabricateSubWithMultiplierAndInstanceMultiplier() {
-        Product product = TestUtil.createProduct("product", "Product", owner);
+        Product product = TestUtil.createProduct("product", "Product");
 
         Pool pool = mock(Pool.class);
 
@@ -1907,7 +1907,7 @@ public class PoolManagerTest {
     public void expiredEntitlementEvent() {
         Date now = new Date();
 
-        Product p = TestUtil.createProduct(owner);
+        Product p = TestUtil.createProduct();
         p.setAttribute("host_limited", "true");
         p.setAttribute("virt_limit", "unlimited");
 

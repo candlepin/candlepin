@@ -59,6 +59,7 @@ public class EventSinkImplTest {
     @Mock private ClientMessage mockClientMessage;
     @Mock private PrincipalProvider mockPrincipalProvider;
     @Mock private ServerLocator mockLocator;
+
     private EventFactory factory;
     private EventFilter eventFilter;
     private EventSinkImpl eventSinkImpl;
@@ -173,7 +174,7 @@ public class EventSinkImplTest {
     @Test
     public void poolCreatedShouldEmitSuccessfully()
         throws Exception {
-        Pool pool = TestUtil.createPool(o, TestUtil.createProduct(o));
+        Pool pool = TestUtil.createPool(o, TestUtil.createProduct());
         eventSinkImpl.emitPoolCreated(pool);
         eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
@@ -210,8 +211,8 @@ public class EventSinkImplTest {
     public void keyWithPoolsShouldEmitSuccessfully()
         throws Exception {
         ArrayList<Pool> pools = new ArrayList<Pool>();
-        pools.add(TestUtil.createPool(o, TestUtil.createProduct(o)));
-        pools.add(TestUtil.createPool(o, TestUtil.createProduct(o)));
+        pools.add(TestUtil.createPool(o, TestUtil.createProduct()));
+        pools.add(TestUtil.createPool(o, TestUtil.createProduct()));
         ActivationKey key = TestUtil.createActivationKey(new Owner("deadbeef"), pools);
         eventSinkImpl.emitActivationKeyCreated(key);
         eventSinkImpl.sendEvents();

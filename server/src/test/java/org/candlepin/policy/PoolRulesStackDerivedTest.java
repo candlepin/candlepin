@@ -129,28 +129,28 @@ public class PoolRulesStackDerivedTest {
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
         // Two subtly different products stacked together:
-        prod1 = TestUtil.createProduct("prod1", "prod1", owner);
+        prod1 = TestUtil.createProduct("prod1", "prod1");
         prod1.addAttribute(new ProductAttribute("virt_limit", "2"));
         prod1.addAttribute(new ProductAttribute("stacking_id", STACK));
         prod1.addAttribute(new ProductAttribute("testattr1", "1"));
         when(ownerProductCuratorMock.getProductById(owner, prod1.getId())).thenReturn(prod1);
 
-        prod2 = TestUtil.createProduct("prod2", "prod2", owner);
+        prod2 = TestUtil.createProduct("prod2", "prod2");
         prod2.addAttribute(new ProductAttribute("virt_limit", "unlimited"));
         prod2.addAttribute(new ProductAttribute("stacking_id", STACK));
         prod2.addAttribute(new ProductAttribute("testattr2", "2"));
         when(ownerProductCuratorMock.getProductById(owner, prod2.getId())).thenReturn(prod2);
 
-        prod3 = TestUtil.createProduct("prod3", "prod3", owner);
+        prod3 = TestUtil.createProduct("prod3", "prod3");
         prod3.addAttribute(new ProductAttribute("virt_limit", "9"));
         prod3.addAttribute(new ProductAttribute("stacking_id", STACK + "3"));
         prod3.addAttribute(new ProductAttribute("testattr2", "2"));
         when(ownerProductCuratorMock.getProductById(owner, prod3.getId())).thenReturn(prod3);
 
-        provided1 = TestUtil.createProduct(owner);
-        provided2 = TestUtil.createProduct(owner);
-        provided3 = TestUtil.createProduct(owner);
-        provided4 = TestUtil.createProduct(owner);
+        provided1 = TestUtil.createProduct();
+        provided2 = TestUtil.createProduct();
+        provided3 = TestUtil.createProduct();
+        provided4 = TestUtil.createProduct();
 
         // Create three subscriptions with various start/end dates:
         sub1 = createStackedVirtSub(owner, prod1,
@@ -172,12 +172,12 @@ public class PoolRulesStackDerivedTest {
         pool3 = TestUtil.copyFromSub(sub3);
 
         sub4 = createStackedVirtSub(owner, prod3,
-                TestUtil.createDate(2012, 1, 1),
-                TestUtil.createDate(2020, 1, 1));
+            TestUtil.createDate(2012, 1, 1),
+            TestUtil.createDate(2020, 1, 1));
         sub4.getProvidedProducts().add(provided4);
         pool4 = TestUtil.copyFromSub(sub4);
 
-            // Initial entitlement from one of the pools:
+        // Initial entitlement from one of the pools:
         stackedEnts.add(createEntFromPool(pool2));
         when(entCurMock.findByStackId(consumer, STACK)).thenReturn(stackedEnts);
 
@@ -202,12 +202,12 @@ public class PoolRulesStackDerivedTest {
         attributes.clear();
         attributes.put(pool4.getId(), PoolHelper.getFlattenedAttributes(pool4));
         stackDerivedPool2 = PoolHelper.createHostRestrictedPools(poolManagerMock, consumer, reqPools,
-                entitlements, attributes).get(0);
+            entitlements, attributes).get(0);
     }
 
     private Subscription createStackedVirtSub(Owner owner, Product product,
         Date start, Date end) {
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
         s.setStartDate(start);
         s.setEndDate(end);
         s.setProduct(product);

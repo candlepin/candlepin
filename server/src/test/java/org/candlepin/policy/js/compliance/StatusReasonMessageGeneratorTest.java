@@ -57,12 +57,12 @@ public class StatusReasonMessageGeneratorTest {
         owner = new Owner("test");
         consumer = new Consumer();
         consumer.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
-        ent1 = mockEntitlement(consumer, TestUtil.createProduct("id1", "Nonstacked Product", owner));
+        ent1 = mockEntitlement(consumer, TestUtil.createProduct("id1", "Nonstacked Product"));
         ent1.setId("ent1");
         entStacked1 = mockBaseStackedEntitlement(consumer, "stack",
-            TestUtil.createProduct("Stacked Product", "Stack Subscription One", owner));
+            TestUtil.createProduct("Stacked Product", "Stack Subscription One"));
         entStacked2 = mockBaseStackedEntitlement(consumer, "stack",
-            TestUtil.createProduct("Stacked Product", "Stack Subscription Two", owner));
+            TestUtil.createProduct("Stacked Product", "Stack Subscription Two"));
         consumer.addEntitlement(ent1);
         consumer.addEntitlement(entStacked1);
         consumer.addEntitlement(entStacked2);
@@ -138,8 +138,7 @@ public class StatusReasonMessageGeneratorTest {
 
     @Test
     public void testDefaultMessage() {
-        ComplianceReason reason = buildReason("NOT_A_KEY",
-            buildGeneralAttributes("8", "4"));
+        ComplianceReason reason = buildReason("NOT_A_KEY", buildGeneralAttributes("8", "4"));
         generator.setMessage(consumer, reason, new Date());
         assertEquals("NOT_A_KEY COVERAGE PROBLEM.  Supports 4 of 8", reason.getMessage());
     }
@@ -151,7 +150,7 @@ public class StatusReasonMessageGeneratorTest {
         ComplianceReason reason = buildReason("NOTCOVERED", attrs);
 
         Owner owner = new Owner("test");
-        Product product = TestUtil.createProduct("prod1", "NonCovered Product", owner);
+        Product product = TestUtil.createProduct("prod1", "NonCovered Product");
         ConsumerInstalledProduct installed = new ConsumerInstalledProduct(product.getId(),
             product.getName());
 

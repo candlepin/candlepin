@@ -137,7 +137,7 @@ public class PoolHelperTest {
 
     @Test
     public void copyProductAttributesForHostRestrictedPools() {
-        Product targetProduct = TestUtil.createProduct(owner);
+        Product targetProduct = TestUtil.createProduct();
         Consumer cons = TestUtil.createConsumer();
         targetProduct.getAttributes().clear();
         targetProduct.setAttribute("A1", "V1");
@@ -146,7 +146,7 @@ public class PoolHelperTest {
         targetPool.setId("jso_speedwagon");
         targetPool.setAttribute("virt_limit", "unlimited");
 
-        Product targetProduct2 = TestUtil.createProduct(owner);
+        Product targetProduct2 = TestUtil.createProduct();
         targetProduct2.getAttributes().clear();
         targetProduct2.setAttribute("B1", "V1");
         targetProduct2.setAttribute("B2", "V2");
@@ -196,19 +196,19 @@ public class PoolHelperTest {
 
         // Create a product for the main pool to be sure that
         // the attributes do not get copied to the sub pool.
-        Product mainPoolProduct = TestUtil.createProduct(owner);
+        Product mainPoolProduct = TestUtil.createProduct();
         mainPoolProduct.getAttributes().clear();
         mainPoolProduct.setAttribute("A1", "V1");
         mainPoolProduct.setAttribute("A2", "V2");
 
-        Product derivedProduct1 = TestUtil.createProduct("sub-pp-1", "Sub Provided 1", owner);
-        Product derivedProduct2 = TestUtil.createProduct("sub-pp-2", "Sub Provided 2", owner);
+        Product derivedProduct1 = TestUtil.createProduct("sub-pp-1", "Sub Provided 1");
+        Product derivedProduct2 = TestUtil.createProduct("sub-pp-2", "Sub Provided 2");
 
         Set<Product> derivedProducts = new HashSet<Product>();
         derivedProducts.add(derivedProduct1);
         derivedProducts.add(derivedProduct2);
 
-        Product subProduct = TestUtil.createProduct(owner);
+        Product subProduct = TestUtil.createProduct();
         subProduct.getAttributes().clear();
         subProduct.setAttribute("SA1", "SV1");
         subProduct.setAttribute("SA2", "SV2");
@@ -254,8 +254,8 @@ public class PoolHelperTest {
 
     @Test
     public void clonePoolTest() {
-        Product product = TestUtil.createProduct(owner);
-        Product product2 = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
+        Product product2 = TestUtil.createProduct();
         Map<String, String> attributes = new HashMap<String, String>();
         for (int i = 0; i < 3; i++) {
             attributes.put("a" + i, "b" + i);

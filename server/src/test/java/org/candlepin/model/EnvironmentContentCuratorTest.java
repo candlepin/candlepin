@@ -27,12 +27,6 @@ import javax.persistence.PersistenceException;
 
 
 public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private EnvironmentContentCurator envContentCurator;
-    @Inject private EnvironmentCurator envCurator;
-    @Inject private ContentCurator contentCurator;
-
     private Owner owner;
     private Environment e;
     private Product p;
@@ -41,53 +35,52 @@ public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        owner = new Owner("test-owner", "Test Owner");
-        owner = ownerCurator.create(owner);
+        owner = this.createOwner("test-owner", "Test Owner");
 
         e = new Environment("env1", "Env 1", owner);
-        envCurator.create(e);
+        environmentCurator.create(e);
 
-        p = TestUtil.createProduct(owner);
+        p = TestUtil.createProduct();
         c = new Content(this.owner, "testcontent", "contentId1", "testcontent", "yum",
             "red hat", "http://example.com", "http://example.com/gpg.key", "test-arch");
         contentCurator.create(c);
         p.addContent(c);
-        productCurator.create(p);
+        p = this.createProduct(p, owner);
 
         envContent = new EnvironmentContent(e, c, true);
-        envContent = envContentCurator.create(envContent);
+        envContent = environmentContentCurator.create(envContent);
     }
 
     @Test
     public void create() {
-        envContent = envContentCurator.lookupByEnvironmentAndContent(e, c.getId());
+        envContent = environmentContentCurator.lookupByEnvironmentAndContent(e, c.getId());
         assertNotNull(envContent);
 
-        e = envCurator.find(e.getId());
+        e = environmentCurator.find(e.getId());
         assertEquals(1, e.getEnvironmentContent().size());
 
-        assertEquals(1, envContentCurator.lookupByContent(owner, c.getId()).size());
+        assertEquals(1, environmentContentCurator.lookupByContent(owner, c.getId()).size());
     }
 
     @Test
     public void deleteEnvCleansUpPromotedContent() {
-        assertEquals(1, envContentCurator.listAll().size());
-        envCurator.delete(e);
-        assertEquals(0, envContentCurator.listAll().size());
+        assertEquals(1, environmentContentCurator.listAll().size());
+        environmentCurator.delete(e);
+        assertEquals(0, environmentContentCurator.listAll().size());
     }
 
     @Test(expected = PersistenceException.class)
     public void createDuplicate() {
         envContent = new EnvironmentContent(e, c, true);
-        envContentCurator.create(envContent);
+        environmentContentCurator.create(envContent);
     }
 
     @Test
     public void delete() {
-        assertEquals(1, envContentCurator.listAll().size());
+        assertEquals(1, environmentContentCurator.listAll().size());
         e.getEnvironmentContent().remove(envContent); // TODO
-        envContentCurator.delete(envContent);
-        assertEquals(0, envContentCurator.listAll().size());
+        environmentContentCurator.delete(envContent);
+        assertEquals(0, environmentContentCurator.listAll().size());
     }
 
 

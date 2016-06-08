@@ -32,8 +32,8 @@ public class ProductTest extends DatabaseTestFixture {
     @Test
     public void testLockStateAffectsEquality() {
         Owner owner = new Owner("Example-Corporation");
-        Product p1 = new Product("test-prod", "test-prod-name", owner, "variant", "1.0.0", "x86", "type");
-        Product p2 = new Product("test-prod", "test-prod-name", owner, "variant", "1.0.0", "x86", "type");
+        Product p1 = new Product("test-prod", "test-prod-name", "variant", "1.0.0", "x86", "type");
+        Product p2 = new Product("test-prod", "test-prod-name", "variant", "1.0.0", "x86", "type");
 
         assertEquals(p1, p2);
 
@@ -47,8 +47,8 @@ public class ProductTest extends DatabaseTestFixture {
     @Test
     public void testLockStateAffectsHashCode() {
         Owner owner = new Owner("Example-Corporation");
-        Product p1 = new Product("test-prod", "test-prod-name", owner, "variant", "1.0.0", "x86", "type");
-        Product p2 = new Product("test-prod", "test-prod-name", owner, "variant", "1.0.0", "x86", "type");
+        Product p1 = new Product("test-prod", "test-prod-name", "variant", "1.0.0", "x86", "type");
+        Product p2 = new Product("test-prod", "test-prod-name", "variant", "1.0.0", "x86", "type");
 
         assertEquals(p1.hashCode(), p2.hashCode());
 

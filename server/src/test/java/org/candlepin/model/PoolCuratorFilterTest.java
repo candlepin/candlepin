@@ -31,11 +31,6 @@ import javax.inject.Inject;
 
 
 public class PoolCuratorFilterTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private PoolCurator poolCurator;
-    @Inject private ContentCurator contentCurator;
-
     private Owner owner;
     private PageRequest req = new PageRequest();
     private Pool searchPool;
@@ -62,21 +57,20 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         );
         this.contentCurator.create(content);
 
-        Product searchProduct = new Product("awesomeos-server", "Awesome OS Server Premium", owner);
+        Product searchProduct = TestUtil.createProduct("awesomeos-server", "Awesome OS Server Premium");
         searchProduct.addAttribute(new ProductAttribute("support_level", "CustomSupportLevel"));
-        productCurator.create(searchProduct);
+        searchProduct = this.createProduct(searchProduct, owner);
 
         Pool searchPool = createPool(owner, searchProduct, 100L,
             TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));
 
-        Product provided = TestUtil.createProduct("101111", "Server Bits", owner);
+        Product provided = TestUtil.createProduct("101111", "Server Bits");
         provided.addContent(content);
+        provided = this.createProduct(provided, owner);
 
-        productCurator.create(provided);
         searchPool.addProvidedProduct(provided);
 
-        provided = TestUtil.createProduct("202222", "Containers In This One", owner);
-        productCurator.create(provided);
+        provided = this.createProduct("202222", "Containers In This One", owner);
         searchPool.addProvidedProduct(provided);
 
         searchPool.setContractNumber("mycontract");
@@ -86,15 +80,12 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         poolCurator.create(searchPool);
 
         // Create another we don't intend to see in the results:
-        Product hideProduct = new Product("hidden-product", "Not-So-Awesome OS Home Edition", owner);
-        productCurator.create(hideProduct);
+        Product hideProduct = this.createProduct("hidden-product", "Not-So-Awesome OS Home Edition", owner);
         hidePool = createPool(owner, hideProduct, 100L,
                 TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));
 
-        provided = TestUtil.createProduct("101", "Workstation Bits", owner);
-        productCurator.create(provided);
+        provided = this.createProduct("101", "Workstation Bits", owner);
         hidePool.addProvidedProduct(provided);
-
         poolCurator.create(hidePool);
 
         return searchPool;

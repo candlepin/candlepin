@@ -71,7 +71,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         owner1 = createOwner();
         ownerCurator.create(owner1);
 
-        product1 = new Product("xyzzy", "xyzzy", owner1);
+        product1 = TestUtil.createProduct("xyzzy", "xyzzy");
         productCurator.create(product1);
 
         pool1 = createPool(owner1, product1, 500L,
@@ -141,7 +141,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
 
     @Test
     public void testQuantityIncrement() {
-        Product product2 = new Product("blah", "blah", owner1);
+        Product product2 = TestUtil.createProduct("blah", "blah");
         product2.addAttribute(new ProductAttribute("instance_multiplier", "12"));
         productCurator.create(product2);
 

@@ -29,6 +29,7 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -315,7 +316,7 @@ public class SubscriptionReconcilerTest {
         String poolId, String entId, String conId, long quantity) {
 
         Subscription sub = new Subscription();
-        sub.setProduct(new Product(productId, productId, owner));
+        sub.setProduct(TestUtil.createProduct(productId, productId));
         sub.setUpstreamPoolId(poolId);
         sub.setUpstreamEntitlementId(entId);
         sub.setUpstreamConsumerId(conId);

@@ -151,7 +151,7 @@ public class TestUtil {
         );
     }
 
-    public static Product createProduct(String id, String name, Owner owner) {
+    public static Product createProduct(String id, String name) {
         Product rhel = new Product(id, name, null);
 
         ProductAttribute a1 = new ProductAttribute("a1", "a1");
@@ -164,21 +164,20 @@ public class TestUtil {
     }
 
     public static Product createProduct(String id) {
-        return createProduct(id, "test-product-" + randomInt(), createOwner());
+        return createProduct(id, "test-product-" + randomInt());
     }
 
-    public static Product createProduct(Owner o) {
+    public static Product createProduct() {
         int random = randomInt();
         return createProduct(
             String.valueOf(random),
-            "test-product-" + random,
-            o
+            "test-product-" + random
         );
     }
 
     public static Subscription createSubscription() {
         Owner owner = createOwner();
-        Product product = createProduct(owner);
+        Product product = createProduct();
 
         return createSubscription(owner, product);
     }
@@ -204,7 +203,7 @@ public class TestUtil {
     }
 
     public static Pool createPool(Owner owner) {
-        return createPool(owner, createProduct(owner));
+        return createPool(owner, createProduct());
     }
 
     public static Pool createPool(Product product) {
@@ -358,7 +357,7 @@ public class TestUtil {
         return createEntitlement(
             owner,
             createConsumer(owner),
-            createPool(owner, createProduct(owner)),
+            createPool(owner, createProduct()),
             null
         );
     }

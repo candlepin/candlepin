@@ -75,9 +75,6 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     @Inject protected CandlepinPoolManager poolManagerBase;
     @Inject protected ImportRecordCurator importRecordCurator;
     @Inject protected ExporterMetadataCurator exportCuratorBase;
-    @Inject protected ConsumerCurator consumerCurator;
-    @Inject protected ConsumerTypeCurator consumerTypeCurator;
-    @Inject protected EntitlementCurator entitlementCurator;
 
     protected CandlepinPoolManager poolManager;
     protected OwnerCurator ownerCurator;
@@ -195,8 +192,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     }
 
     protected Pool createPool(String name, Owner owner, boolean keepSourceSub, PoolType type) {
-        Product product = TestUtil.createProduct(name, name, owner);
-        this.productCurator.create(product);
+        Product product = this.createProduct(name, name, owner);
 
         Pool pool = TestUtil.createPool(owner, product);
         if (!keepSourceSub) {

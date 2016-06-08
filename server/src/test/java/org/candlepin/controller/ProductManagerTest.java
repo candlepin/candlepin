@@ -69,7 +69,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testCreateProduct() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product product = TestUtil.createProduct("p1", "prod1", owner);
+        Product product = TestUtil.createProduct("p1", "prod1");
 
         Product output = this.productManager.createProduct(product, owner);
 
@@ -79,12 +79,11 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test(expected = IllegalStateException.class)
     public void testCreateProductThatAlreadyExists() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        this.ownerCurator.create(owner);
 
-        Product product1 = TestUtil.createProduct("p1", "prod1", owner);
+        Product product1 = TestUtil.createProduct("p1", "prod1");
         Product output = this.productManager.createProduct(product1, owner);
 
-        Product product2 = TestUtil.createProduct("p1", "prod1", owner);
+        Product product2 = TestUtil.createProduct("p1", "prod1");
         this.productManager.createProduct(product2, owner);
     }
 
@@ -93,7 +92,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
 
-        Product product1 = TestUtil.createProduct("p1", "prod1", owner1);
+        Product product1 = TestUtil.createProduct("p1", "prod1");
         Product product2 = this.createProduct("p1", "prod1", owner2);
 
         Product output = this.productManager.createProduct(product1, owner1);
@@ -109,7 +108,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     //     ProductManager.log.debug("STARTING TEST");
 
     //     Owner owner = this.createOwner("test-owner", "Test Owner");
-    //     Product product = this.createProduct("p1", "prod1", owner);
+    //     Product product = this.createProduct("p1", "prod1");
 
     //     Product output = this.productManager.updateProduct(product, owner, true);
 
@@ -123,7 +122,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     public void testUpdateProduct() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         Product product = this.createProduct("p1", "prod1", owner);
-        Product update = TestUtil.createProduct("p1", "new product name", owner);
+        Product update = TestUtil.createProduct("p1", "new product name");
 
         Product output = this.productManager.updateProduct(update, owner, false);
 
@@ -137,7 +136,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     public void testUpdateProductWithCertRegeneration() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         Product product = this.createProduct("p1", "prod1", owner);
-        Product update = TestUtil.createProduct("p1", "new product name", owner);
+        Product update = TestUtil.createProduct("p1", "new product name");
 
         Product output = this.productManager.updateProduct(update, owner, true);
 
@@ -154,7 +153,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
         Product product1 = this.createProduct("p1", "prod1", owner1);
         Product product2 = this.createProduct("p1", "updated product", owner2);
-        Product update = TestUtil.createProduct("p1", "updated product", owner1);
+        Product update = TestUtil.createProduct("p1", "updated product");
 
         Product output = this.productManager.updateProduct(update, owner1, false);
 
@@ -171,7 +170,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
         Product product1 = this.createProduct("p1", "prod1", owner1);
         Product product2 = this.createProduct("p1", "updated product", owner2);
-        Product update = TestUtil.createProduct("p1", "updated product", owner1);
+        Product update = TestUtil.createProduct("p1", "updated product");
 
         Product output = this.productManager.updateProduct(update, owner1, true);
 
@@ -188,7 +187,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
         Product product = this.createProduct("p1", "prod1", owner1, owner2);
-        Product update = TestUtil.createProduct("p1", "updated product", owner1);
+        Product update = TestUtil.createProduct("p1", "updated product");
 
         Product output = this.productManager.updateProduct(update, owner1, false);
 
@@ -206,7 +205,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
         Product product = this.createProduct("p1", "prod1", owner1, owner2);
-        Product update = TestUtil.createProduct("p1", "updated product", owner1);
+        Product update = TestUtil.createProduct("p1", "updated product");
 
         Product output = this.productManager.updateProduct(update, owner1, true);
 
@@ -223,7 +222,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test(expected = IllegalStateException.class)
     public void testUpdateProductThatDoesntExist() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product update = TestUtil.createProduct("p1", "prod1", owner);
+        Product update = TestUtil.createProduct("p1", "prod1");
 
         this.productManager.updateProduct(update, owner, false);
     }
@@ -259,7 +258,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test(expected = IllegalStateException.class)
     public void testRemoveProductThatDoesntExist() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product product = TestUtil.createProduct("p1", "prod1", owner);
+        Product product = TestUtil.createProduct("p1", "prod1");
 
         this.productManager.removeProduct(product, owner);
     }
@@ -278,7 +277,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testRemoveProductContent() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product product = TestUtil.createProduct("p1", "prod1", owner);
+        Product product = TestUtil.createProduct("p1", "prod1");
         Content content = TestUtil.createContent(owner, "c1");
         product.addContent(content);
         this.contentCurator.create(content);
@@ -298,7 +297,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testRemoveProductContentWithCertRegeneration() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product product = TestUtil.createProduct("p1", "prod1", owner);
+        Product product = TestUtil.createProduct("p1", "prod1");
         Content content = TestUtil.createContent(owner, "c1");
         product.addContent(content);
         this.contentCurator.create(content);
@@ -321,7 +320,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     public void testRemoveContentFromSharedProduct() {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
-        Product product = TestUtil.createProduct("p1", "prod1", owner1);
+        Product product = TestUtil.createProduct("p1", "prod1");
         Content content = TestUtil.createContent(owner1, "c1");
         product.addContent(content);
         content = this.contentCurator.create(content);
@@ -348,7 +347,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     public void testRemoveContentFromSharedProductWithCertRegeneration() {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
-        Product product = TestUtil.createProduct("p1", "prod1", owner1);
+        Product product = TestUtil.createProduct("p1", "prod1");
         Content content = TestUtil.createContent(owner1, "c1");
         product.addContent(content);
         content = this.contentCurator.create(content);
@@ -376,7 +375,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     public void testRemoveContentFromProductForBadOwner() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner");
-        Product product = TestUtil.createProduct("p1", "prod1", owner);
+        Product product = TestUtil.createProduct("p1", "prod1");
         Content content = TestUtil.createContent(owner, "c1");
         product.addContent(content);
         this.contentCurator.create(content);
@@ -398,7 +397,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testAddContentToProduct() {
         Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
-        Product product = this.createProduct("p1", "prod1", owner);
+        Product product = this.createProduct("p1", "prod1");
         Content content = this.createContent("c1", "content1", owner);
         this.ownerProductCurator.mapProductToOwners(product, owner);
 

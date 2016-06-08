@@ -88,13 +88,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public static final String PRODUCT_VIRT_HOST_PLATFORM = "virtualization_host_platform";
     public static final String PRODUCT_VIRT_GUEST = "virt_guest";
 
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private PoolCurator poolCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private EntitlementCurator entitlementCurator;
-    @Inject private ContentCurator contentCurator;
     @Inject private CandlepinPoolManager poolManager;
 
     private Product virtHost;
@@ -119,13 +112,13 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         o = createOwner();
         ownerCurator.create(o);
 
-        virtHost = new Product(PRODUCT_VIRT_HOST, PRODUCT_VIRT_HOST, o);
-        virtHostPlatform = new Product(PRODUCT_VIRT_HOST_PLATFORM, PRODUCT_VIRT_HOST_PLATFORM, o);
-        virtGuest = new Product(PRODUCT_VIRT_GUEST, PRODUCT_VIRT_GUEST, o);
-        monitoring = new Product(PRODUCT_MONITORING, PRODUCT_MONITORING, o);
+        virtHost = TestUtil.createProduct(PRODUCT_VIRT_HOST, PRODUCT_VIRT_HOST);
+        virtHostPlatform = TestUtil.createProduct(PRODUCT_VIRT_HOST_PLATFORM, PRODUCT_VIRT_HOST_PLATFORM);
+        virtGuest = TestUtil.createProduct(PRODUCT_VIRT_GUEST, PRODUCT_VIRT_GUEST);
+        monitoring = TestUtil.createProduct(PRODUCT_MONITORING, PRODUCT_MONITORING);
         monitoring.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
 
-        provisioning = new Product(PRODUCT_PROVISIONING, PRODUCT_PROVISIONING, o);
+        provisioning = TestUtil.createProduct(PRODUCT_PROVISIONING, PRODUCT_PROVISIONING);
         provisioning.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
         provisioning.setMultiplier(2L);
         provisioning.addAttribute(new ProductAttribute("instance-multiplier", "4"));
@@ -137,7 +130,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         monitoring.addAttribute(new ProductAttribute(PRODUCT_MONITORING, ""));
         provisioning.addAttribute(new ProductAttribute(PRODUCT_PROVISIONING, ""));
 
-        socketLimitedProduct = new Product("socket-limited-prod", "Socket Limited Product", o);
+        socketLimitedProduct = TestUtil.createProduct("socket-limited-prod", "Socket Limited Product");
         socketLimitedProduct.addAttribute(new ProductAttribute("sockets", "2"));
         productCurator.create(socketLimitedProduct);
 
@@ -309,7 +302,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testEntitleByProductsWithModifierAndModifiee() throws EntitlementRefusedException {
-        Product modifier = new Product("modifier", "modifier", o);
+        Product modifier = TestUtil.createProduct("modifier", "modifier");
 
         Set<String> modified = new HashSet<String>();
         modified.add(PRODUCT_VIRT_HOST);
@@ -359,8 +352,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testRefreshPoolsWithChangedProductShouldUpdatePool() {
-        Product product1 = TestUtil.createProduct("product 1", "Product 1", o);
-        Product product2 = TestUtil.createProduct("product 2", "Product 2", o);
+        Product product1 = TestUtil.createProduct("product 1", "Product 1");
+        Product product2 = TestUtil.createProduct("product 2", "Product 2");
 
         productCurator.create(product1);
         productCurator.create(product2);
@@ -411,7 +404,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testListAllForConsumerExcludesErrors() {
-        Product p = new Product("test-product", "Test Product", o);
+        Product p = TestUtil.createProduct("test-product", "Test Product");
         productCurator.create(p);
 
         Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(
@@ -435,7 +428,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testListAllForActKeyExcludesErrors() {
-        Product p = new Product("test-product", "Test Product", o);
+        Product p = TestUtil.createProduct("test-product", "Test Product");
         productCurator.create(p);
 
         ActivationKey ak = new ActivationKey();
@@ -560,7 +553,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testListConditionDevPools() {
         Owner owner = createOwner();
-        Product p = new Product("test-product", "Test Product", owner);
+        Product p = TestUtil.createProduct("test-product", "Test Product");
         productCurator.create(p);
 
         Pool pool1 = createPool(owner, p, 10L,
@@ -591,7 +584,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testDevPoolRemovalAtUnbind() throws EntitlementRefusedException {
         Owner owner = createOwner();
-        Product p = new Product("test-product", "Test Product", owner);
+        Product p = TestUtil.createProduct("test-product", "Test Product");
         productCurator.create(p);
 
         Consumer devSystem = new Consumer("dev", "user", owner, systemType);
@@ -625,7 +618,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testDevPoolBatchBind() throws EntitlementRefusedException {
         Owner owner = createOwner();
-        Product p = new Product("test-product", "Test Product", owner);
+        Product p = TestUtil.createProduct("test-product", "Test Product");
         productCurator.create(p);
 
         Consumer devSystem = new Consumer("dev", "user", owner, systemType);
@@ -662,7 +655,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testBatchBindError() throws EntitlementRefusedException {
         Owner owner = createOwner();
-        Product p = new Product("test-product", "Test Product", owner);
+        Product p = TestUtil.createProduct("test-product", "Test Product");
         p.addAttribute(new ProductAttribute(Pool.MULTI_ENTITLEMENT_ATTRIBUTE, "yes"));
         productCurator.create(p);
 
@@ -715,7 +708,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testBatchBindZeroQuantity() throws EntitlementRefusedException {
         Owner owner = createOwner();
-        Product p = new Product("test-product", "Test Product", owner);
+        Product p = TestUtil.createProduct("test-product", "Test Product");
         productCurator.create(p);
 
         Consumer devSystem = new Consumer("dev", "user", owner, systemType);

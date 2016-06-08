@@ -188,7 +188,7 @@ public class PoolRulesInstanceTest {
     private Subscription createInstanceBasedSub(String productId, int quantity, int instanceMultiplier,
         boolean exported) {
         Owner owner = new Owner("Test Corporation");
-        Product product = new Product(productId, productId, owner);
+        Product product = TestUtil.createProduct(productId, productId);
         product.setAttribute("instance_multiplier", Integer.toString(instanceMultiplier));
         Subscription s = TestUtil.createSubscription(owner, product);
         if (exported) {

@@ -38,16 +38,28 @@ import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.EntitlementCertificateCurator;
+import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.EnvironmentContentCurator;
+import org.candlepin.model.EventCurator;
+import org.candlepin.model.IdentityCertificateCurator;
+import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductAttributeCurator;
+import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
+import org.candlepin.model.RoleCurator;
 import org.candlepin.model.SourceSubscription;
+import org.candlepin.model.UserCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.resteasy.ResourceLocatorMap;
@@ -100,16 +112,28 @@ public class DatabaseTestFixture {
     public static CandlepinLiquibaseResource liquibase = new CandlepinLiquibaseResource();
 
     @Inject protected ActivationKeyCurator activationKeyCurator;
-    @Inject protected OwnerCurator ownerCurator;
-    @Inject protected OwnerProductCurator ownerProductCurator;
-    @Inject protected ProductCurator productCurator;
-    @Inject protected PoolCurator poolCurator;
     @Inject protected ConsumerCurator consumerCurator;
     @Inject protected ConsumerTypeCurator consumerTypeCurator;
     @Inject protected CertificateSerialCurator certSerialCurator;
     @Inject protected ContentCurator contentCurator;
-    @Inject protected SubscriptionServiceAdapter subAdapter;
-    @Inject protected ResourceLocatorMap locatorMap;
+    @Inject protected EntitlementCurator entitlementCurator;
+    @Inject protected EntitlementCertificateCurator entitlementCertificateCurator;
+    @Inject protected EnvironmentCurator environmentCurator;
+    @Inject protected EnvironmentContentCurator environmentContentCurator;
+    @Inject protected EventCurator eventCurator;
+    @Inject protected IdentityCertificateCurator identityCertificateCurator;
+    @Inject protected ImportRecordCurator importRecordCurator;
+    @Inject protected OwnerCurator ownerCurator;
+    @Inject protected OwnerInfoCurator ownerInfoCurator;
+    @Inject protected OwnerProductCurator ownerProductCurator;
+    @Inject protected ProductAttributeCurator productAttributeCurator;
+    @Inject protected ProductCertificateCurator productCertificateCurator;
+    @Inject protected ProductCurator productCurator;
+    @Inject protected PoolCurator poolCurator;
+    @Inject protected RoleCurator roleCurator;
+    @Inject protected UserCurator userCurator;
+
+    @Inject private ResourceLocatorMap locatorMap;
 
     private static Injector parentInjector;
     private Injector injector;
@@ -245,9 +269,11 @@ public class DatabaseTestFixture {
     }
 
     protected Owner createOwner() {
-        Owner o = new Owner("Test Owner " + TestUtil.randomInt());
-        ownerCurator.create(o);
-        return o;
+        return this.createOwner("Test Owner " + TestUtil.randomInt());
+    }
+
+    protected Owner createOwner(String key) {
+        return this.createOwner(key, key);
     }
 
     protected Owner createOwner(String key, String name) {
@@ -263,7 +289,11 @@ public class DatabaseTestFixture {
     }
 
     protected Product createProduct(String id, String name, Owner... owners) {
-        Product product = TestUtil.createProduct(id, name, null);
+        Product product = TestUtil.createProduct(id, name);
+        return this.createProduct(product, owners);
+    }
+
+    protected Product createProduct(Product product, Owner... owners) {
         product = this.productCurator.create(product);
 
         for (Owner owner : owners) {

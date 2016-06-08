@@ -121,7 +121,7 @@ public class EntitlementRulesTestFixture {
 
     protected Subscription createVirtLimitSub(String productId, int quantity,
         String virtLimit) {
-        Product product = new Product(productId, productId, owner);
+        Product product = TestUtil.createProduct(productId, productId);
         product.setAttribute("virt_limit", virtLimit);
         when(ownerProductCuratorMock.getProductById(owner, productId)).thenReturn(product);
         Subscription s = TestUtil.createSubscription(owner, product);
@@ -137,7 +137,7 @@ public class EntitlementRulesTestFixture {
     }
 
     protected Pool setupVirtLimitPool() {
-        Product product = new Product(productId, "A virt_limit product", owner);
+        Product product = TestUtil.createProduct(productId, "A virt_limit product");
         Pool pool = TestUtil.createPool(owner, product);
         pool.addAttribute(new PoolAttribute("virt_limit", "10"));
         pool.setId("fakeid" + TestUtil.randomInt());

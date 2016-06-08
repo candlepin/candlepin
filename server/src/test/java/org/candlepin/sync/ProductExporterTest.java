@@ -48,7 +48,7 @@ public class ProductExporterTest {
         StringWriter writer = new StringWriter();
 
         Owner owner = new Owner("Example-Corporation");
-        Product product = new Product("my-id", "product name", owner);
+        Product product = new Product("my-id", "product name");
         exporter.export(mapper, writer, product);
         String s = writer.toString();
         assertTrue(s.contains("\"name\":\"product name\""));
