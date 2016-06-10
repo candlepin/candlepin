@@ -28,7 +28,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
@@ -1013,12 +1012,6 @@ public class CandlepinPoolManager implements PoolManager {
                         entitleDate, owner, null, fromPools);
                 }
                 if (bestPools == null) {
-                    List<String> fullList = new ArrayList<String>();
-                    fullList.addAll(Arrays.asList(productIds));
-                    for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
-                        fullList.add(cip.getId());
-                    }
-                    log.info("No entitlements available for products: {}", fullList);
                     return null;
                 }
 

@@ -336,6 +336,10 @@ public class CandlepinModule extends AbstractModule {
     }
 
     private void configureSwagger() {
+        if (!config.getBoolean(ConfigProperties.SWAGGER_ENABLED, true)) {
+            return;
+        }
+
         /**
          * Using this binding, the swagger.(json|xml) will be available
          * for an authenticated user at context: URL/candlepin/swagger.json

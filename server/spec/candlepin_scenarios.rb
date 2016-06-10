@@ -384,6 +384,12 @@ class StandardExporter < Exporter
     @products[:product3] = create_product(random_string('sub-prod'), random_string(), {
         :attributes => { :arch => "x86_64", :virt_limit => "unlimited"}
     })
+    @products[:product_vdc] = create_product(random_string('prod-vdc'), random_string(), {
+        :attributes => { :arch => "x86_64", :virt_limit => "unlimited", 'stacking_id' => 'stack-vdc'}
+    })
+    @products[:product_dc] = create_product(random_string('prod-dc'), random_string(), {
+        :attributes => { :arch => "x86_64", 'stacking_id' => 'stack-dc', 'stacking_id' => 'stack-dc'}
+    })
 
     @products[:derived_product] = create_product(random_string('sub-prov-prod'), random_string(),
         {"sockets" => "2"})
@@ -423,11 +429,13 @@ class StandardExporter < Exporter
     create_pool_and_subscription(@owner['key'], @products[:virt_product].id, 10, [], '', '12345', '6789', nil, end_date, true)
     create_pool_and_subscription(@owner['key'], @products[:product3].id, 5, [], '', '12345', '6789', nil, end_date, true,
       {:derived_product_id => @products[:derived_product]['id'],  :derived_provided_products => [@products[:derived_provided_prod]['id']]})
-    create_pool_and_subscription(@owner['key'], @products[:product_up].id, 10, [], '', '12345', '6789', nil, end_date)
-
+    create_pool_and_subscription(@owner['key'], @products[:product_up].id, 10, [], '', '12345', '6789', nil, end_date, true)
+    create_pool_and_subscription(@owner['key'], @products[:product_vdc].id, 5, [], '', '12345', '6789', nil, end_date, false,
+      {:derived_product_id => @products[:product_dc]['id']})
+ 
     # Pool names is a list of names of instance variables that will be created
-    pool_names = ["pool1", "pool2", "pool3", "pool4", "pool_up"]
-    pool_products = [:product1, :product2, :product3, :virt_product, :product_up]
+    pool_names = ["pool1", "pool2", "pool3", "pool4", "pool_up", "pool_vdc"]
+    pool_products = [:product1, :product2, :product3, :virt_product, :product_up, :product_vdc]
 
     # Take the names and couple them together with keys in the @products hash.
     # Then for each pair, set an instance variable with the value of the list_pools
@@ -439,8 +447,8 @@ class StandardExporter < Exporter
     @candlepin_client.update_consumer({:facts => {"distributor_version" => "sam-1.3"}})
     @candlepin_consumer = @candlepin_client.get_consumer()
 
-    ent_names = ["entitlement1", "entitlement2", "entitlement3", "entitlement_up"]
-    ent_names.zip([@pool1, @pool2, @pool4, @pool_up]).each do |ent_name, pool|
+    ent_names = ["entitlement1", "entitlement2", "entitlement3", "entitlement_up", "entitlement_vdc"]
+    ent_names.zip([@pool1, @pool2, @pool4, @pool_up, @pool_vdc]).each do |ent_name, pool|
       instance_variable_set("@#{ent_name}", @candlepin_client.consume_pool(pool.id, {:quantity => 1})[0])
     end
     # pool3 is special
