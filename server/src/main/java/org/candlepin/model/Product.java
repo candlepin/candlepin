@@ -86,7 +86,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
                      joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "element")
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
-    private List<ProductContent> productContent;
+    private Set<ProductContent> productContent;
 
     @ManyToMany(mappedBy = "providedProducts")
     private List<Subscription> subscriptions;
@@ -112,7 +112,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
         setName(name);
         setMultiplier(multiplier);
         setAttributes(new HashSet<ProductAttribute>());
-        setProductContent(new LinkedList<ProductContent>());
+        setProductContent(new HashSet<ProductContent>());
         setSubscriptions(new LinkedList<Subscription>());
         setDependentProductIds(new HashSet<String>());
     }
@@ -123,7 +123,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
         setName(name);
         setMultiplier(1L);
         setAttributes(new HashSet<ProductAttribute>());
-        setProductContent(new LinkedList<ProductContent>());
+        setProductContent(new HashSet<ProductContent>());
         setSubscriptions(new LinkedList<Subscription>());
         setDependentProductIds(new HashSet<String>());
         setAttribute("version", version);
@@ -300,7 +300,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
      */
     public void addContent(Content content) {
         if (productContent == null) {
-            productContent = new LinkedList<ProductContent>();
+            productContent = new HashSet<ProductContent>();
         }
         productContent.add(new ProductContent(this, content, false));
     }
@@ -310,7 +310,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
      */
     public void addEnabledContent(Content content) {
         if (productContent == null) {
-            productContent = new LinkedList<ProductContent>();
+            productContent = new HashSet<ProductContent>();
         }
         productContent.add(new ProductContent(this, content, true));
     }
@@ -318,14 +318,14 @@ public class Product extends AbstractHibernateObject implements Linkable {
     /**
      * @param productContent the productContent to set
      */
-    public void setProductContent(List<ProductContent> productContent) {
+    public void setProductContent(Set<ProductContent> productContent) {
         this.productContent = productContent;
     }
 
     /**
      * @return the productContent
      */
-    public List<ProductContent> getProductContent() {
+    public Set<ProductContent> getProductContent() {
         return productContent;
     }
 
@@ -336,7 +336,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
             return;
         }
         if (productContent == null) {
-            productContent = new LinkedList<ProductContent>();
+            productContent = new HashSet<ProductContent>();
         }
         for (Content newContent : content) {
             productContent.add(new ProductContent(this, newContent, false));
@@ -348,7 +348,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
             return;
         }
         if (productContent == null) {
-            productContent = new LinkedList<ProductContent>();
+            productContent = new HashSet<ProductContent>();
         }
         for (Content newContent : content) {
             productContent.add(new ProductContent(this, newContent, true));
