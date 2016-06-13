@@ -67,7 +67,10 @@ public class PinsetterKernel {
 
     public static final String CRON_GROUP = "cron group";
     public static final String SINGLE_JOB_GROUP = "async group";
-    public static final String[] DELETED_JOBS = new String[] { "StatisticHistoryTask" };
+    public static final String[] DELETED_JOBS = new String[] {
+        "StatisticHistoryTask",
+        "ExportCleaner"
+    };
 
     private static Logger log = LoggerFactory.getLogger(PinsetterKernel.class);
 
