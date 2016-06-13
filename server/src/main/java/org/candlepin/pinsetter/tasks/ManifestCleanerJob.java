@@ -85,8 +85,9 @@ public class ManifestCleanerJob extends KingpinJob {
                         delCount++;
                     }
                     catch (IOException io) {
-                        log.error("Unable to delete export directory that is old enough " +
-                            "to delete", io);
+                        String errorMsg = String.format("Unable to delete export directory that is old " +
+                            "enough to delete: %s", f.getAbsolutePath());
+                        log.error(errorMsg, io);
                     }
                 }
                 else {
@@ -94,9 +95,9 @@ public class ManifestCleanerJob extends KingpinJob {
                 }
             }
         }
-        log.info("Begining directory count: " + dirCount);
-        log.info("Directories deleted: " + delCount);
-        log.info("Directories remaining: " + leftCount);
+        log.info("Begining directory count: {}", dirCount);
+        log.info("Directories deleted: {}", delCount);
+        log.info("Directories remaining: {}", leftCount);
     }
 
     private void manifestServiceCleanup(int maxAgeInMinutes) {
