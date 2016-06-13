@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Order;
@@ -499,6 +500,10 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         for (Entitlement ent : entitlements) {
             ent.getCertificates().clear();
             ent.getConsumer().getEntitlements().remove(ent);
+    
+            if (Hibernate.isInitialized(ent.getPool().getEntitlements())) {
+                ent.getPool().getEntitlements().remove(ent);
+            }
         }
     }
 
