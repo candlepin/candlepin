@@ -19,6 +19,7 @@ import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 
+import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.Owner;
@@ -115,17 +116,24 @@ public class ImportJobTest {
     }
 
     @Test
-    public void ensureNoOpIfOwnerDoesNotExist() throws Exception {
+    public void ensureJobExceptionThrownIfOwnerNotFound() throws Exception {
         String archiveFilePath = "/path/to/some/file.zip";
         ConflictOverrides co = new ConflictOverrides();
         String uploadedFileName = "test.zip";
-        String expectedMessage = "Nothing to do. Owner no longer exists.";
+        String expectedMessage = String.format("Owner %s was not found.", owner.getKey());
 
         JobDetail detail = job.scheduleImport(owner, archiveFilePath, uploadedFileName, co);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(null);
 
-        job.execute(ctx);
+        try {
+            job.execute(ctx);
+            fail("Expected exception not thrown");
+        }
+        catch (JobExecutionException je) {
+            Throwable cause = je.getCause();
+            assertTrue(cause instanceof NotFoundException);
+        }
         verify(ctx).setResult(eq(expectedMessage));
     }
 

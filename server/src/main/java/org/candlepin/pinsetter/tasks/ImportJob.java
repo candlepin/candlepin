@@ -18,6 +18,7 @@ import static org.quartz.JobBuilder.newJob;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.IseException;
+import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.Owner;
@@ -70,9 +71,7 @@ public class ImportJob extends UniqueByEntityJob {
         try {
             targetOwner = ownerCurator.lookupByKey(ownerKey);
             if (targetOwner == null) {
-                //FIXME This should be internationalized.
-                context.setResult("Nothing to do. Owner no longer exists.");
-                return;
+                throw new NotFoundException(String.format("Owner %s was not found.", ownerKey));
             }
 
             ImportRecord importRecord = manifestManager.importStoredManifest(targetOwner,
