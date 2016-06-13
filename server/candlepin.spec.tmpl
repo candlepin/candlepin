@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.6
+Version: 0.9.54.7
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,13 @@ fi
 
 #raw
 %changelog
+* Mon Jun 13 2016 Vritant Jain <vrjain@redhat.com> 0.9.54.7-1
+- 1344402: Unique product content violation (nguyen.filip@gmail.com)
+- 1343753: logrotate permission denied error (vrjain@redhat.com)
+- 1330245: delete duplicate su from logrotate conf (vrjain@redhat.com)
+- 1337906: Stack derived pool cleanup (nguyen.filip@gmail.com)
+- 1306628: Added additional logging to environment deletion (crog@redhat.com)
+- 1338846: Fixing property filter race condition (nguyen.filip@gmail.com)
 * Wed May 04 2016 Christopher Snyder <csnyder@redhat.com> 0.9.54.6-1
 - 1332635: Treat null guest lists as empty lists (csnyder@redhat.com)
 - 1330245:  Candlepin logrotate error on RHEL6.7 (vrjain@redhat.com)
