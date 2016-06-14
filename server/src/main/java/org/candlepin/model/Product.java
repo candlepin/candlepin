@@ -117,7 +117,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @CollectionTable(name = "cp2_product_content", joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
-    private List<ProductContent> productContent;
+    private Set<ProductContent> productContent;
 
     /*
      * hibernate persists empty set as null, and tries to fetch
@@ -777,7 +777,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      */
     public Product setProductContent(Collection<ProductContent> productContent) {
         if (this.productContent == null) {
-            this.productContent = new LinkedList<ProductContent>();
+            this.productContent = new HashSet<ProductContent>();
         }
 
         this.productContent.clear();
@@ -794,7 +794,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     /**
      * @return the productContent
      */
-    public List<ProductContent> getProductContent() {
+    public Set<ProductContent> getProductContent() {
         return productContent;
     }
 
@@ -810,7 +810,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      */
     public boolean addProductContent(ProductContent content) {
         if (this.productContent == null) {
-            this.productContent = new LinkedList<ProductContent>();
+            this.productContent = new HashSet<ProductContent>();
         }
 
         if (content != null) {
@@ -835,7 +835,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
     public void setContent(Set<Content> content) {
         if (this.productContent == null) {
-            this.productContent = new LinkedList<ProductContent>();
+            this.productContent = new HashSet<ProductContent>();
         }
 
         this.productContent.clear();
