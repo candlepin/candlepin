@@ -104,7 +104,6 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -1782,9 +1781,8 @@ public class ConsumerResource {
         @QueryParam("webapp_prefix") String webAppPrefix,
         @QueryParam("api_url") String apiUrl) {
 
-        Consumer consumer = verifyExportParams(consumerUuid, cdnLabel);
         try {
-            File archive = manifestManager.generateManifest(consumer, cdnLabel, webAppPrefix, apiUrl);
+            File archive = manifestManager.generateManifest(consumerUuid, cdnLabel, webAppPrefix, apiUrl);
             response.addHeader("Content-Disposition", "attachment; filename=" + archive.getName());
             return archive;
         }
@@ -1822,8 +1820,7 @@ public class ConsumerResource {
         @QueryParam("cdn_label") String cdnLabel,
         @QueryParam("webapp_prefix") String webAppPrefix,
         @QueryParam("api_url") String apiUrl) {
-        Consumer consumer = verifyExportParams(consumerUuid, cdnLabel);
-        return manifestManager.generateManifestAsync(consumer, cdnLabel, webAppPrefix, apiUrl);
+        return manifestManager.generateManifestAsync(consumerUuid, cdnLabel, webAppPrefix, apiUrl);
     }
 
     /**
@@ -1853,13 +1850,6 @@ public class ConsumerResource {
         // the HREF generation in ConsumerResource.buildAsyncDownloadManifestHref.
         // *******************************************************************************
 
-        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        if (consumer.getType() == null || !consumer.getType().isManifest()) {
-            log.error("Invalid consumer type specified for the manifest download");
-            throw new NotFoundException(
-                i18n.tr("The specified file does not exist, or can not be accessed."));
-        }
-
         // The response for this request is formulated a little different for this
         // file download. In some cases, such as for a hibernate DB file service, we must
         // stream the results from the DB to the client by directly writing to the
@@ -1870,7 +1860,7 @@ public class ConsumerResource {
         //       can only be done inside a single transaction, so we have to stream it
         //       manually.
         // TODO See if there is a way to get RestEasy to do this so we don't have to.
-        manifestManager.writeStoredExportToResponse(exportId, consumer, response);
+        manifestManager.writeStoredExportToResponse(exportId, consumerUuid, response);
 
         // On successful manifest read, delete the record. The manifest can only be
         // downloaded once and must then be regenerated.
@@ -2109,25 +2099,6 @@ public class ConsumerResource {
         Map<String, String> calculatedAttributes =
             calculatedAttributesUtil.buildCalculatedAttributes(ent.getPool(), null);
         ent.getPool().setCalculatedAttributes(calculatedAttributes);
-    }
-
-    private Consumer verifyExportParams(String consumerUuid, String cdnLabel) {
-        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        if (consumer.getType() == null ||
-            !consumer.getType().isManifest()) {
-            throw new ForbiddenException(
-                i18n.tr(
-                    "Unit {0} cannot be exported. " +
-                    "A manifest cannot be made for units of type ''{1}''.",
-                    consumerUuid, consumer.getType().getLabel()));
-        }
-
-        if (!StringUtils.isBlank(cdnLabel) &&
-            cdnCurator.lookupByLabel(cdnLabel) == null) {
-            throw new ForbiddenException(
-                i18n.tr("A CDN with label {0} does not exist on this system.", cdnLabel));
-        }
-        return consumer;
     }
 
 }

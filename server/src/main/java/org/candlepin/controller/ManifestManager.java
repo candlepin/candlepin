@@ -23,12 +23,15 @@ import java.util.Set;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.EntitlementCurator;
@@ -70,6 +73,7 @@ public class ManifestManager {
     private EntitlementCurator entitlementCurator;
     private PoolManager poolManager;
     private ConsumerCurator consumerCurator;
+    private CdnCurator cdnCurator;
     private PrincipalProvider principalProvider;
     private I18n i18n;
     private EventSink sink;
@@ -77,13 +81,14 @@ public class ManifestManager {
 
     @Inject
     public ManifestManager(ManifestFileService manifestFileService, Exporter exporter, Importer importer,
-        ConsumerCurator consumerCurator, EntitlementCurator entitlementCurator, PoolManager poolManager,
-        PrincipalProvider principalProvider, I18n i18n, EventSink eventSink,
+        ConsumerCurator consumerCurator, EntitlementCurator entitlementCurator, CdnCurator cdnCurator,
+        PoolManager poolManager, PrincipalProvider principalProvider, I18n i18n, EventSink eventSink,
         EventFactory eventFactory) {
         this.manifestFileService = manifestFileService;
         this.exporter = exporter;
         this.importer = importer;
         this.consumerCurator = consumerCurator;
+        this.cdnCurator = cdnCurator;
         this.entitlementCurator = entitlementCurator;
         this.poolManager = poolManager;
         this.principalProvider = principalProvider;
@@ -95,30 +100,33 @@ public class ManifestManager {
     /**
      * Asynchronously generates a manifest for the target consumer.
      *
-     * @param consumer the target consumer.
+     * @param consumerUuid the target consumer's UUID.
      * @param cdnLabel
      * @param webAppPrefix
      * @param apiUrl
      * @return the details of the async export job.
      */
-    public JobDetail generateManifestAsync(Consumer consumer, String cdnLabel, String webAppPrefix,
+    public JobDetail generateManifestAsync(String consumerUuid, String cdnLabel, String webAppPrefix,
         String apiUrl) {
-        log.info("Scheduling Async Export for consumer {}", consumer.getUuid());
+        log.info("Scheduling Async Export for consumer {}", consumerUuid);
+        Consumer consumer = validateConsumerForExport(consumerUuid, cdnLabel);
         return ExportJob.scheduleExport(consumer, cdnLabel, webAppPrefix, apiUrl);
     }
 
     /**
      * Generates a manifest for the specified consumer.
      *
-     * @param consumer the target consumer.
+     * @param consumerUuid the target consumer's UUID.
      * @param cdnLabel
      * @param webAppPrefix
      * @param apiUrl
      * @return an archive of the target consumer
      * @throws ExportCreationException when an export fails.
      */
-    public File generateManifest(Consumer consumer, String cdnLabel, String webAppPrefix, String apiUrl)
+    public File generateManifest(String consumerUuid, String cdnLabel, String webAppPrefix, String apiUrl)
         throws ExportCreationException {
+        log.info("Exporting consumer {}", consumerUuid);
+        Consumer consumer = validateConsumerForExport(consumerUuid, cdnLabel);
         poolManager.regenerateDirtyEntitlements(entitlementCurator.listByConsumer(consumer));
         File export = exporter.getFullExport(consumer, cdnLabel, webAppPrefix, apiUrl);
         sink.queueEvent(eventFactory.exportCreated(consumer));
@@ -217,7 +225,7 @@ public class ManifestManager {
      * the appropriate response data.
      *
      * @param exportId the id of the manifest file to find.
-     * @param exportedConsumer the consumer the export was generated for.
+     * @param exportedConsumerUuid the UUID of the consumer the export was generated for.
      * @param response the response to write the file to.
      * @throws ManifestFileServiceException if there was an issue getting the file from the service
      * @throws NotFoundException if the manifest file is not found
@@ -226,9 +234,11 @@ public class ManifestManager {
      * @throws IseException if there was an issue writing the file to the response.
      */
     @Transactional
-    public void writeStoredExportToResponse(String exportId, Consumer exportedConsumer,
+    public void writeStoredExportToResponse(String exportId, String exportedConsumerUuid,
         HttpServletResponse response) throws ManifestFileServiceException, NotFoundException,
             BadRequestException, IseException {
+        Consumer exportedConsumer = consumerCurator.verifyAndLookupConsumer(exportedConsumerUuid);
+
         // In order to stream the results from the DB to the client
         // we write the file contents directly to the response output stream.
         //
@@ -242,6 +252,7 @@ public class ManifestManager {
                 i18n.tr("Unable to find specified manifest by id: {0}", exportId));
         }
 
+        // The specified consumer must match that of the manifest.
         if (!exportedConsumer.getUuid().equals(manifest.getTargetId())) {
             throw new BadRequestException(
                 i18n.tr("Could not validate export against specifed consumer: {0}",
@@ -273,23 +284,47 @@ public class ManifestManager {
         }
     }
 
+    private Consumer validateConsumerForExport(String consumerUuid, String cdnLabel) {
+        // FIXME Should this be testing the CdnLabel as well?
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        if (consumer.getType() == null ||
+            !consumer.getType().isManifest()) {
+            throw new ForbiddenException(
+                i18n.tr(
+                    "Unit {0} cannot be exported. " +
+                    "A manifest cannot be made for units of type ''{1}''.",
+                    consumerUuid, consumer.getType().getLabel()));
+        }
+
+        if (!StringUtils.isBlank(cdnLabel) &&
+            cdnCurator.lookupByLabel(cdnLabel) == null) {
+            throw new ForbiddenException(
+                i18n.tr("A CDN with label {0} does not exist on this system.", cdnLabel));
+        }
+
+        return consumer;
+    }
+
     /**
      * Generates a manifest for the specifed consumer and stores the resulting file via the
      * {@link ManifestFileService}.
      *
-     * @param consumer the target consumer.
+     * @param consumerUuid the target consumer's UUID.
      * @param cdnKey
      * @param webAppPrefix
      * @param apiUrl
      * @return an {@link ExportResult} containing the details of the stored file.
      * @throws ExportCreationException if there are any issues generating the manifest.
      */
-    public ExportResult generateAndStoreManifest(Consumer consumer, String cdnKey, String webAppPrefix,
+    public ExportResult generateAndStoreManifest(String consumerUuid, String cdnLabel, String webAppPrefix,
         String apiUrl) throws ExportCreationException {
+
+        Consumer consumer = validateConsumerForExport(consumerUuid, cdnLabel);
+
         File export = null;
         try {
             poolManager.regenerateDirtyEntitlements(entitlementCurator.listByConsumer(consumer));
-            export = exporter.getFullExport(consumer, cdnKey, webAppPrefix, apiUrl);
+            export = exporter.getFullExport(consumer, cdnLabel, webAppPrefix, apiUrl);
             ManifestFile manifestFile = storeExport(export, consumer);
             sink.queueEvent(eventFactory.exportCreated(consumer));
             return new ExportResult(consumer.getUuid(), manifestFile.getId());

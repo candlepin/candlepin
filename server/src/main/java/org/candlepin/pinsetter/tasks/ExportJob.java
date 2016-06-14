@@ -16,10 +16,8 @@ package org.candlepin.pinsetter.tasks;
 
 import static org.quartz.JobBuilder.newJob;
 
-import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.sync.ExportResult;
 import org.candlepin.util.Util;
@@ -29,10 +27,8 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 
 /**
  * A job that generates a compressed file representation of a Consumer. Once the job
@@ -51,15 +47,10 @@ public class ExportJob extends UniqueByEntityJob {
     private static Logger log = LoggerFactory.getLogger(ExportJob.class);
 
     private ManifestManager manifestManager;
-    private ConsumerCurator consumerCurator;
-    private I18n i18n;
 
     @Inject
-    public ExportJob(ManifestManager manifestManager, ConsumerCurator consumerCurator,
-        Provider<I18n> i18nProvider) {
+    public ExportJob(ManifestManager manifestManager) {
         this.manifestManager = manifestManager;
-        this.consumerCurator = consumerCurator;
-        this.i18n = i18nProvider.get();
     }
 
     @Override
@@ -70,32 +61,16 @@ public class ExportJob extends UniqueByEntityJob {
         String webAppPrefix = map.getString(WEBAPP_PREFIX);
         String apiUrl = map.getString(API_URL);
 
-        Consumer consumer = validateConsumer(consumerUuid);
-
         log.info("Starting async export for {}", consumerUuid);
         try {
             ExportResult result =
-                manifestManager.generateAndStoreManifest(consumer, cdnLabel, webAppPrefix, apiUrl);
+                manifestManager.generateAndStoreManifest(consumerUuid, cdnLabel, webAppPrefix, apiUrl);
             context.setResult(result);
             log.info("Async export complete.");
         }
         catch (Exception e) {
             throw new JobExecutionException(e.getMessage(), e, false);
         }
-    }
-
-    private Consumer validateConsumer(String consumerUuid) {
-        // FIXME Should this be testing the CdnLabel as well?
-        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        if (consumer.getType() == null ||
-            !consumer.getType().isManifest()) {
-            throw new ForbiddenException(
-                i18n.tr(
-                    "Unit {0} cannot be exported. " +
-                    "A manifest cannot be made for units of type ''{1}''.",
-                    consumerUuid, consumer.getType().getLabel()));
-        }
-        return consumer;
     }
 
     /**

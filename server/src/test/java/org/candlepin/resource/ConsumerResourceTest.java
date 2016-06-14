@@ -31,7 +31,6 @@ import org.candlepin.auth.SubResource;
 import org.candlepin.auth.TrustedUserPrincipal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
@@ -788,72 +787,6 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void verifyOnlyDistributorsCanBeExported() {
-        CdnCurator cdnCurator = mock(CdnCurator.class);
-        when(cdnCurator.lookupByLabel(any(String.class))).thenReturn(new Cdn("cdn-label", "test", "url"));
-
-        ManifestManager manifestManager = mock(ManifestManager.class);
-        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
-            null, null, null, null, null, i18n, null, null, null,
-            null, null, null, null, mockedOwnerCurator, null, null, null,
-            null, null, null, new CandlepinCommonTestConfig(),
-            null, cdnCurator, null, null, manifestManager);
-
-        Owner owner = TestUtil.createOwner();
-        Consumer invalidConsumer = TestUtil.createConsumer(
-            new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM), owner);
-        assertFalse(invalidConsumer.getType().isManifest());
-
-        when(mockedConsumerCurator.verifyAndLookupConsumer(
-                eq(invalidConsumer.getUuid()))).thenReturn(invalidConsumer);
-        try {
-            cr.exportDataAsync(null, invalidConsumer.getUuid(), "cdn-label", "prefix", "url");
-            fail("Expected ForbiddenException to be thrown.");
-        }
-        catch (ForbiddenException e) {
-            // Expected.
-        }
-
-        Consumer validConsumer = TestUtil.createConsumer(
-            new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN), owner);
-        assertTrue(validConsumer.getType().isManifest());
-
-        when(mockedConsumerCurator.verifyAndLookupConsumer(
-            eq(validConsumer.getUuid()))).thenReturn(validConsumer);
-        cr.exportDataAsync(null, validConsumer.getUuid(), "cdn-label", "prefix", "url");
-    }
-
-    @Test
-    public void verifyCdnMustExistOnExport() {
-        CdnCurator cdnCurator = mock(CdnCurator.class);
-
-        ManifestManager manifestManager = mock(ManifestManager.class);
-        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
-            null, null, null, null, null, i18n, null, null, null,
-            null, null, null, null, mockedOwnerCurator, null, null, null,
-            null, null, null, new CandlepinCommonTestConfig(),
-            null, cdnCurator, null, null, manifestManager);
-
-        Owner owner = TestUtil.createOwner();
-        Consumer consumer = TestUtil.createConsumer(
-            new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN), owner);
-
-        when(mockedConsumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
-        when(cdnCurator.lookupByLabel(eq("does-not-exist"))).thenReturn(null);
-        try {
-            cr.exportDataAsync(null, consumer.getUuid(), "does-not-exist", "prefix", "url");
-            fail("Expected ForbiddenException to be thrown.");
-        }
-        catch (ForbiddenException e) {
-            // Expected.
-        }
-
-        Cdn cdn = new Cdn("cdn", "cdnkey", "url");
-        when(cdnCurator.lookupByLabel(eq(cdn.getLabel()))).thenReturn(cdn);
-        cr.exportDataAsync(null, consumer.getUuid(), cdn.getLabel(), "prefix", "url");
-    }
-
-    @Test
     public void testAsyncExport() {
         CdnCurator mockedCdnCurator = mock(CdnCurator.class);
         ManifestManager manifestManager = mock(ManifestManager.class);
@@ -872,8 +805,8 @@ public class ConsumerResourceTest {
         when(mockedCdnCurator.lookupByLabel(eq(cdn.getLabel()))).thenReturn(cdn);
 
         cr.exportDataAsync(null, consumer.getUuid(), cdn.getLabel(), "prefix", cdn.getUrl());
-        verify(manifestManager).generateManifestAsync(eq(consumer), eq(cdn.getLabel()), eq("prefix"),
-            eq(cdn.getUrl()));
+        verify(manifestManager).generateManifestAsync(eq(consumer.getUuid()), eq(cdn.getLabel()),
+            eq("prefix"), eq(cdn.getUrl()));
     }
 
 }

@@ -17,12 +17,8 @@ package org.candlepin.pinsetter.tasks;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import java.util.Locale;
-
-import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.sync.ExportResult;
 import org.candlepin.test.TestUtil;
@@ -34,25 +30,18 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
-import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
 
-import com.google.inject.Provider;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ExportJobTest {
 
     @Mock private ManifestManager manifestManager;
-    @Mock private ConsumerCurator consumerCurator;
-    @Mock private Provider<I18n> i18nProvider;
     @Mock private JobExecutionContext ctx;
     private ExportJob job;
 
     @Before
     public void setupTest() {
-        I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        when(i18nProvider.get()).thenReturn(i18n);
-        job = new ExportJob(manifestManager, consumerCurator, i18nProvider);
+        job = new ExportJob(manifestManager);
     }
 
     @Test
@@ -82,30 +71,16 @@ public class ExportJobTest {
         String manifestId = "1234";
 
         ExportResult result = new ExportResult(distributor.getUuid(), manifestId);
-        when(manifestManager.generateAndStoreManifest(eq(distributor), eq(cdnLabel), eq(webappPrefix),
-            eq(apiUrl))).thenReturn(result);
-        when(consumerCurator.verifyAndLookupConsumer(eq(distributor.getUuid()))).thenReturn(distributor);
+        when(manifestManager.generateAndStoreManifest(eq(distributor.getUuid()), eq(cdnLabel),
+            eq(webappPrefix), eq(apiUrl))).thenReturn(result);
 
         JobDetail detail = job.scheduleExport(distributor, cdnLabel, webappPrefix, apiUrl);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         job.execute(ctx);
 
-        verify(manifestManager).generateAndStoreManifest(eq(distributor), eq(cdnLabel), eq(webappPrefix),
-            eq(apiUrl));
+        verify(manifestManager).generateAndStoreManifest(eq(distributor.getUuid()), eq(cdnLabel),
+            eq(webappPrefix), eq(apiUrl));
         verify(ctx).setResult(eq(result));
     }
 
-    @Test(expected = ForbiddenException.class)
-    public void ensureMustBeDistributorToExport() throws Exception {
-        Consumer consumer = TestUtil.createConsumer();
-        String cdnLabel = "cdn-label";
-        String webappPrefix = "webapp-prefix";
-        String apiUrl = "url";
-
-        when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
-
-        JobDetail detail = job.scheduleExport(consumer, cdnLabel, webappPrefix, apiUrl);
-        when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        job.execute(ctx);
-    }
 }
