@@ -36,6 +36,7 @@ import org.candlepin.util.RdbmsExceptionTranslator;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.quartz.JobDataMap;
@@ -51,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -235,17 +237,20 @@ public class EnvironmentResource {
             }
         }
 
-        for (org.candlepin.model.dto.EnvironmentContent promoteMe : contentToPromote) {
-            // Make sure the content exists:
-            EnvironmentContent envcontent = new EnvironmentContent();
-
-            envcontent.setEnvironment(env);
-            envcontent.setContent(this.resolveContent(env, promoteMe.getContentId()));
-            envcontent.setEnabled(promoteMe.getEnabled());
-
-            envContentCurator.create(envcontent);
-            env.getEnvironmentContent().add(envcontent);
-            contentIds.add(promoteMe.getContentId());
+        try {
+            batchCreate(contentToPromote, env, contentIds);
+        }
+        catch (PersistenceException pe) {
+            if (rdbmsExceptionTranslator.isConstraintViolationDuplicateEntry(pe)) {
+                log.info("Concurrent content promotion will cause this request to fail.",
+                    pe);
+                throw new ConflictException(
+                    i18n.tr("Some of the content is already associated with Environment: {0}",
+                        contentToPromote));
+            }
+            else {
+                throw pe;
+            }
         }
 
         JobDataMap map = new JobDataMap();
@@ -323,6 +328,29 @@ public class EnvironmentResource {
             .build();
 
         return detail;
+    }
+
+    /**
+     * To make promotion transactional
+     * @param contentToPromote
+     * @param env
+     * @param contentIds
+     */
+    @Transactional
+    public void batchCreate(List<org.candlepin.model.dto.EnvironmentContent> contentToPromote,
+        Environment env, Set<String> contentIds) {
+        for (org.candlepin.model.dto.EnvironmentContent promoteMe : contentToPromote) {
+            // Make sure the content exists:
+            EnvironmentContent envcontent = new EnvironmentContent();
+
+            envcontent.setEnvironment(env);
+            envcontent.setContent(this.resolveContent(env, promoteMe.getContentId()));
+            envcontent.setEnabled(promoteMe.getEnabled());
+
+            envContentCurator.create(envcontent);
+            env.getEnvironmentContent().add(envcontent);
+            contentIds.add(promoteMe.getContentId());
+        }
     }
 
     private Environment lookupEnvironment(String envId) {
