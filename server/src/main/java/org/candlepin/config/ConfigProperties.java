@@ -176,8 +176,8 @@ public class ConfigProperties {
         UnmappedGuestEntitlementCleanerJob.class.getName(),
     };
 
-    public static final String EXPORT_CLEANER_JOB_MAX_AGE_IN_MINUTES =
-        "pinsetter.org.candlepin.pinsetter.tasks.ExportCleaner.max_age_in_minutes";
+    public static final String MANIFEST_CLEANER_JOB_MAX_AGE_IN_MINUTES =
+        "pinsetter.org.candlepin.pinsetter.tasks.ManifestCleanerJob.max_age_in_minutes";
 
     public static final String ENTITLER_JOB_THROTTLE =
         "pinsetter." + EntitlerJob.class.getName() + ".throttle";
@@ -392,9 +392,9 @@ public class ConfigProperties {
                 this.put(PINSETTER_ASYNC_JOB_TIMEOUT, Integer.toString(1200));
                 this.put(PINSETTER_MAX_RETRIES, Integer.toString(PINSETTER_MAX_RETRIES_DEFAULT));
 
-                // ExportCleaner job config
+                // ManifestCleanerJob config
                 // Max Age: 24 hours
-                this.put(EXPORT_CLEANER_JOB_MAX_AGE_IN_MINUTES, "1440");
+                this.put(MANIFEST_CLEANER_JOB_MAX_AGE_IN_MINUTES, "1440");
 
                 this.put(SWAGGER_ENABLED, Boolean.toString(true));
             }

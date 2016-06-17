@@ -61,7 +61,7 @@ public class ManifestCleanerJob extends KingpinJob {
     @Override
     public void toExecute(JobExecutionContext arg0) throws JobExecutionException {
         File baseDir = new File(config.getString(ConfigProperties.SYNC_WORK_DIR));
-        int maxAgeInMinutes = config.getInt(ConfigProperties.EXPORT_CLEANER_JOB_MAX_AGE_IN_MINUTES);
+        int maxAgeInMinutes = config.getInt(ConfigProperties.MANIFEST_CLEANER_JOB_MAX_AGE_IN_MINUTES);
 
         log.info("Manifest cleanup started:");
         log.info("Max Age: {} mins ({} hours)", maxAgeInMinutes, maxAgeInMinutes / 60);
