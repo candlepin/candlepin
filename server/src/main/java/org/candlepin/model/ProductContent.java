@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.model.dto.ProductContentData;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
@@ -143,6 +145,50 @@ public class ProductContent extends AbstractHibernateObject {
             .append(this.content != null ? this.content.getUuid() : null)
             .append(this.enabled)
             .toHashCode();
+    }
+
+    /**
+     * Determines whether or not this entity would be changed if the given DTO were applied to this
+     * object.
+     *
+     * @param dto
+     *  The product content DTO to check for changes
+     *
+     * @throws IllegalArgumentException
+     *  if dto is null
+     *
+     * @return
+     *  true if this product content would be changed by the given DTO; false otherwise
+     */
+    public boolean isChangedBy(ProductContentData dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("dto is null");
+        }
+
+        if (dto.isEnabled() != null && dto.isEnabled().equals(this.enabled)) {
+            return true;
+        }
+
+        if (dto.getContent() != null) {
+            if (this.content == null || this.content.isChangedBy(dto.getContent())) {
+                return true;
+            }
+        }
+
+        // Impl note:
+        // Product content DTOs do not contain product information
+
+        return false;
+    }
+
+    /**
+     * Returns a DTO representing this entity.
+     *
+     * @return
+     *  a DTO representing this entity
+     */
+    public ProductContentData toDTO() {
+        return new ProductContentData(this);
     }
 
     public String toString() {

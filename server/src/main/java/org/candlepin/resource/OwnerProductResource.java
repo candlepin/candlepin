@@ -32,16 +32,29 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.dto.ContentData;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
+import org.candlepin.resteasy.JsonProvider;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -60,12 +73,17 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+
+// TODO:
+// Should we build some kind of DTO factory? Would probably clean up/remove all the new DTO(...)
+// code segments. Alternatively, should every entity simply have a .toDTO() method? Maybe there's
+// some magic we can do at the JAXRS layer
+
 
 /**
  * API Gateway into /product
@@ -187,12 +205,31 @@ public class OwnerProductResource {
     @ApiOperation(notes = "Retrieves a list of Products", value = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<Product> list(
+    public Response list(
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
         @QueryParam("product") List<String> productIds) {
 
-        Owner owner = this.getOwnerByKey(ownerKey);
-        return this.ownerProductCurator.getProductsByIds(owner, productIds);
+        final Owner owner = this.getOwnerByKey(ownerKey);
+        final Collection<Product> products = this.ownerProductCurator.getProductsByIds(owner, productIds);
+        final ObjectMapper mapper = new JsonProvider(true)
+            .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
+
+        StreamingOutput output = new StreamingOutput() {
+            @Override
+            public void write(OutputStream stream) throws IOException, WebApplicationException {
+                JsonGenerator generator = mapper.getJsonFactory().createGenerator(stream);
+                generator.writeStartArray();
+
+                for (Product product : products) {
+                    mapper.writeValue(generator, product.toDTO());
+                }
+
+                generator.writeEndArray();
+                generator.flush();
+            }
+        };
+
+        return Response.ok(output).build();
     }
 
     @ApiOperation(notes = "Retrieves a single Product", value = "getProduct")
@@ -201,12 +238,14 @@ public class OwnerProductResource {
     @Path("/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
-    public Product getProduct(
+    public ProductData getProduct(
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        return this.fetchProduct(owner, productId);
+        Product product = this.fetchProduct(owner, productId);
+
+        return product.toDTO();
     }
 
     @ApiOperation(notes = "Retreives a Certificate for a Product",
@@ -221,7 +260,9 @@ public class OwnerProductResource {
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId) {
 
-        Product product = this.getProduct(ownerKey, productId);
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product product = this.fetchProduct(owner, productId);
+
         return this.productCertCurator.getCertForProduct(product);
     }
 
@@ -231,13 +272,14 @@ public class OwnerProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
-    public Product createProduct(
+    public ProductData createProduct(
         @PathParam("owner_key") String ownerKey,
-        Product product) {
+        ProductData product) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
+        Product entity = productManager.createProduct(product, owner);
 
-        return productManager.createProduct(product, owner);
+        return entity.toDTO();
     }
 
     @ApiOperation(notes = "Updates a Product", value = "updateProduct")
@@ -247,19 +289,21 @@ public class OwnerProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
-    public Product updateProduct(
+    public ProductData updateProduct(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
-        Product product) {
+        ProductData update) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product existing = this.getProduct(ownerKey, productId);
+        Product existing = this.fetchProduct(owner, productId);
 
         if (existing.isLocked()) {
-            throw new ForbiddenException(i18n.tr("product \"{1}\" is locked", product.getId()));
+            throw new ForbiddenException(i18n.tr("product \"{1}\" is locked", existing.getId()));
         }
 
-        return this.productManager.updateProduct(existing.merge(product), owner, true);
+        Product updated = this.productManager.updateProduct(existing, update, owner, true);
+
+        return updated.toDTO();
     }
 
     @ApiOperation(notes = "Adds Content to a Product  Batch mode", value = "addBatchContent")
@@ -298,7 +342,7 @@ public class OwnerProductResource {
     @Consumes(MediaType.WILDCARD)
     @Path("/{product_id}/content/{content_id}")
     @Transactional
-    public Product addContent(
+    public ProductData addContent(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
         @PathParam("content_id") String contentId,
@@ -314,9 +358,11 @@ public class OwnerProductResource {
 
         this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
 
-        return this.productManager.addContentToProduct(
+        product = this.productManager.addContentToProduct(
             product, Arrays.asList(new ProductContent(product, content, enabled)), owner, true
         );
+
+        return product.toDTO();
     }
 
     @ApiOperation(notes = "Removes Content from a Product", value = "removeContent")
@@ -386,7 +432,8 @@ public class OwnerProductResource {
             return null;
         }
 
-        Product product = this.getProduct(ownerKey, productId);
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product product = this.fetchProduct(owner, productId);
 
         return RefreshPoolsForProductJob.forProduct(product, lazyRegen);
     }

@@ -71,16 +71,11 @@ public class ProductContentData implements Cloneable {
      *
      * @param source
      *  The source DTO from which to copy data
-     *
-     * @throws IllegalArgumentException
-     *  if source is null
      */
     public ProductContentData(ProductContentData source) {
-        if (source == null) {
-            throw new IllegalArgumentException("source is null");
+        if (source != null) {
+            this.populate(source);
         }
-
-        this.populate(source);
     }
 
     /**
@@ -88,16 +83,11 @@ public class ProductContentData implements Cloneable {
      *
      * @param entity
      *  The source entity from which to copy data
-     *
-     * @throws IllegalArgumentException
-     *  if entity is null
      */
     public ProductContentData(ProductContent entity) {
-        if (entity == null) {
-            throw new IllegalArgumentException("entity is null");
+        if (entity != null) {
+            this.populate(entity);
         }
-
-        this.populate(entity);
     }
 
     /**
@@ -115,12 +105,19 @@ public class ProductContentData implements Cloneable {
      * Sets the content of the product content represented by this DTO.
      *
      * @param updated
-     *  The content of the product represented by this DTO, or null to clear the content
+     *  The content of the product represented by this DTO
+     *
+     * @throws IllegalArgumentException
+     *  if content is null
      *
      * @return
      *  a reference to this DTO
      */
     public ProductContentData setContent(ContentData content) {
+        if (content == null) {
+            throw new IllegalArgumentException("content is null");
+        }
+
         this.content = content;
         return this;
     }
@@ -192,7 +189,6 @@ public class ProductContentData implements Cloneable {
         }
 
         copy.content = this.content != null ? (ContentData) this.content.clone() : null;
-        copy.enabled = this.enabled;
 
         return copy;
     }
@@ -239,7 +235,10 @@ public class ProductContentData implements Cloneable {
 
         Content content = source.getContent();
 
-        this.content = content != null ? new ContentData(content) : null;
+        this.content = content != null ?
+            (this.content != null ? this.content.populate(content) : content.toDTO()) :
+            null;
+
         this.enabled = source.isEnabled();
 
         return this;

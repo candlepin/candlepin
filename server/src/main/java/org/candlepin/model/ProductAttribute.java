@@ -15,6 +15,8 @@
 
 package org.candlepin.model;
 
+import org.candlepin.model.dto.ProductAttributeData;
+
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -72,11 +74,24 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
 
 
     public ProductAttribute() {
+        // Intentionally left empty
     }
 
     public ProductAttribute(String name, String val) {
         this.name = name;
         this.value = val;
+    }
+
+    /**
+     * Creates a new ProductAttribute entity, initialized using the data from the given source DTO.
+     *
+     * @param source
+     *  The source DTO containing the data with which to initialize a new entity
+     */
+    public ProductAttribute(ProductAttributeData source) {
+        if (source != null) {
+            this.populate(source);
+        }
     }
 
     public String toString() {
@@ -140,9 +155,80 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(31, 73)
+        HashCodeBuilder builder = new HashCodeBuilder(31, 73)
             .append(this.name)
-            .append(this.value)
-            .toHashCode();
+            .append(this.value);
+
+        return builder.toHashCode();
+    }
+
+    /**
+     * Determines whether or not this entity would be changed if the given DTO were applied to this
+     * object.
+     *
+     * @param dto
+     *  The product attribute DTO to check for changes
+     *
+     * @throws IllegalArgumentException
+     *  if dto is null
+     *
+     * @return
+     *  true if this attribute would be changed by the given DTO; false otherwise
+     */
+    public boolean isChangedBy(ProductAttributeData dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("dto is null");
+        }
+
+        if (dto.getName() != null && !dto.getName().equals(this.name)) {
+            return true;
+        }
+
+        if (dto.getValue() != null && !dto.getValue().equals(this.value)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Populates this entity with the data contained in the source DTO. Unpopulated values within
+     * the DTO will be ignored.
+     *
+     * @param source
+     *  The source DTO containing the data to use to update this entity
+     *
+     * @throws IllegalArgumentException
+     *  if source is null
+     *
+     * @return
+     *  A reference to this entity
+     */
+    public ProductAttribute populate(ProductAttributeData source) {
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
+
+        super.populate(source);
+
+        if (source.getName() != null) {
+            this.setName(source.getName());
+        }
+
+        if (source.getValue() != null) {
+            this.setValue(source.getValue());
+        }
+
+        return this;
+    }
+
+    /**
+     * Returns a DTO representing this entity.
+     *
+     * @return
+     *  a DTO representing this entity
+     */
+    public ProductAttributeData toDTO() {
+        return new ProductAttributeData(this);
     }
 }

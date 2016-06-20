@@ -16,11 +16,17 @@ package org.candlepin.controller;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.dto.ContentData;
+import org.candlepin.model.dto.ProductAttributeData;
+import org.candlepin.model.dto.ProductContentData;
+import org.candlepin.model.dto.ProductData;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -50,17 +56,57 @@ import java.util.Set;
 public class ProductManager {
     public static Logger log = LoggerFactory.getLogger(ProductManager.class);
 
-    private ProductCurator productCurator;
-    private OwnerProductCurator ownerProductCurator;
+    private ContentCurator contentCurator;
     private EntitlementCertificateGenerator entitlementCertGenerator;
+    private OwnerProductCurator ownerProductCurator;
+    private ProductCurator productCurator;
 
     @Inject
-    public ProductManager(ProductCurator productCurator, OwnerProductCurator ownerProductCurator,
-        EntitlementCertificateGenerator entitlementCertGenerator, Configuration config) {
+    public ProductManager(ContentCurator contentCurator,
+        EntitlementCertificateGenerator entitlementCertGenerator, ProductCurator productCurator,
+        OwnerProductCurator ownerProductCurator, Configuration config) {
 
-        this.productCurator = productCurator;
-        this.ownerProductCurator = ownerProductCurator;
+        this.contentCurator = contentCurator;
         this.entitlementCertGenerator = entitlementCertGenerator;
+        this.ownerProductCurator = ownerProductCurator;
+        this.productCurator = productCurator;
+    }
+
+    /**
+     * Creates a new Product for the given owner, potentially using a different version than the
+     * entity provided if a matching entity has already been registered for another owner.
+     *
+     * @param productData
+     *  A product DTO instance representing the product to create
+     *
+     * @param owner
+     *  The owner for which to create the product
+     *
+     * @throws IllegalStateException
+     *  if this method is called with an entity already exists in the backing database for the given
+     *  owner
+     *
+     * @throws NullPointerException
+     *  if the provided product entity is null
+     *
+     * @return
+     *  a new Product instance representing the specified product for the given owner
+     */
+    public Product createProduct(ProductData productData, Owner owner) {
+        if (productData == null) {
+            throw new IllegalArgumentException("productData is null");
+        }
+
+        if (productData.getId() == null || productData.getName() == null) {
+            throw new IllegalArgumentException("productData is incomplete");
+        }
+
+        // TODO: more validation here...?
+
+        Product entity = new Product(productData.getId(), productData.getName());
+        this.applyProductChanges(entity, productData, owner);
+
+        return this.createProduct(entity, owner);
     }
 
     /**
@@ -88,6 +134,13 @@ public class ProductManager {
         log.debug("Creating new product for org: {}, {}", entity, owner);
 
         Product existing = this.ownerProductCurator.getProductById(owner, entity.getId());
+
+        // TODO: FIXME:
+        // There's a bug here where if changes are applied to an entity's collections, and then
+        // this method is called, the check below will trigger an illegal state exception, but
+        // Hibernate's helpful nature will have persisted the changes during the lookup above.
+        // This needs to be re-written to use DTOs as the primary source of entity creation, rather
+        // than a bolted-on utility method.
 
         if (existing != null) {
             // If we're doing an exclusive creation, this should be an error condition
@@ -117,6 +170,227 @@ public class ProductManager {
         return entity;
     }
 
+    // TODO: Remove this, probably
+    // /**
+    //  * Calculates the hash code of the given product entity as if the changes provided by update
+    //  * were applied.
+    //  *
+    //  * @param entity
+    //  *  The base entity onto which the updates will be projected
+    //  *
+    //  * @param update
+    //  *  A product DTO containing the changes to project onto this product during hashcode
+    //  *  calculation
+    //  *
+    //  * @param owner
+    //  *  The owner to use when resolving content
+    //  *
+    //  * @return
+    //  *  the hashcode of this product with the projected updates
+    //  */
+    // private int projectedHashCode(Product entity, ProductData update, Owner owner) {
+    //     // TODO:
+    //     // Eventually content should be considered a property of products (ala attributes), so we
+    //     // don't have to do this annoying, nested projection and owner passing. Also, it would
+    //     // solve the issue of forcing content to have only one instance per owner and this logic
+    //     // could live in Product, where it belongs.
+    //     if (entity == null) {
+    //         throw new IllegalArgumentException("entity is null");
+    //     }
+
+    //     if (update == null) {
+    //         throw new IllegalArgumentException("update is null");
+    //     }
+
+    //     if (owner == null) {
+    //         throw new IllegalArgumentException("owner is null");
+    //     }
+
+    //     // Impl note:
+    //     // The order and elements compared here needs to be 1:1 with the standard hashCode method.
+    //     HashCodeBuilder builder = new HashCodeBuilder(37, 7)
+    //         .append(entity.getId())
+    //         .append(update.getName() != null ? update.getName() : entity.getName())
+    //         .append(update.getMultiplier() != null ? update.getMultiplier() : entity.getMultiplier())
+    //         .append(entity.isLocked());
+
+    //     if (update.getAttributes() != null) {
+    //         for (ProductAttributeData attrib : update.getAttributes()) {
+    //             builder.append(attrib.getName());
+    //             builder.append(attrib.getValue());
+    //         }
+    //     }
+    //     else {
+    //         for (ProductAttribute attrib : entity.getAttributes()) {
+    //             builder.append(attrib.getName());
+    //             builder.append(attrib.getValue());
+    //         }
+    //     }
+
+    //     Collection<String> dependentProductIds = update.getDependentProductIds() != null ?
+    //         update.getDependentProductIds() :
+    //         entity.getDependentProductIds();
+
+    //     for (String pid : dependentProductIds) {
+    //         builder.append(pid);
+    //     }
+
+    //     if (update.getProductContent() != null) {
+    //         // I apologize to future maintainers of this code
+    //         for (ProductContentData pcd : update.getProductContent()) {
+    //             ContentData contentData = pcd.getContent();
+
+    //             if (contentData == null || contentData.getId() == null) {
+    //                 // Content DTO is in a bad state, so we can't possibly compare it against
+    //                 // anything.
+    //                 throw new IllegalStateException("product contains content without an identifier");
+    //             }
+
+    //             ProductContent existingLink = this.getProductContent(contentData.getId());
+
+    //             if (existingLink == null) {
+    //                 // New product-content link. We need to find the content and project the
+    //                 // content changes onto it.
+    //                 Content existing = this.contentCurator.lookupById(owner, contentData.getId());
+
+    //                 if (existing == null) {
+    //                     // Content doesn't exist yet -- it should have been created already
+    //                     throw new IllegalStateException("product references content which does not exist");
+    //                 }
+
+    //                 builder.append(existing.projectedHashCode(contentData));
+    //                 builder.append(pcd.isEnabled() != null ? pcd.isEnabled() : Boolean.FALSE);
+    //             }
+    //             else {
+    //                 builder.append(existingLink.getContent().projectedHashCode(contentData));
+    //                 builder.append(pcd.isEnabled() != null ? pcd.isEnabled() : existingLink.isEnabled());
+    //             }
+    //         }
+    //     }
+    //     else {
+    //         for (ProductContent productContent : entity.getProductContent()) {
+    //             Content content = productContent.getContent();
+
+    //             builder.append(productContent.getContent().hashCode());
+    //             builder.append(productContent.isEnabled());
+    //         }
+    //     }
+
+    //     return builder.toHashCode();
+    // }
+
+    private Product applyProductChanges(Product entity, ProductData update, Owner owner) {
+        // TODO:
+        // Eventually content should be considered a property of products (ala attributes), so we
+        // don't have to do this annoying, nested projection and owner passing. Also, it would
+        // solve the issue of forcing content to have only one instance per owner and this logic
+        // could live in Product, where it belongs.
+        if (entity == null) {
+            throw new IllegalArgumentException("entity is null");
+        }
+
+        if (update == null) {
+            throw new IllegalArgumentException("update is null");
+        }
+
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
+        }
+
+        if (update.getName() != null) {
+            entity.setName(update.getName());
+        }
+
+        if (update.getMultiplier() != null) {
+            entity.setMultiplier(update.getMultiplier());
+        }
+
+        if (update.getAttributes() != null) {
+            Collection<ProductAttribute> attributes = new LinkedList<ProductAttribute>();
+
+            for (ProductAttributeData attrib : update.getAttributes()) {
+                if (attrib == null || attrib.getName() == null) {
+                    throw new IllegalStateException("attribute is null or incomplete");
+                }
+
+                ProductAttribute existing = entity.getAttribute(attrib.getName());
+
+                if (existing != null) {
+                    existing.populate(attrib);
+                    attributes.add(existing);
+                }
+                else {
+                    attributes.add(new ProductAttribute(attrib));
+                }
+            }
+
+            entity.setAttributes(attributes);
+        }
+
+        if (update.getProductContent() != null) {
+            Collection<ProductContent> productContent = new LinkedList<ProductContent>();
+
+            for (ProductContentData pcd : update.getProductContent()) {
+                if (pcd == null || pcd.getContent() == null || pcd.getContent().getId() == null) {
+                    throw new IllegalStateException("product content is null or incomplete");
+                }
+
+                ContentData contentData = pcd.getContent();
+                ProductContent existingLink = entity.getProductContent(contentData.getId());
+
+                if (existingLink == null) {
+                    Content existing = this.contentCurator.lookupById(owner, contentData.getId());
+
+                    if (existing == null) {
+                        // Content doesn't exist yet -- it should have been created already
+                        throw new IllegalStateException("product references content which does not exist");
+                    }
+
+                    existingLink = new ProductContent(entity, existing, Boolean.FALSE);
+                }
+
+                existingLink.getContent().populate(contentData);
+
+                if (pcd.isEnabled() != null) {
+                    existingLink.setEnabled(pcd.isEnabled());
+                }
+
+                productContent.add(existingLink);
+            }
+
+            entity.setProductContent(productContent);
+        }
+
+        if (update.getDependentProductIds() != null) {
+            entity.setDependentProductIds(update.getDependentProductIds());
+        }
+
+        return entity;
+    }
+
+    public Product updateProduct(ProductData update, Owner owner, boolean regenerateEntitlementCerts) {
+        if (update == null) {
+            throw new IllegalArgumentException("update is null");
+        }
+
+        if (update.getId() == null) {
+            throw new IllegalArgumentException("update does not define a product id");
+        }
+
+        if (owner == null) {
+            throw new IllegalArgumentException("owner");
+        }
+
+        Product entity = this.ownerProductCurator.getProductById(owner.getId(), update.getId());
+
+        if (entity == null) {
+            // If we're doing an exclusive update, this should be an error condition
+            throw new IllegalStateException("Product has not yet been created");
+        }
+
+        return this.updateProduct(entity, update, owner, regenerateEntitlementCerts);
+    }
+
     /**
      * Updates the specified product instance, creating a new version of the product as necessary.
      * The product instance returned by this method is not guaranteed to be the same instance passed
@@ -125,6 +399,9 @@ public class ProductManager {
      *
      * @param entity
      *  The product entity to update
+     *
+     * @param update
+     *  The product updates to apply
      *
      * @param owner
      *  The owner for which to update the product
@@ -144,34 +421,28 @@ public class ProductManager {
      *  the updated product entity, or a new product entity
      */
     @Transactional
-    public Product updateProduct(Product entity, Owner owner, boolean regenerateEntitlementCerts) {
-        log.debug("Applying product update for org: {}, {}", entity, owner);
+    public Product updateProduct(Product entity, ProductData update, Owner owner,
+        boolean regenerateEntitlementCerts) {
+
+        log.debug("Applying product update for org: {} => {}, {}", update, entity, owner);
 
         if (entity == null) {
-            throw new IllegalArgumentException("entity");
+            throw new IllegalArgumentException("entity is null");
+        }
+
+        if (update == null) {
+            throw new IllegalArgumentException("update is null");
         }
 
         if (owner == null) {
-            throw new IllegalArgumentException("owner");
+            throw new IllegalArgumentException("owner is null");
         }
+
+        Product updated = this.applyProductChanges((Product) entity.clone(), update, owner);
 
         // TODO:
         // We, currently, do not trigger a refresh after updating a product. At present this is an
         // exercise left to the caller, but perhaps we should be doing that here automatically?
-
-        // This has to fetch a new instance, or we'll be unable to compare the objects
-        Product existing = this.ownerProductCurator.getProductById(owner.getId(), entity.getId());
-
-        if (existing == null) {
-            // If we're doing an exclusive update, this should be an error condition
-            throw new IllegalStateException("Product has not yet been created");
-        }
-
-        if (existing != entity) {
-            // We're operating on a copy of the entity. We'll merge the changes into the existing
-            // entity and then continue working with that.
-            existing.merge(entity);
-        }
 
         // Check for newer versions of the same product. We want to try to dedupe as much data as we
         // can, and if we have a newer version of the product (which matches the version provided by
@@ -179,69 +450,62 @@ public class ProductManager {
         // their own version.
         // This is probably going to be a very expensive operation, though.
         List<Product> alternateVersions = this.productCurator
-            .getProductsByVersion(existing.getId(), existing.hashCode())
+            .getProductsByVersion(update.getId(), updated.hashCode())
             .list();
 
         log.debug("Checking {} alternate product versions", alternateVersions.size());
         for (Product alt : alternateVersions) {
             // Skip ourselves if we happen across it
-            if (alt != existing && alt.equals(existing)) {
-                log.debug("Converging product with existing: {} => {}", existing, alt);
+            if (alt != updated && alt.equals(updated)) {
+                log.debug("Converging product with existing: {} => {}", updated, alt);
 
                 List<Owner> owners = Arrays.asList(owner);
 
-                existing = this.ownerProductCurator.updateOwnerProductReferences(existing, alt, owners);
+                updated = this.ownerProductCurator.updateOwnerProductReferences(updated, alt, owners);
 
                 if (regenerateEntitlementCerts) {
                     this.entitlementCertGenerator.regenerateCertificatesOf(
-                        owners, Arrays.asList(existing), true
+                        owners, Arrays.asList(updated), true
                     );
                 }
 
-                return existing;
+                return updated;
             }
         }
 
         // No alternate versions with which to converge. Check if we can do an in-place update instead
-        if (this.ownerProductCurator.getOwnerCount(existing) == 1) {
-            log.debug("Applying in-place update to product: {}", existing);
+        if (this.ownerProductCurator.getOwnerCount(updated) == 1) {
+            log.debug("Applying in-place update to product: {}", updated);
 
-            this.productCurator.merge(existing);
+            updated = this.productCurator.merge(updated);
 
             if (regenerateEntitlementCerts) {
-                this.entitlementCertGenerator.regenerateCertificatesOf(Arrays.asList(existing), true);
+                this.entitlementCertGenerator.regenerateCertificatesOf(Arrays.asList(updated), true);
             }
 
-            return existing;
+            return updated;
         }
 
         // Product is shared by multiple owners; we have to diverge here
-        log.debug("Forking product and applying update: {}", existing);
+        log.debug("Forking product and applying update: {}", updated);
 
         // This org isn't the only org using the product. We need to create a new product
         // instance and move the org over to the new product.
         List<Owner> owners = Arrays.asList(owner);
-        Product copy = (Product) existing.clone();
-
-        // Now that we have a copy with the pending changes, refresh the existing version so we
-        // don't apply those changes for other orgs
-        //
-        // NOTE: This won't revert changes made to collections which have automatic orphan removal.
-        this.productCurator.refresh(existing);
 
         // Clear the UUID so Hibernate doesn't think our copy is a detached entity
-        copy.setUuid(null);
+        updated.setUuid(null);
 
-        copy = this.productCurator.create(copy);
-        copy = this.ownerProductCurator.updateOwnerProductReferences(existing, copy, owners);
+        updated = this.productCurator.create(updated);
+        updated = this.ownerProductCurator.updateOwnerProductReferences(entity, updated, owners);
 
         if (regenerateEntitlementCerts) {
             this.entitlementCertGenerator.regenerateCertificatesOf(
-                owners, Arrays.asList(copy), true
+                owners, Arrays.asList(updated), true
             );
         }
 
-        return copy;
+        return updated;
     }
 
     /**
@@ -333,87 +597,20 @@ public class ProductManager {
         boolean regenerateEntitlementCerts) {
 
         if (this.ownerProductCurator.isProductMappedToOwner(product, owner)) {
+            ProductData update = product.toDTO();
             boolean changed = false;
-            Collection<ProductContent> original = new LinkedList<ProductContent>(product.getProductContent());
-            Collection<ProductContent> modified = new LinkedList<ProductContent>();
 
-            for (ProductContent pc : content) {
-                ProductContent current = null;
-                Content lcref = pc.getContent();
-
-                for (ProductContent test : original) {
-                    Content rcref = test.getContent();
-
-                    // Check if the two objects are referencing the same content...
-                    boolean cequal = (lcref == rcref || (lcref != null && rcref != null &&
-                        lcref.getId() != null && lcref.getId().equals(rcref.getId())));
-
-                    if (cequal) {
-                        current = test;
-                        break;
-                    }
-                }
-
-                if (current == null) {
-                    pc.setProduct(product);
-                    modified.add(pc);
-
-                    changed = true;
-                }
-                else if (current.isEnabled() != pc.isEnabled() || !current.getContent().equals(lcref)) {
-                    // If the enabled state or content state differs, update them.
-                    // Note that we're assuming the products are already equal here.
-                    pc.setProduct(product);
-                    modified.add(pc);
-
-                    changed = true;
-                }
-                else {
-                    modified.add(current);
-                }
+            for (ProductContent add : content) {
+                changed |= update.addProductContent(add);
             }
 
             if (changed) {
-                product.setProductContent(modified);
-                Product updated = this.updateProduct(product, owner, regenerateEntitlementCerts);
-
-                // If the product instance changed as a result of a call to update product, we
-                // need to restore the content set so we don't erroneously affect other owners
-                // using the old instance.
-                if (product != updated) {
-                    product.setProductContent(original);
-                }
-
-                return updated;
+                product = this.updateProduct(product, update, owner, regenerateEntitlementCerts);
             }
         }
 
         return product;
     }
-
-    // TODO:
-    // Not sure if needed; also, likely broken. This should probably be axed before merging.
-    // public Product setProductContent(Product product, Collection<Content> content, Owner owner,
-    //     boolean regenerateEntitlementCerts) {
-
-    //     if (this.ownerProductCurator.isProductMappedToOwner(product, owner)) {
-    //         Collection<ProductContent> original = product.getProductContent();
-
-    //         product.setContent(content);
-    //         Product updated = this.updateProduct(product, owner, regenerateEntitlementCerts);
-
-    //         if (product != updated) {
-    //             // We got a different instance out, which likely means a convergence or divergence.
-    //             // Restore the original content on our input product so we don't accidentally apply
-    //             // the change to every owner using it.
-    //             product.setProductContent(original);
-    //         }
-
-    //         return updated;
-    //     }
-
-    //     return product;
-    // }
 
     /**
      * Removes the specified content from the given product for a single owner. The changes made to
@@ -438,30 +635,16 @@ public class ProductManager {
     public Product removeProductContent(Product product, Collection<Content> content, Owner owner,
         boolean regenerateEntitlementCerts) {
 
-        Set<ProductContent> remove = new HashSet<ProductContent>();
-
         if (this.ownerProductCurator.isProductMappedToOwner(product, owner)) {
-            for (Content test : content) {
-                for (ProductContent pc : product.getProductContent()) {
-                    if (test == pc.getContent() || test.equals(pc.getContent())) {
-                        remove.add(pc);
-                    }
-                }
+            ProductData update = product.toDTO();
+            boolean changed = false;
+
+            for (Content remove : content) {
+                changed |= update.removeContent(remove);
             }
 
-            if (remove.size() > 0) {
-                product.getProductContent().removeAll(remove);
-                Product updated = this.updateProduct(product, owner, regenerateEntitlementCerts);
-
-                // Impl note:
-                // The product changed, but it's likely orphan removal botched our content set for
-                // the base product. We should fix that here. If Hibernate ever stops using goofy
-                // timing for when it performs orphan removal, this can be removed.
-                if (product != updated) {
-                    product.getProductContent().addAll(remove);
-                }
-
-                return updated;
+            if (changed) {
+                product = this.updateProduct(product, update, owner, regenerateEntitlementCerts);
             }
         }
 

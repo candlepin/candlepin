@@ -20,12 +20,14 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 
 import com.google.inject.Inject;
 
 import java.util.Collection;
+import java.util.LinkedList;
 
 
 
@@ -35,9 +37,6 @@ import java.util.Collection;
 public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
     private OwnerProductCurator ownerProductCurator;
-
-    // for product cert storage/generation - not sure if this should go in
-    // a separate service?
     private ProductCertificateCurator prodCertCurator;
 
     @Inject
@@ -50,13 +49,22 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     }
 
     @Override
-    public ProductCertificate getProductCertificate(Product product) {
-        return this.prodCertCurator.getCertForProduct(product);
+    public ProductCertificate getProductCertificate(Owner owner, String productId) {
+        // for product cert storage/generation - not sure if this should go in
+        // a separate service?
+        Product entity = this.ownerProductCurator.getProductById(owner, productId);
+        return entity != null ? this.prodCertCurator.getCertForProduct(entity) : null;
     }
 
     @Override
-    public Collection<Product> getProductsByIds(Owner owner, Collection<String> ids) {
-        return this.ownerProductCurator.getProductsByIds(owner, ids);
+    public Collection<ProductData> getProductsByIds(Owner owner, Collection<String> ids) {
+        Collection<ProductData> productData = new LinkedList<ProductData>();
+
+        for (Product product : this.ownerProductCurator.getProductsByIds(owner, ids)) {
+            productData.add(product.toDTO());
+        }
+
+        return productData;
     }
 
 }

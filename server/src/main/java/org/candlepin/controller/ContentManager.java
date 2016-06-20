@@ -209,7 +209,8 @@ public class ContentManager {
                     }
 
                     // Impl note: This should also take care of our entitlement cert regeneration
-                    this.productManager.updateProduct(product, owner, regenerateEntitlementCerts);
+                    // TODO: FIXME: THIS
+                    // this.productManager.updateProduct(product, owner, regenerateEntitlementCerts);
                 }
 
                 return existing;
@@ -270,7 +271,8 @@ public class ContentManager {
             }
 
             // Impl note: This should also take care of our entitlement cert regeneration ??
-            this.productManager.updateProduct(product, owner, regenerateEntitlementCerts);
+            // TODO: FIXME: THIS
+            // this.productManager.updateProduct(product, owner, regenerateEntitlementCerts);
         }
 
         return this.contentCurator.updateOwnerContentReferences(existing, copy, owners);

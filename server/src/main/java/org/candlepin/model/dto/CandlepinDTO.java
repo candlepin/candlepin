@@ -175,8 +175,8 @@ public abstract class CandlepinDTO implements Cloneable {
             throw new RuntimeException("Clone not supported", e);
         }
 
-        copy.setCreated(this.getCreated() != null ? (Date) this.getCreated().clone() : null);
-        copy.setUpdated(this.getUpdated() != null ? (Date) this.getUpdated().clone() : null);
+        copy.created = this.created != null ? (Date) this.created.clone() : null;
+        copy.updated = this.updated != null ? (Date) this.updated.clone() : null;
 
         return copy;
     }

@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 
 
@@ -67,6 +68,7 @@ public class ProductData extends CandlepinDTO {
     protected Collection<ProductContentData> content;
     protected Collection<String> dependentProductIds;
     protected String href;
+    protected boolean locked;
 
     /**
      * Initializes a new ProductData instance with null values.
@@ -80,16 +82,11 @@ public class ProductData extends CandlepinDTO {
      *
      * @param source
      *  The source DTO from which to copy data
-     *
-     * @throws IllegalArgumentException
-     *  if source is null
      */
     public ProductData(ProductData source) {
-        if (source == null) {
-            throw new IllegalArgumentException("source is null");
+        if (source != null) {
+            this.populate(source);
         }
-
-        this.populate(source);
     }
 
     /**
@@ -97,16 +94,11 @@ public class ProductData extends CandlepinDTO {
      *
      * @param entity
      *  The source entity from which to copy data
-     *
-     * @throws IllegalArgumentException
-     *  if entity is null
      */
     public ProductData(Product entity) {
-        if (entity == null) {
-            throw new IllegalArgumentException("entity is null");
+        if (entity != null) {
+            this.populate(entity);
         }
-
-        this.populate(entity);
     }
 
     /**
@@ -149,12 +141,19 @@ public class ProductData extends CandlepinDTO {
      * Sets the ID of the product represented by this DTO.
      *
      * @param id
-     *  The ID of the product represented by this DTO, or null to clear the ID
+     *  The ID of the product represented by this DTO
+     *
+     * @throws IllegalArgumentException
+     *  if id is null or empty
      *
      * @return
      *  a reference to this DTO
      */
     public ProductData setId(String id) {
+        if (id == null || id.length() == 0) {
+            throw new IllegalArgumentException("id is null or empty");
+        }
+
         this.id = id;
         return this;
     }
@@ -218,6 +217,59 @@ public class ProductData extends CandlepinDTO {
      */
     public Collection<ProductAttributeData> getAttributes() {
         return this.attributes != null ? Collections.unmodifiableCollection(this.attributes) : null;
+    }
+
+    /**
+     * Retrieves the attribute data associated with the given attribute. If the attribute is not
+     * set, this method returns null.
+     *
+     * @param key
+     *  The key (name) of the attribute to lookup
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  the attribute data for the given attribute, or null if the attribute is not set
+     */
+    @XmlTransient
+    public ProductAttributeData getAttribute(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        if (this.attributes != null) {
+            for (ProductAttributeData attrib : this.attributes) {
+                if (key.equals(attrib.getName())) {
+                    return attrib;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Retrieves the value associated with the given attribute. If the attribute is not set, this
+     * method returns null.
+     *
+     * @param key
+     *  The key (name) of the attribute to lookup
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  the value set for the given attribute, or null if the attribute is not set
+     */
+    @XmlTransient
+    public String getAttributeValue(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        ProductAttributeData attrib = this.getAttribute(key);
+        return attrib != null ? attrib.getValue() : null;
     }
 
     /**
@@ -372,7 +424,7 @@ public class ProductData extends CandlepinDTO {
      * @return
      *  the content of the product, or null if the content not yet been defined
      */
-    public Collection<ProductContentData> getContent() {
+    public Collection<ProductContentData> getProductContent() {
         return this.content != null ? Collections.unmodifiableCollection(this.content) : null;
     }
 
@@ -380,30 +432,55 @@ public class ProductData extends CandlepinDTO {
      * Adds the given content to this product DTO. If a matching content has already been added to
      * this product, it will be overwritten by the specified content.
      *
-     * @param content
+     * @param contentData
      *  The product content DTO to add to this product
      *
      * @throws IllegalArgumentException
-     *  if content is null
+     *  if content is null or incomplete
      *
      * @return
-     *  a reference to this DTO
+     *  true if adding the content resulted in a change to this product; false otherwise
      */
-    public ProductData addContent(ProductContentData content) {
-        if (content == null) {
-            throw new IllegalArgumentException("content is null");
+    public boolean addProductContent(ProductContentData contentData) {
+        if (contentData == null) {
+            throw new IllegalArgumentException("contentData is null");
         }
+
+        if (contentData.getContent() == null || contentData.getContent().getId() == null) {
+            throw new IllegalArgumentException("content is incomplete");
+        }
+
+        boolean changed = false;
 
         if (this.content == null) {
             this.content = new LinkedList<ProductContentData>();
-            this.content.add(content);
+            changed = this.content.add(contentData);
         }
         else {
-            this.removeContent(content);
-            this.content.add(content);
+            boolean matched = false;
+            Collection<ProductContentData> remove = new LinkedList<ProductContentData>();
+
+            // We're operating under the assumption that we won't be doing janky things like
+            // adding product content, then changing it. It's too bad this isn't all immutable...
+            for (ProductContentData pcd : this.content) {
+                ContentData cd = pcd.getContent();
+
+                if (cd != null && cd.getId() != null && cd.getId().equals(contentData.getContent().getId())) {
+                    matched = true;
+
+                    if (!pcd.equals(contentData)) {
+                        remove.add(pcd);
+                    }
+                }
+            }
+
+            if (!matched || remove.size() > 0) {
+                this.content.removeAll(remove);
+                changed = this.content.add(contentData);
+            }
         }
 
-        return this;
+        return changed;
     }
 
     /**
@@ -417,14 +494,14 @@ public class ProductData extends CandlepinDTO {
      *  if content is null
      *
      * @return
-     *  a reference to this DTO
+     *  true if adding the content resulted in a change to this product; false otherwise
      */
-    public ProductData addContent(ProductContent content) {
+    public boolean addProductContent(ProductContent content) {
         if (content == null) {
             throw new IllegalArgumentException("content is null");
         }
 
-        return this.addContent(new ProductContentData(content));
+        return this.addProductContent(new ProductContentData(content));
     }
 
     /**
@@ -438,14 +515,14 @@ public class ProductData extends CandlepinDTO {
      *  if content is null
      *
      * @return
-     *  a reference to this DTO
+     *  true if adding the content resulted in a change to this product; false otherwise
      */
-    public ProductData addContent(ContentData content, boolean enabled) {
+    public boolean addContent(ContentData content, boolean enabled) {
         if (content == null) {
             throw new IllegalArgumentException("content is null");
         }
 
-        return this.addContent(new ProductContentData(content, enabled));
+        return this.addProductContent(new ProductContentData(content, enabled));
     }
 
     /**
@@ -459,14 +536,14 @@ public class ProductData extends CandlepinDTO {
      *  if content is null
      *
      * @return
-     *  a reference to this DTO
+     *  true if adding the content resulted in a change to this product; false otherwise
      */
-    public ProductData addContent(Content content, boolean enabled) {
+    public boolean addContent(Content content, boolean enabled) {
         if (content == null) {
             throw new IllegalArgumentException("content is null");
         }
 
-        return this.addContent(new ProductContentData(new ContentData(content), enabled));
+        return this.addProductContent(new ProductContentData(new ContentData(content), enabled));
     }
 
     /**
@@ -479,12 +556,14 @@ public class ProductData extends CandlepinDTO {
      *  if contentId is null
      *
      * @return
-     *  a reference to this DTO
+     *  true if the content was removed successfully; false otherwise
      */
-    public ProductData removeContent(String contentId) {
+    public boolean removeContent(String contentId) {
         if (contentId == null) {
             throw new IllegalArgumentException("contentId is null");
         }
+
+        boolean updated = false;
 
         if (this.content != null) {
             Collection<ProductContentData> remove = new LinkedList<ProductContentData>();
@@ -497,10 +576,10 @@ public class ProductData extends CandlepinDTO {
                 }
             }
 
-            this.content.removeAll(remove);
+            updated = this.content.removeAll(remove);
         }
 
-        return this;
+        return updated;
     }
 
     /**
@@ -514,9 +593,9 @@ public class ProductData extends CandlepinDTO {
      *  if content is null or incomplete
      *
      * @return
-     *  a reference to this DTO
+     *  true if the content was removed successfully; false otherwise
      */
-    public ProductData removeContent(Content content) {
+    public boolean removeContent(Content content) {
         if (content == null) {
             throw new IllegalArgumentException("content is null");
         }
@@ -539,9 +618,9 @@ public class ProductData extends CandlepinDTO {
      *  if content is null or incomplete
      *
      * @return
-     *  a reference to this DTO
+     *  true if the content was removed successfully; false otherwise
      */
-    public ProductData removeContent(ContentData content) {
+    public boolean removeContent(ContentData content) {
         if (content == null) {
             throw new IllegalArgumentException("content is null");
         }
@@ -564,9 +643,9 @@ public class ProductData extends CandlepinDTO {
      *  if content is null or incomplete
      *
      * @return
-     *  a reference to this DTO
+     *  true if the content was removed successfully; false otherwise
      */
-    public ProductData removeContent(ProductContent content) {
+    public boolean removeProductContent(ProductContent content) {
         if (content == null) {
             throw new IllegalArgumentException("content is null");
         }
@@ -589,9 +668,9 @@ public class ProductData extends CandlepinDTO {
      *  if content is null or incomplete
      *
      * @return
-     *  a reference to this DTO
+     *  true if the content was removed successfully; false otherwise
      */
-    public ProductData removeContent(ProductContentData content) {
+    public boolean removeProductContent(ProductContentData content) {
         if (content == null) {
             throw new IllegalArgumentException("content is null");
         }
@@ -612,14 +691,14 @@ public class ProductData extends CandlepinDTO {
      * @return
      *  a reference to this DTO
      */
-    public ProductData setContent(Collection<ProductContentData> content) {
+    public ProductData setProductContent(Collection<ProductContentData> content) {
         if (content != null) {
             if (this.content != null) {
                 this.content.clear();
             }
 
             for (ProductContentData pcd : content) {
-                this.addContent(pcd);
+                this.addProductContent(pcd);
             }
         }
         else {
@@ -716,6 +795,32 @@ public class ProductData extends CandlepinDTO {
         return this;
     }
 
+    /**
+     * Retrieves the lock state of the product represented by this DTO. If the lock state has not
+     * yet been defined, this method returns null.
+     *
+     * @return
+     *  the lock state of the product, or null if the lock state has not yet been defined
+     */
+    @XmlTransient
+    public Boolean isLocked() {
+        return this.locked;
+    }
+
+    /**
+     * Sets the lock state of the product represented by this DTO.
+     *
+     * @param locked
+     *  The lock state of the product represented by this DTO, or null to clear the state
+     *
+     * @return
+     *  a reference to this DTO
+     */
+    public ProductData setLocked(Boolean locked) {
+        this.locked = locked;
+        return this;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj == null || !(obj instanceof ProductData)) {
@@ -742,7 +847,7 @@ public class ProductData extends CandlepinDTO {
 
     @Override
     public int hashCode() {
-        HashCodeBuilder builder = new HashCodeBuilder(7, 17)
+        HashCodeBuilder builder = new HashCodeBuilder(37, 7)
             .append(super.hashCode())
             .append(this.id)
             .append(this.name)
@@ -759,21 +864,12 @@ public class ProductData extends CandlepinDTO {
     public Object clone() {
         ProductData copy = (ProductData) super.clone();
 
-        copy.uuid = this.uuid;
-        copy.id = this.id;
-        copy.name = this.name;
-        copy.multiplier = this.multiplier;
-        copy.href = this.href;
-
         if (this.attributes != null) {
             copy.attributes = new HashSet<ProductAttributeData>();
 
             for (ProductAttributeData pad : this.attributes) {
                 copy.attributes.add((ProductAttributeData) pad.clone());
             }
-        }
-        else {
-            copy.attributes = null;
         }
 
         if (this.content != null) {
@@ -783,16 +879,10 @@ public class ProductData extends CandlepinDTO {
                 copy.content.add((ProductContentData) pac.clone());
             }
         }
-        else {
-            copy.content = null;
-        }
 
         if (this.dependentProductIds != null) {
             copy.dependentProductIds = new HashSet<String>();
             copy.dependentProductIds.addAll(this.dependentProductIds);
-        }
-        else {
-            copy.dependentProductIds = null;
         }
 
         return copy;
@@ -817,8 +907,15 @@ public class ProductData extends CandlepinDTO {
 
         super.populate(source);
 
-        this.created = source.getCreated();
-        this.updated = source.getUpdated();
+        this.setUuid(source.getUuid());
+        this.setId(source.getId());
+        this.setName(source.getName());
+        this.setMultiplier(source.getMultiplier());
+        this.setHref(source.getHref());
+        this.setLocked(source.isLocked());
+        this.setAttributes(source.getAttributes());
+        this.setProductContent(source.getProductContent());
+        this.setDependentProductIds(source.getDependentProductIds());
 
         return this;
     }
@@ -842,8 +939,30 @@ public class ProductData extends CandlepinDTO {
 
         super.populate(source);
 
-        this.created = source.getCreated();
-        this.updated = source.getUpdated();
+        this.setUuid(source.getUuid());
+        this.setId(source.getId());
+        this.setName(source.getName());
+        this.setMultiplier(source.getMultiplier());
+        this.setHref(source.getHref());
+        this.setLocked(source.isLocked());
+
+        if (source.getAttributes() != null) {
+            this.setAttributes(null);
+
+            for (ProductAttribute entity : source.getAttributes()) {
+                this.addAttribute(entity.toDTO());
+            }
+        }
+
+        if (source.getProductContent() != null) {
+            this.setProductContent(null);
+
+            for (ProductContent entity : source.getProductContent()) {
+                this.addProductContent(entity.toDTO());
+            }
+        }
+
+        this.setDependentProductIds(source.getDependentProductIds());
 
         return this;
     }

@@ -19,6 +19,7 @@ import org.candlepin.common.exceptions.ServiceUnavailableException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.xnap.commons.i18n.I18n;
@@ -109,15 +110,17 @@ public class ImportSubscriptionServiceAdapter implements SubscriptionServiceAdap
     }
 
     @Override
-    public List<Subscription> getSubscriptions(Product product) {
+    public List<Subscription> getSubscriptions(ProductData product) {
+
         List<Subscription> subs = new LinkedList<Subscription>();
+
         for (Subscription sub : this.subscriptions) {
             if (product.getUuid().equals(sub.getProduct().getUuid())) {
                 subs.add(sub);
                 continue;
             }
 
-            for (Product p : sub.getProvidedProducts()) {
+            for (ProductData p : sub.getProvidedProducts()) {
                 if (product.getUuid().equals(p.getUuid())) {
                     subs.add(sub);
                     break;

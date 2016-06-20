@@ -66,8 +66,7 @@ import java.util.Set;
 /**
  * DefaultEntitlementCertServiceAdapter
  */
-public class DefaultEntitlementCertServiceAdapter extends
-    BaseEntitlementCertServiceAdapter {
+public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertServiceAdapter {
 
     private PKIUtility pki;
     private X509ExtensionUtil extensionUtil;

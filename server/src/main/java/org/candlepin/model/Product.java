@@ -14,6 +14,9 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.model.dto.ProductAttributeData;
+import org.candlepin.model.dto.ProductContentData;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.Util;
 
@@ -34,6 +37,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
@@ -145,11 +149,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     private Boolean locked;
 
     protected Product() {
-        // Intentionally left empty
+        this.attributes = new HashSet<ProductAttribute>();
+        this.productContent = new LinkedList<ProductContent>();
+        this.dependentProductIds = new HashSet<String>();
     }
-
-    // TODO:
-    // Remove the Owner parameter from these constructors; we no longer need it.
 
     /**
      * Constructor Use this variant when creating a new object to persist.
@@ -158,16 +161,16 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @param name Human readable Product name
      */
     public Product(String productId, String name) {
-        this(productId, name, 1L);
+        this();
+
+        this.setId(productId);
+        this.setName(name);
     }
 
     public Product(String productId, String name, Long multiplier) {
-        setId(productId);
-        setName(name);
-        setMultiplier(multiplier);
-        setAttributes(new HashSet<ProductAttribute>());
-        setProductContent(new LinkedList<ProductContent>());
-        setDependentProductIds(new HashSet<String>());
+        this(productId, name);
+
+        this.setMultiplier(multiplier);
     }
 
     public Product(String productId, String name, String variant, String version, String arch, String type) {
@@ -190,6 +193,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  The Product instance to copy
      */
     public Product(Product source) {
+        this();
+
         this.setUuid(source.getUuid());
         this.setId(source.getId());
 
@@ -202,39 +207,29 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         this.setMultiplier(source.getMultiplier());
 
         // Copy attributes
-        if (source.getAttributes() != null) {
-            Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
-            for (ProductAttribute src : source.getAttributes()) {
-                ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
-                dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
-                dest.setUpdated(src.getUpdated() != null ? (Date) src.getUpdated().clone() : null);
-                dest.setProduct(this);
+        Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
+        for (ProductAttribute src : source.getAttributes()) {
+            ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
+            dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
+            dest.setUpdated(src.getUpdated() != null ? (Date) src.getUpdated().clone() : null);
+            dest.setProduct(this);
 
-                attributes.add(dest);
-            }
+            attributes.add(dest);
+        }
 
-            this.setAttributes(attributes);
-        }
-        else {
-            this.setAttributes(null);
-        }
+        this.setAttributes(attributes);
 
         // Copy content
-        if (source.getProductContent() != null) {
-            List<ProductContent> content = new LinkedList<ProductContent>();
-            for (ProductContent src : source.getProductContent()) {
-                ProductContent dest = new ProductContent(this, src.getContent(), src.isEnabled());
-                dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
-                dest.setUpdated(src.getUpdated() != null ? (Date) src.getUpdated().clone() : null);
+        List<ProductContent> content = new LinkedList<ProductContent>();
+        for (ProductContent src : source.getProductContent()) {
+            ProductContent dest = new ProductContent(this, src.getContent(), src.isEnabled());
+            dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
+            dest.setUpdated(src.getUpdated() != null ? (Date) src.getUpdated().clone() : null);
 
-                content.add(dest);
-            }
+            content.add(dest);
+        }
 
-            this.setProductContent(content);
-        }
-        else {
-            this.setProductContent(null);
-        }
+        this.setProductContent(content);
 
         this.setDependentProductIds(source.getDependentProductIds());
 
@@ -264,9 +259,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         }
 
         // Copy attributes
-        if (source.getAttributes() != null &&
-            !Util.collectionsAreEqual(source.getAttributes(), this.getAttributes())) {
-
+        if (!Util.collectionsAreEqual(source.getAttributes(), this.getAttributes())) {
             Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
             for (ProductAttribute src : source.getAttributes()) {
                 ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
@@ -281,8 +274,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         }
 
         // Copy content
-        if (source.getProductContent() != null &&
-            !Util.collectionsAreEqual(source.getProductContent(), this.getProductContent())) {
+        if (!Util.collectionsAreEqual(source.getProductContent(), this.getProductContent())) {
 
             List<ProductContent> content = new LinkedList<ProductContent>();
             for (ProductContent src : source.getProductContent()) {
@@ -296,9 +288,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             this.setProductContent(content);
         }
 
-        if (source.getDependentProductIds() != null) {
-            this.setDependentProductIds(source.getDependentProductIds());
-        }
+        this.setDependentProductIds(source.getDependentProductIds());
 
         this.setUpdated(source.getUpdated() != null ? (Date) source.getUpdated().clone() : null);
 
@@ -306,7 +296,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     }
 
     @Override
-    public Product clone() {
+    public Object clone() {
         Product copy;
 
         try {
@@ -317,53 +307,50 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             throw new RuntimeException("Clone not supported", e);
         }
 
-        // Clear the collections, since this and copy will be sharing a single instance initially
-        copy.attributes = null;
-        copy.productContent = null;
-        copy.dependentProductIds = null;
-
         // Impl note:
         // In most cases, our collection setters copy the contents of the input collections to their
         // own internal collections, so we don't need to worry about our two instances sharing a
         // collection.
 
         // Copy attributes
-        if (this.getAttributes() != null) {
-            Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
-            for (ProductAttribute src : this.getAttributes()) {
-                ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
-                dest.setCreated(src.getCreated());
-                dest.setUpdated(src.getUpdated());
-                dest.setProduct(copy);
+        copy.attributes = new HashSet<ProductAttribute>();
+        for (ProductAttribute src : this.getAttributes()) {
+            ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
+            dest.setCreated(src.getCreated());
+            dest.setUpdated(src.getUpdated());
+            dest.setProduct(copy);
 
-                attributes.add(dest);
-            }
-
-            copy.setAttributes(attributes);
+            copy.attributes.add(dest);
         }
 
         // Copy content
-        if (this.getProductContent() != null) {
-            List<ProductContent> content = new LinkedList<ProductContent>();
-            for (ProductContent src : this.getProductContent()) {
-                ProductContent dest = new ProductContent(copy, src.getContent(), src.isEnabled());
-                dest.setCreated(src.getCreated());
-                dest.setUpdated(src.getUpdated());
+        copy.productContent = new LinkedList<ProductContent>();
+        for (ProductContent src : this.getProductContent()) {
+            ProductContent dest = new ProductContent(copy, src.getContent(), src.isEnabled());
+            dest.setCreated(src.getCreated());
+            dest.setUpdated(src.getUpdated());
 
-                content.add(dest);
-            }
-
-            copy.setProductContent(content);
+            copy.productContent.add(dest);
         }
 
-        if (this.getDependentProductIds() != null) {
-            copy.setDependentProductIds(this.getDependentProductIds());
-        }
+        // Copy dependent product IDs
+        copy.dependentProductIds = new HashSet<String>();
+        copy.dependentProductIds.addAll(this.dependentProductIds);
 
         copy.setCreated(this.getCreated() != null ? (Date) this.getCreated().clone() : null);
         copy.setUpdated(this.getUpdated() != null ? (Date) this.getUpdated().clone() : null);
 
         return copy;
+    }
+
+    /**
+     * Returns a DTO representing this entity.
+     *
+     * @return
+     *  a DTO representing this entity
+     */
+    public ProductData toDTO() {
+        return new ProductData(this);
     }
 
     public static Product createUeberProductForOwner(UniqueIdGenerator idGenerator, Owner owner) {
@@ -450,11 +437,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         }
     }
 
-    public void setAttributes(Set<ProductAttribute> attributes) {
-        if (this.attributes == null) {
-            this.attributes = new HashSet<ProductAttribute>();
-        }
-
+    public void setAttributes(Collection<ProductAttribute> attributes) {
         this.attributes.clear();
 
         if (attributes != null) {
@@ -463,30 +446,29 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     }
 
     public void setAttribute(String key, String value) {
-        ProductAttribute existing = getAttribute(key);
-        if (existing != null) {
-            existing.setValue(value);
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
         }
-        else {
-            ProductAttribute attr = new ProductAttribute(key, value);
-            attr.setProduct(this);
-            addAttribute(attr);
-        }
+
+        this.addAttribute(new ProductAttribute(key, value));
     }
 
     public void addAttribute(ProductAttribute attrib) {
-        if (this.attributes == null) {
-            this.attributes = new HashSet<ProductAttribute>();
-        }
-
         if (attrib != null) {
-            attrib.setProduct(this);
-            this.attributes.add(attrib);
+            ProductAttribute existing = this.getAttribute(attrib.getName());
+
+            if (existing != null) {
+                existing.setValue(attrib.getValue());
+            }
+            else {
+                attrib.setProduct(this);
+                this.attributes.add(attrib);
+            }
         }
     }
 
     public Set<ProductAttribute> getAttributes() {
-        return attributes;
+        return Collections.unmodifiableSet(this.attributes);
     }
 
     public ProductAttribute getAttribute(String key) {
@@ -532,27 +514,21 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     }
 
     public boolean hasAttribute(String key) {
-        if (attributes != null) {
-            for (ProductAttribute attribute : attributes) {
-                if (attribute.getName().equals(key)) {
-                    return true;
-                }
+        return this.getAttribute(key) != null;
+    }
+
+    public ProductContent getProductContent(String contentId) {
+        for (ProductContent pc : getProductContent()) {
+            if (pc.getContent().getId().equals(contentId)) {
+                return pc;
             }
         }
 
-        return false;
+        return null;
     }
 
     public boolean hasContent(String contentId) {
-        if (this.getProductContent() != null) {
-            for (ProductContent pc : getProductContent()) {
-                if (pc.getContent().getId().equals(contentId)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return this.getProductContent() != null;
     }
 
     @Override
@@ -566,6 +542,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             return true;
         }
 
+        boolean equals = false;
+
         if (obj instanceof Product) {
             Product that = (Product) obj;
 
@@ -576,51 +554,25 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             // the time they're checked, or two products not being considered equal if they
             // represent the same product in different states.
 
-            boolean equals = new EqualsBuilder()
+            equals = new EqualsBuilder()
                 .append(this.id, that.id)
                 .append(this.name, that.name)
                 .append(this.multiplier, that.multiplier)
                 .append(this.locked, that.locked)
                 .isEquals();
 
-            if (equals) {
-                // Check our collections.
-                // Impl note: We can't use .equals here on the collections, as Hibernate's special
-                // collections explicitly state that they break the contract on .equals. As such, we
-                // have to step through each collection and do a manual comparison. Ugh.
-                // We also do an extra check here so null values and empty collections are
-                // considered equal. If we ever move to real DTOs, those checks should be dropped.
-                if (!Util.collectionsAreEqual(this.attributes, that.attributes)) {
-                    if (!(this.attributes == null && that.attributes.size() == 0) &&
-                        !(that.attributes == null && this.attributes.size() == 0)) {
+            // Check our collections.
+            // Impl note: We can't use .equals here on the collections, as Hibernate's special
+            // collections explicitly state that they break the contract on .equals. As such, we
+            // have to step through each collection and do a manual comparison. Ugh.
 
-                        return false;
-                    }
-                }
-
-                if (!Util.collectionsAreEqual(this.dependentProductIds, that.dependentProductIds)) {
-                    if (!(this.dependentProductIds == null && that.dependentProductIds.size() == 0) &&
-                        !(that.dependentProductIds == null && this.dependentProductIds.size() == 0)) {
-
-                        return false;
-                    }
-                }
-
-                // We do this check last, in the hopes that if we're going to fail, we fail on the
-                // faster checks.
-                if (!Util.collectionsAreEqual(this.productContent, that.productContent, CONTENT_COMPARATOR)) {
-                    if (!(this.productContent == null && that.productContent.size() == 0) &&
-                        !(that.productContent == null && this.productContent.size() == 0)) {
-
-                        return false;
-                    }
-                }
-            }
-
-            return equals;
+            equals = equals &&
+                Util.collectionsAreEqual(this.attributes, that.attributes) &&
+                Util.collectionsAreEqual(this.dependentProductIds, that.dependentProductIds) &&
+                Util.collectionsAreEqual(this.productContent, that.productContent, CONTENT_COMPARATOR);
         }
 
-        return false;
+        return equals;
     }
 
     @Override
@@ -636,8 +588,9 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         // Because we handle the collections specially in .equals, we have to do the same special
         // treatment here to ensure our output doesn't give us wonky results when compared to the
         // output of .equals
-        if (this.attributes != null && this.attributes.size() > 0) {
-            builder.append(this.attributes);
+        for (ProductAttribute attrib : this.attributes) {
+            builder.append(attrib.getName());
+            builder.append(attrib.getValue());
         }
 
         try {
@@ -646,15 +599,16 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             // again, doesn't implement .hashCode reliably on the proxy collections. So, we have to
             // manually step through these and add the elements to ensure the hash code is
             // generated properly.
-            if (this.dependentProductIds != null && this.dependentProductIds.size() > 0) {
+            if (this.dependentProductIds.size() > 0) {
                 for (String pid : this.dependentProductIds) {
                     builder.append(pid);
                 }
             }
 
-            if (this.productContent != null && this.productContent.size() > 0) {
+            if (this.productContent.size() > 0) {
                 for (ProductContent pc : this.productContent) {
                     builder.append(pc.getContent());
+                    builder.append(pc.isEnabled());
                 }
             }
         }
@@ -675,6 +629,81 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         }
 
         return builder.toHashCode();
+    }
+
+    /**
+     * Determines whether or not this entity would be changed if the given DTO were applied to this
+     * object.
+     *
+     * @param dto
+     *  The product DTO to check for changes
+     *
+     * @throws IllegalArgumentException
+     *  if dto is null
+     *
+     * @return
+     *  true if this product would be changed by the given DTO; false otherwise
+     */
+    public boolean isChangedBy(ProductData dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("dto is null");
+        }
+
+        // Check simple properties first
+        if (dto.getId() != null && !dto.getId().equals(this.id)) {
+            return true;
+        }
+
+        if (dto.getName() != null && !dto.getName().equals(this.name)) {
+            return true;
+        }
+
+        if (dto.getMultiplier() != null && !dto.getMultiplier().equals(this.multiplier)) {
+            return true;
+        }
+
+        if (dto.isLocked() != null && !dto.isLocked().equals(this.locked)) {
+            return true;
+        }
+
+        Collection<String> dependentProductIds = dto.getDependentProductIds();
+        if (dependentProductIds != null &&
+            !Util.collectionsAreEqual(this.dependentProductIds, dependentProductIds)) {
+
+            return true;
+        }
+
+        Collection<ProductAttributeData> attributes = dto.getAttributes();
+        if (attributes != null) {
+            Comparator comparator = new Comparator<Object>() {
+                public int compare(Object lhs, Object rhs) {
+                    return ((ProductAttribute) lhs).isChangedBy((ProductAttributeData) rhs) ? 1 : 0;
+                }
+            };
+
+            if (!Util.collectionsAreEqual(
+                (Collection) this.attributes, (Collection) attributes, comparator)) {
+
+                return true;
+            }
+        }
+
+        Collection<ProductContentData> productContent = dto.getProductContent();
+        if (productContent != null) {
+            Comparator comparator = new Comparator<Object>() {
+                public int compare(Object lhs, Object rhs) {
+                    return ((ProductContent) lhs).isChangedBy((ProductContentData) rhs) ? 1 : 0;
+                }
+            };
+
+            if (!Util.collectionsAreEqual(
+                (Collection) this.productContent, (Collection) productContent, comparator)) {
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -725,10 +754,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  a reference to this Product instance
      */
     public Product setProductContent(Collection<ProductContent> productContent) {
-        if (this.productContent == null) {
-            this.productContent = new LinkedList<ProductContent>();
-        }
-
         this.productContent.clear();
 
         if (productContent != null) {
@@ -742,14 +767,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @return the productContent
      */
     public List<ProductContent> getProductContent() {
-        return productContent;
+        return Collections.unmodifiableList(productContent);
     }
 
-    public void setContent(Set<Content> content) {
-        if (this.productContent == null) {
-            this.productContent = new LinkedList<ProductContent>();
-        }
-
+    public void setContent(Collection<Content> content) {
         this.productContent.clear();
 
         if (content != null) {
@@ -762,11 +783,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     /**
      * @param dependentProductIds the dependentProductIds to set
      */
-    public void setDependentProductIds(Set<String> dependentProductIds) {
-        if (this.dependentProductIds == null) {
-            this.dependentProductIds = new HashSet<String>();
-        }
-
+    public void setDependentProductIds(Collection<String> dependentProductIds) {
         this.dependentProductIds.clear();
 
         if (dependentProductIds != null) {
@@ -778,7 +795,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @return the dependentProductIds
      */
     public Set<String> getDependentProductIds() {
-        return dependentProductIds;
+        return Collections.unmodifiableSet(this.dependentProductIds);
     }
 
     public String getHref() {

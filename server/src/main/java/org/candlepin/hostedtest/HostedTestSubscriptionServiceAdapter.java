@@ -17,6 +17,7 @@ package org.candlepin.hostedtest;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
@@ -58,11 +59,12 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
                 ids.add(subscription.getId());
             }
         }
+
         return ids;
     }
 
     @Override
-    public List<Subscription> getSubscriptions(Product product) {
+    public List<Subscription> getSubscriptions(ProductData product) {
         if (productMap.containsKey(product.getId())) {
             return productMap.get(product.getId());
         }

@@ -32,8 +32,7 @@ public abstract class BaseEntitlementCertServiceAdapter implements
     protected EntitlementCertificateCurator entCertCurator;
 
     @Override
-    public List<EntitlementCertificate> listForConsumer(
-        Consumer consumer) {
+    public List<EntitlementCertificate> listForConsumer(Consumer consumer) {
         return entCertCurator.listForConsumer(consumer);
     }
 

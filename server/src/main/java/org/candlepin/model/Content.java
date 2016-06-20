@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.Util;
 
@@ -310,6 +311,16 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         return copy;
     }
 
+    /**
+     * Returns a DTO representing this entity.
+     *
+     * @return
+     *  a DTO representing this entity
+     */
+    public ContentData toDTO() {
+        return new ContentData(this);
+    }
+
     public static Content createUeberContent(UniqueIdGenerator idGenerator, Owner o, Product p) {
         return new Content(
             o, UEBER_CONTENT_NAME, idGenerator.generateId(),
@@ -567,6 +578,113 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         return builder.toHashCode();
     }
 
+    /**
+     * Determines whether or not this entity would be changed if the given DTO were applied to this
+     * object.
+     *
+     * @param dto
+     *  The content DTO to check for changes
+     *
+     * @throws IllegalArgumentException
+     *  if dto is null
+     *
+     * @return
+     *  true if this content would be changed by the given DTO; false otherwise
+     */
+    public boolean isChangedBy(ContentData dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("dto is null");
+        }
+
+        if (dto.getId() != null && !dto.getId().equals(this.id)) {
+            return true;
+        }
+
+        if (dto.getType() != null && !dto.getType().equals(this.type)) {
+            return true;
+        }
+
+        if (dto.getLabel() != null && !dto.getLabel().equals(this.label)) {
+            return true;
+        }
+
+        if (dto.getName() != null && !dto.getName().equals(this.name)) {
+            return true;
+        }
+
+        if (dto.getVendor() != null && !dto.getVendor().equals(this.vendor)) {
+            return true;
+        }
+
+        if (dto.getContentUrl() != null && !dto.getContentUrl().equals(this.contentUrl)) {
+            return true;
+        }
+
+        if (dto.getRequiredTags() != null && !dto.getRequiredTags().equals(this.requiredTags)) {
+            return true;
+        }
+
+        if (dto.getReleaseVersion() != null && !dto.getReleaseVersion().equals(this.releaseVer)) {
+            return true;
+        }
+
+        if (dto.getGpgUrl() != null && !dto.getGpgUrl().equals(this.gpgUrl)) {
+            return true;
+        }
+
+        if (dto.getMetadataExpire() != null && !dto.getMetadataExpire().equals(this.metadataExpire)) {
+            return true;
+        }
+
+        if (dto.getArches() != null && !dto.getArches().equals(this.arches)) {
+            return true;
+        }
+
+        if (dto.isLocked() != null && !dto.isLocked().equals(this.locked)) {
+            return true;
+        }
+
+        Collection<String> modifiedProductIds = dto.getModifiedProductIds();
+        if (modifiedProductIds != null &&
+            !Util.collectionsAreEqual(this.modifiedProductIds, modifiedProductIds)) {
+
+            return true;
+        }
+
+        return false;
+    }
+
+    // TODO: Remove this, probably
+    // public int projectedHashCode(ContentData update) {
+    //     if (update == null) {
+    //         throw new IllegalArgumentException("update is null");
+    //     }
+
+    //     HashCodeBuilder builder = new HashCodeBuilder(37, 7)
+    //         .append(this.id)
+    //         .append(update.getType() != null ? update.getType() : this.type)
+    //         .append(update.getLabel() != null ? update.getLabel() : this.label)
+    //         .append(update.getName() != null ? update.getName() : this.name)
+    //         .append(update.getVendor() != null ? update.getVendor() : this.vendor)
+    //         .append(update.getContentUrl() != null ? update.getContentUrl() : this.contentUrl)
+    //         .append(update.getRequiredTags() != null ? update.getRequiredTags() : this.requiredTags)
+    //         .append(update.getReleaseVer() != null ? update.getReleaseVer() : this.releaseVer)
+    //         .append(update.getGpgUrl() != null ? update.getGpgUrl() : this.gpgUrl)
+    //         .append(update.getMetadataExpire() != null ? update.getMetadataExpire() : this.metadataExpire)
+    //         .append(update.getArches() != null ? update.getArches() : this.arches)
+    //         .append(this.locked);
+
+
+    //     Collection<String> modifiedProductIds = update.getModifiedProductIds() != null ?
+    //         update.getModifiedProductIds() :
+    //         this.modifiedProductIds;
+
+    //     for (String pid : modifiedProductIds) {
+    //         builder.append(pid);
+    //     }
+
+    //     return builder.toHashCode();
+    // }
 
     public Long getMetadataExpire() {
         return metadataExpire;

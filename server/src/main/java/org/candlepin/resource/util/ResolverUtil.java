@@ -21,7 +21,9 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 
 import com.google.inject.Inject;
@@ -38,6 +40,7 @@ public class ResolverUtil {
     private I18n i18n;
     private OwnerCurator ownerCurator;
     private OwnerProductCurator ownerProductCurator;
+    private ProductCurator productCurator;
 
     @Inject
     public ResolverUtil(I18n i18n, OwnerCurator ownerCurator, OwnerProductCurator ownerProductCurator) {
@@ -145,6 +148,43 @@ public class ResolverUtil {
         return pool;
     }
 
+    public void validateProductData(ProductData pdata, Owner owner, boolean allowNull) {
+        if (pdata != null) {
+            if (pdata.getUuid() != null) {
+                // UUID is set. Verify that product exists and matches the ID provided, if any
+                Product product = this.productCurator.find(pdata.getUuid());
+
+                if (product == null) {
+                    throw new NotFoundException(i18n.tr(
+                        "Unable to find a product with the UUID \"{0}\"", pdata.getUuid()
+                    ));
+                }
+
+                pdata.setId(product.getId());
+            }
+            else if (pdata.getId() != null) {
+                Product product = this.ownerProductCurator.getProductById(owner, pdata.getId());
+
+                if (product == null) {
+                    throw new NotFoundException(i18n.tr(
+                        "Unable to find a product with the ID \"{0}\" for owner \"{1}\"",
+                        pdata.getId(), owner.getKey()
+                    ));
+                }
+            }
+            else {
+                throw new BadRequestException(
+                    i18n.tr("No product specified, or product lacks identifying information")
+                );
+            }
+        }
+        else if (!allowNull) {
+            throw new BadRequestException(
+                i18n.tr("No product specified, or product lacks identifying information")
+            );
+        }
+    }
+
     public Subscription resolveSubscription(Subscription subscription) {
         // Impl note:
         // We don't check that the subscription exists here, because it's
@@ -160,26 +200,16 @@ public class ResolverUtil {
         subscription.setOwner(owner);
 
         // Ensure the specified product(s) exists for the given owner
-        subscription.setProduct(this.resolveProduct(owner, subscription.getProduct()));
+        this.validateProductData(subscription.getProduct(), owner, false);
+        this.validateProductData(subscription.getDerivedProduct(), owner, true);
 
-        if (subscription.getDerivedProduct() != null) {
-            subscription.setDerivedProduct(this.resolveProduct(owner, subscription.getDerivedProduct()));
+        for (ProductData product : subscription.getProvidedProducts()) {
+            this.validateProductData(product, owner, true);
         }
 
-        HashSet<Product> presolved = new HashSet<Product>();
-
-        for (Product product : subscription.getProvidedProducts()) {
-            presolved.add(this.resolveProduct(owner, product));
+        for (ProductData product : subscription.getDerivedProvidedProducts()) {
+            this.validateProductData(product, owner, true);
         }
-
-        subscription.setProvidedProducts(presolved);
-        presolved.clear();
-
-        for (Product product : subscription.getDerivedProvidedProducts()) {
-            presolved.add(this.resolveProduct(owner, product));
-        }
-
-        subscription.setDerivedProvidedProducts(presolved);
 
         // TODO: Do we need to resolve Branding objects?
 

@@ -17,6 +17,7 @@ package org.candlepin.controller;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
@@ -94,7 +95,7 @@ public class Refresher {
             // TODO: This adapter call is not implemented in prod, and cannot be. We plan
             // to fix this whole code path in near future by looking for pools using the
             // given products to be refreshed.
-            List<Subscription> subs = subAdapter.getSubscriptions(product);
+            List<Subscription> subs = subAdapter.getSubscriptions(product.toDTO());
             log.debug("Will refresh {} subscriptions in all orgs using product: ",
                 subs.size(), product.getId());
 

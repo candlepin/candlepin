@@ -193,9 +193,6 @@ public class ProductAttributeData extends CandlepinDTO {
     public Object clone() {
         ProductAttributeData copy = (ProductAttributeData) super.clone();
 
-        copy.name = this.name;
-        copy.value = this.value;
-
         return copy;
     }
 

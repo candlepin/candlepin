@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 
 
@@ -69,6 +70,7 @@ public class ContentData extends CandlepinDTO {
     protected Long metadataExpire;
     protected Set<String> modifiedProductIds;
     protected String arches;
+    protected Boolean locked;
 
     /**
      * Initializes a new ContentData instance with null values.
@@ -82,16 +84,11 @@ public class ContentData extends CandlepinDTO {
      *
      * @param source
      *  The source DTO from which to copy data
-     *
-     * @throws IllegalArgumentException
-     *  if source is null
      */
     public ContentData(ContentData source) {
-        if (source == null) {
-            throw new IllegalArgumentException("source is null");
+        if (source != null) {
+            this.populate(source);
         }
-
-        this.populate(source);
     }
 
     /**
@@ -99,16 +96,11 @@ public class ContentData extends CandlepinDTO {
      *
      * @param entity
      *  The source entity from which to copy data
-     *
-     * @throws IllegalArgumentException
-     *  if entity is null
      */
     public ContentData(Content entity) {
-        if (entity == null) {
-            throw new IllegalArgumentException("entity is null");
+        if (entity != null) {
+            this.populate(entity);
         }
-
-        this.populate(entity);
     }
 
     /**
@@ -125,7 +117,7 @@ public class ContentData extends CandlepinDTO {
     /**
      * Sets the UUID of the content represented by this DTO.
      *
-     * @param updated
+     * @param uuid
      *  The UUID of the content represented by this DTO, or null to clear the UUID
      *
      * @return
@@ -150,13 +142,20 @@ public class ContentData extends CandlepinDTO {
     /**
      * Sets the ID of the content represented by this DTO.
      *
-     * @param updated
-     *  The ID of the content represented by this DTO, or null to clear the ID
+     * @param id
+     *  The ID of the content represented by this DTO
+     *
+     * @throws IllegalArgumentException
+     *  if id is null or empty
      *
      * @return
      *  a reference to this DTO
      */
     public ContentData setId(String id) {
+        if (id == null || id.length() == 0) {
+            throw new IllegalArgumentException("id is null or empty");
+        }
+
         this.id = id;
         return this;
     }
@@ -175,7 +174,7 @@ public class ContentData extends CandlepinDTO {
     /**
      * Sets the type of the content represented by this DTO.
      *
-     * @param updated
+     * @param type
      *  The type of the content represented by this DTO, or null to clear the type
      *
      * @return
@@ -200,7 +199,7 @@ public class ContentData extends CandlepinDTO {
     /**
      * Sets the label of the content represented by this DTO.
      *
-     * @param updated
+     * @param label
      *  The label of the content represented by this DTO, or null to clear the label
      *
      * @return
@@ -225,7 +224,7 @@ public class ContentData extends CandlepinDTO {
     /**
      * Sets the name of the content represented by this DTO.
      *
-     * @param updated
+     * @param name
      *  The name of the content represented by this DTO, or null to clear the name
      *
      * @return
@@ -250,7 +249,7 @@ public class ContentData extends CandlepinDTO {
     /**
      * Sets the vendor of the content represented by this DTO.
      *
-     * @param updated
+     * @param vendor
      *  The vendor of the content represented by this DTO, or null to clear the vendor
      *
      * @return
@@ -275,7 +274,7 @@ public class ContentData extends CandlepinDTO {
     /**
      * Sets the content URL of the content represented by this DTO.
      *
-     * @param updated
+     * @param contentUrl
      *  The content URL of the content represented by this DTO, or null to clear the content URL
      *
      * @return
@@ -300,7 +299,7 @@ public class ContentData extends CandlepinDTO {
     /**
      * Sets the required tags of the content represented by this DTO.
      *
-     * @param updated
+     * @param requiredTags
      *  The required tags of the content represented by this DTO, or null to clear the required
      *  tags
      *
@@ -327,7 +326,7 @@ public class ContentData extends CandlepinDTO {
     /**
      * Sets the release version of the content represented by this DTO.
      *
-     * @param updated
+     * @param releaseVer
      *  The release version of the content represented by this DTO, or null to clear the release
      *  version
      *
@@ -354,7 +353,7 @@ public class ContentData extends CandlepinDTO {
     /**
      * Sets the GPG URL of the content represented by this DTO.
      *
-     * @param updated
+     * @param gpgURL
      *  The GPG URL of the content represented by this DTO, or null to clear the GPG URL
      *
      * @return
@@ -380,7 +379,7 @@ public class ContentData extends CandlepinDTO {
     /**
      * Sets the metadata expiration of the content represented by this DTO.
      *
-     * @param updated
+     * @param metadataExpire
      *  The metadata expiration of the content represented by this DTO, or null to clear the
      *  metadata expiration
      *
@@ -485,7 +484,7 @@ public class ContentData extends CandlepinDTO {
     /**
      * Sets the arches of the content represented by this DTO.
      *
-     * @param updated
+     * @param arches
      *  The arches of the content represented by this DTO, or null to clear the arches
      *
      * @return
@@ -493,6 +492,32 @@ public class ContentData extends CandlepinDTO {
      */
     public ContentData setArches(String arches) {
         this.arches = arches;
+        return this;
+    }
+
+    /**
+     * Retrieves the lock state of the content represented by this DTO. If the lock state has not
+     * yet been defined, this method returns null.
+     *
+     * @return
+     *  the lock state of the content, or null if the lock state has not yet been defined
+     */
+    @XmlTransient
+    public Boolean isLocked() {
+        return this.locked;
+    }
+
+    /**
+     * Sets the lock state of the content represented by this DTO.
+     *
+     * @param locked
+     *  The lock state of the content represented by this DTO, or null to clear the state
+     *
+     * @return
+     *  a reference to this DTO
+     */
+    public ContentData setLocked(Boolean locked) {
+        this.locked = locked;
         return this;
     }
 
@@ -550,18 +575,6 @@ public class ContentData extends CandlepinDTO {
     @Override
     public Object clone() {
         ContentData copy = (ContentData) super.clone();
-
-        copy.uuid = this.uuid;
-        copy.id = this.id;
-        copy.type = this.type;
-        copy.label = this.label;
-        copy.name = this.name;
-        copy.vendor = this.vendor;
-        copy.contentUrl = this.contentUrl;
-        copy.requiredTags = this.requiredTags;
-        copy.releaseVer = this.releaseVer;
-        copy.gpgUrl = this.gpgUrl;
-        copy.metadataExpire = this.metadataExpire;
 
         copy.setModifiedProductIds(this.modifiedProductIds);
 
