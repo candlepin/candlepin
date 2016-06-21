@@ -214,7 +214,7 @@ public class OwnerContentResource {
         Content existing  = this.getContent(ownerKey, contentId);
 
         if (existing.isLocked()) {
-            throw new ForbiddenException(i18n.tr("content \"{1}\" is locked", content.getId()));
+            throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", content.getId()));
         }
 
         return this.contentManager.updateContent(((Content) existing.clone()).merge(content), owner, true);
@@ -231,7 +231,7 @@ public class OwnerContentResource {
         Content content = this.getContent(ownerKey, contentId);
 
         if (content.isLocked()) {
-            throw new ForbiddenException(i18n.tr("content \"{1}\" is locked", content.getId()));
+            throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", content.getId()));
         }
 
         this.contentManager.removeContent(content, owner, true);
