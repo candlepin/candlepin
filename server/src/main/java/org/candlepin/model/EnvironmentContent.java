@@ -120,4 +120,12 @@ public class EnvironmentContent extends AbstractHibernateObject {
         return false;
     }
 
+    @Override
+    public String toString() {
+        return "EnvironmentContent [id=" + id + ", environment=" +
+                 (environment != null ?  environment.getId() : "") +
+                 ", content=" +
+                 (content != null ? content.getId() : "" + "]");
+    }
+
 }

@@ -32,6 +32,7 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.pinsetter.tasks.RegenEnvEntitlementCertsJob;
+import org.candlepin.util.RdbmsExceptionTranslator;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -43,12 +44,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.RollbackException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -82,11 +85,13 @@ public class EnvironmentResource {
     private PoolManager poolManager;
     private ConsumerCurator consumerCurator;
     private ContentCurator contentCurator;
+    private RdbmsExceptionTranslator rdbmsExceptionTranslator;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
         EnvironmentContentCurator envContentCurator, ConsumerResource consumerResource,
-        PoolManager poolManager, ConsumerCurator consumerCurator, ContentCurator contentCurator) {
+        PoolManager poolManager, ConsumerCurator consumerCurator, ContentCurator contentCurator,
+        RdbmsExceptionTranslator rdbmsExceptionTranslator) {
 
         this.envCurator = envCurator;
         this.i18n = i18n;
@@ -95,6 +100,7 @@ public class EnvironmentResource {
         this.poolManager = poolManager;
         this.consumerCurator = consumerCurator;
         this.contentCurator = contentCurator;
+        this.rdbmsExceptionTranslator = rdbmsExceptionTranslator;
     }
 
     @ApiOperation(notes = "Retrieves a single Environment", value = "getEnv")
@@ -261,7 +267,7 @@ public class EnvironmentResource {
         "EnvironmentContent object created after a promotion. This is to help integrate " +
         "with other management apps which should not have to track/lookup a specific ID " +
         "for the content to demote.", value = "demoteContent")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
+    @ApiResponses({ @ApiResponse(code = 404, message = "When the content has already been demoted.") })
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{env_id}/content")
@@ -284,9 +290,21 @@ public class EnvironmentResource {
             demotedContent.put(contentId, envContent);
         }
 
-        // We've validated everything here, so we're clear to start deleting...
-        for (EnvironmentContent envContent : demotedContent.values()) {
-            this.envContentCurator.delete(envContent);
+        try {
+            envContentCurator.bulkDeleteTransactional(
+                new ArrayList<EnvironmentContent>(demotedContent.values()));
+        }
+        catch (RollbackException hibernateException) {
+            if (rdbmsExceptionTranslator.isUpdateHadNoEffectException(hibernateException)) {
+                log.info("Concurrent content demotion will cause this request to fail.",
+                    hibernateException);
+                throw new NotFoundException(
+                    i18n.tr("One of the content does not exist in the environment anymore: {0}",
+                        demotedContent.values()));
+            }
+            else {
+                throw hibernateException;
+            }
         }
 
         // Impl note: Unfortunately, we have to make an additional set here, as the keySet isn't
