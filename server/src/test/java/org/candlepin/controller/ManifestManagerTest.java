@@ -22,8 +22,10 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -98,7 +100,8 @@ public class ManifestManagerTest {
         when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
         when(cdnCurator.lookupByLabel(eq(cdn.getLabel()))).thenReturn(cdn);
 
-        manager.generateManifestAsync(consumer.getUuid(), cdn.getLabel(), webAppPrefix, apiUrl);
+        manager.generateManifestAsync(consumer.getUuid(), cdn.getLabel(), webAppPrefix, apiUrl,
+            new HashMap<String, String>());
 
         verify(poolManager, never()).regenerateDirtyEntitlements(anyCollection());
     }
@@ -109,16 +112,18 @@ public class ManifestManagerTest {
         Cdn cdn = new Cdn("test-cdn", "Test CDN", "");
         String webAppPrefix = "webapp-prefix";
         String apiUrl = "api-url";
+        Map<String, String> extData = new HashMap<String, String>();
 
         List<Entitlement> ents = new ArrayList<Entitlement>();
         when(entitlementCurator.listByConsumer(eq(consumer))).thenReturn(ents);
         when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
         when(cdnCurator.lookupByLabel(eq(cdn.getLabel()))).thenReturn(cdn);
 
-        manager.generateManifest(consumer.getUuid(), cdn.getLabel(), webAppPrefix, apiUrl);
+        manager.generateManifest(consumer.getUuid(), cdn.getLabel(), webAppPrefix, apiUrl, extData);
 
         verify(poolManager).regenerateDirtyEntitlements(eq(ents));
-        verify(exporter).getFullExport(eq(consumer), eq(cdn.getLabel()), eq(webAppPrefix), eq(apiUrl));
+        verify(exporter).getFullExport(eq(consumer), eq(cdn.getLabel()), eq(webAppPrefix), eq(apiUrl),
+            eq(extData));
     }
 
     @Test
@@ -133,7 +138,8 @@ public class ManifestManagerTest {
         when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
         when(cdnCurator.lookupByLabel(eq(cdn.getLabel()))).thenReturn(cdn);
 
-        manager.generateManifest(consumer.getUuid(), cdn.getLabel(), webAppPrefix, apiUrl);
+        manager.generateManifest(consumer.getUuid(), cdn.getLabel(), webAppPrefix, apiUrl,
+            new HashMap<String, String>());
 
         verify(eventFactory).exportCreated(eq(consumer));
         verify(eventSink).queueEvent(eq(event));
@@ -158,7 +164,8 @@ public class ManifestManagerTest {
         when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
         when(cdnCurator.lookupByLabel(eq(cdn.getLabel()))).thenReturn(cdn);
 
-        manager.generateAndStoreManifest(consumer.getUuid(), cdn.getLabel(), webAppPrefix, apiUrl);
+        manager.generateAndStoreManifest(consumer.getUuid(), cdn.getLabel(), webAppPrefix, apiUrl,
+            new HashMap<String, String>());
 
         verify(eventFactory).exportCreated(eq(consumer));
         verify(eventSink).queueEvent(eq(event));
@@ -170,6 +177,7 @@ public class ManifestManagerTest {
         Cdn cdn = new Cdn("test-cdn", "Test CDN", "");
         String webAppPrefix = "webapp-prefix";
         String apiUrl = "api-url";
+        Map<String, String> extData = new HashMap<String, String>();
 
         Event event = mock(Event.class);
         when(eventFactory.exportCreated(eq(consumer))).thenReturn(event);
@@ -181,12 +189,15 @@ public class ManifestManagerTest {
 
         File manifestFile = mock(File.class);
         when(exporter.getFullExport(eq(consumer), eq(cdn.getLabel()), eq(webAppPrefix),
-            eq(apiUrl))).thenReturn(manifestFile);
-        File result = manager.generateManifest(consumer.getUuid(), cdn.getLabel(), webAppPrefix, apiUrl);
+            eq(apiUrl), eq(extData))).thenReturn(manifestFile);
+        File result = manager.generateManifest(consumer.getUuid(), cdn.getLabel(), webAppPrefix, apiUrl,
+            extData);
         assertEquals(manifestFile, result);
 
         verify(entitlementCurator).listByConsumer(eq(consumer));
-        verify(exporter).getFullExport(eq(consumer), eq(cdn.getLabel()), eq(webAppPrefix), eq(apiUrl));
+        verify(exporter).getFullExport(eq(consumer), eq(cdn.getLabel()), eq(webAppPrefix), eq(apiUrl),
+            eq(extData));
+
         verify(eventFactory).exportCreated(eq(consumer));
         verify(eventSink).queueEvent(eq(event));
 
@@ -199,6 +210,7 @@ public class ManifestManagerTest {
         Cdn cdn = new Cdn("test-cdn", "Test CDN", "");
         String webAppPrefix = "webapp-prefix";
         String apiUrl = "api-url";
+        Map<String, String> extData = new HashMap<String, String>();
 
         Event event = mock(Event.class);
         when(eventFactory.exportCreated(eq(consumer))).thenReturn(event);
@@ -218,12 +230,15 @@ public class ManifestManagerTest {
         when(entitlementCurator.listByConsumer(eq(consumer))).thenReturn(ents);
 
         ExportResult result = manager.generateAndStoreManifest(consumer.getUuid(), cdn.getLabel(),
-            webAppPrefix, apiUrl);
+            webAppPrefix, apiUrl, extData);
+
         assertEquals(consumer.getUuid(), result.getExportedConsumer());
         assertEquals(exportId, result.getExportId());
 
         verify(entitlementCurator).listByConsumer(eq(consumer));
-        verify(exporter).getFullExport(eq(consumer), eq(cdn.getLabel()), eq(webAppPrefix), eq(apiUrl));
+        verify(exporter).getFullExport(eq(consumer), eq(cdn.getLabel()), eq(webAppPrefix), eq(apiUrl),
+            eq(extData));
+
         verify(eventFactory).exportCreated(eq(consumer));
         verify(eventSink).queueEvent(eq(event));
         verify(fileService).delete(eq(ManifestFileType.EXPORT), eq(consumer.getUuid()));
@@ -388,12 +403,13 @@ public class ManifestManagerTest {
         Cdn cdn = new Cdn("test-cdn", "Test CDN", "");
         String webAppPrefix = "webapp-prefix";
         String apiUrl = "api-url";
+        Map<String, String> extData = new HashMap<String, String>();
 
         when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
         when(cdnCurator.lookupByLabel(eq(cdn.getLabel()))).thenReturn(cdn);
 
         try {
-            manager.generateManifest(consumer.getUuid(), cdn.getLabel(), webAppPrefix, apiUrl);
+            manager.generateManifest(consumer.getUuid(), cdn.getLabel(), webAppPrefix, apiUrl, extData);
             fail("Expected ForbiddenException not thrown");
         }
         catch (Exception e) {
@@ -410,12 +426,13 @@ public class ManifestManagerTest {
         Cdn cdn = new Cdn("test-cdn", "Test CDN", "");
         String webAppPrefix = "webapp-prefix";
         String apiUrl = "api-url";
+        Map<String, String> extData = new HashMap<String, String>();
 
         when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
         when(cdnCurator.lookupByLabel(eq(cdn.getLabel()))).thenReturn(cdn);
 
         try {
-            manager.generateManifestAsync(consumer.getUuid(), cdn.getLabel(), webAppPrefix, apiUrl);
+            manager.generateManifestAsync(consumer.getUuid(), cdn.getLabel(), webAppPrefix, apiUrl, extData);
             fail("Expected ForbiddenException not thrown");
         }
         catch (Exception e) {
@@ -432,12 +449,13 @@ public class ManifestManagerTest {
         Cdn cdn = new Cdn("test-cdn", "Test CDN", "");
         String webAppPrefix = "webapp-prefix";
         String apiUrl = "api-url";
+        Map<String, String> extData = new HashMap<String, String>();
 
         when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
         when(cdnCurator.lookupByLabel(eq(cdn.getLabel()))).thenReturn(null);
 
         try {
-            manager.generateManifestAsync(consumer.getUuid(), cdn.getLabel(), webAppPrefix, apiUrl);
+            manager.generateManifestAsync(consumer.getUuid(), cdn.getLabel(), webAppPrefix, apiUrl, extData);
             fail("Expected ForbiddenException not thrown");
         }
         catch (Exception e) {
@@ -454,12 +472,13 @@ public class ManifestManagerTest {
         Cdn cdn = new Cdn("test-cdn", "Test CDN", "");
         String webAppPrefix = "webapp-prefix";
         String apiUrl = "api-url";
+        Map<String, String> extData = new HashMap<String, String>();
 
         when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
         when(cdnCurator.lookupByLabel(eq(cdn.getLabel()))).thenReturn(null);
 
         try {
-            manager.generateManifestAsync(consumer.getUuid(), cdn.getLabel(), webAppPrefix, apiUrl);
+            manager.generateManifestAsync(consumer.getUuid(), cdn.getLabel(), webAppPrefix, apiUrl, extData);
             fail("Expected ForbiddenException not thrown");
         }
         catch (Exception e) {

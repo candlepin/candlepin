@@ -16,6 +16,8 @@ package org.candlepin.pinsetter.tasks;
 
 import static org.quartz.JobBuilder.newJob;
 
+import java.util.Map;
+
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.pinsetter.core.model.JobStatus;
@@ -43,6 +45,7 @@ public class ExportJob extends UniqueByEntityJob {
     protected static final String CDN_LABEL = "cdn_label";
     protected static final String WEBAPP_PREFIX = "webapp_prefix";
     protected static final String API_URL = "api_url";
+    protected static final String EXTENSION_DATA = "extension_data";
 
     private static Logger log = LoggerFactory.getLogger(ExportJob.class);
 
@@ -60,11 +63,12 @@ public class ExportJob extends UniqueByEntityJob {
         String cdnLabel = map.getString(CDN_LABEL);
         String webAppPrefix = map.getString(WEBAPP_PREFIX);
         String apiUrl = map.getString(API_URL);
+        Map<String, String> extensionData = (Map<String, String>) map.get(EXTENSION_DATA);
 
         log.info("Starting async export for {}", consumerUuid);
         try {
-            ExportResult result =
-                manifestManager.generateAndStoreManifest(consumerUuid, cdnLabel, webAppPrefix, apiUrl);
+            ExportResult result = manifestManager.generateAndStoreManifest(consumerUuid, cdnLabel,
+                webAppPrefix, apiUrl, extensionData);
             context.setResult(result);
             log.info("Async export complete.");
         }
@@ -83,7 +87,7 @@ public class ExportJob extends UniqueByEntityJob {
      * @return a JobDetail representing the job to be started.
      */
     public static JobDetail scheduleExport(Consumer consumer, String cdnLabel, String webAppPrefix,
-        String apiUrl) {
+        String apiUrl, Map<String, String> extensionData) {
         JobDataMap map = new JobDataMap();
         map.put(JobStatus.OWNER_ID, consumer.getOwner().getKey());
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
@@ -91,6 +95,7 @@ public class ExportJob extends UniqueByEntityJob {
         map.put(CDN_LABEL, cdnLabel);
         map.put(WEBAPP_PREFIX, webAppPrefix);
         map.put(API_URL, apiUrl);
+        map.put(EXTENSION_DATA, extensionData);
 
         return newJob(ExportJob.class)
             .withIdentity("export_" + Util.generateUUID())
