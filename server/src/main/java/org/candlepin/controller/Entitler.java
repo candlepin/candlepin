@@ -337,7 +337,7 @@ public class Entitler {
                 StringUtils.isEmpty(pdata.getAttributeValue("support_level"))) {
 
                 // if there is no SLA, apply the default
-                pdata.addAttribute("support_level", this.DEFAULT_DEV_SLA);
+                pdata.setAttribute("support_level", this.DEFAULT_DEV_SLA);
             }
 
             if (entity != null) {

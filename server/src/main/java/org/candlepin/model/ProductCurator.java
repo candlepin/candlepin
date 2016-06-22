@@ -93,8 +93,9 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
-     * Retrieves a list of products with the specified Red Hat product ID and entity version. If no
-     * products were found matching the given criteria, this method returns an empty list.
+     * Retrieves a criteria which can be used to fetch a list of products with the specified Red
+     * Hat product ID and entity version. If no products were found matching the given criteria,
+     * this method returns an empty list.
      *
      * @param productId
      *  The Red Hat product ID
@@ -103,7 +104,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      *  The hash code representing the product version
      *
      * @return
-     *  a list of products matching the given product ID and entity version
+     *  a criteria for fetching product by version
      */
     public CandlepinCriteria<Product> getProductsByVersion(String productId, int hashcode) {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()

@@ -80,6 +80,10 @@ import javax.xml.bind.annotation.XmlTransient;
 public class Product extends AbstractHibernateObject implements SharedEntity, Linkable, Cloneable {
     public static final String UEBER_PRODUCT_POSTFIX = "_ueber_product";
 
+    public static final String CONTENT_OVERRIDE_ENABLED_ATTRIB = "content_override_enabled";
+    public static final String CONTENT_OVERRIDE_DISABLED_ATTRIB = "content_override_disabled";
+
+
     public static final Comparator<ProductContent> CONTENT_COMPARATOR = new Comparator<ProductContent>() {
         public int compare(ProductContent lhs, ProductContent rhs) {
             if (lhs != null && lhs.equals(rhs)) {
@@ -119,7 +123,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @OneToMany(mappedBy = "product", orphanRemoval = true)
     @Cascade({ CascadeType.ALL })
     @Fetch(FetchMode.SUBSELECT)
-    private Set<ProductAttribute> attributes;
+    private List<ProductAttribute> attributes;
 
     @ElementCollection
     @CollectionTable(name = "cp2_product_content", joinColumns = @JoinColumn(name = "product_uuid"))
@@ -149,7 +153,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     private Boolean locked;
 
     protected Product() {
-        this.attributes = new HashSet<ProductAttribute>();
+        this.attributes = new LinkedList<ProductAttribute>();
         this.productContent = new LinkedList<ProductContent>();
         this.dependentProductIds = new HashSet<String>();
     }
@@ -313,7 +317,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         // collection.
 
         // Copy attributes
-        copy.attributes = new HashSet<ProductAttribute>();
+        copy.attributes = new LinkedList<ProductAttribute>();
         for (ProductAttribute src : this.getAttributes()) {
             ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
             dest.setCreated(src.getCreated());
@@ -355,6 +359,11 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
     public static Product createUeberProductForOwner(UniqueIdGenerator idGenerator, Owner owner) {
         return new Product(idGenerator.generateId(), ueberProductNameForOwner(owner), 1L);
+    }
+
+
+    public static String ueberProductNameForOwner(Owner owner) {
+        return owner.getKey() + UEBER_PRODUCT_POSTFIX;
     }
 
     /**
@@ -437,103 +446,621 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         }
     }
 
-    public void setAttributes(Collection<ProductAttribute> attributes) {
-        this.attributes.clear();
-
-        if (attributes != null) {
-            this.attributes.addAll(attributes);
-        }
+    /**
+     * Retrieves the attributes of the product represented by this product. If this product does
+     * not have any attributes, this method returns an empty collection.
+     *
+     * @return
+     *  a collection containing the attributes of the product
+     */
+    public Collection<ProductAttribute> getAttributes() {
+        return Collections.unmodifiableCollection(this.attributes);
     }
 
-    public void setAttribute(String key, String value) {
+    /**
+     * Retrieves the attribute data associated with the given attribute. If the attribute is not
+     * set, this method returns null.
+     *
+     * @param key
+     *  The key (name) of the attribute to lookup
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  the attribute data for the given attribute, or null if the attribute is not set
+     */
+    @XmlTransient
+    public ProductAttribute getAttribute(String key) {
         if (key == null) {
             throw new IllegalArgumentException("key is null");
         }
 
-        this.addAttribute(new ProductAttribute(key, value));
-    }
-
-    public void addAttribute(ProductAttribute attrib) {
-        if (attrib != null) {
-            ProductAttribute existing = this.getAttribute(attrib.getName());
-
-            if (existing != null) {
-                existing.setValue(attrib.getValue());
-            }
-            else {
-                attrib.setProduct(this);
-                this.attributes.add(attrib);
-            }
-        }
-    }
-
-    public Set<ProductAttribute> getAttributes() {
-        return Collections.unmodifiableSet(this.attributes);
-    }
-
-    public ProductAttribute getAttribute(String key) {
-        if (attributes != null) {
-            for (ProductAttribute a : attributes) {
-                if (a.getName().equals(key)) {
-                    return a;
-                }
+        for (ProductAttribute attrib : this.attributes) {
+            if (key.equals(attrib.getName())) {
+                return attrib;
             }
         }
 
         return null;
     }
 
-    public boolean removeAttribute(String key) {
-        ProductAttribute attrib = this.getAttribute(key);
-        return attrib != null && this.attributes.remove(attrib);
-    }
-
-    public String getAttributeValue(String key) {
-        if (attributes != null) {
-            for (ProductAttribute a : attributes) {
-                if (a.getName().equals(key)) {
-                    return a.getValue();
-                }
-            }
-        }
-
-        return null;
-    }
-
+    /**
+     * Retrieves the value associated with the given attribute. If the attribute is not set, this
+     * method returns null.
+     *
+     * @param key
+     *  The key (name) of the attribute to lookup
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  the value set for the given attribute, or null if the attribute is not set
+     */
     @XmlTransient
-    public Set<String> getAttributeNames() {
-        Set<String> toReturn = new HashSet<String>();
-
-        if (attributes != null) {
-            for (ProductAttribute attribute : attributes) {
-                toReturn.add(attribute.getName());
-            }
+    public String getAttributeValue(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
         }
 
-        return toReturn;
+        ProductAttribute attrib = this.getAttribute(key);
+        return attrib != null ? attrib.getValue() : null;
     }
 
+    /**
+     * Checks if the given attribute has been defined on this product.
+     *
+     * @param key
+     *  The key (name) of the attribute to lookup
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  true if the attribute is defined for this product; false otherwise
+     */
+    @XmlTransient
     public boolean hasAttribute(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
         return this.getAttribute(key) != null;
     }
 
+    /**
+     * Adds the specified product attribute to the this product. If the attribute has already been
+     * added to this product, the existing value will be overwritten.
+     *
+     * @param attribute
+     *  The product attribute to add to this product
+     *
+     * @throws IllegalArgumentException
+     *  if attribute is null or incomplete
+     *
+     * @return
+     *  a reference to this product
+     */
+    public boolean addAttribute(ProductAttribute attribute) {
+        if (attribute == null) {
+            throw new IllegalArgumentException("attribute is null");
+        }
+
+        if (attribute.getName() == null) {
+            throw new IllegalArgumentException("attribute name/key is null");
+        }
+
+        // TODO:
+        // Replace this with a map of attribute key/value pairs so we don't have this mess
+        boolean changed = false;
+        boolean matched = false;
+        Set<ProductAttribute> remove = new HashSet<ProductAttribute>();
+
+        for (ProductAttribute attribdata : this.attributes) {
+            if (attribute.getName().equals(attribdata.getName())) {
+                matched = true;
+
+                if (!(attribdata.getValue() != null ? attribdata.getValue().equals(attribute.getValue()) :
+                    attribute.getValue() == null)) {
+
+                    remove.add(attribdata);
+                }
+            }
+        }
+
+        if (!matched || remove.size() > 0) {
+            attribute.setProduct(this);
+
+            this.attributes.removeAll(remove);
+            changed = this.attributes.add(attribute);
+        }
+
+        return changed;
+    }
+
+    /**
+     * Sets the specified attribute for this product. If the attribute has already been set for
+     * this product, the existing value will be overwritten.
+     *
+     * @param key
+     *  The name or key of the attribute to set
+     *
+     * @param value
+     *  The value to assign to the attribute
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  a reference to this product
+     */
+    public boolean setAttribute(String key, String value) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        return this.addAttribute(new ProductAttribute(key, value));
+    }
+
+    /**
+     * Removes the product attribute represented by the given product attribute DTO from this
+     * product. Any product attribute with the same key as the key of the given attribute DTO will
+     * be removed.
+     *
+     * @param attribute
+     *  The product attribute to remove from this product DTO
+     *
+     * @throws IllegalArgumentException
+     *  if attribute is null or incomplete
+     *
+     * @return
+     *  true if the attribute was removed successfully; false otherwise
+     */
+    public boolean removeAttribute(ProductAttribute attribute) {
+        if (attribute == null) {
+            throw new IllegalArgumentException("attribute is null");
+        }
+
+        if (attribute.getName() == null) {
+            throw new IllegalArgumentException("attribute name is null");
+        }
+
+        return this.removeAttribute(attribute.getName());
+    }
+
+    /**
+     * Removes the product attribute with the given attribute key from this product.
+     *
+     * @param key
+     *  The name/key of the attribute to remove
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  true if the attribute was removed successfully; false otherwise
+     */
+    public boolean removeAttribute(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        Set<ProductAttribute> remove = new HashSet<ProductAttribute>();
+
+        for (ProductAttribute attribdata : this.attributes) {
+            if (key.equals(attribdata.getName())) {
+                remove.add(attribdata);
+            }
+        }
+
+        return this.attributes.removeAll(remove);
+    }
+
+    /**
+     * Sets the attributes of the product represented by this product.
+     *
+     * @param attributes
+     *  A collection of product attributes to attach to this product, or null to clear the
+     *  attributes
+     *
+     * @return
+     *  a reference to this product
+     */
+    public Product setAttributes(Collection<ProductAttribute> attributes) {
+        this.attributes.clear();
+
+        if (attributes != null) {
+            for (ProductAttribute attribute : attributes) {
+                this.addAttribute(attribute);
+            }
+        }
+
+        return this;
+    }
+
+    @XmlTransient
+    public List<String> getSkuEnabledContentIds() {
+        List<String> skus = new LinkedList<String>();
+
+        ProductAttribute attrib = this.getAttribute(CONTENT_OVERRIDE_ENABLED_ATTRIB);
+
+        if (attrib != null && attrib.getValue() != null && attrib.getValue().length() > 0) {
+            StringTokenizer tokenizer = new StringTokenizer(attrib.getValue(), ",");
+
+            while (tokenizer.hasMoreElements()) {
+                skus.add((String) tokenizer.nextElement());
+            }
+        }
+
+        return skus;
+    }
+
+    @XmlTransient
+    public List<String> getSkuDisabledContentIds() {
+        List<String> skus = new LinkedList<String>();
+
+        ProductAttribute attrib = this.getAttribute(CONTENT_OVERRIDE_DISABLED_ATTRIB);
+
+        if (attrib != null && attrib.getValue() != null && attrib.getValue().length() > 0) {
+            StringTokenizer tokenizer = new StringTokenizer(attrib.getValue(), ",");
+
+            while (tokenizer.hasMoreElements()) {
+                skus.add((String) tokenizer.nextElement());
+            }
+        }
+
+        return skus;
+    }
+
+    /**
+     * Retrieves the content of the product represented by this product. If this product does not
+     * have any associated content, this method returns an empty collection.
+     *
+     * @return
+     *  the product content associated with this product
+     */
+    public Collection<ProductContent> getProductContent() {
+        return Collections.unmodifiableCollection(this.productContent);
+    }
+
+    /**
+     * Retrieves the product content for the specified content ID. If no such content has been
+     * assocaited with this product, this method returns null.
+     *
+     * @param contentId
+     *  The ID of the content to retrieve
+     *
+     * @throws IllegalArgumentException
+     *  if contentId is null
+     *
+     * @return
+     *  the content associated with this product using the given ID, or null if such content does
+     *  not exist
+     */
     public ProductContent getProductContent(String contentId) {
-        for (ProductContent pc : getProductContent()) {
-            if (pc.getContent().getId().equals(contentId)) {
-                return pc;
+        if (contentId == null) {
+            throw new IllegalArgumentException("contentId is null");
+        }
+
+        for (ProductContent pcd : this.productContent) {
+            if (pcd.getContent() != null && contentId.equals(pcd.getContent().getId())) {
+                return pcd;
             }
         }
 
         return null;
     }
 
+    /**
+     * Checks if any content with the given content ID has been associated with this product.
+     *
+     * @param contentId
+     *  The ID of the content to check
+     *
+     * @throws IllegalArgumentException
+     *  if contentId is null
+     *
+     * @return
+     *  true if any content with the given content ID has been associated with this product; false
+     *  otherwise
+     */
     public boolean hasContent(String contentId) {
-        return this.getProductContent() != null;
+        if (contentId == null) {
+            throw new IllegalArgumentException("contentId is null");
+        }
+
+        return this.getProductContent(contentId) != null;
+    }
+
+    /**
+     * Adds the given content to this product. If a matching content has already been added to
+     * this product, it will be overwritten by the specified content.
+     *
+     * @param productContent
+     *  The product content to add to this product
+     *
+     * @throws IllegalArgumentException
+     *  if content is null or incomplete
+     *
+     * @return
+     *  true if adding the content resulted in a change to this product; false otherwise
+     */
+    public boolean addProductContent(ProductContent productContent) {
+        if (productContent == null) {
+            throw new IllegalArgumentException("productContent is null");
+        }
+
+        if (productContent.getContent() == null || productContent.getContent().getId() == null) {
+            throw new IllegalArgumentException("content is incomplete");
+        }
+
+        boolean changed = false;
+        boolean matched = false;
+        Collection<ProductContent> remove = new LinkedList<ProductContent>();
+
+        // We're operating under the assumption that we won't be doing janky things like
+        // adding product content, then changing it. It's too bad this isn't all immutable...
+        for (ProductContent pcd : this.productContent) {
+            Content cd = pcd.getContent();
+
+            if (cd != null && cd.getId() != null && cd.getId().equals(productContent.getContent().getId())) {
+                matched = true;
+
+                if (pcd.isEnabled() != productContent.isEnabled() ||
+                    !cd.equals(productContent.getContent())) {
+
+                    remove.add(pcd);
+                }
+            }
+        }
+
+        if (!matched || remove.size() > 0) {
+            productContent.setProduct(this);
+
+            this.productContent.removeAll(remove);
+            changed = this.productContent.add(productContent);
+        }
+
+        return changed;
+    }
+
+    /**
+     * Adds the given content to this product. If a matching content has already been added to
+     * this product, it will be overwritten by the specified content.
+     *
+     * @param content
+     *  The product content to add to this product
+     *
+     * @param enabled
+     *  Whether or not the content should be enabled for this product
+     *
+     * @throws IllegalArgumentException
+     *  if content is null
+     *
+     * @return
+     *  true if adding the content resulted in a change to this product; false otherwise
+     */
+    public boolean addContent(Content content, boolean enabled) {
+        if (content == null) {
+            throw new IllegalArgumentException("content is null");
+        }
+
+        return this.addProductContent(new ProductContent(this, content, enabled));
+    }
+
+    /**
+     * Removes the content with the given content ID from this product.
+     *
+     * @param contentId
+     *  The ID of the content to remove
+     *
+     * @throws IllegalArgumentException
+     *  if contentId is null
+     *
+     * @return
+     *  true if the content was removed successfully; false otherwise
+     */
+    public boolean removeContent(String contentId) {
+        if (contentId == null) {
+            throw new IllegalArgumentException("contentId is null");
+        }
+
+        Collection<ProductContent> remove = new LinkedList<ProductContent>();
+
+        for (ProductContent pcd : this.productContent) {
+            Content cd = pcd.getContent();
+
+            if (cd != null && contentId.equals(cd.getId())) {
+                remove.add(pcd);
+            }
+        }
+
+        return this.productContent.removeAll(remove);
+    }
+
+    /**
+     * Removes the content represented by the given content entity from this product. Any content
+     * with the same ID as the ID of the given content entity will be removed.
+     *
+     * @param content
+     *  The content entity representing the content to remove from this product
+     *
+     * @throws IllegalArgumentException
+     *  if content is null or incomplete
+     *
+     * @return
+     *  true if the content was removed successfully; false otherwise
+     */
+    public boolean removeContent(Content content) {
+        if (content == null) {
+            throw new IllegalArgumentException("content is null");
+        }
+
+        if (content.getId() == null) {
+            throw new IllegalArgumentException("content is incomplete");
+        }
+
+        return this.removeContent(content.getId());
+    }
+
+    /**
+     * Removes the content represented by the given content entity from this product. Any content
+     * with the same ID as the ID of the given content entity will be removed.
+     *
+     * @param content
+     *  The product content entity representing the content to remove from this product
+     *
+     * @throws IllegalArgumentException
+     *  if content is null or incomplete
+     *
+     * @return
+     *  true if the content was removed successfully; false otherwise
+     */
+    public boolean removeProductContent(ProductContent content) {
+        if (content == null) {
+            throw new IllegalArgumentException("content is null");
+        }
+
+        if (content.getContent() == null || content.getContent().getId() == null) {
+            throw new IllegalArgumentException("content is incomplete");
+        }
+
+        return this.removeContent(content.getContent().getId());
+    }
+
+    /**
+     * Sets the content of the product represented by this product.
+     *
+     * @param content
+     *  A collection of product content to attach to this product, or null to clear the content
+     *
+     * @return
+     *  a reference to this product
+     */
+    public Product setProductContent(Collection<ProductContent> content) {
+        this.productContent.clear();
+
+        if (content != null) {
+            for (ProductContent pcd : content) {
+                this.addProductContent(pcd);
+            }
+        }
+
+        return this;
+    }
+
+    /**
+     * Returns true if this product has a content set which modifies the given
+     * product:
+     *
+     * @param productId
+     * @return true if this product modifies the given product ID
+     */
+    public boolean modifies(String productId) {
+        for (ProductContent pc : this.productContent) {
+            if (pc.getContent().getModifiedProductIds().contains(productId)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Retrieves the dependent product IDs for this product. If the dependent product IDs have not
+     * yet been defined, this method returns an empty collection.
+     *
+     * @return
+     *  the dependent product IDs of this product
+     */
+    public Collection<String> getDependentProductIds() {
+        return Collections.unmodifiableCollection(this.dependentProductIds);
+    }
+
+    /**
+     * Adds the ID of the specified product as a dependent product of this product. If the product
+     * is already a dependent product, it will not be added again.
+     *
+     * @param productId
+     *  The ID of the product to add as a dependent product
+     *
+     * @throws IllegalArgumentException
+     *  if productId is null
+     *
+     * @return
+     *  true if the dependent product was added successfully; false otherwise
+     */
+    public boolean addDependentProductId(String productId) {
+        if (productId == null) {
+            throw new IllegalArgumentException("productId is null");
+        }
+
+        return this.dependentProductIds.add(productId);
+    }
+
+    /**
+     * Removes the specified product as a dependent product of this product. If the product is not
+     * dependent on this product, this method does nothing.
+     *
+     * @param productId
+     *  The ID of the product to add as a dependent product
+     *
+     * @throws IllegalArgumentException
+     *  if productId is null
+     *
+     * @return
+     *  true if the dependent product was removed successfully; false otherwise
+     */
+    public boolean removeDependentProductId(String productId) {
+        if (productId == null) {
+            throw new IllegalArgumentException("productId is null");
+        }
+
+        return this.dependentProductIds.remove(productId);
+    }
+
+    /**
+     * Sets the dependent product IDs of this product.
+     *
+     * @param attributes
+     *  A collection of dependent product IDs to attach to this product, or null to clear the
+     *  dependent products
+     *
+     * @return
+     *  a reference to this product
+     */
+    public Product setDependentProductIds(Collection<String> dependentProductIds) {
+        this.dependentProductIds.clear();
+
+        if (dependentProductIds != null) {
+            for (String pid : dependentProductIds) {
+                this.addDependentProductId(pid);
+            }
+        }
+
+        return this;
+    }
+
+    public String getHref() {
+        return this.uuid != null ? String.format("/products/%s", this.uuid) : null;
     }
 
     @Override
     public String toString() {
         return String.format("Product [id = %s, name = %s]", this.id, this.name);
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Product setLocked(boolean locked) {
+        this.locked = locked;
+        return this;
+    }
+
+    @XmlTransient
+    public boolean isLocked() {
+        return this.locked != null && this.locked;
     }
 
     @Override
@@ -704,171 +1231,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         }
 
         return false;
-    }
-
-    /**
-     * Adds the specified content to this product as a disabled source.
-     *
-     * @deprecated
-     *  Product content should not be managed directly. The methods provided by the ProductManager
-     *  for managing content should be used instead.
-     *
-     * @param content
-     *  The content to add to this product
-     *
-     * @return
-     *  true if the content is added successfully; false otherwise
-     */
-    public boolean addContent(Content content) {
-        return this.addContent(content, false);
-    }
-
-    /**
-     * Adds the specified content to this product, if it doesn't already exist.
-     *
-     * @deprecated
-     *  Product content should not be managed directly. The methods provided by the ProductManager
-     *  for managing content should be used instead.
-     *
-     * @param content
-     *  The content to add to this product
-     *
-     * @param enabled
-     *  Whether or not the content should be added as an enabled or disabled source
-     *
-     * @return
-     *  true if the content is added successfully; false otherwise
-     */
-    public boolean addContent(Content content, boolean enabled) {
-        if (content != null) {
-            return this.productContent.add(new ProductContent(this, content, enabled));
-        }
-
-        return false;
-    }
-
-    /**
-     * @param productContent the productContent to set
-     *
-     * @return
-     *  a reference to this Product instance
-     */
-    public Product setProductContent(Collection<ProductContent> productContent) {
-        this.productContent.clear();
-
-        if (productContent != null) {
-            this.productContent.addAll(productContent);
-        }
-
-        return this;
-    }
-
-    /**
-     * @return the productContent
-     */
-    public List<ProductContent> getProductContent() {
-        return Collections.unmodifiableList(productContent);
-    }
-
-    public void setContent(Collection<Content> content) {
-        this.productContent.clear();
-
-        if (content != null) {
-            for (Content newContent : content) {
-                this.addContent(newContent, false);
-            }
-        }
-    }
-
-    /**
-     * @param dependentProductIds the dependentProductIds to set
-     */
-    public void setDependentProductIds(Collection<String> dependentProductIds) {
-        this.dependentProductIds.clear();
-
-        if (dependentProductIds != null) {
-            this.dependentProductIds.addAll(dependentProductIds);
-        }
-    }
-
-    /**
-     * @return the dependentProductIds
-     */
-    public Set<String> getDependentProductIds() {
-        return Collections.unmodifiableSet(this.dependentProductIds);
-    }
-
-    public String getHref() {
-        return this.uuid != null ? String.format("/products/%s", this.uuid) : null;
-    }
-
-    public void setHref(String href) {
-        /*
-         * No-op, here to aid with updating objects which have nested objects
-         * that were originally sent down to the client in HATEOAS form.
-         */
-    }
-
-    /**
-     * Returns true if this product has a content set which modifies the given
-     * product:
-     *
-     * @param productId
-     * @return true if this product modifies the given product ID
-     */
-    public boolean modifies(String productId) {
-        if (getProductContent() != null) {
-            for (ProductContent pc : getProductContent()) {
-                if (pc.getContent().getModifiedProductIds().contains(productId)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public static String ueberProductNameForOwner(Owner owner) {
-        return owner.getKey() + UEBER_PRODUCT_POSTFIX;
-    }
-
-    @XmlTransient
-    public List<String> getSkuDisabledContentIds() {
-        List<String> skuDisabled = new ArrayList<String>();
-        if (this.hasAttribute("content_override_disabled") &&
-            this.getAttributeValue("content_override_disabled").length() > 0) {
-            StringTokenizer stDisable = new StringTokenizer(
-                this.getAttributeValue("content_override_disabled"), ",");
-            while (stDisable.hasMoreElements()) {
-                skuDisabled.add((String) stDisable.nextElement());
-            }
-        }
-        return skuDisabled;
-    }
-
-    @XmlTransient
-    public List<String> getSkuEnabledContentIds() {
-        List<String> skuEnabled = new ArrayList<String>();
-        if (this.hasAttribute("content_override_enabled") &&
-            this.getAttributeValue("content_override_enabled").length() > 0) {
-            StringTokenizer stActive = new StringTokenizer(
-                this.getAttributeValue("content_override_enabled"), ",");
-            while (stActive.hasMoreElements()) {
-                skuEnabled.add((String) stActive.nextElement());
-            }
-        }
-        return skuEnabled;
-    }
-
-    @XmlTransient
-    @JsonIgnore
-    public Product setLocked(boolean locked) {
-        this.locked = locked;
-        return this;
-    }
-
-    @XmlTransient
-    public boolean isLocked() {
-        return this.locked != null && this.locked;
     }
 
     @PrePersist

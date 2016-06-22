@@ -83,7 +83,6 @@ public class Role extends AbstractHibernateObject implements Linkable {
         return "/roles/" + getId();
     }
 
-    @Override
     public void setHref(String href) {
         /*
          * No-op, here to aid with updating objects which have nested objects

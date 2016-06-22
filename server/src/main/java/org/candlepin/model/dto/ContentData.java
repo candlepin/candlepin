@@ -392,46 +392,17 @@ public class ContentData extends CandlepinDTO {
     }
 
     /**
-     * Retrieves the modified product IDs of the content represented by this DTO. If the modified
-     * product IDs has not yet been defined, this method returns null.
+     * Retrieves the collection of IDs representing products that are modified by this content. If
+     * the modified product IDs have not yet been defined, this method returns null.
      *
      * @return
-     *  the modified product IDs of the content, or null if the modified product IDs has not yet
+     *  the modified product IDs of the content, or null if the modified product IDs have not yet
      *  been defined
      */
     public Set<String> getModifiedProductIds() {
         return this.modifiedProductIds != null ?
             Collections.unmodifiableSet(this.modifiedProductIds) :
-            Collections.<String>emptySet();
-    }
-
-    /**
-     * Sets the modified product IDs of the content represented by this DTO. If this DTO already has
-     * modified product IDs defined, they will be cleared before assigning the given product IDs.
-     *
-     * @param modifiedProductIds
-     *  A collection of product IDs to be modified by the content content, or null to remove changes
-     *  to modified product ids
-     *
-     * @return
-     *  a reference to this DTO
-     */
-    public ContentData setModifiedProductIds(Collection<String> modifiedProductIds) {
-        if (modifiedProductIds != null) {
-            if (this.modifiedProductIds == null) {
-                this.modifiedProductIds = new HashSet<String>();
-            }
-            else {
-                this.modifiedProductIds.clear();
-            }
-
-            this.modifiedProductIds.addAll(modifiedProductIds);
-        }
-        else {
-            this.modifiedProductIds = null;
-        }
-
-        return this;
+            null;
     }
 
     /**
@@ -458,16 +429,53 @@ public class ContentData extends CandlepinDTO {
 
     /**
      * Removes the specified product ID from the collection of product IDs to be modified by the
-     * content represented by this DTO. If the product ID is not modified by this DTO, this
+     * content represented by this DTO. If the product ID is not modified by this DTO, this method
+     * does nothing
      *
      * @param productId
      *  The product ID to remove from the modified product IDs on this DTO
+     *
+     * @throws IllegalArgumentException
+     *  if productId is null
      *
      * @return
      *  true if the product ID was removed successfully; false otherwise
      */
     public boolean removeModifiedProductId(String productId) {
+        if (productId == null) {
+            throw new IllegalArgumentException("productId is null");
+        }
+
         return this.modifiedProductIds != null ? this.modifiedProductIds.remove(productId) : false;
+    }
+
+    /**
+     * Sets the modified product IDs for the content represented by this DTO. Any previously
+     * existing modified product IDs will be cleared before assigning the given product IDs.
+     *
+     * @param modifiedProductIds
+     *  A collection of product IDs to be modified by the content content, or null to clear the
+     *  existing modified product IDs
+     *
+     * @return
+     *  a reference to this DTO
+     */
+    public ContentData setModifiedProductIds(Collection<String> modifiedProductIds) {
+        if (modifiedProductIds != null) {
+            if (this.modifiedProductIds == null) {
+                this.modifiedProductIds = new HashSet<String>();
+            }
+            else {
+                this.modifiedProductIds.clear();
+            }
+
+            this.modifiedProductIds.addAll(modifiedProductIds);
+        }
+        else {
+            this.modifiedProductIds = null;
+        }
+
+        return this;
     }
 
     /**

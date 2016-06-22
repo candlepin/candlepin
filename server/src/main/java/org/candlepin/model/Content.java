@@ -29,6 +29,7 @@ import org.hibernate.annotations.Type;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -88,15 +89,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @NotNull
     private String label;
 
-    @OneToMany
-    @JoinTable(
-        name = "cp2_owner_content",
-        joinColumns = {@JoinColumn(name = "content_uuid", insertable = true, updatable = true)},
-        inverseJoinColumns = {@JoinColumn(name = "owner_id")})
-    @LazyCollection(LazyCollectionOption.FALSE)
-    @XmlTransient
-    private Set<Owner> owners;
-
     @Column(nullable = false)
     @Size(max = 255)
     @NotNull
@@ -148,9 +140,9 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     private Boolean locked;
 
 
-    public Content(Owner owner, String name, String id, String label, String type,
-        String vendor, String contentUrl, String gpgUrl, String arches) {
-        addOwner(owner);
+    public Content(String name, String id, String label, String type, String vendor, String contentUrl,
+        String gpgUrl, String arches) {
+
         setName(name);
         setId(id);
         setLabel(label);
@@ -162,6 +154,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     }
 
     public Content() {
+        // Intentionally left empty
     }
 
     /**
@@ -175,8 +168,8 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     }
 
     /**
-     * Creates a shallow copy of the specified source content. Owners, attributes and content are
-     * not duplicated, but the joining objects are (ContentAttribute, ContentContent, etc.).
+     * Creates a shallow copy of the specified source content. Attributes and content are not
+     * duplicated, but the joining objects are (ContentAttribute, ContentContent, etc.).
      * <p></p>
      * Unlike the merge method, all properties from the source content are copied, including the
      * state of any null collections and any identifier fields.
@@ -189,28 +182,8 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         this.setId(source.getId());
 
         this.setCreated(source.getCreated() != null ? (Date) source.getCreated().clone() : null);
-        this.setUpdated(source.getUpdated() != null ? (Date) source.getUpdated().clone() : null);
 
-        // Impl note:
-        // In most cases, our collection setters copy the contents of the input collections to their
-        // own internal collections, so we don't need to worry about our two instances sharing a
-        // collection. The exception here is the modifiedProductIds, which uses the collection
-        // directly, so we'll need to make a defensive copy.
-
-        this.setType(source.getType());
-        this.setLabel(source.getLabel());
-        this.setOwners(source.getOwners());
-        this.setName(source.getName());
-        this.setVendor(source.getVendor());
-        this.setContentUrl(source.getContentUrl());
-        this.setRequiredTags(source.getRequiredTags());
-        this.setReleaseVer(source.getReleaseVer());
-        this.setGpgUrl(source.getGpgUrl());
-        this.setMetadataExpire(source.getMetadataExpire());
-        this.setArches(source.getArches());
-
-        this.setModifiedProductIds(source.getModifiedProductIds() != null ?
-            new HashSet<String>(source.getModifiedProductIds()) : null);
+        this.merge(source);
     }
 
     /**
@@ -227,51 +200,23 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     public Content merge(Content source) {
         this.setUpdated(source.getUpdated() != null ? (Date) source.getUpdated().clone() : null);
 
-        if (source.getType() != null) {
-            this.setType(source.getType());
-        }
+        // Impl note:
+        // In most cases, our collection setters copy the contents of the input collections to their
+        // own internal collections, so we don't need to worry about our two instances sharing a
+        // collection. The exception here is the modifiedProductIds, which uses the collection
+        // directly, so we'll need to make a defensive copy.
 
-        if (source.getLabel() != null) {
-            this.setLabel(source.getLabel());
-        }
-
-        if (source.getName() != null) {
-            this.setName(source.getName());
-        }
-
-        if (source.getVendor() != null) {
-            this.setVendor(source.getVendor());
-        }
-
-        if (source.getContentUrl() != null) {
-            this.setContentUrl(source.getContentUrl());
-        }
-
-        if (source.getRequiredTags() != null) {
-            this.setRequiredTags(source.getRequiredTags());
-        }
-
-        if (source.getReleaseVer() != null) {
-            this.setReleaseVer(source.getReleaseVer());
-        }
-
-        if (source.getGpgUrl() != null) {
-            this.setGpgUrl(source.getGpgUrl());
-        }
-
-        if (source.getMetadataExpire() != null) {
-            this.setMetadataExpire(source.getMetadataExpire());
-        }
-
-        if (source.getArches() != null) {
-            this.setArches(source.getArches());
-        }
-
-        if (source.getModifiedProductIds() != null) {
-            // We need to make a copy of the modified products collection to ensure we don't link
-            // the two instances
-            this.setModifiedProductIds(new HashSet<String>(source.getModifiedProductIds()));
-        }
+        this.setType(source.getType());
+        this.setLabel(source.getLabel());
+        this.setName(source.getName());
+        this.setVendor(source.getVendor());
+        this.setContentUrl(source.getContentUrl());
+        this.setRequiredTags(source.getRequiredTags());
+        this.setReleaseVer(source.getReleaseVer());
+        this.setGpgUrl(source.getGpgUrl());
+        this.setMetadataExpire(source.getMetadataExpire());
+        this.setArches(source.getArches());
+        this.setModifiedProductIds(source.getModifiedProductIds());
 
         return this;
     }
@@ -288,22 +233,12 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
             throw new RuntimeException("Clone not supported", e);
         }
 
-        // Clear any existing collections to ensure we don't end up with shared collections
-        copy.owners = null;
-        copy.modifiedProductIds = null;
-
         // Impl note:
         // In most cases, our collection setters copy the contents of the input collections to their
         // own internal collections, so we don't need to worry about our two instances sharing a
         // collection.
-
-        if (this.getOwners() != null) {
-            copy.setOwners(this.getOwners());
-        }
-
-        if (this.getModifiedProductIds() != null) {
-            copy.setModifiedProductIds(new HashSet<String>(this.getModifiedProductIds()));
-        }
+        copy.modifiedProductIds = new HashSet<String>();
+        copy.setModifiedProductIds(this.getModifiedProductIds());
 
         copy.setCreated(this.getCreated() != null ? (Date) this.getCreated().clone() : null);
         copy.setUpdated(this.getUpdated() != null ? (Date) this.getUpdated().clone() : null);
@@ -322,10 +257,12 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     }
 
     public static Content createUeberContent(UniqueIdGenerator idGenerator, Owner o, Product p) {
-        return new Content(
-            o, UEBER_CONTENT_NAME, idGenerator.generateId(),
-            ueberContentLabelForProduct(p), "yum", "Custom",
-            "/" + o.getKey(), "", "");
+        return new Content(UEBER_CONTENT_NAME, idGenerator.generateId(), ueberContentLabelForProduct(p),
+            "yum", "Custom", "/" + o.getKey(), "", "");
+    }
+
+    public static String ueberContentLabelForProduct(Product p) {
+        return p.getUuid() + "_" + UEBER_CONTENT_NAME;
     }
 
     /**
@@ -373,78 +310,12 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         this.id = id;
     }
 
-    /**
-     * Retrieves the owners with which this content is associated. If this content is not associated
-     * with any owners, this method returns an empty set.
-     * <p></p>
-     * Note that changes made to the set returned by this method will be reflected by this object
-     * and its backing data store.
-     *
-     * @return
-     *  The set of owners with which this content is associated
-     */
-    @XmlTransient
-    public Collection<Owner> getOwners() {
-        return this.owners;
+    public String getType() {
+        return type;
     }
 
-    /**
-     * Associates this content with the specified owner. If the given owner is already associated
-     * with this content, the request is silently ignored.
-     *
-     * @param owner
-     *  An owner to be associated with this content
-     *
-     * @return
-     *  True if this content was successfully associated with the given owner; false otherwise
-     */
-    public boolean addOwner(Owner owner) {
-        if (owner != null) {
-            if (this.owners == null) {
-                this.owners = new HashSet<Owner>();
-            }
-
-            return this.owners.add(owner);
-        }
-
-        return false;
-    }
-
-    /**
-     * Disassociates this content with the specified owner. If the given owner is not associated
-     * with this content, the request is silently ignored.
-     *
-     * @param owner
-     *  The owner to disassociate from this content
-     *
-     * @return
-     *  True if the content was disassociated successfully; false otherwise
-     */
-    public boolean removeOwner(Owner owner) {
-        return (this.owners != null && owner != null) ? this.owners.remove(owner) : false;
-    }
-
-    /**
-     * Sets the owners with which this content is associated.
-     *
-     * @param owners
-     *  A collection of owners to be associated with this content
-     *
-     * @return
-     *  A reference to this content
-     */
-    public Content setOwners(Collection<Owner> owners) {
-        if (this.owners == null) {
-            this.owners = new HashSet<Owner>();
-        }
-
-        this.owners.clear();
-
-        if (owners != null) {
-            this.owners.addAll(owners);
-        }
-
-        return this;
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getLabel() {
@@ -479,6 +350,36 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         this.contentUrl = contentUrl;
     }
 
+    /**
+     * @return Comma separated list of tags this content set requires to be
+     *         enabled.
+     */
+    public String getRequiredTags() {
+        return requiredTags;
+    }
+
+    /**
+     * @param requiredTags Comma separated list of tags this content set
+     *        requires.
+     */
+    public void setRequiredTags(String requiredTags) {
+        this.requiredTags = requiredTags;
+    }
+
+    /**
+     * @return the releaseVer
+     */
+    public String getReleaseVer() {
+        return releaseVer;
+    }
+
+    /**
+     * @param releaseVer the releaseVer to set
+     */
+    public void setReleaseVer(String releaseVer) {
+        this.releaseVer = releaseVer;
+    }
+
     public String getGpgUrl() {
         return gpgUrl;
     }
@@ -487,26 +388,107 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         this.gpgUrl = gpgUrl;
     }
 
-    /**
-     * @param modifiedProductIds the modifiedProductIds to set
-     */
-    public void setModifiedProductIds(Set<String> modifiedProductIds) {
-        this.modifiedProductIds = modifiedProductIds;
+    public Long getMetadataExpire() {
+        return metadataExpire;
+    }
+
+    public void setMetadataExpire(Long metadataExpire) {
+        this.metadataExpire = metadataExpire;
     }
 
     /**
-     * @return the modifiedProductIds
+     * Retrieves the collection of IDs representing products that are modified by this content. If
+     * the modified product IDs have not yet been defined, this method returns an empty collection.
+     *
+     * @return
+     *  the modified product IDs of the content
      */
     public Set<String> getModifiedProductIds() {
-        return modifiedProductIds;
+        return Collections.unmodifiableSet(this.modifiedProductIds);
     }
 
-    public String getType() {
-        return type;
+    /**
+     * Adds the specified product ID as a product ID to be modified by this content. If the product
+     * ID is already modified in by this content, it will not be added again.
+     *
+     * @param productId
+     *  The product ID to add as a modified product ID to this content
+     *
+     * @throws IllegalArgumentException
+     *  if productId is null
+     *
+     * @return
+     *  true if the product ID was added successfully; false otherwise
+     */
+    public boolean addModifiedProductId(String productId) {
+        if (productId == null) {
+            throw new IllegalArgumentException("productId is null");
+        }
+
+        return this.modifiedProductIds.add(productId);
     }
 
-    public void setType(String type) {
-        this.type = type;
+    /**
+     * Removes the specified product ID from the collection of product IDs to be modified by the
+     * content represented by this content. If the product ID is not modified by this content, this
+     * method does nothing.
+     *
+     * @param productId
+     *  The product ID to remove from the modified product IDs on this content
+     *
+     * @throws IllegalArgumentException
+     *  if productId is null
+     *
+     * @return
+     *  true if the product ID was removed successfully; false otherwise
+     */
+    public boolean removeModifiedProductId(String productId) {
+        if (productId == null) {
+            throw new IllegalArgumentException("productId is null");
+        }
+
+        return this.modifiedProductIds != null ? this.modifiedProductIds.remove(productId) : false;
+    }
+
+    /**
+     * Sets the modified product IDs for this content. Any previously existing modified product IDs
+     * will be cleared before assigning the given product IDs.
+     *
+     * @param modifiedProductIds
+     *  A collection of product IDs to be modified by the content content, or null to clear the
+     *  existing modified product IDs
+     *
+     * @return
+     *  a reference to this DTO
+     */
+    public Content setModifiedProductIds(Collection<String> modifiedProductIds) {
+        this.modifiedProductIds.clear();
+
+        if (modifiedProductIds != null) {
+            this.modifiedProductIds.addAll(modifiedProductIds);
+        }
+
+        return this;
+    }
+
+    public void setArches(String arches) {
+        this.arches = arches;
+    }
+
+    public String getArches() {
+        return arches;
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Content setLocked(boolean locked) {
+        this.locked = locked;
+        return this;
+    }
+
+    @XmlTransient
+    public boolean isLocked() {
+        return this.locked != null && this.locked;
     }
 
     @Override
@@ -686,71 +668,9 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     //     return builder.toHashCode();
     // }
 
-    public Long getMetadataExpire() {
-        return metadataExpire;
-    }
-
-    public void setMetadataExpire(Long metadataExpire) {
-        this.metadataExpire = metadataExpire;
-    }
-
-    /**
-     * @return Comma separated list of tags this content set requires to be
-     *         enabled.
-     */
-    public String getRequiredTags() {
-        return requiredTags;
-    }
-
-    /**
-     * @param requiredTags Comma separated list of tags this content set
-     *        requires.
-     */
-    public void setRequiredTags(String requiredTags) {
-        this.requiredTags = requiredTags;
-    }
-
-    public static String ueberContentLabelForProduct(Product p) {
-        return p.getUuid() + "_" + UEBER_CONTENT_NAME;
-    }
-
-    /**
-     * @param releaseVer the releaseVer to set
-     */
-    public void setReleaseVer(String releaseVer) {
-        this.releaseVer = releaseVer;
-    }
-
-    /**
-     * @return the releaseVer
-     */
-    public String getReleaseVer() {
-        return releaseVer;
-    }
-
-    public void setArches(String arches) {
-        this.arches = arches;
-    }
-
-    public String getArches() {
-        return arches;
-    }
-
     @Override
     public String toString() {
         return "Content [id: " + getId() + ", label: " + getLabel() + "]";
-    }
-
-    @XmlTransient
-    @JsonIgnore
-    public Content setLocked(boolean locked) {
-        this.locked = locked;
-        return this;
-    }
-
-    @XmlTransient
-    public boolean isLocked() {
-        return this.locked != null && this.locked;
     }
 
     @PrePersist

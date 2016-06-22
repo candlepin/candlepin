@@ -234,6 +234,10 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         // As an added bonus, it's quicker, but we'll have to be mindful of the memory vs backend
         // state divergence.
 
+        if (owners.size() > AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE) {
+            throw new UnsupportedOperationException("Large owner collections are currently unsupported");
+        }
+
         Session session = this.currentSession();
         Set<String> ownerIds = new HashSet<String>();
 
@@ -339,6 +343,10 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         // should we also go through the DB and scrub references to a product by RHID? Things like
         // installed products and whatnot could end up lingering, pointing to a product which would
         // no longer exist.
+
+        if (owners.size() > AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE) {
+            throw new UnsupportedOperationException("Large owner collections are currently unsupported");
+        }
 
         Session session = this.currentSession();
         Set<String> ownerIds = new HashSet<String>();

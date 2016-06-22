@@ -273,6 +273,27 @@ public class ProductData extends CandlepinDTO {
     }
 
     /**
+     * Checks if the given attribute has been defined on this product DTO.
+     *
+     * @param key
+     *  The key (name) of the attribute to lookup
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  true if the attribute is defined for this product; false otherwise
+     */
+    @XmlTransient
+    public boolean hasAttribute(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        return this.getAttribute(key) != null;
+    }
+
+    /**
      * Adds the specified product attribute DTO to the this product DTO. If the attribute has
      * already been added to this product, the existing value will be overwritten.
      *
@@ -283,53 +304,72 @@ public class ProductData extends CandlepinDTO {
      *  if attribute is null or incomplete
      *
      * @return
-     *  a reference to this DTO
+     *  true if adding the attribute resulted in a change of this product; false otherwise
      */
-    public ProductData addAttribute(ProductAttributeData attribute) {
+    public boolean addAttribute(ProductAttributeData attribute) {
         if (attribute == null) {
             throw new IllegalArgumentException("attribute is null");
         }
 
         if (attribute.getName() == null) {
-            throw new IllegalArgumentException("attribute name is null");
+            throw new IllegalArgumentException("attribute name/key is null");
         }
+
+        boolean changed = false;
 
         if (this.attributes == null) {
             this.attributes = new LinkedList<ProductAttributeData>();
-            this.attributes.add(attribute);
+            changed = this.attributes.add(attribute);
         }
         else {
             // TODO:
             // Replace this with a map of attribute key/value pairs so we don't have this mess
-            this.removeAttribute(attribute.getName());
-            this.attributes.add(attribute);
+            boolean matched = false;
+            Set<ProductAttributeData> remove = new HashSet<ProductAttributeData>();
+
+            for (ProductAttributeData attribdata : this.attributes) {
+                if (attribute.getName().equals(attribdata.getName())) {
+                    matched = true;
+
+                    if (!(attribdata.getValue() != null ? attribdata.getValue().equals(attribute.getValue()) :
+                        attribute.getValue() == null)) {
+
+                        remove.add(attribdata);
+                    }
+                }
+            }
+
+            if (!matched || remove.size() > 0) {
+                this.attributes.removeAll(remove);
+                changed = this.attributes.add(attribute);
+            }
         }
 
-        return this;
+        return changed;
     }
 
     /**
-     * Adds the specified attribute to this product DTO. If the attribute has already been added to
+     * Sets the specified attribute for this product DTO. If the attribute has already been set for
      * this product, the existing value will be overwritten.
      *
-     * @param attribute
-     *  The name or key of the attribute to add
+     * @param key
+     *  The name or key of the attribute to set
      *
      * @param value
      *  The value to assign to the attribute
      *
      * @throws IllegalArgumentException
-     *  if attribute is null
+     *  if key is null
      *
      * @return
-     *  a reference to this DTO
+     *  true if adding the attribute resulted in a change of this product; false otherwise
      */
-    public ProductData addAttribute(String attribute, String value) {
-        if (attribute == null) {
-            throw new IllegalArgumentException("attribute is null");
+    public boolean setAttribute(String key, String value) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
         }
 
-        return this.addAttribute(new ProductAttributeData(attribute, value));
+        return this.addAttribute(new ProductAttributeData(key, value));
     }
 
     /**
@@ -344,9 +384,9 @@ public class ProductData extends CandlepinDTO {
      *  if attribute is null or incomplete
      *
      * @return
-     *  a reference to this DTO
+     *  true if the attribute was removed successfully; false otherwise
      */
-    public ProductData removeAttribute(ProductAttributeData attribute) {
+    public boolean removeAttribute(ProductAttributeData attribute) {
         if (attribute == null) {
             throw new IllegalArgumentException("attribute is null");
         }
@@ -361,33 +401,34 @@ public class ProductData extends CandlepinDTO {
     /**
      * Removes the product attribute with the given attribute key from this product DTO.
      *
-     * @param attribute
+     * @param key
      *  The name/key of the attribute to remove
      *
      * @throws IllegalArgumentException
-     *  if attribute is null
+     *  if key is null
      *
      * @return
-     *  a reference to this DTO
+     *  true if the attribute was removed successfully; false otherwise
      */
-    public ProductData removeAttribute(String attribute) {
-        if (attribute == null) {
-            throw new IllegalArgumentException("attribute is null");
+    public boolean removeAttribute(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
         }
 
+        boolean changed = false;
         Set<ProductAttributeData> remove = new HashSet<ProductAttributeData>();
 
         if (this.attributes != null) {
             for (ProductAttributeData attribdata : this.attributes) {
-                if (attribute.equals(attribdata.getName())) {
+                if (key.equals(attribdata.getName())) {
                     remove.add(attribdata);
                 }
             }
 
-            this.attributes.removeAll(remove);
+            changed = this.attributes.removeAll(remove);
         }
 
-        return this;
+        return changed;
     }
 
     /**
@@ -426,6 +467,55 @@ public class ProductData extends CandlepinDTO {
      */
     public Collection<ProductContentData> getProductContent() {
         return this.content != null ? Collections.unmodifiableCollection(this.content) : null;
+    }
+
+    /**
+     * Retrieves the product content for the specified content ID. If no such content has been
+     * assocaited with this product DTO, this method returns null.
+     *
+     * @param contentId
+     *  The ID of the content to retrieve
+     *
+     * @throws IllegalArgumentException
+     *  if contentId is null
+     *
+     * @return
+     *  the content associated with this DTO using the given ID, or null if such content does not
+     *  exist
+     */
+    public ProductContentData getProductContent(String contentId) {
+        if (contentId == null) {
+            throw new IllegalArgumentException("contentId is null");
+        }
+
+        for (ProductContentData pcd : this.content) {
+            if (pcd.getContent() != null && contentId.equals(pcd.getContent().getId())) {
+                return pcd;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Checks if any content with the given content ID has been associated with this product.
+     *
+     * @param contentId
+     *  The ID of the content to check
+     *
+     * @throws IllegalArgumentException
+     *  if contentId is null
+     *
+     * @return
+     *  true if any content with the given content ID has been associated with this product; false
+     *  otherwise
+     */
+    public boolean hasContent(String contentId) {
+        if (contentId == null) {
+            throw new IllegalArgumentException("contentId is null");
+        }
+
+        return this.getProductContent(contentId) != null;
     }
 
     /**
@@ -722,7 +812,20 @@ public class ProductData extends CandlepinDTO {
             null;
     }
 
-    public ProductData addDependentProductId(String productId) {
+    /**
+     * Adds the ID of the specified product as a dependent product of this product. If the product
+     * is already a dependent product, it will not be added again.
+     *
+     * @param productId
+     *  The ID of the product to add as a dependent product
+     *
+     * @throws IllegalArgumentException
+     *  if productId is null
+     *
+     * @return
+     *  true if the dependent product was added successfully; false otherwise
+     */
+    public boolean addDependentProductId(String productId) {
         if (productId == null) {
             throw new IllegalArgumentException("productId is null");
         }
@@ -731,16 +834,24 @@ public class ProductData extends CandlepinDTO {
             this.dependentProductIds = new HashSet<String>();
         }
 
-        this.dependentProductIds.add(productId);
-        return this;
+        return this.dependentProductIds.add(productId);
     }
 
-    public ProductData removeDependentProductId(String productId) {
-        if (this.dependentProductIds != null) {
-            this.dependentProductIds.remove(productId);
-        }
-
-        return this;
+    /**
+     * Removes the specified product as a dependent product of this product. If the product is not
+     * dependent on this product, this method does nothing.
+     *
+     * @param productId
+     *  The ID of the product to add as a dependent product
+     *
+     * @throws IllegalArgumentException
+     *  if productId is null
+     *
+     * @return
+     *  true if the dependent product was removed successfully; false otherwise
+     */
+    public boolean removeDependentProductId(String productId) {
+        return this.dependentProductIds != null ? this.dependentProductIds.remove(productId) : false;
     }
 
     /**

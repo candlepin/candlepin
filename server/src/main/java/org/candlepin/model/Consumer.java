@@ -506,7 +506,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         return "/consumers/" + getUuid();
     }
 
-    @Override
     public void setHref(String href) {
         /*
          * No-op, here to aid with updating objects which have nested objects that were

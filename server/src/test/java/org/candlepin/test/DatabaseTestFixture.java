@@ -46,6 +46,7 @@ import org.candlepin.model.EventCurator;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.OwnerProductCurator;
@@ -123,6 +124,7 @@ public class DatabaseTestFixture {
     @Inject protected EventCurator eventCurator;
     @Inject protected IdentityCertificateCurator identityCertificateCurator;
     @Inject protected ImportRecordCurator importRecordCurator;
+    @Inject protected OwnerContentCurator ownerContentCurator;
     @Inject protected OwnerCurator ownerCurator;
     @Inject protected OwnerInfoCurator ownerInfoCurator;
     @Inject protected OwnerProductCurator ownerProductCurator;
@@ -352,6 +354,44 @@ public class DatabaseTestFixture {
         return toReturn;
     }
 
+    protected Environment createEnvironment(Owner owner, String id) {
+        String name = "test-env-" + TestUtil.randomInt();
+        return this.createEnvironment(owner, name, name, null, null, null);
+    }
+
+    protected Environment createEnvironment(Owner owner, String id, String name) {
+        return this.createEnvironment(owner, id, name, description, null, null);
+    }
+
+    protected Environment createEnvironment(Owner owner, String id, String name, String description,
+        Collection<Consumer> consumers, Collection<Content> content) {
+
+        Environment environment = new Environment(id, name, owner);
+        environment.setDescription(description);
+
+        if (consumers != null) {
+            // Ugly hack to deal with how environment currently encapsulates its collections
+            if (!consumers instanceof List) {
+                consumers = new LinkedList<Consumer>(consumers);
+            }
+
+            environment.setConsumers((List<Consumer>) consumers);
+        }
+
+        if (content != null) {
+            for (Content elem : content) {
+                EnvironmentContent envContent = new EnvironmentContent(environment, elem, true);
+
+                // Impl note:
+                // At the time of writing, this line is redundant. But if we ever fix environment,
+                // this will be good to have as a backup.
+                environment.getEnvironmentContent().add(envContent);
+            }
+        }
+
+        return this.environmentCurator.create(environment);
+    }
+
     protected Principal setupPrincipal(Owner owner, Access role) {
         return setupPrincipal("someuser", owner, role);
     }
@@ -359,8 +399,7 @@ public class DatabaseTestFixture {
     protected Principal setupPrincipal(String username, Owner owner, Access verb) {
         OwnerPermission p = new OwnerPermission(owner, verb);
         // Only need a detached owner permission here:
-        Principal ownerAdmin = new UserPrincipal(username, Arrays.asList(new Permission[] {
-            p}), false);
+        Principal ownerAdmin = new UserPrincipal(username, Arrays.asList(new Permission[] {p}), false);
         setupPrincipal(ownerAdmin);
         return ownerAdmin;
     }

@@ -30,6 +30,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -67,7 +68,7 @@ public class PoolHelper {
         return allAttributes;
     }
 
-    public static Map<String, String> getFlattenedAttributes(Set<? extends Attribute> attrs) {
+    public static Map<String, String> getFlattenedAttributes(Collection<? extends Attribute> attrs) {
         Map<String, String> flattened = new HashMap<String, String>();
         for (Attribute a : attrs) {
             flattened.put(a.getName(), a.getValue());

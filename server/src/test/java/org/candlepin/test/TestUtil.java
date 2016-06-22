@@ -129,17 +129,12 @@ public class TestUtil {
         return String.valueOf(randomInt());
     }
 
-    public static Content createContent(String id) {
-        return createContent(TestUtil.createOwner(), id);
+    public static Content createContent( String id) {
+        return createContent(id, "test-content-" + randomInt());
     }
 
-    public static Content createContent(Owner owner, String id) {
-        return createContent(owner, id, "test-content-" + randomInt());
-    }
-
-    public static Content createContent(Owner owner, String id, String name) {
+    public static Content createContent(String id, String name) {
         return new Content(
-            owner,
             name,
             id,
             name,

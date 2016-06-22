@@ -997,7 +997,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * @return
      *  The attributes associated with the marketing product (SKU) for this pool
      */
-    public Set<ProductAttribute> getProductAttributes() {
+    public Collection<ProductAttribute> getProductAttributes() {
         return this.getProduct() != null ?
             this.getProduct().getAttributes() :
             this.productAttributes;
@@ -1011,7 +1011,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * @return
      *  The attributes associated with the derived product (???) for this pool
      */
-    public Set<ProductAttribute> getDerivedProductAttributes() {
+    public Collection<ProductAttribute> getDerivedProductAttributes() {
         return this.getDerivedProduct() != null ?
             this.getDerivedProduct().getAttributes() :
             new HashSet<ProductAttribute>();

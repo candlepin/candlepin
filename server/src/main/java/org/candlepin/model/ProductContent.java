@@ -53,13 +53,13 @@ public class ProductContent extends AbstractHibernateObject {
     @NotNull
     private Content content;
 
-    private Boolean enabled;
+    private boolean enabled;
 
     public ProductContent() {
         // Intentionally left empty
     }
 
-    public ProductContent(Product product, Content content, Boolean enabled) {
+    public ProductContent(Product product, Content content, boolean enabled) {
         this.setContent(content);
         this.setProduct(product);
         this.setEnabled(enabled);
@@ -103,14 +103,14 @@ public class ProductContent extends AbstractHibernateObject {
     /**
      * @param enabled the enabled to set
      */
-    public void setEnabled(Boolean enabled) {
+    public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
 
     /**
      * @return the enabled
      */
-    public Boolean isEnabled() {
+    public boolean isEnabled() {
         return enabled;
     }
 

@@ -23,18 +23,22 @@ import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.UniqueIdGenerator;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.LinkedList;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -64,27 +68,30 @@ public class OwnerContentResource {
     private static Logger log = LoggerFactory.getLogger(OwnerContentResource.class);
 
     private ContentCurator contentCurator;
-    private I18n i18n;
-    private UniqueIdGenerator idGenerator;
+    private ContentManager contentManager;
     private EnvironmentContentCurator envContentCurator;
+    private I18n i18n;
     private OwnerCurator ownerCurator;
+    private OwnerContentCurator ownerContentCurator;
     private PoolManager poolManager;
     private ProductCurator productCurator;
-    private ContentManager contentManager;
+    private UniqueIdGenerator idGenerator;
 
     @Inject
-    public OwnerContentResource(ContentCurator contentCurator, I18n i18n, UniqueIdGenerator idGenerator,
-        EnvironmentContentCurator envContentCurator, PoolManager poolManager,
-        ProductCurator productCurator, OwnerCurator ownerCurator, ContentManager contentManager) {
+    public OwnerContentResource(ContentCurator contentCurator, ContentManager contentManager,
+        EnvironmentContentCurator envContentCurator, I18n i18n, OwnerCurator ownerCurator,
+        OwnerContentCurator ownerContentCurator, PoolManager poolManager, ProductCurator productCurator,
+        UniqueIdGenerator idGenerator) {
 
-        this.i18n = i18n;
         this.contentCurator = contentCurator;
-        this.idGenerator = idGenerator;
+        this.contentManager = contentManager;
         this.envContentCurator = envContentCurator;
+        this.i18n = i18n;
+        this.ownerCurator = ownerCurator;
+        this.ownerContentCurator = ownerContentCurator;
         this.poolManager = poolManager;
         this.productCurator = productCurator;
-        this.ownerCurator = ownerCurator;
-        this.contentManager = contentManager;
+        this.idGenerator = idGenerator;
     }
 
     /**
@@ -151,36 +158,41 @@ public class OwnerContentResource {
      * @return
      *  the newly created and/or merged Content object.
      */
-    private Content createContentImpl(Owner owner, Content content) {
+    private Content createContentImpl(Owner owner, ContentData content) {
         // TODO: check if arches have changed ??
 
-        content.addOwner(owner);
+        Content entity = null;
 
         if (content.getId() == null || content.getId().trim().length() == 0) {
             content.setId(this.idGenerator.generateId());
-            content = this.contentManager.createContent(content, owner);
+
+            entity = this.contentManager.createContent(content, owner);
         }
         else {
-            Content lookedUp = this.contentCurator.lookupById(owner, content.getId());
+            Content existing = this.ownerContentCurator.getContentById(owner, content.getId());
 
-            if (lookedUp != null) {
-                content = this.contentManager.updateContent(content, owner, true);
+            if (existing != null) {
+                entity = this.contentManager.updateContent(existing, content, owner, true);
             }
             else {
-                content = this.contentManager.createContent(content, owner);
+                entity = this.contentManager.createContent(content, owner);
             }
         }
 
-        return content;
+        return entity;
     }
 
     @ApiOperation(notes = "Creates a Content", value = "createContent")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Content createContent(@PathParam("owner_key") String ownerKey, Content content) {
+    public ContentData createContent(@PathParam("owner_key") String ownerKey,
+        ContentData content) {
+
         Owner owner = this.getOwnerByKey(ownerKey);
-        return this.createContentImpl(owner, content);
+        Content entity = this.createContentImpl(owner, content);
+
+        return entity.toDTO();
     }
 
     @ApiOperation(notes = "Creates Contents in bulk", value = "createBatchContent")
@@ -188,14 +200,17 @@ public class OwnerContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/batch")
-    public List<Content> createBatchContent(@PathParam("owner_key") String ownerKey,
-        List<Content> contents) {
+    @Transactional
+    public Collection<ContentData> createBatchContent(@PathParam("owner_key") String ownerKey,
+        List<ContentData> contents) {
 
-        List<Content> result = new ArrayList<Content>();
+        Collection<ContentData> result = new LinkedList<ContentData>();
         Owner owner = this.getOwnerByKey(ownerKey);
 
-        for (Content content : contents) {
-            result.add(this.createContentImpl(owner, content));
+        for (ContentData content : contents) {
+            Content entity = this.createContentImpl(owner, content);
+
+            result.add(entity.toDTO());
         }
 
         return result;
@@ -206,18 +221,19 @@ public class OwnerContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")
-    public Content updateContent(@PathParam("owner_key") String ownerKey,
+    public ContentData updateContent(@PathParam("owner_key") String ownerKey,
         @PathParam("content_id") String contentId,
-        Content content) {
+        ContentData content) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Content existing  = this.getContent(ownerKey, contentId);
 
         if (existing.isLocked()) {
-            throw new ForbiddenException(i18n.tr("content \"{1}\" is locked", content.getId()));
+            throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", content.getId()));
         }
 
-        return this.contentManager.updateContent(existing.merge(content), owner, true);
+        existing = this.contentManager.updateContent(existing, content, owner, true);
+        return existing.toDTO();
     }
 
     @ApiOperation(notes = "Deletes a Content", value = "remove")
@@ -231,7 +247,7 @@ public class OwnerContentResource {
         Content content = this.getContent(ownerKey, contentId);
 
         if (content.isLocked()) {
-            throw new ForbiddenException(i18n.tr("content \"{1}\" is locked", content.getId()));
+            throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", content.getId()));
         }
 
         this.contentManager.removeContent(content, owner, true);
