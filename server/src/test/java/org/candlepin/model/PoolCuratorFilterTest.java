@@ -51,21 +51,25 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
     }
 
     private Pool createSearchPools() {
-        Content content = new Content(
-            owner, "Content One", "content1", "C-Label One", "ctype", "content vendor one",
-            "www.content.com", "gpgurl", "x86"
-        );
+        Content content = TestUtil.createContent("content1", "Content One");
+        content.setLabel("C-Label One");
+        content.setType("ctype");
+        content.setVendor("content vendor one");
+        content.setContentUrl("www.content.com");
+        content.setGpgUrl("gpgurl");
+        content.setArches("x86");
+
         this.contentCurator.create(content);
 
         Product searchProduct = TestUtil.createProduct("awesomeos-server", "Awesome OS Server Premium");
         searchProduct.addAttribute(new ProductAttribute("support_level", "CustomSupportLevel"));
         searchProduct = this.createProduct(searchProduct, owner);
 
-        Pool searchPool = createPool(owner, searchProduct, 100L,
-            TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));
+        Pool searchPool = createPool(owner, searchProduct, 100L, TestUtil.createDate(2005, 3, 2),
+            TestUtil.createDate(2050, 3, 2));
 
         Product provided = TestUtil.createProduct("101111", "Server Bits");
-        provided.addContent(content);
+        provided.addContent(content, true);
         provided = this.createProduct(provided, owner);
 
         searchPool.addProvidedProduct(provided);
@@ -81,8 +85,8 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
 
         // Create another we don't intend to see in the results:
         Product hideProduct = this.createProduct("hidden-product", "Not-So-Awesome OS Home Edition", owner);
-        hidePool = createPool(owner, hideProduct, 100L,
-                TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));
+        hidePool = createPool(owner, hideProduct, 100L, TestUtil.createDate(2005, 3, 2),
+            TestUtil.createDate(2050, 3, 2));
 
         provided = this.createProduct("101", "Workstation Bits", owner);
         hidePool.addProvidedProduct(provided);

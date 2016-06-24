@@ -23,6 +23,7 @@ import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.impl.BouncyCastlePKIReader;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
@@ -59,37 +60,46 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
 
     @Test
     public void validProduct() {
-        Owner owner = new Owner("Example-Corporation");
-        Product product = new Product("50", "Test Product", "Standard", "1", "x86_64", "Base");
+        Owner owner = TestUtil.createOwner("Example-Corporation");
+        Product product = this.createProduct("50", "Test Product", "Standard", "1", "x86_64", "Base");
 
-        this.ownerCurator.create(owner);
-
-        ProductCertificate cert = createCert(product);
+        ProductCertificate cert = this.createCert(owner, product);
         Assert.assertEquals(product, cert.getProduct());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void noHashCreation() {
-        Owner owner = new Owner("Example-Corporation");
+        Owner owner = TestUtil.createOwner("Example-Corporation");
+        Product product = TestUtil.createProduct("thin", "Not Much Here");
 
-        this.ownerCurator.create(owner);
-
-        createCert(new Product("thin", "Not Much Here"));
+        createCert(owner, product);
     }
 
     private ProductCertificate createDummyCert() {
-        Owner owner = new Owner("Example-Corporation");
-        Product product = new Product("50", "Test Product", "Standard", "1", "x86_64", "Base");
+        Owner owner = TestUtil.createOwner("Example-Corporation");
+        Product product = this.createProduct("50", "Test Product", "Standard", "1", "x86_64", "Base");
 
-        this.ownerCurator.create(owner);
-
-        return createCert(product);
+        return createCert(owner, product);
     }
 
-    private ProductCertificate createCert(Product product) {
+    private ProductCertificate createCert(Owner owner, Product product) {
+        this.ownerCurator.create(owner);
         this.productCurator.create(product);
 
-        return this.productAdapter.getProductCertificate(product);
+        return this.productAdapter.getProductCertificate(owner, product.getId());
+    }
+
+    private Product createProduct(String productId, String name, String variant, String version, String arch,
+        String type) {
+
+        Product product = TestUtil.createProduct(productId, name);
+
+        product.setAttribute("version", version);
+        product.setAttribute("variant", variant);
+        product.setAttribute("type", type);
+        product.setAttribute("arch", arch);
+
+        return product;
     }
 
     private static class ProductCertCreationModule extends AbstractModule {

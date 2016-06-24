@@ -27,7 +27,11 @@ import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ContentData;
+import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.service.UniqueIdGenerator;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -36,6 +40,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.LinkedList;
@@ -48,7 +54,10 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -117,25 +126,24 @@ public class OwnerContentResource {
         return owner;
     }
 
-    @ApiOperation(notes = "Retrieves list of Content", value = "list")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Content> list(@Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
-        Owner owner = this.getOwnerByKey(ownerKey);
-        return contentCurator.listByOwner(owner);
-    }
-
-    @ApiOperation(notes = "Retrieves a single Content", value = "getContent")
-    @ApiResponses({ @ApiResponse(code = 400, message = "") })
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{content_id}")
-    public Content getContent(
-        @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
-        @PathParam("content_id") String contentId) {
-
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Content content = this.contentCurator.lookupById(owner, contentId);
+    /**
+     * Retrieves the content entity with the given content ID for the specified owner. If a
+     * matching entity could not be found, this method throws a NotFoundException.
+     *
+     * @param owner
+     *  The owner in which to search for the content
+     *
+     * @param contentId
+     *  The Red Hat ID of the content to retrieve
+     *
+     * @throws NotFoundException
+     *  If a content with the specified Red Hat ID could not be found
+     *
+     * @return
+     *  the content entity with the given owner and content ID
+     */
+    protected Content fetchContent(Owner owner, String contentId) {
+        Content content = this.ownerContentCurator.getContentById(owner, contentId);
 
         if (content == null) {
             throw new NotFoundException(
@@ -144,6 +152,48 @@ public class OwnerContentResource {
         }
 
         return content;
+    }
+
+    @ApiOperation(notes = "Retrieves list of Content", value = "list")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response list(@Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
+        final Owner owner = this.getOwnerByKey(ownerKey);
+        final Collection<Content> contents = this.ownerContentCurator.getContentByOwner(owner);
+        final ObjectMapper mapper = new JsonProvider(true)
+            .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
+
+        StreamingOutput output = new StreamingOutput() {
+            @Override
+            public void write(OutputStream stream) throws IOException, WebApplicationException {
+                JsonGenerator generator = mapper.getJsonFactory().createGenerator(stream);
+                generator.writeStartArray();
+
+                for (Content content : contents) {
+                    mapper.writeValue(generator, content.toDTO());
+                }
+
+                generator.writeEndArray();
+                generator.flush();
+            }
+        };
+
+        return Response.ok(output).build();
+    }
+
+    @ApiOperation(notes = "Retrieves a single Content", value = "getContent")
+    @ApiResponses({ @ApiResponse(code = 400, message = "") })
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{content_id}")
+    public ContentData getContent(
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
+        @PathParam("content_id") String contentId) {
+
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Content content = this.fetchContent(owner, contentId);
+
+        return content.toDTO();
     }
 
     /**
@@ -172,6 +222,10 @@ public class OwnerContentResource {
             Content existing = this.ownerContentCurator.getContentById(owner, content.getId());
 
             if (existing != null) {
+                if (existing.isLocked()) {
+                    throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));
+                }
+
                 entity = this.contentManager.updateContent(existing, content, owner, true);
             }
             else {
@@ -226,10 +280,10 @@ public class OwnerContentResource {
         ContentData content) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Content existing  = this.getContent(ownerKey, contentId);
+        Content existing  = this.fetchContent(owner, contentId);
 
         if (existing.isLocked()) {
-            throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", content.getId()));
+            throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));
         }
 
         existing = this.contentManager.updateContent(existing, content, owner, true);
@@ -244,7 +298,7 @@ public class OwnerContentResource {
         @PathParam("content_id") String contentId) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Content content = this.getContent(ownerKey, contentId);
+        Content content = this.fetchContent(owner, contentId);
 
         if (content.isLocked()) {
             throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", content.getId()));

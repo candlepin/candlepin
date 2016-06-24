@@ -171,10 +171,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub = new Subscription(owner, prod,
-            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
-            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
         sub.setId(Util.generateDbUUID());
+        sub.setQuantity(2000L);
+        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub);
 
         // Trigger the refresh:
@@ -201,10 +203,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub = new Subscription(owner, prod,
-            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
-            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
         sub.setId(Util.generateDbUUID());
+        sub.setQuantity(2000L);
+        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub);
 
         assertTrue(pool.getQuantity() < sub.getQuantity());
@@ -231,10 +235,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub = new Subscription(owner, prod,
-            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
-            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
         sub.setId(Util.generateDbUUID());
+        sub.setQuantity(2000L);
+        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub);
 
         // Trigger the refresh:
@@ -263,16 +269,20 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub = new Subscription(owner, prod,
-            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
-            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
         sub.setId(Util.generateDbUUID());
+        sub.setQuantity(2000L);
+        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub);
 
-        Subscription sub2 = new Subscription(owner, prod2,
-            new HashSet<Product>(), 800L, TestUtil.createDate(2010, 2, 9),
-            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        Subscription sub2 = TestUtil.createSubscription(owner, prod2, new HashSet<Product>());
         sub2.setId(Util.generateDbUUID());
+        sub2.setQuantity(800L);
+        sub2.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub2.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub2.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub2);
 
         // Trigger the refresh:
@@ -294,10 +304,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub = new Subscription(owner, prod,
-            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
-            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
         sub.setId(Util.generateDbUUID());
+        sub.setQuantity(2000L);
+        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub);
 
         // Trigger the refresh:
@@ -349,10 +361,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub = new Subscription(owner, prod,
-            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
-            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
         sub.setId(Util.generateDbUUID());
+        sub.setQuantity(2000L);
+        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub);
 
         // Trigger the refresh:
@@ -887,11 +901,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub = new Subscription(owner, prod,
-            new HashSet<Product>(), 1000L, TestUtil.createDate(2009, 11, 30),
-            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 10, 10, 30),
-            TestUtil.createDate(2015, 11, 30));
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
         sub.setId(Util.generateDbUUID());
+        sub.setQuantity(1000L);
+        sub.setStartDate(TestUtil.createDate(2009, 11, 30));
+        sub.setEndDate(TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 10, 10, 30));
+        sub.setModified(TestUtil.createDate(2015, 11, 30));
         subscriptions.add(sub);
 
         List<Pool> pools = poolManager.createAndEnrichPools(sub);
@@ -1042,16 +1057,20 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub1 = new Subscription(owner, prod1,
-            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
-            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        Subscription sub1 = TestUtil.createSubscription(owner, prod1, new HashSet<Product>());
         sub1.setId(Util.generateDbUUID());
+        sub1.setQuantity(2000L);
+        sub1.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub1.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub1.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub1);
 
-        Subscription sub2 = new Subscription(owner, prod2,
-            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
-            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        Subscription sub2 = TestUtil.createSubscription(owner, prod2, new HashSet<Product>());
         sub2.setId(Util.generateDbUUID());
+        sub2.setQuantity(2000L);
+        sub2.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub2.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub2.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub2);
 
         // Trigger the refresh:
@@ -1139,7 +1158,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         MultipartInput input = mock(MultipartInput.class);
         Map<String, Object> result = new HashMap<String, Object>();
         List<Subscription> subscriptions = new ArrayList<Subscription>();
-        Subscription subscription = new Subscription();
+        Subscription subscription = TestUtil.createSubscription();
         //expires tomorrow
         subscription.setEndDate(new Date((new Date()).getTime() + (1000 * 60 * 60 * 24)));
         subscriptions.add(subscription);

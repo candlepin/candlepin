@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.*;
 
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 
 import org.junit.Test;
 
@@ -39,12 +40,8 @@ public class ContentTest extends DatabaseTestFixture {
         Owner owner = new Owner("Example-Corporation");
         ownerCurator.create(owner);
 
-        String  contentHash = String.valueOf(
-            Math.abs(Long.valueOf("test-content".hashCode())));
-        Content content = new Content(owner, "test-content", contentHash,
-            "test-content-label", "yum", "test-vendor",
-            "test-content-url", "test-gpg-url",
-            "test-arch1,test-arch2");
+        Content content = TestUtil.createContent("test-content");
+
         HashSet<String> modifiedProductIds = new HashSet<String>();
         modifiedProductIds.add("ProductA");
         modifiedProductIds.add("ProductB");
@@ -65,13 +62,9 @@ public class ContentTest extends DatabaseTestFixture {
     public void testContentWithArches() {
         Owner owner = new Owner("Example-Corporation");
         ownerCurator.create(owner);
-        String  contentHash = String.valueOf(
-            Math.abs(Long.valueOf("test-content-arches".hashCode())));
 
-        Content content = new Content(owner, "test-content-arches", contentHash,
-            "test-content-arches-label", "yum", "test-vendor",
-            "test-content-url", "test-gpg-url", "");
         String arches = "x86_64, i386";
+        Content content = TestUtil.createContent("test_content");
         content.setArches(arches);
         contentCurator.create(content);
 
@@ -81,26 +74,27 @@ public class ContentTest extends DatabaseTestFixture {
 
     @Test
     public void testCreateOrUpdateWithNewLabel() {
+        // TODO:
+        // This test may no longer have meaning with the addition of the content manager
+
         Owner owner = new Owner("Example-Corporation");
         ownerCurator.create(owner);
 
-        Content content = new Content(owner, "Test Content", "100",
-            "test-content-label", "yum", "test-vendor",
-            "test-content-url", "test-gpg-url", "test-arch1");
+        Content content = TestUtil.createContent("test_content");
         contentCurator.create(content);
 
         // Same ID, but label changed:
         String newLabel = "test-content-label-new";
         String newName = "Test Content Updated";
-        Content modifiedContent = new Content(owner, newName, "100",
-            newLabel, "yum", "test-vendor", "test-content-url",
-            "test-gpg-url", "test-arch1");
+        Content modifiedContent = TestUtil.createContent("test_content");
+        modifiedContent.setName(newName);
+        modifiedContent.setLabel(newLabel);
 
         modifiedContent.setUuid(content.getUuid());
 
         contentCurator.merge(modifiedContent);
 
-        content = contentCurator.lookupById(owner, "100");
+        content = contentCurator.lookupById(owner, content.getId());
         assertEquals(newLabel, content.getLabel());
         assertEquals(newName, content.getName());
     }
@@ -108,10 +102,8 @@ public class ContentTest extends DatabaseTestFixture {
     @Test
     public void testLockStateAffectsEquality() {
         Owner owner = new Owner("Example-Corporation");
-        Content c1 = new Content(owner, "Test Content", "100", "test-content-label", "yum",
-            "test-vendor", "test-content-url", "test-gpg-url", "test-arch1");
-        Content c2 = new Content(owner, "Test Content", "100", "test-content-label", "yum",
-            "test-vendor", "test-content-url", "test-gpg-url", "test-arch1");
+        Content c1 = TestUtil.createContent("test_content-1");
+        Content c2 = TestUtil.createContent("test_content-1");
 
         assertEquals(c1, c2);
 
@@ -125,10 +117,8 @@ public class ContentTest extends DatabaseTestFixture {
     @Test
     public void testLockStateAffectsHashCode() {
         Owner owner = new Owner("Example-Corporation");
-        Content c1 = new Content(owner, "Test Content", "100", "test-content-label", "yum",
-            "test-vendor", "test-content-url", "test-gpg-url", "test-arch1");
-        Content c2 = new Content(owner, "Test Content", "100", "test-content-label", "yum",
-            "test-vendor", "test-content-url", "test-gpg-url", "test-arch1");
+        Content c1 = TestUtil.createContent("test_content-1");
+        Content c2 = TestUtil.createContent("test_content-1");
 
         assertEquals(c1.hashCode(), c2.hashCode());
 

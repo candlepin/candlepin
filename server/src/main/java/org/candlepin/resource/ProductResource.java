@@ -25,6 +25,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 
 import com.google.inject.Inject;
@@ -113,9 +114,9 @@ public class ProductResource {
     @Path("/{product_uuid}")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
-    public Product getProduct(@PathParam("product_uuid") String productUuid) {
+    public ProductData getProduct(@PathParam("product_uuid") String productUuid) {
         Product product = this.fetchProduct(productUuid);
-        return product;
+        return product.toDTO();
     }
 
     @ApiOperation(notes = "Retreives a Certificate for a Product", value = "getProductCertificate")
@@ -127,7 +128,10 @@ public class ProductResource {
     public ProductCertificate getProductCertificate(
         @PathParam("product_uuid") String productUuid) {
 
-        Product product = this.getProduct(productUuid);
+        // TODO:
+        // Should this be enabled globally? This will create a cert if it hasn't yet been created.
+
+        Product product = this.fetchProduct(productUuid);
         return this.productCertCurator.getCertForProduct(product);
     }
 
@@ -142,9 +146,9 @@ public class ProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Deprecated
-    public Product createProduct(Product product) {
+    public ProductData createProduct(ProductData product) {
         throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic product write operations are not supported."
+            "Organization-agnostic product write operations are no longer supported."
         ));
     }
 
@@ -159,11 +163,11 @@ public class ProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
     @Deprecated
-    public Product updateProduct(
+    public ProductData updateProduct(
         @PathParam("product_uuid") String productUuid,
-        Product product) {
+        ProductData product) {
         throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic product write operations are not supported."
+            "Organization-agnostic product write operations are no longer supported."
         ));
     }
 
@@ -179,15 +183,14 @@ public class ProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}/batch_content")
     @Deprecated
-    public Product addBatchContent(
+    public ProductData addBatchContent(
         @PathParam("product_uuid") String productUuid,
         Map<String, Boolean> contentMap) {
 
         throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic product write operations are not supported."
+            "Organization-agnostic product write operations are no longer supported."
         ));
     }
-
 
     /**
      * @deprecated Use per-org version
@@ -201,16 +204,15 @@ public class ProductResource {
     @Consumes(MediaType.WILDCARD)
     @Path("/{product_uuid}/content/{content_id}")
     @Deprecated
-    public Product addContent(
+    public ProductData addContent(
         @PathParam("product_uuid") String productUuid,
         @PathParam("content_id") String contentId,
         @QueryParam("enabled") Boolean enabled) {
 
         throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic product write operations are not supported."
+            "Organization-agnostic product write operations are no longer supported."
         ));
     }
-
 
     /**
      * @deprecated Use per-org version
@@ -226,7 +228,7 @@ public class ProductResource {
         @PathParam("content_id") String contentId) {
 
         throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic product write operations are not supported."
+            "Organization-agnostic product write operations are no longer supported."
         ));
     }
 
@@ -243,7 +245,7 @@ public class ProductResource {
         @PathParam("product_uuid") String productUuid) {
 
         throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic product write operations are not supported."
+            "Organization-agnostic product write operations are no longer supported."
         ));
     }
 

@@ -21,6 +21,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.SourceSubscription;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
@@ -67,20 +68,25 @@ public class RefresherTest {
     @Test
     public void testProductOnlyExaminedOnce() {
         Product product = mock(Product.class);
+        ProductData productData = mock(ProductData.class);
+
+        when(product.toDTO()).thenReturn(productData);
 
         refresher.add(product);
         refresher.add(product);
         refresher.run();
 
-        verify(subAdapter, times(1)).getSubscriptions(product);
+        verify(subAdapter, times(1)).getSubscriptions(eq(productData));
     }
 
     @Test
     public void testPoolOnlyExaminedOnceProductAndOwner() {
         Owner owner = TestUtil.createOwner();
         Product product = mock(Product.class);
+        ProductData productData = mock(ProductData.class);
 
         when(product.getUuid()).thenReturn("product id");
+        when(product.toDTO()).thenReturn(productData);
 
         Pool pool = new Pool();
         pool.setSourceSubscription(new SourceSubscription("subId", "master"));
@@ -94,7 +100,7 @@ public class RefresherTest {
         List<Subscription> subscriptions = Util.newList();
         subscriptions.add(subscription);
 
-        when(subAdapter.getSubscriptions(product)).thenReturn(subscriptions);
+        when(subAdapter.getSubscriptions(eq(productData))).thenReturn(subscriptions);
         when(subAdapter.getSubscriptions(owner)).thenReturn(subscriptions);
         when(subAdapter.getSubscription("subId")).thenReturn(subscription);
 
@@ -113,9 +119,13 @@ public class RefresherTest {
     public void testPoolOnlyExaminedOnceTwoProducts() {
         Product product = mock(Product.class);
         Product product2 = mock(Product.class);
+        ProductData productData = mock(ProductData.class);
+        ProductData productData2 = mock(ProductData.class);
 
         when(product.getUuid()).thenReturn("product id");
         when(product2.getUuid()).thenReturn("product id 2");
+        when(product.toDTO()).thenReturn(productData);
+        when(product2.toDTO()).thenReturn(productData2);
 
         Pool pool = new Pool();
         pool.setSourceSubscription(new SourceSubscription("subId", "master"));
@@ -128,8 +138,8 @@ public class RefresherTest {
         List<Subscription> subscriptions = Util.newList();
         subscriptions.add(subscription);
 
-        when(subAdapter.getSubscriptions(product)).thenReturn(subscriptions);
-        when(subAdapter.getSubscriptions(product2)).thenReturn(subscriptions);
+        when(subAdapter.getSubscriptions(eq(productData))).thenReturn(subscriptions);
+        when(subAdapter.getSubscriptions(eq(productData2))).thenReturn(subscriptions);
         when(subAdapter.getSubscription("subId")).thenReturn(subscription);
         when(poolManager.lookupBySubscriptionId("subId")).thenReturn(pools);
 

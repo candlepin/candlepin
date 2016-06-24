@@ -39,12 +39,15 @@ import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
+import org.candlepin.model.dto.ProductData;
+import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
@@ -210,9 +213,17 @@ public class DefaultEntitlementCertServiceAdapterTest {
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config);
 
-        product = new Product("12345", "a product", "variant", "version", ARCH_LABEL, "SVC");
-        largeContentProduct = new Product("67890", "large content product", "variant",
-            "version", ARCH_LABEL, "SVC");
+        product = TestUtil.createProduct("12345", "a product");
+        product.setAttribute("version", "version");
+        product.setAttribute("variant", "variant");
+        product.setAttribute("type", "SVC");
+        product.setAttribute("arch", ARCH_LABEL);
+
+        largeContentProduct = TestUtil.createProduct("67890", "large content product");
+        largeContentProduct.setAttribute("version", "version");
+        largeContentProduct.setAttribute("variant", "variant");
+        largeContentProduct.setAttribute("type", "SVC");
+        largeContentProduct.setAttribute("arch", ARCH_LABEL);
 
         content = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABEL);
@@ -252,26 +263,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABEL));
         }
 
-        subscription = new Subscription(
-            null,
-            product,
-            new HashSet<Product>(),
-            1L,
-            new Date(),
-            new Date(),
-            new Date()
-        );
+        subscription = TestUtil.createSubscription(null, product, new HashSet<Product>());
         subscription.setId("1");
 
-        largeContentSubscription = new Subscription(
-            null,
-            largeContentProduct,
-            new HashSet<Product>(),
-            1L,
-            new Date(),
-            new Date(),
-            new Date()
-        );
+        largeContentSubscription = TestUtil.createSubscription(null, largeContentProduct,
+            new HashSet<Product>());
         largeContentSubscription.setId("2");
 
         owner = new Owner();
@@ -298,7 +294,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         largeContentEntitlement.setPool(largeContentPool);
         largeContentEntitlement.setOwner(owner);
 
-        product.setContent(Collections.singleton(content));
+        product.addContent(content, true);
 
         // when(productAdapter.getProductById(eq(product.getOwner()), eq(product.getId())))
         //     .thenReturn(product);
@@ -307,12 +303,20 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // ).thenReturn(largeContentProduct);
     }
 
-    private Content createContent(String name, String id, String label,
-        String type, String vendor, String url, String gpgUrl, String arches) {
-        Owner owner = new Owner("Example-Corporation");
-        Content c = new Content(owner, name, id, label, type, vendor, url, gpgUrl, arches);
+    private Content createContent(String name, String id, String label, String type, String vendor,
+        String url, String gpgUrl, String arches) {
 
-        return c;
+        Owner owner = TestUtil.createOwner("Example-Corporation");
+        Content content = TestUtil.createContent(id, name);
+
+        content.setLabel(label);
+        content.setType(type);
+        content.setVendor(vendor);
+        content.setContentUrl(url);
+        content.setGpgUrl(gpgUrl);
+        content.setArches(arches);
+
+        return content;
     }
 
     @Test
@@ -346,18 +350,25 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test(expected = CertificateSizeException.class)
     public void tooManyContentSetsAcrossMultipleProducts() throws Exception {
         Set<Product> providedProducts = new HashSet<Product>();
+
         Product pp1 = new Product("12346", "Provided 1", "variant", "version", ARCH_LABEL, "SVC");
-        pp1.setContent(generateContent(100, "PP1"));
+        for (Content content : generateContent(100, "PP1")) {
+            pp1.addContent(content, true);
+        }
+
         providedProducts.add(pp1);
 
         Product pp2 = new Product("12347", "Provided 2", "variant", "version", ARCH_LABEL, "SVC");
-        pp2.setContent(generateContent(100, "PP2"));
+        for (Content content : generateContent(100, "PP2")) {
+            pp2.addContent(content, true);
+        }
+
         providedProducts.add(pp2);
 
-        subscription.setProvidedProducts(providedProducts);
+        // TODO: Is this even needed anymore?
+        // subscription.setProvidedProducts(providedProducts);
 
-        certServiceAdapter.createX509Certificate(entitlement,
-            product, providedProducts,
+        certServiceAdapter.createX509Certificate(entitlement, product, providedProducts,
             getProductModels(product, providedProducts, "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
     }
@@ -379,10 +390,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test(expected = CertificateSizeException.class)
     public void tooManyContentSets() throws Exception {
-        Set<Content> productContent = generateContent(X509ExtensionUtil.V1_CONTENT_LIMIT +
-            1, "TestContent");
+        Set<Content> productContent = generateContent(X509ExtensionUtil.V1_CONTENT_LIMIT + 1, "TestContent");
 
-        product.setContent(productContent);
+        product.setProductContent(null);
+        for (Content content : productContent) {
+            product.addContent(content, true);
+        }
+
         certServiceAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(),
             getProductModels(product, new HashSet<Product>(), "prefix", entitlement),
@@ -600,8 +614,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             Arrays.asList(new String[]{ "product1", "product2" }));
         modContent.setModifiedProductIds(modifiedProductIds);
 
-        modProduct.addContent(normalContent);
-        modProduct.addContent(modContent);
+        modProduct.addContent(normalContent, true);
+        modProduct.addContent(modContent, true);
 
         // First check that if we have no entitlements providing the modified
         // products,
@@ -767,7 +781,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         consumer.setFact("system.certificate_version", "3.2");
         ProductAttribute attr = new ProductAttribute("ram", "4");
-        subscription.getProduct().addAttribute(attr);
+        subscription.getProduct().addAttribute(attr.toDTO());
 
         X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
         X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
@@ -996,15 +1010,19 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // product with no compatible content, but marked as 'ALL' arch
-        Product wrongArchProduct = new Product("12345", "a product", "variant", "version", "ALL", "SVC");
+        Product wrongArchProduct = TestUtil.createProduct("12345", "a product");
+        wrongArchProduct.setAttribute("version", "version");
+        wrongArchProduct.setAttribute("variant", "variant");
+        wrongArchProduct.setAttribute("type", "SVC");
+        wrongArchProduct.setAttribute("arch", "ALL");
 
         // no x86_64, ie ARCH_LABEL
         String wrongArches = "s390x,s390,ppc64,ia64";
         Content wrongArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, wrongArches);
 
-        wrongArchProduct.setContent(Collections.singleton(wrongArchContent));
-        products.clear();
+        wrongArchProduct.addContent(wrongArchContent, true);
+
         products.add(wrongArchProduct);
         setupEntitlements(ARCH_LABEL, "1.0");
 
@@ -1025,10 +1043,14 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // product with a kickstart content
-        Product kickstartProduct = new Product("12345", "a product", "variant", "version", "ALL", "SVC");
+        Product kickstartProduct = TestUtil.createProduct("12345", "a product");
+        kickstartProduct.setAttribute("version", "version");
+        kickstartProduct.setAttribute("variant", "variant");
+        kickstartProduct.setAttribute("type", "SVC");
+        kickstartProduct.setAttribute("arch", "ALL");
 
-        kickstartProduct.setContent(Collections.singleton(kickstartContent));
-        products.clear();
+        kickstartProduct.addContent(kickstartContent, true);
+
         products.add(kickstartProduct);
         setupEntitlements(ARCH_LABEL, "1.0");
 
@@ -1054,9 +1076,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // product with a kickstart content
-        Product fileProduct = new Product("12345", "a product", "variant", "version", "ALL", "SVC");
+        Product fileProduct = TestUtil.createProduct("12345", "a product");
+        fileProduct.setAttribute("version", "version");
+        fileProduct.setAttribute("variant", "variant");
+        fileProduct.setAttribute("type", "SVC");
+        fileProduct.setAttribute("arch", "ALL");
 
-        fileProduct.setContent(Collections.singleton(fileContent));
+        fileProduct.addContent(fileContent, true);
         products.clear();
         products.add(fileProduct);
         setupEntitlements(ARCH_LABEL, "1.0");
@@ -1084,10 +1110,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // product with a kickstart content
-        Product unknownContentTypeProduct = new Product("12345", "a product",
-            "variant", "version", ARCH_LABEL, "SVC");
+        Product unknownContentTypeProduct = TestUtil.createProduct("12345", "a product");
+        unknownContentTypeProduct.setAttribute("version", "version");
+        unknownContentTypeProduct.setAttribute("variant", "variant");
+        unknownContentTypeProduct.setAttribute("type", "SVC");
+        unknownContentTypeProduct.setAttribute("arch", ARCH_LABEL);
 
-        unknownContentTypeProduct.setContent(Collections.singleton(unknownTypeContent));
+        unknownContentTypeProduct.addContent(unknownTypeContent, true);
         products.clear();
         products.add(unknownContentTypeProduct);
         setupEntitlements(ARCH_LABEL, "1.0");
@@ -1116,16 +1145,17 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // product with a kickstart content
-        Product product = new Product("12345", "a product", "variant", "version", ARCH_LABEL, "SVC");
+        Product product = TestUtil.createProduct("12345", "a product");
+        product.setAttribute("version", "version");
+        product.setAttribute("variant", "variant");
+        product.setAttribute("type", "SVC");
+        product.setAttribute("arch", ARCH_LABEL);
 
-        Set<Content> multipleContents = new HashSet<Content>();
-        multipleContents.add(content);
-        multipleContents.add(fileContent);
-        multipleContents.add(kickstartContent);
-        multipleContents.add(unknownTypeContent);
+        product.addContent(content, true);
+        product.addContent(fileContent, true);
+        product.addContent(kickstartContent, true);
+        product.addContent(unknownTypeContent, true);
 
-        product.setContent(multipleContents);
-        products.clear();
         products.add(product);
         setupEntitlements(ARCH_LABEL, "1.0");
 
@@ -1285,22 +1315,25 @@ public class DefaultEntitlementCertServiceAdapterTest {
         consumer.setFact("system.certificate_version", certVersion);
         consumer.setFact("uname.machine", consumerArch);
 
-        Product product = subscription.getProduct();
+        ProductData pdata = subscription.getProduct();
 
-        product.setAttribute("warning_period", "20");
-        product.setAttribute("sockets", "4");
-        product.setAttribute("ram", "8");
-        product.setAttribute("cores", "4");
-        product.setAttribute("management_enabled", "true");
-        product.setAttribute("stacking_id", "45678");
+        pdata.setAttribute("warning_period", "20");
+        pdata.setAttribute("sockets", "4");
+        pdata.setAttribute("ram", "8");
+        pdata.setAttribute("cores", "4");
+        pdata.setAttribute("management_enabled", "true");
+        pdata.setAttribute("stacking_id", "45678");
+
         entitlement.getPool().setAttribute("virt_only", "true");
-        product.setAttribute("support_level", "slevel");
-        product.setAttribute("support_type", "stype");
+        pdata.setAttribute("support_level", "slevel");
+        pdata.setAttribute("support_type", "stype");
+
         subscription.setAccountNumber("account1");
         subscription.setContractNumber("contract1");
         subscription.setOrderNumber("order1");
-        for (ProductContent pc : product.getProductContent()) {
-            pc.setEnabled(false);
+
+        for (ProductContentData pcd : pdata.getProductContent()) {
+            pcd.setEnabled(false);
         }
     }
 
@@ -1365,10 +1398,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // our content with no arch should inherit this arch
-        Product inheritedArchProduct = new Product("12345", "a product",
-            "variant", "version", ARCH_LABEL, "SVC");
-
-        inheritedArchProduct.setContent(Collections.singleton(noArchContent));
+        Product inheritedArchProduct = TestUtil.createProduct("12345", "a product");
+        inheritedArchProduct.setAttribute("version", "version");
+        inheritedArchProduct.setAttribute("variant", "variant");
+        inheritedArchProduct.setAttribute("type", "SVC");
+        inheritedArchProduct.setAttribute("arch", ARCH_LABEL);
+        inheritedArchProduct.addContent(noArchContent, true);
         products.add(inheritedArchProduct);
 
         setupEntitlements(ARCH_LABEL, "3.2");
@@ -1428,14 +1463,18 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // product with no compatible content, but marked as 'ALL' arch
-        Product wrongArchProduct = new Product("12345", "a product", "variant", "version", "ALL", "SVC");
+        Product wrongArchProduct = TestUtil.createProduct("12345", "a product");
+        wrongArchProduct.setAttribute("version", "version");
+        wrongArchProduct.setAttribute("variant", "variant");
+        wrongArchProduct.setAttribute("type", "SVC");
+        wrongArchProduct.setAttribute("arch", "ALL");
 
         // no x86_64, ie ARCH_LABEL
         String wrongArches = "s390x,s390,ppc64,ia64";
         Content wrongArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, wrongArches);
 
-        wrongArchProduct.setContent(Collections.singleton(wrongArchContent));
+        wrongArchProduct.addContent(wrongArchContent, true);
         products.clear();
         products.add(wrongArchProduct);
         setupEntitlements(ARCH_LABEL, "3.2");
@@ -1583,8 +1622,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         KeyPair keyPair = new BouncyCastlePKIUtility(null, null, null).generateNewKeyPair();
         when(keyPairCurator.getConsumerKeyPair(any(Consumer.class))).thenReturn(keyPair);
 
-        when(mockedPKI.getPemEncoded(any(X509Certificate.class))).thenReturn(
-            "".getBytes());
+        when(mockedPKI.getPemEncoded(any(X509Certificate.class))).thenReturn("".getBytes());
         when(mockedPKI.getPemEncoded(any(Key.class))).thenReturn("".getBytes());
 
         final CertificateSerial serial = mock(CertificateSerial.class);
@@ -1611,7 +1649,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testContentExtension() throws IOException {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
-        product.setContent(superContent);
+
+        product.setProductContent(null);
+        for (Content content : superContent) {
+            product.addContent(content, true);
+        }
+
         consumer.setFact("system.certificate_version", "3.2");
         consumer.setFact("uname.machine", "x86_64");
 
@@ -1647,13 +1690,16 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // set of content for an incompatible arch, which should
         // be in the cert, since this consumer has no arch fact therefore
         // should match everything
-        Content wrongArchContent = new Content();
         String wrongArches = "s390";
         String noArchUrl = "/some/place/nice";
-        wrongArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
-                CONTENT_TYPE, CONTENT_VENDOR, noArchUrl, CONTENT_GPG_URL, wrongArches);
-        product.setContent(superContent);
-        product.addContent(wrongArchContent);
+        Content wrongArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL, CONTENT_TYPE,
+            CONTENT_VENDOR, noArchUrl, CONTENT_GPG_URL, wrongArches);
+
+        product.setProductContent(null);
+        for (Content content : superContent) {
+            product.addContent(content, true);
+        }
+        product.addContent(wrongArchContent, true);
 
         consumer.setFact("system.certificate_version", "3.2");
 
@@ -1689,7 +1735,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testSpecificLargeContent() throws IOException {
         Set<Product> products = new HashSet<Product>();
         products.add(largeContentProduct);
-        largeContentProduct.setContent(largeContent);
+
+        largeContentProduct.setProductContent(null);
+        for (Content content : largeContent) {
+            largeContentProduct.addContent(content, true);
+        }
+
         consumer.setFact("system.certificate_version", "3.2");
 
         Set<X509ByteExtensionWrapper> byteExtensions = certServiceAdapter.prepareV3ByteExtensions(
@@ -1724,15 +1775,20 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void testContentExtensionLargeSet() throws IOException {
         Set<Product> products = new HashSet<Product>();
-        Product extremeProduct = new Product("12345", "a product", "variant", "version", ARCH_LABEL, "SVC");
+        Product extremeProduct = TestUtil.createProduct("12345", "a product");
+        extremeProduct.setAttribute("version", "version");
+        extremeProduct.setAttribute("variant", "variant");
+        extremeProduct.setAttribute("type", "SVC");
+        extremeProduct.setAttribute("arch", ARCH_LABEL);
         products.add(extremeProduct);
-        Set<Content> extremeContent = new HashSet<Content>();
+
         for (int i = 0; i < 550; i++) {
             String url = "/content/dist" + i + "/jboss/source" + i;
-            extremeContent.add(createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
-                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABEL));
+            Content content = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
+                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABEL);
+
+            extremeProduct.addContent(content, true);
         }
-        extremeProduct.setContent(extremeContent);
 
         consumer.setUuid("test-consumer");
         consumer.setFact("system.certificate_version", "3.2");

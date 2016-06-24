@@ -101,13 +101,12 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         productLimit.setAttribute("multi-entitlement", "yes");
         productLimit = this.createProduct(productLimit, owner);
 
-        Subscription limitSub = new Subscription(owner,
-            productLimit, new HashSet<Product>(),
-            10L,
-            TestUtil.createDate(2010, 1, 1),
-            TestUtil.createDate(2020, 1, 1),
-            TestUtil.createDate(2000, 1, 1));
+        Subscription limitSub = TestUtil.createSubscription(owner, productLimit, new HashSet<Product>());
         limitSub.setId(Util.generateDbUUID());
+        limitSub.setQuantity(10L);
+        limitSub.setStartDate(TestUtil.createDate(2010, 1, 1));
+        limitSub.setEndDate(TestUtil.createDate(2020, 1, 1));
+        limitSub.setModified(TestUtil.createDate(2000, 1, 1));
         subscriptions.add(limitSub);
 
         limitPools = poolManager.createAndEnrichPools(limitSub);
@@ -118,13 +117,12 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         productUnlimit.setAttribute("multi-entitlement", "yes");
         productUnlimit = this.createProduct(productUnlimit, owner);
 
-        Subscription unlimitSub = new Subscription(owner,
-            productUnlimit, new HashSet<Product>(),
-            10L,
-            TestUtil.createDate(2010, 1, 1),
-            TestUtil.createDate(2020, 1, 1),
-            TestUtil.createDate(2000, 1, 1));
+        Subscription unlimitSub = TestUtil.createSubscription(owner, productUnlimit, new HashSet<Product>());
         unlimitSub.setId(Util.generateDbUUID());
+        unlimitSub.setQuantity(10L);
+        unlimitSub.setStartDate(TestUtil.createDate(2010, 1, 1));
+        unlimitSub.setEndDate(TestUtil.createDate(2020, 1, 1));
+        unlimitSub.setModified(TestUtil.createDate(2000, 1, 1));
         subscriptions.add(unlimitSub);
 
         unlimitPools = poolManager.createAndEnrichPools(unlimitSub);

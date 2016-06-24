@@ -33,6 +33,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
@@ -501,10 +502,8 @@ public class PoolRulesTest {
 
         // The derived provided products of the sub should be promoted to provided products
         // on the unmappedVirtPool
-        assertProvidedProducts(p.getDerivedProvidedProducts(),
-            unmappedVirtPool.getProvidedProducts());
-        assertProvidedProducts(new HashSet<Product>(),
-            unmappedVirtPool.getDerivedProvidedProducts());
+        assertProvidedProducts(p.getDerivedProvidedProducts(), unmappedVirtPool.getProvidedProducts());
+        assertProvidedProducts(new HashSet<Product>(), unmappedVirtPool.getDerivedProvidedProducts());
 
         // Test for BZ 1204311 - Refreshing pools should not change unmapped guest pools
         // Refresh is a no-op in multiorg
@@ -532,10 +531,8 @@ public class PoolRulesTest {
         assert ("true".equals(unmappedVirtPool.getAttributeValue("unmapped_guests_only")));
         assertEquals("derivedProd", unmappedVirtPool.getProductId());
 
-        assertProvidedProducts(s.getDerivedProvidedProducts(),
-            unmappedVirtPool.getProvidedProducts());
-        assertProvidedProducts(new HashSet<Product>(),
-            unmappedVirtPool.getDerivedProvidedProducts());
+        assertProvidedProductsForSub(s.getDerivedProvidedProducts(), unmappedVirtPool.getProvidedProducts());
+        assertProvidedProducts(new HashSet<Product>(), unmappedVirtPool.getDerivedProvidedProducts());
         assertTrue(unmappedVirtPool.getProduct().hasAttribute(DERIVED_ATTR));
     }
 
@@ -551,7 +548,22 @@ public class PoolRulesTest {
             }
             assertTrue(found);
         }
+    }
 
+    private void assertProvidedProductsForSub(Set<ProductData> expectedProducts,
+        Set<Product> providedProducts) {
+
+        assertEquals(expectedProducts.size(), providedProducts.size());
+        for (ProductData expected : expectedProducts) {
+            boolean found = false;
+            for (Product provided : providedProducts) {
+                if (provided.getId().equals(expected.getId())) {
+                    found = true;
+                    break;
+                }
+            }
+            assertTrue(found);
+        }
     }
 
     private Subscription createVirtLimitSubWithDerivedProducts(String productId,
@@ -587,11 +599,11 @@ public class PoolRulesTest {
 
         Subscription s = TestUtil.createSubscription(owner, product);
         s.setQuantity(new Long(quantity));
-        s.setDerivedProduct(derivedProd);
+        s.setDerivedProduct(derivedProd.toDTO());
 
-        Set<Product> derivedProds = Util.newSet();
-        derivedProds.add(derivedProvided1);
-        derivedProds.add(derivedProvided2);
+        Set<ProductData> derivedProds = Util.newSet();
+        derivedProds.add(derivedProvided1.toDTO());
+        derivedProds.add(derivedProvided2.toDTO());
         s.setDerivedProvidedProducts(derivedProds);
 
         return s;

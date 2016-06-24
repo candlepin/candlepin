@@ -29,6 +29,7 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.UniqueIdGenerator;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.X509ExtensionUtil;
 
 import org.junit.Before;
@@ -78,26 +79,35 @@ public class DefaultProductServiceAdapterTest {
 
     @Test
     public void productCertificateExists() {
-        Product p = mock(Product.class);
+        Owner owner = TestUtil.createOwner("test_owner");
+        Product product = TestUtil.createProduct("test_product");
         ProductCertificate cert = mock(ProductCertificate.class);
-        doReturn(cert).when(pcc).findForProduct(eq(p));
-        ProductCertificate result = dpsa.getProductCertificate(p);
+
+        when(opc.getProductById(eq(owner), eq(product.getId()))).thenReturn(product);
+        when(pcc.findForProduct(eq(product))).thenReturn(cert);
+
+        ProductCertificate result = dpsa.getProductCertificate(owner, product.getId());
         verify(pcc, never()).create(eq(cert));
+
         assertEquals(cert, result);
     }
 
     @Test
     public void productCertificateNew() throws Exception {
-        Product p = mock(Product.class);
-        when(p.getId()).thenReturn(someid);
+        Owner owner = TestUtil.createOwner("test_owner");
+        Product product = TestUtil.createProduct("test_product");
+        ProductCertificate cert = mock(ProductCertificate.class);
+
         doAnswer(returnsFirstArg()).when(pcc).create(any(ProductCertificate.class));
-        doReturn(null).when(pcc).findForProduct(eq(p));
+        when(pcc.findForProduct(eq(product))).thenReturn(null);
+
         KeyPair kp = createKeyPair();
         when(pki.generateNewKeyPair()).thenReturn(kp);
         when(pki.getPemEncoded(any(Key.class))).thenReturn("junk".getBytes());
-        ProductCertificate result = dpsa.getProductCertificate(p);
+
+        ProductCertificate result = dpsa.getProductCertificate(owner, product.getId());
         assertNotNull(result);
-        assertEquals(p, result.getProduct());
+        assertEquals(product, result.getProduct());
     }
 
     // can't mock a final class, so create a dummy one

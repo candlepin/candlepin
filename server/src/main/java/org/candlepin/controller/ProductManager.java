@@ -54,7 +54,7 @@ import java.util.Set;
  * products, to ensure product versioning and linking is handled properly.
  */
 public class ProductManager {
-    public static Logger log = LoggerFactory.getLogger(ProductManager.class);
+    private static Logger log = LoggerFactory.getLogger(ProductManager.class);
 
     private ContentCurator contentCurator;
     private EntitlementCertificateGenerator entitlementCertGenerator;
@@ -63,8 +63,8 @@ public class ProductManager {
 
     @Inject
     public ProductManager(ContentCurator contentCurator,
-        EntitlementCertificateGenerator entitlementCertGenerator, ProductCurator productCurator,
-        OwnerProductCurator ownerProductCurator, Configuration config) {
+        EntitlementCertificateGenerator entitlementCertGenerator,
+        OwnerProductCurator ownerProductCurator, ProductCurator productCurator) {
 
         this.contentCurator = contentCurator;
         this.entitlementCertGenerator = entitlementCertGenerator;
@@ -386,6 +386,11 @@ public class ProductManager {
         if (entity == null) {
             // If we're doing an exclusive update, this should be an error condition
             throw new IllegalStateException("Product has not yet been created");
+        }
+
+        // Make sure we actually have a change to apply
+        if (!entity.isChangedBy(update)) {
+            return entity;
         }
 
         Product updated = this.applyProductChanges((Product) entity.clone(), update, owner);

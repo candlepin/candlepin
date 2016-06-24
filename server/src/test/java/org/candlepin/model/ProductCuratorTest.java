@@ -108,8 +108,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Product prod = new Product("cptest-label", "My Product");
         productCurator.create(prod);
 
-        List<Product> results = entityManager().createQuery(
-            "select p from Product as p").getResultList();
+        List<Product> results = entityManager().createQuery("select p from Product as p").getResultList();
         assertEquals(5, results.size());
     }
 
@@ -192,7 +191,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         ObjectMapper mapper = new ObjectMapper();
         String jsonData = mapper.writeValueAsString(data);
 
-        Product prod = new Product("cptest-label", "My Product");
+        Product prod = TestUtil.createProduct("cptest-label", "My Product");
         ProductAttribute a = new ProductAttribute("content_sets", jsonData);
         prod.addAttribute(a);
         productCurator.create(prod);
@@ -216,7 +215,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
      */
     @Test
     public void testCreationDate() {
-        Product prod = new Product("test-label", "test-product-name");
+        Product prod = TestUtil.createProduct("test-label", "test-product-name");
         productCurator.create(prod);
 
         assertNotNull(prod.getCreated());
@@ -224,7 +223,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testInitialUpdate() {
-        Product prod = new Product("test-label", "test-product-name");
+        Product prod = TestUtil.createProduct("test-label", "test-product-name");
         productCurator.create(prod);
 
         assertNotNull(prod.getUpdated());
@@ -247,7 +246,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
      */
     @Test
     public void testSubsequentUpdate() {
-        Product prod = new Product("test-label", "test-product-name");
+        Product prod = TestUtil.createProduct("test-label", "test-product-name");
         productCurator.create(prod);
 
         Calendar calendar = Calendar.getInstance();
@@ -272,7 +271,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void setMultiplierBasic() {
-        Product product = new Product("test", "Test Product");
+        Product product = TestUtil.createProduct("test", "Test Product");
         product.setMultiplier(4L);
 
         assertEquals(Long.valueOf(4), product.getMultiplier());
@@ -280,7 +279,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void setMultiplierNull() {
-        Product product = new Product("test", "Test Product");
+        Product product = TestUtil.createProduct("test", "Test Product");
         product.setMultiplier(null);
 
         assertEquals(Long.valueOf(1), product.getMultiplier());
@@ -288,7 +287,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void setMultiplierNegative() {
-        Product product = new Product("test", "Test Product");
+        Product product = TestUtil.createProduct("test", "Test Product");
         product.setMultiplier(-15L);
 
         assertEquals(Long.valueOf(1), product.getMultiplier());
@@ -368,8 +367,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         assertTrue(original.getUuid() != null);
         original.setAttribute("product.count", "134");
         original.setAttribute("product.pos_count", "333");
-        original.setAttribute("product.long_multiplier",
-            (new Long(Integer.MAX_VALUE * 100)).toString());
+        original.setAttribute("product.long_multiplier", (new Long(Integer.MAX_VALUE * 100)).toString());
         original.setAttribute("product.long_pos_count", "10");
         original.setAttribute("product.bool_val_str", "false");
         original.setAttribute("product.bool_val_num", "1");
@@ -400,8 +398,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @Test(expected = BadRequestException.class)
     public void testProductAttributeCreationFailBadLong() {
         Product original = createTestProduct();
-        original.addAttribute(new ProductAttribute("product.long_multiplier",
-            "ZZ"));
+        original.addAttribute(new ProductAttribute("product.long_multiplier", "ZZ"));
         productCurator.create(original);
     }
 
@@ -459,8 +456,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Product original = createTestProduct();
         productCurator.create(original);
         assertTrue(original.getUuid() != null);
-        original.addAttribute(new ProductAttribute("product.long_multiplier",
-            "10^23"));
+        original.addAttribute(new ProductAttribute("product.long_multiplier", "10^23"));
         productCurator.merge(original);
     }
 
@@ -469,8 +465,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Product original = createTestProduct();
         productCurator.create(original);
         assertTrue(original.getUuid() != null);
-        original.addAttribute(new ProductAttribute("product.long_pos_count",
-            "-23"));
+        original.addAttribute(new ProductAttribute("product.long_pos_count", "-23"));
         productCurator.merge(original);
     }
 
@@ -502,12 +497,13 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @Test
     public void testGetProductIdFromContentId() {
         Product p = createTestProduct();
-        Content content = new Content(this.owner, "best-content", "best-content",
-            "best-content", "yum", "us", "here", "here", "test-arch");
-        p.addContent(content);
+        Content content = TestUtil.createContent("best-content");
+        p.addContent(content, true);
+
         contentCurator.create(content);
         productCurator.create(p);
         this.ownerProductCurator.mapProductToOwner(p, this.owner);
+        this.ownerContentCurator.mapContentToOwner(content, this.owner);
 
         List<String> contentIds = new LinkedList<String>();
         contentIds.add(content.getId());
@@ -519,9 +515,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @Test
     public void testGetProductIdFromContentUuid() {
         Product p = createTestProduct();
-        Content content = new Content(this.owner, "best-content", "best-content",
-            "best-content", "yum", "us", "here", "here", "test-arch");
-        p.addContent(content);
+        Content content = TestUtil.createContent("best-content");
+        p.addContent(content, true);
+
         contentCurator.create(content);
         productCurator.create(p);
 
@@ -561,12 +557,14 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testSaveOrUpdateProductNoDuplicateProdContent() {
-        Product p = createTestProduct();
-        Content content = new Content(this.owner, "best-content", "best-content",
-            "best-content", "yum", "us", "here", "here", "test-arch"
-        );
+        // TODO:
+        // This test may have lost meaning after the various changes and addition of the product
+        // manager
 
-        p.addContent(content);
+        Product p = createTestProduct();
+        Content content = TestUtil.createContent("best-content");
+
+        p.addContent(content, true);
         contentCurator.create(content);
         productCurator.create(p);
 
@@ -576,14 +574,11 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         // The content isn't quite the same. We just care about matching
         // product ids with content ids
-        Content contentUpdate = new Content(this.owner, "best-content", "best-content",
-            "best-content", "yum", "us", "here", "differnet", "test-arch"
-        );
-
+        Content contentUpdate = TestUtil.createContent("best-content");
         contentUpdate.setUuid(content.getUuid());
-        this.contentCurator.create(content);
+        contentUpdate.setGpgUrl("different");
 
-        p2.addContent(contentUpdate);
+        p2.addContent(contentUpdate, true);
         productCurator.merge(p2);
 
         Product result = productCurator.find(p.getUuid());

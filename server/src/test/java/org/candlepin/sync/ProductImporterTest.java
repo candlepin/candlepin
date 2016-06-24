@@ -111,32 +111,29 @@ public class ProductImporterTest {
     }
 
     // Returns the Content object added
-    private Content addContentTo(Product p) {
-        Owner owner = new Owner("Example-Corporation");
-        Content c = new Content(
-            owner, "name", "100130", "label", "type", "vendor", "url", "gpgurl", "arch"
-        );
+    private Content addContentTo(Product product) {
+        Content content = TestUtil.createContent("100130", "content_name");
+        content.setMetadataExpire(1000L);
 
-        c.setMetadataExpire(1000L);
-        p.getProductContent().add(new ProductContent(p, c, true));
+        product.getProductContent().add(new ProductContent(product, content, true));
 
-        return c;
+        return content;
     }
 
     // Returns the Content object added without vendor
-    private void addNoVendorContentTo(Product p) {
-        Owner owner = new Owner("Example-Corporation");
-        Content c = new Content(
-            owner, "name", "100130", "label", "type", "", "url", "gpgurl", "arch"
-        );
+    private Content addNoVendorContentTo(Product product) {
+        Content content = TestUtil.createContent("100130", "name");
+        content.setVendor("");
+        content.setMetadataExpire(1000L);
 
-        c.setMetadataExpire(1000L);
-        p.getProductContent().add(new ProductContent(p, c, true));
+        product.getProductContent().add(new ProductContent(product, content, true));
+
+        return content;
     }
 
-    private String getJsonForProduct(Product p) throws Exception {
+    private String getJsonForProduct(Product product) throws Exception {
         Writer writer = new StringWriter();
-        mapper.writeValue(writer, p);
+        mapper.writeValue(writer, product);
         return writer.toString();
     }
 

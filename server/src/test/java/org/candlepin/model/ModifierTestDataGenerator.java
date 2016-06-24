@@ -73,8 +73,7 @@ public class ModifierTestDataGenerator {
         }
 
         for (int i = 0; i < 10; i++) {
-            Content content = new Content(owner, "fakecontent", "fakecontent", "CON" + i, "yum", "RH",
-                "http://", "http://", "x86_64");
+            Content content = TestUtil.createContent("fakecontent-" + i);
             Set<String> modified = new HashSet<String>();
 
             /**
@@ -107,7 +106,6 @@ public class ModifierTestDataGenerator {
                 modified.add("M3");
             }
 
-
             content.setModifiedProductIds(modified);
             content = contentCurator.create(content);
             contents.add(content);
@@ -122,14 +120,7 @@ public class ModifierTestDataGenerator {
          * Attach engineering products to content
          */
         for (int i = 0; i < 10; i++) {
-            engProducts.get(i).addContent(contents.get(i));
-
-            org.candlepin.controller.ProductManager.log.debug("STARTING ISSUE THING. PRODUCT: {}, CONTENT: {}", engProducts.get(i), engProducts.get(i).getProductContent());
-
-
-
-
-
+            engProducts.get(i).addContent(contents.get(i), true);
             productCurator.merge(engProducts.get(i));
         }
 

@@ -168,9 +168,9 @@ public class EntitlementCertificateGeneratorTest {
     private List<Entitlement> generateEntitlements() {
         Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
 
-        Content c1 = TestUtil.createContent(owner, "c1");
-        Content c2 = TestUtil.createContent(owner, "c2");
-        Content c3 = TestUtil.createContent(owner, "c3");
+        Content c1 = TestUtil.createContent("c1");
+        Content c2 = TestUtil.createContent("c2");
+        Content c3 = TestUtil.createContent("c3");
 
         Product prod1 = TestUtil.createProduct();
         Product prod2 = TestUtil.createProduct();
@@ -179,9 +179,9 @@ public class EntitlementCertificateGeneratorTest {
         Product pprod2 = TestUtil.createProduct();
         Product pprod3 = TestUtil.createProduct();
 
-        prod1.addContent(c1);
-        pprod2.addContent(c2);
-        prod3.addContent(c3);
+        prod1.addContent(c1, true);
+        pprod2.addContent(c2, true);
+        prod3.addContent(c3, true);
 
         Pool pool1 = TestUtil.createPool(owner, prod1, Arrays.asList(pprod1), 1);
         Pool pool2 = TestUtil.createPool(owner, prod2, Arrays.asList(pprod2), 1);

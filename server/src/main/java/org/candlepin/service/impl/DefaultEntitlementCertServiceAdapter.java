@@ -156,17 +156,14 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     // TODO: productModels not used by V1 certificates. This whole v1/v3 split needs
     // a re-org. Passing them here because it eliminates a substantial performance hit
     // recalculating this for the entitlement body in v3 certs.
-    public X509Certificate createX509Certificate(Entitlement ent,
-        Product product, Set<Product> products,
-        List<org.candlepin.model.dto.Product> productModels,
-        BigInteger serialNumber,
-        KeyPair keyPair, boolean useContentPrefix)
+    public X509Certificate createX509Certificate(Entitlement ent, Product product, Set<Product> products,
+        List<org.candlepin.model.dto.Product> productModels, BigInteger serialNumber, KeyPair keyPair,
+        boolean useContentPrefix)
         throws GeneralSecurityException, IOException {
 
         // oidutil is busted at the moment, so do this manually
         Set<X509ExtensionWrapper> extensions;
-        Set<X509ByteExtensionWrapper> byteExtensions =
-            new LinkedHashSet<X509ByteExtensionWrapper>();
+        Set<X509ByteExtensionWrapper> byteExtensions = new LinkedHashSet<X509ByteExtensionWrapper>();
         products.add(product);
 
         Map<String, EnvironmentContent> promotedContent = getPromotedContent(ent);

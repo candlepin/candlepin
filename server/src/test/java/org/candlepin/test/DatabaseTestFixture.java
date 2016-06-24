@@ -25,6 +25,9 @@ import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.controller.ContentManager;
+import org.candlepin.controller.ProductManager;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
 import org.candlepin.junit.CandlepinLiquibaseResource;
@@ -40,8 +43,10 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.EventCurator;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.ImportRecordCurator;
@@ -80,6 +85,7 @@ import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.SessionFactoryImpl;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -87,9 +93,16 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
+
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -97,6 +110,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -135,6 +150,10 @@ public class DatabaseTestFixture {
     @Inject protected RoleCurator roleCurator;
     @Inject protected UserCurator userCurator;
 
+    @Inject protected CandlepinPoolManager poolManager;
+    @Inject protected ContentManager contentManager;
+    @Inject protected ProductManager productManager;
+
     @Inject private ResourceLocatorMap locatorMap;
 
     private static Injector parentInjector;
@@ -143,6 +162,7 @@ public class DatabaseTestFixture {
 
     protected TestingInterceptor securityInterceptor;
     protected DateSourceForTesting dateSource;
+    protected I18n i18n;
 
 
     @BeforeClass
@@ -176,6 +196,8 @@ public class DatabaseTestFixture {
 
         HttpServletRequest req = parentInjector.getInstance(HttpServletRequest.class);
         when(req.getAttribute("username")).thenReturn("mock_user");
+
+        this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
     }
 
     @After
@@ -311,17 +333,12 @@ public class DatabaseTestFixture {
     }
 
     protected Content createContent(String id, String name, Owner... owners) {
-        Content content = TestUtil.createContent(null, id, name);
-
-        for (Owner owner : owners) {
-            content.addOwner(owner);
-        }
-
+        Content content = TestUtil.createContent(id, name);
         content = this.contentCurator.create(content);
 
-        // for (Owner owner : owners) {
-        //     this.ownerContentCurator.mapContentToOwner(content, owner);
-        // }
+        for (Owner owner : owners) {
+            this.ownerContentCurator.mapContentToOwner(content, owner);
+        }
 
         return content;
     }
@@ -360,7 +377,7 @@ public class DatabaseTestFixture {
     }
 
     protected Environment createEnvironment(Owner owner, String id, String name) {
-        return this.createEnvironment(owner, id, name, description, null, null);
+        return this.createEnvironment(owner, id, name, null, null, null);
     }
 
     protected Environment createEnvironment(Owner owner, String id, String name, String description,
@@ -371,7 +388,7 @@ public class DatabaseTestFixture {
 
         if (consumers != null) {
             // Ugly hack to deal with how environment currently encapsulates its collections
-            if (!consumers instanceof List) {
+            if (!(consumers instanceof List)) {
                 consumers = new LinkedList<Consumer>(consumers);
             }
 

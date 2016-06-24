@@ -577,21 +577,21 @@ public class ProductData extends CandlepinDTO {
      * Adds the given content to this product DTO. If a matching content has already been added to
      * this product, it will be overwritten by the specified content.
      *
-     * @param content
+     * @param productContent
      *  The product content DTO to add to this product
      *
      * @throws IllegalArgumentException
-     *  if content is null
+     *  if productContent is null
      *
      * @return
      *  true if adding the content resulted in a change to this product; false otherwise
      */
-    public boolean addProductContent(ProductContent content) {
-        if (content == null) {
-            throw new IllegalArgumentException("content is null");
+    public boolean addProductContent(ProductContent productContent) {
+        if (productContent == null) {
+            throw new IllegalArgumentException("productContent is null");
         }
 
-        return this.addProductContent(new ProductContentData(content));
+        return this.addProductContent(productContent.toDTO());
     }
 
     /**
@@ -633,7 +633,7 @@ public class ProductData extends CandlepinDTO {
             throw new IllegalArgumentException("content is null");
         }
 
-        return this.addProductContent(new ProductContentData(new ContentData(content), enabled));
+        return this.addProductContent(new ProductContentData(content.toDTO(), enabled));
     }
 
     /**

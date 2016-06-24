@@ -652,7 +652,7 @@ public class ContentData extends CandlepinDTO {
         this.vendor = source.getVendor();
         this.contentUrl = source.getContentUrl();
         this.requiredTags = source.getRequiredTags();
-        this.releaseVer = source.getReleaseVer();
+        this.releaseVer = source.getReleaseVersion();
         this.gpgUrl = source.getGpgUrl();
         this.metadataExpire = source.getMetadataExpire();
 

@@ -480,9 +480,12 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Product product = new Product("someProduct", "An Extremely Great Product", 10L);
         product = this.createProduct(product, owner);
 
-        Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 16L,
-            TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2020, 1, 1), new Date());
+        Subscription sub = TestUtil.createSubscription(owner, product, new HashSet<Product>());
         sub.setId(Util.generateDbUUID());
+        sub.setQuantity(16L);
+        sub.setStartDate(TestUtil.createDate(2006, 10, 21));
+        sub.setEndDate(TestUtil.createDate(2020, 1, 1));
+        sub.setModified(new Date());
 
         Pool newPool = poolManager.createAndEnrichPools(sub).get(0);
         List<Pool> pools = poolCurator.lookupBySubscriptionId(sub.getId());
@@ -1125,9 +1128,12 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void confirmBonusPoolDeleted() {
-        Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 16L,
-            TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2020, 1, 1), new Date());
+        Subscription sub = TestUtil.createSubscription(owner, product, new HashSet<Product>());
         sub.setId(Util.generateDbUUID());
+        sub.setQuantity(16L);
+        sub.setStartDate(TestUtil.createDate(2006, 10, 21));
+        sub.setEndDate(TestUtil.createDate(2020, 1, 1));
+        sub.setModified(new Date());
 
         Pool sourcePool = poolManager.createAndEnrichPools(sub).get(0);
         poolCurator.create(sourcePool);
@@ -1136,8 +1142,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Pool pool2 = TestUtil.createPool(owner, product);
         pool2.setSourceEntitlement(e);
-        pool2.setSourceSubscription(new SourceSubscription(
-            sourcePool.getSubscriptionId(), "derived"));
+        pool2.setSourceSubscription(new SourceSubscription(sourcePool.getSubscriptionId(), "derived"));
         poolCurator.create(pool2);
 
         assertTrue(poolCurator.lookupBySubscriptionId(sub.getId()).size() == 2);

@@ -212,7 +212,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         this.setVendor(source.getVendor());
         this.setContentUrl(source.getContentUrl());
         this.setRequiredTags(source.getRequiredTags());
-        this.setReleaseVer(source.getReleaseVer());
+        this.setReleaseVersion(source.getReleaseVersion());
         this.setGpgUrl(source.getGpgUrl());
         this.setMetadataExpire(source.getMetadataExpire());
         this.setArches(source.getArches());
@@ -369,14 +369,14 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     /**
      * @return the releaseVer
      */
-    public String getReleaseVer() {
+    public String getReleaseVersion() {
         return releaseVer;
     }
 
     /**
      * @param releaseVer the releaseVer to set
      */
-    public void setReleaseVer(String releaseVer) {
+    public void setReleaseVersion(String releaseVer) {
         this.releaseVer = releaseVer;
     }
 

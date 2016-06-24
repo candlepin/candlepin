@@ -13,10 +13,11 @@
  * in this software or its documentation.
  */
 package org.candlepin.resource;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.PoolManager;
@@ -29,178 +30,257 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
+import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+
+import javax.ws.rs.core.Response;
+
+
+
 /**
  * OwnerContentResourceTest
  */
-public class OwnerContentResourceTest {
+public class OwnerContentResourceTest extends DatabaseTestFixture {
 
-    private ContentCurator cc;
-    private ContentManager cm;
-    private OwnerContentResource ocr;
-    private I18n i18n;
-    private EnvironmentContentCurator envContentCurator;
-    private PoolManager poolManager;
-    private ProductCurator productCurator;
-    private OwnerCurator oc;
+    private OwnerContentResource ownerContentResource;
 
     @Before
     public void init() {
-        i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        cc = mock(ContentCurator.class);
-        cm = mock(ContentManager.class);
-        envContentCurator = mock(EnvironmentContentCurator.class);
-        poolManager = mock(PoolManager.class);
-        oc = mock(OwnerCurator.class);
-        productCurator = mock(ProductCurator.class);
-
-        ocr = new OwnerContentResource(cc, i18n, new DefaultUniqueIdGenerator(),
-            envContentCurator, poolManager, productCurator, oc, cm);
-
+        this.ownerContentResource = new OwnerContentResource(this.contentCurator, this.contentManager,
+        this.environmentContentCurator, this.i18n, this.ownerCurator, this.ownerContentCurator,
+        this.poolManager, this.productCurator, new DefaultUniqueIdGenerator());
     }
 
     @Test
     public void listContent() {
-        Owner owner = mock(Owner.class);
-        when(oc.lookupByKey(eq("owner"))).thenReturn(owner);
+        Owner owner = this.createOwner("test_owner");
+        Content content = this.createContent("test_content", "test_content", owner);
 
-        ocr.list("owner");
-        verify(cc, atLeastOnce()).listByOwner(eq(owner));
+        Response output = this.ownerContentResource.list(owner.getKey());
+
+        assertNotNull(output);
+        assertEquals(200, output.getStatus());
+        assertEquals("FIX ME", output.getMetadata());
     }
 
-    @Test(expected = NotFoundException.class)
-    public void getContentNull() {
-        Owner owner = mock(Owner.class);
-        when(oc.lookupByKey(eq("owner"))).thenReturn(owner);
+    @Test
+    public void listContentNoContent() {
+        Owner owner = this.createOwner("test_owner");
 
-        when(cc.lookupById(any(Owner.class), anyString())).thenReturn(null);
-        ocr.getContent("owner", "10");
+        Response output = this.ownerContentResource.list(owner.getKey());
+
+        assertNotNull(output);
+        assertEquals(200, output.getStatus());
+        assertEquals("FIX ME", output.getMetadata());
     }
 
     @Test
     public void getContent() {
-        Owner owner = mock(Owner.class);
-        Content content = mock(Content.class);
+        Owner owner = this.createOwner("test_owner");
+        Content content = this.createContent("test_content", "test_content", owner);
 
-        when(oc.lookupByKey(eq("owner"))).thenReturn(owner);
-        when(cc.lookupById(eq(owner), eq("10"))).thenReturn(content);
+        ContentData output = this.ownerContentResource.getContent(owner.getKey(), content.getId());
 
-        assertEquals(content, ocr.getContent("owner", "10"));
+        assertNotNull(output);
+        assertEquals(content.getId(), output.getId());
+        assertFalse(content.isChangedBy(output));
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void getContentNotFound() {
+        Owner owner = this.createOwner("test_owner");
+
+        ContentData output = this.ownerContentResource.getContent(owner.getKey(), "test_content");
     }
 
     @Test
     public void createContent() {
-        Owner owner = mock(Owner.class);
-        Content content = mock(Content.class);
+        Owner owner = this.createOwner("test_owner");
+        ContentData contentData = TestUtil.createContentDTO("test_content");
 
-        when(content.getId()).thenReturn("10");
-        when(oc.lookupByKey(eq("owner"))).thenReturn(owner);
-        when(cm.createContent(eq(content), eq(owner))).thenReturn(content);
+        assertNull(this.ownerContentCurator.getContentById(owner, contentData.getId()));
 
-        assertEquals(content, ocr.createContent("owner", content));
+        ContentData output = this.ownerContentResource.createContent(owner.getKey(), contentData);
+
+        assertNotNull(output);
+        assertEquals(contentData.getId(), output.getId());
+
+        Content entity = this.ownerContentCurator.getContentById(owner, contentData.getId());
+        assertNotNull(entity);
+        assertFalse(entity.isChangedBy(contentData));
     }
 
     @Test
-    public void createContentNull()  {
-        Owner owner = mock(Owner.class);
-        Content content = mock(Content.class);
+    public void createContentWhenContentAlreadyExists()  {
+        // Note:
+        // The current behavior of createContent is to update content if content already exists
+        // with the given RHID. So, our expected behavior in this test is to trigger an update.
 
-        when(content.getId()).thenReturn("10");
-        when(oc.lookupByKey(eq("owner"))).thenReturn(owner);
-        when(cc.lookupById(eq(owner), eq("10"))).thenReturn(null);
+        Owner owner = this.createOwner("test_owner");
+        Content content = this.createContent("test_content", "test_content", owner);
+        ContentData contentData = TestUtil.createContentDTO("test_content", "updated_name");
 
-        ocr.createContent("owner", content);
-        verify(cm, atLeastOnce()).createContent(content, owner);
+        assertNotNull(this.ownerContentCurator.getContentById(owner, contentData.getId()));
+
+        ContentData output = this.ownerContentResource.createContent(owner.getKey(), contentData);
+
+        assertNotNull(output);
+        assertEquals(contentData.getId(), output.getId());
+        assertEquals(contentData.getName(), output.getName());
+
+        Content entity = this.ownerContentCurator.getContentById(owner, contentData.getId());
+        assertNotNull(entity);
+        assertFalse(entity.isChangedBy(contentData));
+    }
+
+    @Test(expected = ForbiddenException.class)
+    public void createContentWhenContentAlreadyExistsAndLocked()  {
+        // Note:
+        // The current behavior of createContent is to update content if content already exists
+        // with the given RHID. So, our expected behavior in this test is to trigger an update.
+
+        Owner owner = this.createOwner("test_owner");
+        Content content = this.createContent("test_content", "test_content", owner);
+        ContentData contentData = TestUtil.createContentDTO("test_content", "updated_name");
+        content.setLocked(true);
+        this.contentCurator.merge(content);
+
+        assertNotNull(this.ownerContentCurator.getContentById(owner, contentData.getId()));
+
+        try {
+            ContentData output = this.ownerContentResource.createContent(owner.getKey(), contentData);
+        }
+        catch (ForbiddenException e) {
+            Content entity = this.ownerContentCurator.getContentById(owner, contentData.getId());
+            assertNotNull(entity);
+            assertEquals(content, entity);
+            assertTrue(entity.isChangedBy(contentData));
+
+            throw e;
+        }
+    }
+
+    @Test
+    public void updateContent()  {
+        Owner owner = this.createOwner("test_owner");
+        Content content = this.createContent("test_content", "test_content", owner);
+        ContentData contentData = TestUtil.createContentDTO("test_content", "updated_name");
+
+        assertNotNull(this.ownerContentCurator.getContentById(owner, contentData.getId()));
+
+        ContentData output = this.ownerContentResource.updateContent(owner.getKey(), contentData.getId(),
+            contentData);
+
+        assertNotNull(output);
+        assertEquals(contentData.getId(), output.getId());
+        assertEquals(contentData.getName(), output.getName());
+
+        Content entity = this.ownerContentCurator.getContentById(owner, contentData.getId());
+        assertNotNull(entity);
+        assertFalse(entity.isChangedBy(contentData));
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void updateContentThatDoesntExist()  {
+        Owner owner = this.createOwner("test_owner");
+        ContentData contentData = TestUtil.createContentDTO("test_content", "updated_name");
+
+        assertNull(this.ownerContentCurator.getContentById(owner, contentData.getId()));
+
+        try {
+            this.ownerContentResource.updateContent(owner.getKey(), contentData.getId(), contentData);
+        }
+        catch (NotFoundException e) {
+            assertNull(this.ownerContentCurator.getContentById(owner, contentData.getId()));
+        }
+    }
+
+    @Test(expected = ForbiddenException.class)
+    public void updateLockedContent()  {
+        Owner owner = this.createOwner("test_owner");
+        Content content = this.createContent("test_content", "test_content", owner);
+        ContentData contentData = TestUtil.createContentDTO("test_content", "updated_name");
+        content.setLocked(true);
+        this.contentCurator.merge(content);
+
+        assertNotNull(this.ownerContentCurator.getContentById(owner, contentData.getId()));
+
+        try {
+            this.ownerContentResource.updateContent(owner.getKey(), contentData.getId(), contentData);
+        }
+        catch (ForbiddenException e) {
+            Content entity = this.ownerContentCurator.getContentById(owner, contentData.getId());
+            assertNotNull(entity);
+            assertTrue(entity.isChangedBy(contentData));
+
+            throw e;
+        }
     }
 
     @Test
     public void deleteContent() {
-        Owner owner = mock(Owner.class);
-        Content content = mock(Content.class);
+        Owner owner = this.createOwner("test_owner");
+        Content content = this.createContent("test_content", "test_content", owner);
+        Environment environment = this.createEnvironment(owner, "test_env", "test_env", null, null,
+            Arrays.asList(content));
 
-        when(content.getId()).thenReturn("10");
-        when(content.getOwners()).thenReturn(Util.asSet(owner));
-        when(oc.lookupByKey(eq("owner"))).thenReturn(owner);
-        when(cc.lookupById(eq(owner), eq("10"))).thenReturn(content);
+        assertNotNull(this.ownerContentCurator.getContentById(owner, content.getId()));
 
-        EnvironmentContent ec = new EnvironmentContent(mock(Environment.class), content, true);
-        List<EnvironmentContent> envContents = Arrays.asList(ec);
-        when(envContentCurator.lookupByContent(owner, content.getId())).thenReturn(envContents);
+        this.ownerContentResource.remove(owner.getKey(), content.getId());
 
-        ocr.remove("owner", "10");
+        assertNull(this.ownerContentCurator.getContentById(owner, content.getId()));
 
-        verify(cm, atLeastOnce()).removeContent(eq(content), eq(owner), anyBoolean());
+        this.environmentCurator.refresh(environment);
+        assertEquals(0, environment.getEnvironmentContent().size());
+    }
+
+    @Test(expected = ForbiddenException.class)
+    public void deleteLockedContent() {
+        Owner owner = this.createOwner("test_owner");
+        Content content = this.createContent("test_content", "test_content", owner);
+        content.setLocked(true);
+        this.contentCurator.merge(content);
+
+        Environment environment = this.createEnvironment(owner, "test_env", "test_env", null, null,
+            Arrays.asList(content));
+
+        assertNotNull(this.ownerContentCurator.getContentById(owner, content.getId()));
+
+        try {
+            this.ownerContentResource.remove(owner.getKey(), content.getId());
+        }
+        catch (ForbiddenException e) {
+            assertNotNull(this.ownerContentCurator.getContentById(owner, content.getId()));
+
+            this.environmentCurator.refresh(environment);
+            assertEquals(1, environment.getEnvironmentContent().size());
+
+            throw e;
+        }
     }
 
     @Test(expected = NotFoundException.class)
-    public void deleteContentNull() {
-        Owner owner = mock(Owner.class);
-        Content content = mock(Content.class);
+    public void deleteContentWithNonExistentContent() {
+        Owner owner = this.createOwner("test_owner");
 
-        when(content.getId()).thenReturn("10");
-        when(oc.lookupByKey(eq("owner"))).thenReturn(owner);
-        when(cc.lookupById(eq(owner), eq("10"))).thenReturn(null);
-
-        ocr.remove("owner", "10");
-        verify(cm, never()).removeContent(eq(content), eq(owner), anyBoolean());
-    }
-
-    @Test
-    public void testUpdateContent() {
-        final String ownerId = "owner";
-        final String productId = "productId";
-        final String contentId = "10";
-        String contentUuid = "testuuid";
-
-        Owner owner = mock(Owner.class);
-        Product product = mock(Product.class);
-        Content content = new Content(contentId);
-        content.setUuid(contentUuid);
-
-        when(product.getId()).thenReturn(productId);
-
-        content.addOwner(owner);
-
-        when(oc.lookupByKey(eq(ownerId))).thenReturn(owner);
-        when(cc.lookupById(eq(owner), eq(contentId))).thenReturn(content);
-        when(cm.updateContent(eq(content), eq(owner), anyBoolean())).thenReturn(content);
-        when(productCurator.getProductsWithContent(eq(Arrays.asList(contentUuid))))
-            .thenReturn(Arrays.asList(product));
-
-        ocr.updateContent(ownerId, contentId, content);
-
-        verify(cc).lookupById(eq(owner), eq(contentId));
-        verify(cm).updateContent(eq(content), eq(owner), anyBoolean());
-        // verify(productCurator).getProductsWithContent(eq(Arrays.asList(contentUuid)));
-        // verify(poolManager).regenerateCertificatesOf(eq(owner), eq(productId), eq(true));
+        this.ownerContentResource.remove(owner.getKey(), "test_content");
     }
 
     @Test(expected = NotFoundException.class)
     public void testUpdateContentThrowsExceptionWhenOwnerDoesNotExist() {
-        Content content = mock(Content.class);
-        when(cc.find(any(String.class))).thenReturn(null);
+        ContentData contentData = TestUtil.createContentDTO("test_content");
 
-        ocr.updateContent("owner", "someId", content);
+        this.ownerContentResource.updateContent("fake_owner_key", contentData.getId(), contentData);
     }
 
-    @Test(expected = NotFoundException.class)
-    public void testUpdateContentThrowsExceptionWhenContentDoesNotExist() {
-        Owner owner = mock(Owner.class);
-        Content content = mock(Content.class);
-
-        when(oc.lookupByKey(eq("owner"))).thenReturn(owner);
-        when(cc.lookupById(eq(owner), any(String.class))).thenReturn(null);
-
-        ocr.updateContent("owner", "someId", content);
-    }
 }

@@ -290,15 +290,15 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         Content content3 = this.createContent();
 
         List<Owner> owners = Arrays.asList(owner1, owner2, owner3);
-        List<Content> content = Arrays.asList(content1, content2, content3);
+        List<Content> contents = Arrays.asList(content1, content2, content3);
 
         int mapped = 0;
         for (int i = 0; i < owners.size(); ++i) {
-            for (int j = 0; j < content.size(); ++j) {
+            for (int j = 0; j < contents.size(); ++j) {
                 int offset = 0;
 
                 for (Owner owner : owners) {
-                    for (Content content : content) {
+                    for (Content content : contents) {
                         if (mapped > offset++) {
                             assertTrue(this.isContentMappedToOwner(content, owner));
                         }
@@ -308,10 +308,10 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
                     }
                 }
 
-                boolean result = this.ownerContentCurator.mapContentToOwner(content.get(j), owners.get(i));
+                boolean result = this.ownerContentCurator.mapContentToOwner(contents.get(j), owners.get(i));
                 assertTrue(result);
 
-                result = this.ownerContentCurator.mapContentToOwner(content.get(j), owners.get(i));
+                result = this.ownerContentCurator.mapContentToOwner(contents.get(j), owners.get(i));
                 assertFalse(result);
 
                 ++mapped;
@@ -409,7 +409,7 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         Content content3 = this.createContent();
 
         List<Owner> owners = Arrays.asList(owner1, owner2, owner3);
-        List<Content> content = Arrays.asList(content1, content2, content3);
+        List<Content> contents = Arrays.asList(content1, content2, content3);
 
         this.createOwnerContentMapping(owner1, content1);
         this.createOwnerContentMapping(owner1, content2);
@@ -423,11 +423,11 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
 
         int removed = 0;
         for (int i = 0; i < owners.size(); ++i) {
-            for (int j = 0; j < content.size(); ++j) {
+            for (int j = 0; j < contents.size(); ++j) {
                 int offset = 0;
 
                 for (Owner owner : owners) {
-                    for (Content content : content) {
+                    for (Content content : contents) {
                         if (removed > offset++) {
                             assertFalse(this.isContentMappedToOwner(content, owner));
                         }
@@ -438,13 +438,13 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
                 }
 
                 boolean result = this.ownerContentCurator.removeOwnerFromContent(
-                    content.get(j), owners.get(i)
+                    contents.get(j), owners.get(i)
                 );
 
                 assertTrue(result);
 
                 result = this.ownerContentCurator.removeOwnerFromContent(
-                    content.get(j), owners.get(i)
+                    contents.get(j), owners.get(i)
                 );
 
                 assertFalse(result);
@@ -542,8 +542,8 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
 
         Product product1 = this.createProduct("test_prod-1", "test_prod-1", owner1);
         Product product2 = this.createProduct("test_prod-2", "test_prod-2", owner2);
-        product1.addContent(original);
-        product2.addContent(unmodified);
+        product1.addContent(original, true);
+        product2.addContent(unmodified, true);
         product1 = this.productCurator.merge(product1);
         product2 = this.productCurator.merge(product2);
 
@@ -551,7 +551,7 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         assertFalse(this.isContentMappedToOwner(updated, owner1));
         assertTrue(this.isContentMappedToOwner(unmodified, owner2));
 
-        this.ownerContentCurator.updateOwnerContentReferences(original, updated, Arrays.asList(owner));
+        this.ownerContentCurator.updateOwnerContentReferences(original, updated, Arrays.asList(owner1));
 
         assertFalse(this.isContentMappedToOwner(original, owner1));
         assertTrue(this.isContentMappedToOwner(updated, owner1));
@@ -560,11 +560,15 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         this.environmentCurator.refresh(environment1);
         this.environmentCurator.refresh(environment2);
 
-        assertEquals(updated.getUuid(), environment1.getEnvironmentContent().iterator().next().getUuid());
-        assertEquals(unmodified.getUuid(), environment2.getEnvironmentContent().iterator().next().getUuid());
+        assertEquals(updated.getUuid(), environment1.getEnvironmentContent().iterator().next().getContent()
+            .getUuid());
+        assertEquals(unmodified.getUuid(), environment2.getEnvironmentContent().iterator().next().getContent()
+            .getUuid());
 
-        assertEquals(updated.getUuid(), product1.getProductContent(updated.getId()).getUuid());
-        assertEquals(unmodified.getUuid(), product1.getProductContent(unmodified.getId()).getUuid());
+        assertEquals(updated.getUuid(), product1.getProductContent(updated.getId()).getContent()
+            .getUuid());
+        assertEquals(unmodified.getUuid(), product1.getProductContent(unmodified.getId()).getContent()
+            .getUuid());
     }
 
     @Test
@@ -573,6 +577,7 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         Content original = this.createContent();
         this.createOwnerContentMapping(owner, original);
 
+        // TODO
     }
 
 }

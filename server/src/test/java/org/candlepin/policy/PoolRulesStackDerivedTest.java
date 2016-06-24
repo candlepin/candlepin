@@ -156,25 +156,25 @@ public class PoolRulesStackDerivedTest {
         sub1 = createStackedVirtSub(owner, prod1,
             TestUtil.createDate(2010, 1, 1),
             TestUtil.createDate(2015, 1, 1));
-        sub1.getProvidedProducts().add(provided1);
+        sub1.getProvidedProducts().add(provided1.toDTO());
         pool1 = TestUtil.copyFromSub(sub1);
 
         sub2 = createStackedVirtSub(owner, prod2,
             TestUtil.createDate(2011, 1, 1),
             TestUtil.createDate(2017, 1, 1));
-        sub2.getProvidedProducts().add(provided2);
+        sub2.getProvidedProducts().add(provided2.toDTO());
         pool2 = TestUtil.copyFromSub(sub2);
 
         sub3 = createStackedVirtSub(owner, prod2,
             TestUtil.createDate(2012, 1, 1),
             TestUtil.createDate(2020, 1, 1));
-        sub3.getProvidedProducts().add(provided3);
+        sub3.getProvidedProducts().add(provided3.toDTO());
         pool3 = TestUtil.copyFromSub(sub3);
 
         sub4 = createStackedVirtSub(owner, prod3,
             TestUtil.createDate(2012, 1, 1),
             TestUtil.createDate(2020, 1, 1));
-        sub4.getProvidedProducts().add(provided4);
+        sub4.getProvidedProducts().add(provided4.toDTO());
         pool4 = TestUtil.copyFromSub(sub4);
 
         // Initial entitlement from one of the pools:
@@ -210,7 +210,7 @@ public class PoolRulesStackDerivedTest {
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
         s.setStartDate(start);
         s.setEndDate(end);
-        s.setProduct(product);
+        s.setProduct(product.toDTO());
         s.setContractNumber(Integer.toString(TestUtil.randomInt()));
         s.setOrderNumber(Integer.toString(TestUtil.randomInt()));
         s.setAccountNumber(Integer.toString(TestUtil.randomInt()));

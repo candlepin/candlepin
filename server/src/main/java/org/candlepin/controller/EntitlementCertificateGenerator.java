@@ -164,7 +164,9 @@ public class EntitlementCertificateGenerator {
      *  regenerated on-demand
      */
     @Transactional
-    public void regenerateCertificatesOf(Entitlement entitlement, boolean ueberCertificate, boolean lazy) {
+    public void regenerateCertificatesOf(Entitlement entitlement, boolean ueberCertificate,
+        boolean lazy) {
+
         if (lazy) {
             log.info("Marking certificates dirty for entitlement: {}", entitlement);
             entitlement.setDirty(true);

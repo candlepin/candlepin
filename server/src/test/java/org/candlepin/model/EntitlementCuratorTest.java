@@ -193,13 +193,12 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             startDate, endDate);
 
         // Provided product 2 will modify 1, both will be on the pool:
-        Content c = new Content(this.owner, "fakecontent", "fakecontent", "facecontent",
-            "yum", "RH", "http://", "http://", "x86_64");
+        Content c = TestUtil.createContent("fakecontent");
         Set<String> modifiedIds = new HashSet<String>();
         modifiedIds.add(providedProduct1.getId());
         c.setModifiedProductIds(modifiedIds);
         contentCurator.create(c);
-        providedProduct2.addContent(c);
+        providedProduct2.addContent(c, true);
 
         // Add some provided products to this pool:
         testPool.addProvidedProduct(providedProduct1);
@@ -337,13 +336,12 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Pool testPool = createPool(owner, parentProductForTest, 100L, startDate, endDate);
 
         // Provided product 2 will modify 1, both will be on the pool:
-        Content c = new Content(this.owner, "fakecontent", contentId, contentId, "yum", "RH",
-            "http://", "http://", "x86_64");
+        Content c = TestUtil.createContent(contentId, "fakecontent");
         Set<String> modifiedIds = new HashSet<String>();
         modifiedIds.add(providedProduct1ForTest.getId());
         c.setModifiedProductIds(modifiedIds);
         contentCurator.create(c);
-        providedProduct2ForTest.addContent(c);
+        providedProduct2ForTest.addContent(c, true);
 
         assertTrue(providedProduct2ForTest.modifies(providedProduct1ForTest.getId()));
 
@@ -367,12 +365,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     }
 
     public void prepareEntitlementsForModifying() {
-        Content contentPool1 = new Content(owner, "fakecontent", "fakecontent",
-            "facecontent", "yum", "RH", "http://", "http://",
-            "x86_64");
-        Content contentPool2 = new Content(owner, "fakecontent2", "fakecontent2",
-            "facecontent2", "yum", "RH", "http://",
-            "http://", "x86_64");
+        Content contentPool1 = TestUtil.createContent("fake_content-1");
+        Content contentPool2 = TestUtil.createContent("fake_content-2");
 
         /**
          * Each of these products are provided by respective Entitlements
@@ -413,16 +407,12 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         /**
          * Ent3 has content 1 and Ent4 has content 2
          */
-        providedProductEnt3.addContent(contentPool1);
-        providedProductEnt4.addContent(contentPool2);
+        providedProductEnt3.addContent(contentPool1, true);
+        providedProductEnt4.addContent(contentPool2, true);
 
-        createPool("p3", createDate(1998, 1, 1), createDate(2003 + 50, 2, 1),
-            providedProductEnt3);
-        createPool("p4", createDate(2001, 2, 30), createDate(2002 + 50, 1, 10),
-            providedProductEnt4);
-
+        createPool("p3", createDate(1998, 1, 1), createDate(2003 + 50, 2, 1), providedProductEnt3);
+        createPool("p4", createDate(2001, 2, 30), createDate(2002 + 50, 1, 10), providedProductEnt4);
         createPool("p5", createDate(2000 + 50, 5, 5), createDate(2000 + 50, 5, 10), null);
-
         createPool("p6", createDate(1998, 1, 1), createDate(1998, 12, 31), null);
         createPool("p7", createDate(2003, 2, 2), createDate(2003 + 50, 3, 3), null);
     }

@@ -14,7 +14,6 @@
  */
 package org.candlepin.controller;
 
-import org.candlepin.common.config.Configuration;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
@@ -49,21 +48,22 @@ public class ContentManager {
     private static Logger log = LoggerFactory.getLogger(ContentManager.class);
 
     private ContentCurator contentCurator;
+    private EntitlementCertificateGenerator entitlementCertGenerator;
     private OwnerContentCurator ownerContentCurator;
     private ProductCurator productCurator;
     private ProductManager productManager;
-    private EntitlementCertificateGenerator entitlementCertGenerator;
 
     @Inject
-    public ContentManager(ContentCurator contentCurator, OwnerContentCurator ownerContentCurator,
-        ProductCurator productCurator, ProductManager productManager,
-        EntitlementCertificateGenerator entitlementCertGenerator, Configuration config) {
+    public ContentManager(
+        ContentCurator contentCurator, EntitlementCertificateGenerator entitlementCertGenerator,
+        OwnerContentCurator ownerContentCurator, ProductCurator productCurator,
+        ProductManager productManager) {
 
         this.contentCurator = contentCurator;
+        this.entitlementCertGenerator = entitlementCertGenerator;
         this.ownerContentCurator = ownerContentCurator;
         this.productCurator = productCurator;
         this.productManager = productManager;
-        this.entitlementCertGenerator = entitlementCertGenerator;
     }
 
     /**
@@ -218,6 +218,11 @@ public class ContentManager {
         if (entity == null) {
             // If we're doing an exclusive update, this should be an error condition
             throw new IllegalStateException("Content has not yet been created");
+        }
+
+        // Make sure we actually have a change to apply
+        if (!entity.isChangedBy(update)) {
+            return entity;
         }
 
         Content updated = this.applyContentChanges((Content) entity.clone(), update, owner);
@@ -437,7 +442,7 @@ public class ContentManager {
         }
 
         if (update.getReleaseVersion() != null) {
-            entity.setReleaseVer(update.getReleaseVersion());
+            entity.setReleaseVersion(update.getReleaseVersion());
         }
 
         if (update.getGpgUrl() != null) {

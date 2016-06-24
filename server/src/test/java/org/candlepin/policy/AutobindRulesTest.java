@@ -178,7 +178,6 @@ public class AutobindRulesTest {
         assertEquals(1, bestPools.size());
     }
 
-
     /*
      * Create a pool with too much content for a V1 certificate, consumer must be V3
      * capable.
@@ -187,13 +186,20 @@ public class AutobindRulesTest {
         Product mktProduct = TestUtil.createProduct(productId, "A test product");
         Product engProduct = TestUtil.createProduct(Integer.toString(TestUtil.randomInt()), "An ENG product");
 
+        engProduct.setProductContent(null);
         Set<Content> productContent = new HashSet<Content>();
         for (int i = 0; i < X509ExtensionUtil.V1_CONTENT_LIMIT + 1; i++) {
-            productContent.add(new Content(this.owner, "fake" + i, "fake" + i,
-                "fake" + i, "yum", "vendor", "", "", ""));
+            Content content = TestUtil.createContent("fake" + i);
+            content.setLabel("fake" + i);
+            content.setType("yum");
+            content.setVendor("vendor");
+            content.setContentUrl("");
+            content.setGpgUrl("");
+            content.setArches("");
+
+            engProduct.addContent(content, true);
         }
 
-        engProduct.setContent(productContent);
         Pool pool = TestUtil.createPool(owner, mktProduct);
         pool.setId("DEAD-BEEF");
 

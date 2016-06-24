@@ -142,24 +142,37 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         List<Subscription> subscriptions = new LinkedList<Subscription>();
 
-        ImportSubscriptionServiceAdapter subAdapter
-            = new ImportSubscriptionServiceAdapter(subscriptions);
+        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub1 = new Subscription(o, virtHost, new HashSet<Product>(),
-            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
-        Subscription sub2 = new Subscription(o, virtHostPlatform, new HashSet<Product>(),
-            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
+        Subscription sub1 = TestUtil.createSubscription(o, virtHost, new HashSet<Product>());
+        sub1.setId(Util.generateDbUUID());
+        sub1.setQuantity(5L);
+        sub1.setStartDate(new Date());
+        sub1.setEndDate(TestUtil.createDate(3020, 12, 12));
+        sub1.setModified(new Date());
 
-        Subscription sub3 = new Subscription(o, monitoring, new HashSet<Product>(),
-            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
-        sub4 = new Subscription(o, provisioning, new HashSet<Product>(),
-            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
+        Subscription sub2 = TestUtil.createSubscription(o, virtHostPlatform, new HashSet<Product>());
+        sub2.setId(Util.generateDbUUID());
+        sub2.setQuantity(5L);
+        sub2.setStartDate(new Date());
+        sub2.setEndDate(TestUtil.createDate(3020, 12, 12));
+        sub2.setModified(new Date());
+
+        Subscription sub3 = TestUtil.createSubscription(o, monitoring, new HashSet<Product>());
+        sub3.setId(Util.generateDbUUID());
+        sub3.setQuantity(5L);
+        sub3.setStartDate(new Date());
+        sub3.setEndDate(TestUtil.createDate(3020, 12, 12));
+        sub3.setModified(new Date());
+
+        sub4 = TestUtil.createSubscription(o, provisioning, new HashSet<Product>());
+        sub4.setId(Util.generateDbUUID());
+        sub4.setQuantity(5L);
+        sub4.setStartDate(new Date());
+        sub4.setEndDate(TestUtil.createDate(3020, 12, 12));
+        sub4.setModified(new Date());
         sub4.getBranding().add(new Branding("product1", "type1", "branding1"));
         sub4.getBranding().add(new Branding("product2", "type2", "branding2"));
-        sub1.setId(Util.generateDbUUID());
-        sub2.setId(Util.generateDbUUID());
-        sub3.setId(Util.generateDbUUID());
-        sub4.setId(Util.generateDbUUID());
 
         subscriptions.add(sub1);
         subscriptions.add(sub2);
@@ -306,20 +319,24 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         Set<String> modified = new HashSet<String>();
         modified.add(PRODUCT_VIRT_HOST);
-        Content content = new Content(this.o, "modifier-content", "modifier-content",
-            "modifer-content", "yum", "us", "here", "here", "");
+        Content content = TestUtil.createContent("modifier-content", "modifier-content");
         content.setModifiedProductIds(modified);
-        modifier.addContent(content);
+        modifier.addContent(content, true);
 
         contentCurator.create(content);
         productCurator.create(modifier);
+        this.ownerContentCurator.mapContentToOwner(content, this.o);
 
         List<Subscription> subscriptions = new LinkedList<Subscription>();
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub = new Subscription(o, modifier, new HashSet<Product>(),
-            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
+        Subscription sub = TestUtil.createSubscription(o, modifier, new HashSet<Product>());
+        sub.setQuantity(5L);
+        sub.setStartDate(new Date());
+        sub.setEndDate(TestUtil.createDate(3020, 12, 12));
+        sub.setModified(new Date());
+
         sub.setId(Util.generateDbUUID());
 
         subscriptions.add(sub);
@@ -362,9 +379,13 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription subscription = new Subscription(o, product1, new HashSet<Product>(),
-            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
+        Subscription subscription = TestUtil.createSubscription(o, product1, new HashSet<Product>());
         subscription.setId(Util.generateDbUUID());
+        subscription.setQuantity(5L);
+        subscription.setStartDate(new Date());
+        subscription.setEndDate(TestUtil.createDate(3020, 12, 12));
+        subscription.setModified(new Date());
+
         subscriptions.add(subscription);
 
         // set up initial pool
@@ -374,7 +395,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertEquals(1, pools.size());
 
         // now alter the product behind the sub, and make sure the pool is also updated
-        subscription.setProduct(product2);
+        subscription.setProduct(product2.toDTO());
 
         // set up initial pool
         poolManager.getRefresher(subAdapter).add(o).run();
