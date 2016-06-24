@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.49.15
+Version: 0.9.49.16
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -401,6 +401,10 @@ fi
 
 
 %changelog
+* Fri Jun 24 2016 Vritant Jain <vrjain@redhat.com> 0.9.49.16-1
+- 1345845: Stack derived pool cleanup (nguyen.filip@gmail.com)
+- 1330244: Candlepin logrotate error on RHEL6.7 (vrjain@redhat.com)
+
 * Thu Apr 14 2016 Alex Wood <awood@redhat.com> 0.9.49.15-1
 - Update logrotate.conf files (wpoteat@redhat.com)
 - 1321630: Breaks up queries into smaller ones that will not exceed stack depth
