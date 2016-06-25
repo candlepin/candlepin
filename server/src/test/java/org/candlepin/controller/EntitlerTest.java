@@ -28,7 +28,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
-import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
@@ -38,6 +37,7 @@ import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.dto.ProductAttributeData;;
 import org.candlepin.model.dto.ProductData;;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationError;
@@ -51,7 +51,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -65,6 +67,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+
 
 /**
  * EntitlerTest
@@ -440,11 +444,11 @@ public class EntitlerTest {
 
     @Test
     public void testDevPoolCreationAtBind() throws EntitlementRefusedException {
-        Owner owner = new Owner("o");
-        List<Product> devProds = new ArrayList<Product>();
+        Owner owner = TestUtil.createOwner("o");
+        List<ProductData> devProdDTOs = new ArrayList<ProductData>();
         Product p = TestUtil.createProduct("test-product", "Test Product");
         p.setAttribute("support_level", "Premium");
-        devProds.add(p);
+        devProdDTOs.add(p.toDTO());
         Pool activePool = TestUtil.createPool(owner, p);
         List<Pool> activeList = new ArrayList<Pool>();
         activeList.add(activePool);
@@ -455,9 +459,11 @@ public class EntitlerTest {
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
-        when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProds);
+        when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProdDTOs);
         when(productManager.updateProduct(eq(p), any(ProductData.class), eq(owner), anyBoolean()))
             .thenReturn(p);
+        when(ownerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
+
         when(pm.createPool(any(Pool.class))).thenReturn(devPool);
         when(devPool.getId()).thenReturn("test_pool_id");
 
@@ -468,10 +474,10 @@ public class EntitlerTest {
 
     @Test(expected = ForbiddenException.class)
     public void testDevPoolCreationAtBindFailStandalone() throws EntitlementRefusedException {
-        Owner owner = new Owner("o");
-        List<Product> devProds = new ArrayList<Product>();
+        Owner owner = TestUtil.createOwner("o");
+        List<ProductData> devProdDTOs = new ArrayList<ProductData>();
         Product p = TestUtil.createProduct("test-product", "Test Product");
-        devProds.add(p);
+        devProdDTOs.add(p.toDTO());
         Pool activePool = TestUtil.createPool(owner, p);
         List<Pool> activeList = new ArrayList<Pool>();
         activeList.add(activePool);
@@ -482,7 +488,8 @@ public class EntitlerTest {
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(true);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
-        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
+        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProdDTOs);
+        when(ownerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
 
         AutobindData ad = new AutobindData(devSystem);
         entitler.bindByProducts(ad);
@@ -490,10 +497,10 @@ public class EntitlerTest {
 
     @Test(expected = ForbiddenException.class)
     public void testDevPoolCreationAtBindFailNotActive() throws EntitlementRefusedException {
-        Owner owner = new Owner("o");
-        List<Product> devProds = new ArrayList<Product>();
+        Owner owner = TestUtil.createOwner("o");
+        List<ProductData> devProdDTOs = new ArrayList<ProductData>();
         Product p = TestUtil.createProduct("test-product", "Test Product");
-        devProds.add(p);
+        devProdDTOs.add(p.toDTO());
 
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p.getId());
@@ -501,7 +508,8 @@ public class EntitlerTest {
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(false);
-        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
+        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProdDTOs);
+        when(ownerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
 
         AutobindData ad = new AutobindData(devSystem);
         entitler.bindByProducts(ad);
@@ -509,11 +517,11 @@ public class EntitlerTest {
 
     @Test
     public void testDevPoolCreationAtBindFailNoSkuProduct() throws EntitlementRefusedException {
-        Owner owner = new Owner("o");
-        List<Product> devProds = new ArrayList<Product>();
+        Owner owner = TestUtil.createOwner("o");
+        List<ProductData> devProdDTOs = new ArrayList<ProductData>();
         Product p = TestUtil.createProduct("test-product", "Test Product");
         Product ip = TestUtil.createProduct("test-product-installed", "Installed Test Product");
-        devProds.add(ip);
+        devProdDTOs.add(ip.toDTO());
         Pool activePool = TestUtil.createPool(owner, p);
         List<Pool> activeList = new ArrayList<Pool>();
         activeList.add(activePool);
@@ -524,7 +532,9 @@ public class EntitlerTest {
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
-        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
+        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProdDTOs);
+        when(ownerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
+        when(ownerProductCurator.getProductById(eq(owner), eq(ip.getId()))).thenReturn(ip);
 
         when(productManager.updateProduct(eq(p), any(ProductData.class), any(Owner.class), anyBoolean()))
             .thenReturn(p);
@@ -542,15 +552,14 @@ public class EntitlerTest {
     }
 
     @Test
-    public void testDevPoolCreationAtBindNoFailMissingInstalledProduct()
-            throws EntitlementRefusedException {
-        Owner owner = new Owner("o");
-        List<Product> devProds = new ArrayList<Product>();
+    public void testDevPoolCreationAtBindNoFailMissingInstalledProduct() throws EntitlementRefusedException {
+        Owner owner = TestUtil.createOwner("o");
+        List<ProductData> devProdDTOs = new ArrayList<ProductData>();
         Product p = TestUtil.createProduct("test-product", "Test Product");
         Product ip1 = TestUtil.createProduct("test-product-installed-1", "Installed Test Product 1");
         Product ip2 = TestUtil.createProduct("test-product-installed-2", "Installed Test Product 2");
-        devProds.add(p);
-        devProds.add(ip1);
+        devProdDTOs.add(p.toDTO());
+        devProdDTOs.add(ip1.toDTO());
         Pool activePool = TestUtil.createPool(owner, p);
         List<Pool> activeList = new ArrayList<Pool>();
         activeList.add(activePool);
@@ -562,7 +571,11 @@ public class EntitlerTest {
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
-        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProds);
+        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProdDTOs);
+
+        when(ownerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
+        when(ownerProductCurator.getProductById(eq(owner), eq(ip1.getId()))).thenReturn(ip1);
+        when(ownerProductCurator.getProductById(eq(owner), eq(ip2.getId()))).thenReturn(ip2);
 
         when(productManager.updateProduct(eq(p), any(ProductData.class), any(Owner.class), anyBoolean()))
             .thenReturn(p);
@@ -579,27 +592,30 @@ public class EntitlerTest {
 
     @Test
     public void testCreatedDevPoolAttributes() {
-        Owner owner = new Owner("o");
-        List<Product> devProds = new ArrayList<Product>();
+        Owner owner = TestUtil.createOwner("o");
+        List<ProductData> devProdDTOs = new ArrayList<ProductData>();
         Product p1 = TestUtil.createProduct("dev-product", "Dev Product");
         p1.setAttribute("support_level", "Premium");
         p1.setAttribute("expires_after", "47");
         Product p2 = TestUtil.createProduct("provided-product1", "Provided Product 1");
         Product p3 = TestUtil.createProduct("provided-product2", "Provided Product 2");
-        devProds.add(p1);
-        devProds.add(p2);
-        devProds.add(p3);
+        devProdDTOs.add(p1.toDTO());
+        devProdDTOs.add(p2.toDTO());
+        devProdDTOs.add(p3.toDTO());
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p1.getId());
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
-        when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProds);
+        when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProdDTOs);
         when(productManager.updateProduct(eq(p1), any(ProductData.class), eq(owner), anyBoolean()))
             .thenReturn(p1);
         when(productManager.updateProduct(eq(p2), any(ProductData.class), eq(owner), anyBoolean()))
             .thenReturn(p2);
         when(productManager.updateProduct(eq(p3), any(ProductData.class), eq(owner), anyBoolean()))
             .thenReturn(p3);
+        when(ownerProductCurator.getProductById(eq(owner), eq(p1.getId()))).thenReturn(p1);
+        when(ownerProductCurator.getProductById(eq(owner), eq(p2.getId()))).thenReturn(p2);
+        when(ownerProductCurator.getProductById(eq(owner), eq(p3.getId()))).thenReturn(p3);
 
         Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
         Calendar cal = Calendar.getInstance();
@@ -616,15 +632,39 @@ public class EntitlerTest {
 
     @Test
     public void testCreatedDevSkuWithNoSla() {
-        Owner owner = new Owner("o");
-        List<Product> devProds = new ArrayList<Product>();
+        Owner owner = TestUtil.createOwner("o");
+        List<ProductData> devProdDTOs = new ArrayList<ProductData>();
         Product p1 = TestUtil.createProduct("dev-product", "Dev Product");
-        devProds.add(p1);
+        devProdDTOs.add(p1.toDTO());
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p1.getId());
-        when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProds);
+
+        when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProdDTOs);
         when(productManager.updateProduct(eq(p1), any(ProductData.class), eq(owner), anyBoolean()))
             .thenReturn(p1);
+
+        when(ownerProductCurator.getProductById(eq(owner), eq(p1.getId()))).thenReturn(p1);
+
+        when(productManager.updateProduct(eq(p1), any(ProductData.class), eq(owner), anyBoolean()))
+            .thenAnswer(new Answer<Product>() {
+                @Override
+                public Product answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    Product product = (Product) args[0];
+                    ProductData pdata = (ProductData) args[1];
+
+                    // We need to copy the attributes from the product data to the product to
+                    // simulate a proper update.
+                    product.clearAttributes();
+                    if (pdata.getAttributes() != null) {
+                        for (ProductAttributeData attrib : pdata.getAttributes()) {
+                            product.setAttribute(attrib.getName(), attrib.getValue());
+                        }
+                    }
+
+                    return product;
+                }
+            });
 
         Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
         assertEquals(entitler.DEFAULT_DEV_SLA, created.getProduct().getAttributeValue("support_level"));
@@ -635,21 +675,21 @@ public class EntitlerTest {
 
     // @Test
     // public void testEnsureOwnerOnDevProduct() {
-    //     Owner owner = new Owner("o");
-    //     List<Product> devProds = new ArrayList<Product>();
+    //     Owner owner = TestUtil.createOwner("o");
+    //     List<ProductData> devProdDTOs = new ArrayList<ProductData>();
     //     Product p1 = TestUtil.createProduct("dev-product-1", "Dev Product 1");
     //     Content c1 = new Content();
     //     p1.addContent(c1);
-    //     devProds.add(p1);
+    //     devProdDTOs.add(p1.toDTO());
     //     Product p2 = TestUtil.createProduct("dev-product-2", "Dev Product 2");
     //     Content c2 = new Content();
     //     p2.addContent(c2);
-    //     devProds.add(p2);
+    //     devProdDTOs.add(p2.toDTO());
     //     Consumer devSystem = TestUtil.createConsumer(owner);
     //     devSystem.setFact("dev_sku", p1.getId());
     //     devSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
 
-    //     when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProds);
+    //     when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProdDTOs);
     //     when(productManager.updateProduct(eq(p1), eq(owner), anyBoolean())).thenReturn(p1);
     //     when(productManager.updateProduct(eq(p2), eq(owner), anyBoolean())).thenReturn(p2);
 

@@ -22,8 +22,6 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.Type;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -40,9 +38,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinTable;
 import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
@@ -137,7 +133,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @XmlTransient
     @Column
     @Type(type = "org.hibernate.type.NumericBooleanType")
-    private Boolean locked;
+    private boolean locked;
 
 
     public Content(String name, String id, String label, String type, String vendor, String contentUrl,
@@ -488,7 +484,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     @XmlTransient
     public boolean isLocked() {
-        return this.locked != null && this.locked;
+        return this.locked;
     }
 
     @Override
@@ -517,11 +513,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
             if (equals) {
                 if (!Util.collectionsAreEqual(this.modifiedProductIds, that.modifiedProductIds)) {
-                    if (!(this.modifiedProductIds == null && that.modifiedProductIds.size() == 0) &&
-                        !(that.modifiedProductIds == null && this.modifiedProductIds.size() == 0)) {
-
-                        return false;
-                    }
+                    return false;
                 }
             }
 
@@ -546,16 +538,13 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
             .append(this.gpgUrl)
             .append(this.metadataExpire)
             .append(this.arches)
-            .append(this.locked);
+            .append(this.locked)
+            .append(this.modifiedProductIds);
 
         // Impl note:
         // Because we handle the collections specially in .equals, we have to do the same special
         // treatment here to ensure our output doesn't give us wonky results when compared to the
         // output of .equals
-
-        if (this.modifiedProductIds != null && this.modifiedProductIds.size() > 0) {
-            builder.append(this.modifiedProductIds);
-        }
 
         return builder.toHashCode();
     }

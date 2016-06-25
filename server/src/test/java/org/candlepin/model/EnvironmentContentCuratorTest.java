@@ -22,8 +22,8 @@ import org.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.inject.Inject;
 import javax.persistence.PersistenceException;
+
 
 
 public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
@@ -37,12 +37,10 @@ public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
     public void setUp() {
         owner = this.createOwner("test-owner", "Test Owner");
 
-        e = new Environment("env1", "Env 1", owner);
-        environmentCurator.create(e);
+        e = this.createEnvironment(owner, "env1", "Env 1");
+        c = this.createContent("contentId1", "testcontent", this.owner);
 
         p = TestUtil.createProduct();
-        this.createContent("contentId1", "testcontent", this.owner);
-        contentCurator.create(c);
         p.addContent(c, true);
         p = this.createProduct(p, owner);
 

@@ -26,7 +26,7 @@ import java.util.List;
  * The CandlepinCriteria class represents a criteria and provides fluent-style methods for
  * configuring how the criteria is to be executed and how the result should be processed.
  *
- * @param T
+ * @param <T>
  *  The entity type to be returned by this criteria's result output methods
  */
 public class CandlepinCriteria<T> {

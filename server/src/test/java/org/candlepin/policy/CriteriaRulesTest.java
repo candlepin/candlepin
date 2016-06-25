@@ -17,15 +17,11 @@ package org.candlepin.policy;
 import static org.junit.Assert.assertEquals;
 
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -38,7 +34,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-import javax.inject.Inject;
+
 
 /*
  * Test the Javascript pool criteria. This works because we configure an enforcer for the

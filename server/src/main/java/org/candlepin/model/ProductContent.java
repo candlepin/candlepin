@@ -24,16 +24,9 @@ import org.hibernate.annotations.Parent;
 import java.io.Serializable;
 
 import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.Column;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 
@@ -123,14 +116,13 @@ public class ProductContent extends AbstractHibernateObject {
         if (obj instanceof ProductContent) {
             ProductContent that = (ProductContent) obj;
 
-            String thisProductUuid = this.product != null ? this.product.getUuid() : null;
-            String thisContentUuid = this.content != null ? this.content.getUuid() : null;
-            String thatProductUuid = that.product != null ? that.product.getUuid() : null;
-            String thatContentUuid = that.content != null ? that.content.getUuid() : null;
+            // Impl note:
+            // Product is not included in this calculation because it only exists in this object to
+            // properly map products to content -- it should not be used for comparing two
+            // instances.
 
             return new EqualsBuilder()
-                .append(thisProductUuid, thatProductUuid)
-                .append(thisContentUuid, thatContentUuid)
+                .append(this.content, that.content)
                 .append(this.enabled, that.enabled)
                 .isEquals();
         }
@@ -140,9 +132,13 @@ public class ProductContent extends AbstractHibernateObject {
 
     @Override
     public int hashCode() {
+        // Impl note:
+        // Product is not included in this calculation because it only exists in this object to
+        // properly map products to content -- it should not be used for comparing two
+        // instances.
+
         return new HashCodeBuilder(3, 23)
-            .append(this.product != null ? this.product.getUuid() : null)
-            .append(this.content != null ? this.content.getUuid() : null)
+            .append(this.content)
             .append(this.enabled)
             .toHashCode();
     }
@@ -165,7 +161,7 @@ public class ProductContent extends AbstractHibernateObject {
             throw new IllegalArgumentException("dto is null");
         }
 
-        if (dto.isEnabled() != null && dto.isEnabled().equals(this.enabled)) {
+        if (dto.isEnabled() != null && !dto.isEnabled().equals(this.enabled)) {
             return true;
         }
 

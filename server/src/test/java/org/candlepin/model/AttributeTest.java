@@ -21,7 +21,7 @@ import org.candlepin.test.TestUtil;
 
 import org.junit.Test;
 
-import javax.inject.Inject;
+
 
 public class AttributeTest extends DatabaseTestFixture {
 

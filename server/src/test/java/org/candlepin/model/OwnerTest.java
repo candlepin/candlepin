@@ -27,7 +27,7 @@ import org.junit.Test;
 
 import java.util.Set;
 
-import javax.inject.Inject;
+
 
 public class OwnerTest extends DatabaseTestFixture {
 

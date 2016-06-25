@@ -18,7 +18,6 @@ import static org.quartz.JobBuilder.*;
 
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
-import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -32,9 +31,6 @@ import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-
-import java.util.List;
-import java.util.LinkedList;
 
 
 

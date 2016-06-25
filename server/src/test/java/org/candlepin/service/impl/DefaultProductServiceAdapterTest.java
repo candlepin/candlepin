@@ -84,7 +84,7 @@ public class DefaultProductServiceAdapterTest {
         ProductCertificate cert = mock(ProductCertificate.class);
 
         when(opc.getProductById(eq(owner), eq(product.getId()))).thenReturn(product);
-        when(pcc.findForProduct(eq(product))).thenReturn(cert);
+        doReturn(cert).when(pcc).findForProduct(eq(product));
 
         ProductCertificate result = dpsa.getProductCertificate(owner, product.getId());
         verify(pcc, never()).create(eq(cert));
@@ -98,8 +98,9 @@ public class DefaultProductServiceAdapterTest {
         Product product = TestUtil.createProduct("test_product");
         ProductCertificate cert = mock(ProductCertificate.class);
 
+        when(opc.getProductById(eq(owner), eq(product.getId()))).thenReturn(product);
         doAnswer(returnsFirstArg()).when(pcc).create(any(ProductCertificate.class));
-        when(pcc.findForProduct(eq(product))).thenReturn(null);
+        doReturn(null).when(pcc).findForProduct(eq(product));
 
         KeyPair kp = createKeyPair();
         when(pki.generateNewKeyPair()).thenReturn(kp);

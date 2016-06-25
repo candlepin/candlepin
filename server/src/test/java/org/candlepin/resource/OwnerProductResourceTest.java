@@ -20,26 +20,24 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.Util;
 
+import org.junit.Before;
 import org.junit.Test;
+
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -55,10 +53,18 @@ import javax.inject.Inject;
  * OwnerProductResourceTest
  */
 public class OwnerProductResourceTest extends DatabaseTestFixture {
-    @Inject private OwnerProductResource ownerProductResource;
-    @Inject private ProductManager productManager;
-    @Inject private Configuration config;
 
+    @Inject protected ProductManager productManager;
+
+    private OwnerProductResource ownerProductResource;
+
+    @Before
+    public void setup() {
+        this.ownerProductResource = new OwnerProductResource(this.config, this.i18n, this.ownerCurator,
+            this.ownerContentCurator, this.ownerProductCurator, this.productCertificateCurator,
+            this.productCurator, this.productManager
+        );
+    }
 
     private ProductData buildTestProductDTO() {
         ProductData dto = TestUtil.createProductDTO("test_product");
@@ -89,9 +95,10 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
 
         assertNull(this.ownerProductCurator.getProductById(owner.getKey(), productData.getId()));
 
-        ProductData result = ownerProductResource.createProduct(owner.getKey(), productData);
-        Product entity = this.ownerProductCurator.getProductById(owner.getKey(), productData.getId());
+        ProductData result = this.ownerProductResource.createProduct(owner.getKey(), productData);
+        Product entity = this.ownerProductCurator.getProductById(owner, productData.getId());
 
+        assertNotNull(result);
         assertNotNull(entity);
         assertFalse(entity.isChangedBy(result));
     }
@@ -99,15 +106,17 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
     @Test
     public void testCreateProductWithContent() {
         Owner owner = this.createOwner("Example-Corporation");
+        Content content = this.createContent("content-1", "content-1", owner);
         ProductData productData = this.buildTestProductDTO();
-        ContentData contentData = TestUtil.createContentDTO();
+        ContentData contentData = content.toDTO();
         productData.addContent(contentData, true);
 
         assertNull(this.ownerProductCurator.getProductById(owner.getKey(), productData.getId()));
 
-        ProductData result = ownerProductResource.createProduct(owner.getKey(), productData);
-        Product entity = this.ownerProductCurator.getProductById(owner.getKey(), productData.getId());
+        ProductData result = this.ownerProductResource.createProduct(owner.getKey(), productData);
+        Product entity = this.ownerProductCurator.getProductById(owner, productData.getId());
 
+        assertNotNull(result);
         assertNotNull(entity);
         assertFalse(entity.isChangedBy(result));
 
@@ -123,7 +132,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         ProductCurator pc = mock(ProductCurator.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         OwnerProductResource pr = new OwnerProductResource(
-            pc, null, oc, null, productManager, opc, config, i18n
+            config, i18n, oc, null, opc, null, pc, null
         );
 
         Owner o = mock(Owner.class);

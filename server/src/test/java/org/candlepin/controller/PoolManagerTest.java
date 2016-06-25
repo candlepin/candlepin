@@ -36,7 +36,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -127,7 +126,6 @@ public class PoolManagerTest {
     @Mock private EventBuilder eventBuilder;
     @Mock private ComplianceRules complianceRules;
     @Mock private ActivationKeyRules activationKeyRules;
-    @Mock private ContentCurator mockContentCurator;
     @Mock private ContentManager mockContentManager;
     @Mock private OwnerCurator mockOwnerCurator;
     @Mock private OwnerContentCurator mockOwnerContentCurator;
@@ -151,9 +149,11 @@ public class PoolManagerTest {
     public void init() throws Exception {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
-        owner = new Owner("key", "displayname");
+        owner = TestUtil.createOwner("key", "displayname");
         product = TestUtil.createProduct();
         pool = TestUtil.createPool(owner, product);
+
+        when(mockOwnerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
 
         when(mockConfig.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
         when(eventFactory.getEventBuilder(any(Target.class), any(Type.class))).thenReturn(eventBuilder);
@@ -161,12 +161,12 @@ public class PoolManagerTest {
         when(eventBuilder.setNewEntity(any(Eventful.class))).thenReturn(eventBuilder);
         when(eventBuilder.setOldEntity(any(Eventful.class))).thenReturn(eventBuilder);
 
-        this.principal = TestUtil.createOwnerPrincipal();
+        this.principal = TestUtil.createOwnerPrincipal(owner);
         this.manager = spy(new CandlepinPoolManager(
             mockPoolCurator, mockEventSink, eventFactory, mockConfig, enforcerMock, poolRulesMock,
             entitlementCurator, consumerCuratorMock, certCuratorMock, mockECGenerator,
             complianceRules, autobindRules, activationKeyRules, mockProductCurator, mockProductManager,
-            mockContentCurator, mockContentManager, mockOwnerCurator, mockOwnerProductCurator,
+            mockContentManager, mockOwnerContentCurator, mockOwnerCurator, mockOwnerProductCurator,
             pinsetterKernel, i18n
         ));
 
@@ -240,6 +240,8 @@ public class PoolManagerTest {
 
         Owner owner = this.getOwner();
         Product product = TestUtil.createProduct();
+        product.setLocked(true);
+
         Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setId("testing-subid");
         subscriptions.add(sub);
@@ -273,15 +275,19 @@ public class PoolManagerTest {
 
     @Test
     public void productAttributesCopiedOntoPoolWhenCreatingNewPool() {
+        // Why is this test in pool manager? It looks like a pool rules test.
 
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, mockOwnerProductCurator);
         Product product = TestUtil.createProduct();
-        Subscription sub = TestUtil.createSubscription(owner, product);
+        product.setLocked(true);
+
         String testAttributeKey = "multi-entitlement";
         String expectedAttributeValue = "yes";
-        sub.getProduct().setAttribute(testAttributeKey, expectedAttributeValue);
+        product.setAttribute(testAttributeKey, expectedAttributeValue);
 
-        when(mockOwnerProductCurator.getProductById(owner, product.getId())).thenReturn(product);
+        Subscription sub = TestUtil.createSubscription(owner, product);
+
+        this.mockProduct(owner, product);
 
         List<Pool> pools = pRules.createAndEnrichPools(sub);
         assertEquals(1, pools.size());
@@ -303,8 +309,8 @@ public class PoolManagerTest {
         String expectedAttributeValue = "yes";
         subProduct.setAttribute(testAttributeKey, expectedAttributeValue);
 
-        when(this.mockOwnerProductCurator.getProductById(owner, product.getId())).thenReturn(product);
-        when(this.mockOwnerProductCurator.getProductById(owner, subProduct.getId())).thenReturn(subProduct);
+        this.mockProduct(owner, product);
+        this.mockProduct(owner, subProduct);
 
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, mockOwnerProductCurator);
         List<Pool> pools = pRules.createAndEnrichPools(sub);
@@ -325,8 +331,8 @@ public class PoolManagerTest {
         Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setDerivedProduct(subProduct.toDTO());
 
-        when(this.mockOwnerProductCurator.getProductById(owner, product.getId())).thenReturn(product);
-        when(this.mockOwnerProductCurator.getProductById(owner, subProduct.getId())).thenReturn(subProduct);
+        this.mockProduct(owner, product);
+        this.mockProduct(owner, subProduct);
 
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, mockOwnerProductCurator);
         List<Pool> pools = pRules.createAndEnrichPools(sub);
@@ -348,8 +354,9 @@ public class PoolManagerTest {
         subProvided.add(subProvidedProduct.toDTO());
         sub.setDerivedProvidedProducts(subProvided);
 
-        when(this.mockOwnerProductCurator.getProductById(owner, product.getId())).thenReturn(product);
-        when(this.mockOwnerProductCurator.getProductById(owner, subProduct.getId())).thenReturn(subProduct);
+        this.mockProduct(owner, product);
+        this.mockProduct(owner, subProduct);
+        this.mockProduct(owner, subProvidedProduct);
 
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, mockOwnerProductCurator);
         List<Pool> pools = pRules.createAndEnrichPools(sub);
@@ -369,7 +376,7 @@ public class PoolManagerTest {
         sub.getBranding().add(b1);
         sub.getBranding().add(b2);
 
-        when(this.mockOwnerProductCurator.getProductById(owner, product.getId())).thenReturn(product);
+        this.mockProduct(owner, product);
 
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, mockOwnerProductCurator);
         List<Pool> pools = pRules.createAndEnrichPools(sub);
@@ -520,22 +527,27 @@ public class PoolManagerTest {
 
         Owner owner = this.getOwner();
         Product product = TestUtil.createProduct();
+        product.setLocked(true);
 
         Subscription s = TestUtil.createSubscription(owner, product);
         subscriptions.add(s);
-        mockSubsList(subscriptions);
 
+        mockSubsList(subscriptions);
         mockPoolsList(pools);
 
         List<Pool> newPools = new LinkedList<Pool>();
         Pool p = TestUtil.createPool(product);
+        p.setId("test");
         p.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
         newPools.add(p);
         ArgumentCaptor<Pool> argPool = ArgumentCaptor.forClass(Pool.class);
+
         when(poolRulesMock.createAndEnrichPools(argPool.capture(), any(List.class))).thenReturn(newPools);
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
         when(mockOwnerProductCurator.getProductById(owner, product.getId())).thenReturn(product);
+
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
+
         TestUtil.assertPoolsAreEqual(TestUtil.copyFromSub(s), argPool.getValue());
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
     }
@@ -548,6 +560,7 @@ public class PoolManagerTest {
 
         Owner owner = getOwner();
         Product product = TestUtil.createProduct();
+        product.setLocked(true);
 
         Subscription s = TestUtil.createSubscription(owner, product);
         s.setId("01923");
@@ -987,6 +1000,8 @@ public class PoolManagerTest {
 
         Owner owner = this.getOwner();
         Product product = TestUtil.createProduct();
+        product.setLocked(true);
+
         Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setId("123");
         subscriptions.add(sub);
@@ -1241,12 +1256,14 @@ public class PoolManagerTest {
     }
 
     private void mockProduct(Owner owner, Product p) {
-        when(mockOwnerProductCurator.getProductById(owner, p.getId())).thenReturn(p);
+        when(mockOwnerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
     }
 
     @Test
     public void testGetChangedProductsAllIdentical() {
         Product product = TestUtil.createProduct("fake id", "fake name");
+        product.setLocked(true);
+
         ProductData productData = product.toDTO();
 
         Map<String, ProductData> products = new HashMap<String, ProductData>();
@@ -1458,12 +1475,22 @@ public class PoolManagerTest {
         Product product = TestUtil.createProduct("product", "Product");
         Product provided1 = TestUtil.createProduct("provided-1", "Provided 1");
         Product provided2 = TestUtil.createProduct("provided-2", "Provided 2");
+        product.setLocked(true);
+        provided1.setLocked(true);
+        provided2.setLocked(true);
+
+        ProductData productDTO = product.toDTO();
+        ProductData provided1DTO = provided1.toDTO();
+        ProductData provided2DTO = provided2.toDTO();
 
         Pool pool = mock(Pool.class);
 
         HashSet<Product> provided = new HashSet<Product>();
+        HashSet<ProductData> providedDTOs = new HashSet<ProductData>();
         provided.add(provided1);
         provided.add(provided2);
+        providedDTOs.add(provided1DTO);
+        providedDTOs.add(provided2DTO);
 
         Long quantity = new Long(42);
 
@@ -1486,8 +1513,8 @@ public class PoolManagerTest {
         Subscription fabricated = manager.fabricateSubscriptionFromPool(pool);
 
         assertEquals(owner, fabricated.getOwner());
-        assertEquals(product, fabricated.getProduct());
-        assertEquals(provided, fabricated.getProvidedProducts());
+        assertEquals(productDTO, fabricated.getProduct());
+        assertEquals(providedDTOs, fabricated.getProvidedProducts());
         assertEquals(quantity, fabricated.getQuantity());
         assertEquals(startDate, fabricated.getStartDate());
         assertEquals(endDate, fabricated.getEndDate());
@@ -1518,7 +1545,7 @@ public class PoolManagerTest {
 
     @Test
     public void testFabricateSubWithZeroInstanceMultiplier() {
-        Product product = TestUtil.createProduct("product", "Product");
+        // Product product = TestUtil.createProduct("product", "Product");
 
         Pool pool = mock(Pool.class);
 
@@ -1574,6 +1601,10 @@ public class PoolManagerTest {
         content.setVendor("content_vendor-" + rand);
         content.setArches("content_arches-" + rand);
         content.setModifiedProductIds(modifiedProductIds);
+
+        // Since CPM sets all inbound products and content as "locked," we do this to ensure we
+        // don't always trigger a change because the lock state looks different from our mocks.
+        content.setLocked(true);
 
         return content;
     }

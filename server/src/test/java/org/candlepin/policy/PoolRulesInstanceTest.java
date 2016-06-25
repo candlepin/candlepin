@@ -26,7 +26,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.dto.Subscription;
@@ -48,6 +47,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 
+
 /**
  * JsPoolRulesInstanceTest: Tests for refresh pools code on instance based subscriptions.
  */
@@ -65,8 +65,7 @@ public class PoolRulesInstanceTest {
 
     @Before
     public void setUp() {
-        InputStream is = this.getClass().getResourceAsStream(
-            RulesCurator.DEFAULT_RULES_FILE);
+        InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is));
 
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
@@ -142,8 +141,7 @@ public class PoolRulesInstanceTest {
         // revert to half of what it was. No existing entitlements need to be adjusted,
         // we will let a (future) overconsumption routine handle that.
         masterPool = TestUtil.copyFromSub(s);
-        ProductAttribute pa = masterPool.getProduct().getAttribute("instance_multiplier");
-        masterPool.getProduct().getAttributes().remove(pa);
+        masterPool.getProduct().removeAttribute("instance_multiplier");
 
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);

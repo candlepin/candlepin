@@ -15,7 +15,6 @@
 package org.candlepin.service;
 
 import org.candlepin.model.Owner;
-import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.dto.ProductData;
 

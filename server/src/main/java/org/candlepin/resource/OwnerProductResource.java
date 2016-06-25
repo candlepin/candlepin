@@ -23,8 +23,8 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
@@ -32,7 +32,6 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
 import org.candlepin.resteasy.JsonProvider;
@@ -79,11 +78,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
 
-// TODO:
-// Should we build some kind of DTO factory? Would probably clean up/remove all the new DTO(...)
-// code segments. Alternatively, should every entity simply have a .toDTO() method? Maybe there's
-// some magic we can do at the JAXRS layer
-
 
 /**
  * API Gateway into /product
@@ -95,29 +89,29 @@ import javax.ws.rs.core.StreamingOutput;
 public class OwnerProductResource {
     private static Logger log = LoggerFactory.getLogger(OwnerProductResource.class);
 
-    private ProductCurator productCurator;
-    private ContentCurator contentCurator;
+    private Configuration config;
+    private I18n i18n;
+    private OwnerContentCurator ownerContentCurator;
     private OwnerCurator ownerCurator;
     private OwnerProductCurator ownerProductCurator;
     private ProductCertificateCurator productCertCurator;
+    private ProductCurator productCurator;
     private ProductManager productManager;
-    private Configuration config;
-    private I18n i18n;
 
     @Inject
-    public OwnerProductResource(ProductCurator productCurator, ContentCurator contentCurator,
-        OwnerCurator ownerCurator, ProductCertificateCurator productCertCurator,
-        ProductManager productManager, OwnerProductCurator ownerProductCurator, Configuration config,
-        I18n i18n) {
+    public OwnerProductResource(Configuration config, I18n i18n, OwnerCurator ownerCurator,
+        OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator,
+        ProductCertificateCurator productCertCurator, ProductCurator productCurator,
+        ProductManager productManager) {
 
-        this.productCurator = productCurator;
-        this.contentCurator = contentCurator;
+        this.config = config;
+        this.i18n = i18n;
+        this.ownerContentCurator = ownerContentCurator;
         this.ownerCurator = ownerCurator;
         this.ownerProductCurator = ownerProductCurator;
         this.productCertCurator = productCertCurator;
+        this.productCurator = productCurator;
         this.productManager = productManager;
-        this.config = config;
-        this.i18n = i18n;
     }
 
     /**
@@ -191,7 +185,7 @@ public class OwnerProductResource {
      *  the Content instance for the content with the specified id
      */
     protected Content fetchContent(Owner owner, String contentId) {
-        Content content = this.contentCurator.lookupById(owner, contentId);
+        Content content = this.ownerContentCurator.getContentById(owner, contentId);
 
         if (content == null) {
             throw new NotFoundException(
@@ -278,6 +272,8 @@ public class OwnerProductResource {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Product entity = productManager.createProduct(product, owner);
+
+        log.debug("PRODUCT CREATED: {}", entity);
 
         return entity.toDTO();
     }

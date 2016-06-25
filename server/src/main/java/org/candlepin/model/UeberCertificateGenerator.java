@@ -97,15 +97,11 @@ public class UeberCertificateGenerator {
         // generated with numeric IDs.
 
         Product ueberProduct = Product.createUeberProductForOwner(idGenerator, o);
-        this.productManager.createProduct(ueberProduct, o);
-
         Content ueberContent = Content.createUeberContent(idGenerator, o, ueberProduct);
-        this.contentManager.createContent(ueberContent, o);
+        ueberContent = this.contentManager.createContent(ueberContent, o);
+        ueberProduct.addContent(ueberContent, true);
 
-        ProductContent productContent = new ProductContent(ueberProduct, ueberContent, true);
-        ueberProduct.getProductContent().add(productContent);
-
-        return ueberProduct;
+        return this.productManager.createProduct(ueberProduct, o);
     }
 
     public Subscription createUeberSubscription(Owner o, Product ueberProduct) {

@@ -413,30 +413,4 @@ public class EntitlementCertificateGenerator {
         }
     }
 
-    /**
-     * Regenerates the entitlement certificates for all pools using any of the the specified
-     * product(s), effective for the all owners using them.
-     *
-     * @param products
-     *  A collection of products for which to regenerate affected certificates
-     *
-     * @param lazy
-     *  Whether or not to generate the certificate immediately, or mark it dirty and allow it to be
-     *  regenerated on-demand
-     */
-    @Transactional
-    public void regenerateCertificatesOf(Collection<Product> products, boolean lazy) {
-        Set<Owner> owners = new HashSet<Owner>();
-
-        // TODO: This could fall over if a product is mapped to many owners.
-        for (Product product : products) {
-            // FIXME: THIS IS BROKEN AT THE MOMENT. UPDATE IT ONCE WE FIGURE OUT WHAT WE'RE DOING WITH
-            // CONTENT MANAGER
-            //owners.addAll();
-            throw new RuntimeException("We're broken right now; check back in 15 minutes.");
-        }
-
-        this.regenerateCertificatesOf(owners, products, lazy);
-    }
-
 }

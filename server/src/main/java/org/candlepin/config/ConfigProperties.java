@@ -166,7 +166,7 @@ public class ConfigProperties {
     public static final String PINSETTER_MAX_RETRIES = "pinsetter.retries.max";
     public static final int PINSETTER_MAX_RETRIES_DEFAULT = 10;
 
-    private static final String[] DEFAULT_TASK_LIST = new String[]{
+    public static final String[] DEFAULT_TASK_LIST = new String[]{
         CertificateRevocationListTask.class.getName(),
         JobCleaner.class.getName(),
         ImportRecordJob.class.getName(),

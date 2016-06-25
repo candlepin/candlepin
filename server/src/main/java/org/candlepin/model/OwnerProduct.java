@@ -14,42 +14,16 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.common.jackson.HateoasInclude;
-import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.resteasy.InfoProperty;
-
-import com.fasterxml.jackson.annotation.JsonFilter;
-
-import org.hibernate.annotations.GenericGenerator;
-
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
-import javax.persistence.AttributeOverride;
-import javax.persistence.AttributeOverrides;
-import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-
-import io.swagger.annotations.ApiModelProperty;
 
 
 
@@ -77,19 +51,19 @@ public class OwnerProduct implements Persisted, Serializable {
      * the owner and product fields.
      */
     @ManyToOne
-    @JoinColumn(updatable=false, insertable=false)
+    @JoinColumn(updatable = false, insertable = false)
     private Owner owner;
 
     @ManyToOne
-    @JoinColumn(updatable=false, insertable=false)
+    @JoinColumn(updatable = false, insertable = false)
     private Product product;
 
     @Id
-    @Column(name="owner_id")
+    @Column(name = "owner_id")
     private String ownerId;
 
     @Id
-    @Column(name="product_uuid")
+    @Column(name = "product_uuid")
     private String productUuid;
 
     public OwnerProduct() {

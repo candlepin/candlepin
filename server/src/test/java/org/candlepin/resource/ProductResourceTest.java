@@ -24,7 +24,6 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -146,6 +145,10 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Owner owner = this.createOwner("Example-Corporation");
         Product entity = this.createProduct("test_product", "test_product", owner);
 
+        if (entity.isLocked()) {
+            throw new RuntimeException("entity is locked...?");
+        }
+
         securityInterceptor.enable();
         ProductData result = productResource.getProduct(entity.getUuid());
 
@@ -153,7 +156,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         assertFalse(entity.isChangedBy(result));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void getProductCertificate() {
         Owner owner = this.createOwner("Example-Corporation");
 

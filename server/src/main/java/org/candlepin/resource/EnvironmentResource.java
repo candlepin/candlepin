@@ -26,11 +26,11 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.pinsetter.tasks.RegenEnvEntitlementCertsJob;
 import org.candlepin.util.Util;
 
@@ -66,6 +66,8 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
+
+
 /**
  * REST API for managing Environments.
  */
@@ -81,12 +83,12 @@ public class EnvironmentResource {
     private ConsumerResource consumerResource;
     private PoolManager poolManager;
     private ConsumerCurator consumerCurator;
-    private ContentCurator contentCurator;
+    private OwnerContentCurator ownerContentCurator;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
         EnvironmentContentCurator envContentCurator, ConsumerResource consumerResource,
-        PoolManager poolManager, ConsumerCurator consumerCurator, ContentCurator contentCurator) {
+        PoolManager poolManager, ConsumerCurator consumerCurator, OwnerContentCurator ownerContentCurator) {
 
         this.envCurator = envCurator;
         this.i18n = i18n;
@@ -94,7 +96,7 @@ public class EnvironmentResource {
         this.consumerResource = consumerResource;
         this.poolManager = poolManager;
         this.consumerCurator = consumerCurator;
-        this.contentCurator = contentCurator;
+        this.ownerContentCurator = ownerContentCurator;
     }
 
     @ApiOperation(notes = "Retrieves a single Environment", value = "getEnv")
@@ -172,7 +174,7 @@ public class EnvironmentResource {
             );
         }
 
-        Content resolved = this.contentCurator.lookupById(environment.getOwner(), contentId);
+        Content resolved = this.ownerContentCurator.getContentById(environment.getOwner(), contentId);
 
         if (resolved == null) {
             throw new NotFoundException(i18n.tr(

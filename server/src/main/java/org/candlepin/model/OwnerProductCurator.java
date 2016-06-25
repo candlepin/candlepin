@@ -18,14 +18,12 @@ import com.google.inject.persist.Transactional;
 
 import org.hibernate.Session;
 import org.hibernate.Criteria;
-import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -213,6 +211,13 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
     /**
      * Updates the product references currently pointing to the original product to instead point to
      * the updated product for the specified owners.
+     * <p/></p>
+     * <strong>Warning:</strong> Hibernate does not gracefully handle situations where the data
+     * backing an entity changes via direct SQL or other outside influence. While, logically, a
+     * refresh on the entity should resolve any divergence, in many cases it does not or causes
+     * errors. As such, whenever this method is called, any active ActivationKey or Pool entities
+     * should be manually evicted from the session and re-queried to ensure they will not clobber
+     * the changes made by this method on persist, nor trigger any errors on refresh.
      *
      * @param current
      *  The current product other objects are referencing
@@ -318,6 +323,13 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
     /**
      * Removes the product references currently pointing to the specified product for the given
      * owners.
+     * <p/></p>
+     * <strong>Warning:</strong> Hibernate does not gracefully handle situations where the data
+     * backing an entity changes via direct SQL or other outside influence. While, logically, a
+     * refresh on the entity should resolve any divergence, in many cases it does not or causes
+     * errors. As such, whenever this method is called, any active ActivationKey entities should
+     * be manually evicted from the session and re-queried to ensure they will not clobber the
+     * changes made by this method on persist, nor trigger any errors on refresh.
      *
      * @param entity
      *  The product other objects are referencing
@@ -385,5 +397,4 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         // int ipCount = this.safeSQLUpdateWithCollection(sql, entity.getId(), ids);
         // log.debug("{} installed products removed", ipCount);
     }
-
 }

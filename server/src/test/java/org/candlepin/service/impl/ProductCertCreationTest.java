@@ -16,9 +16,7 @@ package org.candlepin.service.impl;
 
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.impl.BouncyCastlePKIReader;
 import org.candlepin.service.ProductServiceAdapter;
@@ -78,13 +76,13 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
     private ProductCertificate createDummyCert() {
         Owner owner = TestUtil.createOwner("Example-Corporation");
         Product product = this.createProduct("50", "Test Product", "Standard", "1", "x86_64", "Base");
-
         return createCert(owner, product);
     }
 
     private ProductCertificate createCert(Owner owner, Product product) {
         this.ownerCurator.create(owner);
         this.productCurator.create(product);
+        this.ownerProductCurator.mapProductToOwner(product, owner);
 
         return this.productAdapter.getProductCertificate(owner, product.getId());
     }

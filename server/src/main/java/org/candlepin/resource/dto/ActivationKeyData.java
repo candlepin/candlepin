@@ -581,7 +581,7 @@ public class ActivationKeyData {
      *  a collection of content overrides associated with the activation key
      */
     public Collection<AKContentOverride> getContentOverrides() {
-        return Collections.unmodifiableCollection(this.contentOverrides);
+        return Collections.unmodifiableSet(this.contentOverrides);
     }
 
     /**

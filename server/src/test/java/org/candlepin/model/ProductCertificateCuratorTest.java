@@ -22,7 +22,7 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.inject.Inject;
+
 
 /**
  * ProductCertificateCuratorTest

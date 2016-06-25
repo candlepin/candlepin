@@ -22,7 +22,6 @@ import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.UsernameConsumersPermission;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.junit.Before;
@@ -33,7 +32,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Inject;
+
 
 /**
  * OwnerInfoCuratorTest

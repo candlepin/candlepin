@@ -323,8 +323,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     }
 
     public Set<X509ByteExtensionWrapper> prepareV3ByteExtensions(Product sku,
-        List<org.candlepin.model.dto.Product> productModels,
-        Entitlement ent, String contentPrefix,
+        List<org.candlepin.model.dto.Product> productModels, Entitlement ent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent) throws IOException {
 
         Set<X509ByteExtensionWrapper> result = v3extensionUtil.getByteExtensions(sku,

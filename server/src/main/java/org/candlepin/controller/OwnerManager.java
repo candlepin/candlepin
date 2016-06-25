@@ -17,7 +17,6 @@ package org.candlepin.controller;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.ExporterMetadata;
@@ -25,6 +24,7 @@ import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprint;
@@ -58,7 +58,7 @@ public class OwnerManager {
     @Inject private PermissionBlueprintCurator permissionCurator;
     @Inject private OwnerProductCurator ownerProductCurator;
     @Inject private ProductManager prodManager;
-    @Inject private ContentCurator contentCurator;
+    @Inject private OwnerContentCurator ownerContentCurator;
     @Inject private ContentManager contentManager;
     @Inject private OwnerCurator ownerCurator;
 
@@ -141,8 +141,8 @@ public class OwnerManager {
         /*
          * contents might have been deleted due to cascades above.
          */
-        contentCurator.flush();
-        for (Content c : contentCurator.listByOwner(owner)) {
+        ownerContentCurator.flush();
+        for (Content c : ownerContentCurator.getContentByOwner(owner)) {
             log.info("Deleting content: {}", c);
             this.contentManager.removeContent(c, owner, false);
         }

@@ -26,9 +26,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
-import org.candlepin.model.Product;
-import org.candlepin.model.SourceSubscription;
-import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.TestUtil;
 
@@ -291,7 +288,7 @@ public class SubscriptionReconcilerTest {
             testSub24);
 
         reconciler.reconcile(owner, Arrays.asList(testSub1, testSub2, testSub3, testSub4, testSub5, testSub30,
-             testSub31, testSub32, testSub33, testSub34), poolCurator);
+            testSub31, testSub32, testSub33, testSub34), poolCurator);
 
         // 20-24 have no matchup with 30-34 due to different upstream pool ID:
         assertUpstream(testSub1, testSub1.getId());

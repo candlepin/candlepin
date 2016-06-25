@@ -18,7 +18,6 @@ package org.candlepin.service.impl;
 import org.candlepin.common.exceptions.ServiceUnavailableException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
-import org.candlepin.model.Product;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -31,6 +30,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+
 
 /**
  * @author mstead

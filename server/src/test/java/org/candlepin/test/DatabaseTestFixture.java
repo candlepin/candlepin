@@ -24,10 +24,8 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.controller.CandlepinPoolManager;
-import org.candlepin.controller.ContentManager;
-import org.candlepin.controller.ProductManager;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
 import org.candlepin.junit.CandlepinLiquibaseResource;
@@ -69,7 +67,6 @@ import org.candlepin.model.UserCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.resteasy.ResourceLocatorMap;
-import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.Util;
 
@@ -127,6 +124,8 @@ public class DatabaseTestFixture {
     @Rule
     public static CandlepinLiquibaseResource liquibase = new CandlepinLiquibaseResource();
 
+    protected Configuration config;
+
     @Inject protected ActivationKeyCurator activationKeyCurator;
     @Inject protected ConsumerCurator consumerCurator;
     @Inject protected ConsumerTypeCurator consumerTypeCurator;
@@ -150,11 +149,7 @@ public class DatabaseTestFixture {
     @Inject protected RoleCurator roleCurator;
     @Inject protected UserCurator userCurator;
 
-    @Inject protected CandlepinPoolManager poolManager;
-    @Inject protected ContentManager contentManager;
-    @Inject protected ProductManager productManager;
-
-    @Inject private ResourceLocatorMap locatorMap;
+    @Inject protected ResourceLocatorMap locatorMap;
 
     private static Injector parentInjector;
     private Injector injector;
@@ -173,8 +168,8 @@ public class DatabaseTestFixture {
 
     @Before
     public void init() {
-        CandlepinCommonTestConfig config = new CandlepinCommonTestConfig();
-        Module testingModule = new TestingModules.StandardTest(config);
+        this.config = new CandlepinCommonTestConfig();
+        Module testingModule = new TestingModules.StandardTest(this.config);
         injector = parentInjector.createChildInjector(
             Modules.override(testingModule).with(getGuiceOverrideModule()));
 
@@ -448,17 +443,18 @@ public class DatabaseTestFixture {
      * @param inj
      */
     private static void insertValidationEventListeners(Injector inj) {
-        Provider<EntityManagerFactory> emfProvider =
-            inj.getProvider(EntityManagerFactory.class);
+        Provider<EntityManagerFactory> emfProvider = inj.getProvider(EntityManagerFactory.class);
         HibernateEntityManagerFactory hibernateEntityManagerFactory =
             (HibernateEntityManagerFactory) emfProvider.get();
         SessionFactoryImpl sessionFactoryImpl =
             (SessionFactoryImpl) hibernateEntityManagerFactory.getSessionFactory();
-        EventListenerRegistry registry =
-            sessionFactoryImpl.getServiceRegistry().getService(EventListenerRegistry.class);
+        EventListenerRegistry registry = sessionFactoryImpl
+            .getServiceRegistry()
+            .getService(EventListenerRegistry.class);
 
         Provider<BeanValidationEventListener> listenerProvider =
             inj.getProvider(BeanValidationEventListener.class);
+
         registry.getEventListenerGroup(EventType.PRE_INSERT).appendListener(listenerProvider.get());
         registry.getEventListenerGroup(EventType.PRE_UPDATE).appendListener(listenerProvider.get());
         registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());

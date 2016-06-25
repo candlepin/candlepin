@@ -23,7 +23,6 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
-import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -34,7 +33,6 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -106,6 +104,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @return
      *  a criteria for fetching product by version
      */
+    @SuppressWarnings("checkstyle:indentation")
     public CandlepinCriteria<Product> getProductsByVersion(String productId, int hashcode) {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .add(Restrictions.eq("id", productId))

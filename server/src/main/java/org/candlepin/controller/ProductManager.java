@@ -14,10 +14,9 @@
  */
 package org.candlepin.controller;
 
-import org.candlepin.common.config.Configuration;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
@@ -31,17 +30,13 @@ import org.candlepin.model.dto.ProductData;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.Session;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 
 
@@ -56,18 +51,18 @@ import java.util.Set;
 public class ProductManager {
     private static Logger log = LoggerFactory.getLogger(ProductManager.class);
 
-    private ContentCurator contentCurator;
     private EntitlementCertificateGenerator entitlementCertGenerator;
+    private OwnerContentCurator ownerContentCurator;
     private OwnerProductCurator ownerProductCurator;
     private ProductCurator productCurator;
 
     @Inject
-    public ProductManager(ContentCurator contentCurator,
-        EntitlementCertificateGenerator entitlementCertGenerator,
-        OwnerProductCurator ownerProductCurator, ProductCurator productCurator) {
+    public ProductManager(EntitlementCertificateGenerator entitlementCertGenerator,
+        OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator,
+        ProductCurator productCurator) {
 
-        this.contentCurator = contentCurator;
         this.entitlementCertGenerator = entitlementCertGenerator;
+        this.ownerContentCurator = ownerContentCurator;
         this.ownerProductCurator = ownerProductCurator;
         this.productCurator = productCurator;
     }
@@ -433,7 +428,9 @@ public class ProductManager {
             updated = this.productCurator.merge(updated);
 
             if (regenerateEntitlementCerts) {
-                this.entitlementCertGenerator.regenerateCertificatesOf(Arrays.asList(updated), true);
+                this.entitlementCertGenerator.regenerateCertificatesOf(
+                    Arrays.asList(owner), Arrays.asList(updated), true
+                );
             }
 
             return updated;
@@ -590,7 +587,7 @@ public class ProductManager {
                 ProductContent existingLink = entity.getProductContent(contentData.getId());
 
                 if (existingLink == null) {
-                    Content existing = this.contentCurator.lookupById(owner, contentData.getId());
+                    Content existing = this.ownerContentCurator.getContentById(owner, contentData.getId());
 
                     if (existing == null) {
                         // Content doesn't exist yet -- it should have been created already

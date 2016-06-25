@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import java.util.Collection;
-
 
 
 /**

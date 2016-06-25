@@ -22,28 +22,20 @@ import static org.mockito.AdditionalAnswers.*;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
-import org.candlepin.common.config.Configuration;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.Util;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.mockito.Mock;
-
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 
 
@@ -62,7 +54,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         this.mockEntCertGenerator = mock(EntitlementCertificateGenerator.class);
 
         this.productManager = new ProductManager(
-            this.contentCurator, this.mockEntCertGenerator, this.ownerProductCurator, this.productCurator
+            this.mockEntCertGenerator, this.ownerContentCurator, this.ownerProductCurator, this.productCurator
         );
     }
 
@@ -147,7 +139,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testUpdateProductNoChange() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product product = this.createProduct("p1", "prod1");
+        Product product = this.createProduct("p1", "prod1", owner);
 
         Product output = this.productManager.updateProduct(product, product.toDTO(), owner, true);
 
@@ -170,8 +162,11 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertEquals(output.getName(), update.getName());
 
         if (regenCerts) {
-            verify(this.mockEntCertGenerator, times(1))
-                .regenerateCertificatesOf(eq(Arrays.asList(product)), anyBoolean());
+            // TODO: Is there a better way to do this? We won't know the exact product instance,
+            // we just know that a product should be refreshed as a result of this operation.
+            verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
+                eq(Arrays.asList(owner)), anyCollectionOf(Product.class), anyBoolean()
+            );
         }
         else {
             verifyZeroInteractions(this.mockEntCertGenerator);
@@ -201,8 +196,9 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertTrue(this.ownerProductCurator.isProductMappedToOwner(product2, owner2));
 
         if (regenCerts) {
-            verify(this.mockEntCertGenerator, times(1))
-                .regenerateCertificatesOf(eq(Arrays.asList(product1)), anyBoolean());
+            verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
+                eq(Arrays.asList(owner1)), anyCollectionOf(Product.class), anyBoolean()
+            );
         }
         else {
             verifyZeroInteractions(this.mockEntCertGenerator);
@@ -229,8 +225,9 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
 
         if (regenCerts) {
-            verify(this.mockEntCertGenerator, times(1))
-                .regenerateCertificatesOf(eq(Arrays.asList(product)), anyBoolean());
+            verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
+                eq(Arrays.asList(owner1)), anyCollectionOf(Product.class), anyBoolean()
+            );
         }
         else {
             verifyZeroInteractions(this.mockEntCertGenerator);
@@ -322,8 +319,9 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertNotNull(this.contentCurator.find(content.getUuid()));
 
         if (regenCerts) {
-            verify(this.mockEntCertGenerator, times(1))
-                .regenerateCertificatesOf(eq(Arrays.asList(output)), anyBoolean());
+            verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
+                eq(Arrays.asList(owner)), anyCollectionOf(Product.class), anyBoolean()
+            );
         }
         else {
             verifyZeroInteractions(this.mockEntCertGenerator);
@@ -357,8 +355,9 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertFalse(this.ownerProductCurator.isProductMappedToOwner(output, owner2));
 
         if (regenCerts) {
-            verify(this.mockEntCertGenerator, times(1))
-                .regenerateCertificatesOf(eq(Arrays.asList(output)), anyBoolean());
+            verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
+                eq(Arrays.asList(owner1)), anyCollectionOf(Product.class), anyBoolean()
+            );
         }
         else {
             verifyZeroInteractions(this.mockEntCertGenerator);
@@ -426,8 +425,9 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertFalse(this.ownerProductCurator.isProductMappedToOwner(output, owner2));
 
         if (regenCerts) {
-            verify(this.mockEntCertGenerator, times(1))
-                .regenerateCertificatesOf(eq(Arrays.asList(owner1)), eq(Arrays.asList(output)), anyBoolean());
+            verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
+                eq(Arrays.asList(owner1)), anyCollectionOf(Product.class), anyBoolean()
+            );
         }
         else {
             verifyZeroInteractions(this.mockEntCertGenerator);

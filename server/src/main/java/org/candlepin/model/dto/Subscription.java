@@ -39,7 +39,6 @@ import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -569,6 +568,7 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         this.setQuantity(source.getQuantity());
         this.setStartDate(source.getStartDate());
         this.setEndDate(source.getEndDate());
+        this.setModified(source.getUpdated());
         this.setUpstreamEntitlementId(source.getUpstreamEntitlementId());
         this.setCdn(source.getCdn());
         this.setCertificate(source.getCertificate());

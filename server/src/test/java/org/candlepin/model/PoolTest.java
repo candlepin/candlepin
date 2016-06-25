@@ -59,31 +59,37 @@ public class PoolTest extends DatabaseTestFixture {
     public void createObjects() {
         beginTransaction();
 
-        owner = new Owner("testowner");
-        ownerCurator.create(owner);
+        try {
+            owner = new Owner("testowner");
+            ownerCurator.create(owner);
 
-        prod1 = this.createProduct(owner);
-        prod2 = this.createProduct(owner);
+            prod1 = this.createProduct(owner);
+            prod2 = this.createProduct(owner);
 
-        Set<Product> providedProducts = new HashSet<Product>();
-        providedProducts.add(prod2);
+            Set<Product> providedProducts = new HashSet<Product>();
+            providedProducts.add(prod2);
 
-        pool = TestUtil.createPool(owner, prod1, providedProducts, 1000);
-        subscription = TestUtil.createSubscription(owner, prod1);
-        subscription.setId(Util.generateDbUUID());
+            pool = TestUtil.createPool(owner, prod1, providedProducts, 1000);
+            subscription = TestUtil.createSubscription(owner, prod1);
+            subscription.setId(Util.generateDbUUID());
 
-        pool.setSourceSubscription(new SourceSubscription(subscription.getId(), "master"));
-        poolCurator.create(pool);
-        owner = pool.getOwner();
+            pool.setSourceSubscription(new SourceSubscription(subscription.getId(), "master"));
+            poolCurator.create(pool);
+            owner = pool.getOwner();
 
-        consumer = TestUtil.createConsumer(owner);
+            consumer = TestUtil.createConsumer(owner);
 
-        productCurator.create(prod1);
-        poolCurator.create(pool);
-        consumerTypeCurator.create(consumer.getType());
-        consumerCurator.create(consumer);
+            productCurator.create(prod1);
+            poolCurator.create(pool);
+            consumerTypeCurator.create(consumer.getType());
+            consumerCurator.create(consumer);
 
-        commitTransaction();
+            commitTransaction();
+        }
+        catch (RuntimeException e) {
+            rollbackTransaction();
+            throw e;
+        }
     }
 
     @Test

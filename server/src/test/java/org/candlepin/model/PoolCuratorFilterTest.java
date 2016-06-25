@@ -27,7 +27,6 @@ import org.junit.Test;
 import java.util.Collection;
 import java.util.List;
 
-import javax.inject.Inject;
 
 
 public class PoolCuratorFilterTest extends DatabaseTestFixture {

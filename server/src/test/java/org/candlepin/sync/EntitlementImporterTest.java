@@ -138,11 +138,11 @@ public class EntitlementImporterTest {
 
         assertEquals(ent.getQuantity().intValue(), sub.getQuantity().intValue());
 
-        assertEquals(parentProduct, sub.getProduct());
+        assertEquals(parentProduct.toDTO(), sub.getProduct());
         assertEquals(providedProducts.size(), sub.getProvidedProducts().size());
         assertEquals(provided1.getId(), sub.getProvidedProducts().iterator().next().getId());
 
-        assertEquals(derivedProduct, sub.getDerivedProduct());
+        assertEquals(derivedProduct.toDTO(), sub.getDerivedProduct());
         assertEquals(1, sub.getDerivedProvidedProducts().size());
         assertEquals(derivedProvided1.getId(), sub.getDerivedProvidedProducts().iterator().next().getId());
 

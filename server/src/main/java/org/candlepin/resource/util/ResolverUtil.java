@@ -43,10 +43,13 @@ public class ResolverUtil {
     private ProductCurator productCurator;
 
     @Inject
-    public ResolverUtil(I18n i18n, OwnerCurator ownerCurator, OwnerProductCurator ownerProductCurator) {
+    public ResolverUtil(I18n i18n, OwnerCurator ownerCurator, OwnerProductCurator ownerProductCurator,
+        ProductCurator productCurator) {
+
         this.i18n = i18n;
         this.ownerCurator = ownerCurator;
         this.ownerProductCurator = ownerProductCurator;
+        this.productCurator = productCurator;
     }
 
     public Owner resolveOwner(Owner owner) {

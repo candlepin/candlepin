@@ -19,7 +19,6 @@ import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
@@ -34,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+
 
 
 /**
@@ -133,7 +133,7 @@ public class ContentManager {
 
         log.debug("Creating new content for org: {}, {}", entity, owner);
 
-        Content existing = this.contentCurator.lookupById(owner, entity.getId());
+        Content existing = this.ownerContentCurator.getContentById(owner, entity.getId());
 
         // TODO: FIXME:
         // There's a bug here where if changes are applied to an entity's collections, and then
@@ -152,6 +152,7 @@ public class ContentManager {
             .getContentByVersion(entity.getId(), entity.hashCode())
             .list();
 
+        log.debug("Checking {} alternate content versions", alternateVersions.size());
         for (Content alt : alternateVersions) {
             if (alt.equals(entity)) {
                 // If we're "creating" a content, we shouldn't have any other object references to
@@ -213,7 +214,7 @@ public class ContentManager {
 
         // Resolve the entity to ensure we're working with the merged entity, and to ensure it's
         // already been created.
-        entity = this.contentCurator.lookupById(owner, entity.getId());
+        entity = this.ownerContentCurator.getContentById(owner, entity.getId());
 
         if (entity == null) {
             // If we're doing an exclusive update, this should be an error condition
@@ -273,8 +274,12 @@ public class ContentManager {
 
             if (regenerateEntitlementCerts) {
                 // Every owner with a pool using any of the affected products needs an update.
+                List<Product> affectedProducts = this.productCurator.getProductsWithContent(
+                    Arrays.asList(updated.getUuid())
+                );
+
                 this.entitlementCertGenerator.regenerateCertificatesOf(
-                    this.productCurator.getProductsWithContent(Arrays.asList(updated.getUuid())), true
+                    Arrays.asList(owner), affectedProducts, true
                 );
             }
 
@@ -283,8 +288,6 @@ public class ContentManager {
 
 
         log.debug("Forking content and applying update: {}", updated);
-
-        List<Owner> owners = Arrays.asList(owner);
 
         // Clear the UUID so Hibernate doesn't think our copy is a detached entity
         updated.setUuid(null);
@@ -307,12 +310,9 @@ public class ContentManager {
                 // Impl note: This should also take care of our entitlement cert regeneration
                 this.productManager.updateProduct(product, pdata, owner, regenerateEntitlementCerts);
             }
-
-            // Impl note: This should also take care of our entitlement cert regeneration
-            this.productManager.updateProduct(product, pdata, owner, regenerateEntitlementCerts);
         }
 
-        return this.ownerContentCurator.updateOwnerContentReferences(entity, updated, owners);
+        return this.ownerContentCurator.updateOwnerContentReferences(entity, updated, Arrays.asList(owner));
     }
 
     /**

@@ -31,7 +31,6 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.User;
@@ -72,16 +71,16 @@ public class TestUtil {
     private TestUtil() {
     }
 
-    public static Owner createOwner() {
-        return new Owner("Test Owner " + randomInt());
+    public static Owner createOwner(String key, String name) {
+        return new Owner(key, name);
     }
 
     public static Owner createOwner(String key) {
-        return new Owner(key);
+        return createOwner(key, key);
     }
 
-    public static Owner createOwner(String key, String name) {
-        return new Owner(key, name);
+    public static Owner createOwner() {
+        return createOwner("Test Owner " + randomInt());
     }
 
     public static Consumer createConsumer(ConsumerType type, Owner owner) {
@@ -138,7 +137,7 @@ public class TestUtil {
         return new Content(
             name,
             id,
-            name,
+            "test-label",
             "test-type",
             "test-vendor",
             "https://test.url.com",
@@ -225,7 +224,7 @@ public class TestUtil {
         Product product = null;
 
         if (productData != null) {
-            product = new Product(product.getId(), product.getName());
+            product = new Product(productData.getId(), productData.getName());
 
             product.setUuid(productData.getUuid());
             product.setMultiplier(productData.getMultiplier());
@@ -290,8 +289,10 @@ public class TestUtil {
 
         Collection<ProductData> providedProductsDTOs = new LinkedList<ProductData>();
 
-        for (Product providedProduct : providedProducts) {
-            providedProductsDTOs.add(providedProduct.toDTO());
+        if (providedProducts != null) {
+            for (Product providedProduct : providedProducts) {
+                providedProductsDTOs.add(providedProduct.toDTO());
+            }
         }
 
         return createSubscription(owner, product.toDTO(), providedProductsDTOs);
@@ -316,6 +317,8 @@ public class TestUtil {
             createDate(2050, 1, 1),
             createDate(2000, 1, 1)
         );
+
+        sub.setId("test-sub-" + randomInt());
 
         return sub;
     }
@@ -424,10 +427,15 @@ public class TestUtil {
         );
     }
 
-    public static UserPrincipal createOwnerPrincipal() {
-        Owner owner = new Owner("Test Owner " + randomInt());
+    public static UserPrincipal createOwnerPrincipal(Owner owner) {
         return createPrincipal("someuser", owner, Access.ALL);
     }
+
+    public static UserPrincipal createOwnerPrincipal() {
+        Owner owner = createOwner("Test Owner " + randomInt());
+        return createPrincipal("someuser", owner, Access.ALL);
+    }
+
 
     public static Set<String> createSet(String productId) {
         Set<String> results = new HashSet<String>();

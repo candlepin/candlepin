@@ -353,7 +353,7 @@ public class ContentData extends CandlepinDTO {
     /**
      * Sets the GPG URL of the content represented by this DTO.
      *
-     * @param gpgURL
+     * @param gpgUrl
      *  The GPG URL of the content represented by this DTO, or null to clear the GPG URL
      *
      * @return
@@ -399,7 +399,7 @@ public class ContentData extends CandlepinDTO {
      *  the modified product IDs of the content, or null if the modified product IDs have not yet
      *  been defined
      */
-    public Set<String> getModifiedProductIds() {
+    public Collection<String> getModifiedProductIds() {
         return this.modifiedProductIds != null ?
             Collections.unmodifiableSet(this.modifiedProductIds) :
             null;
@@ -619,6 +619,7 @@ public class ContentData extends CandlepinDTO {
         this.releaseVer = source.getReleaseVersion();
         this.gpgUrl = source.getGpgUrl();
         this.metadataExpire = source.getMetadataExpire();
+        this.arches = source.getArches();
 
         this.setModifiedProductIds(source.getModifiedProductIds());
 
@@ -655,6 +656,7 @@ public class ContentData extends CandlepinDTO {
         this.releaseVer = source.getReleaseVersion();
         this.gpgUrl = source.getGpgUrl();
         this.metadataExpire = source.getMetadataExpire();
+        this.arches = source.getArches();
 
         this.setModifiedProductIds(source.getModifiedProductIds());
 

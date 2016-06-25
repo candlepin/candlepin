@@ -35,7 +35,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -53,7 +52,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
@@ -82,20 +80,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
     public static final String CONTENT_OVERRIDE_ENABLED_ATTRIB = "content_override_enabled";
     public static final String CONTENT_OVERRIDE_DISABLED_ATTRIB = "content_override_disabled";
-
-
-    public static final Comparator<ProductContent> CONTENT_COMPARATOR = new Comparator<ProductContent>() {
-        public int compare(ProductContent lhs, ProductContent rhs) {
-            if (lhs != null && lhs.equals(rhs)) {
-                Content lhc = lhs.getContent();
-                Content rhc = rhs.getContent();
-
-                return (lhc == rhc) || (lhc != null && lhc.equals(rhc)) ? 0 : -1;
-            }
-
-            return lhs == rhs ? 0 : -1;
-        }
-    };
 
     // Object ID
     @Id
@@ -150,7 +134,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @XmlTransient
     @Column
     @Type(type = "org.hibernate.type.NumericBooleanType")
-    private Boolean locked;
+    private boolean locked;
 
     protected Product() {
         this.attributes = new LinkedList<ProductAttribute>();
@@ -454,7 +438,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  a collection containing the attributes of the product
      */
     public Collection<ProductAttribute> getAttributes() {
-        return Collections.unmodifiableCollection(this.attributes);
+        return Collections.unmodifiableList(this.attributes);
     }
 
     /**
@@ -658,6 +642,17 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     }
 
     /**
+     * Clears all product attributes currently set for this product.
+     *
+     * @return
+     *  a reference to this product
+     */
+    public Product clearAttributes() {
+        this.attributes.clear();
+        return this;
+    }
+
+    /**
      * Sets the attributes of the product represented by this product.
      *
      * @param attributes
@@ -721,7 +716,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  the product content associated with this product
      */
     public Collection<ProductContent> getProductContent() {
-        return Collections.unmodifiableCollection(this.productContent);
+        return Collections.unmodifiableList(this.productContent);
     }
 
     /**
@@ -930,6 +925,17 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     }
 
     /**
+     * Clears all product content currently associated with this product.
+     *
+     * @return
+     *  a reference to this product
+     */
+    public Product clearProductContent() {
+        this.productContent.clear();
+        return this;
+    }
+
+    /**
      * Sets the content of the product represented by this product.
      *
      * @param content
@@ -975,7 +981,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  the dependent product IDs of this product
      */
     public Collection<String> getDependentProductIds() {
-        return Collections.unmodifiableCollection(this.dependentProductIds);
+        return Collections.unmodifiableSet(this.dependentProductIds);
     }
 
     /**
@@ -1021,9 +1027,20 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     }
 
     /**
+     * Clears all dependent product IDs currently set for this product.
+     *
+     * @return
+     *  a reference to this product
+     */
+    public Product clearDependentProductIds() {
+        this.dependentProductIds.clear();
+        return this;
+    }
+
+    /**
      * Sets the dependent product IDs of this product.
      *
-     * @param attributes
+     * @param dependentProductIds
      *  A collection of dependent product IDs to attach to this product, or null to clear the
      *  dependent products
      *
@@ -1060,7 +1077,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
     @XmlTransient
     public boolean isLocked() {
-        return this.locked != null && this.locked;
+        return this.locked;
     }
 
     @Override
@@ -1092,11 +1109,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             // Impl note: We can't use .equals here on the collections, as Hibernate's special
             // collections explicitly state that they break the contract on .equals. As such, we
             // have to step through each collection and do a manual comparison. Ugh.
-
             equals = equals &&
                 Util.collectionsAreEqual(this.attributes, that.attributes) &&
                 Util.collectionsAreEqual(this.dependentProductIds, that.dependentProductIds) &&
-                Util.collectionsAreEqual(this.productContent, that.productContent, CONTENT_COMPARATOR);
+                Util.collectionsAreEqual(this.productContent, that.productContent);
         }
 
         return equals;

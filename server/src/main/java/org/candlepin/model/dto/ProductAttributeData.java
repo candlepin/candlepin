@@ -16,14 +16,8 @@ package org.candlepin.model.dto;
 
 import org.candlepin.model.ProductAttribute;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Set;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -120,7 +114,7 @@ public class ProductAttributeData extends CandlepinDTO {
     /**
      * Sets the name of the attribute represented by this DTO.
      *
-     * @param updated
+     * @param name
      *  The name of the attribute represented by this DTO, or null to clear the name
      *
      * @return
@@ -149,7 +143,7 @@ public class ProductAttributeData extends CandlepinDTO {
     /**
      * Sets the value of the attribute represented by this DTO.
      *
-     * @param updated
+     * @param value
      *  The value of the attribute represented by this DTO, or null to clear the value
      *
      * @return

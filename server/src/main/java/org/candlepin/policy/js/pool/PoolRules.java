@@ -226,8 +226,7 @@ public class PoolRules {
      * @param floatingPools pools with no subscription ID
      * @return pool updates
      */
-    public List<PoolUpdate> updatePools(List<Pool> floatingPools,
-        Set<Product> changedProducts) {
+    public List<PoolUpdate> updatePools(List<Pool> floatingPools, Set<Product> changedProducts) {
         List<PoolUpdate> updates = new LinkedList<PoolUpdate>();
         for (Pool p : floatingPools) {
 
@@ -264,8 +263,9 @@ public class PoolRules {
 
         List<PoolUpdate> poolsUpdated = new LinkedList<PoolUpdate>();
         Map<String, String> attributes = PoolHelper.getFlattenedAttributes(masterPool.getProduct());
+
         for (Pool existingPool : existingPools) {
-            log.debug("Checking pool: {}", existingPool.getId());
+            log.debug("Checking pool: {}", existingPool);
 
             // Ensure subscription details are maintained on the master pool
             if ("master".equalsIgnoreCase(existingPool.getSubscriptionSubKey())) {
@@ -287,15 +287,15 @@ public class PoolRules {
                 existingPools, attributes));
 
             if (!existingPool.isMarkedForDelete()) {
-                boolean useDerived = BooleanUtils.toBoolean(
-                    existingPool.getAttributeValue("pool_derived")) &&
-                    masterPool.getDerivedProduct() != null;
+                boolean useDerived = masterPool.getDerivedProduct() != null &&
+                    BooleanUtils.toBoolean(existingPool.getAttributeValue("pool_derived"));
 
                 update.setProductsChanged(checkForChangedProducts(
                     useDerived ? masterPool.getDerivedProduct() : masterPool.getProduct(),
                     getExpectedProvidedProducts(masterPool, useDerived),
                     existingPool,
-                    changedProducts));
+                    changedProducts)
+                );
 
                 if (!useDerived) {
                     update.setDerivedProductsChanged(
@@ -306,6 +306,7 @@ public class PoolRules {
 
                 update.setBrandingChanged(checkForBrandingChanges(masterPool, existingPool));
             }
+
             // All done, see if we found any changes and return an update object if so:
             if (update.changed()) {
                 poolsUpdated.add(update);
@@ -508,13 +509,25 @@ public class PoolRules {
 
         Product existingProduct = existingPool.getProduct();
         Set<Product> currentProvided = existingPool.getProvidedProducts();
+        String pid = existingProduct.getId();
 
         // TODO: ideally we would differentiate between these different product changes
         // a little, but in the end it probably doesn't matter:
         boolean productsChanged =
-            !incomingProduct.getId().equals(existingProduct.getId()) ||
-            (changedProducts != null && changedProducts.contains(existingProduct)) ||
+            (pid != null && !pid.equals(incomingProduct.getId())) ||
             !currentProvided.equals(incomingProvided);
+
+        // Check if the existing product is in the set of changed products
+        if (!productsChanged && changedProducts != null && existingProduct.getId() != null) {
+            for (Product product : changedProducts) {
+                if (pid.equals(product.getId())) {
+                    // TODO: Should we maybe check if the products have actually changed, or is it
+                    // safe to assume their presence is enough?
+                    productsChanged = true;
+                    break;
+                }
+            }
+        }
 
         if (productsChanged) {
             existingPool.setProduct(incomingProduct);
@@ -585,9 +598,9 @@ public class PoolRules {
         // virt only pools we expect it to be main pool quantity * virt_limit:
         long expectedQuantity = calculateQuantity(originalQuantity, pool.getProduct(),
             pool.getUpstreamPoolId());
+
         expectedQuantity = processVirtLimitPools(existingPools,
             attributes, existingPool, expectedQuantity);
-
 
         boolean quantityChanged = !(expectedQuantity == existingPool.getQuantity());
 

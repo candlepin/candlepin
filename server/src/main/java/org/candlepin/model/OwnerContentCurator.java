@@ -18,15 +18,12 @@ import com.google.inject.persist.Transactional;
 
 import org.hibernate.Session;
 import org.hibernate.Criteria;
-import org.hibernate.SQLQuery;
-import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -216,6 +213,13 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
      * the updated content for the specified owners.
      * <p/></p>
      * <strong>Note:</strong> product-content mappings are not modified by this method.
+     * <p/></p>
+     * <strong>Warning:</strong> Hibernate does not gracefully handle situations where the data
+     * backing an entity changes via direct SQL or other outside influence. While, logically, a
+     * refresh on the entity should resolve any divergence, in many cases it does not or causes
+     * errors. As such, whenever this method is called, any active Environment entities should
+     * be manually evicted from the session and re-queried to ensure they will not clobber the
+     * changes made by this method on persist, nor trigger any errors on refresh.
      *
      * @param current
      *  The current content other objects are referencing
@@ -229,6 +233,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
      * @return
      *  a reference to the updated content
      */
+    @Transactional
     public Content updateOwnerContentReferences(Content current, Content updated, Collection<Owner> owners) {
         // Impl note:
         // We're doing this in straight SQL because direct use of the ORM would require querying all
@@ -278,6 +283,11 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         int ecCount = this.safeSQLUpdateWithCollection(sql, ids, updated.getUuid());
         log.debug("{} environment-content relations updated", ecCount);
 
+        // Impl note:
+        // We're not managing product-content references, since versioning changes require us to
+        // handle that with more explicit logic. Instead, when rely on the content manager using
+        // the product manager to fork/update products when a related content changes.
+
         return updated;
     }
 
@@ -286,6 +296,13 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
      * owners.
      * <p/></p>
      * <strong>Note:</strong> product-content mappings are not modified by this method.
+     * <p/></p>
+     * <strong>Warning:</strong> Hibernate does not gracefully handle situations where the data
+     * backing an entity changes via direct SQL or other outside influence. While, logically, a
+     * refresh on the entity should resolve any divergence, in many cases it does not or causes
+     * errors. As such, whenever this method is called, any active Environment entities should
+     * be manually evicted from the session and re-queried to ensure they will not clobber the
+     * changes made by this method on persist, nor trigger any errors on refresh.
      *
      * @param content
      *  The content other objects are referencing
@@ -293,6 +310,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
      * @param owners
      *  A collection of owners for which to apply the reference changes
      */
+    @Transactional
     public void removeOwnerContentReferences(Content content, Collection<Owner> owners) {
         // Impl note:
         // As is the case in updateOwnerContentReferences, HQL's bulk delete doesn't allow us to
@@ -336,6 +354,11 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
         int ecCount = this.safeSQLUpdateWithCollection(sql, ids);
         log.debug("{} environment-content relations updated", ecCount);
+
+        // Impl note:
+        // We're not managing product-content references, since versioning changes require us to
+        // handle that with more explicit logic. Instead, when rely on the content manager using
+        // the product manager to fork/update products when a related content changes.
     }
 
 }

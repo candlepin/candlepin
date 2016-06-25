@@ -25,15 +25,12 @@ import org.junit.Test;
 
 import java.util.HashSet;
 
-import javax.inject.Inject;
 
 
 /**
  * ContentTest
  */
 public class ContentTest extends DatabaseTestFixture {
-    @Inject private ContentCurator contentCurator;
-    @Inject private OwnerCurator ownerCurator;
 
     @Test
     public void testContent() {
@@ -77,11 +74,8 @@ public class ContentTest extends DatabaseTestFixture {
         // TODO:
         // This test may no longer have meaning with the addition of the content manager
 
-        Owner owner = new Owner("Example-Corporation");
-        ownerCurator.create(owner);
-
-        Content content = TestUtil.createContent("test_content");
-        contentCurator.create(content);
+        Owner owner = this.createOwner("Example-Corporation");
+        Content content = this.createContent("test_content", "test_content", owner);
 
         // Same ID, but label changed:
         String newLabel = "test-content-label-new";
@@ -94,7 +88,7 @@ public class ContentTest extends DatabaseTestFixture {
 
         contentCurator.merge(modifiedContent);
 
-        content = contentCurator.lookupById(owner, content.getId());
+        content = this.ownerContentCurator.getContentById(owner, content.getId());
         assertEquals(newLabel, content.getLabel());
         assertEquals(newName, content.getName());
     }

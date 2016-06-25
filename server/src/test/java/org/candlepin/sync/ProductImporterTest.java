@@ -20,11 +20,8 @@ import static org.mockito.Mockito.*;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductContent;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,8 +35,9 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+
+
+
 /**
  * ProductImporterTest
  */
@@ -65,6 +63,9 @@ public class ProductImporterTest {
     @Test
     public void testCreateObject() throws Exception {
         Product product = TestUtil.createProduct();
+        product.setAttribute("a1", "a1");
+        product.setAttribute("a2", "a2");
+
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
         Product created = importer.createObject(mapper, reader, owner);
@@ -115,7 +116,7 @@ public class ProductImporterTest {
         Content content = TestUtil.createContent("100130", "content_name");
         content.setMetadataExpire(1000L);
 
-        product.getProductContent().add(new ProductContent(product, content, true));
+        product.addContent(content, true);
 
         return content;
     }
@@ -126,7 +127,7 @@ public class ProductImporterTest {
         content.setVendor("");
         content.setMetadataExpire(1000L);
 
-        product.getProductContent().add(new ProductContent(product, content, true));
+        product.addContent(content, true);
 
         return content;
     }

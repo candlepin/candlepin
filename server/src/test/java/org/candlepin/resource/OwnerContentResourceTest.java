@@ -22,28 +22,22 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;
-import org.candlepin.model.EnvironmentContent;
-import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.Util;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
 
+import javax.inject.Inject;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 
 
 
@@ -52,36 +46,51 @@ import javax.ws.rs.core.Response;
  */
 public class OwnerContentResourceTest extends DatabaseTestFixture {
 
+    @Inject protected ContentManager contentManager;
+    @Inject protected PoolManager poolManager;
+
     private OwnerContentResource ownerContentResource;
 
     @Before
-    public void init() {
+    public void setup() {
         this.ownerContentResource = new OwnerContentResource(this.contentCurator, this.contentManager,
         this.environmentContentCurator, this.i18n, this.ownerCurator, this.ownerContentCurator,
         this.poolManager, this.productCurator, new DefaultUniqueIdGenerator());
     }
 
     @Test
-    public void listContent() {
+    public void listContent() throws Exception {
         Owner owner = this.createOwner("test_owner");
         Content content = this.createContent("test_content", "test_content", owner);
 
-        Response output = this.ownerContentResource.list(owner.getKey());
+        Response response = this.ownerContentResource.list(owner.getKey());
 
-        assertNotNull(output);
-        assertEquals(200, output.getStatus());
-        assertEquals("FIX ME", output.getMetadata());
+        assertNotNull(response);
+        assertEquals(200, response.getStatus());
+        assertTrue(response.getEntity() instanceof StreamingOutput);
+
+        StreamingOutput output = (StreamingOutput) response.getEntity();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        output.write(baos);
+
+        assertNotEquals(-1, baos.toString().indexOf("test_content"));
     }
 
     @Test
-    public void listContentNoContent() {
+    public void listContentNoContent() throws Exception {
         Owner owner = this.createOwner("test_owner");
 
-        Response output = this.ownerContentResource.list(owner.getKey());
+        Response response = this.ownerContentResource.list(owner.getKey());
 
-        assertNotNull(output);
-        assertEquals(200, output.getStatus());
-        assertEquals("FIX ME", output.getMetadata());
+        assertNotNull(response);
+        assertEquals(200, response.getStatus());
+        assertTrue(response.getEntity() instanceof StreamingOutput);
+
+        StreamingOutput output = (StreamingOutput) response.getEntity();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        output.write(baos);
+
+        assertEquals("[]", baos.toString());
     }
 
     @Test
@@ -107,6 +116,9 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
     public void createContent() {
         Owner owner = this.createOwner("test_owner");
         ContentData contentData = TestUtil.createContentDTO("test_content");
+        contentData.setLabel("test-label");
+        contentData.setType("test-test");
+        contentData.setVendor("test-vendor");
 
         assertNull(this.ownerContentCurator.getContentById(owner, contentData.getId()));
 
@@ -129,6 +141,9 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
         Owner owner = this.createOwner("test_owner");
         Content content = this.createContent("test_content", "test_content", owner);
         ContentData contentData = TestUtil.createContentDTO("test_content", "updated_name");
+        contentData.setLabel("test-label");
+        contentData.setType("test-test");
+        contentData.setVendor("test-vendor");
 
         assertNotNull(this.ownerContentCurator.getContentById(owner, contentData.getId()));
 
@@ -152,6 +167,10 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
         Owner owner = this.createOwner("test_owner");
         Content content = this.createContent("test_content", "test_content", owner);
         ContentData contentData = TestUtil.createContentDTO("test_content", "updated_name");
+        contentData.setLabel("test-label");
+        contentData.setType("test-test");
+        contentData.setVendor("test-vendor");
+
         content.setLocked(true);
         this.contentCurator.merge(content);
 
@@ -202,6 +221,8 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
         }
         catch (NotFoundException e) {
             assertNull(this.ownerContentCurator.getContentById(owner, contentData.getId()));
+
+            throw e;
         }
     }
 
@@ -240,7 +261,9 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
 
         assertNull(this.ownerContentCurator.getContentById(owner, content.getId()));
 
-        this.environmentCurator.refresh(environment);
+        this.environmentCurator.evict(environment);
+        environment = this.environmentCurator.find(environment.getId());
+
         assertEquals(0, environment.getEnvironmentContent().size());
     }
 
@@ -262,7 +285,9 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
         catch (ForbiddenException e) {
             assertNotNull(this.ownerContentCurator.getContentById(owner, content.getId()));
 
-            this.environmentCurator.refresh(environment);
+            this.environmentCurator.evict(environment);
+            environment = this.environmentCurator.find(environment.getId());
+
             assertEquals(1, environment.getEnvironmentContent().size());
 
             throw e;

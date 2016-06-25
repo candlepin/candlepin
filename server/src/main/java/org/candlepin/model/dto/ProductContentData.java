@@ -17,20 +17,8 @@ package org.candlepin.model.dto;
 import org.candlepin.model.Content;
 import org.candlepin.model.ProductContent;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -50,6 +38,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * }
  * </pre>
  */
+@XmlRootElement
 public class ProductContentData implements Cloneable {
     private ContentData content;
     private Boolean enabled;
@@ -104,7 +93,7 @@ public class ProductContentData implements Cloneable {
     /**
      * Sets the content of the product content represented by this DTO.
      *
-     * @param updated
+     * @param content
      *  The content of the product represented by this DTO
      *
      * @throws IllegalArgumentException
@@ -136,7 +125,7 @@ public class ProductContentData implements Cloneable {
     /**
      * Sets the enabled flag of the product content represented by this DTO.
      *
-     * @param updated
+     * @param enabled
      *  The enabled flag of the product content represented by this DTO, or null to clear the
      *  enabled flag
      *
@@ -208,7 +197,7 @@ public class ProductContentData implements Cloneable {
     public ProductContentData populate(ProductContentData source) {
         if (source == null) {
             throw new IllegalArgumentException("source is null");
-        };
+        }
 
         this.content = source.content;
         this.enabled = source.enabled;

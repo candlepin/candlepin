@@ -17,31 +17,16 @@ package org.candlepin.model;
 import static org.junit.Assert.*;
 import static org.hamcrest.Matchers.*;
 
-import org.candlepin.model.activationkeys.ActivationKey;
-
-import org.candlepin.common.config.Configuration;
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.Util;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import javax.inject.Inject;
-import javax.persistence.PersistenceException;
-import javax.validation.ConstraintViolationException;
 
 
 /**
@@ -521,15 +506,14 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testUpdateOwnerContentReferences() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-        Content original = this.createContent();
-        Content unmodified = this.createContent();
-        Content updated = this.createContent();
-        this.createOwnerContentMapping(owner1, original);
-        this.createOwnerContentMapping(owner2, unmodified);
+        Owner owner1 = this.createOwner("owner1");
+        Owner owner2 = this.createOwner("owner2");
+        Content original = this.createContent("c1", "c1", owner1);
+        Content unmodified = this.createContent("c1", "c1", owner2);
+        Content updated = this.createContent("c1", "c1");
 
-        assertTrue(original.getUuid() != updated.getUuid() && original.getUuid() != unmodified.getUuid());
+        assertTrue(original.getUuid() != updated.getUuid());
+        assertTrue(original.getUuid() != unmodified.getUuid());
         assertTrue(updated.getUuid() != unmodified.getUuid());
 
         Environment environment1 = this.createEnvironment(
@@ -539,13 +523,6 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         Environment environment2 = this.createEnvironment(
             owner2, "test_env-2", "test_env-2", null, null, Arrays.asList(unmodified)
         );
-
-        Product product1 = this.createProduct("test_prod-1", "test_prod-1", owner1);
-        Product product2 = this.createProduct("test_prod-2", "test_prod-2", owner2);
-        product1.addContent(original, true);
-        product2.addContent(unmodified, true);
-        product1 = this.productCurator.merge(product1);
-        product2 = this.productCurator.merge(product2);
 
         assertTrue(this.isContentMappedToOwner(original, owner1));
         assertFalse(this.isContentMappedToOwner(updated, owner1));
@@ -557,27 +534,53 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         assertTrue(this.isContentMappedToOwner(updated, owner1));
         assertTrue(this.isContentMappedToOwner(unmodified, owner2));
 
-        this.environmentCurator.refresh(environment1);
-        this.environmentCurator.refresh(environment2);
+        this.environmentCurator.evict(environment1);
+        this.environmentCurator.evict(environment2);
+        environment1 = this.environmentCurator.find(environment1.getId());
+        environment2 = this.environmentCurator.find(environment2.getId());
 
+        assertEquals(1, environment1.getEnvironmentContent().size());
+        assertEquals(1, environment2.getEnvironmentContent().size());
         assertEquals(updated.getUuid(), environment1.getEnvironmentContent().iterator().next().getContent()
             .getUuid());
         assertEquals(unmodified.getUuid(), environment2.getEnvironmentContent().iterator().next().getContent()
-            .getUuid());
-
-        assertEquals(updated.getUuid(), product1.getProductContent(updated.getId()).getContent()
-            .getUuid());
-        assertEquals(unmodified.getUuid(), product1.getProductContent(unmodified.getId()).getContent()
             .getUuid());
     }
 
     @Test
     public void testRemoveOwnerContentReferences() {
-        Owner owner = this.createOwner();
-        Content original = this.createContent();
-        this.createOwnerContentMapping(owner, original);
+        Owner owner1 = this.createOwner("owner1");
+        Owner owner2 = this.createOwner("owner2");
+        Content original = this.createContent("c1", "c1", owner1);
+        Content unmodified = this.createContent("c1", "c1", owner2);
 
-        // TODO
+        assertTrue(original.getUuid() != unmodified.getUuid());
+
+        Environment environment1 = this.createEnvironment(
+            owner1, "test_env-1", "test_env-1", null, null, Arrays.asList(original)
+        );
+
+        Environment environment2 = this.createEnvironment(
+            owner2, "test_env-2", "test_env-2", null, null, Arrays.asList(unmodified)
+        );
+
+        assertTrue(this.isContentMappedToOwner(original, owner1));
+        assertTrue(this.isContentMappedToOwner(unmodified, owner2));
+
+        this.ownerContentCurator.removeOwnerContentReferences(original, Arrays.asList(owner1));
+
+        assertFalse(this.isContentMappedToOwner(original, owner1));
+        assertTrue(this.isContentMappedToOwner(unmodified, owner2));
+
+        this.environmentCurator.evict(environment1);
+        this.environmentCurator.evict(environment2);
+        environment1 = this.environmentCurator.find(environment1.getId());
+        environment2 = this.environmentCurator.find(environment2.getId());
+
+        assertEquals(0, environment1.getEnvironmentContent().size());
+        assertEquals(1, environment2.getEnvironmentContent().size());
+        assertEquals(unmodified.getUuid(), environment2.getEnvironmentContent().iterator().next().getContent()
+            .getUuid());
     }
 
 }

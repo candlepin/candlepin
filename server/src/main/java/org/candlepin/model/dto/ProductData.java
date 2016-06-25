@@ -19,19 +19,14 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -64,9 +59,9 @@ public class ProductData extends CandlepinDTO {
     protected String id;
     protected String name;
     protected Long multiplier;
-    protected Collection<ProductAttributeData> attributes;
-    protected Collection<ProductContentData> content;
-    protected Collection<String> dependentProductIds;
+    protected List<ProductAttributeData> attributes;
+    protected List<ProductContentData> content;
+    protected Set<String> dependentProductIds;
     protected String href;
     protected boolean locked;
 
@@ -216,7 +211,7 @@ public class ProductData extends CandlepinDTO {
      *  the attributes of the product, or null if the attributes have not yet been defined
      */
     public Collection<ProductAttributeData> getAttributes() {
-        return this.attributes != null ? Collections.unmodifiableCollection(this.attributes) : null;
+        return this.attributes != null ? Collections.unmodifiableList(this.attributes) : null;
     }
 
     /**
@@ -808,7 +803,7 @@ public class ProductData extends CandlepinDTO {
      */
     public Collection<String> getDependentProductIds() {
         return this.dependentProductIds != null ?
-            Collections.unmodifiableCollection(this.dependentProductIds) :
+            Collections.unmodifiableSet(this.dependentProductIds) :
             null;
     }
 
@@ -857,7 +852,7 @@ public class ProductData extends CandlepinDTO {
     /**
      * Sets the dependent product IDs of the product represented by this DTO.
      *
-     * @param attributes
+     * @param dependentProductIds
      *  A collection of dependent product IDs to attach to this DTO, or null to clear the
      *  dependent products
      *
@@ -976,7 +971,7 @@ public class ProductData extends CandlepinDTO {
         ProductData copy = (ProductData) super.clone();
 
         if (this.attributes != null) {
-            copy.attributes = new HashSet<ProductAttributeData>();
+            copy.attributes = new LinkedList<ProductAttributeData>();
 
             for (ProductAttributeData pad : this.attributes) {
                 copy.attributes.add((ProductAttributeData) pad.clone());
@@ -984,7 +979,7 @@ public class ProductData extends CandlepinDTO {
         }
 
         if (this.content != null) {
-            copy.content = new HashSet<ProductContentData>();
+            copy.content = new LinkedList<ProductContentData>();
 
             for (ProductContentData pac : this.content) {
                 copy.content.add((ProductContentData) pac.clone());
@@ -1076,5 +1071,10 @@ public class ProductData extends CandlepinDTO {
         this.setDependentProductIds(source.getDependentProductIds());
 
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("ProductData [id = %s, name = %s]", this.id, this.name);
     }
 }

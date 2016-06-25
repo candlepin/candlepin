@@ -139,7 +139,6 @@ public class PoolHelperTest {
     public void copyProductAttributesForHostRestrictedPools() {
         Product targetProduct = TestUtil.createProduct();
         Consumer cons = TestUtil.createConsumer();
-        targetProduct.getAttributes().clear();
         targetProduct.setAttribute("A1", "V1");
         targetProduct.setAttribute("A2", "V2");
         Pool targetPool = TestUtil.createPool(targetProduct);
@@ -147,7 +146,6 @@ public class PoolHelperTest {
         targetPool.setAttribute("virt_limit", "unlimited");
 
         Product targetProduct2 = TestUtil.createProduct();
-        targetProduct2.getAttributes().clear();
         targetProduct2.setAttribute("B1", "V1");
         targetProduct2.setAttribute("B2", "V2");
         Pool targetPool2 = TestUtil.createPool(targetProduct2);
@@ -197,7 +195,6 @@ public class PoolHelperTest {
         // Create a product for the main pool to be sure that
         // the attributes do not get copied to the sub pool.
         Product mainPoolProduct = TestUtil.createProduct();
-        mainPoolProduct.getAttributes().clear();
         mainPoolProduct.setAttribute("A1", "V1");
         mainPoolProduct.setAttribute("A2", "V2");
 
@@ -209,7 +206,6 @@ public class PoolHelperTest {
         derivedProducts.add(derivedProduct2);
 
         Product subProduct = TestUtil.createProduct();
-        subProduct.getAttributes().clear();
         subProduct.setAttribute("SA1", "SV1");
         subProduct.setAttribute("SA2", "SV2");
 

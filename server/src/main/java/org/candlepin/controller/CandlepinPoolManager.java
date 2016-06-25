@@ -29,12 +29,12 @@ import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
@@ -123,8 +123,8 @@ public class CandlepinPoolManager implements PoolManager {
     private ProductManager productManager;
     private AutobindRules autobindRules;
     private ActivationKeyRules activationKeyRules;
-    private ContentCurator contentCurator;
     private ContentManager contentManager;
+    private OwnerContentCurator ownerContentCurator;
     private OwnerCurator ownerCurator;
     private OwnerProductCurator ownerProductCurator;
     private PinsetterKernel pinsetterKernel;
@@ -153,8 +153,8 @@ public class CandlepinPoolManager implements PoolManager {
         ActivationKeyRules activationKeyRules,
         ProductCurator productCurator,
         ProductManager productManager,
-        ContentCurator contentCurator,
         ContentManager contentManager,
+        OwnerContentCurator ownerContentCurator,
         OwnerCurator ownerCurator,
         OwnerProductCurator ownerProductCurator,
         PinsetterKernel pinsetterKernel,
@@ -176,8 +176,8 @@ public class CandlepinPoolManager implements PoolManager {
         this.activationKeyRules = activationKeyRules;
         this.productCurator = productCurator;
         this.productManager = productManager;
-        this.contentCurator = contentCurator;
         this.contentManager = contentManager;
+        this.ownerContentCurator = ownerContentCurator;
         this.ownerCurator = ownerCurator;
         this.ownerProductCurator = ownerProductCurator;
         this.pinsetterKernel = pinsetterKernel;
@@ -294,17 +294,19 @@ public class CandlepinPoolManager implements PoolManager {
 
         log.info("Refreshing content for {} subscriptions.", subs.size());
 
-        for (Subscription sub : subs) {
-            // Grab all the content from each product
-            this.addProductContentToMap(content, sub.getProduct());
-            this.addProductContentToMap(content, sub.getDerivedProduct());
+        if (subs != null) {
+            for (Subscription sub : subs) {
+                // Grab all the content from each product
+                this.addProductContentToMap(content, sub.getProduct());
+                this.addProductContentToMap(content, sub.getDerivedProduct());
 
-            for (ProductData product : sub.getProvidedProducts()) {
-                this.addProductContentToMap(content, product);
-            }
+                for (ProductData product : sub.getProvidedProducts()) {
+                    this.addProductContentToMap(content, product);
+                }
 
-            for (ProductData product : sub.getDerivedProvidedProducts()) {
-                this.addProductContentToMap(content, product);
+                for (ProductData product : sub.getDerivedProvidedProducts()) {
+                    this.addProductContentToMap(content, product);
+                }
             }
         }
 
@@ -312,7 +314,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // We need to flush here to make sure our pending persists and merges get pushed to the DB
         // so our reference updates don't fail.
-        this.contentCurator.flush();
+        this.ownerContentCurator.flush();
 
         // Go back through each sub and update content references so we don't end up with dangling,
         // transient or duplicate references on any of the subs' products.
@@ -340,38 +342,40 @@ public class CandlepinPoolManager implements PoolManager {
         Map<String, ContentData> mapped = new HashMap<String, ContentData>();
         List<ProductContentData> duplicates = new LinkedList<ProductContentData>();
 
-        for (ProductContentData pcd : product.getProductContent()) {
-            ContentData content = pcd.getContent();
+        if (product.getProductContent() != null) {
+            for (ProductContentData pcd : product.getProductContent()) {
+                ContentData content = pcd.getContent();
 
-            // Check that this product isn't linking to the same content multiple times...
-            // TODO: This probably isn't necessary anymore, since our product DTO is more strict
-            // than our entities
-            if (mapped.containsKey(content.getId())) {
-                log.warn(
-                    "Multiple references to the same content found on a single product; " +
-                    "discarding duplicate: {} => {}, {}",
-                    product, content, mapped.get(content.getId())
-                );
+                // Check that this product isn't linking to the same content multiple times...
+                // TODO: This probably isn't necessary anymore, since our product DTO is more strict
+                // than our entities
+                if (mapped.containsKey(content.getId())) {
+                    log.warn(
+                        "Multiple references to the same content found on a single product; " +
+                        "discarding duplicate: {} => {}, {}",
+                        product, content, mapped.get(content.getId())
+                    );
 
-                duplicates.add(pcd);
-                continue;
+                    duplicates.add(pcd);
+                    continue;
+                }
+
+                mapped.put(content.getId(), content);
+
+
+                // Check that the content hasn't changed if we've already seen it.
+                ContentData existing = contentMap.get(content.getId());
+
+                if (existing != null && !content.equals(existing)) {
+                    log.warn(
+                        "Multiple versions of the same content found on a single subscription; " +
+                        "discarding previous version: {} => {}, {}",
+                        content.getId(), existing, content
+                    );
+                }
+
+                contentMap.put(content.getId(), content);
             }
-
-            mapped.put(content.getId(), content);
-
-
-            // Check that the content hasn't changed if we've already seen it.
-            ContentData existing = contentMap.get(content.getId());
-
-            if (existing != null && !content.equals(existing)) {
-                log.warn(
-                    "Multiple versions of the same content found on a single subscription; " +
-                    "discarding previous version: {} => {}, {}",
-                    content.getId(), existing, content
-                );
-            }
-
-            contentMap.put(content.getId(), content);
         }
 
         // Remove duplicate references from the product so we don't die trying to persist it...
@@ -388,7 +392,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         for (ProductContent pc : product.getProductContent()) {
             Content content = pc.getContent();
-            Content existing = this.contentCurator.lookupById(owner, content.getId());
+            Content existing = this.ownerContentCurator.getContentById(owner, content.getId());
 
             if (existing == null) {
                 // This should never happen.
@@ -408,21 +412,20 @@ public class CandlepinPoolManager implements PoolManager {
         for (String cid : contentCache.keySet()) {
             // If cid and incoming.getId() aren't equal, we're in trouble.
             ContentData incoming = contentCache.get(cid);
-            Content existing = this.contentCurator.lookupById(owner, cid);
-
-            // This is coming from a manifest or upstream; lock it so it can't be modified
-            // with the API
-            incoming.setLocked(true);
+            Content existing = this.ownerContentCurator.getContentById(owner, cid);
 
             if (existing == null) {
                 log.info("Creating new content for org {}: {}", owner.getKey(), cid);
                 existing = this.contentManager.createContent(incoming, owner);
             }
-            else if (!existing.isChangedBy(incoming)) {
+            else if (existing.isChangedBy(incoming)) {
                 log.info("Updating existing content for org {}: {}", owner.getKey(), cid);
                 existing = this.contentManager.updateContent(existing, incoming, owner, false);
 
                 changed.add(existing);
+            }
+            else {
+                log.info("NO CHANGE");
             }
         }
 
@@ -536,7 +539,7 @@ public class CandlepinPoolManager implements PoolManager {
                 log.info("Creating new product for org {}: {}", owner.getKey(), pid);
                 existing = this.productManager.createProduct(incoming, owner);
             }
-            else if (!existing.isChangedBy(incoming)) {
+            else if (existing.isChangedBy(incoming)) {
                 log.info("Product changed for org {}: {}", owner.getKey(), pid);
                 existing = this.productManager.updateProduct(existing, incoming, owner, false);
 
@@ -949,7 +952,7 @@ public class CandlepinPoolManager implements PoolManager {
             for (ProductData pdata : productData) {
                 Product product = this.ownerProductCurator.getProductById(owner, pdata.getId());
 
-                // TODO: Should we check if product is null here...?
+                // TODO: Is a null product at this point a silent ignore or an error condition?
                 products.add(product);
             }
 
@@ -963,7 +966,7 @@ public class CandlepinPoolManager implements PoolManager {
             for (ProductData pdata : productData) {
                 Product product = this.ownerProductCurator.getProductById(owner, pdata.getId());
 
-                // TODO: Should we check if product is null here...?
+                // TODO: Is a null product at this point a silent ignore or an error condition?
                 products.add(product);
             }
 
@@ -2253,7 +2256,10 @@ public class CandlepinPoolManager implements PoolManager {
                 poolQuantity, multiplier, pool.getProduct());
         }
 
-        return new Subscription(pool);
+        Subscription subscription = new Subscription(pool);
+        subscription.setQuantity(poolQuantity);
+
+        return subscription;
     }
 
     @Override
