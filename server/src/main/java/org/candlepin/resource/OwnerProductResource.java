@@ -204,7 +204,9 @@ public class OwnerProductResource {
         @QueryParam("product") List<String> productIds) {
 
         final Owner owner = this.getOwnerByKey(ownerKey);
-        final Collection<Product> products = this.ownerProductCurator.getProductsByIds(owner, productIds);
+        final Collection<Product> products = productIds != null && productIds.size() > 0 ?
+            this.ownerProductCurator.getProductsByIds(owner, productIds) :
+            this.ownerProductCurator.getProductsByOwner(owner);
         final ObjectMapper mapper = new JsonProvider(true)
             .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
 
@@ -238,6 +240,8 @@ public class OwnerProductResource {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Product product = this.fetchProduct(owner, productId);
+
+        log.debug("RETURNING PRODUCT WITH CONTENT: {}", product.getProductContent());
 
         return product.toDTO();
     }

@@ -390,6 +390,9 @@ public class ProductManager {
 
         Product updated = this.applyProductChanges((Product) entity.clone(), update, owner);
 
+        log.debug("HASH CHECK: {} => {}", entity.hashCode(), updated.hashCode());
+        log.debug("EQUALITY CHECK: {} => {}", entity.equals(updated), updated.isChangedBy(update));
+
         // TODO:
         // We, currently, do not trigger a refresh after updating a product. At present this is an
         // exercise left to the caller, but perhaps we should be doing that here automatically?
@@ -406,6 +409,7 @@ public class ProductManager {
         log.debug("Checking {} alternate product versions", alternateVersions.size());
         for (Product alt : alternateVersions) {
             if (alt.equals(updated)) {
+                log.debug("UUIDS: {} => {}", entity, alt);
                 log.debug("Converging product with existing: {} => {}", updated, alt);
 
                 List<Owner> owners = Arrays.asList(owner);
@@ -422,7 +426,7 @@ public class ProductManager {
         }
 
         // No alternate versions with which to converge. Check if we can do an in-place update instead
-        if (this.ownerProductCurator.getOwnerCount(updated) == 1) {
+        if (this.ownerProductCurator.getOwnerCount(updated) < 2) {
             log.debug("Applying in-place update to product: {}", updated);
 
             updated = this.productCurator.merge(updated);
@@ -576,6 +580,8 @@ public class ProductManager {
         }
 
         if (update.getProductContent() != null) {
+            log.debug("Applying product content changes");
+
             Collection<ProductContent> productContent = new LinkedList<ProductContent>();
 
             for (ProductContentData pcd : update.getProductContent()) {
@@ -585,22 +591,27 @@ public class ProductManager {
 
                 ContentData contentData = pcd.getContent();
                 ProductContent existingLink = entity.getProductContent(contentData.getId());
+                Content content = this.ownerContentCurator.getContentById(owner, contentData.getId());
 
-                if (existingLink == null) {
-                    Content existing = this.ownerContentCurator.getContentById(owner, contentData.getId());
-
-                    if (existing == null) {
-                        // Content doesn't exist yet -- it should have been created already
-                        throw new IllegalStateException("product references content which does not exist");
-                    }
-
-                    existingLink = new ProductContent(entity, existing, Boolean.FALSE);
+                if (content == null) {
+                    // Content doesn't exist yet -- it should have been created already
+                    throw new IllegalStateException("product references content which does not exist");
                 }
 
-                existingLink.getContent().populate(contentData);
+                if (existingLink == null) {
+                    log.debug("Adding new link to content");
 
-                if (pcd.isEnabled() != null) {
-                    existingLink.setEnabled(pcd.isEnabled());
+                    existingLink = new ProductContent(
+                        entity, content, pcd.isEnabled() != null ? pcd.isEnabled() : false
+                    );
+                }
+                else {
+                    log.debug("Updating existing link");
+                    existingLink.setContent(content);
+
+                    if (pcd.isEnabled() != null) {
+                        existingLink.setEnabled(pcd.isEnabled());
+                    }
                 }
 
                 productContent.add(existingLink);
@@ -615,7 +626,6 @@ public class ProductManager {
 
         return entity;
     }
-
 
     // TODO:
     // Not sure if we'll need this or not. Don't feel like writing a test for it at the moment, so

@@ -111,11 +111,11 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
     @Transactional
     public long getOwnerCount(Product product) {
-        String jpql = "SELECT count(op) FROM OwnerProduct op WHERE op.product.id = :product_id";
+        String jpql = "SELECT count(op) FROM OwnerProduct op WHERE op.product.uuid = :product_uuid";
 
         long count = (Long) this.getEntityManager()
             .createQuery(jpql, Long.class)
-            .setParameter("product_id", product.getId())
+            .setParameter("product_uuid", product.getUuid())
             .getSingleResult();
 
         return count;

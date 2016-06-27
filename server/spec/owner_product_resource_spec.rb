@@ -92,8 +92,7 @@ describe 'Owner Product Resource' do
 
   it 'retrieves the owners of an active product' do
     owner = create_owner(random_string('owner'), nil)
-    product = create_product(random_string("test_id"), random_string("test_name"),
-        {:owner => owner['key']})
+    product = create_product(random_string("test_id"), random_string("test_name"), {:owner => owner['key']})
     provided_product = create_product(nil, nil, {:owner => owner['key']})
     create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id])
     user = user_client(owner, random_string('billy'))

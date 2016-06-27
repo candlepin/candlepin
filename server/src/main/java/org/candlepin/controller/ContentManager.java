@@ -247,8 +247,10 @@ public class ContentManager {
 
                 // Impl note:
                 // This block is a consequence of products and contents not being strongly related.
+                log.debug("Updating {} affected products", affectedProducts.size());
                 ContentData cdata = updated.toDTO();
                 for (Product product : affectedProducts) {
+                    log.debug("Updating affected product: {}", product);
                     ProductData pdata = product.toDTO();
 
                     // We're taking advantage of the mutable nature of our joining objects.
@@ -267,7 +269,7 @@ public class ContentManager {
         }
 
         // No alternate versions with which to converge. Check if we can do an in-place update instead
-        if (this.ownerContentCurator.getOwnerCount(updated) == 1) {
+        if (this.ownerContentCurator.getOwnerCount(updated) < 2) {
             log.debug("Applying in-place update to content: {}", updated);
 
             updated = this.contentCurator.merge(updated);
@@ -298,9 +300,14 @@ public class ContentManager {
         );
 
         updated = this.contentCurator.create(updated);
+        updated = this.ownerContentCurator.updateOwnerContentReferences(
+            entity, updated, Arrays.asList(owner)
+        );
 
+        log.debug("Updating {} affected products", affectedProducts.size());
         ContentData cdata = updated.toDTO();
         for (Product product : affectedProducts) {
+            log.debug("Updating affected product: {}", product);
             ProductData pdata = product.toDTO();
 
             ProductContentData pcd = pdata.getProductContent(updated.getId());
@@ -312,7 +319,7 @@ public class ContentManager {
             }
         }
 
-        return this.ownerContentCurator.updateOwnerContentReferences(entity, updated, Arrays.asList(owner));
+        return updated;
     }
 
     /**

@@ -10,12 +10,12 @@ describe 'Owner Content Resource' do
     @user = user_client(@owner, random_string('test-user'))
 
     @content = @cp.create_content(
-      @owner['key'], "cname", nil, random_string("clabel"), "ctype", "cvendor", {}, true
+      @owner['key'], "cname", 'test-content', random_string("clabel"), "ctype", "cvendor", {}, true
     )
 
     @content_id = @content['id']
 
-    @product = create_product(nil, 'some product', {:multiplier => 4})
+    @product = create_product('test-product', 'some product', {:multiplier => 4})
     @cp.add_content_to_product(@owner['key'], @product['id'], @content_id)
   end
 
@@ -26,21 +26,21 @@ describe 'Owner Content Resource' do
   end
 
   it 'should show content on products' do
-    @product = @cp.get_product(@owner['key'], @product['id'])
-    @product.productContent.size.should == 1
-    @product.productContent[0]['content']['name'].should == "cname"
+    product = @cp.get_product(@owner['key'], @product['id'])
+    product.productContent.size.should == 1
+    product.productContent[0]['content']['name'].should == "cname"
   end
 
   it 'should remove content from products upon deletion' do
     @cp.delete_content(@owner['key'], @content_id)
-    @product = @cp.get_product(@owner['key'], @product['id'])
-    @product.productContent.size.should == 0
+    product = @cp.get_product(@owner['key'], @product['id'])
+    product.productContent.size.should == 0
   end
 
   it 'should allow content to be updated' do
     @cp.update_content(@owner['key'], @content_id, {"gpgUrl" => "somegpgurl"})
-    @content = @cp.get_content(@owner['key'], @content_id)
-    @content.gpgUrl.should == "somegpgurl"
+    content = @cp.get_content(@owner['key'], @content_id)
+    content.gpgUrl.should == "somegpgurl"
   end
 
   it 'should force entitlements providing changed content to be regenerated' do

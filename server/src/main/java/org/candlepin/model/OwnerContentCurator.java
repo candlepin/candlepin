@@ -111,11 +111,11 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
     @Transactional
     public long getOwnerCount(Content content) {
-        String jpql = "SELECT count(op) FROM OwnerContent op WHERE op.content.id = :content_id";
+        String jpql = "SELECT count(op) FROM OwnerContent op WHERE op.content.uuid = :content_uuid";
 
         long count = (Long) this.getEntityManager()
             .createQuery(jpql, Long.class)
-            .setParameter("content_id", content.getId())
+            .setParameter("content_uuid", content.getUuid())
             .getSingleResult();
 
         return count;
@@ -266,7 +266,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         log.debug("{} owner-content relations updated", ocCount);
 
         // environment content
-        sql = "SELECT id " +
+        sql = "SELECT ec.id " +
             "FROM cp2_environment_content ec " +
             "  JOIN cp_environment e ON ec.environment_id = e.id " +
             "WHERE " +
@@ -338,7 +338,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         log.debug("{} owner-content relations updated", ocCount);
 
         // environment content
-        sql = "SELECT id " +
+        sql = "SELECT ec.id " +
             "FROM cp2_environment_content ec " +
             "  JOIN cp_environment e ON ec.environment_id = e.id " +
             "WHERE " +

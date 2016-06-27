@@ -438,7 +438,10 @@ public class ProductData extends CandlepinDTO {
      */
     public ProductData setAttributes(Collection<ProductAttributeData> attributes) {
         if (attributes != null) {
-            if (this.attributes != null) {
+            if (this.attributes == null) {
+                this.attributes = new LinkedList<ProductAttributeData>();
+            }
+            else {
                 this.attributes.clear();
             }
 
@@ -778,7 +781,10 @@ public class ProductData extends CandlepinDTO {
      */
     public ProductData setProductContent(Collection<ProductContentData> content) {
         if (content != null) {
-            if (this.content != null) {
+            if (this.content == null) {
+                this.content = new LinkedList<ProductContentData>();
+            }
+            else {
                 this.content.clear();
             }
 
@@ -861,7 +867,10 @@ public class ProductData extends CandlepinDTO {
      */
     public ProductData setDependentProductIds(Collection<String> dependentProductIds) {
         if (dependentProductIds != null) {
-            if (this.dependentProductIds != null) {
+            if (this.dependentProductIds == null) {
+                this.dependentProductIds = new HashSet<String>();
+            }
+            else {
                 this.dependentProductIds.clear();
             }
 
@@ -925,6 +934,11 @@ public class ProductData extends CandlepinDTO {
     public ProductData setLocked(Boolean locked) {
         this.locked = locked;
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("ProductData [id = %s, name = %s]", this.id, this.name);
     }
 
     @Override
@@ -1053,7 +1067,12 @@ public class ProductData extends CandlepinDTO {
         this.setLocked(source.isLocked());
 
         if (source.getAttributes() != null) {
-            this.setAttributes(null);
+            if (this.attributes == null) {
+                this.attributes = new LinkedList<ProductAttributeData>();
+            }
+            else {
+                this.attributes.clear();
+            }
 
             for (ProductAttribute entity : source.getAttributes()) {
                 this.addAttribute(entity.toDTO());
@@ -1061,7 +1080,12 @@ public class ProductData extends CandlepinDTO {
         }
 
         if (source.getProductContent() != null) {
-            this.setProductContent(null);
+            if (this.content == null) {
+                this.content = new LinkedList<ProductContentData>();
+            }
+            else {
+                this.content.clear();
+            }
 
             for (ProductContent entity : source.getProductContent()) {
                 this.addProductContent(entity.toDTO());
@@ -1071,10 +1095,5 @@ public class ProductData extends CandlepinDTO {
         this.setDependentProductIds(source.getDependentProductIds());
 
         return this;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("ProductData [id = %s, name = %s]", this.id, this.name);
     }
 }

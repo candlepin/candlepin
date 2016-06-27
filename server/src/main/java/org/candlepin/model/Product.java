@@ -1132,8 +1132,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         // treatment here to ensure our output doesn't give us wonky results when compared to the
         // output of .equals
         for (ProductAttribute attrib : this.attributes) {
-            builder.append(attrib.getName());
-            builder.append(attrib.getValue());
+            builder.append(attrib);
         }
 
         try {
@@ -1150,8 +1149,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
             if (this.productContent.size() > 0) {
                 for (ProductContent pc : this.productContent) {
-                    builder.append(pc.getContent());
-                    builder.append(pc.isEnabled());
+                    builder.append(pc);
                 }
             }
         }
