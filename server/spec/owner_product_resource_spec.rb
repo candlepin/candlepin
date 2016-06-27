@@ -43,6 +43,10 @@ describe 'Owner Product Resource' do
     #update_product is called.
     temp_attributes = prod.attributes
 
+    # Delay here a moment to ensure an in-place update on the product doesn't trigger
+    # attributes to be cloned/updated (as we're not updating attributes here)
+    sleep 1
+
     prod = @cp.update_product(@owner['key'], prod.id, {:multiplier => prod2.multiplier, :attributes => nil})
 
     prod.multiplier.should == prod2.multiplier

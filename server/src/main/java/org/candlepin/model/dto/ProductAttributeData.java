@@ -16,6 +16,8 @@ package org.candlepin.model.dto;
 
 import org.candlepin.model.ProductAttribute;
 
+import io.swagger.annotations.ApiModel;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
@@ -35,6 +37,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * }
  * </pre>
  */
+@ApiModel(parent = CandlepinDTO.class)
 @XmlRootElement
 public class ProductAttributeData extends CandlepinDTO {
 
@@ -86,18 +89,18 @@ public class ProductAttributeData extends CandlepinDTO {
      * Initializes a new ProductAttributeData instance using the data contained by the given
      * entity.
      *
-     * @param entity
+     * @param source
      *  The source entity from which to copy data
      *
      * @throws IllegalArgumentException
-     *  if entity is null
+     *  if source is null
      */
-    public ProductAttributeData(ProductAttribute entity) {
-        if (entity == null) {
-            throw new IllegalArgumentException("entity is null");
+    public ProductAttributeData(ProductAttribute source) {
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
         }
 
-        this.populate(entity);
+        this.populate(source);
     }
 
     /**

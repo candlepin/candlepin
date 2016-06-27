@@ -170,115 +170,6 @@ public class ProductManager {
         return entity;
     }
 
-    // TODO: Remove this, probably
-    // /**
-    //  * Calculates the hash code of the given product entity as if the changes provided by update
-    //  * were applied.
-    //  *
-    //  * @param entity
-    //  *  The base entity onto which the updates will be projected
-    //  *
-    //  * @param update
-    //  *  A product DTO containing the changes to project onto this product during hashcode
-    //  *  calculation
-    //  *
-    //  * @param owner
-    //  *  The owner to use when resolving content
-    //  *
-    //  * @return
-    //  *  the hashcode of this product with the projected updates
-    //  */
-    // private int projectedHashCode(Product entity, ProductData update, Owner owner) {
-    //     // TODO:
-    //     // Eventually content should be considered a property of products (ala attributes), so we
-    //     // don't have to do this annoying, nested projection and owner passing. Also, it would
-    //     // solve the issue of forcing content to have only one instance per owner and this logic
-    //     // could live in Product, where it belongs.
-    //     if (entity == null) {
-    //         throw new IllegalArgumentException("entity is null");
-    //     }
-
-    //     if (update == null) {
-    //         throw new IllegalArgumentException("update is null");
-    //     }
-
-    //     if (owner == null) {
-    //         throw new IllegalArgumentException("owner is null");
-    //     }
-
-    //     // Impl note:
-    //     // The order and elements compared here needs to be 1:1 with the standard hashCode method.
-    //     HashCodeBuilder builder = new HashCodeBuilder(37, 7)
-    //         .append(entity.getId())
-    //         .append(update.getName() != null ? update.getName() : entity.getName())
-    //         .append(update.getMultiplier() != null ? update.getMultiplier() : entity.getMultiplier())
-    //         .append(entity.isLocked());
-
-    //     if (update.getAttributes() != null) {
-    //         for (ProductAttributeData attrib : update.getAttributes()) {
-    //             builder.append(attrib.getName());
-    //             builder.append(attrib.getValue());
-    //         }
-    //     }
-    //     else {
-    //         for (ProductAttribute attrib : entity.getAttributes()) {
-    //             builder.append(attrib.getName());
-    //             builder.append(attrib.getValue());
-    //         }
-    //     }
-
-    //     Collection<String> dependentProductIds = update.getDependentProductIds() != null ?
-    //         update.getDependentProductIds() :
-    //         entity.getDependentProductIds();
-
-    //     for (String pid : dependentProductIds) {
-    //         builder.append(pid);
-    //     }
-
-    //     if (update.getProductContent() != null) {
-    //         // I apologize to future maintainers of this code
-    //         for (ProductContentData pcd : update.getProductContent()) {
-    //             ContentData contentData = pcd.getContent();
-
-    //             if (contentData == null || contentData.getId() == null) {
-    //                 // Content DTO is in a bad state, so we can't possibly compare it against
-    //                 // anything.
-    //                 throw new IllegalStateException("product contains content without an identifier");
-    //             }
-
-    //             ProductContent existingLink = this.getProductContent(contentData.getId());
-
-    //             if (existingLink == null) {
-    //                 // New product-content link. We need to find the content and project the
-    //                 // content changes onto it.
-    //                 Content existing = this.contentCurator.lookupById(owner, contentData.getId());
-
-    //                 if (existing == null) {
-    //                     // Content doesn't exist yet -- it should have been created already
-    //                     throw new IllegalStateException("product references content which does not exist");
-    //                 }
-
-    //                 builder.append(existing.projectedHashCode(contentData));
-    //                 builder.append(pcd.isEnabled() != null ? pcd.isEnabled() : Boolean.FALSE);
-    //             }
-    //             else {
-    //                 builder.append(existingLink.getContent().projectedHashCode(contentData));
-    //                 builder.append(pcd.isEnabled() != null ? pcd.isEnabled() : existingLink.isEnabled());
-    //             }
-    //         }
-    //     }
-    //     else {
-    //         for (ProductContent productContent : entity.getProductContent()) {
-    //             Content content = productContent.getContent();
-
-    //             builder.append(productContent.getContent().hashCode());
-    //             builder.append(productContent.isEnabled());
-    //         }
-    //     }
-
-    //     return builder.toHashCode();
-    // }
-
     /**
      * Updates the product entity represented by the given DTO with the changes provided by the
      * DTO.
@@ -390,9 +281,6 @@ public class ProductManager {
 
         Product updated = this.applyProductChanges((Product) entity.clone(), update, owner);
 
-        log.debug("HASH CHECK: {} => {}", entity.hashCode(), updated.hashCode());
-        log.debug("EQUALITY CHECK: {} => {}", entity.equals(updated), updated.isChangedBy(update));
-
         // TODO:
         // We, currently, do not trigger a refresh after updating a product. At present this is an
         // exercise left to the caller, but perhaps we should be doing that here automatically?
@@ -429,7 +317,7 @@ public class ProductManager {
         if (this.ownerProductCurator.getOwnerCount(updated) < 2) {
             log.debug("Applying in-place update to product: {}", updated);
 
-            updated = this.productCurator.merge(updated);
+            updated = this.productCurator.merge(this.applyProductChanges(entity, update, owner));
 
             if (regenerateEntitlementCerts) {
                 this.entitlementCertGenerator.regenerateCertificatesOf(
@@ -626,21 +514,6 @@ public class ProductManager {
 
         return entity;
     }
-
-    // TODO:
-    // Not sure if we'll need this or not. Don't feel like writing a test for it at the moment, so
-    // I'm leaving it disabled until we have a need for it. -C
-    // public Product addContentToProduct(Product product, Collection<Content> content, boolean enabled,
-    //     Owner owner, boolean regenerateEntitlementCerts) {
-
-    //     Collection<ProductContent> productContent = new LinkedList<ProductContent>();
-
-    //     for (Content current : content) {
-    //         productContent.add(new ProductContent(product, current, enabled));
-    //     }
-
-    //     return this.addContentToProduct(product, productContent, owner, regenerateEntitlementCerts);
-    // }
 
     /**
      * Adds the specified content to the product, effective for the given owner. If the product is

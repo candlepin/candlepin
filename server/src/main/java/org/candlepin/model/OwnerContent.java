@@ -75,11 +75,6 @@ public class OwnerContent implements Persisted, Serializable {
         this.setContent(content);
     }
 
-    // public OwnerContent(String ownerId, String contentUuid) {
-    //     this.ownerId = ownerId;
-    //     this.contentUuid = contentUuid;
-    // }
-
     @Override
     public Serializable getId() {
         return new OwnerContentKey(this.ownerId, this.contentUuid);

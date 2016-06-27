@@ -350,12 +350,6 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         // from an owner if it is being used by a pool. As such, we shouldn't need to manually clean
         // the pool tables here.
 
-        // TODO:
-        // Since we're removing the product from an owner, but not replacing it with anything,
-        // should we also go through the DB and scrub references to a product by RHID? Things like
-        // installed products and whatnot could end up lingering, pointing to a product which would
-        // no longer exist.
-
         if (owners.size() > AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE) {
             throw new UnsupportedOperationException("Large owner collections are currently unsupported");
         }
@@ -386,15 +380,5 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
         int akCount = this.safeSQLUpdateWithCollection(sql, ids, entity.getUuid());
         log.debug("{} activation keys removed", akCount);
-
-        // // Installed products
-        // ids = session.createSQLQuery("SELECT id FROM cp_consumer WHERE owner_id IN (?1)")
-        //     .setParameterList("1", ownerIds)
-        //     .list();
-
-        // sql = "DELETE FROM cp_installed_products WHERE product_id = ?1 AND consumer_id IN (?2)";
-
-        // int ipCount = this.safeSQLUpdateWithCollection(sql, entity.getId(), ids);
-        // log.debug("{} installed products removed", ipCount);
     }
 }

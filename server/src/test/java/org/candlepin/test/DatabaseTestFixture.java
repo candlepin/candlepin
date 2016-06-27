@@ -314,10 +314,7 @@ public class DatabaseTestFixture {
 
     protected Product createProduct(Product product, Owner... owners) {
         product = this.productCurator.create(product);
-
-        for (Owner owner : owners) {
-            this.ownerProductCurator.mapProductToOwner(product, owner);
-        }
+        this.ownerProductCurator.mapProductToOwners(product, owners);
 
         return product;
     }
@@ -330,10 +327,7 @@ public class DatabaseTestFixture {
     protected Content createContent(String id, String name, Owner... owners) {
         Content content = TestUtil.createContent(id, name);
         content = this.contentCurator.create(content);
-
-        for (Owner owner : owners) {
-            this.ownerContentCurator.mapContentToOwner(content, owner);
-        }
+        this.ownerContentCurator.mapContentToOwners(content, owners);
 
         return content;
     }

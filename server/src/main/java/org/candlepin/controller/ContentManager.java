@@ -272,7 +272,7 @@ public class ContentManager {
         if (this.ownerContentCurator.getOwnerCount(updated) < 2) {
             log.debug("Applying in-place update to content: {}", updated);
 
-            updated = this.contentCurator.merge(updated);
+            updated = this.contentCurator.merge(this.applyContentChanges(entity, update, owner));
 
             if (regenerateEntitlementCerts) {
                 // Every owner with a pool using any of the affected products needs an update.
@@ -372,7 +372,9 @@ public class ContentManager {
         List<Product> updatedAffectedProducts = new LinkedList<Product>();
         List<Content> contentList = Arrays.asList(existing);
 
+        log.debug("Updating {} affected products", affectedProducts.size());
         for (Product product : affectedProducts) {
+            log.debug("Updating affected product: {}", product);
             product = this.productManager.removeProductContent(
                 product, contentList, owner, regenerateEntitlementCerts
             );

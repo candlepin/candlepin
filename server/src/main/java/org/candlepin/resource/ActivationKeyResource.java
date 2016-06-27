@@ -21,7 +21,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
@@ -73,7 +72,6 @@ import io.swagger.annotations.ApiResponses;
 public class ActivationKeyResource {
     private static Logger log = LoggerFactory.getLogger(ActivationKeyResource.class);
     private ActivationKeyCurator activationKeyCurator;
-    private ProductCurator productCurator;
     private OwnerProductCurator ownerProductCurator;
     private PoolManager poolManager;
     private I18n i18n;
@@ -83,15 +81,13 @@ public class ActivationKeyResource {
     @Inject
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator, I18n i18n,
         PoolManager poolManager, ServiceLevelValidator serviceLevelValidator,
-        ActivationKeyRules activationKeyRules, ProductCurator productCurator,
-        OwnerProductCurator ownerProductCurator) {
+        ActivationKeyRules activationKeyRules, OwnerProductCurator ownerProductCurator) {
 
         this.activationKeyCurator = activationKeyCurator;
         this.i18n = i18n;
         this.poolManager = poolManager;
         this.serviceLevelValidator = serviceLevelValidator;
         this.activationKeyRules = activationKeyRules;
-        this.productCurator = productCurator;
         this.ownerProductCurator = ownerProductCurator;
     }
 

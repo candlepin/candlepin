@@ -17,6 +17,8 @@ package org.candlepin.model.dto;
 import org.candlepin.model.Content;
 import org.candlepin.model.ProductContent;
 
+import io.swagger.annotations.ApiModel;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
@@ -38,6 +40,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * }
  * </pre>
  */
+@ApiModel(parent = CandlepinDTO.class)
 @XmlRootElement
 public class ProductContentData implements Cloneable {
     private ContentData content;
@@ -60,23 +63,33 @@ public class ProductContentData implements Cloneable {
      *
      * @param source
      *  The source DTO from which to copy data
+     *
+     * @throws IllegalArgumentException
+     *  if source is null
      */
     public ProductContentData(ProductContentData source) {
-        if (source != null) {
-            this.populate(source);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
         }
+
+        this.populate(source);
     }
 
     /**
      * Initializes a new ProductContentData instance using the data contained by the given entity.
      *
-     * @param entity
+     * @param source
      *  The source entity from which to copy data
+     *
+     * @throws IllegalArgumentException
+     *  if source is null
      */
-    public ProductContentData(ProductContent entity) {
-        if (entity != null) {
-            this.populate(entity);
+    public ProductContentData(ProductContent source) {
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
         }
+
+        this.populate(source);
     }
 
     /**

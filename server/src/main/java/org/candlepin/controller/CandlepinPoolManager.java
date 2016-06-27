@@ -43,7 +43,6 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -316,21 +315,6 @@ public class CandlepinPoolManager implements PoolManager {
         // so our reference updates don't fail.
         this.ownerContentCurator.flush();
 
-        // Go back through each sub and update content references so we don't end up with dangling,
-        // transient or duplicate references on any of the subs' products.
-        // for (Subscription sub : subs) {
-        //     this.updateContentRefs(content, owner, sub.getProduct());
-        //     this.updateContentRefs(content, owner, sub.getDerivedProduct());
-
-        //     for (Product product : sub.getProvidedProducts()) {
-        //         this.updateContentRefs(content, owner, product);
-        //     }
-
-        //     for (Product product : sub.getDerivedProvidedProducts()) {
-        //         this.updateContentRefs(content, owner, product);
-        //     }
-        // }
-
         return changed;
     }
 
@@ -347,8 +331,6 @@ public class CandlepinPoolManager implements PoolManager {
                 ContentData content = pcd.getContent();
 
                 // Check that this product isn't linking to the same content multiple times...
-                // TODO: This probably isn't necessary anymore, since our product DTO is more strict
-                // than our entities
                 if (mapped.containsKey(content.getId())) {
                     log.warn(
                         "Multiple references to the same content found on a single product; " +
@@ -379,29 +361,8 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // Remove duplicate references from the product so we don't die trying to persist it...
-        // TODO: REMOVE THIS ONCE WE VERIFY THIS STEP IS NO LONGER NECESSARY
         if (duplicates.size() > 0) {
             log.debug("WE SHOULD HAVE REMOVED {} ENTITIES");
-        }
-    }
-
-    private void updateContentRefs(Map<String, Content> contentCache, Owner owner, Product product) {
-        if (product == null) {
-            return;
-        }
-
-        for (ProductContent pc : product.getProductContent()) {
-            Content content = pc.getContent();
-            Content existing = this.ownerContentCurator.getContentById(owner, content.getId());
-
-            if (existing == null) {
-                // This should never happen.
-                throw new RuntimeException(String.format(
-                    "Unable to resolve content reference: %s", content
-                ));
-            }
-
-            pc.setContent(existing);
         }
     }
 
@@ -423,9 +384,6 @@ public class CandlepinPoolManager implements PoolManager {
                 existing = this.contentManager.updateContent(existing, incoming, owner, false);
 
                 changed.add(existing);
-            }
-            else {
-                log.info("NO CHANGE");
             }
         }
 
@@ -461,28 +419,6 @@ public class CandlepinPoolManager implements PoolManager {
         // so our reference updates don't fail.
         this.productCurator.flush();
 
-        // Go back through each sub and update product references so we don't end up with dangling,
-        // transient or duplicate references on any of the subs.
-        // for (Subscription sub : subs) {
-        //     sub.setProduct(this.updateProductRef(products, owner, sub.getProduct()));
-
-        //     if (sub.getDerivedProduct() != null) {
-        //         sub.setDerivedProduct(this.updateProductRef(products, owner, sub.getDerivedProduct()));
-        //     }
-
-        //     Set<ProductData> pset = new HashSet<ProductData>();
-        //     for (Product product : sub.getProvidedProducts()) {
-        //         pset.add(this.updateProductRef(products, owner, product));
-        //     }
-        //     sub.setProvidedProducts(pset);
-
-        //     pset.clear();
-        //     for (ProductData product : sub.getDerivedProvidedProducts()) {
-        //         pset.add(this.updateProductRef(products, owner, product));
-        //     }
-        //     sub.setDerivedProvidedProducts(pset);
-        // }
-
         return changed;
     }
 
@@ -501,23 +437,6 @@ public class CandlepinPoolManager implements PoolManager {
 
             productMap.put(product.getId(), product);
         }
-    }
-
-    private Product updateProductRef(Map<String, Product> productCache, Owner owner, Product product) {
-        Product resolved = null;
-
-        if (product != null) {
-            resolved = this.ownerProductCurator.getProductById(owner, product.getId());
-
-            if (resolved == null) {
-                // This should never happen.
-                throw new RuntimeException(String.format(
-                    "Unable to resolve product reference for product: %s", product
-                ));
-            }
-        }
-
-        return resolved;
     }
 
     public Set<Product> getChangedProducts(Owner owner, Map<String, ProductData> productCache) {

@@ -19,6 +19,9 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
@@ -52,17 +55,32 @@ import javax.xml.bind.annotation.XmlTransient;
  * }
  * </pre>
  */
+@ApiModel(parent = CandlepinDTO.class, description = "Product information for a given sku or product")
 @XmlRootElement
 public class ProductData extends CandlepinDTO {
 
+    @ApiModelProperty(example = "ff808081554a3e4101554a3e9033005d")
     protected String uuid;
+
+    @ApiModelProperty(required = true, example = "5051")
     protected String id;
+
+    @ApiModelProperty(example = "Admin OS Developer Bits")
     protected String name;
+
+    @ApiModelProperty(example = "1")
     protected Long multiplier;
+
     protected List<ProductAttributeData> attributes;
+
+    @ApiModelProperty(name = "productContent")
     protected List<ProductContentData> content;
     protected Set<String> dependentProductIds;
+
+    @ApiModelProperty(example = "/products/ff808081554a3e4101554a3e9033005d")
     protected String href;
+
+    @ApiModelProperty(hidden = true)
     protected boolean locked;
 
     /**
@@ -77,23 +95,33 @@ public class ProductData extends CandlepinDTO {
      *
      * @param source
      *  The source DTO from which to copy data
+     *
+     * @throws IllegalArgumentException
+     *  if source is null
      */
     public ProductData(ProductData source) {
-        if (source != null) {
-            this.populate(source);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
         }
+
+        this.populate(source);
     }
 
     /**
      * Initializes a new ProductData instance using the data contained by the given entiy.
      *
-     * @param entity
+     * @param source
      *  The source entity from which to copy data
+     *
+     * @throws IllegalArgumentException
+     *  if source is null
      */
-    public ProductData(Product entity) {
-        if (entity != null) {
-            this.populate(entity);
+    public ProductData(Product source) {
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
         }
+
+        this.populate(source);
     }
 
     /**

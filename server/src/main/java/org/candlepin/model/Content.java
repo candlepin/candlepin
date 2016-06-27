@@ -196,12 +196,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     public Content merge(Content source) {
         this.setUpdated(source.getUpdated() != null ? (Date) source.getUpdated().clone() : null);
 
-        // Impl note:
-        // In most cases, our collection setters copy the contents of the input collections to their
-        // own internal collections, so we don't need to worry about our two instances sharing a
-        // collection. The exception here is the modifiedProductIds, which uses the collection
-        // directly, so we'll need to make a defensive copy.
-
         this.setType(source.getType());
         this.setLabel(source.getLabel());
         this.setName(source.getName());
@@ -624,38 +618,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
         return false;
     }
-
-    // TODO: Remove this, probably
-    // public int projectedHashCode(ContentData update) {
-    //     if (update == null) {
-    //         throw new IllegalArgumentException("update is null");
-    //     }
-
-    //     HashCodeBuilder builder = new HashCodeBuilder(37, 7)
-    //         .append(this.id)
-    //         .append(update.getType() != null ? update.getType() : this.type)
-    //         .append(update.getLabel() != null ? update.getLabel() : this.label)
-    //         .append(update.getName() != null ? update.getName() : this.name)
-    //         .append(update.getVendor() != null ? update.getVendor() : this.vendor)
-    //         .append(update.getContentUrl() != null ? update.getContentUrl() : this.contentUrl)
-    //         .append(update.getRequiredTags() != null ? update.getRequiredTags() : this.requiredTags)
-    //         .append(update.getReleaseVer() != null ? update.getReleaseVer() : this.releaseVer)
-    //         .append(update.getGpgUrl() != null ? update.getGpgUrl() : this.gpgUrl)
-    //         .append(update.getMetadataExpire() != null ? update.getMetadataExpire() : this.metadataExpire)
-    //         .append(update.getArches() != null ? update.getArches() : this.arches)
-    //         .append(this.locked);
-
-
-    //     Collection<String> modifiedProductIds = update.getModifiedProductIds() != null ?
-    //         update.getModifiedProductIds() :
-    //         this.modifiedProductIds;
-
-    //     for (String pid : modifiedProductIds) {
-    //         builder.append(pid);
-    //     }
-
-    //     return builder.toHashCode();
-    // }
 
     @Override
     public String toString() {

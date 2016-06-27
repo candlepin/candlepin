@@ -304,8 +304,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         copy.attributes = new LinkedList<ProductAttribute>();
         for (ProductAttribute src : this.getAttributes()) {
             ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
-            dest.setCreated(src.getCreated());
-            dest.setUpdated(src.getUpdated());
+            dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
+            dest.setUpdated(src.getUpdated() != null ? (Date) src.getUpdated().clone() : null);
             dest.setProduct(copy);
 
             copy.attributes.add(dest);
@@ -315,8 +315,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         copy.productContent = new LinkedList<ProductContent>();
         for (ProductContent src : this.getProductContent()) {
             ProductContent dest = new ProductContent(copy, src.getContent(), src.isEnabled());
-            dest.setCreated(src.getCreated());
-            dest.setUpdated(src.getUpdated());
+            dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
+            dest.setUpdated(src.getUpdated() != null ? (Date) src.getUpdated().clone() : null);
 
             copy.productContent.add(dest);
         }

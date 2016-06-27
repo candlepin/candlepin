@@ -18,6 +18,9 @@ import org.candlepin.model.Content;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
@@ -39,37 +42,65 @@ import javax.xml.bind.annotation.XmlTransient;
  *   "uuid" : "ff808081554a3e4101554a3e83be003d",
  *   "id" : "5001",
  *   "type" : "yum",
- *   "label" : "admin-tagged-content",
- *   "name" : "admin-tagged-content",
- *   "vendor" : "test-vendor",
- *   "contentUrl" : "/admin/foo/path/always",
+ *   "label" : "content_label",
+ *   "name" : "content_name",
+ *   "vendor" : "example-vendor",
+ *   "contentUrl" : "/admin/foo/example/path",
  *   "requiredTags" : "TAG1,TAG2",
- *   "releaseVer" : null,
- *   "gpgUrl" : "/admin/foo/path/always/gpg",
- *   "metadataExpire" : null,
+ *   "releaseVer" : "1.2.3",
+ *   "gpgUrl" : "/admin/foo/example/gpg/path",
+ *   "metadataExpire" : 1467124079,
  *   "modifiedProductIds" : [ ... ],
- *   "arches" : null,
+ *   "arches" : "x86_64",
  *   "created" : "2016-06-13T14:50:58+0000",
  *   "updated" : "2016-06-13T14:50:58+0000"
  * }
  * </pre>
  */
+@ApiModel(parent = CandlepinDTO.class)
 @XmlRootElement
 public class ContentData extends CandlepinDTO {
 
+    @ApiModelProperty(example = "ff808081554a3e4101554a3e9033005d")
     protected String uuid;
+
+    @ApiModelProperty(required = true, example = "5001")
     protected String id;
+
+    @ApiModelProperty(example = "yum")
     protected String type;
+
+    @ApiModelProperty(example = "content_label")
     protected String label;
+
+    @ApiModelProperty(example = "content_name")
     protected String name;
+
+    @ApiModelProperty(example = "example-vendor")
     protected String vendor;
+
+    @ApiModelProperty(example = "/admin/foo/example/path")
     protected String contentUrl;
+
+    @ApiModelProperty(example = "TAG1,TAG2")
     protected String requiredTags;
+
+    @ApiModelProperty(example = "1.2.3")
     protected String releaseVer;
+
+    @ApiModelProperty(example = "/admin/foo/example/gpg/path")
     protected String gpgUrl;
+
+    @ApiModelProperty(example = "1467124079")
     protected Long metadataExpire;
+
+    @ApiModelProperty(example = "[5051,5052,5053]")
     protected Set<String> modifiedProductIds;
+
+    @ApiModelProperty(example = "x86_64")
     protected String arches;
+
+    @ApiModelProperty(hidden = true)
     protected Boolean locked;
 
     /**
@@ -84,23 +115,33 @@ public class ContentData extends CandlepinDTO {
      *
      * @param source
      *  The source DTO from which to copy data
+     *
+     * @throws IllegalArgumentException
+     *  if source is null
      */
     public ContentData(ContentData source) {
-        if (source != null) {
-            this.populate(source);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
         }
+
+        this.populate(source);
     }
 
     /**
      * Initializes a new ContentData instance using the data contained by the given entity.
      *
-     * @param entity
+     * @param source
      *  The source entity from which to copy data
+     *
+     * @throws IllegalArgumentException
+     *  if source is null
      */
-    public ContentData(Content entity) {
-        if (entity != null) {
-            this.populate(entity);
+    public ContentData(Content source) {
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
         }
+
+        this.populate(source);
     }
 
     /**

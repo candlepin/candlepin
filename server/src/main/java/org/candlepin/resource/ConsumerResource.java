@@ -72,7 +72,6 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.User;
 import org.candlepin.model.VirtConsumerMap;
@@ -165,7 +164,6 @@ public class ConsumerResource {
 
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
-    private ProductCurator productCurator;
     private OwnerProductCurator ownerProductCurator;
     private SubscriptionServiceAdapter subAdapter;
     private EntitlementCurator entitlementCurator;
@@ -195,7 +193,6 @@ public class ConsumerResource {
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        ProductCurator productCurator,
         OwnerProductCurator ownerProductCurator,
         SubscriptionServiceAdapter subAdapter,
         EntitlementCurator entitlementCurator,
@@ -215,7 +212,6 @@ public class ConsumerResource {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
-        this.productCurator = productCurator;
         this.ownerProductCurator = ownerProductCurator;
         this.subAdapter = subAdapter;
         this.entitlementCurator = entitlementCurator;

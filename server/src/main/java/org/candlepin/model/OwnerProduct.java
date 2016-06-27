@@ -75,11 +75,6 @@ public class OwnerProduct implements Persisted, Serializable {
         this.setProduct(product);
     }
 
-    // public OwnerProduct(String ownerId, String productUuid) {
-    //     this.ownerId = ownerId;
-    //     this.productUuid = productUuid;
-    // }
-
     @Override
     public Serializable getId() {
         return new OwnerProductKey(this.ownerId, this.productUuid);
