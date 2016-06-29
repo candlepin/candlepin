@@ -19,7 +19,12 @@ package org.candlepin.model;
  */
 public interface Linkable extends Persisted {
 
+    /**
+     * Retrieves the link clients can use to link back to this object.
+     *
+     * @return
+     *  The link clients can use to link back to this object, or null if no such link is available
+     */
     String getHref();
 
-    void setHref(String href);
 }

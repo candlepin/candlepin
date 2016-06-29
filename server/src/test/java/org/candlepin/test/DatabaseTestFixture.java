@@ -24,6 +24,7 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
@@ -34,21 +35,38 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.EntitlementCertificateCurator;
+import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentContent;
+import org.candlepin.model.EnvironmentContentCurator;
+import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.EventCurator;
+import org.candlepin.model.IdentityCertificateCurator;
+import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerInfoCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductAttributeCurator;
+import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
+import org.candlepin.model.RoleCurator;
 import org.candlepin.model.SourceSubscription;
+import org.candlepin.model.UserCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.resteasy.ResourceLocatorMap;
-import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.Util;
 
@@ -64,6 +82,7 @@ import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.SessionFactoryImpl;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -71,9 +90,16 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
+
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -81,6 +107,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -96,14 +124,31 @@ public class DatabaseTestFixture {
     @Rule
     public static CandlepinLiquibaseResource liquibase = new CandlepinLiquibaseResource();
 
-    @Inject protected OwnerCurator ownerCurator;
-    @Inject protected ProductCurator productCurator;
-    @Inject protected PoolCurator poolCurator;
+    protected Configuration config;
+
+    @Inject protected ActivationKeyCurator activationKeyCurator;
     @Inject protected ConsumerCurator consumerCurator;
     @Inject protected ConsumerTypeCurator consumerTypeCurator;
     @Inject protected CertificateSerialCurator certSerialCurator;
     @Inject protected ContentCurator contentCurator;
-    @Inject protected SubscriptionServiceAdapter subAdapter;
+    @Inject protected EntitlementCurator entitlementCurator;
+    @Inject protected EntitlementCertificateCurator entitlementCertificateCurator;
+    @Inject protected EnvironmentCurator environmentCurator;
+    @Inject protected EnvironmentContentCurator environmentContentCurator;
+    @Inject protected EventCurator eventCurator;
+    @Inject protected IdentityCertificateCurator identityCertificateCurator;
+    @Inject protected ImportRecordCurator importRecordCurator;
+    @Inject protected OwnerContentCurator ownerContentCurator;
+    @Inject protected OwnerCurator ownerCurator;
+    @Inject protected OwnerInfoCurator ownerInfoCurator;
+    @Inject protected OwnerProductCurator ownerProductCurator;
+    @Inject protected ProductAttributeCurator productAttributeCurator;
+    @Inject protected ProductCertificateCurator productCertificateCurator;
+    @Inject protected ProductCurator productCurator;
+    @Inject protected PoolCurator poolCurator;
+    @Inject protected RoleCurator roleCurator;
+    @Inject protected UserCurator userCurator;
+
     @Inject protected ResourceLocatorMap locatorMap;
 
     private static Injector parentInjector;
@@ -112,6 +157,7 @@ public class DatabaseTestFixture {
 
     protected TestingInterceptor securityInterceptor;
     protected DateSourceForTesting dateSource;
+    protected I18n i18n;
 
 
     @BeforeClass
@@ -122,8 +168,8 @@ public class DatabaseTestFixture {
 
     @Before
     public void init() {
-        CandlepinCommonTestConfig config = new CandlepinCommonTestConfig();
-        Module testingModule = new TestingModules.StandardTest(config);
+        this.config = new CandlepinCommonTestConfig();
+        Module testingModule = new TestingModules.StandardTest(this.config);
         injector = parentInjector.createChildInjector(
             Modules.override(testingModule).with(getGuiceOverrideModule()));
 
@@ -145,6 +191,8 @@ public class DatabaseTestFixture {
 
         HttpServletRequest req = parentInjector.getInstance(HttpServletRequest.class);
         when(req.getAttribute("username")).thenReturn("mock_user");
+
+        this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
     }
 
     @After
@@ -210,14 +258,19 @@ public class DatabaseTestFixture {
     protected void rollbackTransaction() {
         entityManager().getTransaction().rollback();
     }
+
+    protected Pool createPool(Owner owner, Product product) {
+        return this.createPool(
+            owner, product, 1L, TestUtil.createDate(2000, 1, 1), TestUtil.createDate(2100, 1, 1)
+        );
+    }
+
     /**
      * Create an entitlement pool.
      *
      * @return an entitlement pool
      */
-    protected Pool createPool(Owner owner, Product product, Long quantity, Date startDate,
-        Date endDate) {
-
+    protected Pool createPool(Owner owner, Product product, Long quantity, Date startDate, Date endDate) {
         Pool p = new Pool(
             owner,
             product,
@@ -235,14 +288,52 @@ public class DatabaseTestFixture {
     }
 
     protected Owner createOwner() {
-        Owner o = new Owner("Test Owner " + TestUtil.randomInt());
-        ownerCurator.create(o);
-        return o;
+        return this.createOwner("Test Owner " + TestUtil.randomInt());
+    }
+
+    protected Owner createOwner(String key) {
+        return this.createOwner(key, key);
+    }
+
+    protected Owner createOwner(String key, String name) {
+        Owner owner = TestUtil.createOwner(key, name);
+        this.ownerCurator.create(owner);
+
+        return owner;
+    }
+
+    protected Product createProduct(Owner... owners) {
+        String productId = "test-product-" + TestUtil.randomInt();
+        return this.createProduct(productId, productId, owners);
+    }
+
+    protected Product createProduct(String id, String name, Owner... owners) {
+        Product product = TestUtil.createProduct(id, name);
+        return this.createProduct(product, owners);
+    }
+
+    protected Product createProduct(Product product, Owner... owners) {
+        product = this.productCurator.create(product);
+        this.ownerProductCurator.mapProductToOwners(product, owners);
+
+        return product;
+    }
+
+    protected Content createContent(Owner... owners) {
+        String contentId = "test-content-" + TestUtil.randomInt();
+        return this.createContent(contentId, contentId, owners);
+    }
+
+    protected Content createContent(String id, String name, Owner... owners) {
+        Content content = TestUtil.createContent(id, name);
+        content = this.contentCurator.create(content);
+        this.ownerContentCurator.mapContentToOwners(content, owners);
+
+        return content;
     }
 
     protected Consumer createConsumer(Owner owner) {
-        ConsumerType type = new ConsumerType("test-consumer-type-" +
-            TestUtil.randomInt());
+        ConsumerType type = new ConsumerType("test-consumer-type-" + TestUtil.randomInt());
         consumerTypeCurator.create(type);
         Consumer c = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(c);
@@ -269,6 +360,44 @@ public class DatabaseTestFixture {
         return toReturn;
     }
 
+    protected Environment createEnvironment(Owner owner, String id) {
+        String name = "test-env-" + TestUtil.randomInt();
+        return this.createEnvironment(owner, name, name, null, null, null);
+    }
+
+    protected Environment createEnvironment(Owner owner, String id, String name) {
+        return this.createEnvironment(owner, id, name, null, null, null);
+    }
+
+    protected Environment createEnvironment(Owner owner, String id, String name, String description,
+        Collection<Consumer> consumers, Collection<Content> content) {
+
+        Environment environment = new Environment(id, name, owner);
+        environment.setDescription(description);
+
+        if (consumers != null) {
+            // Ugly hack to deal with how environment currently encapsulates its collections
+            if (!(consumers instanceof List)) {
+                consumers = new LinkedList<Consumer>(consumers);
+            }
+
+            environment.setConsumers((List<Consumer>) consumers);
+        }
+
+        if (content != null) {
+            for (Content elem : content) {
+                EnvironmentContent envContent = new EnvironmentContent(environment, elem, true);
+
+                // Impl note:
+                // At the time of writing, this line is redundant. But if we ever fix environment,
+                // this will be good to have as a backup.
+                environment.getEnvironmentContent().add(envContent);
+            }
+        }
+
+        return this.environmentCurator.create(environment);
+    }
+
     protected Principal setupPrincipal(Owner owner, Access role) {
         return setupPrincipal("someuser", owner, role);
     }
@@ -276,8 +405,7 @@ public class DatabaseTestFixture {
     protected Principal setupPrincipal(String username, Owner owner, Access verb) {
         OwnerPermission p = new OwnerPermission(owner, verb);
         // Only need a detached owner permission here:
-        Principal ownerAdmin = new UserPrincipal(username, Arrays.asList(new Permission[] {
-            p}), false);
+        Principal ownerAdmin = new UserPrincipal(username, Arrays.asList(new Permission[] {p}), false);
         setupPrincipal(ownerAdmin);
         return ownerAdmin;
     }
@@ -309,17 +437,18 @@ public class DatabaseTestFixture {
      * @param inj
      */
     private static void insertValidationEventListeners(Injector inj) {
-        Provider<EntityManagerFactory> emfProvider =
-            inj.getProvider(EntityManagerFactory.class);
+        Provider<EntityManagerFactory> emfProvider = inj.getProvider(EntityManagerFactory.class);
         HibernateEntityManagerFactory hibernateEntityManagerFactory =
             (HibernateEntityManagerFactory) emfProvider.get();
         SessionFactoryImpl sessionFactoryImpl =
             (SessionFactoryImpl) hibernateEntityManagerFactory.getSessionFactory();
-        EventListenerRegistry registry =
-            sessionFactoryImpl.getServiceRegistry().getService(EventListenerRegistry.class);
+        EventListenerRegistry registry = sessionFactoryImpl
+            .getServiceRegistry()
+            .getService(EventListenerRegistry.class);
 
         Provider<BeanValidationEventListener> listenerProvider =
             inj.getProvider(BeanValidationEventListener.class);
+
         registry.getEventListenerGroup(EventType.PRE_INSERT).appendListener(listenerProvider.get());
         registry.getEventListenerGroup(EventType.PRE_UPDATE).appendListener(listenerProvider.get());
         registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());

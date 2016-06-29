@@ -254,7 +254,7 @@ public class ActivationKeyRulesTest {
         pool.setConsumed(4L);
         pool.setAttribute("multi-entitlement", "yes");
         pool.setOwner(owner);
-        pool.setProduct(TestUtil.createProduct(owner));
+        pool.setProduct(TestUtil.createProduct());
         return pool;
     }
 

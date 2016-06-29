@@ -37,8 +37,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_cdn",
-    uniqueConstraints = {@UniqueConstraint(columnNames = {"label"})})
+@Table(name = "cp_cdn", uniqueConstraints = {@UniqueConstraint(columnNames = {"label"})})
 public class Cdn extends AbstractHibernateObject {
 
     @Id
@@ -68,11 +67,10 @@ public class Cdn extends AbstractHibernateObject {
     private CdnCertificate cert;
 
     public Cdn() {
-        this(null, null, null, null);
+        // Intentionally left empty
     }
 
-    public Cdn(String label, String name, String url,
-        CdnCertificate cert) {
+    public Cdn(String label, String name, String url, CdnCertificate cert) {
         this.label = label;
         this.name = name;
         this.url = url;
@@ -127,6 +125,5 @@ public class Cdn extends AbstractHibernateObject {
     public void setCertificate(CdnCertificate cert) {
         this.cert = cert;
     }
-
 
 }

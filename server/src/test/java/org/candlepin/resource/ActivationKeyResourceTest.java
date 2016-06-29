@@ -62,11 +62,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-
-        activationKeyResource = injector
-            .getInstance(ActivationKeyResource.class);
-        activationKeyRules = injector
-            .getInstance(ActivationKeyRules.class);
+        activationKeyResource = injector.getInstance(ActivationKeyResource.class);
+        activationKeyRules = injector.getInstance(ActivationKeyRules.class);
         owner = createOwner();
     }
 
@@ -106,8 +103,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     @Test
     public void testAddingRemovingPools() {
         ActivationKey key = new ActivationKey();
-        Product product = TestUtil.createProduct(owner);
-        productCurator.create(product);
+        Product product = this.createProduct(owner);
         Pool pool = createPool(owner, product, 10L, new Date(), new Date());
         key.setOwner(owner);
         key.setName("dd");
@@ -122,8 +118,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     @Test(expected = BadRequestException.class)
     public void testReaddingPools() {
         ActivationKey key = new ActivationKey();
-        Product product = TestUtil.createProduct(owner);
-        productCurator.create(product);
+        Product product = this.createProduct(owner);
         Pool pool = createPool(owner, product, 10L, new Date(), new Date());
 
         key.setOwner(owner);
@@ -345,8 +340,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     public void testAddingRemovingProductIDs() {
         ActivationKey key = new ActivationKey();
         Owner owner = createOwner();
-        Product product = TestUtil.createProduct(owner);
-        productCurator.create(product);
+        Product product = this.createProduct(owner);
 
         key.setOwner(owner);
         key.setName("dd");
@@ -363,8 +357,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     public void testReaddingProductIDs() {
         ActivationKey key = new ActivationKey();
         Owner owner = createOwner();
-        Product product = TestUtil.createProduct(owner);
-        productCurator.create(product);
+        Product product = this.createProduct(owner);
 
         key.setOwner(owner);
         key.setName("dd");
@@ -381,11 +374,11 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
     private Pool genPool() {
         Pool pool = new Pool();
-        pool.setId("" + poolid++);
+        pool.setId(String.valueOf(poolid++));
         pool.setQuantity(10L);
         pool.setConsumed(4L);
         pool.setAttribute("multi-entitlement", "yes");
-        pool.setProduct(TestUtil.createProduct(owner));
+        pool.setProduct(TestUtil.createProduct());
         return pool;
     }
 

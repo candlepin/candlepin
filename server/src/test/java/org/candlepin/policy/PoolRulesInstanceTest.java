@@ -23,10 +23,9 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.dto.Subscription;
@@ -48,6 +47,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 
+
 /**
  * JsPoolRulesInstanceTest: Tests for refresh pools code on instance based subscriptions.
  */
@@ -61,12 +61,11 @@ public class PoolRulesInstanceTest {
     @Mock private PoolManager poolManagerMock;
     @Mock private Configuration configMock;
     @Mock private EntitlementCurator entCurMock;
-    @Mock private ProductCurator prodCuratorMock;
+    @Mock private OwnerProductCurator ownerProdCuratorMock;
 
     @Before
     public void setUp() {
-        InputStream is = this.getClass().getResourceAsStream(
-            RulesCurator.DEFAULT_RULES_FILE);
+        InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is));
 
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
@@ -74,7 +73,7 @@ public class PoolRulesInstanceTest {
 
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
 
-        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, prodCuratorMock);
+        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, ownerProdCuratorMock);
     }
 
     @Test
@@ -142,8 +141,7 @@ public class PoolRulesInstanceTest {
         // revert to half of what it was. No existing entitlements need to be adjusted,
         // we will let a (future) overconsumption routine handle that.
         masterPool = TestUtil.copyFromSub(s);
-        ProductAttribute pa = masterPool.getProduct().getAttribute("instance_multiplier");
-        masterPool.getProduct().getAttributes().remove(pa);
+        masterPool.getProduct().removeAttribute("instance_multiplier");
 
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
@@ -188,7 +186,7 @@ public class PoolRulesInstanceTest {
     private Subscription createInstanceBasedSub(String productId, int quantity, int instanceMultiplier,
         boolean exported) {
         Owner owner = new Owner("Test Corporation");
-        Product product = new Product(productId, productId, owner);
+        Product product = TestUtil.createProduct(productId, productId);
         product.setAttribute("instance_multiplier", Integer.toString(instanceMultiplier));
         Subscription s = TestUtil.createSubscription(owner, product);
         if (exported) {

@@ -16,7 +16,7 @@ package org.candlepin.service;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
-import org.candlepin.model.Product;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 
 import java.util.List;
@@ -130,5 +130,5 @@ public interface SubscriptionServiceAdapter {
      * @param product the main or provided product to look for.
      * @return a list of subscriptions that provide this product.
      */
-    List<Subscription> getSubscriptions(Product product);
+    List<Subscription> getSubscriptions(ProductData product);
 }

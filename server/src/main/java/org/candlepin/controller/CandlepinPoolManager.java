@@ -29,23 +29,26 @@ import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.dto.ContentData;
+import org.candlepin.model.dto.ProductContentData;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
@@ -119,9 +122,10 @@ public class CandlepinPoolManager implements PoolManager {
     private ProductManager productManager;
     private AutobindRules autobindRules;
     private ActivationKeyRules activationKeyRules;
-    private ContentCurator contentCurator;
     private ContentManager contentManager;
+    private OwnerContentCurator ownerContentCurator;
     private OwnerCurator ownerCurator;
+    private OwnerProductCurator ownerProductCurator;
     private PinsetterKernel pinsetterKernel;
 
     /**
@@ -148,9 +152,10 @@ public class CandlepinPoolManager implements PoolManager {
         ActivationKeyRules activationKeyRules,
         ProductCurator productCurator,
         ProductManager productManager,
-        ContentCurator contentCurator,
         ContentManager contentManager,
+        OwnerContentCurator ownerContentCurator,
         OwnerCurator ownerCurator,
+        OwnerProductCurator ownerProductCurator,
         PinsetterKernel pinsetterKernel,
         I18n i18n) {
 
@@ -170,9 +175,10 @@ public class CandlepinPoolManager implements PoolManager {
         this.activationKeyRules = activationKeyRules;
         this.productCurator = productCurator;
         this.productManager = productManager;
-        this.contentCurator = contentCurator;
         this.contentManager = contentManager;
+        this.ownerContentCurator = ownerContentCurator;
         this.ownerCurator = ownerCurator;
+        this.ownerProductCurator = ownerProductCurator;
         this.pinsetterKernel = pinsetterKernel;
         this.i18n = i18n;
     }
@@ -283,21 +289,23 @@ public class CandlepinPoolManager implements PoolManager {
      */
     protected Set<Content> refreshContent(Owner owner, Collection<Subscription> subs) {
         // All inbound content, mapped by content ID. We're assuming it's all under the same org
-        Map<String, Content> content = new HashMap<String, Content>();
+        Map<String, ContentData> content = new HashMap<String, ContentData>();
 
         log.info("Refreshing content for {} subscriptions.", subs.size());
 
-        for (Subscription sub : subs) {
-            // Grab all the content from each product
-            this.addProductContentToMap(content, sub.getProduct());
-            this.addProductContentToMap(content, sub.getDerivedProduct());
+        if (subs != null) {
+            for (Subscription sub : subs) {
+                // Grab all the content from each product
+                this.addProductContentToMap(content, sub.getProduct());
+                this.addProductContentToMap(content, sub.getDerivedProduct());
 
-            for (Product product : sub.getProvidedProducts()) {
-                this.addProductContentToMap(content, product);
-            }
+                for (ProductData product : sub.getProvidedProducts()) {
+                    this.addProductContentToMap(content, product);
+                }
 
-            for (Product product : sub.getDerivedProvidedProducts()) {
-                this.addProductContentToMap(content, product);
+                for (ProductData product : sub.getDerivedProvidedProducts()) {
+                    this.addProductContentToMap(content, product);
+                }
             }
         }
 
@@ -305,117 +313,77 @@ public class CandlepinPoolManager implements PoolManager {
 
         // We need to flush here to make sure our pending persists and merges get pushed to the DB
         // so our reference updates don't fail.
-        this.contentCurator.flush();
-
-        // Go back through each sub and update content references so we don't end up with dangling,
-        // transient or duplicate references on any of the subs' products.
-        for (Subscription sub : subs) {
-            this.updateContentRefs(content, owner, sub.getProduct());
-            this.updateContentRefs(content, owner, sub.getDerivedProduct());
-
-            for (Product product : sub.getProvidedProducts()) {
-                this.updateContentRefs(content, owner, product);
-            }
-
-            for (Product product : sub.getDerivedProvidedProducts()) {
-                this.updateContentRefs(content, owner, product);
-            }
-        }
+        this.ownerContentCurator.flush();
 
         return changed;
     }
 
-    private void addProductContentToMap(Map<String, Content> contentMap, Product product) {
+    private void addProductContentToMap(Map<String, ContentData> contentMap, ProductData product) {
         if (product == null) {
             return;
         }
 
-        Map<String, Content> mapped = new HashMap<String, Content>();
-        List<ProductContent> duplicates = new LinkedList<ProductContent>();
+        Map<String, ContentData> mapped = new HashMap<String, ContentData>();
+        List<ProductContentData> duplicates = new LinkedList<ProductContentData>();
 
-        for (ProductContent pc : product.getProductContent()) {
-            Content content = pc.getContent();
+        if (product.getProductContent() != null) {
+            for (ProductContentData pcd : product.getProductContent()) {
+                ContentData content = pcd.getContent();
 
-            // Check that this product isn't linking to the same content multiple times...
-            if (mapped.containsKey(content.getId())) {
-                log.warn(
-                    "Multiple references to the same content found on a single product; " +
-                    "discarding duplicate: {} => {}, {}",
-                    product, content, mapped.get(content.getId())
-                );
+                // Check that this product isn't linking to the same content multiple times...
+                if (mapped.containsKey(content.getId())) {
+                    log.warn(
+                        "Multiple references to the same content found on a single product; " +
+                        "discarding duplicate: {} => {}, {}",
+                        product, content, mapped.get(content.getId())
+                    );
 
-                duplicates.add(pc);
-                continue;
+                    duplicates.add(pcd);
+                    continue;
+                }
+
+                mapped.put(content.getId(), content);
+
+
+                // Check that the content hasn't changed if we've already seen it.
+                ContentData existing = contentMap.get(content.getId());
+
+                if (existing != null && !content.equals(existing)) {
+                    log.warn(
+                        "Multiple versions of the same content found on a single subscription; " +
+                        "discarding previous version: {} => {}, {}",
+                        content.getId(), existing, content
+                    );
+                }
+
+                contentMap.put(content.getId(), content);
             }
-
-            mapped.put(content.getId(), content);
-
-
-            // Check that the content hasn't changed if we've already seen it.
-            Content existing = contentMap.get(content.getId());
-
-            if (existing != null && !content.equals(existing)) {
-                log.warn(
-                    "Multiple versions of the same content found on a single subscription; " +
-                    "discarding previous version: {} => {}, {}",
-                    content.getId(), existing, content
-                );
-            }
-
-            contentMap.put(content.getId(), content);
         }
 
         // Remove duplicate references from the product so we don't die trying to persist it...
-        product.getProductContent().removeAll(duplicates);
-    }
-
-    private void updateContentRefs(Map<String, Content> contentCache, Owner owner, Product product) {
-        if (product == null) {
-            return;
-        }
-
-        for (ProductContent pc : product.getProductContent()) {
-            Content content = pc.getContent();
-            Content existing = this.contentCurator.lookupById(owner, content.getId());
-
-            if (existing == null) {
-                // This should never happen.
-                throw new RuntimeException(String.format(
-                    "Unable to resolve content reference: %s", content
-                ));
-            }
-
-            pc.setContent(existing);
+        if (duplicates.size() > 0) {
+            log.debug("WE SHOULD HAVE REMOVED {} ENTITIES");
         }
     }
 
-    public Set<Content> getChangedContent(Owner owner, Map<String, Content> contentCache) {
+    public Set<Content> getChangedContent(Owner owner, Map<String, ContentData> contentCache) {
         Set<Content> changed = Util.newSet();
 
         log.debug("Syncing {} incoming content", contentCache.size());
         for (String cid : contentCache.keySet()) {
             // If cid and incoming.getId() aren't equal, we're in trouble.
-            Content incoming = contentCache.get(cid);
-            Content existing = this.contentCurator.lookupById(owner, cid);
-
-            // Ensure the incoming content is linked to the owner that initiated the refresh
-            incoming.setOwners(Arrays.asList(owner));
+            ContentData incoming = contentCache.get(cid);
+            Content existing = this.ownerContentCurator.getContentById(owner, cid);
 
             if (existing == null) {
                 log.info("Creating new content for org {}: {}", owner.getKey(), cid);
-
-                // This is coming from a manifest or upstream; lock it so it can't be modified
-                // with the API
-                incoming.setLocked(true);
-
-                incoming = this.contentManager.createContent(incoming, owner);
+                existing = this.contentManager.createContent(incoming, owner);
             }
-            else if (!incoming.equals(existing)) {
+            else if (existing.isChangedBy(incoming)) {
                 log.info("Updating existing content for org {}: {}", owner.getKey(), cid);
+                existing = this.contentManager.updateContent(existing, incoming, owner, false);
 
-                incoming = this.contentManager.updateContent(incoming, owner, false);
-
-                changed.add(incoming);
+                changed.add(existing);
             }
         }
 
@@ -428,7 +396,7 @@ public class CandlepinPoolManager implements PoolManager {
          * these product objects are detached, and need to be synced with what's in the
          * database.
          */
-        Map<String, Product> products = new HashMap<String, Product>();
+        Map<String, ProductData> products = new HashMap<String, ProductData>();
 
         log.info("Refreshing products for {} subscriptions.", subs.size());
 
@@ -436,11 +404,11 @@ public class CandlepinPoolManager implements PoolManager {
             this.addProductToMap(products, sub.getProduct());
             this.addProductToMap(products, sub.getDerivedProduct());
 
-            for (Product product : sub.getProvidedProducts()) {
+            for (ProductData product : sub.getProvidedProducts()) {
                 this.addProductToMap(products, product);
             }
 
-            for (Product product : sub.getDerivedProvidedProducts()) {
+            for (ProductData product : sub.getDerivedProvidedProducts()) {
                 this.addProductToMap(products, product);
             }
         }
@@ -451,35 +419,13 @@ public class CandlepinPoolManager implements PoolManager {
         // so our reference updates don't fail.
         this.productCurator.flush();
 
-        // Go back through each sub and update product references so we don't end up with dangling,
-        // transient or duplicate references on any of the subs.
-        for (Subscription sub : subs) {
-            sub.setProduct(this.updateProductRef(products, owner, sub.getProduct()));
-
-            if (sub.getDerivedProduct() != null) {
-                sub.setDerivedProduct(this.updateProductRef(products, owner, sub.getDerivedProduct()));
-            }
-
-            Set<Product> pset = new HashSet<Product>();
-            for (Product product : sub.getProvidedProducts()) {
-                pset.add(this.updateProductRef(products, owner, product));
-            }
-            sub.setProvidedProducts(pset);
-
-            pset.clear();
-            for (Product product : sub.getDerivedProvidedProducts()) {
-                pset.add(this.updateProductRef(products, owner, product));
-            }
-            sub.setDerivedProvidedProducts(pset);
-        }
-
         return changed;
     }
 
-    private void addProductToMap(Map<String, Product> productMap, Product product) {
+    private void addProductToMap(Map<String, ProductData> productMap, ProductData product) {
         if (product != null) {
             // Check that the product hasn't changed if we've already seen it.
-            Product existing = productMap.get(product.getId());
+            ProductData existing = productMap.get(product.getId());
 
             if (existing != null && existing.equals(product)) {
                 log.warn(
@@ -493,24 +439,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
     }
 
-    private Product updateProductRef(Map<String, Product> productCache, Owner owner, Product product) {
-        Product resolved = null;
-
-        if (product != null) {
-            resolved = this.productCurator.lookupById(owner, product.getId());
-
-            if (resolved == null) {
-                // This should never happen.
-                throw new RuntimeException(String.format(
-                    "Unable to resolve product reference for product: %s", product
-                ));
-            }
-        }
-
-        return resolved;
-    }
-
-    public Set<Product> getChangedProducts(Owner owner, Map<String, Product> productCache) {
+    public Set<Product> getChangedProducts(Owner owner, Map<String, ProductData> productCache) {
 
         log.debug("Syncing {} incoming products", productCache.size());
 
@@ -518,27 +447,22 @@ public class CandlepinPoolManager implements PoolManager {
 
         for (String pid : productCache.keySet()) {
             // If the pid key and product.getId() don't match, we'll have some serious issues here.
-            Product incoming = productCache.get(pid);
-            Product existing = this.productCurator.lookupById(owner, pid);
+            ProductData incoming = productCache.get(pid);
+            Product existing = this.ownerProductCurator.getProductById(owner, pid);
 
-            // Ensure the incoming content is linked to the owner that initiated the refresh
-            incoming.setOwners(Arrays.asList(owner));
+            // This is coming from a manifest or upstream; lock it so it can't be modified
+            // with the API
+            incoming.setLocked(true);
 
             if (existing == null) {
                 log.info("Creating new product for org {}: {}", owner.getKey(), pid);
-
-                // This is coming from a manifest or upstream; lock it so it can't be modified
-                // with the API
-                incoming.setLocked(true);
-
-                incoming = this.productManager.createProduct(incoming, owner);
+                existing = this.productManager.createProduct(incoming, owner);
             }
-            else if (!existing.equals(incoming)) {
+            else if (existing.isChangedBy(incoming)) {
                 log.info("Product changed for org {}: {}", owner.getKey(), pid);
+                existing = this.productManager.updateProduct(existing, incoming, owner, false);
 
-                incoming = this.productManager.updateProduct(incoming, owner, false);
-
-                changedProducts.add(incoming);
+                changedProducts.add(existing);
             }
         }
 
@@ -918,27 +842,72 @@ public class CandlepinPoolManager implements PoolManager {
         if (sub == null) {
             throw new IllegalArgumentException("subscription is null");
         }
-        Pool pool = new Pool(sub.getOwner(), sub.getProduct(), sub.getProvidedProducts(),
-            sub.getQuantity(), sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
-            sub.getAccountNumber(), sub.getOrderNumber());
 
-        // Add all product references
-        pool.setDerivedProduct(sub.getDerivedProduct());
-        pool.setDerivedProvidedProducts(sub.getDerivedProvidedProducts());
+        Pool pool = new Pool();
 
-        // Add in branding
-        for (Branding b : sub.getBranding()) {
-            pool.getBranding().add(new Branding(b.getProductId(), b.getType(), b.getName()));
+        Owner owner = this.ownerCurator.lookupByKey(sub.getOwner().getKey());
+
+        pool.setOwner(owner);
+        pool.setQuantity(sub.getQuantity());
+        pool.setStartDate(sub.getStartDate());
+        pool.setEndDate(sub.getEndDate());
+        pool.setContractNumber(sub.getContractNumber());
+        pool.setAccountNumber(sub.getAccountNumber());
+        pool.setOrderNumber(sub.getOrderNumber());
+
+        // Copy over product details
+        pool.setProduct(this.ownerProductCurator.getProductById(owner, sub.getProduct().getId()));
+
+        if (sub.getDerivedProduct() != null) {
+            pool.setDerivedProduct(
+                this.ownerProductCurator.getProductById(owner, sub.getDerivedProduct().getId())
+            );
         }
+
+        Collection<ProductData> productData = sub.getProvidedProducts();
+        if (productData != null) {
+            Collection<Product> products = new LinkedList<Product>();
+
+            for (ProductData pdata : productData) {
+                Product product = this.ownerProductCurator.getProductById(owner, pdata.getId());
+
+                // TODO: Is a null product at this point a silent ignore or an error condition?
+                products.add(product);
+            }
+
+            pool.setProvidedProducts(products);
+        }
+
+        productData = sub.getDerivedProvidedProducts();
+        if (productData != null) {
+            Collection<Product> products = new LinkedList<Product>();
+
+            for (ProductData pdata : productData) {
+                Product product = this.ownerProductCurator.getProductById(owner, pdata.getId());
+
+                // TODO: Is a null product at this point a silent ignore or an error condition?
+                products.add(product);
+            }
+
+            pool.setDerivedProvidedProducts(products);
+        }
+
+        // Copy over subscription details
         pool.setSubscriptionId(sub.getId());
         pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
 
-        // Copy over upstream details...?
+        // Copy over upstream details
         pool.setUpstreamPoolId(sub.getUpstreamPoolId());
         pool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
         pool.setUpstreamConsumerId(sub.getUpstreamConsumerId());
         pool.setCdn(sub.getCdn());
         pool.setCertificate(sub.getCertificate());
+
+        // Add in branding
+        for (Branding b : sub.getBranding()) {
+            pool.getBranding().add(new Branding(b.getProductId(), b.getType(), b.getName()));
+        }
+
         return pool;
     }
 
@@ -2206,30 +2175,10 @@ public class CandlepinPoolManager implements PoolManager {
                 poolQuantity, multiplier, pool.getProduct());
         }
 
+        Subscription subscription = new Subscription(pool);
+        subscription.setQuantity(poolQuantity);
 
-        Subscription fabricated = new Subscription(
-            pool.getOwner(),
-            pool.getProduct(),
-            pool.getProvidedProducts(),
-            poolQuantity,
-            pool.getStartDate(),
-            pool.getEndDate(),
-            pool.getUpdated()
-        );
-
-        fabricated.setId(pool.getSubscriptionId());
-        fabricated.setUpstreamEntitlementId(pool.getUpstreamEntitlementId());
-        fabricated.setCdn(pool.getCdn());
-        fabricated.setCertificate(pool.getCertificate());
-        //Pool.getBranding should return entity Branding. The Branding
-        //entity has no futher relationships so everything should be ok.
-        fabricated.setBranding(pool.getBranding());
-
-        // TODO:
-        // There's probably a fair amount of other stuff we need to migrate over to the
-        // subscription. We should do that here.
-
-        return fabricated;
+        return subscription;
     }
 
     @Override

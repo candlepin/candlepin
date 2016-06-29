@@ -30,13 +30,14 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+
 
 /**
  * Represents an environment within an owner/organization. Environments are tracked
@@ -48,8 +49,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_environment",
-    uniqueConstraints = {@UniqueConstraint(columnNames = {"owner_id", "name"})})
+@Table(name = "cp_environment")
 public class Environment extends AbstractHibernateObject implements Serializable, Owned {
     private static final long serialVersionUID = 4162471699021316341L;
 
@@ -81,8 +81,8 @@ public class Environment extends AbstractHibernateObject implements Serializable
         cascade = CascadeType.ALL)
     private Set<EnvironmentContent> environmentContent = new HashSet<EnvironmentContent>();
 
-
     public Environment() {
+        // Intentionally left empty
     }
 
     public Environment(String id, String name, Owner owner) {
@@ -90,7 +90,6 @@ public class Environment extends AbstractHibernateObject implements Serializable
         this.owner = owner;
         this.name = name;
     }
-
 
     /**
      * Get the environment ID.

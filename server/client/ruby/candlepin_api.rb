@@ -590,6 +590,7 @@ class Candlepin
     updates.each do |key, value|
       current_content[key] = value
     end
+
     put("/owners/#{owner_key}/content/#{content_id}", current_content)
   end
 

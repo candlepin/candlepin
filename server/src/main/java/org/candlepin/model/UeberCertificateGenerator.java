@@ -19,6 +19,7 @@ import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -96,22 +97,19 @@ public class UeberCertificateGenerator {
         // generated with numeric IDs.
 
         Product ueberProduct = Product.createUeberProductForOwner(idGenerator, o);
-        this.productManager.createProduct(ueberProduct, o);
-
         Content ueberContent = Content.createUeberContent(idGenerator, o, ueberProduct);
-        this.contentManager.createContent(ueberContent, o);
+        ueberContent = this.contentManager.createContent(ueberContent, o);
+        ueberProduct.addContent(ueberContent, true);
 
-        ProductContent productContent = new ProductContent(ueberProduct, ueberContent, true);
-        ueberProduct.getProductContent().add(productContent);
-
-        return ueberProduct;
+        return this.productManager.createProduct(ueberProduct, o);
     }
 
     public Subscription createUeberSubscription(Owner o, Product ueberProduct) {
         Date now = now();
 
-        Subscription subscription = new Subscription(o, ueberProduct,
-            new HashSet<Product>(), 1L, now, lateIn2049(), now);
+        Subscription subscription = new Subscription(
+            o, ueberProduct.toDTO(), new HashSet<ProductData>(), 1L, now, lateIn2049(), now
+        );
 
         // We need to fake a subscription ID here so our generated pool's source subscription ends
         // up with a valid ID.
@@ -125,11 +123,9 @@ public class UeberCertificateGenerator {
 
     public Consumer createUeberConsumer(Principal principal, Owner o) {
         ConsumerType type = lookupConsumerType(ConsumerTypeEnum.UEBER_CERT.toString());
-        Consumer consumer = consumerCurator.create(new Consumer(
-            Consumer.UEBER_CERT_CONSUMER,
-            principal.getUsername(),
-            o,
-            type));
+        Consumer consumer = consumerCurator.create(
+            new Consumer(Consumer.UEBER_CERT_CONSUMER, principal.getUsername(), o, type)
+        );
         return consumer;
     }
 
@@ -143,9 +139,9 @@ public class UeberCertificateGenerator {
         ConsumerType type = consumerTypeCurator.lookupByLabel(label);
 
         if (type == null) {
-            throw new CuratorException(i18n.tr("No such unit type: {0}",
-                label));
+            throw new CuratorException(i18n.tr("No such unit type: {0}", label));
         }
+
         return type;
     }
 

@@ -23,25 +23,39 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
+import org.candlepin.resteasy.JsonProvider;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -58,12 +72,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+
 
 /**
  * API Gateway into /product
@@ -75,26 +89,29 @@ import io.swagger.annotations.ApiResponses;
 public class OwnerProductResource {
     private static Logger log = LoggerFactory.getLogger(OwnerProductResource.class);
 
-    private ProductCurator productCurator;
-    private ContentCurator contentCurator;
-    private OwnerCurator ownerCurator;
-    private ProductCertificateCurator productCertCurator;
-    private ProductManager productManager;
     private Configuration config;
     private I18n i18n;
+    private OwnerContentCurator ownerContentCurator;
+    private OwnerCurator ownerCurator;
+    private OwnerProductCurator ownerProductCurator;
+    private ProductCertificateCurator productCertCurator;
+    private ProductCurator productCurator;
+    private ProductManager productManager;
 
     @Inject
-    public OwnerProductResource(ProductCurator productCurator, ContentCurator contentCurator,
-        OwnerCurator ownerCurator, ProductCertificateCurator productCertCurator,
-        ProductManager productManager, Configuration config, I18n i18n) {
+    public OwnerProductResource(Configuration config, I18n i18n, OwnerCurator ownerCurator,
+        OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator,
+        ProductCertificateCurator productCertCurator, ProductCurator productCurator,
+        ProductManager productManager) {
 
-        this.productCurator = productCurator;
-        this.contentCurator = contentCurator;
-        this.ownerCurator = ownerCurator;
-        this.productCertCurator = productCertCurator;
-        this.productManager = productManager;
         this.config = config;
         this.i18n = i18n;
+        this.ownerContentCurator = ownerContentCurator;
+        this.ownerCurator = ownerCurator;
+        this.ownerProductCurator = ownerProductCurator;
+        this.productCertCurator = productCertCurator;
+        this.productCurator = productCurator;
+        this.productManager = productManager;
     }
 
     /**
@@ -140,7 +157,7 @@ public class OwnerProductResource {
      *  the Product instance for the product with the specified id
      */
     protected Product fetchProduct(Owner owner, String productId) {
-        Product product = productCurator.lookupById(owner, productId);
+        Product product = this.ownerProductCurator.getProductById(owner, productId);
 
         if (product == null) {
             throw new NotFoundException(
@@ -168,7 +185,7 @@ public class OwnerProductResource {
      *  the Content instance for the content with the specified id
      */
     protected Content fetchContent(Owner owner, String contentId) {
-        Content content = this.contentCurator.lookupById(owner, contentId);
+        Content content = this.ownerContentCurator.getContentById(owner, contentId);
 
         if (content == null) {
             throw new NotFoundException(
@@ -182,15 +199,33 @@ public class OwnerProductResource {
     @ApiOperation(notes = "Retrieves a list of Products", value = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Product> list(
+    public Response list(
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
         @QueryParam("product") List<String> productIds) {
 
-        Owner owner = this.getOwnerByKey(ownerKey);
+        final Owner owner = this.getOwnerByKey(ownerKey);
+        final Collection<Product> products = productIds != null && productIds.size() > 0 ?
+            this.ownerProductCurator.getProductsByIds(owner, productIds) :
+            this.ownerProductCurator.getProductsByOwner(owner);
+        final ObjectMapper mapper = new JsonProvider(true)
+            .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
 
-        return productIds.isEmpty() ?
-            productCurator.listByOwner(owner) :
-            productCurator.listAllByIds(owner, productIds);
+        StreamingOutput output = new StreamingOutput() {
+            @Override
+            public void write(OutputStream stream) throws IOException, WebApplicationException {
+                JsonGenerator generator = mapper.getJsonFactory().createGenerator(stream);
+                generator.writeStartArray();
+
+                for (Product product : products) {
+                    mapper.writeValue(generator, product.toDTO());
+                }
+
+                generator.writeEndArray();
+                generator.flush();
+            }
+        };
+
+        return Response.ok(output).build();
     }
 
     @ApiOperation(notes = "Retrieves a single Product", value = "getProduct")
@@ -199,12 +234,16 @@ public class OwnerProductResource {
     @Path("/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
-    public Product getProduct(
+    public ProductData getProduct(
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        return this.fetchProduct(owner, productId);
+        Product product = this.fetchProduct(owner, productId);
+
+        log.debug("RETURNING PRODUCT WITH CONTENT: {}", product.getProductContent());
+
+        return product.toDTO();
     }
 
     @ApiOperation(notes = "Retreives a Certificate for a Product",
@@ -219,7 +258,9 @@ public class OwnerProductResource {
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId) {
 
-        Product product = this.getProduct(ownerKey, productId);
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product product = this.fetchProduct(owner, productId);
+
         return this.productCertCurator.getCertForProduct(product);
     }
 
@@ -229,13 +270,16 @@ public class OwnerProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
-    public Product createProduct(
+    public ProductData createProduct(
         @PathParam("owner_key") String ownerKey,
-        Product product) {
+        ProductData product) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
+        Product entity = productManager.createProduct(product, owner);
 
-        return productManager.createProduct(product, owner);
+        log.debug("PRODUCT CREATED: {}", entity);
+
+        return entity.toDTO();
     }
 
     @ApiOperation(notes = "Updates a Product", value = "updateProduct")
@@ -245,19 +289,21 @@ public class OwnerProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
-    public Product updateProduct(
+    public ProductData updateProduct(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
-        Product product) {
+        ProductData update) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product existing = this.getProduct(ownerKey, productId);
+        Product existing = this.fetchProduct(owner, productId);
 
         if (existing.isLocked()) {
-            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
+            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", existing.getId()));
         }
 
-        return this.productManager.updateProduct(((Product) existing.clone()).merge(product), owner, true);
+        Product updated = this.productManager.updateProduct(existing, update, owner, true);
+
+        return updated.toDTO();
     }
 
     @ApiOperation(notes = "Adds Content to a Product  Batch mode", value = "addBatchContent")
@@ -273,22 +319,21 @@ public class OwnerProductResource {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Product product = this.fetchProduct(owner, productId);
-        List<ProductContent> productContent = new LinkedList<ProductContent>();
+        Collection<ProductContent> productContent = new LinkedList<ProductContent>();
 
         if (product.isLocked()) {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
         }
 
         this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
-        product = (Product) product.clone();
         boolean change = false;
 
         for (Entry<String, Boolean> entry : contentMap.entrySet()) {
             Content content = this.fetchContent(owner, entry.getKey());
-            change = product.addContent(content, entry.getValue()) || change;
+            productContent.add(new ProductContent(product, content, entry.getValue()));
         }
 
-        return change ? this.productManager.updateProduct(product, owner, true) : product;
+        return this.productManager.addContentToProduct(product, productContent, owner, true);
     }
 
     @ApiOperation(notes = "Adds Content to a Product  Single mode", value = "addContent")
@@ -297,7 +342,7 @@ public class OwnerProductResource {
     @Consumes(MediaType.WILDCARD)
     @Path("/{product_id}/content/{content_id}")
     @Transactional
-    public Product addContent(
+    public ProductData addContent(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
         @PathParam("content_id") String contentId,
@@ -313,10 +358,11 @@ public class OwnerProductResource {
 
         this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
 
-        product = (Product) product.clone();
-        return product.addContent(content, enabled) ?
-            this.productManager.updateProduct(product, owner, true) :
-            product;
+        product = this.productManager.addContentToProduct(
+            product, Arrays.asList(new ProductContent(product, content, enabled)), owner, true
+        );
+
+        return product.toDTO();
     }
 
     @ApiOperation(notes = "Removes Content from a Product", value = "removeContent")
@@ -386,7 +432,8 @@ public class OwnerProductResource {
             return null;
         }
 
-        Product product = this.getProduct(ownerKey, productId);
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product product = this.fetchProduct(owner, productId);
 
         return RefreshPoolsForProductJob.forProduct(product, lazyRegen);
     }

@@ -77,9 +77,9 @@ public class ComplianceRulesTest {
     private ComplianceRules compliance;
 
     private Owner PRODUCT_OWNER = new Owner("Test Corporation");
-    private Product PRODUCT_1 = new Product("p1", "product1", PRODUCT_OWNER);
-    private Product PRODUCT_2 = new Product("p2", "product2", PRODUCT_OWNER);
-    private Product PRODUCT_3 = new Product("p3", "product3", PRODUCT_OWNER);
+    private Product PRODUCT_1 = new Product("p1", "product1");
+    private Product PRODUCT_2 = new Product("p2", "product2");
+    private Product PRODUCT_3 = new Product("p3", "product3");
     private static final String STACK_ID_1 = "my-stack-1";
     private static final String STACK_ID_2 = "my-stack-2";
 

@@ -76,6 +76,7 @@ public class X509V3ExtensionUtil extends X509Util {
     private long huffNodeId = 0;
     private static final Object END_NODE = new Object();
     private static boolean treeDebug = false;
+
     @Inject
     public X509V3ExtensionUtil(Configuration config, EntitlementCurator entCurator) {
         // Output everything in UTC
@@ -267,8 +268,8 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public List<org.candlepin.model.dto.Product> createProducts(Product sku,
-        Set<Product> products, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent, Consumer consumer, Entitlement ent) {
+        Set<Product> products, String contentPrefix, Map<String, EnvironmentContent> promotedContent,
+        Consumer consumer, Entitlement ent) {
 
         List<org.candlepin.model.dto.Product> toReturn =
             new ArrayList<org.candlepin.model.dto.Product>();
@@ -299,9 +300,7 @@ public class X509V3ExtensionUtil extends X509Util {
         toReturn.setId(engProduct.getId());
         toReturn.setName(engProduct.getName());
 
-        String version = engProduct.hasAttribute("version") ?
-            engProduct.getAttributeValue("version") : "";
-
+        String version = engProduct.hasAttribute("version") ? engProduct.getAttributeValue("version") : "";
         toReturn.setVersion(version);
 
         Branding brand = getBranding(ent.getPool(), engProduct.getId());
@@ -353,10 +352,9 @@ public class X509V3ExtensionUtil extends X509Util {
      * productArchList is a list of arch strings parse from
      *   product attributes.
      */
-    public List<Content> createContent(
-        Set<ProductContent> productContent, Product sku, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent,
-        Consumer consumer, Product product, Entitlement ent) {
+    public List<Content> createContent(Set<ProductContent> productContent, Product sku, String contentPrefix,
+        Map<String, EnvironmentContent> promotedContent, Consumer consumer, Product product,
+        Entitlement ent) {
 
         List<Content> toReturn = new ArrayList<Content>();
 
@@ -406,7 +404,7 @@ public class X509V3ExtensionUtil extends X509Util {
             }
             content.setArches(archesList);
 
-            Boolean enabled = pc.getEnabled();
+            Boolean enabled = pc.isEnabled();
             // sku level content enable override. if on both lists, active wins.
             if (skuDisabled.contains(pc.getContent().getId())) {
                 enabled = false;
@@ -487,6 +485,7 @@ public class X509V3ExtensionUtil extends X509Util {
                 log.debug("Skipping content set: " + pc.getContent());
             }
         }
+
         return filtered;
     }
 
@@ -930,6 +929,7 @@ public class X509V3ExtensionUtil extends X509Util {
 
     public List<String> hydrateContentPackage(byte[] payload)
         throws IOException, UnsupportedEncodingException {
+
         List<HuffNode> pathDictionary = new ArrayList<HuffNode>();
         List<HuffNode> nodeDictionary = new ArrayList<HuffNode>();
 
@@ -989,8 +989,7 @@ public class X509V3ExtensionUtil extends X509Util {
         HuffNode nodeTrie = makeTrie(trieNodeDictionary);
 
         // populate the PathNodes so we can rebuild the cool url tree
-        Set<PathNode> pathNodes =  populatePathNodes(nodeDictionary,
-            pathTrie, nodeTrie, nodeBits);
+        Set<PathNode> pathNodes =  populatePathNodes(nodeDictionary, pathTrie, nodeTrie, nodeBits);
         // find the root, he has no parents
         PathNode root = null;
         for (PathNode pn : pathNodes) {

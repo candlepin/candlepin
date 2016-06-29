@@ -44,20 +44,15 @@ public class ModifierTestDataGenerator {
     /**
      * All the entitlements of this consumer are expired
      */
-    @Inject
-    private ProductCurator productCurator;
-    @Inject
-    private CertificateSerialCurator certSerialCurator;
-    @Inject
-    private PoolCurator poolCurator;
-    @Inject
-    private ConsumerCurator consumerCurator;
-    @Inject
-    private ConsumerTypeCurator consumerTypeCurator;
-    @Inject
-    private EntitlementCurator entitlementCurator;
-    @Inject
-    private ContentCurator contentCurrator;
+    @Inject private ProductCurator productCurator;
+    @Inject private OwnerProductCurator ownerProductCurator;
+    @Inject private CertificateSerialCurator certSerialCurator;
+    @Inject private PoolCurator poolCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private EntitlementCurator entitlementCurator;
+    @Inject private ContentCurator contentCurator;
+
     private Owner owner;
 
     private List<Consumer> consumers = new ArrayList<Consumer>();
@@ -70,14 +65,15 @@ public class ModifierTestDataGenerator {
     public void createTestData(Owner owner) {
         this.owner = owner;
         for (int i = 0; i < 10; i++) {
-            Product prod = TestUtil.createProduct("E" + i, "EName" + i, owner);
-            productCurator.create(prod);
+            Product prod = TestUtil.createProduct("E" + i, "EName" + i);
+            prod = productCurator.create(prod);
+            this.ownerProductCurator.mapProductToOwner(prod, owner);
+
             engProducts.add(prod);
         }
 
         for (int i = 0; i < 10; i++) {
-            Content content = new Content(owner, "fakecontent", "fakecontent", "CON" + i, "yum", "RH",
-                "http://", "http://", "x86_64");
+            Content content = TestUtil.createContent("fakecontent-" + i);
             Set<String> modified = new HashSet<String>();
 
             /**
@@ -110,9 +106,8 @@ public class ModifierTestDataGenerator {
                 modified.add("M3");
             }
 
-
             content.setModifiedProductIds(modified);
-            contentCurrator.create(content);
+            content = contentCurator.create(content);
             contents.add(content);
         }
 
@@ -125,7 +120,7 @@ public class ModifierTestDataGenerator {
          * Attach engineering products to content
          */
         for (int i = 0; i < 10; i++) {
-            engProducts.get(i).addContent(contents.get(i));
+            engProducts.get(i).addContent(contents.get(i), true);
             productCurator.merge(engProducts.get(i));
         }
 
@@ -210,8 +205,10 @@ public class ModifierTestDataGenerator {
     }
 
     private Pool createPool(int id, Date startDate, Date endDate, List<Product> provided) {
-        Product poolProd = TestUtil.createProduct("M" + id, "MName-" + id, owner);
+        Product poolProd = TestUtil.createProduct("M" + id, "MName-" + id);
         productCurator.create(poolProd);
+        this.ownerProductCurator.mapProductToOwner(poolProd, owner);
+
         Pool p = TestUtil.createPool(owner, poolProd);
         mktProducts.add(poolProd);
         for (Product prov : provided) {

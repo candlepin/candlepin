@@ -68,7 +68,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
     @Test
     public void testPoolRelationship() {
         ActivationKey key = createActivationKey(owner);
-        Product prod = TestUtil.createProduct(owner);
+        Product prod = TestUtil.createProduct();
         productCurator.create(prod);
         Pool pool = createPool(owner, prod, 12L,
             new Date(), new Date(System.currentTimeMillis() + (365 * 24 * 60 * 60 * 1000)));
@@ -84,7 +84,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
     @Test
     public void testNullPoolRelationship() {
         ActivationKey key = createActivationKey(owner);
-        Product prod = TestUtil.createProduct(owner);
+        Product prod = TestUtil.createProduct();
         productCurator.create(prod);
         Pool pool = createPool(owner, prod, 12L,
             new Date(), new Date(System.currentTimeMillis() + (365 * 24 * 60 * 60 * 1000)));
@@ -100,7 +100,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
     @Test
     public void testActivationKeyHasPool() {
         ActivationKey key = this.createActivationKey(this.owner);
-        Product prod = TestUtil.createProduct(owner);
+        Product prod = TestUtil.createProduct();
         productCurator.create(prod);
         Pool pool = createPool(
             this.owner,
@@ -122,7 +122,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
     @Test
     public void testActivationKeyHasProduct() {
         ActivationKey key = this.createActivationKey(this.owner);
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
 
         assertTrue(!key.hasProduct(product));
 

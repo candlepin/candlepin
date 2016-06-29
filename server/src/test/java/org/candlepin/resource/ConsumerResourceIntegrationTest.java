@@ -31,28 +31,18 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
-import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
-import org.candlepin.model.EntitlementCertificateCurator;
-import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.IdentityCertificate;
-import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
-import org.candlepin.model.RoleCurator;
 import org.candlepin.model.User;
-import org.candlepin.model.UserCurator;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.impl.BouncyCastlePKIReader;
 import org.candlepin.resource.util.ConsumerBindUtil;
@@ -90,21 +80,10 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     private static final String CONSUMER_NAME = "consumer_name";
     private static final String USER_NAME = "testing user";
 
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private UserCurator userCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private EntitlementCurator entitlementCurator;
-    @Inject private EntitlementCertificateCurator entCertCurator;
-    @Inject private RoleCurator roleCurator;
-    @Inject private CertificateSerialCurator certSerialCurator;
     @Inject private CandlepinPoolManager poolManager;
     @Inject private PermissionFactory permFactory;
     @Inject private ConsumerResource consumerResource;
-    @Inject private IdentityCertificateCurator idCurator;
     @Inject private IdentityCertServiceAdapter icsa;
-
 
     private ConsumerType standardSystemType;
     private ConsumerType personType;
@@ -150,7 +129,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(consumer);
 
-        product = TestUtil.createProduct(owner);
+        product = TestUtil.createProduct();
         product.addAttribute(new ProductAttribute("support_level", DEFAULT_SERVICE_LEVEL));
         productCurator.create(product);
 
@@ -293,7 +272,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         idCert.setId(null); // needs to be null to persist
         idCert.getSerial().setId(null);  // needs to be null to persist
         certSerialCurator.create(idCert.getSerial());
-        idCurator.create(idCert);
+        identityCertificateCurator.create(idCert);
         consumer.setIdCert(idCert);
 
         consumer.setType(consumerTypeCurator.create(
@@ -322,8 +301,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals(Long.valueOf(1), pool.getConsumed());
         assertEquals(1, resultList.size());
         assertEquals(pool.getId(), resultList.get(0).getPool().getId());
-        assertEquals(1, entCertCurator.listForEntitlement(resultList.get(0))
-            .size());
+        assertEquals(1, entitlementCertificateCurator.listForEntitlement(resultList.get(0)).size());
     }
 
     @Test

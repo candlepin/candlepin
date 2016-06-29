@@ -30,7 +30,9 @@ import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.Projections;
@@ -134,8 +136,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     public List<E> listAllByIds(Collection<? extends Serializable> ids) {
-        return listByCriteria(
-            createSecureCriteria().add(unboundedInCriterion("id", ids)));
+        return listByCriteria(createSecureCriteria().add(unboundedInCriterion("id", ids)));
     }
 
     @SuppressWarnings("unchecked")
@@ -261,7 +262,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return this.createSecureCriteria(null);
     }
 
-
     /**
      * Gives the permissions a chance to add aliases and then restrictions to the query.
      * Uses an "or" so a principal could carry permissions for multiple owners
@@ -274,52 +274,126 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return Criteria Final criteria query with all filters applied.
      */
     protected Criteria createSecureCriteria(String alias) {
-        Principal principal = principalProvider.get();
-        Criteria query = (alias != null && !alias.equals("")) ?
-            currentSession().createCriteria(entityType, alias) :
-            currentSession().createCriteria(entityType);
+        return this.createSecureCriteria(this.entityType, alias);
+    }
 
-        /*
-         * There are situations where consumer queries are run before there is a principal,
-         * i.e. during authentication when we're looking up the consumer itself.
-         */
-        if (principal == null) {
-            return query;
+    /**
+     * Creates a "secure" criteria for the given entity class. The criteria object returned will
+     * have zero or more restrictions applied to the entity class based on the current principal's
+     * permissions.
+     *
+     * @param entityClass
+     *  The class of entity to be retrieved and restricted by the generated criteria
+     *
+     * @param alias
+     *  The alias to assign to the root entity; ignored if null
+     *
+     * @return
+     *  a new Criteria instance with any applicable entity restrictions
+     */
+    protected Criteria createSecureCriteria(Class entityClass, String alias) {
+        Criteria criteria = (alias != null && alias.length() > 0) ?
+            this.currentSession().createCriteria(entityClass, alias) :
+            this.currentSession().createCriteria(entityClass);
+
+        Criterion restrictions = this.getSecureCriteriaRestrictions(entityClass);
+
+        if (restrictions != null) {
+            criteria.add(restrictions);
         }
 
+        return criteria;
+    }
 
-        // Admins do not need query filtering enabled.
-        if (principal.hasFullAccess()) {
-            return query;
+    /**
+     * Creates a detached criteria object to use as the basis of a permission-oriented entity
+     * lookup query.
+     *
+     * @return
+     *  a detached criteria object containing permission restrictions
+     */
+    protected DetachedCriteria createSecureDetachedCriteria() {
+        return this.createSecureDetachedCriteria(null);
+    }
+
+    /**
+     * Creates a detached criteria object to use as the basis of a permission-oriented entity
+     * lookup query.
+     *
+     * @param alias
+     *  The alias to use for the main entity, or null to omit an alias
+     *
+     * @return
+     *  a detached criteria object containing permission restrictions
+     */
+    protected DetachedCriteria createSecureDetachedCriteria(String alias) {
+        return this.createSecureDetachedCriteria(this.entityType, null);
+    }
+
+    /**
+     * Creates a detached criteria object to use as the basis of a permission-oriented entity
+     * lookup query.
+     *
+     * @param entityClass
+     *  The class of entity to be retrieved and restricted by the generated criteria
+     *
+     * @param alias
+     *  The alias to assign to the root entity; ignored if null
+     *
+     * @return
+     *  a detached criteria object containing permission restrictions
+     */
+    protected DetachedCriteria createSecureDetachedCriteria(Class entityClass, String alias) {
+        DetachedCriteria criteria = (alias != null && !alias.equals("")) ?
+            DetachedCriteria.forClass(this.entityType, alias) :
+            DetachedCriteria.forClass(this.entityType);
+
+        Criterion restrictions = this.getSecureCriteriaRestrictions(entityClass);
+
+        if (restrictions != null) {
+            criteria.add(restrictions);
         }
 
-        Criterion finalCriterion = null;
-        for (Permission perm : principal.getPermissions()) {
+        return criteria;
+    }
 
-            Criterion crit = perm.getCriteriaRestrictions(entityType);
-            if (crit != null) {
-                log.debug("Got criteria restrictions from permissions {} for {}: {}",
-                    new Object [] {perm, entityType, crit});
-                if (finalCriterion == null) {
-                    finalCriterion = crit;
-                }
-                else {
-                    finalCriterion = Restrictions.or(finalCriterion, crit);
+    /**
+     * Builds the criteria restrictions for the given entity class. If the entity does not need any
+     * restrictions or the current principal otherwise has full access, this method returns null.
+     *
+     * @param entityClass
+     *  The entity class for which to build secure criteria restrictions
+     *
+     * @return
+     *  the criteria restrictions for the given entity class, or null if no restrictions are
+     *  necessary.
+     */
+    protected Criterion getSecureCriteriaRestrictions(Class entityClass) {
+        Principal principal = this.principalProvider.get();
+        Criterion restrictions = null;
+
+        // If we do not yet have a principal (during authentication) or the principal has full
+        // access, skip the restriction building
+        if (principal != null && !principal.hasFullAccess()) {
+            for (Permission permission : principal.getPermissions()) {
+                Criterion restriction = permission.getCriteriaRestrictions(entityClass);
+
+                if (restriction != null) {
+                    log.debug("Adding criteria restriction from permission {} for {}: {}",
+                        permission, entityClass, restriction);
+
+                    restrictions = (restrictions != null) ?
+                        Restrictions.or(restrictions, restriction) : restriction;
                 }
             }
         }
 
-        if (finalCriterion != null) {
-            query.add(finalCriterion);
-        }
-
-        return query;
+        return restrictions;
     }
 
     @SuppressWarnings("unchecked")
     @Transactional
-    public Page<List<E>> listByCriteria(Criteria c,
-        PageRequest pageRequest) {
+    public Page<List<E>> listByCriteria(Criteria c, PageRequest pageRequest) {
         Page<List<E>> page = new Page<List<E>>();
 
         if (pageRequest != null) {
@@ -415,12 +489,17 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
     }
 
-    protected Session currentSession() {
+    public Session currentSession() {
         Session sess = (Session) entityManager.get().getDelegate();
         return sess;
     }
 
-    protected EntityManager getEntityManager() {
+    public Session openSession() {
+        SessionFactory factory = this.currentSession().getSessionFactory();
+        return factory.openSession();
+    }
+
+    public EntityManager getEntityManager() {
         return entityManager.get();
     }
 
@@ -524,7 +603,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return
      *  the number of rows updated as a result of this query
      */
-    protected int safeSQLUpdateWithCollection(String sql, List<?> collection, Object... params) {
+    protected int safeSQLUpdateWithCollection(String sql, Collection<?> collection, Object... params) {
         int count = 0;
 
         Session session = this.currentSession();

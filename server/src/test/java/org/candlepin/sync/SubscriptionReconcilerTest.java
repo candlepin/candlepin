@@ -26,9 +26,8 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
-import org.candlepin.model.Product;
-import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -81,21 +80,15 @@ public class SubscriptionReconcilerTest {
      * to incoming subscriptions. Today we don't have local subscriptions, only the
      * master pools they created.
      *
-     * TODO: Might be worth switching from copying data off a subscription to just creating
+     * TODO: Might be worth switching from copying data of a subscription to just creating
      * the local pool with params.
      */
     private List<Pool> createPoolsFor(Subscription ... subs) {
         List<Pool> pools = new LinkedList<Pool>();
         for (Subscription sub : subs) {
-            Pool p = new Pool(sub.getOwner(), sub.getProduct(), sub.getProvidedProducts(),
-                sub.getQuantity(), sub.getStartDate(), sub.getEndDate(),
-                sub.getContractNumber(), sub.getAccountNumber(), sub.getOrderNumber());
-            p.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
-            p.setUpstreamPoolId(sub.getUpstreamPoolId());
-            p.setUpstreamConsumerId(sub.getUpstreamConsumerId());
-            p.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
-            pools.add(p);
+            pools.add(TestUtil.copyFromSub(sub));
         }
+
         // Mock these pools as the return value for the owner:
         when(poolCurator.listByOwnerAndType(owner, PoolType.NORMAL)).thenReturn(pools);
         return pools;
@@ -291,12 +284,11 @@ public class SubscriptionReconcilerTest {
         Subscription testSub33 = createSubscription(owner, "test-prod-1", "up3", "ue33", "uc1", 10);
         Subscription testSub34 = createSubscription(owner, "test-prod-1", "up3", "ue34", "uc1", 5);
 
-        createPoolsFor(testSub1, testSub2, testSub3, testSub4, testSub5,
-            testSub20, testSub21, testSub22, testSub24);
+        createPoolsFor(testSub1, testSub2, testSub3, testSub4, testSub5, testSub20, testSub21, testSub22,
+            testSub24);
 
-        reconciler.reconcile(owner, Arrays.asList(testSub1, testSub2, testSub3, testSub4,
-            testSub5, testSub30, testSub31, testSub32, testSub33, testSub34),
-            poolCurator);
+        reconciler.reconcile(owner, Arrays.asList(testSub1, testSub2, testSub3, testSub4, testSub5, testSub30,
+            testSub31, testSub32, testSub33, testSub34), poolCurator);
 
         // 20-24 have no matchup with 30-34 due to different upstream pool ID:
         assertUpstream(testSub1, testSub1.getId());
@@ -315,13 +307,14 @@ public class SubscriptionReconcilerTest {
         String poolId, String entId, String conId, long quantity) {
 
         Subscription sub = new Subscription();
-        sub.setProduct(new Product(productId, productId, owner));
+        sub.setProduct(TestUtil.createProductDTO(productId, productId));
         sub.setUpstreamPoolId(poolId);
         sub.setUpstreamEntitlementId(entId);
         sub.setUpstreamConsumerId(conId);
         sub.setQuantity(quantity);
         sub.setOwner(daOwner);
         sub.setId("" + index++);
+
         return sub;
     }
 

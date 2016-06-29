@@ -31,12 +31,15 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
+import org.candlepin.model.dto.ContentData;
+import org.candlepin.model.dto.ProductAttributeData;
+import org.candlepin.model.dto.ProductContentData;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -53,6 +56,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -67,16 +71,16 @@ public class TestUtil {
     private TestUtil() {
     }
 
-    public static Owner createOwner() {
-        return new Owner("Test Owner " + randomInt());
+    public static Owner createOwner(String key, String name) {
+        return new Owner(key, name);
     }
 
     public static Owner createOwner(String key) {
-        return new Owner(key);
+        return createOwner(key, key);
     }
 
-    public static Owner createOwner(String key, String name) {
-        return new Owner(key, name);
+    public static Owner createOwner() {
+        return createOwner("Test Owner " + randomInt());
     }
 
     public static Consumer createConsumer(ConsumerType type, Owner owner) {
@@ -129,20 +133,11 @@ public class TestUtil {
         return String.valueOf(randomInt());
     }
 
-    public static Content createContent(String id) {
-        return createContent(TestUtil.createOwner(), id);
-    }
-
-    public static Content createContent(Owner owner, String id) {
-        return createContent(owner, id, "test-content-" + randomInt());
-    }
-
-    public static Content createContent(Owner owner, String id, String name) {
+    public static Content createContent(String id, String name) {
         return new Content(
-            owner,
             name,
             id,
-            name,
+            "test-label",
             "test-type",
             "test-vendor",
             "https://test.url.com",
@@ -151,60 +146,185 @@ public class TestUtil {
         );
     }
 
-    public static Product createProduct(String id, String name, Owner owner) {
-        Product rhel = new Product(id, name, owner);
+    public static Content createContent(String id) {
+        return createContent(id, id);
+    }
 
-        ProductAttribute a1 = new ProductAttribute("a1", "a1");
-        rhel.addAttribute(a1);
+    public static Content createContent() {
+        return createContent("test-content-" + randomInt());
+    }
 
-        ProductAttribute a2 = new ProductAttribute("a2", "a2");
-        rhel.addAttribute(a2);
+    public static Content createContent(ContentData contentData) {
+        Content content = null;
 
-        return rhel;
+        if (contentData != null) {
+            content = createContent(contentData.getId(), contentData.getName());
+
+            content.setUuid(contentData.getUuid());
+            content.setType(contentData.getType());
+            content.setLabel(contentData.getLabel());
+            content.setVendor(contentData.getVendor());
+            content.setContentUrl(contentData.getContentUrl());
+            content.setRequiredTags(contentData.getRequiredTags());
+            content.setReleaseVersion(contentData.getReleaseVersion());
+            content.setGpgUrl(contentData.getGpgUrl());
+            content.setMetadataExpire(contentData.getMetadataExpire());
+            content.setModifiedProductIds(contentData.getModifiedProductIds());
+            content.setArches(contentData.getArches());
+            content.setLocked(contentData.isLocked());
+        }
+
+        return content;
+    }
+
+    public static ContentData createContentDTO(String id, String name) {
+        ContentData dto = new ContentData();
+
+        dto.setId(id);
+        dto.setName(name);
+
+        return dto;
+    }
+
+    public static ContentData createContentDTO(String id) {
+        return createContentDTO(id, id);
+    }
+
+    public static ContentData createContentDTO() {
+        return createContentDTO("test-content-" + randomInt());
+    }
+
+    public static Product createProduct(String id, String name) {
+        return new Product(id, name, null);
+
+        // TODO:
+        // Leaving these comments in for the moment for reference when a few tests that are
+        // expecting these attributes break.
+
+        // ProductAttribute a1 = new ProductAttribute("a1", "a1");
+        // rhel.addAttribute(a1);
+
+        // ProductAttribute a2 = new ProductAttribute("a2", "a2");
+        // rhel.addAttribute(a2);
     }
 
     public static Product createProduct(String id) {
-        return createProduct(id, "test-product-" + randomInt(), createOwner());
+        return createProduct(id, "test-product-" + randomInt());
     }
 
-    public static Product createProduct(Owner o) {
+    public static Product createProduct() {
         int random = randomInt();
         return createProduct(
             String.valueOf(random),
-            "test-product-" + random,
-            o
+            "test-product-" + random
         );
+    }
+
+    public static Product createProduct(ProductData productData) {
+        Product product = null;
+
+        if (productData != null) {
+            product = new Product(productData.getId(), productData.getName());
+
+            product.setUuid(productData.getUuid());
+            product.setMultiplier(productData.getMultiplier());
+
+            if (productData.getAttributes() != null) {
+                for (ProductAttributeData attrib : productData.getAttributes()) {
+                    if (attrib != null) {
+                        product.setAttribute(attrib.getName(), attrib.getValue());
+                    }
+                }
+            }
+
+            if (productData.getProductContent() != null) {
+                for (ProductContentData pcd : productData.getProductContent()) {
+                    if (pcd != null) {
+                        Content content = createContent((ContentData) pcd.getContent());
+
+                        if (content != null) {
+                            product.addContent(content, pcd.isEnabled() != null ? pcd.isEnabled() : true);
+                        }
+                    }
+                }
+            }
+
+            product.setDependentProductIds(productData.getDependentProductIds());
+            product.setLocked(productData.isLocked() != null ? productData.isLocked() : false);
+        }
+
+        return product;
+    }
+
+    public static ProductData createProductDTO(String id, String name) {
+        ProductData dto = new ProductData();
+
+        dto.setId(id);
+        dto.setName(name);
+
+        return dto;
+    }
+
+    public static ProductData createProductDTO(String id) {
+        return createProductDTO(id, id);
+    }
+
+    public static ProductData createProductDTO() {
+        return createProductDTO("test-product-" + randomInt());
     }
 
     public static Subscription createSubscription() {
         Owner owner = createOwner();
-        Product product = createProduct(owner);
+        Product product = createProduct();
 
         return createSubscription(owner, product);
     }
 
     public static Subscription createSubscription(Owner owner, Product product) {
-        return createSubscription(owner, product, new HashSet<Product>());
+        return createSubscription(owner, product, null);
     }
 
     public static Subscription createSubscription(Owner owner, Product product,
-        Set<Product> providedProducts) {
+        Collection<Product> providedProducts) {
+
+        Collection<ProductData> providedProductsDTOs = new LinkedList<ProductData>();
+
+        if (providedProducts != null) {
+            for (Product providedProduct : providedProducts) {
+                providedProductsDTOs.add(providedProduct.toDTO());
+            }
+        }
+
+        return createSubscription(owner, product.toDTO(), providedProductsDTOs);
+    }
+
+    public static Subscription createSubscription(Owner owner, ProductData product) {
+        return createSubscription(owner, product, null);
+    }
+
+    public static Subscription createSubscription(Owner owner, ProductData productData,
+        Collection<ProductData> providedProductsData) {
+
+        Set<ProductData> providedProductsSet = new HashSet<ProductData>();
+        providedProductsSet.addAll(providedProductsData);
 
         Subscription sub = new Subscription(
             owner,
-            product,
-            providedProducts,
+            productData,
+            providedProductsSet,
             1000L,
             createDate(2000, 1, 1),
             createDate(2050, 1, 1),
             createDate(2000, 1, 1)
         );
 
+        sub.setId("test-sub-" + randomInt());
+
         return sub;
     }
 
     public static Pool createPool(Owner owner) {
-        return createPool(owner, createProduct(owner));
+        return createPool(owner, createProduct());
     }
 
     public static Pool createPool(Product product) {
@@ -307,10 +427,15 @@ public class TestUtil {
         );
     }
 
-    public static UserPrincipal createOwnerPrincipal() {
-        Owner owner = new Owner("Test Owner " + randomInt());
+    public static UserPrincipal createOwnerPrincipal(Owner owner) {
         return createPrincipal("someuser", owner, Access.ALL);
     }
+
+    public static UserPrincipal createOwnerPrincipal() {
+        Owner owner = createOwner("Test Owner " + randomInt());
+        return createPrincipal("someuser", owner, Access.ALL);
+    }
+
 
     public static Set<String> createSet(String productId) {
         Set<String> results = new HashSet<String>();
@@ -358,7 +483,7 @@ public class TestUtil {
         return createEntitlement(
             owner,
             createConsumer(owner),
-            createPool(owner, createProduct(owner)),
+            createPool(owner, createProduct()),
             null
         );
     }
@@ -375,28 +500,50 @@ public class TestUtil {
      * @return pool for subscription
      */
     public static Pool copyFromSub(Subscription sub) {
-        Pool p = new Pool(sub.getOwner(),
-            sub.getProduct(),
-            new HashSet<Product>(sub.getProvidedProducts()),
-            sub.getQuantity(),
-            sub.getStartDate(),
-            sub.getEndDate(),
-            sub.getContractNumber(),
-            sub.getAccountNumber(),
-            sub.getOrderNumber()
-        );
-        p.setUpstreamPoolId(sub.getUpstreamPoolId());
-        p.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
+        Product product = createProduct((ProductData) sub.getProduct());
+        Product derivedProduct = createProduct((ProductData) sub.getDerivedProduct());
 
-        // Copy sub-product data if there is any:
-        p.setDerivedProduct(sub.getDerivedProduct());
-        p.setDerivedProvidedProducts(new HashSet<Product>(sub.getDerivedProvidedProducts()));
-
-        for (Branding b : sub.getBranding()) {
-            p.getBranding().add(new Branding(b.getProductId(), b.getType(), b.getName()));
+        List<Product> providedProducts = new LinkedList<Product>();
+        if (sub.getProvidedProducts() != null) {
+            for (ProductData productData : sub.getProvidedProducts()) {
+                if (productData != null) {
+                    providedProducts.add(TestUtil.createProduct(productData));
+                }
+            }
         }
 
-        return p;
+        List<Product> derivedProvidedProducts = new LinkedList<Product>();
+        if (sub.getDerivedProvidedProducts() != null) {
+            for (ProductData productData : sub.getDerivedProvidedProducts()) {
+                if (productData != null) {
+                    derivedProvidedProducts.add(TestUtil.createProduct(productData));
+                }
+            }
+        }
+
+        Pool pool = new Pool(sub.getOwner(), product, providedProducts, sub.getQuantity(),
+            sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
+            sub.getOrderNumber()
+        );
+
+        pool.setDerivedProduct(derivedProduct);
+        pool.setDerivedProvidedProducts(derivedProvidedProducts);
+
+        if (sub.getId() != null) {
+            pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
+        }
+
+        pool.setUpstreamPoolId(sub.getUpstreamPoolId());
+        pool.setUpstreamConsumerId(sub.getUpstreamConsumerId());
+        pool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
+
+        for (Branding branding : sub.getBranding()) {
+            pool.getBranding().add(
+                new Branding(branding.getProductId(), branding.getType(), branding.getName())
+            );
+        }
+
+        return pool;
     }
 
     /**
@@ -428,8 +575,7 @@ public class TestUtil {
         return p;
     }
 
-    public static ActivationKey createActivationKey(Owner owner,
-        List<Pool> pools) {
+    public static ActivationKey createActivationKey(Owner owner, List<Pool> pools) {
         ActivationKey key = new ActivationKey();
         key.setOwner(owner);
         key.setName("A Test Key");

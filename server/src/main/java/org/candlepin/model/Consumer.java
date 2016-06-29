@@ -154,8 +154,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     // leave FROM capitalized until hibernate 5.0.3
     // https://hibernate.atlassian.net/browse/HHH-1400
-    @Formula("(select sum(ent.quantity) FROM cp_entitlement ent " +
-        "where ent.consumer_id = id)")
+    @Formula("(select sum(ent.quantity) FROM cp_entitlement ent where ent.consumer_id = id)")
     private Long entitlementCount;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
@@ -175,8 +174,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     private Date lastCheckin;
 
-    @OneToMany(mappedBy = "consumer",
-        orphanRemoval = true, cascade = { CascadeType.ALL })
+    @OneToMany(mappedBy = "consumer", orphanRemoval = true, cascade = { CascadeType.ALL })
     private Set<ConsumerInstalledProduct> installedProducts;
 
     @Transient
@@ -508,7 +506,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         return "/consumers/" + getUuid();
     }
 
-    @Override
     public void setHref(String href) {
         /*
          * No-op, here to aid with updating objects which have nested objects that were

@@ -26,15 +26,10 @@ import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -56,11 +51,6 @@ import javax.inject.Inject;
  * PoolResourceTest
  */
 public class PoolResourceTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private PoolCurator poolCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private I18n i18n;
     @Inject private CandlepinPoolManager poolManager;
 
@@ -92,12 +82,9 @@ public class PoolResourceTest extends DatabaseTestFixture {
         ownerCurator.create(owner1);
         ownerCurator.create(owner2);
 
-        product1 = new Product(PRODUCT_CPULIMITED, PRODUCT_CPULIMITED, owner1);
-        product1Owner2 = new Product(PRODUCT_CPULIMITED, PRODUCT_CPULIMITED, owner2);
-        product2 = TestUtil.createProduct(owner1);
-        productCurator.create(product1);
-        productCurator.create(product1Owner2);
-        productCurator.create(product2);
+        product1 = this.createProduct(PRODUCT_CPULIMITED, PRODUCT_CPULIMITED, owner1);
+        product1Owner2 = this.createProduct(PRODUCT_CPULIMITED, PRODUCT_CPULIMITED, owner2);
+        product2 = this.createProduct(owner1);
 
         pool1 = createPool(owner1, product1, 500L,
              TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
@@ -135,8 +122,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @Test(expected = ForbiddenException.class)
     public void testUserCannotListAllPools() {
-        List<Pool> pools = poolResource.list(null, null, null, false, null,
-            adminPrincipal, null);
+        List<Pool> pools = poolResource.list(null, null, null, false, null, adminPrincipal, null);
         assertEquals(3, pools.size());
     }
 
@@ -149,8 +135,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testListForOrg() {
-        List<Pool> pools = poolResource.list(owner1.getId(), null, null, false, null,
-            adminPrincipal, null);
+        List<Pool> pools = poolResource.list(owner1.getId(), null, null, false, null, adminPrincipal, null);
         assertEquals(2, pools.size());
         Principal p = setupPrincipal(owner2, Access.ALL);
         pools = poolResource.list(owner2.getId(), null, null, false, null, p, null);
@@ -160,8 +145,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     @Ignore
     @Test
     public void testListForProduct() {
-        List<Pool> pools = poolResource.list(null, null, product1.getId(), false, null,
-            adminPrincipal, null);
+        List<Pool> pools = poolResource.list(null, null, product1.getId(), false, null, adminPrincipal, null);
         assertEquals(2, pools.size());
         pools = poolResource.list(null, null, product2.getId(), false, null,
             adminPrincipal, null);

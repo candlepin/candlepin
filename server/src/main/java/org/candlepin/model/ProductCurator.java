@@ -23,7 +23,7 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
-import org.hibernate.Session;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
@@ -33,7 +33,6 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -76,106 +75,13 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      *  was not found.
      */
     public Product lookupByName(Owner owner, String name) {
-        return (Product) this.createSecureCriteria()
-            .createAlias("owners", "owner")
+        return (Product) this.createSecureCriteria(OwnerProduct.class, null)
+            .createAlias("owner", "owner")
+            .createAlias("product", "product")
+            .setProjection(Projections.property("product"))
             .add(Restrictions.eq("owner.id", owner.getId()))
-            .add(Restrictions.eq("name", name))
+            .add(Restrictions.eq("product.name", name))
             .uniqueResult();
-    }
-
-    /**
-     * Performs an owner-agnostic product lookup by product ID.
-     *
-     * @deprecated
-     *  This method is provided for legacy functionality only and may return the incorrect product
-     *  instance in situations where multiple owners exist with the same product.Use lookupById with
-     *  a specific owner to get accurate results.
-     *
-     * @param id Product ID to lookup. (note: not the database ID)
-     * @return the Product which matches the given id.
-     */
-    @Deprecated
-    @Transactional
-    public Product lookupById(String id) {
-        List<Product> products = (List<Product>) this.createSecureCriteria().add(Restrictions.eq("id", id));
-        return products.size() > 0 ? products.get(0) : null;
-    }
-
-    /**
-     * @param owner owner to lookup product for
-     * @param id Product ID to lookup. (note: not the database ID)
-     * @return the Product which matches the given id.
-     */
-    @Transactional
-    public Product lookupById(Owner owner, String id) {
-        return this.lookupById(owner.getId(), id);
-    }
-
-    /**
-     * @param ownerId The ID of the owner for which to lookup a product
-     * @param productId The ID of the product to lookup. (note: not the database ID)
-     * @return the Product which matches the given id.
-     */
-    @Transactional
-    public Product lookupById(String ownerId, String productId) {
-        return (Product) this.createSecureCriteria()
-            .createAlias("owners", "owner")
-            .add(Restrictions.eq("owner.id", ownerId))
-            .add(Restrictions.eq("id", productId))
-            .uniqueResult();
-    }
-
-    /**
-     * Retrieves a Product instance for the specified product UUID. If a matching product could not
-     * be found, this method returns null.
-     *
-     * @param uuid
-     *  The UUID of the product to retrieve
-     *
-     * @return
-     *  the Product instance for the product with the specified UUID or null if a matching product
-     *  was not found.
-     */
-    @Transactional
-    public Product lookupByUuid(String uuid) {
-        return (Product) this.createSecureCriteria()
-            .add(Restrictions.eq("uuid", uuid)).uniqueResult();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Transactional
-    public List<Product> listByOwner(Owner owner) {
-        return this.createSecureCriteria()
-            .createAlias("owners", "owner")
-            .add(Restrictions.eq("owner.id", owner.getId()))
-            .list();
-    }
-
-    public List<Product> listAllByIds(Owner owner, Collection<? extends Serializable> ids) {
-        return this.listByCriteria(
-            this.createSecureCriteria()
-                .createAlias("owners", "owner")
-                .add(Restrictions.eq("owner.id", owner.getId()))
-                .add(Restrictions.in("id", ids))
-        );
-    }
-
-    /**
-     * List all products with a Red Hat ID matching any of the IDs provided. Note that this method
-     * may return multiple products for a given ID if multiple owners have a product with the same
-     * ID.
-     *
-     * @param ids
-     *  A collection of product IDs for which to search
-     *
-     * @return
-     *  a list of Product instances with IDs matching those provided
-     */
-    @Override
-    public List<Product> listAllByIds(Collection<? extends Serializable> ids) {
-        return this.listByCriteria(
-            this.createSecureCriteria().add(Restrictions.in("id", ids))
-        );
     }
 
     public List<Product> listAllByUuids(Collection<? extends Serializable> uuids) {
@@ -185,8 +91,9 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
-     * Retrieves a list of products with the specified Red Hat product ID and entity version. If no
-     * products were found matching the given criteria, this method returns an empty list.
+     * Retrieves a criteria which can be used to fetch a list of products with the specified Red
+     * Hat product ID and entity version. If no products were found matching the given criteria,
+     * this method returns an empty list.
      *
      * @param productId
      *  The Red Hat product ID
@@ -195,17 +102,18 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      *  The hash code representing the product version
      *
      * @return
-     *  a list of products matching the given product ID and entity version
+     *  a criteria for fetching product by version
      */
-    public List<Product> getProductsByVersion(String productId, int hashcode) {
-        return this.listByCriteria(
-            this.createSecureCriteria()
-                .add(Restrictions.eq("id", productId))
-                .add(Restrictions.or(
-                    Restrictions.isNull("entityVersion"),
-                    Restrictions.eq("entityVersion", hashcode)
-                ))
-        );
+    @SuppressWarnings("checkstyle:indentation")
+    public CandlepinCriteria<Product> getProductsByVersion(String productId, int hashcode) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
+            .add(Restrictions.eq("id", productId))
+            .add(Restrictions.or(
+                Restrictions.isNull("entityVersion"),
+                Restrictions.eq("entityVersion", hashcode)
+            ));
+
+        return new CandlepinCriteria<Product>(criteria, this.currentSession());
     }
 
     // TODO:
@@ -300,183 +208,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         return entity;
     }
 
-    /**
-     * Updates the product references currently pointing to the original product to instead point to
-     * the updated product for the specified owners.
-     *
-     * @param current
-     *  The current product other objects are referencing
-     *
-     * @param updated
-     *  The product other objects should reference
-     *
-     * @param owners
-     *  A collection of owners for which to apply the reference changes
-     *
-     * @return
-     *  a reference to the updated product
-     */
-    public Product updateOwnerProductReferences(Product current, Product updated,
-        Collection<Owner> owners) {
-        // Impl note:
-        // We're doing this in straight SQL because direct use of the ORM would require querying all
-        // of these objects and the available HQL refuses to do any joining (implicit or otherwise),
-        // which prevents it from updating collections backed by a join table.
-        // As an added bonus, it's quicker, but we'll have to be mindful of the memory vs backend
-        // state divergence.
-
-        Session session = this.currentSession();
-        Set<String> ownerIds = new HashSet<String>();
-
-        for (Owner owner : owners) {
-            ownerIds.add(owner.getId());
-        }
-
-        // Owner products
-        String sql = "UPDATE cp2_owner_products SET product_uuid = ?1 " +
-            "WHERE product_uuid = ?2 AND owner_id IN (?3)";
-
-        int opCount = session.createSQLQuery(sql)
-            .setParameter("1", updated.getUuid())
-            .setParameter("2", current.getUuid())
-            .setParameterList("3", ownerIds)
-            .executeUpdate();
-
-        log.debug("{} owner-product relations updated", opCount);
-
-        // Activation key products
-        List<String> ids = session.createSQLQuery("SELECT id FROM cp_activation_key WHERE owner_id IN (?1)")
-            .setParameterList("1", ownerIds)
-            .list();
-
-        sql = "UPDATE cp2_activation_key_products SET product_uuid = ?1 " +
-            "WHERE product_uuid = ?2 AND key_id IN (?3)";
-
-        int akCount = this.safeSQLUpdateWithCollection(sql, ids, updated.getUuid(), current.getUuid());
-        log.debug("{} activation keys updated", akCount);
-
-        // Installed products
-        ids = session.createSQLQuery("SELECT id FROM cp_consumer WHERE owner_id IN (?1)")
-            .setParameterList("1", ownerIds)
-            .list();
-
-        sql = "UPDATE cp2_installed_products SET product_uuid = ?1 " +
-            "WHERE product_uuid = ?2 AND consumer_id IN (?3)";
-
-        int ipCount = this.safeSQLUpdateWithCollection(sql, ids, updated.getUuid(), current.getUuid());
-        log.debug("{} installed products updated", ipCount);
-
-        // pool provided and derived products
-        sql = "UPDATE cp_pool SET product_uuid = ?1 WHERE product_uuid = ?2 AND owner_id IN (?3)";
-
-        int ppCount = session.createSQLQuery(sql)
-            .setParameter("1", updated.getUuid())
-            .setParameter("2", current.getUuid())
-            .setParameterList("3", ownerIds)
-            .executeUpdate();
-
-        log.debug("{} pools updated", ppCount);
-
-        sql = "UPDATE cp_pool SET derived_product_uuid = ?1 " +
-            "WHERE derived_product_uuid = ?2 AND owner_id IN (?3)";
-
-        int pdpCount = session.createSQLQuery(sql)
-            .setParameter("1", updated.getUuid())
-            .setParameter("2", current.getUuid())
-            .setParameterList("3", ownerIds)
-            .executeUpdate();
-
-        log.debug("{} pools updated", pdpCount);
-
-        // pool provided products
-        ids = session.createSQLQuery("SELECT id FROM cp_pool WHERE owner_id IN (?1)")
-            .setParameterList("1", ownerIds)
-            .list();
-
-        sql = "UPDATE cp2_pool_provided_products SET product_uuid = ?1 " +
-            "WHERE product_uuid = ?2 AND pool_id IN (?3)";
-
-        int pppCount = this.safeSQLUpdateWithCollection(sql, ids, updated.getUuid(), current.getUuid());
-        log.debug("{} provided products updated", pppCount);
-
-        // pool derived provided products
-        sql = "UPDATE cp2_pool_derprov_products SET product_uuid = ?1 " +
-            "WHERE product_uuid = ?2 AND pool_id IN (?3)";
-
-        int pdppCount = this.safeSQLUpdateWithCollection(sql, ids, updated.getUuid(), current.getUuid());
-        log.debug("{} derived provided products updated", pdppCount);
-
-        // product certificates
-        // Looks like we don't need to do anything here, since we generate them on request. By
-        // leaving them alone, they'll be generated as needed and we save some overhead here.
-
-        this.refresh(current);
-        this.refresh(updated);
-
-        return updated;
-    }
-
-    /**
-     * Removes the product references currently pointing to the specified product for the given
-     * owners.
-     *
-     * @param entity
-     *  The product other objects are referencing
-     *
-     * @param owners
-     *  A collection of owners for which to apply the reference changes
-     */
-    public void removeOwnerProductReferences(Product entity, Collection<Owner> owners) {
-        // Impl note:
-        // We're doing this in straight SQL because direct use of the ORM would require querying all
-        // of these objects and the available HQL refuses to do any joining (implicit or otherwise),
-        // which prevents it from updating collections backed by a join table.
-        // As an added bonus, it's quicker, but we'll have to be mindful of the memory vs backend
-        // state divergence.
-
-        Session session = this.currentSession();
-        Set<String> ownerIds = new HashSet<String>();
-
-        for (Owner owner : owners) {
-            ownerIds.add(owner.getId());
-        }
-
-        // Owner products
-        String sql = "DELETE FROM cp2_owner_products WHERE product_uuid = ?1 AND owner_id IN (?2)";
-
-        int opCount = session.createSQLQuery(sql)
-            .setParameter("1", entity.getUuid())
-            .setParameterList("2", ownerIds)
-            .executeUpdate();
-
-        log.debug("{} owner-product relations removed", opCount);
-
-        // Activation key products
-        List<String> ids = session.createSQLQuery("SELECT id FROM cp_activation_key WHERE owner_id IN (?1)")
-            .setParameterList("1", ownerIds)
-            .list();
-
-        sql = "DELETE FROM cp2_activation_key_products WHERE product_uuid = ?1 AND key_id IN (?2)";
-
-        int akCount = this.safeSQLUpdateWithCollection(sql, ids, entity.getUuid());
-        log.debug("{} activation keys removed", akCount);
-
-        // Installed products
-        ids = session.createSQLQuery("SELECT id FROM cp_consumer WHERE owner_id IN (?1)")
-            .setParameterList("1", ownerIds)
-            .list();
-
-        sql = "DELETE FROM cp2_installed_products WHERE product_uuid = ?1 AND consumer_id IN (?2)";
-
-        int ipCount = this.safeSQLUpdateWithCollection(sql, ids, entity.getUuid());
-        log.debug("{} installed products removed", ipCount);
-
-        // Impl note:
-        // We have a restriction in removeProduct which should prevent a product from being removed
-        // from an owner if it is being used by a pool. As such, we shouldn't need to manually clean
-        // the pool tables here.
-    }
-
     @Transactional
     public Product create(Product entity) {
         log.debug("Persisting new product entity: {}", entity);
@@ -523,14 +254,15 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             return new LinkedList<Product>();
         }
 
-        return this.createSecureCriteria()
-            .createAlias("productContent", "pcontent")
+        return this.createSecureCriteria(OwnerProduct.class, null)
+            .createAlias("product", "product")
+            .createAlias("product.productContent", "pcontent")
             .createAlias("pcontent.content", "content")
-            .createAlias("owners", "owner")
+            .createAlias("owner", "owner")
             .add(Restrictions.eq("owner.id", owner.getId()))
             .add(Restrictions.in("content.id", contentIds))
             .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
-            // .setProjection(Projections.id())
+            .setProjection(Projections.property("product"))
             .list();
     }
 

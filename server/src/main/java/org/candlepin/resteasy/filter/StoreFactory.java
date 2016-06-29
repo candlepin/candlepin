@@ -215,7 +215,7 @@ public class StoreFactory {
 
         @Override
         public Product lookup(String key) {
-            return productCurator.lookupByUuid(key);
+            return productCurator.find(key);
         }
 
         @Override

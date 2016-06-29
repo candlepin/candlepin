@@ -14,20 +14,11 @@
  */
 package org.candlepin.model;
 
-import java.util.Collection;
-
 
 
 /**
  * Interface representing an entity which is used by multiple owners
  */
 public interface SharedEntity {
-
-    /**
-     * Retrieves all known owners which use this entity.
-     *
-     * @return
-     *  a collection of all known owners for this entity
-     */
-    Collection<Owner> getOwners();
+    // Intentionally left empty (for now)
 }

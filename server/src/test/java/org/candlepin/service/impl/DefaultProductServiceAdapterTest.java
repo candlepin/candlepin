@@ -23,12 +23,13 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.UniqueIdGenerator;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.X509ExtensionUtil;
 
 import org.junit.Before;
@@ -47,7 +48,7 @@ import java.util.List;
 public class DefaultProductServiceAdapterTest {
     private String someid = "deadbeef";
     private DefaultProductServiceAdapter dpsa;
-    private ProductCurator pc;
+    private OwnerProductCurator opc;
     private ProductCertificateCurator pcc;
     private UniqueIdGenerator idgen;
     private PKIUtility pki;
@@ -56,7 +57,7 @@ public class DefaultProductServiceAdapterTest {
 
     @Before
     public void init() {
-        pc = mock(ProductCurator.class);
+        opc = mock(OwnerProductCurator.class);
         idgen = mock(UniqueIdGenerator.class);
         Configuration config = mock(Configuration.class);
         pki = mock(PKIUtility.class);
@@ -64,7 +65,7 @@ public class DefaultProductServiceAdapterTest {
         cc = mock(ContentCurator.class);
         pcc = spy(new ProductCertificateCurator(pki, extUtil));
         when(config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING)).thenReturn(false);
-        dpsa = new DefaultProductServiceAdapter(pc, pcc, cc, idgen);
+        dpsa = new DefaultProductServiceAdapter(opc, pcc, cc, idgen);
     }
 
     @Test
@@ -73,31 +74,41 @@ public class DefaultProductServiceAdapterTest {
         List<String> ids = new ArrayList<String>();
         ids.add(someid);
         dpsa.getProductsByIds(o, ids);
-        verify(pc).listAllByIds(eq(o), eq(ids));
+        verify(opc).getProductsByIds(eq(o), eq(ids));
     }
 
     @Test
     public void productCertificateExists() {
-        Product p = mock(Product.class);
+        Owner owner = TestUtil.createOwner("test_owner");
+        Product product = TestUtil.createProduct("test_product");
         ProductCertificate cert = mock(ProductCertificate.class);
-        doReturn(cert).when(pcc).findForProduct(eq(p));
-        ProductCertificate result = dpsa.getProductCertificate(p);
+
+        when(opc.getProductById(eq(owner), eq(product.getId()))).thenReturn(product);
+        doReturn(cert).when(pcc).findForProduct(eq(product));
+
+        ProductCertificate result = dpsa.getProductCertificate(owner, product.getId());
         verify(pcc, never()).create(eq(cert));
+
         assertEquals(cert, result);
     }
 
     @Test
     public void productCertificateNew() throws Exception {
-        Product p = mock(Product.class);
-        when(p.getId()).thenReturn(someid);
+        Owner owner = TestUtil.createOwner("test_owner");
+        Product product = TestUtil.createProduct("test_product");
+        ProductCertificate cert = mock(ProductCertificate.class);
+
+        when(opc.getProductById(eq(owner), eq(product.getId()))).thenReturn(product);
         doAnswer(returnsFirstArg()).when(pcc).create(any(ProductCertificate.class));
-        doReturn(null).when(pcc).findForProduct(eq(p));
+        doReturn(null).when(pcc).findForProduct(eq(product));
+
         KeyPair kp = createKeyPair();
         when(pki.generateNewKeyPair()).thenReturn(kp);
         when(pki.getPemEncoded(any(Key.class))).thenReturn("junk".getBytes());
-        ProductCertificate result = dpsa.getProductCertificate(p);
+
+        ProductCertificate result = dpsa.getProductCertificate(owner, product.getId());
         assertNotNull(result);
-        assertEquals(p, result.getProduct());
+        assertEquals(product, result.getProduct());
     }
 
     // can't mock a final class, so create a dummy one

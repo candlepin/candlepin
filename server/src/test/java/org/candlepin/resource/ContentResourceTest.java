@@ -30,7 +30,6 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
-import org.candlepin.util.Util;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -40,6 +39,9 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+
+
+
 /**
  * ContentResourceTest
  */
@@ -143,8 +145,6 @@ public class ContentResourceTest {
         Content content = mock(Content.class);
 
         when(product.getId()).thenReturn(productId);
-        when(product.getOwners()).thenReturn(Util.asSet(owner));
-
         when(content.getId()).thenReturn(contentId);
 
         when(cc.find(any(String.class))).thenReturn(content);

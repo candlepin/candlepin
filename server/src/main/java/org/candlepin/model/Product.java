@@ -14,11 +14,15 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.model.dto.ProductAttributeData;
+import org.candlepin.model.dto.ProductContentData;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.Util;
 
 import org.hibernate.LazyInitializationException;
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
@@ -31,8 +35,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -47,7 +52,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
@@ -72,8 +76,10 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp2_products")
 public class Product extends AbstractHibernateObject implements SharedEntity, Linkable, Cloneable {
+    public static final String UEBER_PRODUCT_POSTFIX = "_ueber_product";
 
-    public static final  String UEBER_PRODUCT_POSTFIX = "_ueber_product";
+    public static final String CONTENT_OVERRIDE_ENABLED_ATTRIB = "content_override_enabled";
+    public static final String CONTENT_OVERRIDE_DISABLED_ATTRIB = "content_override_disabled";
 
     // Object ID
     @Id
@@ -92,32 +98,22 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @NotNull
     private String name;
 
-    @OneToMany
-    @JoinTable(
-        name = "cp2_owner_products",
-        joinColumns = {@JoinColumn(name = "product_uuid", insertable = true, updatable = true)},
-        inverseJoinColumns = {@JoinColumn(name = "owner_id")})
-    @LazyCollection(LazyCollectionOption.FALSE)
-    @XmlTransient
-    private Set<Owner> owners;
-
     /**
      * How many entitlements per quantity
      */
     @Column
     private Long multiplier;
 
-    @OneToMany(mappedBy = "product")
-    @Cascade({ org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN })
+    @OneToMany(mappedBy = "product", orphanRemoval = true)
+    @Cascade({ CascadeType.ALL })
     @Fetch(FetchMode.SUBSELECT)
-    private Set<ProductAttribute> attributes;
+    private List<ProductAttribute> attributes;
 
     @ElementCollection
     @CollectionTable(name = "cp2_product_content", joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
-    private Set<ProductContent> productContent;
+    private List<ProductContent> productContent;
 
     /*
      * hibernate persists empty set as null, and tries to fetch
@@ -129,7 +125,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
     @LazyCollection(LazyCollectionOption.FALSE)
-    private Set<String> dependentProductIds; // Should these be product references?
+    private Set<String> dependentProductIds;
 
     @XmlTransient
     @Column(name = "entity_version")
@@ -138,9 +134,12 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @XmlTransient
     @Column
     @Type(type = "org.hibernate.type.NumericBooleanType")
-    private Boolean locked;
+    private boolean locked;
 
     protected Product() {
+        this.attributes = new LinkedList<ProductAttribute>();
+        this.productContent = new LinkedList<ProductContent>();
+        this.dependentProductIds = new HashSet<String>();
     }
 
     /**
@@ -149,30 +148,26 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @param productId The Red Hat product ID for the new product.
      * @param name Human readable Product name
      */
-    public Product(String productId, String name, Owner owner) {
-        this(productId, name, owner, 1L);
+    public Product(String productId, String name) {
+        this();
+
+        this.setId(productId);
+        this.setName(name);
     }
 
-    public Product(String productId, String name, Owner owner, Long multiplier) {
-        setId(productId);
-        setName(name);
-        setOwners(new HashSet<Owner>());
-        setMultiplier(multiplier);
-        setAttributes(new HashSet<ProductAttribute>());
-        setProductContent(new LinkedList<ProductContent>());
-        setDependentProductIds(new HashSet<String>());
+    public Product(String productId, String name, Long multiplier) {
+        this(productId, name);
 
-        this.addOwner(owner);
+        this.setMultiplier(multiplier);
     }
 
-    public Product(String productId, String name, Owner owner, String variant, String version,
-        String arch, String type) {
-        this(productId, name, owner, 1L);
+    public Product(String productId, String name, String variant, String version, String arch, String type) {
+        this(productId, name, 1L);
 
-        setAttribute("version", version);
-        setAttribute("variant", variant);
-        setAttribute("type", type);
-        setAttribute("arch", arch);
+        this.setAttribute("version", version);
+        this.setAttribute("variant", variant);
+        this.setAttribute("type", type);
+        this.setAttribute("arch", arch);
     }
 
     /**
@@ -186,6 +181,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  The Product instance to copy
      */
     public Product(Product source) {
+        this();
+
         this.setUuid(source.getUuid());
         this.setId(source.getId());
 
@@ -195,43 +192,32 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         // collection.
 
         this.setName(source.getName());
-        this.setOwners(source.getOwners());
         this.setMultiplier(source.getMultiplier());
 
         // Copy attributes
-        if (source.getAttributes() != null) {
-            Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
-            for (ProductAttribute src : source.getAttributes()) {
-                ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
-                dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
-                dest.setUpdated(src.getUpdated() != null ? (Date) src.getUpdated().clone() : null);
-                dest.setProduct(this);
+        Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
+        for (ProductAttribute src : source.getAttributes()) {
+            ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
+            dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
+            dest.setUpdated(src.getUpdated() != null ? (Date) src.getUpdated().clone() : null);
+            dest.setProduct(this);
 
-                attributes.add(dest);
-            }
+            attributes.add(dest);
+        }
 
-            this.setAttributes(attributes);
-        }
-        else {
-            this.setAttributes(null);
-        }
+        this.setAttributes(attributes);
 
         // Copy content
-        if (source.getProductContent() != null) {
-            List<ProductContent> content = new LinkedList<ProductContent>();
-            for (ProductContent src : source.getProductContent()) {
-                ProductContent dest = new ProductContent(this, src.getContent(), src.getEnabled());
-                dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
-                dest.setUpdated(src.getUpdated() != null ? (Date) src.getUpdated().clone() : null);
+        List<ProductContent> content = new LinkedList<ProductContent>();
+        for (ProductContent src : source.getProductContent()) {
+            ProductContent dest = new ProductContent(this, src.getContent(), src.isEnabled());
+            dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
+            dest.setUpdated(src.getUpdated() != null ? (Date) src.getUpdated().clone() : null);
 
-                content.add(dest);
-            }
+            content.add(dest);
+        }
 
-            this.setProductContent(content);
-        }
-        else {
-            this.setProductContent(null);
-        }
+        this.setProductContent(content);
 
         this.setDependentProductIds(source.getDependentProductIds());
 
@@ -261,9 +247,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         }
 
         // Copy attributes
-        if (source.getAttributes() != null &&
-            !Util.collectionsAreEqual(source.getAttributes(), this.getAttributes())) {
-
+        if (!Util.collectionsAreEqual(source.getAttributes(), this.getAttributes())) {
             Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
             for (ProductAttribute src : source.getAttributes()) {
                 ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
@@ -278,12 +262,11 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         }
 
         // Copy content
-        if (source.getProductContent() != null &&
-            !Util.collectionsAreEqual(source.getProductContent(), this.getProductContent())) {
+        if (!Util.collectionsAreEqual(source.getProductContent(), this.getProductContent())) {
 
             List<ProductContent> content = new LinkedList<ProductContent>();
             for (ProductContent src : source.getProductContent()) {
-                ProductContent dest = new ProductContent(this, src.getContent(), src.getEnabled());
+                ProductContent dest = new ProductContent(this, src.getContent(), src.isEnabled());
                 dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
                 dest.setUpdated(src.getUpdated() != null ? (Date) src.getUpdated().clone() : null);
 
@@ -293,9 +276,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             this.setProductContent(content);
         }
 
-        if (source.getDependentProductIds() != null) {
-            this.setDependentProductIds(source.getDependentProductIds());
-        }
+        this.setDependentProductIds(source.getDependentProductIds());
 
         this.setUpdated(source.getUpdated() != null ? (Date) source.getUpdated().clone() : null);
 
@@ -303,7 +284,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     }
 
     @Override
-    public Product clone() {
+    public Object clone() {
         Product copy;
 
         try {
@@ -314,54 +295,35 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             throw new RuntimeException("Clone not supported", e);
         }
 
-        // Clear the collections, since this and copy will be sharing a single instance initially
-        copy.owners = null;
-        copy.attributes = null;
-        copy.productContent = null;
-        copy.dependentProductIds = null;
-
         // Impl note:
         // In most cases, our collection setters copy the contents of the input collections to their
         // own internal collections, so we don't need to worry about our two instances sharing a
         // collection.
 
-        // Copy owners
-        if (this.getOwners() != null) {
-            copy.setOwners(this.getOwners());
-        }
-
         // Copy attributes
-        if (this.getAttributes() != null) {
-            Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
-            for (ProductAttribute src : this.getAttributes()) {
-                ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
-                dest.setCreated(src.getCreated());
-                dest.setUpdated(src.getUpdated());
-                dest.setProduct(copy);
+        copy.attributes = new LinkedList<ProductAttribute>();
+        for (ProductAttribute src : this.getAttributes()) {
+            ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
+            dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
+            dest.setUpdated(src.getUpdated() != null ? (Date) src.getUpdated().clone() : null);
+            dest.setProduct(copy);
 
-                attributes.add(dest);
-            }
-
-            copy.setAttributes(attributes);
+            copy.attributes.add(dest);
         }
 
         // Copy content
-        if (this.getProductContent() != null) {
-            List<ProductContent> content = new LinkedList<ProductContent>();
-            for (ProductContent src : this.getProductContent()) {
-                ProductContent dest = new ProductContent(copy, src.getContent(), src.getEnabled());
-                dest.setCreated(src.getCreated());
-                dest.setUpdated(src.getUpdated());
+        copy.productContent = new LinkedList<ProductContent>();
+        for (ProductContent src : this.getProductContent()) {
+            ProductContent dest = new ProductContent(copy, src.getContent(), src.isEnabled());
+            dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
+            dest.setUpdated(src.getUpdated() != null ? (Date) src.getUpdated().clone() : null);
 
-                content.add(dest);
-            }
-
-            copy.setProductContent(content);
+            copy.productContent.add(dest);
         }
 
-        if (this.getDependentProductIds() != null) {
-            copy.setDependentProductIds(this.getDependentProductIds());
-        }
+        // Copy dependent product IDs
+        copy.dependentProductIds = new HashSet<String>();
+        copy.dependentProductIds.addAll(this.dependentProductIds);
 
         copy.setCreated(this.getCreated() != null ? (Date) this.getCreated().clone() : null);
         copy.setUpdated(this.getUpdated() != null ? (Date) this.getUpdated().clone() : null);
@@ -369,8 +331,23 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         return copy;
     }
 
+    /**
+     * Returns a DTO representing this entity.
+     *
+     * @return
+     *  a DTO representing this entity
+     */
+    public ProductData toDTO() {
+        return new ProductData(this);
+    }
+
     public static Product createUeberProductForOwner(UniqueIdGenerator idGenerator, Owner owner) {
-        return new Product(idGenerator.generateId(), ueberProductNameForOwner(owner), owner, 1L);
+        return new Product(idGenerator.generateId(), ueberProductNameForOwner(owner), 1L);
+    }
+
+
+    public static String ueberProductNameForOwner(Owner owner) {
+        return owner.getKey() + UEBER_PRODUCT_POSTFIX;
     }
 
     /**
@@ -435,80 +412,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     }
 
     /**
-     * Retrieves the owners with which this product is associated. If this product is not associated
-     * with any owners, this method may return an empty set, or null.
-     * <p></p>
-     * Note that changes made to the set returned by this method will be reflected by this object
-     * and its backing data store.
-     *
-     * @return
-     *  The set of owners with which this product is associated
-     */
-    @XmlTransient
-    @Override
-    public Collection<Owner> getOwners() {
-        return this.owners;
-    }
-
-    /**
-     * Associates this product with the specified owner. If the given owner is already associated
-     * with this product, the request is silently ignored.
-     *
-     * @param owner
-     *  An owner to be associated with this product
-     *
-     * @return
-     *  True if this product was successfully associated with the given owner; false otherwise
-     */
-    public boolean addOwner(Owner owner) {
-        if (owner != null) {
-            if (this.owners == null) {
-                this.owners = new HashSet<Owner>();
-            }
-
-            return this.owners.add(owner);
-        }
-
-        return false;
-    }
-
-    /**
-     * Disassociates this product with the specified owner. If the given owner is not associated
-     * with this product, the request is silently ignored.
-     *
-     * @param owner
-     *  The owner to disassociate from this product
-     *
-     * @return
-     *  True if the product was disassociated successfully; false otherwise
-     */
-    public boolean removeOwner(Owner owner) {
-        return (this.owners != null && owner != null) ? this.owners.remove(owner) : false;
-    }
-
-    /**
-     * Sets the owners with which this product is associated.
-     *
-     * @param owners
-     *  A collection of owners to be associated with this product
-     *
-     * @return
-     *  A reference to this product
-     */
-    public Product setOwners(Collection<Owner> owners) {
-        if (this.owners == null) {
-            this.owners = new HashSet<Owner>();
-        }
-
-        this.owners.clear();
-        if (owners != null) {
-            this.owners.addAll(owners);
-        }
-
-        return this;
-    }
-
-    /**
      * @return the number of entitlements to create from a single subscription
      */
     public Long getMultiplier() {
@@ -527,104 +430,637 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         }
     }
 
-    public void setAttributes(Set<ProductAttribute> attributes) {
-        if (this.attributes == null) {
-            this.attributes = new HashSet<ProductAttribute>();
+    /**
+     * Retrieves the attributes of the product represented by this product. If this product does
+     * not have any attributes, this method returns an empty collection.
+     *
+     * @return
+     *  a collection containing the attributes of the product
+     */
+    public Collection<ProductAttribute> getAttributes() {
+        return Collections.unmodifiableList(this.attributes);
+    }
+
+    /**
+     * Retrieves the attribute data associated with the given attribute. If the attribute is not
+     * set, this method returns null.
+     *
+     * @param key
+     *  The key (name) of the attribute to lookup
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  the attribute data for the given attribute, or null if the attribute is not set
+     */
+    @XmlTransient
+    public ProductAttribute getAttribute(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
         }
 
+        for (ProductAttribute attrib : this.attributes) {
+            if (key.equals(attrib.getName())) {
+                return attrib;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Retrieves the value associated with the given attribute. If the attribute is not set, this
+     * method returns null.
+     *
+     * @param key
+     *  The key (name) of the attribute to lookup
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  the value set for the given attribute, or null if the attribute is not set
+     */
+    @XmlTransient
+    public String getAttributeValue(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        ProductAttribute attrib = this.getAttribute(key);
+        return attrib != null ? attrib.getValue() : null;
+    }
+
+    /**
+     * Checks if the given attribute has been defined on this product.
+     *
+     * @param key
+     *  The key (name) of the attribute to lookup
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  true if the attribute is defined for this product; false otherwise
+     */
+    @XmlTransient
+    public boolean hasAttribute(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        return this.getAttribute(key) != null;
+    }
+
+    /**
+     * Adds the specified product attribute to the this product. If the attribute has already been
+     * added to this product, the existing value will be overwritten.
+     *
+     * @param attribute
+     *  The product attribute to add to this product
+     *
+     * @throws IllegalArgumentException
+     *  if attribute is null or incomplete
+     *
+     * @return
+     *  a reference to this product
+     */
+    public boolean addAttribute(ProductAttribute attribute) {
+        if (attribute == null) {
+            throw new IllegalArgumentException("attribute is null");
+        }
+
+        if (attribute.getName() == null) {
+            throw new IllegalArgumentException("attribute name/key is null");
+        }
+
+        // TODO:
+        // Replace this with a map of attribute key/value pairs so we don't have this mess
+        boolean changed = false;
+        boolean matched = false;
+        Set<ProductAttribute> remove = new HashSet<ProductAttribute>();
+
+        for (ProductAttribute attribdata : this.attributes) {
+            if (attribute.getName().equals(attribdata.getName())) {
+                matched = true;
+
+                if (!(attribdata.getValue() != null ? attribdata.getValue().equals(attribute.getValue()) :
+                    attribute.getValue() == null)) {
+
+                    remove.add(attribdata);
+                }
+            }
+        }
+
+        if (!matched || remove.size() > 0) {
+            attribute.setProduct(this);
+
+            this.attributes.removeAll(remove);
+            changed = this.attributes.add(attribute);
+        }
+
+        return changed;
+    }
+
+    /**
+     * Sets the specified attribute for this product. If the attribute has already been set for
+     * this product, the existing value will be overwritten.
+     *
+     * @param key
+     *  The name or key of the attribute to set
+     *
+     * @param value
+     *  The value to assign to the attribute
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  a reference to this product
+     */
+    public boolean setAttribute(String key, String value) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        return this.addAttribute(new ProductAttribute(key, value));
+    }
+
+    /**
+     * Removes the product attribute represented by the given product attribute DTO from this
+     * product. Any product attribute with the same key as the key of the given attribute DTO will
+     * be removed.
+     *
+     * @param attribute
+     *  The product attribute to remove from this product DTO
+     *
+     * @throws IllegalArgumentException
+     *  if attribute is null or incomplete
+     *
+     * @return
+     *  true if the attribute was removed successfully; false otherwise
+     */
+    public boolean removeAttribute(ProductAttribute attribute) {
+        if (attribute == null) {
+            throw new IllegalArgumentException("attribute is null");
+        }
+
+        if (attribute.getName() == null) {
+            throw new IllegalArgumentException("attribute name is null");
+        }
+
+        return this.removeAttribute(attribute.getName());
+    }
+
+    /**
+     * Removes the product attribute with the given attribute key from this product.
+     *
+     * @param key
+     *  The name/key of the attribute to remove
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  true if the attribute was removed successfully; false otherwise
+     */
+    public boolean removeAttribute(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        Set<ProductAttribute> remove = new HashSet<ProductAttribute>();
+
+        for (ProductAttribute attribdata : this.attributes) {
+            if (key.equals(attribdata.getName())) {
+                remove.add(attribdata);
+            }
+        }
+
+        return this.attributes.removeAll(remove);
+    }
+
+    /**
+     * Clears all product attributes currently set for this product.
+     *
+     * @return
+     *  a reference to this product
+     */
+    public Product clearAttributes() {
+        this.attributes.clear();
+        return this;
+    }
+
+    /**
+     * Sets the attributes of the product represented by this product.
+     *
+     * @param attributes
+     *  A collection of product attributes to attach to this product, or null to clear the
+     *  attributes
+     *
+     * @return
+     *  a reference to this product
+     */
+    public Product setAttributes(Collection<ProductAttribute> attributes) {
         this.attributes.clear();
 
         if (attributes != null) {
-            this.attributes.addAll(attributes);
-        }
-    }
-
-    public void setAttribute(String key, String value) {
-        ProductAttribute existing = getAttribute(key);
-        if (existing != null) {
-            existing.setValue(value);
-        }
-        else {
-            ProductAttribute attr = new ProductAttribute(key, value);
-            attr.setProduct(this);
-            addAttribute(attr);
-        }
-    }
-
-    public void addAttribute(ProductAttribute attrib) {
-        if (this.attributes == null) {
-            this.attributes = new HashSet<ProductAttribute>();
-        }
-
-        if (attrib != null) {
-            attrib.setProduct(this);
-            this.attributes.add(attrib);
-        }
-    }
-
-    public Set<ProductAttribute> getAttributes() {
-        return attributes;
-    }
-
-    public ProductAttribute getAttribute(String key) {
-        if (attributes != null) {
-            for (ProductAttribute a : attributes) {
-                if (a.getName().equals(key)) {
-                    return a;
-                }
+            for (ProductAttribute attribute : attributes) {
+                this.addAttribute(attribute);
             }
         }
 
-        return null;
-    }
-
-    public String getAttributeValue(String key) {
-        if (attributes != null) {
-            for (ProductAttribute a : attributes) {
-                if (a.getName().equals(key)) {
-                    return a.getValue();
-                }
-            }
-        }
-
-        return null;
+        return this;
     }
 
     @XmlTransient
-    public Set<String> getAttributeNames() {
-        Set<String> toReturn = new HashSet<String>();
+    public List<String> getSkuEnabledContentIds() {
+        List<String> skus = new LinkedList<String>();
 
-        if (attributes != null) {
-            for (ProductAttribute attribute : attributes) {
-                toReturn.add(attribute.getName());
+        ProductAttribute attrib = this.getAttribute(CONTENT_OVERRIDE_ENABLED_ATTRIB);
+
+        if (attrib != null && attrib.getValue() != null && attrib.getValue().length() > 0) {
+            StringTokenizer tokenizer = new StringTokenizer(attrib.getValue(), ",");
+
+            while (tokenizer.hasMoreElements()) {
+                skus.add((String) tokenizer.nextElement());
             }
         }
 
-        return toReturn;
+        return skus;
     }
 
-    public boolean hasAttribute(String key) {
-        if (attributes != null) {
-            for (ProductAttribute attribute : attributes) {
-                if (attribute.getName().equals(key)) {
-                    return true;
-                }
+    @XmlTransient
+    public List<String> getSkuDisabledContentIds() {
+        List<String> skus = new LinkedList<String>();
+
+        ProductAttribute attrib = this.getAttribute(CONTENT_OVERRIDE_DISABLED_ATTRIB);
+
+        if (attrib != null && attrib.getValue() != null && attrib.getValue().length() > 0) {
+            StringTokenizer tokenizer = new StringTokenizer(attrib.getValue(), ",");
+
+            while (tokenizer.hasMoreElements()) {
+                skus.add((String) tokenizer.nextElement());
             }
         }
 
-        return false;
+        return skus;
     }
 
+    /**
+     * Retrieves the content of the product represented by this product. If this product does not
+     * have any associated content, this method returns an empty collection.
+     *
+     * @return
+     *  the product content associated with this product
+     */
+    public Collection<ProductContent> getProductContent() {
+        return Collections.unmodifiableList(this.productContent);
+    }
+
+    /**
+     * Retrieves the product content for the specified content ID. If no such content has been
+     * assocaited with this product, this method returns null.
+     *
+     * @param contentId
+     *  The ID of the content to retrieve
+     *
+     * @throws IllegalArgumentException
+     *  if contentId is null
+     *
+     * @return
+     *  the content associated with this product using the given ID, or null if such content does
+     *  not exist
+     */
+    public ProductContent getProductContent(String contentId) {
+        if (contentId == null) {
+            throw new IllegalArgumentException("contentId is null");
+        }
+
+        for (ProductContent pcd : this.productContent) {
+            if (pcd.getContent() != null && contentId.equals(pcd.getContent().getId())) {
+                return pcd;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Checks if any content with the given content ID has been associated with this product.
+     *
+     * @param contentId
+     *  The ID of the content to check
+     *
+     * @throws IllegalArgumentException
+     *  if contentId is null
+     *
+     * @return
+     *  true if any content with the given content ID has been associated with this product; false
+     *  otherwise
+     */
     public boolean hasContent(String contentId) {
-        if (this.getProductContent() != null) {
-            for (ProductContent pc : getProductContent()) {
-                if (pc.getContent().getId().equals(contentId)) {
-                    return true;
+        if (contentId == null) {
+            throw new IllegalArgumentException("contentId is null");
+        }
+
+        return this.getProductContent(contentId) != null;
+    }
+
+    /**
+     * Adds the given content to this product. If a matching content has already been added to
+     * this product, it will be overwritten by the specified content.
+     *
+     * @param productContent
+     *  The product content to add to this product
+     *
+     * @throws IllegalArgumentException
+     *  if content is null or incomplete
+     *
+     * @return
+     *  true if adding the content resulted in a change to this product; false otherwise
+     */
+    public boolean addProductContent(ProductContent productContent) {
+        if (productContent == null) {
+            throw new IllegalArgumentException("productContent is null");
+        }
+
+        if (productContent.getContent() == null || productContent.getContent().getId() == null) {
+            throw new IllegalArgumentException("content is incomplete");
+        }
+
+        boolean changed = false;
+        boolean matched = false;
+        Collection<ProductContent> remove = new LinkedList<ProductContent>();
+
+        // We're operating under the assumption that we won't be doing janky things like
+        // adding product content, then changing it. It's too bad this isn't all immutable...
+        for (ProductContent pcd : this.productContent) {
+            Content cd = pcd.getContent();
+
+            if (cd != null && cd.getId() != null && cd.getId().equals(productContent.getContent().getId())) {
+                matched = true;
+
+                if (pcd.isEnabled() != productContent.isEnabled() ||
+                    !cd.equals(productContent.getContent())) {
+
+                    remove.add(pcd);
                 }
             }
         }
 
+        if (!matched || remove.size() > 0) {
+            productContent.setProduct(this);
+
+            this.productContent.removeAll(remove);
+            changed = this.productContent.add(productContent);
+        }
+
+        return changed;
+    }
+
+    /**
+     * Adds the given content to this product. If a matching content has already been added to
+     * this product, it will be overwritten by the specified content.
+     *
+     * @param content
+     *  The product content to add to this product
+     *
+     * @param enabled
+     *  Whether or not the content should be enabled for this product
+     *
+     * @throws IllegalArgumentException
+     *  if content is null
+     *
+     * @return
+     *  true if adding the content resulted in a change to this product; false otherwise
+     */
+    public boolean addContent(Content content, boolean enabled) {
+        if (content == null) {
+            throw new IllegalArgumentException("content is null");
+        }
+
+        return this.addProductContent(new ProductContent(this, content, enabled));
+    }
+
+    /**
+     * Removes the content with the given content ID from this product.
+     *
+     * @param contentId
+     *  The ID of the content to remove
+     *
+     * @throws IllegalArgumentException
+     *  if contentId is null
+     *
+     * @return
+     *  true if the content was removed successfully; false otherwise
+     */
+    public boolean removeContent(String contentId) {
+        if (contentId == null) {
+            throw new IllegalArgumentException("contentId is null");
+        }
+
+        Collection<ProductContent> remove = new LinkedList<ProductContent>();
+
+        for (ProductContent pcd : this.productContent) {
+            Content cd = pcd.getContent();
+
+            if (cd != null && contentId.equals(cd.getId())) {
+                remove.add(pcd);
+            }
+        }
+
+        return this.productContent.removeAll(remove);
+    }
+
+    /**
+     * Removes the content represented by the given content entity from this product. Any content
+     * with the same ID as the ID of the given content entity will be removed.
+     *
+     * @param content
+     *  The content entity representing the content to remove from this product
+     *
+     * @throws IllegalArgumentException
+     *  if content is null or incomplete
+     *
+     * @return
+     *  true if the content was removed successfully; false otherwise
+     */
+    public boolean removeContent(Content content) {
+        if (content == null) {
+            throw new IllegalArgumentException("content is null");
+        }
+
+        if (content.getId() == null) {
+            throw new IllegalArgumentException("content is incomplete");
+        }
+
+        return this.removeContent(content.getId());
+    }
+
+    /**
+     * Removes the content represented by the given content entity from this product. Any content
+     * with the same ID as the ID of the given content entity will be removed.
+     *
+     * @param content
+     *  The product content entity representing the content to remove from this product
+     *
+     * @throws IllegalArgumentException
+     *  if content is null or incomplete
+     *
+     * @return
+     *  true if the content was removed successfully; false otherwise
+     */
+    public boolean removeProductContent(ProductContent content) {
+        if (content == null) {
+            throw new IllegalArgumentException("content is null");
+        }
+
+        if (content.getContent() == null || content.getContent().getId() == null) {
+            throw new IllegalArgumentException("content is incomplete");
+        }
+
+        return this.removeContent(content.getContent().getId());
+    }
+
+    /**
+     * Clears all product content currently associated with this product.
+     *
+     * @return
+     *  a reference to this product
+     */
+    public Product clearProductContent() {
+        this.productContent.clear();
+        return this;
+    }
+
+    /**
+     * Sets the content of the product represented by this product.
+     *
+     * @param content
+     *  A collection of product content to attach to this product, or null to clear the content
+     *
+     * @return
+     *  a reference to this product
+     */
+    public Product setProductContent(Collection<ProductContent> content) {
+        this.productContent.clear();
+
+        if (content != null) {
+            for (ProductContent pcd : content) {
+                this.addProductContent(pcd);
+            }
+        }
+
+        return this;
+    }
+
+    /**
+     * Returns true if this product has a content set which modifies the given
+     * product:
+     *
+     * @param productId
+     * @return true if this product modifies the given product ID
+     */
+    public boolean modifies(String productId) {
+        for (ProductContent pc : this.productContent) {
+            if (pc.getContent().getModifiedProductIds().contains(productId)) {
+                return true;
+            }
+        }
+
         return false;
+    }
+
+    /**
+     * Retrieves the dependent product IDs for this product. If the dependent product IDs have not
+     * yet been defined, this method returns an empty collection.
+     *
+     * @return
+     *  the dependent product IDs of this product
+     */
+    public Collection<String> getDependentProductIds() {
+        return Collections.unmodifiableSet(this.dependentProductIds);
+    }
+
+    /**
+     * Adds the ID of the specified product as a dependent product of this product. If the product
+     * is already a dependent product, it will not be added again.
+     *
+     * @param productId
+     *  The ID of the product to add as a dependent product
+     *
+     * @throws IllegalArgumentException
+     *  if productId is null
+     *
+     * @return
+     *  true if the dependent product was added successfully; false otherwise
+     */
+    public boolean addDependentProductId(String productId) {
+        if (productId == null) {
+            throw new IllegalArgumentException("productId is null");
+        }
+
+        return this.dependentProductIds.add(productId);
+    }
+
+    /**
+     * Removes the specified product as a dependent product of this product. If the product is not
+     * dependent on this product, this method does nothing.
+     *
+     * @param productId
+     *  The ID of the product to add as a dependent product
+     *
+     * @throws IllegalArgumentException
+     *  if productId is null
+     *
+     * @return
+     *  true if the dependent product was removed successfully; false otherwise
+     */
+    public boolean removeDependentProductId(String productId) {
+        if (productId == null) {
+            throw new IllegalArgumentException("productId is null");
+        }
+
+        return this.dependentProductIds.remove(productId);
+    }
+
+    /**
+     * Clears all dependent product IDs currently set for this product.
+     *
+     * @return
+     *  a reference to this product
+     */
+    public Product clearDependentProductIds() {
+        this.dependentProductIds.clear();
+        return this;
+    }
+
+    /**
+     * Sets the dependent product IDs of this product.
+     *
+     * @param dependentProductIds
+     *  A collection of dependent product IDs to attach to this product, or null to clear the
+     *  dependent products
+     *
+     * @return
+     *  a reference to this product
+     */
+    public Product setDependentProductIds(Collection<String> dependentProductIds) {
+        this.dependentProductIds.clear();
+
+        if (dependentProductIds != null) {
+            for (String pid : dependentProductIds) {
+                this.addDependentProductId(pid);
+            }
+        }
+
+        return this;
+    }
+
+    public String getHref() {
+        return this.uuid != null ? String.format("/products/%s", this.uuid) : null;
     }
 
     @Override
@@ -632,14 +1068,28 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         return String.format("Product [id = %s, name = %s]", this.id, this.name);
     }
 
+    @XmlTransient
+    @JsonIgnore
+    public Product setLocked(boolean locked) {
+        this.locked = locked;
+        return this;
+    }
+
+    @XmlTransient
+    public boolean isLocked() {
+        return this.locked;
+    }
+
     @Override
-    public boolean equals(Object comp) {
-        if (this == comp) {
+    public boolean equals(Object obj) {
+        if (this == obj) {
             return true;
         }
 
-        if (comp instanceof Product) {
-            Product that = (Product) comp;
+        boolean equals = false;
+
+        if (obj instanceof Product) {
+            Product that = (Product) obj;
 
             // TODO:
             // Maybe it would be better to check the UUID field and only check the following if
@@ -648,50 +1098,24 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             // the time they're checked, or two products not being considered equal if they
             // represent the same product in different states.
 
-            boolean equals = new EqualsBuilder()
+            equals = new EqualsBuilder()
                 .append(this.id, that.id)
                 .append(this.name, that.name)
                 .append(this.multiplier, that.multiplier)
                 .append(this.locked, that.locked)
                 .isEquals();
 
-            if (equals) {
-                // Check our collections.
-                // Impl note: We can't use .equals here on the collections, as Hibernate's special
-                // collections explicitly state that they break the contract on .equals. As such, we
-                // have to step through each collection and do a manual comparison. Ugh.
-                // We also do an extra check here so null values and empty collections are
-                // considered equal. If we ever move to real DTOs, those checks should be dropped.
-
-                if (!Util.collectionsAreEqual(this.attributes, that.attributes)) {
-                    if (!(this.attributes == null && that.attributes.size() == 0) &&
-                        !(that.attributes == null && this.attributes.size() == 0)) {
-
-                        return false;
-                    }
-                }
-
-                if (!Util.collectionsAreEqual(this.productContent, that.productContent)) {
-                    if (!(this.productContent == null && that.productContent.size() == 0) &&
-                        !(that.productContent == null && this.productContent.size() == 0)) {
-
-                        return false;
-                    }
-                }
-
-                if (!Util.collectionsAreEqual(this.dependentProductIds, that.dependentProductIds)) {
-                    if (!(this.dependentProductIds == null && that.dependentProductIds.size() == 0) &&
-                        !(that.dependentProductIds == null && this.dependentProductIds.size() == 0)) {
-
-                        return false;
-                    }
-                }
-            }
-
-            return equals;
+            // Check our collections.
+            // Impl note: We can't use .equals here on the collections, as Hibernate's special
+            // collections explicitly state that they break the contract on .equals. As such, we
+            // have to step through each collection and do a manual comparison. Ugh.
+            equals = equals &&
+                Util.collectionsAreEqual(this.attributes, that.attributes) &&
+                Util.collectionsAreEqual(this.dependentProductIds, that.dependentProductIds) &&
+                Util.collectionsAreEqual(this.productContent, that.productContent);
         }
 
-        return false;
+        return equals;
     }
 
     @Override
@@ -707,18 +1131,26 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         // Because we handle the collections specially in .equals, we have to do the same special
         // treatment here to ensure our output doesn't give us wonky results when compared to the
         // output of .equals
-
-        if (this.attributes != null && this.attributes.size() > 0) {
-            builder.append(this.attributes);
+        for (ProductAttribute attrib : this.attributes) {
+            builder.append(attrib);
         }
 
         try {
-            if (this.productContent != null && this.productContent.size() > 0) {
-                builder.append(this.productContent);
+            // Impl note:
+            // Stepping through the collections here is as painful as it looks, but Hibernate, once
+            // again, doesn't implement .hashCode reliably on the proxy collections. So, we have to
+            // manually step through these and add the elements to ensure the hash code is
+            // generated properly.
+            if (this.dependentProductIds.size() > 0) {
+                for (String pid : this.dependentProductIds) {
+                    builder.append(pid);
+                }
             }
 
-            if (this.dependentProductIds != null && this.dependentProductIds.size() > 0) {
-                builder.append(this.dependentProductIds);
+            if (this.productContent.size() > 0) {
+                for (ProductContent pc : this.productContent) {
+                    builder.append(pc);
+                }
             }
         }
         catch (LazyInitializationException e) {
@@ -741,205 +1173,78 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     }
 
     /**
-     * Adds the specified content to this product as a disabled source.
+     * Determines whether or not this entity would be changed if the given DTO were applied to this
+     * object.
      *
-     * @param content
-     *  The content to add to this product
+     * @param dto
+     *  The product DTO to check for changes
      *
-     * @return
-     *  true if the content is added successfully; false otherwise
-     */
-    public boolean addContent(Content content) {
-        return this.addContent(content, false);
-    }
-
-    /**
-     * Adds the specified content to this product, if it doesn't already exist.
-     *
-     * @param content
-     *  The content to add to this product
-     *
-     * @param enabled
-     *  Whether or not the content should be added as an enabled or disabled source
+     * @throws IllegalArgumentException
+     *  if dto is null
      *
      * @return
-     *  true if the content is added successfully; false otherwise
+     *  true if this product would be changed by the given DTO; false otherwise
      */
-    public boolean addContent(Content content, boolean enabled) {
-        return this.addProductContent(new ProductContent(this, content, enabled));
-    }
-
-    /**
-     * @param productContent the productContent to set
-     *
-     * @return
-     *  a reference to this Product instance
-     */
-    public Product setProductContent(Collection<ProductContent> productContent) {
-        if (this.productContent == null) {
-            this.productContent = new HashSet<ProductContent>();
+    public boolean isChangedBy(ProductData dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("dto is null");
         }
 
-        this.productContent.clear();
-
-        if (productContent != null) {
-            for (ProductContent pc : productContent) {
-                this.addProductContent(pc);
-            }
+        // Check simple properties first
+        if (dto.getId() != null && !dto.getId().equals(this.id)) {
+            return true;
         }
 
-        return this;
-    }
-
-    /**
-     * @return the productContent
-     */
-    public Set<ProductContent> getProductContent() {
-        return productContent;
-    }
-
-    /**
-     * Adds the specified ProductContent to this product. If the content has already been added,
-     * this method does nothing.
-     *
-     * @param content
-     *  The ProductContent instance to add to this product
-     *
-     * @return
-     *  true if the ProductContent is added successfully; false otherwise
-     */
-    public boolean addProductContent(ProductContent content) {
-        if (this.productContent == null) {
-            this.productContent = new HashSet<ProductContent>();
+        if (dto.getName() != null && !dto.getName().equals(this.name)) {
+            return true;
         }
 
-        if (content != null) {
-            boolean found = false;
-            for (ProductContent pc : this.productContent) {
-                if (pc.getContent().equals(content.getContent())) {
-                    found = true;
-                    break;
+        if (dto.getMultiplier() != null && !dto.getMultiplier().equals(this.multiplier)) {
+            return true;
+        }
+
+        if (dto.isLocked() != null && !dto.isLocked().equals(this.locked)) {
+            return true;
+        }
+
+        Collection<String> dependentProductIds = dto.getDependentProductIds();
+        if (dependentProductIds != null &&
+            !Util.collectionsAreEqual(this.dependentProductIds, dependentProductIds)) {
+
+            return true;
+        }
+
+        Collection<ProductAttributeData> attributes = dto.getAttributes();
+        if (attributes != null) {
+            Comparator comparator = new Comparator<Object>() {
+                public int compare(Object lhs, Object rhs) {
+                    return ((ProductAttribute) lhs).isChangedBy((ProductAttributeData) rhs) ? 1 : 0;
                 }
-            }
+            };
 
-            if (!found) {
-                content.setProduct(this);
-                this.productContent.add(content);
+            if (!Util.collectionsAreEqual(
+                (Collection) this.attributes, (Collection) attributes, comparator)) {
+
+                return true;
+            }
+        }
+
+        Collection<ProductContentData> productContent = dto.getProductContent();
+        if (productContent != null) {
+            Comparator comparator = new Comparator<Object>() {
+                public int compare(Object lhs, Object rhs) {
+                    return ((ProductContent) lhs).isChangedBy((ProductContentData) rhs) ? 1 : 0;
+                }
+            };
+
+            if (!Util.collectionsAreEqual(
+                (Collection) this.productContent, (Collection) productContent, comparator)) {
 
                 return true;
             }
         }
 
         return false;
-    }
-
-    public void setContent(Set<Content> content) {
-        if (this.productContent == null) {
-            this.productContent = new HashSet<ProductContent>();
-        }
-
-        this.productContent.clear();
-
-        if (content != null) {
-            for (Content newContent : content) {
-                this.addContent(newContent, false);
-            }
-        }
-    }
-
-    /**
-     * @param dependentProductIds the dependentProductIds to set
-     */
-    public void setDependentProductIds(Set<String> dependentProductIds) {
-        if (this.dependentProductIds == null) {
-            this.dependentProductIds = new HashSet<String>();
-        }
-
-        this.dependentProductIds.clear();
-
-        if (dependentProductIds != null) {
-            this.dependentProductIds.addAll(dependentProductIds);
-        }
-    }
-
-    /**
-     * @return the dependentProductIds
-     */
-    public Set<String> getDependentProductIds() {
-        return dependentProductIds;
-    }
-
-    public String getHref() {
-        return this.uuid != null ? String.format("/products/%s", this.uuid) : null;
-    }
-
-    public void setHref(String href) {
-        /*
-         * No-op, here to aid with updating objects which have nested objects
-         * that were originally sent down to the client in HATEOAS form.
-         */
-    }
-
-    /**
-     * Returns true if this product has a content set which modifies the given
-     * product:
-     *
-     * @param productId
-     * @return true if this product modifies the given product ID
-     */
-    public boolean modifies(String productId) {
-        if (getProductContent() != null) {
-            for (ProductContent pc : getProductContent()) {
-                if (pc.getContent().getModifiedProductIds().contains(productId)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public static String ueberProductNameForOwner(Owner o) {
-        return o.getKey() + UEBER_PRODUCT_POSTFIX;
-    }
-
-    @XmlTransient
-    public List<String> getSkuDisabledContentIds() {
-        List<String> skuDisabled = new ArrayList<String>();
-        if (this.hasAttribute("content_override_disabled") &&
-            this.getAttributeValue("content_override_disabled").length() > 0) {
-            StringTokenizer stDisable = new StringTokenizer(
-                this.getAttributeValue("content_override_disabled"), ",");
-            while (stDisable.hasMoreElements()) {
-                skuDisabled.add((String) stDisable.nextElement());
-            }
-        }
-        return skuDisabled;
-    }
-
-    @XmlTransient
-    public List<String> getSkuEnabledContentIds() {
-        List<String> skuEnabled = new ArrayList<String>();
-        if (this.hasAttribute("content_override_enabled") &&
-            this.getAttributeValue("content_override_enabled").length() > 0) {
-            StringTokenizer stActive = new StringTokenizer(
-                this.getAttributeValue("content_override_enabled"), ",");
-            while (stActive.hasMoreElements()) {
-                skuEnabled.add((String) stActive.nextElement());
-            }
-        }
-        return skuEnabled;
-    }
-
-    @XmlTransient
-    @JsonIgnore
-    public Product setLocked(boolean locked) {
-        this.locked = locked;
-        return this;
-    }
-
-    @XmlTransient
-    public boolean isLocked() {
-        return this.locked != null && this.locked;
     }
 
     @PrePersist

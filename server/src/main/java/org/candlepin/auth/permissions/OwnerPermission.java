@@ -20,6 +20,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerProduct;
 import org.candlepin.model.Pool;
 import org.candlepin.model.activationkeys.ActivationKey;
 
@@ -62,19 +63,22 @@ public class OwnerPermission implements Permission, Serializable {
 
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
-        if (entityClass.equals(Owner.class)) {
+        if (Owner.class.equals(entityClass)) {
             return Restrictions.eq("key", owner.getKey());
         }
-        else if (entityClass.equals(Consumer.class)) {
+        else if (Consumer.class.equals(entityClass)) {
             return Restrictions.eq("owner", owner);
         }
-        else if (entityClass.equals(Pool.class)) {
+        else if (Pool.class.equals(entityClass)) {
             return Restrictions.eq("owner", owner);
         }
-        else if (entityClass.equals(ActivationKey.class)) {
+        else if (ActivationKey.class.equals(entityClass)) {
             return Restrictions.eq("owner", owner);
         }
-        else if (entityClass.equals(Environment.class)) {
+        else if (Environment.class.equals(entityClass)) {
+            return Restrictions.eq("owner", owner);
+        }
+        else if (OwnerProduct.class.equals(entityClass)) {
             return Restrictions.eq("owner", owner);
         }
 

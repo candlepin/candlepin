@@ -22,7 +22,6 @@ import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.UsernameConsumersPermission;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.junit.Before;
@@ -33,37 +32,27 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Inject;
+
 
 /**
  * OwnerInfoCuratorTest
  */
 public class OwnerInfoCuratorTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private PoolCurator poolCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private EntitlementCurator entitlementCurator;
-    @Inject private OwnerInfoCurator ownerInfoCurator;
 
     private Owner owner;
     private Pool pool1;
 
     @Before
     public void setUp() {
-        owner = createOwner();
-        ownerCurator.create(owner);
+        owner = this.createOwner();
 
-        Product product1 = TestUtil.createProduct(owner);
-        productCurator.create(product1);
+        Product product1 = this.createProduct(owner);
 
         pool1 = createPool(owner, product1, 1L,
             Util.yesterday(), Util.tomorrow());
         poolCurator.create(pool1);
 
-        Product product2 = TestUtil.createProduct(owner);
-        productCurator.create(product2);
+        Product product2 = this.createProduct(owner);
 
         ConsumerType consumerType = new ConsumerType("system");
         consumerTypeCurator.create(consumerType);

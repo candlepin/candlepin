@@ -58,6 +58,7 @@ public class EnvironmentContent extends AbstractHibernateObject {
     private Boolean enabled;
 
     public EnvironmentContent() {
+        // Intentionally left empty
     }
 
     public EnvironmentContent(Environment env, Content content, Boolean enabled) {

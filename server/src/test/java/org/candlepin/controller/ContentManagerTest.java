@@ -19,367 +19,317 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.AdditionalAnswers.*;
 
-import org.candlepin.common.config.Configuration;
-import org.candlepin.config.CandlepinCommonTestConfig;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
+import org.candlepin.model.dto.ContentData;
+import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-
 import java.util.Arrays;
-import java.util.Collection;
 
 
 
 /**
  * ContentManagerTest
  */
-@RunWith(MockitoJUnitRunner.class)
-public class ContentManagerTest {
-
-    private Configuration config;
-
-    @Mock private ContentCurator mockContentCurator;
-    @Mock private ProductCurator mockProductCurator;
-    @Mock private ProductManager mockProductManager;
-    @Mock private EntitlementCertificateGenerator mockEntCertGenerator;
+@RunWith(JUnitParamsRunner.class)
+public class ContentManagerTest extends DatabaseTestFixture {
 
     private ContentManager contentManager;
+    private EntitlementCertificateGenerator mockEntCertGenerator;
+    private ProductManager productManager;
 
     @Before
-    public void init() throws Exception {
-        this.config = new CandlepinCommonTestConfig();
+    public void setup() throws Exception {
+        this.mockEntCertGenerator = mock(EntitlementCertificateGenerator.class);
 
-        this.contentManager = new ContentManager(
-            this.mockContentCurator, this.mockProductCurator, this.mockProductManager,
-            this.mockEntCertGenerator, this.config
+        this.productManager = new ProductManager(
+            this.mockEntCertGenerator, this.ownerContentCurator, this.ownerProductCurator,
+            this.productCurator
         );
 
-        doAnswer(returnsFirstArg()).when(this.mockContentCurator).merge(any(Content.class));
-        doAnswer(returnsFirstArg()).when(this.mockContentCurator).create(any(Content.class));
-        doAnswer(returnsSecondArg()).when(this.mockContentCurator)
-            .updateOwnerContentReferences(any(Content.class), any(Content.class), any(Collection.class));
+        this.contentManager = new ContentManager(
+            this.contentCurator, this.mockEntCertGenerator, this.ownerContentCurator,
+            this.productCurator, this.productManager
+        );
     }
 
     @Test
     public void testCreateContent() {
-        Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
-        Content content = TestUtil.createContent(owner, "c1");
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        Content content = TestUtil.createContent("c1", "content-1");
+
+        assertNull(this.ownerContentCurator.getContentById(owner, content.getId()));
 
         Content output = this.contentManager.createContent(content, owner);
 
-        assertEquals(output, content);
-        verify(this.mockContentCurator, times(1)).create(eq(content));
+        assertEquals(output, this.ownerContentCurator.getContentById(owner, content.getId()));
+    }
+
+    @Test
+    public void testCreateContentWithDTO() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        ContentData dto = TestUtil.createContentDTO("c1", "content-1");
+        dto.setLabel("test-label");
+        dto.setType("test-test");
+        dto.setVendor("test-vendor");
+
+        assertNull(this.ownerContentCurator.getContentById(owner, dto.getId()));
+
+        Content output = this.contentManager.createContent(dto, owner);
+
+        assertEquals(output, this.ownerContentCurator.getContentById(owner, dto.getId()));
     }
 
     @Test(expected = IllegalStateException.class)
     public void testCreateContentThatAlreadyExists() {
-        Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
-        Content content = TestUtil.createContent(owner, "c1");
+        Owner owner = this.createOwner("test-owner", "Test Owner");
 
-        when(this.mockContentCurator.lookupById(eq(owner), eq(content.getId()))).thenReturn(content);
+        Content content1 = TestUtil.createContent("c1", "content-1");
+        Content output = this.contentManager.createContent(content1, owner);
 
-        Content output = this.contentManager.createContent(content, owner);
+        Content content2 = TestUtil.createContent("c1", "content-1");
+        this.contentManager.createContent(content2, owner);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testCreateContentThatAlreadyExistsWithDTO() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+
+        Content content1 = TestUtil.createContent("c1", "content-1");
+        Content output = this.contentManager.createContent(content1, owner);
+
+        ContentData dto = TestUtil.createContentDTO("c1", "content-1");
+        dto.setLabel("test-label");
+        dto.setType("test-test");
+        dto.setVendor("test-vendor");
+
+        this.contentManager.createContent(dto, owner);
     }
 
     @Test
     public void testCreateContentMergeWithExisting() {
-        Owner owner1 = TestUtil.createOwner("test-owner-1", "Test Owner 1");
-        Owner owner2 = TestUtil.createOwner("test-owner-2", "Test Owner 2");
+        Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
+        Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
 
-        Content content1 = TestUtil.createContent(owner1, "c1", "test content");
-        Content content2 = TestUtil.createContent(owner2, "c1", "test content");
-
-        when(this.mockContentCurator.getContentByVersion(eq(content2.getId()), eq(content2.hashCode())))
-            .thenReturn(Arrays.asList(content2));
+        Content content1 = TestUtil.createContent("c1", "content-1");
+        Content content2 = this.createContent("c1", "content-1", owner2);
 
         Content output = this.contentManager.createContent(content1, owner1);
 
+        assertEquals(output.getUuid(), content2.getUuid());
         assertEquals(output, content2);
-        assertTrue(output.getOwners().contains(owner1));
-        assertTrue(output.getOwners().contains(owner2));
+        assertTrue(this.ownerContentCurator.isContentMappedToOwner(output, owner1));
+        assertTrue(this.ownerContentCurator.isContentMappedToOwner(output, owner2));
+    }
 
-        verify(this.mockContentCurator, times(1)).merge(eq(content2));
-        verify(this.mockContentCurator, never()).create(eq(content1));
+    @Test
+    public void testCreateContentMergeWithExistingUsingDTO() {
+        Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
+        Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
+
+        Content content1 = TestUtil.createContent("c1", "content-1");
+        Content content2 = this.createContent("c1", "content-1", owner2);
+
+        Content output = this.contentManager.createContent(content1.toDTO(), owner1);
+
+        assertEquals(content2.getUuid(), output.getUuid());
+        assertEquals(content2, output);
+        assertTrue(this.ownerContentCurator.isContentMappedToOwner(output, owner1));
+        assertTrue(this.ownerContentCurator.isContentMappedToOwner(output, owner2));
     }
 
     @Test
     public void testUpdateContentNoChange() {
-        Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
-        Content content = TestUtil.createContent(owner, "c1", "content-1");
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        Product product = this.createProduct("p1", "product-1", owner);
+        Content content = this.createContent("c1", "content-1", owner);
+        product.addContent(content, true);
+        product = this.productCurator.merge(product);
 
-        when(this.mockContentCurator.lookupById(eq(owner), eq(content.getId()))).thenReturn(content);
+        Content output = this.contentManager.updateContent(content, content.toDTO(), owner, true);
 
-        Content output = this.contentManager.updateContent(content, owner, true);
+        assertEquals(output.getUuid(), content.getUuid());
+        assertEquals(output, content);
 
-        assertTrue(output == content);
-
-        verify(this.mockContentCurator, times(1)).merge(eq(content));
         verifyZeroInteractions(this.mockEntCertGenerator);
     }
 
     @Test
-    public void testUpdateContent() {
-        Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
-        Content content = TestUtil.createContent(owner, "c1", "content-1");
-        content.setUuid("test-uuid");
+    @Parameters({"false", "true"})
+    public void testUpdateContent(boolean regenCerts) {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        Product product = this.createProduct("p1", "product-1", owner);
+        Content content = this.createContent("c1", "content-1", owner);
+        ContentData update = TestUtil.createContentDTO("c1", "new content name");
+        product.addContent(content, true);
+        product = this.productCurator.merge(product);
 
-        Content update = TestUtil.createContent(owner, "c1", "new content name");
-        update.setUuid("test-uuid");
+        Content output = this.contentManager.updateContent(content, update, owner, regenCerts);
 
-        when(this.mockContentCurator.lookupById(eq(owner), eq(content.getId()))).thenReturn(content);
+        assertEquals(output.getUuid(), content.getUuid());
+        assertEquals(output.getName(), update.getName());
 
-        Content output = this.contentManager.updateContent(update, owner, false);
-
-        assertEquals(output, update);
-
-        verify(this.mockContentCurator, times(1)).merge(eq(content));
-        verifyZeroInteractions(this.mockEntCertGenerator);
+        if (regenCerts) {
+            verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
+                eq(Arrays.asList(owner)), anyCollectionOf(Product.class), anyBoolean()
+            );
+        }
+        else {
+            verifyZeroInteractions(this.mockEntCertGenerator);
+        }
     }
 
     @Test
-    public void testUpdateContentWithCertRegeneration() {
-        Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
-        Content content = TestUtil.createContent(owner, "c1", "content-1");
-        content.setUuid("test-uuid");
+    @Parameters({"false", "true"})
+    public void testUpdateContentConvergeWithExisting(boolean regenCerts) {
+        Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
+        Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
+        Product product = this.createProduct("p1", "product-1", owner1);
+        Content content1 = this.createContent("c1", "content-1", owner1);
+        Content content2 = this.createContent("c1", "updated content", owner2);
+        ContentData update = TestUtil.createContentDTO("c1", "updated content");
+        product.addContent(content1, true);
+        product = this.productCurator.merge(product);
 
-        Content update = TestUtil.createContent(owner, "c1", "new content name");
-        update.setUuid("test-uuid");
+        assertTrue(this.ownerContentCurator.isContentMappedToOwner(content1, owner1));
+        assertFalse(this.ownerContentCurator.isContentMappedToOwner(content2, owner1));
+        assertFalse(this.ownerContentCurator.isContentMappedToOwner(content1, owner2));
+        assertTrue(this.ownerContentCurator.isContentMappedToOwner(content2, owner2));
 
-        Product product = TestUtil.createProduct("p1", "test product", owner);
+        Content output = this.contentManager.updateContent(content1, update, owner1, regenCerts);
 
-        when(this.mockContentCurator.lookupById(eq(owner), eq(content.getId()))).thenReturn(content);
-        when(this.mockProductCurator.getProductsWithContent(eq(Arrays.asList(content.getUuid()))))
-            .thenReturn(Arrays.asList(product));
+        assertEquals(content2.getUuid(), output.getUuid());
+        assertFalse(this.ownerContentCurator.isContentMappedToOwner(content1, owner1));
+        assertTrue(this.ownerContentCurator.isContentMappedToOwner(content2, owner1));
+        assertFalse(this.ownerContentCurator.isContentMappedToOwner(content1, owner2));
+        assertTrue(this.ownerContentCurator.isContentMappedToOwner(content2, owner2));
 
-        Content output = this.contentManager.updateContent(update, owner, true);
-
-        assertEquals(output, update);
-
-        verify(this.mockContentCurator, times(1)).merge(eq(content));
-        verify(this.mockEntCertGenerator, times(1))
-            .regenerateCertificatesOf(eq(Arrays.asList(product)), anyBoolean());
+        if (regenCerts) {
+            verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
+                eq(Arrays.asList(owner1)), anyCollectionOf(Product.class), anyBoolean()
+            );
+        }
+        else {
+            verifyZeroInteractions(this.mockEntCertGenerator);
+        }
     }
 
     @Test
-    public void testUpdateContentConvergeWithExisting() {
-        Owner owner1 = TestUtil.createOwner("test-owner-1", "Test Owner 1");
-        Owner owner2 = TestUtil.createOwner("test-owner-2", "Test Owner 2");
-        Content content1 = TestUtil.createContent(owner1, "c1", "content-1");
-        Content content2 = TestUtil.createContent(owner2, "c1", "updated content");
-        Content update = TestUtil.createContent(owner1, "c1", "updated content");
-        Product product = TestUtil.createProduct("p1", "test product", owner1);
+    @Parameters({"false", "true"})
+    public void testUpdateContentDivergeFromExisting(boolean regenCerts) {
+        Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
+        Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
+        Product product = this.createProduct("p1", "product-1", owner1);
+        Content content = this.createContent("c1", "content-1", owner1, owner2);
+        ContentData update = TestUtil.createContentDTO("c1", "updated content");
+        product.addContent(content, true);
+        product = this.productCurator.merge(product);
 
-        when(this.mockContentCurator.lookupById(eq(owner1), eq(content1.getId()))).thenReturn(content1);
-        when(this.mockContentCurator.lookupById(eq(owner2), eq(content2.getId()))).thenReturn(content2);
-        when(this.mockContentCurator.getContentByVersion(eq(update.getId()), eq(update.hashCode())))
-            .thenReturn(Arrays.asList(content2));
-        when(this.mockProductCurator.getProductsWithContent(eq(owner1), eq(Arrays.asList(content1.getId()))))
-            .thenReturn(Arrays.asList(product));
+        assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner1));
+        assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner2));
 
-        Content output = this.contentManager.updateContent(update, owner1, false);
+        Content output = this.contentManager.updateContent(content, update, owner1, regenCerts);
 
-        assertTrue(output == content2);
-        assertTrue(output.getOwners().contains(owner1));
-        assertTrue(output.getOwners().contains(owner2));
+        assertNotEquals(output.getUuid(), content.getUuid());
+        assertTrue(this.ownerContentCurator.isContentMappedToOwner(output, owner1));
+        assertFalse(this.ownerContentCurator.isContentMappedToOwner(output, owner2));
+        assertFalse(this.ownerContentCurator.isContentMappedToOwner(content, owner1));
+        assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner2));
 
-        verify(this.mockProductManager, times(1)).updateProduct(any(Product.class), eq(owner1), eq(false));
-    }
-
-    @Test
-    public void testUpdateContentConvergeWithExistingWithCertRegeneration() {
-        Owner owner1 = TestUtil.createOwner("test-owner-1", "Test Owner 1");
-        Owner owner2 = TestUtil.createOwner("test-owner-2", "Test Owner 2");
-        Content content1 = TestUtil.createContent(owner1, "c1", "content-1");
-        Content content2 = TestUtil.createContent(owner2, "c1", "updated content");
-        Content update = TestUtil.createContent(owner1, "c1", "updated content");
-        Product product = TestUtil.createProduct("p1", "test product", owner1);
-
-        when(this.mockContentCurator.lookupById(eq(owner1), eq(content1.getId()))).thenReturn(content1);
-        when(this.mockContentCurator.lookupById(eq(owner2), eq(content2.getId()))).thenReturn(content2);
-        when(this.mockContentCurator.getContentByVersion(eq(update.getId()), eq(update.hashCode())))
-            .thenReturn(Arrays.asList(content2));
-        when(this.mockProductCurator.getProductsWithContent(eq(owner1), eq(Arrays.asList(content1.getId()))))
-            .thenReturn(Arrays.asList(product));
-
-        Content output = this.contentManager.updateContent(update, owner1, true);
-
-        assertTrue(output == content2);
-        assertTrue(output.getOwners().contains(owner1));
-        assertTrue(output.getOwners().contains(owner2));
-
-        verify(this.mockProductManager, times(1)).updateProduct(eq(product), eq(owner1), eq(true));
-    }
-
-    @Test
-    public void testUpdateContentDivergeFromExisting() {
-        Owner owner1 = TestUtil.createOwner("test-owner-1", "Test Owner 1");
-        Owner owner2 = TestUtil.createOwner("test-owner-2", "Test Owner 2");
-        Content content = TestUtil.createContent(owner1, "c1", "content-1");
-        content.addOwner(owner2);
-        Content update = TestUtil.createContent(owner1, "c1", "updated content");
-        Product product = TestUtil.createProduct("p1", "test product", owner1);
-        product.addOwner(owner2);
-        product.addContent(content);
-
-        when(this.mockContentCurator.lookupById(eq(owner1), eq(content.getId()))).thenReturn(content);
-        when(this.mockProductCurator.getProductsWithContent(eq(owner1), eq(Arrays.asList(content.getId()))))
-            .thenReturn(Arrays.asList(product));
-
-        Content output = this.contentManager.updateContent(update, owner1, false);
-
-        assertTrue(output != content);
-        assertTrue(output.getOwners().contains(owner1));
-        assertFalse(output.getOwners().contains(owner2));
-        assertFalse(content.getOwners().contains(owner1));
-        assertTrue(content.getOwners().contains(owner2));
-
-        verify(this.mockProductManager, times(1)).updateProduct(any(Product.class), eq(owner1), eq(false));
-    }
-
-    @Test
-    public void testUpdateContentDivergeFromExistingWithCertRegeneration() {
-        Owner owner1 = TestUtil.createOwner("test-owner-1", "Test Owner 1");
-        Owner owner2 = TestUtil.createOwner("test-owner-2", "Test Owner 2");
-        Content content = TestUtil.createContent(owner1, "c1", "content-1");
-        content.addOwner(owner2);
-        Content update = TestUtil.createContent(owner1, "c1", "updated content");
-        Product product = TestUtil.createProduct("p1", "test product", owner1);
-        product.addOwner(owner2);
-
-        when(this.mockContentCurator.lookupById(eq(owner1), eq(content.getId()))).thenReturn(content);
-        when(this.mockProductCurator.getProductsWithContent(eq(owner1), eq(Arrays.asList(content.getId()))))
-            .thenReturn(Arrays.asList(product));
-
-        Content output = this.contentManager.updateContent(update, owner1, true);
-
-        assertTrue(output != content);
-        assertTrue(output.getOwners().contains(owner1));
-        assertFalse(output.getOwners().contains(owner2));
-        assertFalse(content.getOwners().contains(owner1));
-        assertTrue(content.getOwners().contains(owner2));
-
-        verify(this.mockProductManager, times(1)).updateProduct(eq(product), eq(owner1), eq(true));
+        if (regenCerts) {
+            verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
+                eq(Arrays.asList(owner1)), anyCollectionOf(Product.class), anyBoolean()
+            );
+        }
+        else {
+            verifyZeroInteractions(this.mockEntCertGenerator);
+        }
     }
 
     @Test(expected = IllegalStateException.class)
     public void testUpdateContentThatDoesntExist() {
-        Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
-        Content content = TestUtil.createContent(owner, "c1", "content-1");
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        Content content = TestUtil.createContent("c1", "content-1");
+        ContentData update = TestUtil.createContentDTO("c1", "new_name");
 
-        this.contentManager.updateContent(content, owner, false);
+        assertFalse(this.ownerContentCurator.isContentMappedToOwner(content, owner));
+
+        this.contentManager.updateContent(content, update, owner, false);
     }
 
     @Test
-    public void testRemoveContent() {
-        Owner owner = TestUtil.createOwner("test-owner-1", "Test Owner 1");
-        Content content = TestUtil.createContent(owner, "c1", "content-1");
-        Product product = TestUtil.createProduct("p1", "test prod", owner);
+    @Parameters({"false", "true"})
+    public void testRemoveContent(boolean regenCerts) {
+        Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
+        Product product = this.createProduct("p1", "product-1", owner);
+        Content content = this.createContent("c1", "content-1", owner);
+        product.addContent(content, true);
+        product = this.productCurator.merge(product);
 
-        when(this.mockContentCurator.lookupById(eq(owner), eq(content.getId()))).thenReturn(content);
-        when(this.mockProductCurator.getProductsWithContent(eq(owner), eq(Arrays.asList(content.getId()))))
-            .thenReturn(Arrays.asList(product));
+        assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner));
 
-        this.contentManager.removeContent(content, owner, false);
+        this.contentManager.removeContent(content, owner, regenCerts);
 
-        assertFalse(content.getOwners().contains(owner));
+        assertFalse(this.ownerContentCurator.isContentMappedToOwner(content, owner));
+        assertNull(this.contentCurator.find(content.getUuid()));
 
-        verify(this.mockProductManager, times(1))
-            .removeProductContent(eq(product), eq(Arrays.asList(content)), eq(owner), eq(false));
-        verify(this.mockContentCurator, never()).merge(eq(content));
-        verify(this.mockContentCurator, times(1)).delete(eq(content));
+        if (regenCerts) {
+            verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
+                eq(Arrays.asList(owner)), anyCollectionOf(Product.class), anyBoolean()
+            );
+        }
+        else {
+            verifyZeroInteractions(this.mockEntCertGenerator);
+        }
     }
 
     @Test
-    public void testRemoveContentWithCertRegeneration() {
-        Owner owner = TestUtil.createOwner("test-owner-1", "Test Owner 1");
-        Content content = TestUtil.createContent(owner, "c1", "content-1");
-        Product product = TestUtil.createProduct("p1", "test prod", owner);
+    @Parameters({"false", "true"})
+    public void testRemoveContentDivergeFromExisting(boolean regenCerts) {
+        Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
+        Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
+        Product product = this.createProduct("p1", "product-1", owner1, owner2);
+        Content content = this.createContent("c1", "content-1", owner1, owner2);
+        product.addContent(content, true);
+        product = this.productCurator.merge(product);
 
-        when(this.mockContentCurator.lookupById(eq(owner), eq(content.getId()))).thenReturn(content);
-        when(this.mockProductCurator.getProductsWithContent(eq(owner), eq(Arrays.asList(content.getId()))))
-            .thenReturn(Arrays.asList(product));
+        assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner1));
+        assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner2));
 
-        this.contentManager.removeContent(content, owner, true);
+        this.contentManager.removeContent(content, owner1, regenCerts);
 
-        assertFalse(content.getOwners().contains(owner));
+        assertFalse(this.ownerContentCurator.isContentMappedToOwner(content, owner1));
+        assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner2));
+        assertNotNull(this.contentCurator.find(content.getUuid()));
 
-        verify(this.mockProductManager, times(1))
-            .removeProductContent(eq(product), eq(Arrays.asList(content)), eq(owner), eq(true));
-        verify(this.mockContentCurator, never()).merge(eq(content));
-        verify(this.mockContentCurator, times(1)).delete(eq(content));
-    }
-
-    @Test
-    public void testRemoveContentDivergeFromExisting() {
-        Owner owner1 = TestUtil.createOwner("test-owner-1", "Test Owner 1");
-        Owner owner2 = TestUtil.createOwner("test-owner-2", "Test Owner 2");
-        Content content = TestUtil.createContent(owner1, "c1", "content-1");
-        content.addOwner(owner2);
-        Product product = TestUtil.createProduct("p1", "test prod", owner1);
-        product.addOwner(owner2);
-
-        when(this.mockContentCurator.lookupById(eq(owner1), eq(content.getId()))).thenReturn(content);
-        when(this.mockProductCurator.getProductsWithContent(eq(owner1), eq(Arrays.asList(content.getId()))))
-            .thenReturn(Arrays.asList(product));
-
-        this.contentManager.removeContent(content, owner1, false);
-
-        assertFalse(content.getOwners().contains(owner1));
-        assertTrue(content.getOwners().contains(owner2));
-
-        verify(this.mockProductManager, times(1))
-            .removeProductContent(eq(product), eq(Arrays.asList(content)), eq(owner1), eq(false));
-        verify(this.mockContentCurator, times(1)).merge(eq(content));
-        verify(this.mockContentCurator, never()).delete(eq(content));
-    }
-
-    @Test
-    public void testRemoveContentDivergeFromExistingWithCertRegeneration() {
-        Owner owner1 = TestUtil.createOwner("test-owner-1", "Test Owner 1");
-        Owner owner2 = TestUtil.createOwner("test-owner-2", "Test Owner 2");
-        Content content = TestUtil.createContent(owner1, "c1", "content-1");
-        content.addOwner(owner2);
-        Product product = TestUtil.createProduct("p1", "test prod", owner1);
-        product.addOwner(owner2);
-
-        when(this.mockContentCurator.lookupById(eq(owner1), eq(content.getId()))).thenReturn(content);
-        when(this.mockProductCurator.getProductsWithContent(eq(owner1), eq(Arrays.asList(content.getId()))))
-            .thenReturn(Arrays.asList(product));
-
-        this.contentManager.removeContent(content, owner1, true);
-
-        assertFalse(content.getOwners().contains(owner1));
-        assertTrue(content.getOwners().contains(owner2));
-
-        verify(this.mockProductManager, times(1))
-            .removeProductContent(eq(product), eq(Arrays.asList(content)), eq(owner1), eq(true));
-        verify(this.mockContentCurator, times(1)).merge(eq(content));
-        verify(this.mockContentCurator, never()).delete(eq(content));
+        if (regenCerts) {
+            verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
+                eq(Arrays.asList(owner1)), anyCollectionOf(Product.class), anyBoolean()
+            );
+        }
+        else {
+            verifyZeroInteractions(this.mockEntCertGenerator);
+        }
     }
 
     @Test(expected = IllegalStateException.class)
     public void testRemoveContentThatDoesntExist() {
-        Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
-        Content content = TestUtil.createContent(owner, "c1", "content-1");
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        Content content = TestUtil.createContent("c1", "content-1");
 
-        this.contentManager.removeContent(content, owner, false);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testRemoveContentThatDoesntExistWithRegeneration() {
-        Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
-        Content content = TestUtil.createContent(owner, "c1", "content-1");
+        assertFalse(this.ownerContentCurator.isContentMappedToOwner(content, owner));
 
         this.contentManager.removeContent(content, owner, true);
     }
+
+
 }

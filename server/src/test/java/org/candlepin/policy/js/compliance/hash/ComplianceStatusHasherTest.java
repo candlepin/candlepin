@@ -385,7 +385,7 @@ public class ComplianceStatusHasherTest {
     private Entitlement createEntitlement(Calendar cal, Owner owner, Consumer consumer,
         String productId) {
 
-        Product product = TestUtil.createProduct(productId, productId, owner);
+        Product product = TestUtil.createProduct(productId, productId);
         Pool pool = TestUtil.createPool(owner, product);
         pool.setId(product.getId() + "pool");
         pool.setUpdated(cal.getTime());

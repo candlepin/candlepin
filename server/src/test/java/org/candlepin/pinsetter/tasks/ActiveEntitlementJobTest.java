@@ -17,18 +17,13 @@ package org.candlepin.pinsetter.tasks;
 import static org.junit.Assert.*;
 
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.Util;
 
@@ -42,11 +37,6 @@ import javax.inject.Inject;
  * TestActiveEntitlementJob
  */
 public class ActiveEntitlementJobTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private EntitlementCurator entitlementCurator;
     @Inject private ActiveEntitlementJob job;
 
     private Owner owner;
@@ -59,8 +49,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
         owner = new Owner("test-owner", "Test Owner");
         owner = ownerCurator.create(owner);
 
-        prod = new Product("1", "2", owner);
-        productCurator.create(prod);
+        prod = this.createProduct("1", "2", owner);
 
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ct = consumerTypeCurator.create(ct);

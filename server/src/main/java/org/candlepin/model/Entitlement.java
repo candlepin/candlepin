@@ -100,8 +100,7 @@ public class Entitlement extends AbstractHibernateObject
     // certificates.
     @OneToMany(mappedBy = "entitlement", cascade = CascadeType.ALL)
     @BatchSize(size = 100)
-    private Set<EntitlementCertificate> certificates =
-        new HashSet<EntitlementCertificate>();
+    private Set<EntitlementCertificate> certificates = new HashSet<EntitlementCertificate>();
 
 
     private Integer quantity;
@@ -291,7 +290,6 @@ public class Entitlement extends AbstractHibernateObject
         return "/entitlements/" + getId();
     }
 
-    @Override
     public void setHref(String href) {
         /*
          * No-op, here to aid with updating objects which have nested objects that were

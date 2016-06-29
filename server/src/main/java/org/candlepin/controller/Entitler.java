@@ -27,12 +27,13 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
@@ -59,6 +60,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+
+
 /**
  * entitler
  */
@@ -73,6 +76,7 @@ public class Entitler {
     private EntitlementRulesTranslator messageTranslator;
     private EntitlementCurator entitlementCurator;
     private Configuration config;
+    private OwnerProductCurator ownerProductCurator;
     private PoolCurator poolCurator;
     private ProductCurator productCurator;
     private ProductManager productManager;
@@ -83,8 +87,8 @@ public class Entitler {
     @Inject
     public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n, EventFactory evtFactory,
         EventSink sink, EntitlementRulesTranslator messageTranslator,
-        EntitlementCurator entitlementCurator, Configuration config, PoolCurator poolCurator,
-        ProductCurator productCurator, ProductManager productManager,
+        EntitlementCurator entitlementCurator, Configuration config, OwnerProductCurator ownerProductCurator,
+        PoolCurator poolCurator, ProductCurator productCurator, ProductManager productManager,
         ProductServiceAdapter productAdapter) {
 
         this.poolManager = pm;
@@ -95,6 +99,7 @@ public class Entitler {
         this.messageTranslator = messageTranslator;
         this.entitlementCurator = entitlementCurator;
         this.config = config;
+        this.ownerProductCurator = ownerProductCurator;
         this.poolCurator = poolCurator;
         this.productCurator = productCurator;
         this.productManager = productManager;
@@ -117,8 +122,9 @@ public class Entitler {
             // TODO: Could be multiple errors, but we'll just report the first
             // one for now
             Pool pool = poolCurator.find(poolId);
-            throw new ForbiddenException(messageTranslator.poolErrorToMessage(pool,
-                    e.getResults().get(poolId).getErrors().get(0)));
+            throw new ForbiddenException(messageTranslator.poolErrorToMessage(
+                pool, e.getResults().get(poolId).getErrors().get(0)
+            ));
         }
     }
 
@@ -143,8 +149,9 @@ public class Entitler {
         }
         catch (EntitlementRefusedException e) {
             // TODO: Could be multiple errors, but we'll just report the first one for now:
-            throw new ForbiddenException(messageTranslator.entitlementErrorToMessage(ent,
-                    e.getResults().values().iterator().next().getErrors().get(0)));
+            throw new ForbiddenException(messageTranslator.entitlementErrorToMessage(
+                ent, e.getResults().values().iterator().next().getErrors().get(0))
+            );
         }
     }
 
@@ -194,6 +201,7 @@ public class Entitler {
                 try {
                     List<Entitlement> hostEntitlements = poolManager.entitleByProductsForHost(
                         consumer, host, data.getOnDate(), data.getPossiblePools());
+
                     log.debug("Granted host {} entitlements", hostEntitlements.size());
                     sendEvents(hostEntitlements);
                 }
@@ -214,9 +222,11 @@ public class Entitler {
         if (consumer.isDev()) {
             if (config.getBoolean(ConfigProperties.STANDALONE) ||
                 !poolCurator.hasActiveEntitlementPools(consumer.getOwner(), null)) {
+
                 throw new ForbiddenException(i18n.tr(
-                        "Development units may only be used on hosted servers" +
-                        " and with orgs that have active subscriptions."));
+                    "Development units may only be used on hosted servers" +
+                    " and with orgs that have active subscriptions."
+                ));
             }
 
             // Look up the dev pool for this consumer, and if not found
@@ -242,11 +252,14 @@ public class Entitler {
         catch (EntitlementRefusedException e) {
             // TODO: Could be multiple errors, but we'll just report the first one for now
             String productId = "Unknown Product";
+
             if (data.getProductIds().length > 0) {
                 productId = data.getProductIds()[0];
             }
-            throw new ForbiddenException(messageTranslator.productErrorToMessage(productId,
-                    e.getResults().values().iterator().next().getErrors().get(0)));
+
+            throw new ForbiddenException(messageTranslator.productErrorToMessage(
+                productId, e.getResults().values().iterator().next().getErrors().get(0)
+            ));
         }
     }
 
@@ -314,37 +327,33 @@ public class Entitler {
         Owner owner = consumer.getOwner();
         Set<Product> products = new HashSet<Product>();
 
-        for (Product product : productAdapter.getProductsByIds(consumer.getOwner(), devProductIds)) {
-            for (ProductContent pc : product.getProductContent()) {
-                pc.getContent().addOwner(owner);
+        for (ProductData pdata : this.productAdapter.getProductsByIds(owner, devProductIds)) {
+            Product entity = this.ownerProductCurator.getProductById(owner, pdata.getId());
 
-                // VERSIONING TODO: We may need to hit the content curator here. Hopefully the update on
-                // product will cascade down.
-            }
+            // This product is coming from an upstream source. Lock it so only the upstream can
+            // make changes to it
+            pdata.setLocked(true);
 
-            product.addOwner(owner);
-            product.setLocked(true);
-
-            if (sku.equals(product.getId()) &&
-                StringUtils.isEmpty(product.getAttributeValue("support_level"))) {
+            if (sku.equals(pdata.getId()) &&
+                StringUtils.isEmpty(pdata.getAttributeValue("support_level"))) {
 
                 // if there is no SLA, apply the default
-                product.setAttribute("support_level", this.DEFAULT_DEV_SLA);
+                pdata.setAttribute("support_level", this.DEFAULT_DEV_SLA);
             }
 
-            try {
-                // TODO: If we juggle/manage entitlement certs later, we should tell the product
-                // manager to skip the entitlement cert regeneration (by setting the true to false)
-                product = this.productManager.updateProduct(product, consumer.getOwner(), true);
+            if (entity != null) {
+                entity = this.productManager.updateProduct(entity, pdata, consumer.getOwner(), true);
             }
-            catch (IllegalStateException e) {
-                // This should only happen if we try to update a product that hasn't yet been
-                // created. We'll do that here.
-                log.debug("Product doesn't yet exist locally; creating it now. {}", product);
-                product = this.productManager.createProduct(product, consumer.getOwner());
+            else {
+                log.debug("Product doesn't yet exist locally; creating it now. {}", pdata);
+                entity = this.productManager.createProduct(pdata, consumer.getOwner());
             }
 
-            products.add(product);
+            if (entity == null) {
+                throw new IllegalStateException("Unable to resolve product data received from adapter");
+            }
+
+            products.add(entity);
         }
 
         log.debug("New dev products with sku: {}", sku);
@@ -367,7 +376,7 @@ public class Entitler {
 
         if (!devProducts.foundSku()) {
             throw new ForbiddenException(i18n.tr("SKU product not available to this " +
-                    "development unit: ''{0}''", expectedSku));
+                "development unit: ''{0}''", expectedSku));
         }
 
         for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
@@ -396,8 +405,9 @@ public class Entitler {
                 if (config.getBoolean(ConfigProperties.STANDALONE) ||
                     !poolCurator.hasActiveEntitlementPools(consumer.getOwner(), null)) {
                     throw new ForbiddenException(i18n.tr(
-                            "Development units may only be used on hosted servers" +
-                            " and with orgs that have active subscriptions."));
+                        "Development units may only be used on hosted servers" +
+                        " and with orgs that have active subscriptions."
+                    ));
                 }
 
                 // Look up the dev pool for this consumer, and if not found

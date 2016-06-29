@@ -169,13 +169,13 @@ public class ConsumerResourceTest {
         CandlepinPoolManager poolManager = new CandlepinPoolManager(
             null, null, null, new CandlepinCommonTestConfig(), null, null, mockedEntitlementCurator,
             mockedConsumerCurator, null, null, null, null, mockedActivationKeyRules, null, null,
-            null, null, null, null, null
+            null, null, null, null, null, null
         );
 
         ConsumerResource consumerResource = new ConsumerResource(mockedConsumerCurator, null, null,
-            null, mockedEntitlementCurator, null, mockedEntitlementCertServiceAdapter, null, null,
-            null, null, null, null, null, poolManager, null, null, null, null, null, null, null,
-            null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+            null, mockedEntitlementCurator, null, mockedEntitlementCertServiceAdapter, null,
+            null, null, null, null, null, null, poolManager, null, null, null, null, null, null,
+            null, null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
 
         consumerResource.regenerateEntitlementCertificates(consumer.getUuid(), "9999", false);
     }
@@ -206,8 +206,8 @@ public class ConsumerResourceTest {
 
         CandlepinPoolManager mgr = mock(CandlepinPoolManager.class);
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
-            null, mockedSubscriptionServiceAdapter, null, null, null, null, null, null, null, null, null,
-            null, mgr, null, null, null, null, null, null, null, null,
+            null, mockedSubscriptionServiceAdapter, null, null, null, null, null, null, null,
+            null, null, null, mgr, null, null, null, null, null, null, null, null,
             new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
 
         cr.regenerateEntitlementCertificates(consumer.getUuid(), null, true);
@@ -364,8 +364,8 @@ public class ConsumerResourceTest {
         when(cc.verifyAndLookupConsumerWithEntitlements(eq("fakeConsumer"))).thenReturn(consumer);
         when(sa.hasUnacceptedSubscriptionTerms(any(Owner.class))).thenReturn(false);
 
-        ConsumerResource cr = new ConsumerResource(cc, null, null, sa, null, null, null, i18n, null,
-            null, null, null, null, null, pm, null, null, null, null, null, null, null, null,
+        ConsumerResource cr = new ConsumerResource(cc, null, null, sa, null, null, null, i18n,
+            null, null, null, null, null, null, pm, null, null, null, null, null, null, null, null,
             new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
 
         Response rsp = cr.bind("fakeConsumer", null, null, null, null, null, true, null,
@@ -405,9 +405,8 @@ public class ConsumerResourceTest {
         when(sa.hasUnacceptedSubscriptionTerms(eq(o))).thenReturn(false);
         when(cc.verifyAndLookupConsumerWithEntitlements(eq("fakeConsumer"))).thenReturn(c);
 
-        ConsumerResource cr = new ConsumerResource(cc, null, null, sa,
-            null, null, null, null, null, null, null, null, null, null,
-            null, null, null, null, e, null, null, null, null,
+        ConsumerResource cr = new ConsumerResource(cc, null, null, sa, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, e, null, null, null, null,
             new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
         String dtStr = "2011-09-26T18:10:50.184081+00:00";
         Date dt = ResourceDateParser.parseDateString(dtStr);

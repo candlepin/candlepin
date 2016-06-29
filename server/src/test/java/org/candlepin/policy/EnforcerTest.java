@@ -24,16 +24,10 @@ import static org.mockito.Mockito.when;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunner;
@@ -71,12 +65,6 @@ import java.util.Set;
 import javax.inject.Inject;
 
 public class EnforcerTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private PoolCurator poolCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private EntitlementCurator entitlementCurator;
     @Inject private I18n i18n;
 
     @Mock private ProductServiceAdapter productAdapter;
@@ -220,9 +208,9 @@ public class EnforcerTest extends DatabaseTestFixture {
     // This exception should mention wrapping a MissingFactException
     @Test(expected = RuleExecutionException.class)
     public void testRuleFailsWhenConsumerDoesntHaveFact() {
-        Product product = new Product("a-product", "A product for testing", owner);
+        Product product = TestUtil.createProduct("a-product", "A product for testing");
         product.setAttribute(PRODUCT_CPULIMITED, "2");
-        productCurator.create(product);
+        product = this.createProduct(product, owner);
 
         ValidationResult result = enforcer.preEntitlement(
             TestUtil.createConsumer(),

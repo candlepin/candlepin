@@ -15,11 +15,12 @@
 package org.candlepin.service;
 
 import org.candlepin.model.Owner;
-import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.dto.ProductData;
 
 import java.util.Collection;
-import java.util.List;
+
+
 
 /**
  * Product data may originate from a separate service outside Candlepin in some
@@ -48,15 +49,16 @@ public interface ProductServiceAdapter {
      * @return list of products matching the given string IDs,
      *         empty list if none were found.
      */
-    List<Product> getProductsByIds(Owner owner, Collection<String> ids);
+    Collection<ProductData> getProductsByIds(Owner owner, Collection<String> ids);
 
     /**
      * Gets the certificate that defines the given product, creating one
      * if necessary. If the implementation does not support product certificates
      * for some reason, null can be returned instead of creating a new one.
      *
-     * @param product the source product of the certificate.
+     * @param owner the owner/org in which to search for products
+     * @param productId the ID of the source product of the certificate
      * @return the stored or created {@link ProductCertificate}
      */
-    ProductCertificate getProductCertificate(Product product);
+    ProductCertificate getProductCertificate(Owner owner, String productId);
 }

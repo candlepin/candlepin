@@ -20,9 +20,9 @@ import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
 
@@ -30,6 +30,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -67,7 +68,7 @@ public class PoolHelper {
         return allAttributes;
     }
 
-    public static Map<String, String> getFlattenedAttributes(Set<? extends Attribute> attrs) {
+    public static Map<String, String> getFlattenedAttributes(Collection<? extends Attribute> attrs) {
         Map<String, String> flattened = new HashMap<String, String>();
         for (Attribute a : attrs) {
             flattened.put(a.getName(), a.getValue());
@@ -160,8 +161,7 @@ public class PoolHelper {
      * @param source subscription
      * @param destination pool
      */
-    private static void copyProvidedProducts(Pool source, Pool destination,
-        ProductCurator prodCurator) {
+    private static void copyProvidedProducts(Pool source, Pool destination, OwnerProductCurator curator) {
         Set<Product> products;
 
         if (source.getDerivedProduct() != null) {
@@ -174,7 +174,7 @@ public class PoolHelper {
         for (Product product : products) {
             // If no result is returned here, the product has not been correctly imported
             // into the organization, indicating a problem somewhere in the sync or refresh code:
-            Product destprod = prodCurator.lookupById(destination.getOwner(), product.getId());
+            Product destprod = curator.getProductById(destination.getOwner(), product.getId());
             if (destprod == null) {
                 throw new RuntimeException("Product " + product.getId() +
                         " has not been imported into org " +
@@ -185,8 +185,9 @@ public class PoolHelper {
     }
 
     public static Pool clonePool(Pool sourcePool, Product product, String quantity,
-        Map<String, String> attributes, String subKey, ProductCurator prodCurator,
+        Map<String, String> attributes, String subKey, OwnerProductCurator curator,
         Entitlement sourceEntitlement) {
+
         Pool pool = createPool(product, sourcePool.getOwner(), quantity,
             sourcePool.getStartDate(), sourcePool.getEndDate(),
             sourcePool.getContractNumber(), sourcePool.getAccountNumber(),
@@ -195,7 +196,7 @@ public class PoolHelper {
         pool.setSourceSubscription(
             new SourceSubscription(sourcePool.getSubscriptionId(), subKey));
 
-        copyProvidedProducts(sourcePool, pool, prodCurator);
+        copyProvidedProducts(sourcePool, pool, curator);
 
         // Add in the new attributes
         for (Entry<String, String> entry : attributes.entrySet()) {

@@ -94,6 +94,10 @@ public class PinsetterKernel {
          * this will help:
          * when(config.subset(eq("org.quartz"))).thenReturn(
          * new MapConfiguration(ConfigProperties.DEFAULT_PROPERTIES));
+         *
+         * TODO: We should probably be clearing up what's happening here. Not a fan of a comment
+         * explaining what should be handled by something like an illegal arg or illegal state
+         * exception. -C
          */
         Properties props = config.subset("org.quartz").toProperties();
 
@@ -108,8 +112,7 @@ public class PinsetterKernel {
             }
         }
         catch (SchedulerException e) {
-            throw new InstantiationException("this.scheduler failed: " +
-                e.getMessage());
+            throw new InstantiationException("this.scheduler failed: " + e.getMessage());
         }
     }
 

@@ -43,25 +43,19 @@ import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
-import org.candlepin.model.EventCurator;
 import org.candlepin.model.ImportRecord;
-import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.Role;
-import org.candlepin.model.RoleCurator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -122,21 +116,12 @@ import javax.ws.rs.core.MultivaluedMap;
 public class OwnerResourceTest extends DatabaseTestFixture {
     private static final String OWNER_NAME = "Jar Jar Binks";
 
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private PoolCurator poolCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private EntitlementCurator entitlementCurator;
-    @Inject private EventCurator eventCurator;
-    @Inject private RoleCurator roleCurator;
     @Inject private CandlepinPoolManager poolManager;
     @Inject private ServiceLevelValidator serviceLevelValidator;
     @Inject private I18n i18n;
     @Inject private OwnerResource ownerResource;
     @Inject private EventFactory eventFactory;
     @Inject private Configuration config;
-    @Inject private ImportRecordCurator importRecordCurator;
     @Inject private ContentOverrideValidator contentOverrideValidator;
     @Inject private ProductManager productManager;
     @Inject private ContentManager contentManager;
@@ -154,8 +139,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         owner = ownerCurator.create(new Owner(OWNER_NAME));
         owners = new ArrayList<Owner>();
         owners.add(owner);
-        product = TestUtil.createProduct(owner);
-        productCurator.create(product);
+        product = this.createProduct(owner);
     }
 
     @Test
@@ -175,17 +159,18 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testRefreshPoolsWithNewSubscriptions() {
-        Product prod = TestUtil.createProduct(owner);
-        productCurator.create(prod);
+        Product prod = this.createProduct(owner);
 
         List<Subscription> subscriptions = new LinkedList<Subscription>();
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub = new Subscription(owner, prod,
-            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
-            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
         sub.setId(Util.generateDbUUID());
+        sub.setQuantity(2000L);
+        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub);
 
         // Trigger the refresh:
@@ -202,8 +187,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testRefreshPoolsWithChangedSubscriptions() {
-        Product prod = TestUtil.createProduct(owner);
-        productCurator.create(prod);
+        Product prod = this.createProduct(owner);
         Pool pool = createPool(owner, prod, 1000L,
             TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));
@@ -213,10 +197,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub = new Subscription(owner, prod,
-            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
-            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
         sub.setId(Util.generateDbUUID());
+        sub.setQuantity(2000L);
+        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub);
 
         assertTrue(pool.getQuantity() < sub.getQuantity());
@@ -237,17 +223,18 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testRefreshPoolsWithRemovedSubscriptions() {
-        Product prod = TestUtil.createProduct(owner);
-        productCurator.create(prod);
+        Product prod = this.createProduct(owner);
 
         List<Subscription> subscriptions = new LinkedList<Subscription>();
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub = new Subscription(owner, prod,
-            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
-            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
         sub.setId(Util.generateDbUUID());
+        sub.setQuantity(2000L);
+        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub);
 
         // Trigger the refresh:
@@ -269,25 +256,27 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testRefreshMultiplePools() {
-        Product prod = TestUtil.createProduct(owner);
-        productCurator.create(prod);
-        Product prod2 = TestUtil.createProduct(owner);
-        productCurator.create(prod2);
+        Product prod = this.createProduct(owner);
+        Product prod2 = this.createProduct(owner);
 
         List<Subscription> subscriptions = new LinkedList<Subscription>();
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub = new Subscription(owner, prod,
-            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
-            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
         sub.setId(Util.generateDbUUID());
+        sub.setQuantity(2000L);
+        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub);
 
-        Subscription sub2 = new Subscription(owner, prod2,
-            new HashSet<Product>(), 800L, TestUtil.createDate(2010, 2, 9),
-            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        Subscription sub2 = TestUtil.createSubscription(owner, prod2, new HashSet<Product>());
         sub2.setId(Util.generateDbUUID());
+        sub2.setQuantity(800L);
+        sub2.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub2.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub2.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub2);
 
         // Trigger the refresh:
@@ -300,19 +289,21 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     // test covers scenario from bug 1012386
     @Test
     public void testRefreshPoolsWithRemovedMasterPool() {
-        Product prod = TestUtil.createProduct(owner);
+        Product prod = this.createProduct(owner);
         prod.setAttribute("virt_limit", "4");
-        productCurator.create(prod);
+        productCurator.merge(prod);
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
         List<Subscription> subscriptions = new LinkedList<Subscription>();
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub = new Subscription(owner, prod,
-            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
-            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
         sub.setId(Util.generateDbUUID());
+        sub.setQuantity(2000L);
+        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub);
 
         // Trigger the refresh:
@@ -355,19 +346,21 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     // test covers a corollary scenario from bug 1012386
     @Test
     public void testRefreshPoolsWithRemovedBonusPool() {
-        Product prod = TestUtil.createProduct(owner);
+        Product prod = this.createProduct(owner);
         prod.setAttribute("virt_limit", "4");
-        productCurator.create(prod);
+        productCurator.merge(prod);
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
         List<Subscription> subscriptions = new LinkedList<Subscription>();
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub = new Subscription(owner, prod,
-            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
-            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
         sub.setId(Util.generateDbUUID());
+        sub.setQuantity(2000L);
+        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub);
 
         // Trigger the refresh:
@@ -477,8 +470,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         Date now = new Date();
-        Product p = TestUtil.createProduct(owner);
-        productCurator.create(p);
+        Product p = this.createProduct(owner);
         Pool pool1 = TestUtil.createPool(owner, p);
         pool1.setAttribute("virt_only", "true");
         pool1.setAttribute("pool_derived", "true");
@@ -513,8 +505,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testOwnerAdminCanGetPools() {
         Principal principal = setupPrincipal(owner, Access.ALL);
 
-        Product p = TestUtil.createProduct(owner);
-        productCurator.create(p);
+        Product p = this.createProduct(owner);
         Pool pool1 = TestUtil.createPool(owner, p);
         Pool pool2 = TestUtil.createPool(owner, p);
         poolCurator.create(pool1);
@@ -530,15 +521,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testCanFilterPoolsByAttribute() throws Exception {
         Principal principal = setupPrincipal(owner, Access.ALL);
 
-        Product p = TestUtil.createProduct(owner);
-        productCurator.create(p);
+        Product p = this.createProduct(owner);
         Pool pool1 = TestUtil.createPool(owner, p);
         pool1.setAttribute("virt_only", "true");
         poolCurator.create(pool1);
 
-        Product p2 = TestUtil.createProduct(owner);
+        Product p2 = this.createProduct(owner);
         p2.setAttribute("cores", "12");
-        productCurator.create(p2);
+        productCurator.merge(p2);
         Pool pool2 = TestUtil.createPool(owner, p2);
         poolCurator.create(pool2);
 
@@ -564,14 +554,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testCanFilterOutDevPoolsByAttribute() throws Exception {
         Principal principal = setupPrincipal(owner, Access.ALL);
 
-        Product p = TestUtil.createProduct(owner);
-        productCurator.create(p);
+        Product p = this.createProduct(owner);
+
         Pool pool1 = TestUtil.createPool(owner, p);
         pool1.setAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
         poolCurator.create(pool1);
 
-        Product p2 = TestUtil.createProduct(owner);
-        productCurator.create(p2);
+        Product p2 = this.createProduct(owner);
         Pool pool2 = TestUtil.createPool(owner, p2);
         poolCurator.create(pool2);
 
@@ -595,8 +584,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ownerCurator.create(evilOwner);
         Principal principal = setupPrincipal(evilOwner, Access.ALL);
 
-        Product p = TestUtil.createProduct(owner);
-        productCurator.create(p);
+        Product p = this.createProduct(owner);
         Pool pool1 = TestUtil.createPool(owner, p);
         Pool pool2 = TestUtil.createPool(owner, p);
         poolCurator.create(pool1);
@@ -786,8 +774,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void consumerListPoolsGetCalculatedAttributes() {
-        Product p = TestUtil.createProduct(owner);
-        productCurator.create(p);
+        Product p = this.createProduct(owner);
         Pool pool1 = TestUtil.createPool(owner, p);
         poolCurator.create(pool1);
 
@@ -808,8 +795,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test(expected = NotFoundException.class)
     public void testConsumerListPoolsCannotAccessOtherConsumer() {
-        Product p = TestUtil.createProduct(owner);
-        productCurator.create(p);
+        Product p = this.createProduct(owner);
         Pool pool1 = TestUtil.createPool(owner, p);
         poolCurator.create(pool1);
 
@@ -903,18 +889,18 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private Pool doTestEntitlementsRevocationCommon(long subQ, int e1, int e2, boolean fifo)
         throws ParseException {
 
-        Product prod = TestUtil.createProduct(owner);
-        productCurator.create(prod);
+        Product prod = this.createProduct(owner);
 
         List<Subscription> subscriptions = new LinkedList<Subscription>();
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub = new Subscription(owner, prod,
-            new HashSet<Product>(), 1000L, TestUtil.createDate(2009, 11, 30),
-            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 10, 10, 30),
-            TestUtil.createDate(2015, 11, 30));
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
         sub.setId(Util.generateDbUUID());
+        sub.setQuantity(1000L);
+        sub.setStartDate(TestUtil.createDate(2009, 11, 30));
+        sub.setEndDate(TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 10, 10, 30));
+        sub.setModified(TestUtil.createDate(2015, 11, 30));
         subscriptions.add(sub);
 
         List<Pool> pools = poolManager.createAndEnrichPools(sub);
@@ -995,8 +981,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void cleanupWithOutstandingPermissions() {
-        PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner,
-            Access.ALL);
+        PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner, Access.ALL);
         Role r = new Role("rolename");
         r.addPermission(p);
         roleCurator.create(r);
@@ -1055,27 +1040,31 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner owner = new Owner("Test Owner", "test");
         ownerCurator.create(owner);
 
-        Product prod1 = TestUtil.createProduct(owner);
+        Product prod1 = this.createProduct(owner);
         prod1.setAttribute("support_level", "premium");
-        productCurator.create(prod1);
-        Product prod2 = TestUtil.createProduct(owner);
+        productCurator.merge(prod1);
+        Product prod2 = this.createProduct(owner);
         prod2.setAttribute("support_level", "standard");
-        productCurator.create(prod2);
+        productCurator.merge(prod2);
 
         List<Subscription> subscriptions = new LinkedList<Subscription>();
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub1 = new Subscription(owner, prod1,
-            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
-            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        Subscription sub1 = TestUtil.createSubscription(owner, prod1, new HashSet<Product>());
         sub1.setId(Util.generateDbUUID());
+        sub1.setQuantity(2000L);
+        sub1.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub1.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub1.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub1);
 
-        Subscription sub2 = new Subscription(owner, prod2,
-            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
-            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        Subscription sub2 = TestUtil.createSubscription(owner, prod2, new HashSet<Product>());
         sub2.setId(Util.generateDbUUID());
+        sub2.setQuantity(2000L);
+        sub2.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub2.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub2.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub2);
 
         // Trigger the refresh:
@@ -1163,7 +1152,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         MultipartInput input = mock(MultipartInput.class);
         Map<String, Object> result = new HashMap<String, Object>();
         List<Subscription> subscriptions = new ArrayList<Subscription>();
-        Subscription subscription = new Subscription();
+        Subscription subscription = TestUtil.createSubscription();
         //expires tomorrow
         subscription.setEndDate(new Date((new Date()).getTime() + (1000 * 60 * 60 * 24)));
         subscriptions.add(subscription);
@@ -1307,8 +1296,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void createSubscription() {
-        Product p = TestUtil.createProduct(owner);
-        productCurator.create(p);
+        Product p = this.createProduct(owner);
         Subscription s = TestUtil.createSubscription(owner, p);
         s.setId("MADETHISUP");
         assertEquals(0, poolCurator.listByOwner(owner).size());
@@ -1318,8 +1306,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void createPool() {
-        Product prod = TestUtil.createProduct(owner);
-        productCurator.create(prod);
+        Product prod = this.createProduct(owner);
         Pool pool = TestUtil.createPool(owner, prod);
         assertEquals(0, poolCurator.listByOwner(owner).size());
         ownerResource.createPool(owner.getKey(), pool);
@@ -1330,8 +1317,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void updatePool() {
-        Product prod = TestUtil.createProduct(owner);
-        productCurator.create(prod);
+        Product prod = this.createProduct(owner);
         Pool pool = TestUtil.createPool(owner, prod);
         ownerResource.createPool(owner.getKey(), pool);
         List<Pool> createdPools = poolCurator.listByOwner(owner);
@@ -1347,9 +1333,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void createBonusPool() {
-        Product prod = TestUtil.createProduct(owner);
+        Product prod = this.createProduct(owner);
         prod.setAttribute("virt_limit", "2");
-        productCurator.create(prod);
+        productCurator.merge(prod);
         Pool pool = TestUtil.createPool(owner, prod);
         assertEquals(0, poolCurator.listByOwner(owner).size());
         ownerResource.createPool(owner.getKey(), pool);
@@ -1363,9 +1349,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void createBonusPoolForUpdate() {
-        Product prod = TestUtil.createProduct(owner);
+        Product prod = this.createProduct(owner);
         prod.setAttribute("virt_limit", "3");
-        productCurator.create(prod);
+        productCurator.merge(prod);
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setSubscriptionSubKey("master");
         ownerResource.createPool(owner.getKey(), pool);
@@ -1383,9 +1369,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void removePoolsForExpiredUpdate() {
-        Product prod = TestUtil.createProduct(owner);
+        Product prod = this.createProduct(owner);
         prod.setAttribute("virt_limit", "3");
-        productCurator.create(prod);
+        productCurator.merge(prod);
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setSubscriptionSubKey("master");
         ownerResource.createPool(owner.getKey(), pool);
@@ -1400,9 +1386,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test(expected = BadRequestException.class)
     public void cantUpdateBonusPool() {
-        Product prod = TestUtil.createProduct(owner);
+        Product prod = this.createProduct(owner);
         prod.setAttribute("virt_limit", "3");
-        productCurator.create(prod);
+        productCurator.merge(prod);
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setSubscriptionSubKey("master");
         ownerResource.createPool(owner.getKey(), pool);
@@ -1420,10 +1406,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void enrichPool() {
-        Product prod = TestUtil.createProduct(owner);
+        Product prod = this.createProduct(owner);
         prod.setAttribute("virt_only", "true");
         prod.setMultiplier(2L);
-        productCurator.create(prod);
+        productCurator.merge(prod);
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setQuantity(100L);
         assertEquals(0, poolCurator.listByOwner(owner).size());
@@ -1442,7 +1428,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Owner owner = TestUtil.createOwner();
         Consumer consumer = TestUtil.createConsumer(owner);
-        Pool pool = TestUtil.createPool(owner, TestUtil.createProduct(owner));
+        Pool pool = TestUtil.createPool(owner, TestUtil.createProduct());
 
         Entitlement e = TestUtil.createEntitlement(owner, consumer, pool, null);
         e.setId("getAllEntitlementsForOwner");

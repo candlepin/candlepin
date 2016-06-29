@@ -164,7 +164,9 @@ public class EntitlementCertificateGenerator {
      *  regenerated on-demand
      */
     @Transactional
-    public void regenerateCertificatesOf(Entitlement entitlement, boolean ueberCertificate, boolean lazy) {
+    public void regenerateCertificatesOf(Entitlement entitlement, boolean ueberCertificate,
+        boolean lazy) {
+
         if (lazy) {
             log.info("Marking certificates dirty for entitlement: {}", entitlement);
             entitlement.setDirty(true);
@@ -409,28 +411,6 @@ public class EntitlementCertificateGenerator {
         for (Pool pool : pools) {
             this.regenerateCertificatesOf(pool.getEntitlements(), lazy);
         }
-    }
-
-    /**
-     * Regenerates the entitlement certificates for all pools using any of the the specified
-     * product(s), effective for the all owners using them.
-     *
-     * @param products
-     *  A collection of products for which to regenerate affected certificates
-     *
-     * @param lazy
-     *  Whether or not to generate the certificate immediately, or mark it dirty and allow it to be
-     *  regenerated on-demand
-     */
-    @Transactional
-    public void regenerateCertificatesOf(Collection<Product> products, boolean lazy) {
-        Set<Owner> owners = new HashSet<Owner>();
-
-        for (Product product : products) {
-            owners.addAll(product.getOwners());
-        }
-
-        this.regenerateCertificatesOf(owners, products, lazy);
     }
 
 }

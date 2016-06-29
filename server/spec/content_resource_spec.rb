@@ -10,12 +10,12 @@ describe 'Content Resource' do
     @user = user_client(@owner, random_string('test-user'))
 
     @content = @cp.create_content(
-      @owner['key'], "cname", nil, random_string("clabel"), "ctype", "cvendor", {}, true
+      @owner['key'], "cname", 'test-content', random_string("clabel"), "ctype", "cvendor", {}, true
     )
 
     @content_id = @content['id']
 
-    @product = create_product(nil, 'some product', {:multiplier => 4})
+    @product = create_product('test-product', 'some product', {:multiplier => 4})
     @cp.add_content_to_product(@owner['key'], @product['id'], @content_id)
   end
 
