@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.13
+Version: 2.0.14
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,36 @@ fi
 
 #raw
 %changelog
+* Wed Jun 29 2016 Chris Rog <crog@redhat.com> 2.0.14-1
+- Added OwnerContentCurator, OwnerContent and updated ContentManager
+  (crog@redhat.com)
+- 1345765 - Concurrent content demotions cause 400 (nguyen.filip@gmail.com)
+- 1348291: Corrected placeholder index for translated "locked" message
+  (crog@redhat.com)
+- Updated the adapters and product resources to use the new DTOs
+  (crog@redhat.com)
+- 1314904: SASL mechanism ANONYMOUS (nguyen.filip@gmail.com)
+- Added DTOs for products, content and their related objects (crog@redhat.com)
+- 1345918: Unique product content violation (nguyen.filip@gmail.com)
+- 1344469: logrotate permission denied error (vrjain@redhat.com)
+- Removed the owner parameter from Product's constructor (crog@redhat.com)
+- ProductManager now provides methods for managing product-content mapping
+  (crog@redhat.com)
+- Added tests for the new OwnerProductCurator (crog@redhat.com)
+- Refactored several methods for owner-product querying (crog@redhat.com)
+- Removed the owners collection from Product (crog@redhat.com)
+- 1340500: Config for Swagger enable/disable (nguyen.filip@gmail.com)
+- 1337906: Stack derived pool cleanup (nguyen.filip@gmail.com)
+- 1338908: The logging message for auto-attach should be more descriptive
+  (wpoteat@redhat.com)
+- Added speculative fix for content modifications (crog@redhat.com)
+- Updated how products and contents are updated (crog@redhat.com)
+- Tests of Batch List Modifying (nguyen.filip@gmail.com)
+- 1335576: Ensure unlimited host dependent pool has finite virt-limit quantity
+  (wpoteat@redhat.com)
+- CandlepinPoolManager now removes extraneous product owners during refresh
+  (crog@redhat.com)
+
 * Tue May 17 2016 Vritant Jain <vrjain@redhat.com> 2.0.13-1
 - 1336054: Overconsumption Fix (nguyen.filip@gmail.com)
 - Candlepin specific changes to ModelConverter (nguyen.filip@gmail.com)
