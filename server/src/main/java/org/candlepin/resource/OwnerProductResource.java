@@ -298,7 +298,7 @@ public class OwnerProductResource {
         Product existing = this.fetchProduct(owner, productId);
 
         if (existing.isLocked()) {
-            throw new ForbiddenException(i18n.tr("product \"{1}\" is locked", existing.getId()));
+            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", existing.getId()));
         }
 
         Product updated = this.productManager.updateProduct(existing, update, owner, true);
@@ -322,7 +322,7 @@ public class OwnerProductResource {
         Collection<ProductContent> productContent = new LinkedList<ProductContent>();
 
         if (product.isLocked()) {
-            throw new ForbiddenException(i18n.tr("product \"{1}\" is locked", product.getId()));
+            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
         }
 
         this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
@@ -353,7 +353,7 @@ public class OwnerProductResource {
         Content content = this.fetchContent(owner, contentId);
 
         if (product.isLocked()) {
-            throw new ForbiddenException(i18n.tr("product \"{1}\" is locked", product.getId()));
+            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
         }
 
         this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
@@ -380,7 +380,7 @@ public class OwnerProductResource {
         Content content = this.fetchContent(owner, contentId);
 
         if (product.isLocked()) {
-            throw new ForbiddenException(i18n.tr("product \"{1}\" is locked", product.getId()));
+            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
         }
 
         // Remove content
@@ -401,7 +401,7 @@ public class OwnerProductResource {
         Product product = this.fetchProduct(owner, productId);
 
         if (product.isLocked()) {
-            throw new ForbiddenException(i18n.tr("product \"{1}\" is locked", product.getId()));
+            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
         }
 
         if (this.productCurator.productHasSubscriptions(product, owner)) {

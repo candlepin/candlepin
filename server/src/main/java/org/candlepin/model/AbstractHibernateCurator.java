@@ -438,6 +438,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
     }
 
+    @Transactional
+    public void bulkDeleteTransactional(List<E> entities) {
+        for (E entity : entities) {
+            delete(entity);
+        }
+    }
+
     /**
      * @param entity entity to be merged.
      * @return merged entity.
