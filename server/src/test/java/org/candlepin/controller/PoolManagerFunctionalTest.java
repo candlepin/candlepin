@@ -848,7 +848,31 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertNotNull(this.poolCurator.find(pool1.getId()));        // Active pool, no attrib
         assertNull(this.poolCurator.find(pool2.getId()));           // Expired pool, no attrib
         assertNotNull(this.poolCurator.find(pool3.getId()));        // Active pool, derived attrib
-        assertNotNull(this.poolCurator.find(pool4.getId()));        // Expired pool, derived attrib
+        assertNull(this.poolCurator.find(pool4.getId()));           // Expired pool, derived attrib
+    }
+
+    @Test
+    public void testCleanupExpiredDerivedPoolsAndItsEnt() {
+        long ct = System.currentTimeMillis();
+        Date expiredStart = new Date(ct - 7200000);
+        Date expiredEnd = new Date(ct - 3600000);
+
+        Owner owner = this.createOwner();
+        Product product1 = this.createProduct("test-product-1", "Test Product 1", owner);
+        String suscriptionId = Util.generateDbUUID();
+        Pool pool2 = this.createPool(owner, product1, 1L, suscriptionId, "master", expiredStart, expiredEnd);
+        Pool pool3 = this.createPool(owner, product1, 1L, suscriptionId, "derived", expiredStart, expiredEnd);
+
+        pool3.setAttribute(Pool.DERIVED_POOL_ATTRIBUTE, "true");
+        this.poolCurator.merge(pool3);
+
+        Entitlement ent = this.createEntitlement(owner, this.createConsumer(owner), pool3, null);
+
+        this.poolManager.cleanupExpiredPools();
+
+        assertNull(this.poolCurator.find(pool2.getId()));
+        assertNull(this.poolCurator.find(pool3.getId()));
+        assertNull(this.entitlementCurator.find(ent.getId()));
     }
 }
 

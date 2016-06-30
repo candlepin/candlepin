@@ -232,12 +232,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> listExpiredPools(int blockSize) {
         Date now = new Date();
 
-        DetachedCriteria attribCheck = DetachedCriteria.forClass(Pool.class, "attribPool")
-            .createAlias("attributes", "attrib", JoinType.INNER_JOIN)
-            .add(Restrictions.eqProperty("attribPool.id", "tgtPool.id"))
-            .add(Restrictions.eq("attrib.name", Pool.DERIVED_POOL_ATTRIBUTE))
-            .setProjection(Projections.property("attribPool.id"));
-
         DetachedCriteria entCheck = DetachedCriteria.forClass(Pool.class, "entPool")
             .createAlias("entitlements", "ent", JoinType.INNER_JOIN)
             .add(Restrictions.eqProperty("entPool.id", "tgtPool.id"))
@@ -246,7 +240,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         Criteria criteria = this.createSecureCriteria("tgtPool")
             .add(Restrictions.lt("tgtPool.endDate", now))
-            .add(Subqueries.notExists(attribCheck))
             .add(Subqueries.notExists(entCheck));
 
         if (blockSize > 0) {
@@ -726,10 +719,25 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     /**
      * Batch deletes a list of pools.
-     * @param pools
+     *
+     * @param pools pools to delete
+     * @param alreadyDeletedPools pools to skip, they have already been deleted,
      */
-    public void batchDelete(List<Pool> pools) {
+    public void batchDelete(List<Pool> pools, Set<String> alreadyDeletedPools) {
+        if (alreadyDeletedPools == null) {
+            alreadyDeletedPools = new HashSet<String>();
+        }
+
         for (Pool pool : pools) {
+
+            // As we batch pool operations, pools may be deleted at multiple places in the code path.
+            // We may request to delete the same pool in multiple places too, for example if an expired
+            // stack derived pool has no entitlements, ExpiredPoolsJob will request to delete it twice,
+            // for each reason.
+            if (alreadyDeletedPools.contains(pool.getId())) {
+                continue;
+            }
+            alreadyDeletedPools.add(pool.getId());
             this.currentSession().delete(pool);
 
             // Maintain runtime consistency. The entitlements for the pool have been deleted on the

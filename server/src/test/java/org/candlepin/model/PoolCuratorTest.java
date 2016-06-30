@@ -1154,6 +1154,47 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void batchDeleteTest() {
+        Owner owner2 = createOwner();
+        ownerCurator.create(owner2);
+
+        List<Pool> pools = new ArrayList<Pool>();
+        for (int i = 0; i < 10; i++) {
+            pools.add(createPool(owner2, "id123"));
+        }
+
+        for(Pool pool:pools) {
+            assertNotNull(poolCurator.find(pool.getId()));
+        }
+        poolCurator.batchDelete(pools, null);
+        for (Pool pool : pools) {
+            assertNull(poolCurator.find(pool.getId()));
+        }
+    }
+
+    @Test
+    public void batchDeleteAlreadyDeletedTest() {
+        Owner owner2 = createOwner();
+        ownerCurator.create(owner2);
+
+        List<Pool> pools = new ArrayList<Pool>();
+        Set<String> ids = new HashSet<String>();
+        for (int i = 0; i < 10; i++) {
+            Pool p = createPool(owner2, "id123");
+            pools.add(p);
+            ids.add(p.getId());
+        }
+
+        for (Pool pool : pools) {
+            assertNotNull(poolCurator.find(pool.getId()));
+        }
+        poolCurator.batchDelete(pools, ids);
+        for (Pool pool : pools) {
+            assertNotNull(poolCurator.find(pool.getId()));
+        }
+    }
+
+    @Test
     public void handleNull() {
         Pool noexist = new Pool(
             owner,
