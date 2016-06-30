@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.14
+Version: 2.0.15
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,10 @@ fi
 
 #raw
 %changelog
+* Thu Jun 30 2016 Vritant Jain <vrjain@redhat.com> 2.0.15-1
+- 1344765: Updated query backing the PoolCurator.findExpiredPools method
+  (crog@redhat.com)
+
 * Wed Jun 29 2016 Chris Rog <crog@redhat.com> 2.0.14-1
 - Added OwnerContentCurator, OwnerContent and updated ContentManager
   (crog@redhat.com)
