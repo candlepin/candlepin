@@ -89,6 +89,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
@@ -114,6 +116,7 @@ import javax.servlet.http.HttpServletResponse;
  * Test fixture for test classes requiring access to the database.
  */
 public class DatabaseTestFixture {
+    private static Logger log = LoggerFactory.getLogger(DatabaseTestFixture.class);
 
     private static final String DEFAULT_CONTRACT = "SUB349923";
     private static final String DEFAULT_ACCOUNT = "ACC123";
@@ -271,7 +274,7 @@ public class DatabaseTestFixture {
      * @return an entitlement pool
      */
     protected Pool createPool(Owner owner, Product product, Long quantity, Date startDate, Date endDate) {
-        Pool p = new Pool(
+        Pool pool = new Pool(
             owner,
             product,
             new HashSet<Product>(),
@@ -283,8 +286,8 @@ public class DatabaseTestFixture {
             DEFAULT_ORDER
         );
 
-        p.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
-        return poolCurator.create(p);
+        pool.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        return poolCurator.create(pool);
     }
 
     protected Owner createOwner() {
@@ -344,19 +347,39 @@ public class DatabaseTestFixture {
         return TestUtil.createActivationKey(owner, null);
     }
 
-    protected Entitlement createEntitlement(Owner owner, Consumer consumer,
-        Pool pool, EntitlementCertificate cert) {
-        return TestUtil.createEntitlement(owner, consumer, pool, cert);
+    protected Entitlement createEntitlement(Owner owner, Consumer consumer, Pool pool,
+        EntitlementCertificate cert) {
+
+        Entitlement entitlement = new Entitlement();
+        entitlement.setOwner(owner);
+        entitlement.setPool(pool);
+        entitlement.setConsumer(consumer);
+
+        this.entitlementCurator.create(entitlement);
+
+        // Maintain runtime consistency
+        consumer.addEntitlement(entitlement);
+        pool.getEntitlements().add(entitlement);
+
+        if (cert != null) {
+            cert.setEntitlement(entitlement);
+            entitlement.getCertificates().add(cert);
+
+            this.entitlementCertificateCurator.merge(cert);
+            this.entitlementCurator.merge(entitlement);
+        }
+
+        return entitlement;
     }
 
-    protected EntitlementCertificate createEntitlementCertificate(String key,
-        String cert) {
+    protected EntitlementCertificate createEntitlementCertificate(String key, String cert) {
         EntitlementCertificate toReturn = new EntitlementCertificate();
         CertificateSerial certSerial = new CertificateSerial(new Date());
         certSerialCurator.create(certSerial);
         toReturn.setKeyAsBytes(key.getBytes());
         toReturn.setCertAsBytes(cert.getBytes());
         toReturn.setSerial(certSerial);
+
         return toReturn;
     }
 

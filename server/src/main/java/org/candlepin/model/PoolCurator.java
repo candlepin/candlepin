@@ -33,11 +33,13 @@ import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Junction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.SimpleExpression;
+import org.hibernate.criterion.Subqueries;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
@@ -200,7 +202,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     /**
-     * Fetches a block of non-derived, expired pools
+     * Fetches the list of non-derived, expired pools
      *
      * @return
      *  the list of non-derived, expired pools pools
@@ -230,15 +232,22 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> listExpiredPools(int blockSize) {
         Date now = new Date();
 
-        Criteria criteria = this.createSecureCriteria("pool")
-            .createAlias("pool.entitlements", "entitlement")
-            .createAlias("pool.attributes", "attributes")
-            .add(Restrictions.lt("pool.endDate", now))
-            .add(Restrictions.ne("attributes.name", "derived_pool"))
-            .add(Restrictions.or(
-                Restrictions.isNull("entitlement.endDateOverride"),
-                Restrictions.lt("entitlement.endDateOverride", now)
-            ));
+        DetachedCriteria attribCheck = DetachedCriteria.forClass(Pool.class, "attribPool")
+            .createAlias("attributes", "attrib", JoinType.INNER_JOIN)
+            .add(Restrictions.eqProperty("attribPool.id", "tgtPool.id"))
+            .add(Restrictions.eq("attrib.name", Pool.DERIVED_POOL_ATTRIBUTE))
+            .setProjection(Projections.property("attribPool.id"));
+
+        DetachedCriteria entCheck = DetachedCriteria.forClass(Pool.class, "entPool")
+            .createAlias("entitlements", "ent", JoinType.INNER_JOIN)
+            .add(Restrictions.eqProperty("entPool.id", "tgtPool.id"))
+            .add(Restrictions.ge("ent.endDateOverride", now))
+            .setProjection(Projections.property("entPool.id"));
+
+        Criteria criteria = this.createSecureCriteria("tgtPool")
+            .add(Restrictions.lt("tgtPool.endDate", now))
+            .add(Subqueries.notExists(attribCheck))
+            .add(Subqueries.notExists(entCheck));
 
         if (blockSize > 0) {
             criteria.setMaxResults(blockSize);
