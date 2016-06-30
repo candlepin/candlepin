@@ -111,6 +111,38 @@ public class ContentData extends CandlepinDTO {
     }
 
     /**
+     * Initializes a new ContentData instance with the specified values.
+     * <p/></p>
+     * <strong>Note</strong>: This constructor passes the provided values to their respective
+     * mutator methods, and does not capture any exceptions they may throw due to malformed
+     * values.
+     *
+     * @param id
+     *  The ID of the content to be represented by this DTO; cannot be null
+     *
+     * @param name
+     *  The name of the content to be represented by this DTO
+     *
+     * @param type
+     *  The type of the content to be represented by this DTO
+     *
+     * @param label
+     *  The label of the content to be represented by this DTO
+     *
+     * @param vendor
+     *  The vendor of the content to be represented by this DTO
+     */
+    public ContentData(String id, String name, String type, String label, String vendor) {
+        super();
+
+        this.setId(id);
+        this.setName(name);
+        this.setType(type);
+        this.setLabel(label);
+        this.setVendor(vendor);
+    }
+
+    /**
      * Initializes a new ContentData instance using the data contained by the given DTO.
      *
      * @param source
@@ -571,6 +603,11 @@ public class ContentData extends CandlepinDTO {
     }
 
     @Override
+    public String toString() {
+        return String.format("ContentData [id: %s, name: %s, label: %s]", this.id, this.name, this.label);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (obj == null || !(obj instanceof ContentData)) {
             return false;
@@ -595,7 +632,8 @@ public class ContentData extends CandlepinDTO {
             .append(this.gpgUrl, that.gpgUrl)
             .append(this.metadataExpire, that.metadataExpire)
             .append(this.modifiedProductIds, that.modifiedProductIds)
-            .append(this.arches, that.arches);
+            .append(this.arches, that.arches)
+            .append(this.locked, that.locked);
 
         return super.equals(obj) && builder.isEquals();
     }
@@ -616,7 +654,8 @@ public class ContentData extends CandlepinDTO {
             .append(this.gpgUrl)
             .append(this.metadataExpire)
             .append(this.modifiedProductIds)
-            .append(this.arches);
+            .append(this.arches)
+            .append(this.locked);
 
         return builder.toHashCode();
     }
@@ -661,6 +700,7 @@ public class ContentData extends CandlepinDTO {
         this.gpgUrl = source.getGpgUrl();
         this.metadataExpire = source.getMetadataExpire();
         this.arches = source.getArches();
+        this.locked = source.isLocked();
 
         this.setModifiedProductIds(source.getModifiedProductIds());
 
@@ -698,6 +738,7 @@ public class ContentData extends CandlepinDTO {
         this.gpgUrl = source.getGpgUrl();
         this.metadataExpire = source.getMetadataExpire();
         this.arches = source.getArches();
+        this.locked = source.isLocked();
 
         this.setModifiedProductIds(source.getModifiedProductIds());
 

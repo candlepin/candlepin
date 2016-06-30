@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.Date;
+import java.io.Serializable;
 
 
 
@@ -28,8 +29,7 @@ import java.util.Date;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFilter("DefaultFilter")
-public abstract class CandlepinDTO implements Cloneable {
-
+public abstract class CandlepinDTO implements Cloneable, Serializable {
     protected Date created;
     protected Date updated;
 
@@ -149,8 +149,8 @@ public abstract class CandlepinDTO implements Cloneable {
         CandlepinDTO that = (CandlepinDTO) obj;
 
         return this == that ||
-            ((this.created == that.created || this.created != null && this.created.equals(that.created)) &&
-            (this.updated == that.updated || this.updated != null && this.updated.equals(that.updated)));
+            ((this.created == that.created || (this.created != null && this.created.equals(that.created))) &&
+            (this.updated == that.updated || (this.updated != null && this.updated.equals(that.updated))));
     }
 
     @Override
