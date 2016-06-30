@@ -120,7 +120,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @CollectionTable(name = "cp2_content_modified_products", joinColumns = @JoinColumn(name = "content_uuid"))
     @Column(name = "element")
     @Size(max = 255)
-    private Set<String> modifiedProductIds = new HashSet<String>();
+    private Set<String> modifiedProductIds;
 
     @Column(nullable = true)
     @Size(max = 255)
@@ -135,22 +135,11 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @Type(type = "org.hibernate.type.NumericBooleanType")
     private boolean locked;
 
-
-    public Content(String name, String id, String label, String type, String vendor, String contentUrl,
-        String gpgUrl, String arches) {
-
-        setName(name);
-        setId(id);
-        setLabel(label);
-        setType(type);
-        setVendor(vendor);
-        setContentUrl(contentUrl);
-        setGpgUrl(gpgUrl);
-        setArches(arches);
-    }
-
+    /**
+     * Default constructor
+     */
     public Content() {
-        // Intentionally left empty
+        this.modifiedProductIds = new HashSet<String>();
     }
 
     /**
@@ -160,7 +149,28 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      *  The ID for this content
      */
     public Content(String id) {
+        this();
+
         this.setId(id);
+    }
+
+    public Content(String id, String name, String type, String label, String vendor) {
+        this(id);
+
+        this.setName(name);
+        this.setType(type);
+        this.setLabel(label);
+        this.setVendor(vendor);
+    }
+
+    public Content(String name, String id, String label, String type, String vendor, String contentUrl,
+        String gpgUrl, String arches) {
+
+        this(id, name, label, type, vendor);
+
+        this.setContentUrl(contentUrl);
+        this.setGpgUrl(gpgUrl);
+        this.setArches(arches);
     }
 
     /**
@@ -621,7 +631,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     @Override
     public String toString() {
-        return "Content [id: " + getId() + ", label: " + getLabel() + "]";
+        return String.format("ContentData [id: %s, name: %s, label: %s]", this.id, this.name, this.label);
     }
 
     @PrePersist

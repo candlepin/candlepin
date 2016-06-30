@@ -94,9 +94,9 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
         }
     }
 
+    @Override
     public String toString() {
-        return "ProductAttribute [id=" + id + ", name=" + name + ", value=" + value +
-            ", product=" + (product != null ? product.getId() : null) + "]";
+        return String.format("ProductAttribute [name: %s, value: %s]", this.name, this.value);
     }
 
     @XmlTransient

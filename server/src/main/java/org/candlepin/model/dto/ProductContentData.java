@@ -151,6 +151,11 @@ public class ProductContentData implements Cloneable {
     }
 
     @Override
+    public String toString() {
+        return String.format("ProductContentData [content: %s, enabled: %s]", this.content, this.enabled);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (obj == null || !(obj instanceof ProductContentData)) {
             return false;

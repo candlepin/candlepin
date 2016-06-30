@@ -136,7 +136,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @Type(type = "org.hibernate.type.NumericBooleanType")
     private boolean locked;
 
-    protected Product() {
+    public Product() {
         this.attributes = new LinkedList<ProductAttribute>();
         this.productContent = new LinkedList<ProductContent>();
         this.dependentProductIds = new HashSet<String>();

@@ -158,6 +158,11 @@ public class ProductAttributeData extends CandlepinDTO {
     }
 
     @Override
+    public String toString() {
+        return String.format("ProductAttributeData [name: %s, value: %s]", this.name, this.value);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (obj == null || !(obj instanceof ProductAttributeData)) {
             return false;
