@@ -163,16 +163,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         this.setVendor(vendor);
     }
 
-    public Content(String name, String id, String label, String type, String vendor, String contentUrl,
-        String gpgUrl, String arches) {
-
-        this(id, name, label, type, vendor);
-
-        this.setContentUrl(contentUrl);
-        this.setGpgUrl(gpgUrl);
-        this.setArches(arches);
-    }
-
     /**
      * Creates a shallow copy of the specified source content. Attributes and content are not
      * duplicated, but the joining objects are (ContentAttribute, ContentContent, etc.).
@@ -256,9 +246,17 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         return new ContentData(this);
     }
 
-    public static Content createUeberContent(UniqueIdGenerator idGenerator, Owner o, Product p) {
-        return new Content(UEBER_CONTENT_NAME, idGenerator.generateId(), ueberContentLabelForProduct(p),
-            "yum", "Custom", "/" + o.getKey(), "", "");
+    public static Content createUeberContent(UniqueIdGenerator idGenerator, Owner owner, Product product) {
+        Content ueberContent = new Content(idGenerator.generateId());
+        ueberContent.setName(UEBER_CONTENT_NAME);
+        ueberContent.setType("yum");
+        ueberContent.setLabel(ueberContentLabelForProduct(product));
+        ueberContent.setVendor("Custom");
+        ueberContent.setContentUrl("/" + owner.getKey());
+        ueberContent.setGpgUrl("");
+        ueberContent.setArches("");
+
+        return ueberContent;
     }
 
     public static String ueberContentLabelForProduct(Product p) {

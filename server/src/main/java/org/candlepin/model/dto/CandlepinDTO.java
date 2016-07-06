@@ -30,6 +30,8 @@ import java.io.Serializable;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFilter("DefaultFilter")
 public abstract class CandlepinDTO implements Cloneable, Serializable {
+    public static final long serialVersionUID = 1L;
+
     protected Date created;
     protected Date updated;
 

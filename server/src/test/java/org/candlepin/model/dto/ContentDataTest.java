@@ -353,7 +353,6 @@ public class ContentDataTest {
         assertEquals(input, output);
     }
 
-
     protected Object[][] getValuesForEqualityAndReplication() {
         return new Object[][] {
             new Object[] { "Uuid", "test_value", "alt_value" },

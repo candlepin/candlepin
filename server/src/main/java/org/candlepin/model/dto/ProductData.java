@@ -58,6 +58,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @ApiModel(parent = CandlepinDTO.class, description = "Product information for a given sku or product")
 @XmlRootElement
 public class ProductData extends CandlepinDTO {
+    public static final long serialVersionUID = 1L;
 
     @ApiModelProperty(example = "ff808081554a3e4101554a3e9033005d")
     protected String uuid;

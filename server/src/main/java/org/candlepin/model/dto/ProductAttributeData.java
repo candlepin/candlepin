@@ -40,6 +40,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @ApiModel(parent = CandlepinDTO.class)
 @XmlRootElement
 public class ProductAttributeData extends CandlepinDTO {
+    public static final long serialVersionUID = 1L;
 
     protected String name;
     protected String value;
