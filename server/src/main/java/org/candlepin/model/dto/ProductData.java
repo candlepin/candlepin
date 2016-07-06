@@ -58,6 +58,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @ApiModel(parent = CandlepinDTO.class, description = "Product information for a given sku or product")
 @XmlRootElement
 public class ProductData extends CandlepinDTO {
+    public static final long serialVersionUID = 1L;
 
     @ApiModelProperty(example = "ff808081554a3e4101554a3e9033005d")
     protected String uuid;
@@ -81,13 +82,33 @@ public class ProductData extends CandlepinDTO {
     protected String href;
 
     @ApiModelProperty(hidden = true)
-    protected boolean locked;
+    protected Boolean locked;
 
     /**
      * Initializes a new ProductData instance with null values.
      */
     public ProductData() {
         super();
+    }
+
+    /**
+     * Initializes a new ProductData instance with the specified Red Hat ID and name.
+     * <p/></p>
+     * <strong>Note</strong>: This constructor passes the provided values to their respective
+     * mutator methods, and does not capture any exceptions they may throw as due to malformed
+     * values.
+     *
+     * @param id
+     *  The ID of the product to be represented by this DTO; cannot be null
+     *
+     * @param name
+     *  The name of the product to be represented by this DTO
+     */
+    public ProductData(String id, String name) {
+        super();
+
+        this.setId(id);
+        this.setName(name);
     }
 
     /**
@@ -492,7 +513,7 @@ public class ProductData extends CandlepinDTO {
      *  the content of the product, or null if the content not yet been defined
      */
     public Collection<ProductContentData> getProductContent() {
-        return this.content != null ? Collections.unmodifiableCollection(this.content) : null;
+        return this.content != null ? Collections.unmodifiableList(this.content) : null;
     }
 
     /**
@@ -514,9 +535,11 @@ public class ProductData extends CandlepinDTO {
             throw new IllegalArgumentException("contentId is null");
         }
 
-        for (ProductContentData pcd : this.content) {
-            if (pcd.getContent() != null && contentId.equals(pcd.getContent().getId())) {
-                return pcd;
+        if (this.content != null) {
+            for (ProductContentData pcd : this.content) {
+                if (pcd.getContent() != null && contentId.equals(pcd.getContent().getId())) {
+                    return pcd;
+                }
             }
         }
 
@@ -982,13 +1005,15 @@ public class ProductData extends CandlepinDTO {
         ProductData that = (ProductData) obj;
 
         EqualsBuilder builder = new EqualsBuilder()
+            .append(this.uuid, that.uuid)
             .append(this.id, that.id)
             .append(this.name, that.name)
             .append(this.multiplier, that.multiplier)
             .append(this.attributes, that.attributes)
-            .append(this.href, that.href)
             .append(this.content, that.content)
-            .append(this.dependentProductIds, that.dependentProductIds);
+            .append(this.dependentProductIds, that.dependentProductIds)
+            .append(this.href, that.href)
+            .append(this.locked, that.locked);
 
         return super.equals(obj) && builder.isEquals();
     }
@@ -997,13 +1022,15 @@ public class ProductData extends CandlepinDTO {
     public int hashCode() {
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
             .append(super.hashCode())
+            .append(this.uuid)
             .append(this.id)
             .append(this.name)
             .append(this.multiplier)
             .append(this.href)
             .append(this.attributes)
             .append(this.content)
-            .append(this.dependentProductIds);
+            .append(this.dependentProductIds)
+            .append(this.locked);
 
         return builder.toHashCode();
     }
@@ -1055,12 +1082,13 @@ public class ProductData extends CandlepinDTO {
 
         super.populate(source);
 
-        this.setUuid(source.getUuid());
-        this.setId(source.getId());
-        this.setName(source.getName());
-        this.setMultiplier(source.getMultiplier());
-        this.setHref(source.getHref());
-        this.setLocked(source.isLocked());
+        this.uuid = source.getUuid();
+        this.id = source.getId();
+        this.name = source.getName();
+        this.multiplier = source.getMultiplier();
+        this.href = source.getHref();
+        this.locked = source.isLocked();
+
         this.setAttributes(source.getAttributes());
         this.setProductContent(source.getProductContent());
         this.setDependentProductIds(source.getDependentProductIds());
@@ -1087,12 +1115,12 @@ public class ProductData extends CandlepinDTO {
 
         super.populate(source);
 
-        this.setUuid(source.getUuid());
-        this.setId(source.getId());
-        this.setName(source.getName());
-        this.setMultiplier(source.getMultiplier());
-        this.setHref(source.getHref());
-        this.setLocked(source.isLocked());
+        this.uuid = source.getUuid();
+        this.id = source.getId();
+        this.name = source.getName();
+        this.multiplier = source.getMultiplier();
+        this.href = source.getHref();
+        this.locked = source.isLocked();
 
         if (source.getAttributes() != null) {
             if (this.attributes == null) {
@@ -1106,6 +1134,9 @@ public class ProductData extends CandlepinDTO {
                 this.addAttribute(entity.toDTO());
             }
         }
+        else {
+            this.setAttributes(null);
+        }
 
         if (source.getProductContent() != null) {
             if (this.content == null) {
@@ -1118,6 +1149,9 @@ public class ProductData extends CandlepinDTO {
             for (ProductContent entity : source.getProductContent()) {
                 this.addProductContent(entity.toDTO());
             }
+        }
+        else {
+            this.setProductContent(null);
         }
 
         this.setDependentProductIds(source.getDependentProductIds());

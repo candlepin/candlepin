@@ -454,7 +454,7 @@ public class Util {
      * <p></p>
      * WARNING: This method will not work with collections which use iterators that return its
      * elements in an inconsistent order. The order does not need to be known, but it must be
-     * consistent for a given collection state.
+     * consistent and repeatable for a given collection state.
      *
      * @param c1
      *  A collection to compare to c2
@@ -508,7 +508,7 @@ public class Util {
      * <p></p>
      * WARNING: This method will not work with collections which use iterators that return its
      * elements in an inconsistent order. The order does not need to be known, but it must be
-     * consistent for a given collection state.
+     * consistent and repeatable for a given collection state.
      *
      * @param c1
      *  A collection to compare to c2

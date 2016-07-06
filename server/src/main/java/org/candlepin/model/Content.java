@@ -120,7 +120,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @CollectionTable(name = "cp2_content_modified_products", joinColumns = @JoinColumn(name = "content_uuid"))
     @Column(name = "element")
     @Size(max = 255)
-    private Set<String> modifiedProductIds = new HashSet<String>();
+    private Set<String> modifiedProductIds;
 
     @Column(nullable = true)
     @Size(max = 255)
@@ -135,22 +135,11 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @Type(type = "org.hibernate.type.NumericBooleanType")
     private boolean locked;
 
-
-    public Content(String name, String id, String label, String type, String vendor, String contentUrl,
-        String gpgUrl, String arches) {
-
-        setName(name);
-        setId(id);
-        setLabel(label);
-        setType(type);
-        setVendor(vendor);
-        setContentUrl(contentUrl);
-        setGpgUrl(gpgUrl);
-        setArches(arches);
-    }
-
+    /**
+     * Default constructor
+     */
     public Content() {
-        // Intentionally left empty
+        this.modifiedProductIds = new HashSet<String>();
     }
 
     /**
@@ -160,7 +149,18 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      *  The ID for this content
      */
     public Content(String id) {
+        this();
+
         this.setId(id);
+    }
+
+    public Content(String id, String name, String type, String label, String vendor) {
+        this(id);
+
+        this.setName(name);
+        this.setType(type);
+        this.setLabel(label);
+        this.setVendor(vendor);
     }
 
     /**
@@ -246,9 +246,17 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         return new ContentData(this);
     }
 
-    public static Content createUeberContent(UniqueIdGenerator idGenerator, Owner o, Product p) {
-        return new Content(UEBER_CONTENT_NAME, idGenerator.generateId(), ueberContentLabelForProduct(p),
-            "yum", "Custom", "/" + o.getKey(), "", "");
+    public static Content createUeberContent(UniqueIdGenerator idGenerator, Owner owner, Product product) {
+        Content ueberContent = new Content(idGenerator.generateId());
+        ueberContent.setName(UEBER_CONTENT_NAME);
+        ueberContent.setType("yum");
+        ueberContent.setLabel(ueberContentLabelForProduct(product));
+        ueberContent.setVendor("Custom");
+        ueberContent.setContentUrl("/" + owner.getKey());
+        ueberContent.setGpgUrl("");
+        ueberContent.setArches("");
+
+        return ueberContent;
     }
 
     public static String ueberContentLabelForProduct(Product p) {
@@ -621,7 +629,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     @Override
     public String toString() {
-        return "Content [id: " + getId() + ", label: " + getLabel() + "]";
+        return String.format("ContentData [id: %s, name: %s, label: %s]", this.id, this.name, this.label);
     }
 
     @PrePersist

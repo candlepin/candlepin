@@ -22,6 +22,8 @@ import io.swagger.annotations.ApiModel;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
+import java.io.Serializable;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 
@@ -42,7 +44,9 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @ApiModel(parent = CandlepinDTO.class)
 @XmlRootElement
-public class ProductContentData implements Cloneable {
+public class ProductContentData implements Cloneable, Serializable {
+    public static final long serialVersionUID = 1L;
+
     private ContentData content;
     private Boolean enabled;
 
@@ -148,6 +152,11 @@ public class ProductContentData implements Cloneable {
     public ProductContentData setEnabled(Boolean enabled) {
         this.enabled = enabled;
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("ProductContentData [content: %s, enabled: %s]", this.content, this.enabled);
     }
 
     @Override
