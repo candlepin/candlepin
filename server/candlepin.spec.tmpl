@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.15
+Version: 2.0.16
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,8 @@ fi
 
 #raw
 %changelog
+* Wed Jul 06 2016 Vritant Jain <vrjain@redhat.com> 2.0.16-1
+- Added utility constructors to some of the new DTOs (crog@redhat.com)
 * Thu Jun 30 2016 Vritant Jain <vrjain@redhat.com> 2.0.15-1
 - 1344765: Updated query backing the PoolCurator.findExpiredPools method
   (crog@redhat.com)
