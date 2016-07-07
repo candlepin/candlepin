@@ -29,7 +29,8 @@ package org.candlepin.model;
 public interface ResultProcessor<T> {
 
     /**
-     * Processes a given row of a query. This will likely be called multiple times for a query
+     * Processes a given row of a query. This will likely be called multiple times for a given
+     * query.
      *
      * @param row
      *  The row or result to process

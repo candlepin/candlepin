@@ -34,6 +34,10 @@ public class CandlepinCriteria<T> {
     protected DetachedCriteria criteria;
     protected Session session;
 
+    // TODO:
+    // Add support for stateless sessions (which requires some workarounds because stateless sessions
+    // and sessions don't have a common parent class)
+
     /**
      * Creates a new CandlepinCriteria instance using the specified criteria and session.
      *
@@ -80,6 +84,15 @@ public class CandlepinCriteria<T> {
         return this;
     }
 
+    // TODO:
+    // Add some other utility/passthrough methods as a need arises:
+    //  - setReadOnly
+    //  - setFirstResults
+    //  - setMaxResults
+    //  - setOrder
+    //  - setFetchMode
+    //  - setCacheMode/setCacheable
+
     /**
      * Retreives an executable criteria and configures it to be ready to run the criteria with the
      * configuration set by this criteria instance.
@@ -117,6 +130,215 @@ public class CandlepinCriteria<T> {
     }
 
     /**
+     * Steps through the results of a column of the given query row-by-row, rather than dumping the
+     * entire query result into memory before processing it. This method will always pass the first
+     * column of each row to the processor.
+     *
+     * @param processor
+     *  A ResultProcessor instance to use for processing each result
+     *
+     * @return
+     *  the number of rows processed and sent to the result processor
+     */
+    public int scroll(ResultProcessor<E> processor) {
+        return this.scroll(0, false, processor);
+    }
+
+    /**
+     * Steps through the results of a column of the given query row-by-row, rather than dumping the
+     * entire query result into memory before processing it.
+     *
+     * @param column
+     *  The zero-indexed offset of the column to process
+     *
+     * @param processor
+     *  A ResultProcessor instance to use for processing each result
+     *
+     * @return
+     *  the number of rows processed and sent to the result processor
+     */
+    public int scroll(Criteria query, int column, ResultProcessor<E> processor) {
+        return this.scroll(query, column, false, processor);
+    }
+
+    /**
+     * Steps through the results of a query row-by-row, rather than dumping the entire query result
+     * into memory before processing it.
+     * <p/>
+     * If this method is called with eviction enabled, the result processor must manually persist
+     * and flush each object that is changed, as any unflushed changes will be lost when the object
+     * is evicted.
+     *
+     * @param evict
+     *  Whether or not to auto-evict queried objects after they've been processed
+     *
+     * @param processor
+     *  A ResultProcessor instance to use for processing each result
+     *
+     * @return
+     *  the number of rows processed and sent to the result processor
+     */
+    @Transactional
+    @SuppressWarnings("unchecked")
+    public int scroll(int column, boolean evict, ResultProcessor<E> processor) {
+        if (processor == null) {
+            throw new IllegalArgumentException("processor is null");
+        }
+
+        Criteria executable = this.getExecutableCriteria();
+
+        // We always override the cache mode here to ensure we don't evict things that may be in
+        // cache from another request.
+        if (evict) {
+            executable.setCacheMode(CacheMode.GET);
+        }
+
+        ScrollableResults cursor = executable.scroll(ScrollMode.FORWARD_ONLY);
+        int count = 0;
+
+        try {
+            boolean cont = true;
+
+            if (evict) {
+                Session session = this.currentSession();
+
+                while (cont && cursor.next()) {
+                    E result = (E) cursor.get(column);
+
+                    cont = processor.process(result);
+                    session.evict(result);
+
+                    ++count;
+                }
+            }
+            else {
+                while (cont && cursor.next()) {
+                    cont = processor.process((E) cursor.get(column));
+                    ++count;
+                }
+            }
+        }
+        finally {
+            cursor.close();
+        }
+
+        return count;
+    }
+
+    /**
+     * Steps through the results of a query row-by-row, rather than dumping the entire query result
+     * into memory before processing it. Unlike the base scroll method, this method sends each row
+     * to the processor without performing any preprocessing or cleanup.
+     *
+     * @param processor
+     *  A ResultProcessor instance to use for processing each row
+     *
+     * @return
+     *  the number of rows processed by the result processor
+     */
+    @Transactional
+    public int scrollByRow(ResultProcessor<Object[]> processor) {
+        if (processor == null) {
+            throw new IllegalArgumentException("processor is null");
+        }
+
+        Criteria executable = this.getExecutableCriteria();
+        ScrollableResults cursor = executable.scroll(ScrollMode.FORWARD_ONLY);
+        int count = 0;
+
+        try {
+            boolean cont = true;
+
+            while (cont && cursor.next()) {
+                cont = processor.process(cursor.get());
+                ++count;
+            }
+        }
+        finally {
+            cursor.close();
+        }
+
+        return count;
+    }
+
+    /**
+     * Executes this criteria and iterates over the first column of the results. Other columns in
+     * each row are silently discarded.
+     * <p></p>
+     * WARNING: This method must be called from within a transaction, and the iterator must
+     * remain within the bounds of that transaction.
+     *
+     * @return
+     *
+     */
+    public ColumnarResultIterator<T> iterate() {
+        return this.iterate(0, false);
+    }
+
+    /**
+     * Executes this criteria and iterates over the specified column of the results. Other columns
+     * in each row are silently discarded.
+     * <p></p>
+     * WARNING: This method must be called from within a transaction, and the iterator must
+     * remain within the bounds of that transaction.
+     *
+     * @param column
+     *  The zero-indexed offset of the column to iterate
+     *
+     * @return
+     *  an iterator over the specified column of the results
+     */
+    public ColumnarResultIterator<T> iterate(int column) {
+        return this.iterate(column, false);
+    }
+
+    /**
+     * Executes this criteria and iterates over the specified column of the results, optionally
+     * automatically evicting returned entities after they are processed. Other columns in each row
+     * are silently discarded.
+     * <p></p>
+     * WARNING: This method must be called from within a transaction, and the iterator must
+     * remain within the bounds of that transaction.
+     *
+     * @param column
+     *  The zero-indexed offset of the column to iterate
+     *
+     * @param evict
+     *  Whether or not to auto-evict queried objects after they've been processed
+     *
+     * @return
+     *  an iterator over the specified column of the results
+     */
+    public ColumnarResultIterator<T> iterate(int column, boolean evict) {
+        Criteria executable = this.getExecutableCriteria();
+
+        // We always override the cache mode here to ensure we don't evict things that may be in
+        // cache from another request.
+        if (evict) {
+            executable.setCacheMode(CacheMode.GET);
+        }
+
+        ScrollableResults cursor = executable.scroll(ScrollMode.FORWARD_ONLY);
+        return new ColumnarResultIterator<T>(this.session, cursor, column, evict);
+    }
+
+    /**
+     * Executes this criteria and iterates over the rows of results.
+     * <p></p>
+     * WARNING: This method must be called from within a transaction, and the iterator must
+     * remain within the bounds of that transaction.
+     *
+     * @return
+     *  an iterator over the rows in the query results
+     */
+    public ResultIterator iterateByRow() {
+        Criteria executable = this.getExecutableCriteria();
+
+        ScrollableResults cursor = executable.scroll(ScrollMode.FORWARD_ONLY);
+        return new ResultIterator(cursor);
+    }
+
+    /**
      * Executes this criteria and returns a single, unique entity. If no entities could be found,
      * this method returns null. If more than one entity is found, a runtime exception will be
      * thrown.
@@ -124,27 +346,10 @@ public class CandlepinCriteria<T> {
      * @return
      *  a single entity, or null if no entities were found
      */
+    @SuppressWarnings("unchecked")
     public T uniqueResult() {
         Criteria executable = this.getExecutableCriteria();
         return (T) executable.uniqueResult();
     }
-
-    // TODO:
-    // Add support for stateless sessions (which requires some workarounds because stateless sessions
-    // and sessions don't have a common parent class)
-
-    // TODO:
-    // Add some other utility/passthrough methods as a need arises:
-    //  - setReadOnly
-    //  - setFirstResults
-    //  - setMaxResults
-    //  - setOrder
-    //  - setFetchMode
-    //  - setCacheMode/setCacheable
-
-    // TODO:
-    // Add the methods here from the cursor PR:
-    //  - scroll
-    //  - iterate
 
 }

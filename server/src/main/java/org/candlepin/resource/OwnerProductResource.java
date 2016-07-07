@@ -228,8 +228,6 @@ public class OwnerProductResource {
         Owner owner = this.getOwnerByKey(ownerKey);
         Product product = this.fetchProduct(owner, productId);
 
-        log.debug("RETURNING PRODUCT WITH CONTENT: {}", product.getProductContent());
-
         return product.toDTO();
     }
 
@@ -263,8 +261,6 @@ public class OwnerProductResource {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Product entity = productManager.createProduct(product, owner);
-
-        log.debug("PRODUCT CREATED: {}", entity);
 
         return entity.toDTO();
     }

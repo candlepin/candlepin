@@ -194,10 +194,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @SuppressWarnings("unchecked")
     private List<E> loadPageData(Criteria c, PageRequest pageRequest) {
         c.addOrder(createPagingOrder(pageRequest));
+
         if (pageRequest.isPaging()) {
             c.setFirstResult((pageRequest.getPage() - 1) * pageRequest.getPerPage());
             c.setMaxResults(pageRequest.getPerPage());
         }
+
         return c.list();
     }
 
@@ -208,6 +210,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         switch (order) {
             case ASCENDING:
                 return Order.asc(sortBy);
+
             //DESCENDING
             default:
                 return Order.desc(sortBy);
@@ -832,7 +835,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      *  the number of rows processed by the result processor
      */
     @Transactional
-    protected int rawScroll(Criteria query, ResultProcessor<Object[]> processor) {
+    protected int scrollByRow(Criteria query, ResultProcessor<Object[]> processor) {
         if (query == null) {
             throw new IllegalArgumentException("query is null");
         }
@@ -874,7 +877,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      *  the number of rows processed by the result processor
      */
     @Transactional
-    protected int rawScroll(Query query, ResultProcessor<Object[]> processor) {
+    protected int scrollByRow(Query query, ResultProcessor<Object[]> processor) {
         if (query == null) {
             throw new IllegalArgumentException("query is null");
         }
@@ -910,7 +913,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @param query
      *  The query through which to scroll
      */
-    protected ResultIterator<E> iterate(Criteria query) {
+    protected ColumnarResultIterator<E> iterate(Criteria query) {
         return this.iterate(query, 0, false);
     }
 
@@ -926,7 +929,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @param column
      *  The zero-indexed offset of the column to process
      */
-    protected ResultIterator<E> iterate(Criteria query, int column) {
+    protected ColumnarResultIterator<E> iterate(Criteria query, int column) {
         return this.iterate(query, column, false);
     }
 
@@ -945,7 +948,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @param evict
      *  Whether or not to auto-evict queried objects after they've been processed
      */
-    protected ResultIterator<E> iterate(Criteria query, int column, boolean evict) {
+    protected ColumnarResultIterator<E> iterate(Criteria query, int column, boolean evict) {
         if (query == null) {
             throw new IllegalArgumentException("query is null");
         }
@@ -955,9 +958,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
 
         ScrollableResults cursor = query.scroll(ScrollMode.FORWARD_ONLY);
-        return new ResultIterator<E>(this.currentSession(), cursor, column, evict);
+        return new ColumnarResultIterator<E>(this.currentSession(), cursor, column, evict);
     }
-
 
     /**
      * Returns an iterator over the results of the given query.
@@ -968,7 +970,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @param query
      *  The query through which to scroll
      */
-    protected ResultIterator<E> iterate(Query query) {
+    protected ColumnarResultIterator<E> iterate(Query query) {
         return this.iterate(query, 0, false);
     }
 
@@ -984,7 +986,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @param column
      *  The zero-indexed offset of the column to process
      */
-    protected ResultIterator<E> iterate(Query query, int column) {
+    protected ColumnarResultIterator<E> iterate(Query query, int column) {
         return this.iterate(query, column, false);
     }
 
@@ -1003,7 +1005,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @param evict
      *  Whether or not to auto-evict queried objects after they've been processed
      */
-    protected ResultIterator<E> iterate(Query query, int column, boolean evict) {
+    protected ColumnarResultIterator<E> iterate(Query query, int column, boolean evict) {
         if (query == null) {
             throw new IllegalArgumentException("query is null");
         }
@@ -1013,7 +1015,43 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
 
         ScrollableResults cursor = query.scroll(ScrollMode.FORWARD_ONLY);
-        return new ResultIterator<E>(this.currentSession(), cursor, column, evict);
+        return new ColumnarResultIterator<E>(this.currentSession(), cursor, column, evict);
+    }
+
+    /**
+     * Returns an iterator over rows of the results of the given query.
+     * <p/>
+     * WARNING: This method must be called from within a transaction, and the iterator must
+     * remain within the bounds of that transaction.
+     *
+     * @param query
+     *  The query through which to scroll
+     */
+    protected ResultIterator iterateByRow(Criteria query) {
+        if (query == null) {
+            throw new IllegalArgumentException("query is null");
+        }
+
+        ScrollableResults cursor = query.scroll(ScrollMode.FORWARD_ONLY);
+        return new ResultIterator(cursor);
+    }
+
+    /**
+     * Returns an iterator over rows of the results of the given query.
+     * <p/>
+     * WARNING: This method must be called from within a transaction, and the iterator must
+     * remain within the bounds of that transaction.
+     *
+     * @param query
+     *  The query through which to scroll
+     */
+    protected ResultIterator iterateByRow(Query query) {
+        if (query == null) {
+            throw new IllegalArgumentException("query is null");
+        }
+
+        ScrollableResults cursor = query.scroll(ScrollMode.FORWARD_ONLY);
+        return new ResultIterator(cursor);
     }
 
     /**
@@ -1072,6 +1110,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                 query.setParameter("ids", block);
                 result.addAll((List<E>) query.getResultList());
             }
+
             //In some situations, even after locking the entity we
             //got stale in the entity e.g. Pool.consumed
             //This refresh reloads the entity after the lock has
