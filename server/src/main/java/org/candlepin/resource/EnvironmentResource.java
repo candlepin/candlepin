@@ -214,7 +214,7 @@ public class EnvironmentResource {
 
         Environment env = lookupEnvironment(envId);
 
-        Set<String> contentIds = new HashSet<String>();
+
         // Make sure this content has not already been promoted within this environment
         // Impl note:
         // We have to do this in a separate loop or we'll end up with an undefined state, should
@@ -237,8 +237,10 @@ public class EnvironmentResource {
             }
         }
 
+        Set<String> contentIds = new HashSet<String>();
+
         try {
-            batchCreate(contentToPromote, env, contentIds);
+            contentIds = batchCreate(contentToPromote, env);
         }
         catch (PersistenceException pe) {
             if (rdbmsExceptionTranslator.isConstraintViolationDuplicateEntry(pe)) {
@@ -334,11 +336,14 @@ public class EnvironmentResource {
      * To make promotion transactional
      * @param contentToPromote
      * @param env
-     * @param contentIds
+     * @return contentIds Ids of the promoted content
      */
     @Transactional
-    public void batchCreate(List<org.candlepin.model.dto.EnvironmentContent> contentToPromote,
-        Environment env, Set<String> contentIds) {
+    public Set<String>  batchCreate(List<org.candlepin.model.dto.EnvironmentContent> contentToPromote,
+        Environment env) {
+
+        Set<String> contentIds = new HashSet<String>();
+
         for (org.candlepin.model.dto.EnvironmentContent promoteMe : contentToPromote) {
             // Make sure the content exists:
             EnvironmentContent envcontent = new EnvironmentContent();
@@ -351,6 +356,8 @@ public class EnvironmentResource {
             env.getEnvironmentContent().add(envcontent);
             contentIds.add(promoteMe.getContentId());
         }
+
+        return contentIds;
     }
 
     private Environment lookupEnvironment(String envId) {
