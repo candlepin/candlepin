@@ -56,14 +56,15 @@ import javax.inject.Inject;
 public class OwnerProductResourceTest extends DatabaseTestFixture {
 
     @Inject protected ProductManager productManager;
+    @Inject protected IterableStreamingOutputFactory isoFactory;
 
     private OwnerProductResource ownerProductResource;
 
     @Before
     public void setup() {
-        this.ownerProductResource = new OwnerProductResource(this.config, this.i18n, this.ownerCurator,
-            this.ownerContentCurator, this.ownerProductCurator, this.productCertificateCurator,
-            this.productCurator, this.productManager
+        this.ownerProductResource = new OwnerProductResource(this.config, this.i18n, this.isoFactory,
+            this.ownerCurator, this.ownerContentCurator, this.ownerProductCurator,
+            this.productCertificateCurator, this.productCurator, this.productManager
         );
     }
 

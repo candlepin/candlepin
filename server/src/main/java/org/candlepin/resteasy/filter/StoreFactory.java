@@ -220,7 +220,7 @@ public class StoreFactory {
 
         @Override
         public List<Product> lookup(Collection<String> keys) {
-            return productCurator.listAllByUuids(keys);
+            return productCurator.listAllByUuids(keys).list();
         }
 
         @Override

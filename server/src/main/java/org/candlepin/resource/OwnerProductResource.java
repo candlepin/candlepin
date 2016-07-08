@@ -209,8 +209,8 @@ public class OwnerProductResource {
         Owner owner = this.getOwnerByKey(ownerKey);
 
         ResultIterator<Product> iterator = productIds != null && !productIds.isEmpty() ?
-            this.productCurator.iterateAllByIds(owner, productIds) :
-            this.productCurator.iterateByOwner(owner);
+            this.ownerProductCurator.getProductsByIds(owner, productIds).iterate() :
+            this.ownerProductCurator.getProductsByOwner(owner).iterate();
 
         return Response.ok(this.isoFactory.create(iterator)).build();
     }

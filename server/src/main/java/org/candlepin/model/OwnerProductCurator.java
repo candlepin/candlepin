@@ -18,6 +18,7 @@ import com.google.inject.persist.Transactional;
 
 import org.hibernate.Session;
 import org.hibernate.Criteria;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
@@ -61,52 +62,49 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .uniqueResult();
     }
 
-    public Collection<Owner> getOwnersByProduct(Product product) {
+    public CandlepinCriteria<Owner> getOwnersByProduct(Product product) {
         return this.getOwnersByProduct(product.getId());
     }
 
-    @Transactional
-    public Collection<Owner> getOwnersByProduct(String productId) {
-        return (List<Owner>) this.createSecureCriteria()
+    public CandlepinCriteria<Owner> getOwnersByProduct(String productId) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .createAlias("product", "product")
             .setProjection(Projections.property("owner"))
-            .add(Restrictions.eq("product.id", productId))
-            .list();
+            .add(Restrictions.eq("product.id", productId));
+
+        return new StdCandlepinCriteria<Owner>(criteria, this.currentSession());
     }
 
-    public Collection<Product> getProductsByOwner(Owner owner) {
+    public CandlepinCriteria<Product> getProductsByOwner(Owner owner) {
         return this.getProductsByOwner(owner.getId());
     }
 
-    @Transactional
-    public Collection<Product> getProductsByOwner(String ownerId) {
-        return (List<Product>) this.createSecureCriteria()
+    public CandlepinCriteria<Product> getProductsByOwner(String ownerId) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .createAlias("owner", "owner")
             .setProjection(Projections.property("product"))
-            .add(Restrictions.eq("owner.id", ownerId))
-            .list();
+            .add(Restrictions.eq("owner.id", ownerId));
+
+        return new StdCandlepinCriteria<Product>(criteria, this.currentSession());
     }
 
-    public Collection<Product> getProductsByIds(Owner owner, Collection<String> productIds) {
+    public CandlepinCriteria<Product> getProductsByIds(Owner owner, Collection<String> productIds) {
         return this.getProductsByIds(owner.getId(), productIds);
     }
 
-    @Transactional
-    public Collection<Product> getProductsByIds(String ownerId, Collection<String> productIds) {
-        Collection<Product> result = null;
-
-        if (productIds != null && productIds.size() > 0) {
-            Criteria criteria = this.createSecureCriteria()
-                .createAlias("owner", "owner")
-                .createAlias("product", "product")
-                .setProjection(Projections.property("product"))
-                .add(Restrictions.eq("owner.id", ownerId))
-                .add(this.unboundedInCriterion("product.id", productIds));
-
-            result = (Collection<Product>) criteria.list();
+    public CandlepinCriteria<Product> getProductsByIds(String ownerId, Collection<String> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return new EmptyCandlepinCriteria<Product>();
         }
 
-        return result != null ? result : new LinkedList<Product>();
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
+            .createAlias("owner", "owner")
+            .createAlias("product", "product")
+            .setProjection(Projections.property("product"))
+            .add(Restrictions.eq("owner.id", ownerId))
+            .add(CPRestrictions.in("product.id", productIds));
+
+        return new StdCandlepinCriteria<Product>(criteria, this.currentSession());
     }
 
     @Transactional

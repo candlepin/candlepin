@@ -17,8 +17,6 @@ package org.candlepin.model;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 
-import java.io.Closeable;
-import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 
@@ -33,7 +31,7 @@ import java.util.NoSuchElementException;
  *
  * @param <T> The element type to be returned by this iterator's "next" method.
  */
-public class ColumnarResultIterator<T> implements Closeable, Iterator<T> {
+public class ColumnarResultIterator<T> implements ResultIterator<T> {
 
     private final Session session;
     private final ScrollableResults cursor;
@@ -42,7 +40,7 @@ public class ColumnarResultIterator<T> implements Closeable, Iterator<T> {
 
     private boolean stateCache;
     private boolean useStateCache;
-    private E toEvict;
+    private T toEvict;
 
     /**
      * Creates a new ColumnarResultIterator to iterate over the results provided by the
@@ -92,6 +90,11 @@ public class ColumnarResultIterator<T> implements Closeable, Iterator<T> {
 
         this.useStateCache = true;
         this.stateCache = this.cursor.next();
+
+        // Automatically close once we've run out of elements
+        if (!this.stateCache) {
+            this.close();
+        }
 
         return this.stateCache;
     }

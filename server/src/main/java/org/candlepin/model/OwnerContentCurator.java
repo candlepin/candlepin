@@ -101,7 +101,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
                 .createAlias("content", "content")
                 .setProjection(Projections.property("content"))
                 .add(Restrictions.eq("owner.id", ownerId))
-                .add(this.unboundedInCriterion("content.id", contentIds));
+                .add(CPRestrictions.in("content.id", contentIds));
 
             result = (Collection<Content>) criteria.list();
         }

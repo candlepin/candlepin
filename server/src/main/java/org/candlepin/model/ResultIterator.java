@@ -23,67 +23,25 @@ import java.util.NoSuchElementException;
 
 
 /**
- * The ResultIterator provides iteration on each row of a ScrollableResults object.
+ * The ResultIterator provides iteration on each row of a ResultSet or ScrollableResults object.
  *
  * ResultIterators should be closed after iteration to close the backing resources. Omitting this
  * step may leave database connections open longer than necessary.
+ *
+ * @param <T>
+ *  The element type to be returned by this iterators's next method
  */
-public class ResultIterator implements Closeable, Iterator<Object[]> {
+public interface ResultIterator<T> extends Closeable, Iterator<T> {
 
-    private final ScrollableResults cursor;
-
-    private boolean stateCache;
-    private boolean useStateCache;
+    public boolean hasNext();
+    public T next();
+    public void remove();
 
     /**
-     * Creates a new ResultIterator to iterate over the results provided by the given
-     * ScrollableResults instance.
-     *
-     * @param cursor
-     *  The ScrollableResults instance over which to iterate
+     * Closes this ResultIterator and frees it's backing database resources.
      */
-    public ResultIterator(ScrollableResults cursor) {
-        if (cursor == null) {
-            throw new IllegalArgumentException("cursor is null");
-        }
+    public void close();
 
-        this.cursor = cursor;
-
-        this.stateCache = false;
-        this.useStateCache = false;
-    }
-
-    @Override
-    public boolean hasNext() {
-        if (this.useStateCache) {
-            return this.stateCache;
-        }
-
-        this.useStateCache = true;
-        this.stateCache = this.cursor.next();
-
-        return this.stateCache;
-    }
-
-    @Override
-    public Object[] next() {
-        if (!this.hasNext()) {
-            throw new NoSuchElementException();
-        }
-
-        this.useStateCache = false;
-        return this.cursor.get();
-    }
-
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException(
-            "The remove operation is not supported on ResultIterator instances."
-        );
-    }
-
-    @Override
-    public void close() {
-        this.cursor.close();
-    }
+    // TODO:
+    // Add support for iterator transformers here as the need arises.
 }

@@ -14,8 +14,13 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.Session;
+import com.google.inject.persist.Transactional;
+
+import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
+import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 
 import java.util.List;
@@ -23,17 +28,64 @@ import java.util.List;
 
 
 /**
- * The CandlepinCriteria interface defines a fluent-style criteria blueprint for configuring and
- * executing criteria, and methods for processing the results.
+ * The StdCandlepinCriteria class represents a criteria and provides fluent-style methods for
+ * configuring how the criteria is to be executed and how the result should be processed.
  *
  * @param <T>
  *  The entity type to be returned by this criteria's result output methods
  */
-public interface CandlepinCriteria<T> extends Iterable<T> {
+public class StdCandlepinCriteria<T> implements CandlepinCriteria<T> {
+
+    protected DetachedCriteria criteria;
+    protected Session session;
 
     // TODO:
     // Add support for stateless sessions (which requires some workarounds because stateless sessions
     // and sessions don't have a common parent class)
+
+    /**
+     * Creates a new StdCandlepinCriteria instance using the specified criteria and session.
+     *
+     * @param criteria
+     *  The detached criteria to execute
+     *
+     * @param session
+     *  The session to use to execute the given criteria
+     *
+     * @throws IllegalArgumentException
+     *  if either criteria or session are null
+     */
+    public StdCandlepinCriteria(DetachedCriteria criteria, Session session) {
+        if (criteria == null) {
+            throw new IllegalArgumentException("criteria is null");
+        }
+
+        if (session == null) {
+            throw new IllegalArgumentException("session is null");
+        }
+
+        this.criteria = criteria;
+        this.session = session;
+    }
+
+    /**
+     * Retreives an executable criteria and configures it to be ready to run the criteria with the
+     * configuration set by this criteria instance.
+     *
+     * @return
+     *  a fully configured, executable criteria
+     */
+    protected Criteria getExecutableCriteria() {
+        Criteria executable = this.criteria.getExecutableCriteria(this.session);
+
+        // TODO:
+        // Apply pending changes to the executable criteria:
+        //  - read only
+        //  - first/max results, order
+        //  - fetch and cache mode
+
+        return executable;
+    }
 
     /**
      * Sets the session to be used for executing this criteria
@@ -47,7 +99,15 @@ public interface CandlepinCriteria<T> extends Iterable<T> {
      * @return
      *  this criteria instance
      */
-    public CandlepinCriteria<T> useSession(Session session);
+    @Override
+    public CandlepinCriteria<T> useSession(Session session) {
+        if (session == null) {
+            throw new IllegalArgumentException("session is null");
+        }
+
+        this.session = session;
+        return this;
+    }
 
     // TODO:
     // Add some other utility/passthrough methods as a need arises:
@@ -69,7 +129,12 @@ public interface CandlepinCriteria<T> extends Iterable<T> {
      * @return
      *  a list containing the results of executing this criteria
      */
-    public List<T> list();
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<T> list() {
+        Criteria executable = this.getExecutableCriteria();
+        return (List<T>) executable.list();
+    }
 
     /**
      * Steps through the results of a column of the given query row-by-row, rather than dumping the
@@ -82,7 +147,10 @@ public interface CandlepinCriteria<T> extends Iterable<T> {
      * @return
      *  the number of rows processed and sent to the result processor
      */
-    public int scroll(ResultProcessor<T> processor);
+    @Override
+    public int scroll(ResultProcessor<T> processor) {
+        return this.scroll(0, false, processor);
+    }
 
     /**
      * Steps through the results of a column of the given query row-by-row, rather than dumping the
@@ -97,7 +165,10 @@ public interface CandlepinCriteria<T> extends Iterable<T> {
      * @return
      *  the number of rows processed and sent to the result processor
      */
-    public int scroll(int column, ResultProcessor<T> processor);
+    @Override
+    public int scroll(int column, ResultProcessor<T> processor) {
+        return this.scroll(column, false, processor);
+    }
 
     /**
      * Steps through the results of a query row-by-row, rather than dumping the entire query result
@@ -116,7 +187,51 @@ public interface CandlepinCriteria<T> extends Iterable<T> {
      * @return
      *  the number of rows processed and sent to the result processor
      */
-    public int scroll(int column, boolean evict, ResultProcessor<T> processor);
+    @Override
+    @Transactional
+    @SuppressWarnings("unchecked")
+    public int scroll(int column, boolean evict, ResultProcessor<T> processor) {
+        if (processor == null) {
+            throw new IllegalArgumentException("processor is null");
+        }
+
+        Criteria executable = this.getExecutableCriteria();
+
+        // We always override the cache mode here to ensure we don't evict things that may be in
+        // cache from another request.
+        if (evict) {
+            executable.setCacheMode(CacheMode.GET);
+        }
+
+        ScrollableResults cursor = executable.scroll(ScrollMode.FORWARD_ONLY);
+        int count = 0;
+
+        try {
+            boolean cont = true;
+
+            if (evict) {
+                while (cont && cursor.next()) {
+                    T result = (T) cursor.get(column);
+
+                    cont = processor.process(result);
+                    this.session.evict(result);
+
+                    ++count;
+                }
+            }
+            else {
+                while (cont && cursor.next()) {
+                    cont = processor.process((T) cursor.get(column));
+                    ++count;
+                }
+            }
+        }
+        finally {
+            cursor.close();
+        }
+
+        return count;
+    }
 
     /**
      * Steps through the results of a query row-by-row, rather than dumping the entire query result
@@ -129,7 +244,31 @@ public interface CandlepinCriteria<T> extends Iterable<T> {
      * @return
      *  the number of rows processed by the result processor
      */
-    public int scrollByRow(ResultProcessor<Object[]> processor);
+    @Override
+    @Transactional
+    public int scrollByRow(ResultProcessor<Object[]> processor) {
+        if (processor == null) {
+            throw new IllegalArgumentException("processor is null");
+        }
+
+        Criteria executable = this.getExecutableCriteria();
+        ScrollableResults cursor = executable.scroll(ScrollMode.FORWARD_ONLY);
+        int count = 0;
+
+        try {
+            boolean cont = true;
+
+            while (cont && cursor.next()) {
+                cont = processor.process(cursor.get());
+                ++count;
+            }
+        }
+        finally {
+            cursor.close();
+        }
+
+        return count;
+    }
 
     /**
      * Executes this criteria and iterates over the first column of the results. Other columns in
@@ -141,7 +280,10 @@ public interface CandlepinCriteria<T> extends Iterable<T> {
      * @return
      *  an iterator over the first column of the results
      */
-    public ResultIterator<T> iterate();
+    @Override
+    public ResultIterator<T> iterate() {
+        return this.iterate(0, false);
+    }
 
     /**
      * Executes this criteria and iterates over the first column of the results. Other columns in
@@ -154,7 +296,10 @@ public interface CandlepinCriteria<T> extends Iterable<T> {
      * @return
      *  an iterator over the first column of the results
      */
-    public ResultIterator<T> iterator();
+    @Override
+    public ResultIterator<T> iterator() {
+        return this.iterate(0, false);
+    }
 
     /**
      * Executes this criteria and iterates over the specified column of the results. Other columns
@@ -169,7 +314,10 @@ public interface CandlepinCriteria<T> extends Iterable<T> {
      * @return
      *  an iterator over the specified column of the results
      */
-    public ResultIterator<T> iterate(int column);
+    @Override
+    public ResultIterator<T> iterate(int column) {
+        return this.iterate(column, false);
+    }
 
     /**
      * Executes this criteria and iterates over the specified column of the results, optionally
@@ -188,7 +336,19 @@ public interface CandlepinCriteria<T> extends Iterable<T> {
      * @return
      *  an iterator over the specified column of the results
      */
-    public ResultIterator<T> iterate(int column, boolean evict);
+    @Override
+    public ResultIterator<T> iterate(int column, boolean evict) {
+        Criteria executable = this.getExecutableCriteria();
+
+        // We always override the cache mode here to ensure we don't evict things that may be in
+        // cache from another request.
+        if (evict) {
+            executable.setCacheMode(CacheMode.GET);
+        }
+
+        ScrollableResults cursor = executable.scroll(ScrollMode.FORWARD_ONLY);
+        return new ColumnarResultIterator<T>(this.session, cursor, column, evict);
+    }
 
     /**
      * Executes this criteria and iterates over the rows of results.
@@ -199,7 +359,13 @@ public interface CandlepinCriteria<T> extends Iterable<T> {
      * @return
      *  an iterator over the rows in the query results
      */
-    public ResultIterator<Object[]> iterateByRow();
+    @Override
+    public ResultIterator<Object[]> iterateByRow() {
+        Criteria executable = this.getExecutableCriteria();
+
+        ScrollableResults cursor = executable.scroll(ScrollMode.FORWARD_ONLY);
+        return new RowResultIterator(cursor);
+    }
 
     /**
      * Executes this criteria and returns a single, unique entity. If no entities could be found,
@@ -209,6 +375,11 @@ public interface CandlepinCriteria<T> extends Iterable<T> {
      * @return
      *  a single entity, or null if no entities were found
      */
-    public T uniqueResult();
+    @Override
+    @SuppressWarnings("unchecked")
+    public T uniqueResult() {
+        Criteria executable = this.getExecutableCriteria();
+        return (T) executable.uniqueResult();
+    }
 
 }

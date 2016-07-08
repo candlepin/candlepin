@@ -84,10 +84,10 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .uniqueResult();
     }
 
-    public List<Product> listAllByUuids(Collection<? extends Serializable> uuids) {
-        return this.listByCriteria(
-            this.createSecureCriteria().add(Restrictions.in("uuid", uuids))
-        );
+    public CandlepinCriteria<Product> listAllByUuids(Collection<? extends Serializable> uuids) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria().add(CPRestrictions.in("uuid", uuids));
+
+        return new StdCandlepinCriteria<Product>(criteria, this.currentSession());
     }
 
     /**
@@ -113,7 +113,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                 Restrictions.eq("entityVersion", hashcode)
             ));
 
-        return new CandlepinCriteria<Product>(criteria, this.currentSession());
+        return new StdCandlepinCriteria<Product>(criteria, this.currentSession());
     }
 
     // TODO:
@@ -249,12 +249,12 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Product> getProductsWithContent(Owner owner, Collection<String> contentIds) {
+    public CandlepinCriteria<Product> getProductsWithContent(Owner owner, Collection<String> contentIds) {
         if (owner == null || contentIds == null || contentIds.isEmpty()) {
-            return new LinkedList<Product>();
+            return new EmptyCandlepinCriteria<Product>();
         }
 
-        return this.createSecureCriteria(OwnerProduct.class, null)
+        DetachedCriteria criteria = this.createSecureDetachedCriteria(OwnerProduct.class, null)
             .createAlias("product", "product")
             .createAlias("product.productContent", "pcontent")
             .createAlias("pcontent.content", "content")
@@ -262,22 +262,24 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .add(Restrictions.eq("owner.id", owner.getId()))
             .add(Restrictions.in("content.id", contentIds))
             .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
-            .setProjection(Projections.property("product"))
-            .list();
+            .setProjection(Projections.property("product"));
+
+        return new StdCandlepinCriteria<Product>(criteria, this.currentSession());
     }
 
     @SuppressWarnings("unchecked")
-    public List<Product> getProductsWithContent(Collection<String> contentUuids) {
+    public CandlepinCriteria<Product> getProductsWithContent(Collection<String> contentUuids) {
         if (contentUuids == null || contentUuids.isEmpty()) {
-            return new LinkedList<Product>();
+            return new EmptyCandlepinCriteria<Product>();
         }
 
-        return this.createSecureCriteria()
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .createAlias("productContent", "pcontent")
             .createAlias("pcontent.content", "content")
             .add(Restrictions.in("content.uuid", contentUuids))
-            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
+            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
             // .setProjection(Projections.id())
-            .list();
+
+        return new StdCandlepinCriteria<Product>(criteria, this.currentSession());
     }
 }

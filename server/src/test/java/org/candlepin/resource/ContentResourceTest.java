@@ -20,6 +20,7 @@ import static org.mockito.Mockito.*;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.CandlepinCriteria;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;
@@ -143,14 +144,16 @@ public class ContentResourceTest {
         Owner owner = mock(Owner.class);
         Product product = mock(Product.class);
         Content content = mock(Content.class);
+        CandlepinCriteria ccmock = mock(CandlepinCriteria.class);
 
         when(product.getId()).thenReturn(productId);
         when(content.getId()).thenReturn(contentId);
+        when(ccmock.list()).thenReturn(Arrays.asList(product));
 
         when(cc.find(any(String.class))).thenReturn(content);
         when(cc.merge(any(Content.class))).thenReturn(content);
         when(productCurator.getProductsWithContent(eq(owner), eq(Arrays.asList(contentId))))
-            .thenReturn(Arrays.asList(product));
+            .thenReturn(ccmock);
 
         cr.updateContent(contentId, content);
 
