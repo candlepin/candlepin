@@ -5,7 +5,7 @@ MAINTAINER Chris Rog <crog@redhat.com>
 
 # Add internal RHEL repo:
 ADD rhel.repo /etc/yum.repos.d/
-RUN rpm -ivh http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-6.noarch.rpm
+RUN rpm -ivh http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-7.noarch.rpm
 
 # Postgresql binary is needed for some cpsetup commands, even though we
 # do not run a server in this container:
