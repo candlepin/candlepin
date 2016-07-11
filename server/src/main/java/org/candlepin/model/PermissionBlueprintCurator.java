@@ -14,6 +14,9 @@
  */
 package org.candlepin.model;
 
+import com.google.inject.Inject;
+
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.List;
@@ -21,15 +24,18 @@ import java.util.List;
 /**
  * PermissionBlueprintCurator
  */
-public class PermissionBlueprintCurator extends
-    AbstractHibernateCurator<PermissionBlueprint> {
+public class PermissionBlueprintCurator extends AbstractHibernateCurator<PermissionBlueprint> {
+
+    @Inject private CandlepinQueryFactory cpQueryFactory;
 
     public PermissionBlueprintCurator() {
         super(PermissionBlueprint.class);
     }
 
-    public List<PermissionBlueprint> findByOwner(Owner owner) {
-        return currentSession().createCriteria(PermissionBlueprint.class)
-            .add(Restrictions.eq("owner", owner)).list();
+    public CandlepinQuery<PermissionBlueprint> findByOwner(Owner owner) {
+        DetachedCriteria criteria = DetachedCriteria.forClass(PermissionBlueprint.class)
+            .add(Restrictions.eq("owner", owner));
+
+        return this.cpQueryFactory.<PermissionBlueprint>buildCandlepinQuery(this.currentSession(), criteria);
     }
 }

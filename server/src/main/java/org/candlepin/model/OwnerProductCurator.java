@@ -62,39 +62,39 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .uniqueResult();
     }
 
-    public CandlepinCriteria<Owner> getOwnersByProduct(Product product) {
+    public CandlepinQuery<Owner> getOwnersByProduct(Product product) {
         return this.getOwnersByProduct(product.getId());
     }
 
-    public CandlepinCriteria<Owner> getOwnersByProduct(String productId) {
+    public CandlepinQuery<Owner> getOwnersByProduct(String productId) {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .createAlias("product", "product")
             .setProjection(Projections.property("owner"))
             .add(Restrictions.eq("product.id", productId));
 
-        return new StdCandlepinCriteria<Owner>(criteria, this.currentSession());
+        return this.cpQueryFactory.<Owner>buildCandlepinQuery(this.currentSession(), criteria);
     }
 
-    public CandlepinCriteria<Product> getProductsByOwner(Owner owner) {
+    public CandlepinQuery<Product> getProductsByOwner(Owner owner) {
         return this.getProductsByOwner(owner.getId());
     }
 
-    public CandlepinCriteria<Product> getProductsByOwner(String ownerId) {
+    public CandlepinQuery<Product> getProductsByOwner(String ownerId) {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .createAlias("owner", "owner")
             .setProjection(Projections.property("product"))
             .add(Restrictions.eq("owner.id", ownerId));
 
-        return new StdCandlepinCriteria<Product>(criteria, this.currentSession());
+        return this.cpQueryFactory.<Product>buildCandlepinQuery(this.currentSession(), criteria);
     }
 
-    public CandlepinCriteria<Product> getProductsByIds(Owner owner, Collection<String> productIds) {
+    public CandlepinQuery<Product> getProductsByIds(Owner owner, Collection<String> productIds) {
         return this.getProductsByIds(owner.getId(), productIds);
     }
 
-    public CandlepinCriteria<Product> getProductsByIds(String ownerId, Collection<String> productIds) {
+    public CandlepinQuery<Product> getProductsByIds(String ownerId, Collection<String> productIds) {
         if (productIds == null || productIds.isEmpty()) {
-            return new EmptyCandlepinCriteria<Product>();
+            return new EmptyCandlepinQuery<Product>();
         }
 
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
@@ -104,7 +104,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .add(Restrictions.eq("owner.id", ownerId))
             .add(CPRestrictions.in("product.id", productIds));
 
-        return new StdCandlepinCriteria<Product>(criteria, this.currentSession());
+        return this.cpQueryFactory.<Product>buildCandlepinQuery(this.currentSession(), criteria);
     }
 
     @Transactional

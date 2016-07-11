@@ -16,7 +16,9 @@ package org.candlepin.resource;
 
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
+import org.candlepin.model.ResultIterator;
 import org.candlepin.resource.util.ResourceDateParser;
+import org.candlepin.resteasy.IterableStreamingOutputFactory;
 
 import com.google.inject.Inject;
 
@@ -27,6 +29,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -40,10 +43,14 @@ import io.swagger.annotations.ApiResponses;
 @Api("deleted_consumers")
 public class DeletedConsumerResource {
     private DeletedConsumerCurator deletedConsumerCurator;
+    private IterableStreamingOutputFactory isoFactory;
 
     @Inject
-    public DeletedConsumerResource(DeletedConsumerCurator deletedConsumerCurator) {
+    public DeletedConsumerResource(DeletedConsumerCurator deletedConsumerCurator,
+        IterableStreamingOutputFactory isoFactory) {
+
         this.deletedConsumerCurator = deletedConsumerCurator;
+        this.isoFactory = isoFactory;
     }
 
     @ApiOperation(
@@ -53,13 +60,11 @@ public class DeletedConsumerResource {
     @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<DeletedConsumer> listByDate(@QueryParam("date") String dateStr) {
-        if (dateStr != null) {
-            return deletedConsumerCurator.findByDate(
-                    ResourceDateParser.parseDateString(dateStr));
-        }
-        else {
-            return deletedConsumerCurator.listAll();
-        }
+    public Response listByDate(@QueryParam("date") String dateStr) {
+        ResultIterator<DeletedConsumer> iterator = dateStr != null ?
+            this.deletedConsumerCurator.findByDate(ResourceDateParser.parseDateString(dateStr)).iterate() :
+            this.deletedConsumerCurator.listAll().iterate();
+
+        return Response.ok(this.isoFactory.create(iterator)).build();
     }
 }

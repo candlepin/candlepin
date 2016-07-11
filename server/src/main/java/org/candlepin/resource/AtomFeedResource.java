@@ -53,7 +53,7 @@ public class AtomFeedResource {
     @GET
     @Produces({"application/atom+xml", MediaType.APPLICATION_JSON})
     public Feed getFeed() {
-        List<Event> events = eventCurator.listMostRecent(ATOM_FEED_LIMIT);
+        List<Event> events = eventCurator.listMostRecent(ATOM_FEED_LIMIT).list();
         Feed feed = this.adapter.toFeed(events, "/atom");
         feed.setTitle("Event Feed");
         return feed;

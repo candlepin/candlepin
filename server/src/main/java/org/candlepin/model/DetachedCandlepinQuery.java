@@ -28,23 +28,25 @@ import java.util.List;
 
 
 /**
- * The StdCandlepinCriteria class represents a criteria and provides fluent-style methods for
- * configuring how the criteria is to be executed and how the result should be processed.
+ * The DetachedCandlepinQuery class represents a detached criteria and provides fluent-style methodsfor
+ *  configuring how the criteria is to be executed and how the result should be processed.
  *
  * @param <T>
  *  The entity type to be returned by this criteria's result output methods
  */
-public class StdCandlepinCriteria<T> implements CandlepinCriteria<T> {
+public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
 
-    protected DetachedCriteria criteria;
     protected Session session;
+    protected DetachedCriteria criteria;
+
+    protected int limit;
 
     // TODO:
     // Add support for stateless sessions (which requires some workarounds because stateless sessions
     // and sessions don't have a common parent class)
 
     /**
-     * Creates a new StdCandlepinCriteria instance using the specified criteria and session.
+     * Creates a new DetachedCandlepinQuery instance using the specified criteria and session.
      *
      * @param criteria
      *  The detached criteria to execute
@@ -55,17 +57,18 @@ public class StdCandlepinCriteria<T> implements CandlepinCriteria<T> {
      * @throws IllegalArgumentException
      *  if either criteria or session are null
      */
-    public StdCandlepinCriteria(DetachedCriteria criteria, Session session) {
-        if (criteria == null) {
-            throw new IllegalArgumentException("criteria is null");
-        }
-
+    public DetachedCandlepinQuery(Session session, DetachedCriteria criteria) {
         if (session == null) {
             throw new IllegalArgumentException("session is null");
         }
 
-        this.criteria = criteria;
+        if (criteria == null) {
+            throw new IllegalArgumentException("criteria is null");
+        }
+
         this.session = session;
+        this.criteria = criteria;
+        this.limit = -1;
     }
 
     /**
@@ -81,8 +84,12 @@ public class StdCandlepinCriteria<T> implements CandlepinCriteria<T> {
         // TODO:
         // Apply pending changes to the executable criteria:
         //  - read only
-        //  - first/max results, order
+        //  - first results, order
         //  - fetch and cache mode
+
+        if (this.limit > -1) {
+            executable.setMaxResults(this.limit);
+        }
 
         return executable;
     }
@@ -100,7 +107,7 @@ public class StdCandlepinCriteria<T> implements CandlepinCriteria<T> {
      *  this criteria instance
      */
     @Override
-    public CandlepinCriteria<T> useSession(Session session) {
+    public CandlepinQuery<T> useSession(Session session) {
         if (session == null) {
             throw new IllegalArgumentException("session is null");
         }
@@ -109,14 +116,20 @@ public class StdCandlepinCriteria<T> implements CandlepinCriteria<T> {
         return this;
     }
 
-    // TODO:
-    // Add some other utility/passthrough methods as a need arises:
-    //  - setReadOnly
-    //  - setFirstResults
-    //  - setMaxResults
-    //  - setOrder
-    //  - setFetchMode
-    //  - setCacheMode/setCacheable
+    /**
+     * Sets the maximum results to be returned when executing this query.
+     *
+     * @param limit
+     *  The maximum number of results to be returned when executing this query. Negative values
+     *  will disable any previously set limits.
+     *
+     * @return
+     *  this query instance
+     */
+    public CandlepinQuery<T> setMaxResults(int limit) {
+        this.limit = limit;
+        return this;
+    }
 
     /**
      * Executes this criteria and returns the entities as a list. If no entities could be found,

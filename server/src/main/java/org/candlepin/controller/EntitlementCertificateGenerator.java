@@ -299,10 +299,9 @@ public class EntitlementCertificateGenerator {
 
         log.info("Regenerating relevant certificates in environment: {}", environment);
 
-        List<Entitlement> entitlements = this.entitlementCurator.listByEnvironment(environment);
         Set<Entitlement> entsToRegen = new HashSet<Entitlement>();
 
-        entLoop: for (Entitlement entitlement : entitlements) {
+        entLoop: for (Entitlement entitlement : this.entitlementCurator.listByEnvironment(environment)) {
             // Impl note:
             // Since the entitlements came from the DB, we should be safe to traverse the graph as
             // necessary without any sanity checks (so long as our model's restrictions aren't

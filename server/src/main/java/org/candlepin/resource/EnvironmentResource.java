@@ -31,7 +31,9 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.OwnerContentCurator;
+import org.candlepin.model.ResultIterator;
 import org.candlepin.pinsetter.tasks.RegenEnvEntitlementCertsJob;
+import org.candlepin.resteasy.IterableStreamingOutputFactory;
 import org.candlepin.util.RdbmsExceptionTranslator;
 import org.candlepin.util.Util;
 
@@ -63,6 +65,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -77,7 +80,6 @@ import io.swagger.annotations.ApiResponses;
 @Path("/environments")
 @Api("environments")
 public class EnvironmentResource {
-
     private static Logger log = LoggerFactory.getLogger(AdminResource.class);
 
     private EnvironmentCurator envCurator;
@@ -88,12 +90,13 @@ public class EnvironmentResource {
     private ConsumerCurator consumerCurator;
     private OwnerContentCurator ownerContentCurator;
     private RdbmsExceptionTranslator rdbmsExceptionTranslator;
+    private IterableStreamingOutputFactory isoFactory;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
         EnvironmentContentCurator envContentCurator, ConsumerResource consumerResource,
         PoolManager poolManager, ConsumerCurator consumerCurator, OwnerContentCurator ownerContentCurator,
-        RdbmsExceptionTranslator rdbmsExceptionTranslator) {
+        RdbmsExceptionTranslator rdbmsExceptionTranslator, IterableStreamingOutputFactory isoFactory) {
 
         this.envCurator = envCurator;
         this.i18n = i18n;
@@ -103,6 +106,7 @@ public class EnvironmentResource {
         this.consumerCurator = consumerCurator;
         this.ownerContentCurator = ownerContentCurator;
         this.rdbmsExceptionTranslator = rdbmsExceptionTranslator;
+        this.isoFactory = isoFactory;
     }
 
     @ApiOperation(notes = "Retrieves a single Environment", value = "getEnv")
@@ -151,8 +155,9 @@ public class EnvironmentResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "environments")
-    public List<Environment> getEnvironments() {
-        return envCurator.listAll();
+    public Response getEnvironments() {
+        ResultIterator<Environment> iterator = this.envCurator.listAll().iterate();
+        return Response.ok(this.isoFactory.create(iterator)).build();
     }
 
     /**

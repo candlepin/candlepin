@@ -14,16 +14,22 @@
  */
 package org.candlepin.model;
 
+import com.google.inject.Inject;
+
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.List;
 
+
+
 /**
  * Curator for {@link ImportRecord}s.
  */
 public class ImportRecordCurator extends AbstractHibernateCurator<ImportRecord> {
+
+    @Inject private CandlepinQueryFactory cpQueryFactory;
 
     public ImportRecordCurator() {
         super(ImportRecord.class);

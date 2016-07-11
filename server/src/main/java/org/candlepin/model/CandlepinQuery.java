@@ -23,37 +23,48 @@ import java.util.List;
 
 
 /**
- * The CandlepinCriteria interface defines a fluent-style criteria blueprint for configuring and
+ * The CandlepinQuery interface defines a fluent-style criteria blueprint for configuring and
  * executing criteria, and methods for processing the results.
  *
  * @param <T>
  *  The entity type to be returned by this criteria's result output methods
  */
-public interface CandlepinCriteria<T> extends Iterable<T> {
+public interface CandlepinQuery<T> extends Iterable<T> {
 
     // TODO:
     // Add support for stateless sessions (which requires some workarounds because stateless sessions
     // and sessions don't have a common parent class)
 
     /**
-     * Sets the session to be used for executing this criteria
+     * Sets the session to be used for executing this query
      *
      * @param session
-     *  The session to use for executing this criteria
+     *  The session to use for executing this query
      *
      * @throws IllegalArgumentException
      *  if session is null
      *
      * @return
-     *  this criteria instance
+     *  this query instance
      */
-    public CandlepinCriteria<T> useSession(Session session);
+    public CandlepinQuery<T> useSession(Session session);
+
+    /**
+     * Sets the maximum results to be returned when executing this query.
+     *
+     * @param limit
+     *  The maximum number of results to be returned when executing this query. Negative values
+     *  will disable any previously set limits.
+     *
+     * @return
+     *  this query instance
+     */
+    public CandlepinQuery<T> setMaxResults(int limit);
 
     // TODO:
     // Add some other utility/passthrough methods as a need arises:
     //  - setReadOnly
     //  - setFirstResults
-    //  - setMaxResults
     //  - setOrder
     //  - setFetchMode
     //  - setCacheMode/setCacheable

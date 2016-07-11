@@ -25,14 +25,14 @@ import java.util.NoSuchElementException;
 
 
 /**
- * The EmptyCandlepinCriteria class represents a CandlepinCriteria that is not backed by an actual
+ * The EmptyCandlepinQuery class represents a CandlepinQuery that is not backed by an actual
  * criteria, and, thus, has no values. This can be used in cases where input validation or state
  * checks determine the query can't be run, but still provide consistent output to the caller.
  *
  * @param <T>
  *  The entity type to be returned by this criteria's result output methods
  */
-public class EmptyCandlepinCriteria<T> implements CandlepinCriteria<T> {
+public class EmptyCandlepinQuery<T> implements CandlepinQuery<T> {
 
     /**
      * Empty version of the ResultIterator class
@@ -60,23 +60,36 @@ public class EmptyCandlepinCriteria<T> implements CandlepinCriteria<T> {
     };
 
     /**
-     * Creates a new EmptyCandlepinCriteria instance.
+     * Creates a new EmptyCandlepinQuery instance.
      */
-    public EmptyCandlepinCriteria() {
+    public EmptyCandlepinQuery() {
         // Intentionally left empty
     }
 
     /**
-     * Returns a reference to this CandlepinCriteria instance.
+     * Returns a reference to this CandlepinQuery instance.
      *
      * @param session
-     *  The session to use for executing this criteria
+     *  The session to use for executing this query
      *
      * @return
-     *  this criteria instance
+     *  this query instance
      */
     @Override
-    public CandlepinCriteria useSession(Session session) {
+    public CandlepinQuery useSession(Session session) {
+        return this;
+    }
+
+    /**
+     * Returns a reference to this CandlepinQuery instance.
+     *
+     * @param limit
+     *  The maximum number of results to be returned when executing this query.
+     *
+     * @return
+     *  this query instance
+     */
+    public CandlepinQuery<T> setMaxResults(int limit) {
         return this;
     }
 

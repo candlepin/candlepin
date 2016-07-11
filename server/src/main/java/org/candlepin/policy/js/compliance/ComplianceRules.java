@@ -173,24 +173,25 @@ public class ComplianceRules {
         }
     }
 
-    public boolean isStackCompliant(Consumer consumer, String stackId,
-        List<Entitlement> entsToConsider) {
+    public boolean isStackCompliant(Consumer consumer, String stackId, List<Entitlement> entsToConsider) {
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("stack_id", stackId);
         args.put("consumer", consumer);
         args.put("entitlements", entsToConsider);
         args.put("log", log, false);
+
         return jsRules.runJsFunction(Boolean.class, "is_stack_compliant", args);
     }
 
     public boolean isEntitlementCompliant(Consumer consumer, Entitlement ent, Date onDate) {
-        List<Entitlement> ents = entCurator.listByConsumerAndDate(consumer, onDate);
+        List<Entitlement> ents = entCurator.listByConsumerAndDate(consumer, onDate).list();
 
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", consumer);
         args.put("entitlement", ent);
         args.put("entitlements", ents);
         args.put("log", log, false);
+
         return jsRules.runJsFunction(Boolean.class, "is_ent_compliant", args);
     }
 

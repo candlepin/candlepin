@@ -1423,10 +1423,11 @@ public class ConsumerResource {
                         "Cannot bind more than {0} pools per request, found: {1}", batchBindLimit,
                         pqMap.keySet().size()));
             }
+
             List<Pool> pools = poolManager.secureFind(pqMap.keySet());
             if (!principal.canAccessAll(pools, SubResource.ENTITLEMENTS, Access.CREATE)) {
                 throw new NotFoundException(i18n.tr("Pools with ids {0} could not be found.",
-                        pqMap.keySet()));
+                    pqMap.keySet()));
             }
         }
 
@@ -1626,8 +1627,7 @@ public class ConsumerResource {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
         if (consumer == null) {
-            throw new NotFoundException(i18n.tr(
-                "Unit with ID ''{0}'' could not be found.", consumerUuid));
+            throw new NotFoundException(i18n.tr("Unit with ID ''{0}'' could not be found.", consumerUuid));
         }
 
         int total = poolManager.revokeAllEntitlements(consumer);
@@ -1717,8 +1717,7 @@ public class ConsumerResource {
     public List<Event> getConsumerEvents(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT,
-            consumer);
+        List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT, consumer).list();
         if (events != null) {
             eventAdapter.addMessageText(events);
         }
@@ -1735,7 +1734,7 @@ public class ConsumerResource {
         String path = String.format("/consumers/%s/atom", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         Feed feed = this.eventAdapter.toFeed(
-            this.eventCurator.listMostRecent(FEED_LIMIT, consumer), path);
+            this.eventCurator.listMostRecent(FEED_LIMIT, consumer).list(), path);
         feed.setTitle("Event feed for consumer " + consumer.getUuid());
         return feed;
     }
@@ -1778,9 +1777,7 @@ public class ConsumerResource {
         if (consumer.getType() == null ||
             !consumer.getType().isManifest()) {
             throw new ForbiddenException(
-                i18n.tr(
-                    "Unit {0} cannot be exported. " +
-                    "A manifest cannot be made for units of type ''{1}''.",
+                i18n.tr("Unit {0} cannot be exported. A manifest cannot be made for units of type ''{1}''.",
                     consumerUuid, consumer.getType().getLabel()));
         }
 
@@ -1795,15 +1792,13 @@ public class ConsumerResource {
         File archive;
         try {
             archive = exporter.getFullExport(consumer, cdnLabel, webAppPrefix, apiUrl);
-            response.addHeader("Content-Disposition", "attachment; filename=" +
-                archive.getName());
+            response.addHeader("Content-Disposition", "attachment; filename=" + archive.getName());
 
             sink.queueEvent(eventFactory.exportCreated(consumer));
             return archive;
         }
         catch (ExportCreationException e) {
-            throw new IseException(i18n.tr("Unable to create export archive"),
-                e);
+            throw new IseException(i18n.tr("Unable to create export archive"), e);
         }
     }
 
@@ -1910,8 +1905,7 @@ public class ConsumerResource {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         if (consumer.getFact("virt.uuid") == null ||
             consumer.getFact("virt.uuid").trim().equals("")) {
-            throw new BadRequestException(i18n.tr(
-                "The system with UUID {0} is not a virtual guest.",
+            throw new BadRequestException(i18n.tr("The system with UUID {0} is not a virtual guest.",
                 consumer.getUuid()));
         }
         return consumerCurator.getHost(consumer.getFact("virt.uuid"), consumer.getOwner());

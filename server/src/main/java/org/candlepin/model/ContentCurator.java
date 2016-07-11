@@ -81,7 +81,7 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
      *  a criteria for fetching content by version
      */
     @SuppressWarnings("checkstyle:indentation")
-    public CandlepinCriteria<Content> getContentByVersion(String contentId, int hashcode) {
+    public CandlepinQuery<Content> getContentByVersion(String contentId, int hashcode) {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .add(Restrictions.eq("id", contentId))
             .add(Restrictions.or(
@@ -89,7 +89,7 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
                 Restrictions.eq("entityVersion", hashcode)
             ));
 
-        return new StdCandlepinCriteria<Content>(criteria, this.currentSession());
+        return this.cpQueryFactory.<Content>buildCandlepinQuery(this.currentSession(), criteria);
     }
 
 

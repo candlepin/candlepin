@@ -22,7 +22,9 @@ import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.ResultIterator;
 import org.candlepin.service.UniqueIdGenerator;
+import org.candlepin.resteasy.IterableStreamingOutputFactory;
 
 import com.google.inject.Inject;
 
@@ -39,15 +41,18 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
+
+
 /**
  * ContentResource
  */
-
 @Path("/content")
 @Api("content")
 public class ContentResource {
@@ -59,11 +64,12 @@ public class ContentResource {
     private PoolManager poolManager;
     private ProductCurator productCurator;
     private OwnerCurator ownerCurator;
+    private IterableStreamingOutputFactory isoFactory;
 
     @Inject
     public ContentResource(ContentCurator contentCurator, I18n i18n, UniqueIdGenerator idGenerator,
         EnvironmentContentCurator envContentCurator, PoolManager poolManager,
-        ProductCurator productCurator, OwnerCurator ownerCurator) {
+        ProductCurator productCurator, OwnerCurator ownerCurator, IterableStreamingOutputFactory isoFactory) {
 
         this.i18n = i18n;
         this.contentCurator = contentCurator;
@@ -72,13 +78,15 @@ public class ContentResource {
         this.poolManager = poolManager;
         this.productCurator = productCurator;
         this.ownerCurator = ownerCurator;
+        this.isoFactory = isoFactory;
     }
 
     @ApiOperation(notes = "Retrieves list of Content", value = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Content> list() {
-        return contentCurator.listAll();
+    public Response list() {
+        ResultIterator<Content> iterator = this.contentCurator.listAll().iterate();
+        return Response.ok(this.isoFactory.create(iterator)).build();
     }
 
     @ApiOperation(notes = "Retrieves a single Content", value = "getContent")

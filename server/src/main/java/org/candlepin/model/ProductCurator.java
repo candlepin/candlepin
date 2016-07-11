@@ -84,10 +84,11 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .uniqueResult();
     }
 
-    public CandlepinCriteria<Product> listAllByUuids(Collection<? extends Serializable> uuids) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria().add(CPRestrictions.in("uuid", uuids));
+    public CandlepinQuery<Product> listAllByUuids(Collection<? extends Serializable> uuids) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
+            .add(CPRestrictions.in("uuid", uuids));
 
-        return new StdCandlepinCriteria<Product>(criteria, this.currentSession());
+        return this.cpQueryFactory.<Product>buildCandlepinQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -105,7 +106,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      *  a criteria for fetching product by version
      */
     @SuppressWarnings("checkstyle:indentation")
-    public CandlepinCriteria<Product> getProductsByVersion(String productId, int hashcode) {
+    public CandlepinQuery<Product> getProductsByVersion(String productId, int hashcode) {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .add(Restrictions.eq("id", productId))
             .add(Restrictions.or(
@@ -113,7 +114,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                 Restrictions.eq("entityVersion", hashcode)
             ));
 
-        return new StdCandlepinCriteria<Product>(criteria, this.currentSession());
+        return this.cpQueryFactory.<Product>buildCandlepinQuery(this.currentSession(), criteria);
     }
 
     // TODO:
@@ -249,9 +250,9 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     @SuppressWarnings("unchecked")
-    public CandlepinCriteria<Product> getProductsWithContent(Owner owner, Collection<String> contentIds) {
+    public CandlepinQuery<Product> getProductsWithContent(Owner owner, Collection<String> contentIds) {
         if (owner == null || contentIds == null || contentIds.isEmpty()) {
-            return new EmptyCandlepinCriteria<Product>();
+            return this.cpQueryFactory.<Product>buildCandlepinQuery();
         }
 
         DetachedCriteria criteria = this.createSecureDetachedCriteria(OwnerProduct.class, null)
@@ -264,13 +265,13 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
             .setProjection(Projections.property("product"));
 
-        return new StdCandlepinCriteria<Product>(criteria, this.currentSession());
+        return this.cpQueryFactory.<Product>buildCandlepinQuery(this.currentSession(), criteria);
     }
 
     @SuppressWarnings("unchecked")
-    public CandlepinCriteria<Product> getProductsWithContent(Collection<String> contentUuids) {
+    public CandlepinQuery<Product> getProductsWithContent(Collection<String> contentUuids) {
         if (contentUuids == null || contentUuids.isEmpty()) {
-            return new EmptyCandlepinCriteria<Product>();
+            return new EmptyCandlepinQuery<Product>();
         }
 
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
@@ -280,6 +281,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
             // .setProjection(Projections.id())
 
-        return new StdCandlepinCriteria<Product>(criteria, this.currentSession());
+        return this.cpQueryFactory.<Product>buildCandlepinQuery(this.currentSession(), criteria);
     }
 }

@@ -72,6 +72,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private DeletedConsumerCurator deletedConsumerCurator;
     @Inject private Configuration config;
+    @Inject private CandlepinQueryFactory cpQueryFactory;
 
     private static final int MAX_FACT_STR_LENGTH = 255;
     private static final int NAME_LENGTH = 250;
@@ -336,9 +337,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     @SuppressWarnings("unchecked")
     @Transactional
-    public List<Consumer> listByOwner(Owner owner) {
-        return createSecureCriteria()
-            .add(Restrictions.eq("owner", owner)).list();
+    public CandlepinQuery<Consumer> listByOwner(Owner owner) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
+            .add(Restrictions.eq("owner", owner));
+
+        return this.cpQueryFactory.<Consumer>buildCandlepinQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -351,8 +354,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @SuppressWarnings("unchecked")
     @Transactional
-    public Page<List<Consumer>> listByUsernameAndType(String userName,
-        List<ConsumerType> types, Owner owner, PageRequest pageRequest) {
+    public Page<List<Consumer>> listByUsernameAndType(String userName, List<ConsumerType> types, Owner owner,
+        PageRequest pageRequest) {
 
         Criteria criteria = createSecureCriteria();
 
@@ -594,7 +597,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public VirtConsumerMap getHostConsumersMap(Owner owner, Iterable<String> hypervisorIds) {
         VirtConsumerMap hypervisorMap = new VirtConsumerMap();
 
-        // TODO: Replace this with cursor bits when they're available!
         for (Consumer consumer : this.getHypervisorsBulk(hypervisorIds, owner.getKey())) {
             hypervisorMap.add(consumer.getHypervisorId().getHypervisorId(), consumer);
         }
@@ -609,18 +611,18 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @SuppressWarnings("unchecked")
     @Transactional
-    public List<Consumer> getHypervisorsBulk(Iterable<String> hypervisorIds, String ownerKey) {
+    public CandlepinQuery<Consumer> getHypervisorsBulk(Iterable<String> hypervisorIds, String ownerKey) {
         if (hypervisorIds == null || !hypervisorIds.iterator().hasNext()) {
-            return new LinkedList<Consumer>();
+            return this.cpQueryFactory.<Consumer>buildCandlepinQuery();
         }
 
-        return this.currentSession()
-            .createCriteria(Consumer.class)
+        DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
             .createAlias("owner", "o")
             .createAlias("hypervisorId", "hvsr")
             .add(Restrictions.eq("o.key", ownerKey))
-            .add(this.getHypervisorIdRestriction(hypervisorIds))
-            .list();
+            .add(this.getHypervisorIdRestriction(hypervisorIds));
+
+        return this.cpQueryFactory.<Consumer>buildCandlepinQuery(this.currentSession(), criteria);
     }
 
     private Criterion getHypervisorIdRestriction(Iterable<String> hypervisorIds) {
@@ -633,13 +635,14 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     @SuppressWarnings("unchecked")
     @Transactional
-    public List<Consumer> getHypervisorsForOwner(String ownerKey) {
-        return createSecureCriteria()
+    public CandlepinQuery<Consumer> getHypervisorsForOwner(String ownerKey) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .createAlias("owner", "o")
             .createAlias("hypervisorId", "hvsr")
             .add(Restrictions.eq("o.key", ownerKey))
-            .add(Restrictions.isNotNull("hvsr.hypervisorId"))
-            .list();
+            .add(Restrictions.isNotNull("hvsr.hypervisorId"));
+
+        return this.cpQueryFactory.<Consumer>buildCandlepinQuery(this.currentSession(), criteria);
     }
 
     public boolean doesConsumerExist(String uuid) {

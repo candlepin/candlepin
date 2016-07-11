@@ -25,8 +25,11 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.ResultIterator;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
+import org.candlepin.resteasy.IterableStreamingOutputFactory;
+import org.candlepin.resteasy.IteratorTransformer;
 
 import com.google.inject.Inject;
 
@@ -50,6 +53,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -71,16 +75,19 @@ public class ProductResource {
     private ProductCertificateCurator productCertCurator;
     private Configuration config;
     private I18n i18n;
+    private IterableStreamingOutputFactory isoFactory;
 
     @Inject
     public ProductResource(ProductCurator productCurator, OwnerCurator ownerCurator,
-        ProductCertificateCurator productCertCurator, Configuration config, I18n i18n) {
+        ProductCertificateCurator productCertCurator, Configuration config, I18n i18n,
+        IterableStreamingOutputFactory isoFactory) {
 
         this.productCurator = productCurator;
         this.productCertCurator = productCertCurator;
         this.ownerCurator = ownerCurator;
         this.config = config;
         this.i18n = i18n;
+        this.isoFactory = isoFactory;
     }
 
     /**
@@ -254,14 +261,15 @@ public class ProductResource {
     @GET
     @Path("/owners")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Owner> getProductOwners(
+    public Response getProductOwners(
         @QueryParam("product") List<String> productUuids) {
 
         if (productUuids.isEmpty()) {
             throw new BadRequestException(i18n.tr("No product IDs specified"));
         }
 
-        return this.ownerCurator.lookupOwnersWithProduct(productUuids);
+        ResultIterator<Owner> iterator = this.ownerCurator.lookupOwnersWithProduct(productUuids).iterate();
+        return Response.ok(this.isoFactory.create(iterator)).build();
     }
 
     @ApiOperation(notes = "Refreshes Pools by Product", value = "refreshPoolsForProduct")
@@ -269,7 +277,7 @@ public class ProductResource {
     @Path("/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
-    public JobDetail[] refreshPoolsForProduct(
+    public Response refreshPoolsForProduct(
         @QueryParam("product") List<String> productUuids,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
@@ -282,13 +290,13 @@ public class ProductResource {
             return null;
         }
 
-        List<Owner> owners = this.ownerCurator.lookupOwnersWithProduct(productUuids);
-        List<JobDetail> jobs = new LinkedList<JobDetail>();
+        ResultIterator<Owner> iterator = this.ownerCurator.lookupOwnersWithProduct(productUuids).iterate();
+        final Boolean lazy = lazyRegen; // Necessary to deal with Java's limitations with closures
 
-        for (Owner owner : owners) {
-            jobs.add(RefreshPoolsJob.forOwner(owner, lazyRegen));
-        }
-
-        return jobs.toArray(new JobDetail[0]);
+        return Response.ok(this.isoFactory.create(iterator, new IteratorTransformer<Owner> () {
+            public Object transform(Owner owner) {
+                return RefreshPoolsJob.forOwner(owner, lazy);
+            }
+        })).build();
     }
 }

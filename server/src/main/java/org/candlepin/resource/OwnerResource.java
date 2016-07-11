@@ -64,6 +64,7 @@ import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolFilterBuilder;
+import org.candlepin.model.ResultIterator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
@@ -77,6 +78,7 @@ import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resource.util.ResourceDateParser;
+import org.candlepin.resteasy.IterableStreamingOutputFactory;
 import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.OwnerServiceAdapter;
@@ -113,6 +115,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -133,12 +136,15 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
+
 
 /**
  * Owner Resource
@@ -178,6 +184,7 @@ public class OwnerResource {
     private ResolverUtil resolverUtil;
     private ProductManager productManager;
     private ContentManager contentManager;
+    private IterableStreamingOutputFactory isoFactory;
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator,
@@ -206,7 +213,8 @@ public class OwnerResource {
         Configuration config,
         ResolverUtil resolverUtil,
         ProductManager productManager,
-        ContentManager contentManager) {
+        ContentManager contentManager,
+        IterableStreamingOutputFactory isoFactory) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -235,6 +243,7 @@ public class OwnerResource {
         this.resolverUtil = resolverUtil;
         this.productManager = productManager;
         this.contentManager = contentManager;
+        this.isoFactory = isoFactory;
     }
 
     /**
@@ -246,21 +255,26 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "owners")
-    @ApiOperation(notes = "Retrieves a list of Owners", value = "List Owners",
-        responseContainer = "owners")
-    public List<Owner> list(@QueryParam("key") String keyFilter) {
+    @ApiOperation(notes = "Retrieves a list of Owners", value = "List Owners", responseContainer = "owners")
+    public Response list(@QueryParam("key") String keyFilter) {
+        Iterator<Owner> iterator;
 
         // For now, assuming key filter is just one key:
         if (keyFilter != null) {
             List<Owner> results = new LinkedList<Owner>();
+
             Owner o = ownerCurator.lookupByKey(keyFilter);
             if (o != null) {
                 results.add(o);
             }
-            return results;
+
+            iterator = results.iterator();
+        }
+        else {
+            iterator = this.ownerCurator.listAll().iterate();
         }
 
-        return ownerCurator.listAll();
+        return Response.ok(this.isoFactory.create(iterator)).build();
     }
 
     /**
@@ -807,7 +821,7 @@ public class OwnerResource {
         @Verify(Owner.class) String ownerKey) {
         Owner o = findOwner(ownerKey);
         String path = String.format("/owners/%s/atom", ownerKey);
-        Feed feed = this.eventAdapter.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT, o), path);
+        Feed feed = this.eventAdapter.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT, o).list(), path);
         feed.setTitle("Event feed for owner " + o.getDisplayName());
         return feed;
     }
@@ -827,10 +841,13 @@ public class OwnerResource {
     public List<Event> getEvents(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner o = findOwner(ownerKey);
-        List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT, o);
+
+        List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT, o).list();
+
         if (events != null) {
             eventAdapter.addMessageText(events);
         }
+
         return events;
     }
 
@@ -1426,13 +1443,15 @@ public class OwnerResource {
     @Path("/{owner_key}/hypervisors")
     @ApiOperation(notes = "Retrieves a list of Hypervisors for an Owner", value = "Get Hypervisors")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public List<Consumer> getHypervisors(
+    public Response getHypervisors(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("hypervisor_id") List<String> hypervisorIds) {
-        if (hypervisorIds == null || hypervisorIds.isEmpty()) {
-            return consumerCurator.getHypervisorsForOwner(ownerKey);
-        }
-        return consumerCurator.getHypervisorsBulk(hypervisorIds, ownerKey);
+
+        ResultIterator<Consumer> iterator = (hypervisorIds == null || hypervisorIds.isEmpty()) ?
+            this.consumerCurator.getHypervisorsForOwner(ownerKey).iterate() :
+            this.consumerCurator.getHypervisorsBulk(hypervisorIds, ownerKey).iterate();
+
+        return Response.ok(this.isoFactory.create(iterator)).build();
     }
 
     private ImportRecord recordImportSuccess(Owner owner, Map data,

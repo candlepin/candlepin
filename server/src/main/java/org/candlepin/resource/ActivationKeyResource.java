@@ -21,11 +21,13 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ResultIterator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.resource.dto.ActivationKeyData;
+import org.candlepin.resteasy.IterableStreamingOutputFactory;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.util.ServiceLevelValidator;
 
@@ -77,11 +79,13 @@ public class ActivationKeyResource {
     private I18n i18n;
     private ServiceLevelValidator serviceLevelValidator;
     private ActivationKeyRules activationKeyRules;
+    private IterableStreamingOutputFactory isoFactory;
 
     @Inject
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator, I18n i18n,
         PoolManager poolManager, ServiceLevelValidator serviceLevelValidator,
-        ActivationKeyRules activationKeyRules, OwnerProductCurator ownerProductCurator) {
+        ActivationKeyRules activationKeyRules, OwnerProductCurator ownerProductCurator,
+        IterableStreamingOutputFactory isoFactory) {
 
         this.activationKeyCurator = activationKeyCurator;
         this.i18n = i18n;
@@ -89,6 +93,7 @@ public class ActivationKeyResource {
         this.serviceLevelValidator = serviceLevelValidator;
         this.activationKeyRules = activationKeyRules;
         this.ownerProductCurator = ownerProductCurator;
+        this.isoFactory = isoFactory;
     }
 
     @ApiOperation(notes = "Retrieves a single Activation Key", value = "Get Activation Key")
@@ -252,27 +257,8 @@ public class ActivationKeyResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response findActivationKey() {
-        // TODO: Replace this with use of a cursor/iterator
-        final List<ActivationKey> keyList = activationKeyCurator.listAll();
-        final ObjectMapper mapper = new JsonProvider(true)
-            .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
-
-        StreamingOutput output = new StreamingOutput() {
-            @Override
-            public void write(OutputStream stream) throws IOException, WebApplicationException {
-                JsonGenerator generator = mapper.getJsonFactory().createGenerator(stream);
-                generator.writeStartArray();
-
-                for (ActivationKey key : keyList) {
-                    mapper.writeValue(generator, new ActivationKeyData(key));
-                }
-
-                generator.writeEndArray();
-                generator.flush();
-            }
-        };
-
-        return Response.ok(output).build();
+        ResultIterator<ActivationKey> iterator = this.activationKeyCurator.listAll().iterate();
+        return Response.ok(this.isoFactory.create(iterator)).build();
     }
 
     @ApiOperation(notes = "Removes an Activation Key", value = "deleteActivationKey")

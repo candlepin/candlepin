@@ -327,9 +327,9 @@ public class PoolRules {
      * @return pool update specifics
      */
     public PoolUpdate updatePoolFromStack(Pool pool, Set<Product> changedProducts) {
-        List<Entitlement> stackedEnts = this.entCurator.findByStackId(
-            pool.getSourceConsumer(), pool.getSourceStackId()
-        );
+        List<Entitlement> stackedEnts = this.entCurator
+            .findByStackId(pool.getSourceConsumer(), pool.getSourceStackId())
+            .list();
 
         return this.updatePoolFromStackedEntitlements(pool, stackedEnts, changedProducts);
     }
@@ -350,13 +350,14 @@ public class PoolRules {
         for (Pool pool : pools) {
             sourceStackIds.add(pool.getSourceStackId());
         }
-        List<Entitlement> stackedEnts = this.entCurator.findByStackIds(consumer, sourceStackIds);
-        for (Entitlement entitlement : stackedEnts) {
+
+        for (Entitlement entitlement : this.entCurator.findByStackIds(consumer, sourceStackIds)) {
             List<Entitlement> ents = entitlementMap.get(entitlement.getPool().getStackId());
             if (ents == null) {
                 ents = new ArrayList<Entitlement>();
                 entitlementMap.put(entitlement.getPool().getStackId(), ents);
             }
+
             ents.add(entitlement);
         }
 

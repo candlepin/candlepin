@@ -14,23 +14,30 @@
  */
 package org.candlepin.model;
 
+import com.google.inject.Inject;
+
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
-import java.util.List;
+
 
 /**
  * RoleCurator
  */
 public class RoleCurator extends AbstractHibernateCurator<Role> {
 
+    @Inject private CandlepinQueryFactory cpQueryFactory;
+
     public RoleCurator() {
         super(Role.class);
     }
 
-    public List<Role> listForOwner(Owner o) {
-        return this.currentSession().createCriteria(Role.class)
+    public CandlepinQuery<Role> listForOwner(Owner o) {
+        DetachedCriteria criteria = DetachedCriteria.forClass(Role.class)
             .createCriteria("permissions")
-            .add(Restrictions.eq("owner", o)).list();
+            .add(Restrictions.eq("owner", o));
+
+        return this.cpQueryFactory.<Role>buildCandlepinQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -39,8 +46,8 @@ public class RoleCurator extends AbstractHibernateCurator<Role> {
      */
     public Role lookupByName(String name) {
         return (Role) currentSession().createCriteria(Role.class)
-        .add(Restrictions.eq("name", name))
-        .uniqueResult();
+            .add(Restrictions.eq("name", name))
+            .uniqueResult();
     }
 
 }

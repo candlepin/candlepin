@@ -66,7 +66,7 @@ public class OwnerManager {
     public void cleanupAndDelete(Owner owner, boolean revokeCerts) {
         log.info("Cleaning up owner: " + owner);
 
-        List<String> ids = ownerCurator.getConsumerUuids(owner.getKey());
+        List<String> ids = ownerCurator.getConsumerUuids(owner.getKey()).list();
         List<Consumer> consumers = consumerCurator.lockAndLoadBatch(ids);
 
         for (Consumer c : consumers) {

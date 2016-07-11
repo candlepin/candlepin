@@ -85,13 +85,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return pool;
     }
 
-    @Override
-    @Transactional
-    public List<Pool> listAll() {
-        List<Pool> pools = super.listAll();
-        return pools;
-    }
-
     /**
      * Returns list of pools owned by the given Owner.
      * @param o Owner to filter

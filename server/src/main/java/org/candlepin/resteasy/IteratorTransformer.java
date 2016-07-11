@@ -34,6 +34,6 @@ public interface IteratorTransformer<T> {
      * @return
      *  the transformed element, or null to skip the value
      */
-    T transform(T element);
+    Object transform(T element);
 
 }

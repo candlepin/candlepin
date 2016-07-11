@@ -102,7 +102,7 @@ public class IterableStreamingOutput<T> implements StreamingOutput {
 
         if (this.transformer != null) {
             while (this.iterator.hasNext()) {
-                T element = this.transformer.transform(this.iterator.next());
+                Object element = this.transformer.transform(this.iterator.next());
 
                 if (element != null) {
                     this.mapper.writeValue(generator, element);

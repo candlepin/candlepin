@@ -61,8 +61,10 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
             JobDataMap map = ctx.getMergedJobDataMap();
             String ownerId = (String) map.get("ownerId");
             Date entitleDate = (Date) map.get("entitle_date");
-            List<String> uuids = ownerCurator.getConsumerUuids(ownerId);
-            for (String uuid : uuids) {
+
+            // TODO:
+            // Make sure this doesn't choke on MySQL, since we're doing queries with the cursor open.
+            for (String uuid : ownerCurator.getConsumerUuids(ownerId)) {
                 // Do not send in product IDs.  CandlepinPoolManager will take care
                 // of looking up the non or partially compliant products to bind.
                 try {
@@ -72,8 +74,7 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
                 // We want to catch everything and continue.
                 // Perhaps add something to surface errors later
                 catch (Exception e) {
-                    log.debug("Healing failed for UUID " + uuid +
-                        " with message: " + e.getMessage());
+                    log.debug("Healing failed for UUID \"{}\" with message: {}", uuid, e.getMessage());
                 }
             }
         }
@@ -100,6 +101,7 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, ownerId);
         map.put("entitle_date", entitleDate);
+
         JobDetail detail = newJob(HealEntireOrgJob.class)
             .withIdentity("heal_entire_org_" + Util.generateUUID())
             .usingJobData(map)

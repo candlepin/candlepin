@@ -23,7 +23,7 @@ import com.google.inject.Inject;
 
 import org.xnap.commons.i18n.I18n;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -48,7 +48,6 @@ public class EventResource {
     private I18n i18n;
     private EventAdapter eventAdapter;
 
-
     @Inject
     public EventResource(EventCurator eventCurator, I18n i18n, EventAdapter eventAdapter) {
         this.eventCurator = eventCurator;
@@ -60,10 +59,12 @@ public class EventResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Event> listEvents() {
-        List<Event> events = eventCurator.listAll();
+        List<Event> events = eventCurator.listAll().list();
+
         if (events != null) {
             eventAdapter.addMessageText(events);
         }
+
         return events;
     }
 
@@ -74,14 +75,16 @@ public class EventResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Event getEvent(@PathParam("uuid") String uuid) {
         Event toReturn = eventCurator.find(uuid);
+
         if (toReturn != null) {
-            ArrayList<Event> events = new ArrayList<Event>();
+            List<Event> events = new LinkedList<Event>();
+
             events.add(toReturn);
             eventAdapter.addMessageText(events);
+
             return toReturn;
         }
 
-        throw new NotFoundException(i18n.tr(
-            "Event with ID ''{0}'' could not be found.", uuid));
+        throw new NotFoundException(i18n.tr("Event with ID ''{0}'' could not be found.", uuid));
     }
 }

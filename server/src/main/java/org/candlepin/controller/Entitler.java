@@ -21,6 +21,7 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -448,7 +449,7 @@ public class Entitler {
     public int revokeUnmappedGuestEntitlements(Consumer consumer) {
         int total = 0;
 
-        List<Entitlement> unmappedGuestEntitlements;
+        CandlepinQuery<Entitlement> unmappedGuestEntitlements;
 
         if (consumer == null) {
             unmappedGuestEntitlements = entitlementCurator.findByPoolAttribute(
@@ -459,12 +460,15 @@ public class Entitler {
                 consumer, "unmapped_guests_only", "true");
         }
 
+        // TODO:
+        // Make sure this doesn't choke on MySQL, since we're doing queries with the cursor open.
         for (Entitlement e : unmappedGuestEntitlements) {
             if (!e.isValid()) {
                 poolManager.revokeEntitlement(e);
                 total++;
             }
         }
+
         return total;
     }
 

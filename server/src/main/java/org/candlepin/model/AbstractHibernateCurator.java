@@ -71,6 +71,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     // oracle has a limit of 1000
     public static final int IN_OPERATOR_BLOCK_SIZE = 999;
 
+    @Inject protected CandlepinQueryFactory cpQueryFactory;
     @Inject protected Provider<EntityManager> entityManager;
     @Inject protected I18n i18n;
     private final Class<E> entityType;
@@ -134,12 +135,17 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     /**
      * @return all entities for a particular type.
      */
-    public List<E> listAll() {
-        return listByCriteria(createSecureCriteria());
+    public CandlepinQuery<E> listAll() {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria();
+
+        return this.cpQueryFactory.<E>buildCandlepinQuery(this.currentSession(), criteria);
     }
 
-    public List<E> listAllByIds(Collection<? extends Serializable> ids) {
-        return listByCriteria(createSecureCriteria().add(CPRestrictions.in("id", ids)));
+    public CandlepinQuery<E> listAllByIds(Collection<? extends Serializable> ids) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
+            .add(CPRestrictions.in("id", ids));
+
+        return this.cpQueryFactory.<E>buildCandlepinQuery(this.currentSession(), criteria);
     }
 
     @SuppressWarnings("unchecked")
@@ -182,7 +188,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             page.setPageRequest(pageRequest);
         }
         else {
-            List<E> pageData = listAll();
+            List<E> pageData = this.listAll().list();
             page.setMaxRecords(pageData.size());
             page.setPageData(pageData);
         }

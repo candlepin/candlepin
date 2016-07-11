@@ -57,9 +57,10 @@ public class OwnerInfoCurator {
         OwnerInfo info = new OwnerInfo();
         Date now = new Date();
 
-        List<ConsumerType> types = consumerTypeCurator.listAll();
+        // TODO:
+        // Make sure this doesn't choke on MySQL, since we're doing queries with the cursor open.
         HashMap<String, ConsumerType> typeHash = new HashMap<String, ConsumerType>();
-        for (ConsumerType type : types) {
+        for (ConsumerType type : consumerTypeCurator.listAll()) {
             // Store off the type for later use
             typeHash.put(type.getLabel(), type);
 
@@ -85,8 +86,7 @@ public class OwnerInfoCurator {
         for (String family : families) {
             int virtualCount = getProductFamilyCount(owner, now, family, true);
             int totalCount = getProductFamilyCount(owner, now, family, false);
-            info.addToEntitlementsConsumedByFamily(family, totalCount - virtualCount,
-                virtualCount);
+            info.addToEntitlementsConsumedByFamily(family, totalCount - virtualCount, virtualCount);
         }
 
         int virtTotalEntitlements = getProductFamilyCount(owner, now, null, true);

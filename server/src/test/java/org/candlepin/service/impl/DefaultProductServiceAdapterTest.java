@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.CandlepinCriteria;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
@@ -74,7 +74,7 @@ public class DefaultProductServiceAdapterTest {
     public void productsByIds() {
         Owner o = mock(Owner.class);
         List<String> ids = new ArrayList<String>();
-        CandlepinCriteria<Product> ccmock = mock(CandlepinCriteria.class);
+        CandlepinQuery<Product> ccmock = mock(CandlepinQuery.class);
         ResultIterator<Product> iterator = mock(ResultIterator.class);
 
         when(opc.getProductsByIds(any(Owner.class), anyCollection())).thenReturn(ccmock);

@@ -931,6 +931,9 @@ public class CandlepinPoolManager implements PoolManager {
         return pool;
     }
 
+    // TODO:
+    // Remove these methods or update them to properly mirror the curator.
+
     @Override
     public Pool find(String poolId) {
         return this.poolCurator.find(poolId);
@@ -939,8 +942,9 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public List<Pool> secureFind(Collection<String> poolIds) {
         if (CollectionUtils.isNotEmpty(poolIds)) {
-            return this.poolCurator.listAllByIds(poolIds);
+            return this.poolCurator.listAllByIds(poolIds).list();
         }
+
         return new ArrayList<Pool>();
     }
 
@@ -954,6 +958,7 @@ public class CandlepinPoolManager implements PoolManager {
         if (CollectionUtils.isNotEmpty(subscriptionIds)) {
             return this.poolCurator.lookupBySubscriptionIds(subscriptionIds);
         }
+
         return new ArrayList<Pool>();
     }
 

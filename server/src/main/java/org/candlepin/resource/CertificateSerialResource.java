@@ -16,6 +16,8 @@ package org.candlepin.resource;
 
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.ResultIterator;
+import org.candlepin.resteasy.IterableStreamingOutputFactory;
 
 import com.google.inject.Inject;
 
@@ -26,9 +28,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+
+
 
 /**
  * CertificateSerialResource
@@ -38,17 +43,22 @@ import io.swagger.annotations.ApiOperation;
 public class CertificateSerialResource {
 
     private CertificateSerialCurator certificateSerialCurator;
+    private IterableStreamingOutputFactory isoFactory;
 
     @Inject
-    public CertificateSerialResource(CertificateSerialCurator certificateSerialCurator) {
+    public CertificateSerialResource(CertificateSerialCurator certificateSerialCurator,
+        IterableStreamingOutputFactory isoFactory) {
+
         this.certificateSerialCurator = certificateSerialCurator;
+        this.isoFactory = isoFactory;
     }
 
     @ApiOperation(notes = "Retrieves a list of Certificate Serials", value = "getCertificateSerials")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<CertificateSerial> getCertificateSerials() {
-        return this.certificateSerialCurator.listAll();
+    public Response getCertificateSerials() {
+        ResultIterator<CertificateSerial> iterator = this.certificateSerialCurator.listAll().iterate();
+        return Response.ok(this.isoFactory.create(iterator)).build();
     }
 
     @ApiOperation(notes = "Retrieves single Certificate Serial", value = "getCertificateSerial")
