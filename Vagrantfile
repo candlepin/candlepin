@@ -6,9 +6,17 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
  # explicitly mount the code using NFSv4.
  config.vm.synced_folder ".", "/vagrant", type: "nfs", nfs_version: 4, nfs_udp: false
 
+ # Set up the hostmanager plugin to automatically configure host & guest hostnames 
+ if Vagrant.has_plugin?("vagrant-hostmanager")
+   config.hostmanager.enabled = true
+   config.hostmanager.manage_host = true
+   config.hostmanager.manage_guest = true
+   config.hostmanager.include_offline = true
+ end
+ 
  # Create the "candlepin" box
  config.vm.define "dev" do |dev|
-    dev.vm.host_name = "dev.example.com"
+    dev.vm.host_name = "candlepin.example.com"
     # Tomcat remote debug
     config.vm.network "forwarded_port", guest: 8000, host: 8000
     # Rest access for Candlepin

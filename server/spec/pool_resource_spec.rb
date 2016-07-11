@@ -174,11 +174,17 @@ describe 'Pool Resource' do
     @cp_export_file = @cp_export.export_filename
     @import_owner = @cp.create_owner(random_string("test_owner"))
     import_record = @cp.import(@import_owner['key'], @cp_export_file)
-    pool = @cp.list_owner_pools(@import_owner['key'])[0]
-    pool.cdn.should be nil
-    result_cdn = @cp.get_cdn_from_pool(pool['id'])
-    result_cdn.name.should == cdn.name
-    result_cdn.url.should == cdn.url
+    pools = @cp.list_owner_pools(@import_owner['key'])
+    # only master pools have cdns associated with them
+    pools = pools.select do |pool|
+        pool['type'] == 'NORMAL'
+    end
+    pools.each do |pool|
+        pool.cdn.should be nil
+        result_cdn = @cp.get_cdn_from_pool(pool['id'])
+        result_cdn.name.should == cdn.name
+        result_cdn.url.should == cdn.url
+    end
     @cp.delete_owner(@import_owner['key'])
     @cp_export.cleanup
   end

@@ -134,16 +134,12 @@ public class TestUtil {
     }
 
     public static Content createContent(String id, String name) {
-        return new Content(
-            name,
-            id,
-            "test-label",
-            "test-type",
-            "test-vendor",
-            "https://test.url.com",
-            "https://gpg.test.url.com",
-            "x86"
-        );
+        Content content = new Content(id, name, "test-type", "test-label", "test-vendor");
+        content.setContentUrl("https://test.url.com");
+        content.setGpgUrl("https://gpg.test.url.com");
+        content.setArches("x86");
+
+        return content;
     }
 
     public static Content createContent(String id) {

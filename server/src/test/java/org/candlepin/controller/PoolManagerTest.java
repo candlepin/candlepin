@@ -190,9 +190,9 @@ public class PoolManagerTest {
     public void deletePoolsTest() {
         List<Pool> pools = new ArrayList<Pool>();
         pools.add(TestUtil.createPool(TestUtil.createProduct()));
-        doNothing().when(mockPoolCurator).batchDelete(pools);
+        doNothing().when(mockPoolCurator).batchDelete(eq(pools), anySetOf(String.class));
         manager.deletePools(pools);
-        verify(mockPoolCurator).batchDelete(eq(pools));
+        verify(mockPoolCurator).batchDelete(eq(pools), anySetOf(String.class));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -696,7 +696,7 @@ public class PoolManagerTest {
         manager.revokeEntitlements(entsToDelete);
         entsToDelete.add(e3);
         verify(entitlementCurator).batchDelete(eq(entsToDelete));
-        verify(mockPoolCurator).batchDelete(eq(poolsWithSource));
+        verify(mockPoolCurator).batchDelete(eq(poolsWithSource), anySetOf(String.class));
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -845,7 +845,7 @@ public class PoolManagerTest {
 
         List<Entitlement> entsToDelete = Arrays.asList(ent);
         List<Pool> poolsToDelete = Arrays.asList(p);
-        verify(mockPoolCurator).batchDelete(eq(poolsToDelete));
+        verify(mockPoolCurator).batchDelete(eq(poolsToDelete), anySetOf(String.class));
         verify(entitlementCurator).batchDelete(eq(entsToDelete));
     }
 
@@ -899,7 +899,7 @@ public class PoolManagerTest {
         manager.cleanupExpiredPools();
 
         // And the pool should be deleted:
-        verify(mockPoolCurator).batchDelete(pools);
+        verify(mockPoolCurator).batchDelete(eq(pools), anySetOf(String.class));
     }
 
     @Test
@@ -923,7 +923,7 @@ public class PoolManagerTest {
         manager.cleanupExpiredPools();
 
         // And the pool should be deleted:
-        verify(mockPoolCurator).batchDelete(pools);
+        verify(mockPoolCurator).batchDelete(eq(pools), anySetOf(String.class));
         verify(mockSubAdapter, never()).getSubscription(any(String.class));
         verify(mockSubAdapter, never()).deleteSubscription(any(Subscription.class));
     }

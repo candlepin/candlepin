@@ -1599,19 +1599,25 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public void revokeEntitlements(List<Entitlement> entsToRevoke) {
-        revokeEntitlements(entsToRevoke, true);
+        revokeEntitlements(entsToRevoke, null, true);
+    }
+
+    public void revokeEntitlements(List<Entitlement> entsToRevoke, Set<String> alreadyDeletedPools) {
+        revokeEntitlements(entsToRevoke, alreadyDeletedPools, true);
     }
 
     /**
      * Revokes the given set of entitlements.
      *
      * @param entsToRevoke entitlements to revoke
+     * @param alreadyDeletedPools pools to skip deletion as they have already been deleted
      * @param regenCertsAndStatuses if this revocation should also trigger regeneration of certificates
      * and recomputation of statuses. For performance reasons some callers might
      * choose to set this to false.
      */
     @Transactional
-    public void revokeEntitlements(List<Entitlement> entsToRevoke, boolean regenCertsAndStatuses) {
+    public void revokeEntitlements(List<Entitlement> entsToRevoke, Set<String> alreadyDeletedPools,
+            boolean regenCertsAndStatuses) {
         if (log.isDebugEnabled()) {
             log.debug("Starting batch revoke of entitlements: {}", getEntIds(entsToRevoke));
         }
@@ -1674,7 +1680,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         log.info("Starting batch delete of pools");
-        poolCurator.batchDelete(poolsToDelete);
+        poolCurator.batchDelete(poolsToDelete, alreadyDeletedPools);
         log.info("Starting batch delete of entitlements");
         entitlementCurator.batchDelete(entsToRevoke);
         log.info("Starting delete flush");
@@ -1684,7 +1690,7 @@ public class CandlepinPoolManager implements PoolManager {
         Map<Consumer, List<Entitlement>> consumerSortedEntitlements = entitlementCurator
             .getDistinctConsumers(entsToRevoke);
 
-        filterAndUpdateStackingEntitlements(consumerSortedEntitlements);
+        filterAndUpdateStackingEntitlements(consumerSortedEntitlements, alreadyDeletedPools);
 
         // post unbind actions
         for (Entitlement ent : entsToRevoke) {
@@ -1765,10 +1771,11 @@ public class CandlepinPoolManager implements PoolManager {
      * accordingly
      *
      * @param consumerSortedEntitlements Entitlements to be filtered
+     * @param alreadyDeletedPools pools to skip deletion as they have already been deleted
      * @return Entitlements that are stacked
      */
     private void filterAndUpdateStackingEntitlements(
-        Map<Consumer, List<Entitlement>> consumerSortedEntitlements) {
+        Map<Consumer, List<Entitlement>> consumerSortedEntitlements, Set<String> alreadyDeletedPools) {
         Map<Consumer, List<Entitlement>> stackingEntitlements = new HashMap<Consumer, List<Entitlement>>();
 
         for (Consumer consumer : consumerSortedEntitlements.keySet()) {
@@ -1802,7 +1809,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
             List<Pool> subPools = poolCurator.getSubPoolForStackIds(entry.getKey(), stackIds);
             if (CollectionUtils.isNotEmpty(subPools)) {
-                poolRules.updatePoolsFromStack(entry.getKey(), subPools, true);
+                poolRules.updatePoolsFromStack(entry.getKey(), subPools, alreadyDeletedPools, true);
             }
         }
     }
@@ -1823,7 +1830,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Transactional
     public int revokeAllEntitlements(Consumer consumer, boolean regenCertsAndStatuses) {
         List<Entitlement> entsToDelete = entitlementCurator.listByConsumer(consumer);
-        revokeEntitlements(entsToDelete, regenCertsAndStatuses);
+        revokeEntitlements(entsToDelete, null, regenCertsAndStatuses);
         return entsToDelete.size();
     }
 
@@ -1847,10 +1854,19 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    @Transactional
     public void deletePools(List<Pool> pools) {
+        deletePools(pools, null);
+    }
+
+    @Override
+    @Transactional
+    public void deletePools(List<Pool> pools, Set<String> alreadyDeletedPools) {
         if (pools.isEmpty()) {
             return;
+        }
+
+        if (alreadyDeletedPools == null) {
+            alreadyDeletedPools = new HashSet<String>();
         }
 
         if (log.isDebugEnabled()) {
@@ -1868,9 +1884,9 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         if (!pools.isEmpty()) {
-            revokeEntitlements(entitlementsToRevoke);
+            revokeEntitlements(entitlementsToRevoke, alreadyDeletedPools);
             log.debug("Batch deleting pools after successful revocation");
-            poolCurator.batchDelete(pools);
+            poolCurator.batchDelete(pools, alreadyDeletedPools);
         }
 
         for (Pool pool : pools) {
