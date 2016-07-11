@@ -3,7 +3,6 @@
 ### Repositories
 repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin/"
 repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
-repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
 repositories.remote << "http://oauth.googlecode.com/svn/code/maven/"
 repositories.remote << "http://central.maven.org/maven2/"
 
@@ -118,7 +117,7 @@ COMMONS = ['commons-codec:commons-codec:jar:1.4',
 LIQUIBASE = 'org.liquibase:liquibase-core:jar:3.1.0'
 LIQUIBASE_SLF4J = 'com.mattbertolini:liquibase-slf4j:jar:1.2.1'
 
-GETTEXT_COMMONS = 'org.xnap.commons:gettext-commons:jar:0.9.6'
+GETTEXT_COMMONS = 'com.googlecode.gettext-commons:gettext-commons:jar:0.9.8'
 
 BOUNCYCASTLE = 'org.bouncycastle:bcprov-jdk16:jar:1.46'
 
