@@ -340,13 +340,15 @@ describe 'One Sub Pool Per Stack' do
     sub_pool.should_not be_nil
 
     @guest_client.consume_pool(sub_pool['id'], {:quantity => 1})
-    @guest_client.list_entitlements.length.should == 1
+    @guest_client.list_entitlements.length.should == 1 
+
+    # MySQL before 5.6.4 doesn't store fractional seconds on timestamps
+    # and getHost() method in ConsumerCurator (which is what tells us which
+    # host a guest is associated with) sorts results by updated time.
+    sleep 1
 
     # Simulate migration
     @host2_client.update_consumer({:guestIds => [{'guestId' => @guest_uuid}]})
-
-    # Need to wait a moment here for MySQL to catch up
-    sleep 4
 
     # Guest entitlement should now be revoked.
     @guest_client.list_entitlements.length.should == 0

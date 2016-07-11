@@ -171,6 +171,7 @@ public class PoolManagerTest {
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class))).thenReturn(
             dummyComplianceStatus);
 
+        when(mockPoolCurator.exists(any(Pool.class))).thenReturn(true);
         when(consumerCuratorMock.lockAndLoad(any(Consumer.class))).thenAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
@@ -178,6 +179,31 @@ public class PoolManagerTest {
                 return args[0];
             }
         });
+    }
+
+    @Test
+    public void doesntMergeDeletedPools() {
+        reset(mockPoolCurator);
+
+        Map<String, EventBuilder> poolEvents = new HashMap<String, EventBuilder>();
+        List<PoolUpdate> updatedPools = new ArrayList<PoolUpdate>();
+        Pool deletedPool = mock(Pool.class);
+        Pool normalPool = mock(Pool.class);
+        when(mockPoolCurator.exists(deletedPool)).thenReturn(false);
+        when(mockPoolCurator.exists(normalPool)).thenReturn(true);
+
+        PoolUpdate deletedPu = mock(PoolUpdate.class);
+        PoolUpdate normalPu = mock(PoolUpdate.class);
+        when(deletedPu.getPool()).thenReturn(deletedPool);
+        when(normalPu.getPool()).thenReturn(normalPool);
+
+        updatedPools.add(deletedPu);
+        updatedPools.add(normalPu);
+
+        manager.processPoolUpdates(poolEvents, updatedPools);
+
+        verify(mockPoolCurator, never()).merge(deletedPool);
+        verify(mockPoolCurator, times(1)).merge(normalPool);
     }
 
     @Test

@@ -43,6 +43,36 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     @guest_pool = pools.find_all { |i| !i['sourceEntitlement'].nil? }[0]
 
   end
+  
+  it 'should remove excess entitlements' do
+   prod = create_product(nil, nil,{:attributes => {"multi-entitlement" => "yes", "virt_limit" => 1}})
+   sub = @cp.create_subscription(@owner['key'], prod.id, 2)
+   @cp.refresh_pools(@owner['key'])
+   pools = @cp.list_pools({:owner => @owner['id'], :product => prod['id']})
+   #Find the normal pool to entitle
+   pool = pools.select{|i| i['type']=='NORMAL'}[0]
+   pools.size.should == 2
+   @host1_client.consume_pool(pool['id'], {:quantity => 2})
+   pools = @cp.list_pools({:owner => @owner['id'], :product => prod['id']})
+   #New entitlement pool has been created
+   pools.size.should == 3
+ 
+   #Change subscription quantity and the name of the product
+   sub.quantity = 1
+   @cp.update_subscription(sub)
+   @cp.update_product(sub['product'].id, :name=>'newrandomname')
+   
+   #Refresh pools and make sure it succeeds
+   status = @cp.refresh_pools(@owner['key'], true)
+   # The job is being retried several times anyway. We need to sleep it out
+   sleep 15
+   jobstatus = @cp.post(status.statusPath)
+   jobstatus.state.should == 'FINISHED'
+
+   #The entitlement derived pool has been removed by refresh pools
+   pools = @cp.list_pools({:owner => @owner['id'], :product => prod['id']})
+   pools.size.should == 2   
+  end 
 
   it 'should create a virt_only pool for hosts guests' do
     # Get the attribute that indicates which host:
