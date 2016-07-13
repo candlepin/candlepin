@@ -157,6 +157,8 @@ public interface PoolManager {
 
     void regenerateDirtyEntitlements(Iterable<Entitlement> entitlements);
 
+    void regenerateDirtyEntitlements(Consumer consumer);
+
     Entitlement adjustEntitlementQuantity(Consumer consumer, Entitlement entitlement,
         Integer quantity) throws EntitlementRefusedException;
 

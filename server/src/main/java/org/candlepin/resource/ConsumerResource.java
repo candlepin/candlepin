@@ -1221,8 +1221,7 @@ public class ConsumerResource {
 
         log.debug("Getting client certificates for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        poolManager.regenerateDirtyEntitlements(
-            entitlementCurator.listByConsumer(consumer));
+        poolManager.regenerateDirtyEntitlements(consumer);
 
         Set<Long> serialSet = this.extractSerials(serials);
 
@@ -1251,8 +1250,7 @@ public class ConsumerResource {
 
         log.debug("Getting client certificate zip file for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        poolManager.regenerateDirtyEntitlements(
-            entitlementCurator.listByConsumer(consumer));
+        poolManager.regenerateDirtyEntitlements(consumer);
 
         Set<Long> serialSet = this.extractSerials(serials);
         // filtering requires a null set, so make this null if it is
@@ -1314,8 +1312,7 @@ public class ConsumerResource {
 
         log.debug("Getting client certificate serials for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        poolManager.regenerateDirtyEntitlements(
-            entitlementCurator.listByConsumer(consumer));
+        poolManager.regenerateDirtyEntitlements(consumer);
 
         List<CertificateSerialDto> allCerts = new LinkedList<CertificateSerialDto>();
         for (EntitlementCertificate cert : entCertService
@@ -1790,7 +1787,7 @@ public class ConsumerResource {
                 i18n.tr("A CDN with label {0} does not exist on this system.", cdnLabel));
         }
 
-        poolManager.regenerateDirtyEntitlements(entitlementCurator.listByConsumer(consumer));
+        poolManager.regenerateDirtyEntitlements(consumer);
 
         File archive;
         try {

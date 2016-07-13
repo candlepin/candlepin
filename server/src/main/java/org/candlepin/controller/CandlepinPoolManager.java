@@ -1914,6 +1914,14 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
+    public void regenerateDirtyEntitlements(Consumer consumer) {
+        List<Entitlement> ents = entitlementCurator.listDirty(consumer);
+        if (CollectionUtils.isNotEmpty(ents)) {
+            regenerateDirtyEntitlements(ents);
+        }
+    }
+
+    @Override
     public void regenerateDirtyEntitlements(Iterable<Entitlement> entitlements) {
         for (Entitlement entitlement : entitlements) {
             if (entitlement.isDirty()) {
