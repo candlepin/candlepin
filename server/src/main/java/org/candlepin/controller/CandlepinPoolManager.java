@@ -1698,22 +1698,17 @@ public class CandlepinPoolManager implements PoolManager {
             return;
         }
 
-        log.info("Scheduling Compliance status for {} consumers.", consumerSortedEntitlements.size());
+        log.info("Recomputing status for {} consumers.", consumerSortedEntitlements.size());
+        int i = 1;
         for (Consumer consumer : consumerSortedEntitlements.keySet()) {
-            JobDetail detail = ConsumerComplianceJob.scheduleStatusCheck(consumer, null, false, true);
-            detail.getJobDataMap().put(PinsetterJobListener.PRINCIPAL_KEY, new SystemPrincipal());
-
-            log.info("Triggering ConsumerComplianceJob: {} for consumer: {}", detail.getKey(),
-                consumer.getUuid());
-            try {
-                pinsetterKernel.scheduleSingleJob(detail);
+            if (i++ % 1000 == 0) {
+                consumerCurator.flush();
             }
-            catch (PinsetterException e) {
-                log.error("ConsumerComplianceJob schedule failed", e.getMessage());
-            }
+            complianceRules.getStatus(consumer);
         }
+        consumerCurator.flush();
 
-        log.info("All statuses recomputation scheduled.");
+        log.info("All statuses recomputed.");
 
         sendDeletedEvents(entsToRevoke);
     }
