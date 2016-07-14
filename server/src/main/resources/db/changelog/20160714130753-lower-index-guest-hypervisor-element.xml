@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20160714130753-1" author="fnguyen">
+        <comment>Indexes on results of lower() function. There are code paths in
+                 hypervisor checkin that benefit off these
+        </comment>
+        
+        <createIndex indexName="cp_cnsmr_guests_lower_guest_id_idx" tableName="cp_consumer_guests" unique="false">
+            <column name="lower(guest_id)"/>
+        </createIndex>
+
+        <createIndex indexName="cp_cnsmr_hyp_lower_hyp_id_idx" tableName="cp_consumer_hypervisor" unique="false">
+            <column name="lower(hypervisor_id)"/>
+        </createIndex>
+
+        <createIndex indexName="cp_cnsmr_facts_lower_element_idx" tableName="cp_consumer_facts" unique="false">
+            <column name="lower(element)"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
