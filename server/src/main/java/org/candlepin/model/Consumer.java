@@ -22,6 +22,7 @@ import org.candlepin.util.Util;
 import com.fasterxml.jackson.annotation.JsonFilter;
 
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
@@ -180,6 +181,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Transient
     private boolean canActivate;
 
+    @BatchSize(size = 32)
     @OneToMany(mappedBy = "consumer",
         orphanRemoval = true, cascade = { CascadeType.ALL })
     private List<GuestId> guestIds;
