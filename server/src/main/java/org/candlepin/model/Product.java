@@ -128,6 +128,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     private Set<String> dependentProductIds;
 
     @XmlTransient
+    @Column(name = "dependent_products_hash")
+    private Integer dependentProductsHash;
+
+    @XmlTransient
     @Column(name = "entity_version")
     private Integer entityVersion;
 
@@ -1002,7 +1006,13 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             throw new IllegalArgumentException("productId is null");
         }
 
-        return this.dependentProductIds.add(productId);
+        boolean result = this.dependentProductIds.add(productId);
+
+        if (result) {
+            this.dependentProductsHash = null;
+        }
+
+        return result;
     }
 
     /**
@@ -1023,7 +1033,13 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             throw new IllegalArgumentException("productId is null");
         }
 
-        return this.dependentProductIds.remove(productId);
+        boolean result = this.dependentProductIds.remove(productId);
+
+        if (result) {
+            this.dependentProductsHash = null;
+        }
+
+        return result;
     }
 
     /**
@@ -1034,6 +1050,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      */
     public Product clearDependentProductIds() {
         this.dependentProductIds.clear();
+        this.dependentProductsHash = null;
+
         return this;
     }
 
@@ -1049,6 +1067,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      */
     public Product setDependentProductIds(Collection<String> dependentProductIds) {
         this.dependentProductIds.clear();
+        this.dependentProductsHash = null;
 
         if (dependentProductIds != null) {
             for (String pid : dependentProductIds) {
@@ -1127,12 +1146,24 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             .append(this.multiplier)
             .append(this.locked);
 
+        int hash = builder.toHashCode();
+
         // Impl note:
         // Because we handle the collections specially in .equals, we have to do the same special
         // treatment here to ensure our output doesn't give us wonky results when compared to the
         // output of .equals
-        for (ProductAttribute attrib : this.attributes) {
-            builder.append(attrib);
+
+        // We need to be certain that the hash code is calculated in a way that's order
+        // independent and not subject to Hibernate's poor hashCode implementation on proxy
+        // collections. This calculation follows that defined by the Set.hashCode method.
+        int accumulator = 0;
+
+        if (this.attributes.size() > 0) {
+            for (ProductAttribute attrib : this.attributes) {
+                accumulator += (attrib != null ? attrib.hashCode() : 0);
+            }
+
+            hash = 17 * hash + accumulator;
         }
 
         try {
@@ -1141,16 +1172,26 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             // again, doesn't implement .hashCode reliably on the proxy collections. So, we have to
             // manually step through these and add the elements to ensure the hash code is
             // generated properly.
-            if (this.dependentProductIds.size() > 0) {
-                for (String pid : this.dependentProductIds) {
-                    builder.append(pid);
+            if (this.dependentProductsHash == null || this.dependentProductsHash.intValue() == 0) {
+                accumulator = 0;
+
+                if (this.dependentProductIds != null) {
+                    for (String pid : this.dependentProductIds) {
+                        accumulator += (pid != null ? pid.hashCode() : 0);
+                    }
                 }
+
+                this.dependentProductsHash = accumulator;
             }
 
             if (this.productContent.size() > 0) {
+                accumulator = 0;
+
                 for (ProductContent pc : this.productContent) {
-                    builder.append(pc);
+                    accumulator += (pc != null ? pc.hashCode() : 0);
                 }
+
+                hash = 17 * hash + accumulator;
             }
         }
         catch (LazyInitializationException e) {
@@ -1169,7 +1210,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             // to check for now.
         }
 
-        return builder.toHashCode();
+        return hash;
     }
 
     /**
@@ -1252,5 +1293,4 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     public void updateEntityVersion() {
         this.entityVersion = this.hashCode();
     }
-
 }

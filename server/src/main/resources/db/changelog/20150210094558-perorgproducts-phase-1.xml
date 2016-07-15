@@ -29,6 +29,7 @@
             </column>
             <column name="entity_version" type="int"/>
             <column name="locked" type="smallint"/>
+            <column name="dependent_products_hash" type="int"/>
         </createTable>
     </changeSet>
 
@@ -119,6 +120,7 @@
             <column name="arches" type="varchar(255)"/>
             <column name="entity_version" type="int"/>
             <column name="locked" type="smallint"/>
+            <column name="modified_products_hash" type="int"/>
         </createTable>
     </changeSet>
 

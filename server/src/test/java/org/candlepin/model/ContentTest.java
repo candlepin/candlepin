@@ -21,15 +21,24 @@ import static org.junit.Assert.*;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Test;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
+
 
 
 
 /**
  * ContentTest
  */
+@RunWith(JUnitParamsRunner.class)
 public class ContentTest extends DatabaseTestFixture {
 
     @Test
@@ -121,5 +130,95 @@ public class ContentTest extends DatabaseTestFixture {
 
         c1.setLocked(true);
         assertEquals(c1.hashCode(), c2.hashCode());
+    }
+
+    protected Object[][] getValuesForEqualityAndReplication() {
+        return new Object[][] {
+            new Object[] { "Id", "test_value", "alt_value" },
+            new Object[] { "Type", "test_value", "alt_value" },
+            new Object[] { "Label", "test_value", "alt_value" },
+            new Object[] { "Name", "test_value", "alt_value" },
+            new Object[] { "Vendor", "test_value", "alt_value" },
+            new Object[] { "ContentUrl", "test_value", "alt_value" },
+            new Object[] { "RequiredTags", "test_value", "alt_value" },
+            new Object[] { "ReleaseVersion", "test_value", "alt_value" },
+            new Object[] { "GpgUrl", "test_value", "alt_value" },
+            new Object[] { "MetadataExpire", 1234L, 5678L },
+            new Object[] { "ModifiedProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5", "6") },
+            new Object[] { "Arches", "test_value", "alt_value" },
+            new Object[] { "Locked", Boolean.TRUE, Boolean.FALSE }
+        };
+    }
+
+    protected Method[] getAccessorAndMutator(String methodSuffix, Class mutatorInputClass)
+        throws Exception {
+
+        Method accessor = null;
+        Method mutator = null;
+
+        try {
+            accessor = Content.class.getDeclaredMethod("get" + methodSuffix, null);
+        }
+        catch (NoSuchMethodException e) {
+            accessor = Content.class.getDeclaredMethod("is" + methodSuffix, null);
+        }
+
+        try {
+            mutator = Content.class.getDeclaredMethod("set" + methodSuffix, mutatorInputClass);
+        }
+        catch (NoSuchMethodException e) {
+            if (Collection.class.isAssignableFrom(mutatorInputClass)) {
+                mutator = Content.class.getDeclaredMethod("set" + methodSuffix, Collection.class);
+            }
+            else if (Boolean.class.isAssignableFrom(mutatorInputClass)) {
+                mutator = Content.class.getDeclaredMethod("set" + methodSuffix, boolean.class);
+            }
+            else {
+                throw e;
+            }
+        }
+
+        return new Method[] { accessor, mutator };
+    }
+
+    @Test
+    public void testBaseEquality() {
+        Content lhs = new Content();
+        Content rhs = new Content();
+
+        assertFalse(lhs.equals(null));
+        assertTrue(lhs.equals(lhs));
+        assertTrue(rhs.equals(rhs));
+        assertTrue(lhs.equals(rhs));
+        assertTrue(rhs.equals(lhs));
+    }
+
+    @Test
+    @Parameters(method = "getValuesForEqualityAndReplication")
+    public void testEquality(String valueName, Object value1, Object value2) throws Exception {
+        Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
+        Method accessor = methods[0];
+        Method mutator = methods[1];
+
+        Content lhs = new Content();
+        Content rhs = new Content();
+
+        mutator.invoke(lhs, value1);
+        mutator.invoke(rhs, value1);
+
+        assertEquals(accessor.invoke(lhs), accessor.invoke(rhs));
+        assertTrue(lhs.equals(rhs));
+        assertTrue(rhs.equals(lhs));
+        assertTrue(lhs.equals(lhs));
+        assertTrue(rhs.equals(rhs));
+        assertEquals(lhs.hashCode(), rhs.hashCode());
+
+        mutator.invoke(rhs, value2);
+
+        assertNotEquals(accessor.invoke(lhs), accessor.invoke(rhs));
+        assertFalse(lhs.equals(rhs));
+        assertFalse(rhs.equals(lhs));
+        assertTrue(lhs.equals(lhs));
+        assertTrue(rhs.equals(rhs));
     }
 }

@@ -238,6 +238,20 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
 
                 productUuid = this.generateUUID();
 
+                // Precalculate the hash of the dependent product IDs
+                ResultSet dependentProducts = this.executeQuery(
+                    "SELECT pdp.element FROM cp_product_dependent_products pdp WHERE pdp.cp_product_id = ?",
+                    productId
+                );
+
+                int accumulator = 0;
+                while (dependentProducts.next()) {
+                    String pid = dependentProducts.getString(1);
+                    accumulator += (pid != null ? pid.hashCode() : 0);
+                }
+
+                dependentProducts.close();
+
                 productRows.add(new Object[]{
                     productUuid,
                     productInfo.getObject(2),
@@ -245,7 +259,8 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
                     productInfo.getObject(4),
                     productId,
                     productInfo.getObject(5),
-                    0
+                    0,
+                    accumulator
                 });
 
                 // The rest of the product information will be migrated in one large batch operation
@@ -263,7 +278,8 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
         if (productRows.size() > 0) {
             PreparedStatement statement = this.generateBulkInsertStatement(
                 "cp2_products", productRows.size(),
-                "uuid", "created", "updated", "multiplier", "product_id", "name", "locked"
+                "uuid", "created", "updated", "multiplier", "product_id", "name", "locked",
+                "dependent_products_hash"
             );
 
             int index = 0;
@@ -348,6 +364,21 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
 
                 contentUuid = this.generateUUID();
 
+                // Precalculate the hash of the modified product IDs
+                ResultSet modifiedProducts = this.executeQuery(
+                    "SELECT cmp.element FROM cp_content_modified_products cmp WHERE cmp.cp_content_id = ?",
+                    contentId
+                );
+
+                int accumulator = 0;
+                while (modifiedProducts.next()) {
+                    String pid = modifiedProducts.getString(1);
+                    accumulator += (pid != null ? pid.hashCode() : 0);
+                }
+
+                modifiedProducts.close();
+
+
                 // Fetch current row...
                 contentRows.add(new Object[] {
                     contentUuid,
@@ -364,7 +395,8 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
                     contentInfo.getObject(11),
                     contentInfo.getObject(12),
                     contentInfo.getObject(13),
-                    0
+                    0,
+                    accumulator
                 });
 
                 // The rest of the content information will be migrated in one large batch operation
@@ -384,7 +416,7 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
                 "cp2_content", contentRows.size(),
                 "uuid", "content_id", "created", "updated", "contenturl", "gpgurl", "label",
                 "metadataexpire", "name", "releasever", "requiredtags", "type", "vendor", "arches",
-                "locked"
+                "locked", "modified_products_hash"
             );
 
             int index = 0;

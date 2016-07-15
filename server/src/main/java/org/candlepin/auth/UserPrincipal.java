@@ -23,10 +23,13 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+
+
 /**
  *
  */
 public class UserPrincipal extends Principal {
+    private static final long serialVersionUID = 4000009253180011323L;
 
     private String username;
     private boolean admin;

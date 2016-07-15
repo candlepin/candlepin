@@ -59,7 +59,6 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp2_content")
 public class Content extends AbstractHibernateObject implements SharedEntity, Cloneable {
-
     public static final  String UEBER_CONTENT_NAME = "ueber_content";
 
     // Object ID
@@ -121,6 +120,10 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @Column(name = "element")
     @Size(max = 255)
     private Set<String> modifiedProductIds;
+
+    @XmlTransient
+    @Column(name = "modified_products_hash")
+    private Integer modifiedProductsHash;
 
     @Column(nullable = true)
     @Size(max = 255)
@@ -423,7 +426,13 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
             throw new IllegalArgumentException("productId is null");
         }
 
-        return this.modifiedProductIds.add(productId);
+        boolean result = this.modifiedProductIds.add(productId);
+
+        if (result) {
+            this.modifiedProductsHash = null;
+        }
+
+        return result;
     }
 
     /**
@@ -445,7 +454,14 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
             throw new IllegalArgumentException("productId is null");
         }
 
-        return this.modifiedProductIds != null ? this.modifiedProductIds.remove(productId) : false;
+        boolean result = this.modifiedProductIds != null ? this.modifiedProductIds.remove(productId) : false;
+
+        if (result) {
+            this.modifiedProductsHash = null;
+        }
+
+        return result;
+
     }
 
     /**
@@ -461,6 +477,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      */
     public Content setModifiedProductIds(Collection<String> modifiedProductIds) {
         this.modifiedProductIds.clear();
+        this.modifiedProductsHash = null;
 
         if (modifiedProductIds != null) {
             this.modifiedProductIds.addAll(modifiedProductIds);
@@ -540,15 +557,31 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
             .append(this.gpgUrl)
             .append(this.metadataExpire)
             .append(this.arches)
-            .append(this.locked)
-            .append(this.modifiedProductIds);
+            .append(this.locked);
 
-        // Impl note:
-        // Because we handle the collections specially in .equals, we have to do the same special
-        // treatment here to ensure our output doesn't give us wonky results when compared to the
-        // output of .equals
+        int hash = builder.toHashCode();
 
-        return builder.toHashCode();
+        if (this.modifiedProductsHash == null || this.modifiedProductsHash.intValue() == 0) {
+            // Impl note:
+            // We need to be certain that the hash code is calculated in a way that's order
+            // independent and not subject to Hibernate's poor hashCode implementation on proxy
+            // collections. This calculation follows that defined by the Set.hashCode method.
+            int accumulator = 0;
+
+            if (this.modifiedProductIds != null) {
+                for (String pid : this.modifiedProductIds) {
+                    accumulator += (pid != null ? pid.hashCode() : 0);
+                }
+            }
+
+            this.modifiedProductsHash = accumulator;
+        }
+
+        // Add the modified products hash to our result...
+        hash = 17 * hash + this.modifiedProductsHash.intValue();
+
+        // Return
+        return hash;
     }
 
     /**
