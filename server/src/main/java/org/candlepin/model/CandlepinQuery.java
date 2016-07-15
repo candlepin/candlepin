@@ -19,6 +19,7 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.DetachedCriteria;
 
 import java.util.List;
+import java.util.Iterator;
 
 
 
@@ -165,7 +166,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      * @return
      *  an iterator over the first column of the results
      */
-    public ResultIterator<T> iterator();
+    public Iterator<T> iterator();
 
     /**
      * Executes this criteria and iterates over the specified column of the results. Other columns

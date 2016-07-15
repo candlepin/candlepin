@@ -23,6 +23,9 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -38,6 +41,8 @@ import javax.persistence.EntityManager;
  */
 
 public class OwnerInfoCurator {
+    private static Logger log = LoggerFactory.getLogger(OwnerInfoCurator.class);
+
     private Provider<EntityManager> entityManager;
     private ConsumerTypeCurator consumerTypeCurator;
     private ConsumerCurator consumerCurator;
@@ -59,8 +64,10 @@ public class OwnerInfoCurator {
 
         // TODO:
         // Make sure this doesn't choke on MySQL, since we're doing queries with the cursor open.
+
+        List<ConsumerType> types = consumerTypeCurator.listAll().list();
         HashMap<String, ConsumerType> typeHash = new HashMap<String, ConsumerType>();
-        for (ConsumerType type : consumerTypeCurator.listAll()) {
+        for (ConsumerType type : types) {
             // Store off the type for later use
             typeHash.put(type.getLabel(), type);
 
@@ -210,6 +217,7 @@ public class OwnerInfoCurator {
             "and prod.name = 'product_family' " +
             "and p not in (select distinct pa.pool from PoolAttribute pa" +
             "              where pa.name = 'product_family')";
+
         query = currentSession().createQuery(queryStr)
             .setEntity("owner", owner)
             .setParameter("date", date);
@@ -271,15 +279,14 @@ public class OwnerInfoCurator {
         Query query = currentSession().createQuery(queryStr)
             .setEntity("owner", owner)
             .setParameter("date", date);
+
         if (family != null) {
             query.setParameter("family", family);
         }
-        Long res = (Long) query.uniqueResult();
-        if (res == null) {
-            return 0;
-        }
 
-        return res.intValue();
+        Long res = (Long) query.uniqueResult();
+
+        return res != null ? res.intValue() : 0;
     }
 
     protected Session currentSession() {

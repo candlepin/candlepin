@@ -86,7 +86,7 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void byOwnerId() {
-        List<DeletedConsumer> found = dcc.findByOwnerId("10");
+        List<DeletedConsumer> found = dcc.findByOwnerId("10").list();
         assertEquals(2, found.size());
     }
 
@@ -94,7 +94,7 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
     public void byOwner() {
         Owner o = mock(Owner.class);
         when(o.getId()).thenReturn("20");
-        List<DeletedConsumer> found = dcc.findByOwner(o);
+        List<DeletedConsumer> found = dcc.findByOwner(o).list();
         assertEquals(1, found.size());
     }
 
@@ -118,21 +118,21 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void findByDate() throws InterruptedException {
-        assertEquals(2, dcc.findByDate(twoResultsDate).size());
-        assertEquals(1, dcc.findByDate(oneResultDate).size());
+        assertEquals(2, dcc.findByDate(twoResultsDate).list().size());
+        assertEquals(1, dcc.findByDate(oneResultDate).list().size());
         Thread.sleep(2000);
-        assertEquals(0, dcc.findByDate(new Date()).size());
+        assertEquals(0, dcc.findByDate(new Date()).list().size());
     }
 
     @Test
     public void descOrderByDate() {
-        DeletedConsumer newest = dcc.findByDate(twoResultsDate).get(0);
+        DeletedConsumer newest = dcc.findByDate(twoResultsDate).list().get(0);
         assertEquals("klmno", newest.getConsumerUuid());
     }
 
     @Test
     public void descOrderByOwnerId() {
-        DeletedConsumer newest = dcc.findByOwnerId("10").get(0);
+        DeletedConsumer newest = dcc.findByOwnerId("10").list().get(0);
         assertEquals("fghij", newest.getConsumerUuid());
     }
 }

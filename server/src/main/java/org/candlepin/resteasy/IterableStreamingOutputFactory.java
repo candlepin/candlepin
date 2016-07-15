@@ -69,7 +69,9 @@ public class IterableStreamingOutputFactory {
      * @return
      *  a new IterableStreamingOutput instance
      */
-    public <T> IterableStreamingOutput<T> create(Iterable<T> iterable, IteratorTransformer<T> transformer) {
+    public <T> IterableStreamingOutput<T> create(Iterable<T> iterable,
+        IteratorTransformer<T, ?> transformer) {
+
         IterableStreamingOutput<T> iso = new IterableStreamingOutput<T>(this.jsonProvider, iterable);
         iso.setTransformer(transformer);
 
@@ -104,7 +106,9 @@ public class IterableStreamingOutputFactory {
      * @return
      *  a new IterableStreamingOutput instance
      */
-    public <T> IterableStreamingOutput<T> create(Iterator<T> iterator, IteratorTransformer<T> transformer) {
+    public <T> IterableStreamingOutput<T> create(Iterator<T> iterator,
+        IteratorTransformer<T, ?> transformer) {
+
         IterableStreamingOutput<T> iso = new IterableStreamingOutput<T>(this.jsonProvider, iterator);
         iso.setTransformer(transformer);
 

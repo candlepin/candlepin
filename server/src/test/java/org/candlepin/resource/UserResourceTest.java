@@ -32,16 +32,21 @@ import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
 import org.candlepin.model.User;
+import org.candlepin.resteasy.IterableStreamingOutput;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Test;
 
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
+import javax.ws.rs.core.Response;
+
+
 
 /**
  * UserResourceTest
@@ -104,8 +109,12 @@ public class UserResourceTest extends DatabaseTestFixture {
 
         // Requesting the list of owners for this user should assume ALL, and not
         // return owner2:
-        List<Owner> owners = userResource.listUsersOwners(user.getUsername(),
-            userPrincipal);
+        Response response = userResource.listUsersOwners(user.getUsername(), userPrincipal);
+        List<Owner> owners = new LinkedList<Owner>();
+        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
+            owners.add((Owner) entity);
+        }
+
         assertEquals(1, owners.size());
         assertEquals(owner1.getKey(), owners.get(0).getKey());
     }
@@ -129,8 +138,12 @@ public class UserResourceTest extends DatabaseTestFixture {
         perms.add(new UsernameConsumersPermission(user, owner1));
         Principal userPrincipal = new UserPrincipal(user.getUsername(), perms, false);
 
-        List<Owner> owners = userResource.listUsersOwners(user.getUsername(),
-            userPrincipal);
+        Response response = userResource.listUsersOwners(user.getUsername(), userPrincipal);
+        List<Owner> owners = new LinkedList<Owner>();
+        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
+            owners.add((Owner) entity);
+        }
+
         assertEquals(1, owners.size());
         assertEquals(owner1.getKey(), owners.get(0).getKey());
     }

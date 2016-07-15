@@ -265,7 +265,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
             .setProjection(Projections.property("product"));
 
-        return this.cpQueryFactory.<Product>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Product>buildDistinctCandlepinQuery(this.currentSession(), criteria);
     }
 
     @SuppressWarnings("unchecked")
@@ -281,6 +281,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
             // .setProjection(Projections.id())
 
-        return this.cpQueryFactory.<Product>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Product>buildDistinctCandlepinQuery(this.currentSession(), criteria);
     }
 }

@@ -101,7 +101,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
         consumerContentOverrideCurator.create(cco2);
 
         consumerContentOverrideCurator.removeByContentLabel(consumer, "test-content");
-        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll();
+        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll().list();
         assertEquals(ccoList.size(), 0);
     }
 
@@ -115,7 +115,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
         consumerContentOverrideCurator.create(cco2);
 
         consumerContentOverrideCurator.removeByParent(consumer);
-        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll();
+        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll().list();
         assertEquals(ccoList.size(), 0);
     }
 
@@ -128,7 +128,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
             consumer, "test-content1", "name1", "value2");
         consumerContentOverrideCurator.addOrUpdate(consumer, cco2);
 
-        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll();
+        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll().list();
         assertEquals(1, ccoList.size());
         assertEquals("value2", ccoList.get(0).getValue());
     }
@@ -142,7 +142,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
             consumer, "test-content2", "name2", "value2");
         consumerContentOverrideCurator.addOrUpdate(consumer, cco2);
 
-        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll();
+        List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll().list();
         assertEquals(2, ccoList.size());
     }
 

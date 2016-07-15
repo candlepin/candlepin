@@ -293,8 +293,9 @@ public class ProductResource {
         ResultIterator<Owner> iterator = this.ownerCurator.lookupOwnersWithProduct(productUuids).iterate();
         final Boolean lazy = lazyRegen; // Necessary to deal with Java's limitations with closures
 
-        return Response.ok(this.isoFactory.create(iterator, new IteratorTransformer<Owner> () {
-            public Object transform(Owner owner) {
+        return Response.ok(this.isoFactory.create(iterator, new IteratorTransformer<Owner, JobDetail> () {
+            @Override
+            public JobDetail transform(Owner owner) {
                 return RefreshPoolsJob.forOwner(owner, lazy);
             }
         })).build();

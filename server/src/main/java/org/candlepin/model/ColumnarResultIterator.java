@@ -32,7 +32,6 @@ import java.util.NoSuchElementException;
  * @param <T> The element type to be returned by this iterator's "next" method.
  */
 public class ColumnarResultIterator<T> implements ResultIterator<T> {
-
     private final Session session;
     private final ScrollableResults cursor;
     private final int column;

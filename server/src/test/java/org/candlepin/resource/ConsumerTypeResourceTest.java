@@ -19,13 +19,18 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.candlepin.model.ConsumerType;
+import org.candlepin.resteasy.IterableStreamingOutput;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Test;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.ws.rs.core.Response;
+
+
 
 /**
  * ConsumerTypeResourceTest
@@ -48,8 +53,7 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
         assertTrue("The type was not found", this.typeExists(type));
 
         // Find it by ID
-        ConsumerType consumerType2 = consumerTypeResource
-            .getConsumerType(consumerType.getId());
+        ConsumerType consumerType2 = consumerTypeResource.getConsumerType(consumerType.getId());
         assertNotNull("The type was not found by ID", consumerType2);
 
         // Update it
@@ -66,7 +70,13 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
     }
 
     public boolean typeExists(String type) {
-        List<ConsumerType> types = consumerTypeResource.list();
+        Response response = consumerTypeResource.list();
+        List<ConsumerType> types = new LinkedList<ConsumerType>();
+
+        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
+            types.add((ConsumerType) entity);
+        }
+
         boolean found = false;
         for (ConsumerType aType : types) {
             found = type.equals(aType.getLabel());

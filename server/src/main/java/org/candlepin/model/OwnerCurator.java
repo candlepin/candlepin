@@ -88,10 +88,9 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
      */
     public CandlepinQuery<Owner> lookupOwnersByActiveProduct(Collection<String> productIds) {
         // NOTE: only used by superadmin API calls, no permissions filtering needed here.
-        DetachedCriteria poolIdQuery = DetachedCriteria.forClass(Pool.class, "pool");
-        poolIdQuery.createAlias("pool.providedProducts", "providedProducts");
-
-        poolIdQuery.add(CPRestrictions.in("providedProducts.id", productIds))
+        DetachedCriteria poolIdQuery = DetachedCriteria.forClass(Pool.class, "pool")
+            .createAlias("pool.providedProducts", "providedProducts")
+            .add(CPRestrictions.in("providedProducts.id", productIds))
             .setProjection(Property.forName("pool.id"));
 
         DetachedCriteria ownerIdQuery = DetachedCriteria.forClass(Entitlement.class, "e")
@@ -135,7 +134,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
                 CPRestrictions.in("DPProd.id", productIds)
             ));
 
-        return this.cpQueryFactory.<Owner>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Owner>buildDistinctCandlepinQuery(this.currentSession(), criteria);
     }
 
     @SuppressWarnings("unchecked")

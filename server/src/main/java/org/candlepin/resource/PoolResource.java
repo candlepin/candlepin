@@ -79,8 +79,7 @@ public class PoolResource {
 
     @Inject
     public PoolResource(ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
-        I18n i18n, PoolManager poolManager,
-        CalculatedAttributesUtil calculatedAttributesUtil) {
+        I18n i18n, PoolManager poolManager, CalculatedAttributesUtil calculatedAttributesUtil) {
 
         this.consumerCurator = consumerCurator;
         this.ownerCurator = ownerCurator;

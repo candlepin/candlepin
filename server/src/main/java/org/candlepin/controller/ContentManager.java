@@ -304,7 +304,7 @@ public class ContentManager {
         // Get products that currently use this content...
         ResultIterator<Product> affectedProducts = this.productCurator
             .getProductsWithContent(owner, Arrays.asList(updated.getId()))
-            .iterator();
+            .iterate();
 
         updated = this.contentCurator.create(updated);
         updated = this.ownerContentCurator.updateOwnerContentReferences(

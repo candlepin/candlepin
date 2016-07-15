@@ -59,6 +59,8 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Pattern;
 
+
+
 /**
  * CrlFileUtil
  */
@@ -299,7 +301,10 @@ public class CrlFileUtil {
 
     public boolean syncCRLWithDB(File file) throws IOException {
         List<BigInteger> revoke = new LinkedList<BigInteger>();
-        List<CertificateSerial> serials = this.certificateSerialCurator.retrieveTobeCollectedSerials();
+        List<CertificateSerial> serials = this.certificateSerialCurator
+            .retrieveTobeCollectedSerials()
+            .list();
+
         for (CertificateSerial serial : serials) {
             revoke.add(serial.getSerial());
             serial.setCollected(true);

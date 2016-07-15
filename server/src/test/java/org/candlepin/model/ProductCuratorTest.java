@@ -332,7 +332,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         newAttributes.add(a4);
         modified.setAttributes(newAttributes);
 
-        int initialAttrCount = productAttributeCurator.listAll().size();
+        int initialAttrCount = productAttributeCurator.listAll().list().size();
         productCurator.merge(modified);
 
         Product lookedUp = productCurator.find(original.getUuid());
@@ -345,7 +345,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         // TODO: test content merging
 
         // Old attributes should get cleaned up:
-        assertEquals(initialAttrCount, productAttributeCurator.listAll().size());
+        assertEquals(initialAttrCount, productAttributeCurator.listAll().list().size());
     }
 
     @Test

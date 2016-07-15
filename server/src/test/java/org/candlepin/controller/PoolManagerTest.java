@@ -32,6 +32,7 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Branding;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -2120,7 +2121,9 @@ public class PoolManagerTest {
 
         Class<List<String>> listClass = (Class<List<String>>) (Class) ArrayList.class;
         ArgumentCaptor<List<String>> poolsArg = ArgumentCaptor.forClass(listClass);
-        when(mockPoolCurator.listAllByIds(poolsArg.capture())).thenReturn(pools);
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(pools);
+        when(mockPoolCurator.listAllByIds(poolsArg.capture())).thenReturn(cqmock);
         List<Pool> found = manager.secureFind(ids);
         List<String> argument = poolsArg.getValue();
         assertEquals(pools, found);

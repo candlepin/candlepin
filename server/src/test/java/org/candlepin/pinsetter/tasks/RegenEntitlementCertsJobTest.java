@@ -18,6 +18,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 
@@ -50,7 +51,9 @@ public class RegenEntitlementCertsJobTest {
 
         Owner owner = new Owner(ownerId);
 
-        when(oc.listAll()).thenReturn(Arrays.asList(owner));
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.iterator()).thenReturn(Arrays.asList(owner).iterator());
+        when(oc.listAll()).thenReturn(cqmock);
 
         when(jdm.getString(eq(RegenProductEntitlementCertsJob.PROD_ID))).thenReturn(prodId);
         when(jdm.getBoolean(eq(RegenProductEntitlementCertsJob.LAZY_REGEN))).thenReturn(lazyRegen);

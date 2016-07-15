@@ -61,9 +61,9 @@ public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void deleteEnvCleansUpPromotedContent() {
-        assertEquals(1, environmentContentCurator.listAll().size());
+        assertEquals(1, environmentContentCurator.listAll().list().size());
         environmentCurator.delete(e);
-        assertEquals(0, environmentContentCurator.listAll().size());
+        assertEquals(0, environmentContentCurator.listAll().list().size());
     }
 
     @Test(expected = PersistenceException.class)
@@ -74,10 +74,10 @@ public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void delete() {
-        assertEquals(1, environmentContentCurator.listAll().size());
+        assertEquals(1, environmentContentCurator.listAll().list().size());
         e.getEnvironmentContent().remove(envContent); // TODO
         environmentContentCurator.delete(envContent);
-        assertEquals(0, environmentContentCurator.listAll().size());
+        assertEquals(0, environmentContentCurator.listAll().list().size());
     }
 
 

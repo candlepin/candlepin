@@ -59,7 +59,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
         newJobStatus().startTime(new Date())
             .finishTime(Util.tomorrow()).create();
         this.curator.cleanUpOldCompletedJobs(Util.addDaysToDt(2));
-        assertEquals(0, this.curator.listAll().size());
+        assertEquals(0, this.curator.listAll().list().size());
     }
 
     /**
@@ -69,7 +69,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
     public void notCompletedButSelectedByDateCriteriaShouldNotBeDeleted() {
         newJobStatus().finishTime(Util.yesterday()).create();
         this.curator.cleanUpOldCompletedJobs(Util.tomorrow());
-        assertEquals(1, this.curator.listAll().size());
+        assertEquals(1, this.curator.listAll().list().size());
     }
 
     /**
@@ -81,7 +81,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
         newJobStatus().startTime(Util.yesterday()).finishTime(new Date())
             .create();
         this.curator.cleanUpOldCompletedJobs(Util.yesterday());
-        assertEquals(1, this.curator.listAll().size());
+        assertEquals(1, this.curator.listAll().list().size());
     }
 
     /**
@@ -92,7 +92,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
     public void notCompletedAndNotSelectedByDateCriteriaShouldNotBeDeleted() {
         newJobStatus().startTime(Util.yesterday()).create();
         this.curator.cleanUpOldCompletedJobs(Util.tomorrow());
-        assertEquals(1, this.curator.listAll().size());
+        assertEquals(1, this.curator.listAll().list().size());
     }
 
     @Test
@@ -100,16 +100,16 @@ public class JobCuratorTest extends DatabaseTestFixture {
         newJobStatus().startTime(Util.yesterday()).finishTime(null)
             .result("wrong pool").state(JobState.FAILED).create();
         this.curator.cleanupAllOldJobs(new Date());
-        assertEquals(0, this.curator.listAll().size());
+        assertEquals(0, this.curator.listAll().list().size());
     }
 
     @Test
     public void deleteJobNoStatusReturn() {
         newJobStatus().result("Taylor Swift").state(JobState.CANCELED).create();
-        List<JobStatus> statuses = this.curator.listAll();
+        List<JobStatus> statuses = this.curator.listAll().list();
         assertEquals(1, statuses.size());
         this.curator.deleteJobNoStatusReturn(statuses.get(0).getId());
-        assertEquals(0, this.curator.listAll().size());
+        assertEquals(0, this.curator.listAll().list().size());
     }
 
     @Test

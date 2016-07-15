@@ -19,6 +19,7 @@ import com.google.common.collect.Iterables;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -67,6 +68,27 @@ public class CPRestrictions {
         }
 
         return criterion;
+    }
+
+    /**
+     * Apply an "in" constraint to the named property or expression. If the collection of values
+     * exceeds known database limitations on collection sizes, it will be broken up into several
+     * in-clauses connected with or-operators.
+     *
+     * @param expression
+     *  the string expression against which we are searching values
+     *
+     * @param values
+     *  the values being searched for the expression
+     *
+     * @throws IllegalArgumentException
+     *  if values is null or empty
+     *
+     * @return
+     *  a Criterion representing the "in" constraint on the given property or expression
+     */
+    public static Criterion in(String expression, Object[] values) {
+        return in(expression, Arrays.asList(values));
     }
 
 }

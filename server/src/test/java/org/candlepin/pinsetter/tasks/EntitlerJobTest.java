@@ -20,6 +20,7 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.controller.Entitler;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
@@ -189,7 +190,11 @@ public class EntitlerJobTest {
         EntitlerJob job = new EntitlerJob(e, null, pC, i18n);
         Pool p = new Pool();
         p.setId("hello");
-        when(pC.listAllByIds(anyListOf(String.class))).thenReturn(Arrays.asList(p));
+
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.iterator()).thenReturn(Arrays.asList(p).iterator());
+        when(pC.listAllByIds(anyListOf(String.class))).thenReturn(cqmock);
+
         job.execute(ctx);
         ArgumentCaptor<Object> argumentCaptor = ArgumentCaptor.forClass(Object.class);
         verify(ctx).setResult(argumentCaptor.capture());

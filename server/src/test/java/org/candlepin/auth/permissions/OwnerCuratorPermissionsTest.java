@@ -63,7 +63,7 @@ public class OwnerCuratorPermissionsTest extends DatabaseTestFixture {
 
     @Test
     public void testListAllOwnerPermissionFiltering() {
-        List<Owner> results = ownerCurator.listAll();
+        List<Owner> results = ownerCurator.listAll().list();
         assertEquals(2, results.size());
         assertTrue(results.contains(owner1));
         assertTrue(results.contains(owner2));
@@ -72,7 +72,7 @@ public class OwnerCuratorPermissionsTest extends DatabaseTestFixture {
     @Test
     public void testListAllByIdsOwnerPermissionFiltering() {
         List<String> ids = Arrays.asList(owner1.getId(), owner2.getId(), owner3.getId());
-        List<Owner> results = ownerCurator.listAllByIds(ids);
+        List<Owner> results = ownerCurator.listAllByIds(ids).list();
         // Even though we asked for three by ID, we should only get two returned:
         assertEquals(2, results.size());
         assertTrue(results.contains(owner1));

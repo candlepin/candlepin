@@ -69,5 +69,45 @@ public class CPRestrictionsTest {
         assertEquals(expected, ie.toString());
     }
 
+    @Test
+    public void testInAsArray() {
+        List<String> items = new LinkedList<String>();
+        StringBuilder expected = new StringBuilder("taylor in (");
+
+        for (int i = 0; i < AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE * 3; ++i) {
+            items.add(String.valueOf(i));
+
+            if (items.size() % AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE == 0) {
+                expected.append(i).append(") or taylor in (");
+            }
+            else {
+                expected.append(i).append(", ");
+            }
+        }
+        expected.setLength(expected.length() - 15);
+
+        Criterion crit = CPRestrictions.in("taylor", items.toArray());
+        LogicalExpression le = (LogicalExpression) crit;
+        assertEquals("or", le.getOp());
+        assertEquals(expected.toString(), le.toString());
+    }
+
+    @Test
+    public void testInSimpleAsArray() {
+        List<String> items = new LinkedList<String>();
+        String expected = "swift in (";
+        int i = 0;
+
+        for (; i < AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE - 1; i++) {
+            expected += i + ", ";
+            items.add("" + i);
+        }
+
+        expected += i + ")";
+        items.add("" + i);
+        Criterion crit = CPRestrictions.in("swift", items.toArray());
+        InExpression ie = (InExpression) crit;
+        assertEquals(expected, ie.toString());
+    }
 }
 

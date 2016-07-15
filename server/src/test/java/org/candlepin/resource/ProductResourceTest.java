@@ -37,6 +37,8 @@ import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
+import org.candlepin.resteasy.IterableStreamingOutputFactory;
+import org.candlepin.resteasy.IterableStreamingOutput;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -54,6 +56,8 @@ import java.util.Locale;
 import java.util.Set;
 
 import javax.inject.Inject;
+import javax.ws.rs.core.Response;
+
 
 
 /**
@@ -67,6 +71,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     @Inject private ProductCurator productCurator;
     @Inject private Configuration config;
     @Inject private I18n i18n;
+    @Inject private IterableStreamingOutputFactory isoFactory;
 
     private ProductData buildTestProductDTO() {
         ProductData dto = TestUtil.createProductDTO("test_product");
@@ -128,7 +133,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     public void testDeleteProductWithSubscriptions() {
         ProductCurator pc = mock(ProductCurator.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        ProductResource pr = new ProductResource(pc, null, null, config, i18n);
+        ProductResource pr = new ProductResource(pc, null, null, config, i18n, this.isoFactory);
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);
         // when(pc.lookupById(eq(o), eq("10"))).thenReturn(p);
@@ -213,16 +218,32 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Owner owner2 = owners.get(1);
         Owner owner3 = owners.get(2);
 
-        owners = productResource.getProductOwners(Arrays.asList("p1"));
+        Response response = productResource.getProductOwners(Arrays.asList("p1"));
+        owners = new LinkedList<Owner>();
+        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
+            owners.add((Owner) entity);
+        }
         assertEquals(Arrays.asList(owner1, owner2), owners);
 
-        owners = productResource.getProductOwners(Arrays.asList("p1", "p2"));
+        response = productResource.getProductOwners(Arrays.asList("p1", "p2"));
+        owners.clear();
+        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
+            owners.add((Owner) entity);
+        }
         assertEquals(Arrays.asList(owner1, owner2, owner3), owners);
 
-        owners = productResource.getProductOwners(Arrays.asList("p3"));
+        response = productResource.getProductOwners(Arrays.asList("p3"));
+        owners.clear();
+        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
+            owners.add((Owner) entity);
+        }
         assertEquals(Arrays.asList(owner3), owners);
 
-        owners = productResource.getProductOwners(Arrays.asList("nope"));
+        response = productResource.getProductOwners(Arrays.asList("nope"));
+        owners.clear();
+        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
+            owners.add((Owner) entity);
+        }
         assertEquals(0, owners.size());
     }
 
@@ -231,7 +252,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         productResource.getProductOwners(new LinkedList<String>());
     }
 
-    private void verifyRefreshPoolsJobs(JobDetail[] jobs, List<Owner> owners, boolean lazyRegen) {
+    private void verifyRefreshPoolsJobs(List<JobDetail> jobs, List<Owner> owners, boolean lazyRegen) {
         for (JobDetail job : jobs) {
             assertTrue(RefreshPoolsJob.class.isAssignableFrom(job.getJobClass()));
 
@@ -264,7 +285,8 @@ public class ProductResourceTest extends DatabaseTestFixture {
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
         ProductResource productResource = new ProductResource(
-            this.productCurator, this.ownerCurator, this.productCertificateCurator, config, this.i18n
+            this.productCurator, this.ownerCurator, this.productCertificateCurator, config, this.i18n,
+            this.isoFactory
         );
 
         List<Owner> owners = this.setupDBForOwnerProdTests();
@@ -272,26 +294,42 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Owner owner2 = owners.get(1);
         Owner owner3 = owners.get(2);
 
-        JobDetail[] jobs;
+        List<JobDetail> jobs = new LinkedList<JobDetail>();
 
-        jobs = productResource.refreshPoolsForProduct(Arrays.asList("p1"), true);
+        Response response = productResource.refreshPoolsForProduct(Arrays.asList("p1"), true);
+        jobs.clear();
+        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
+            jobs.add((JobDetail) entity);
+        }
         assertNotNull(jobs);
-        assertEquals(2, jobs.length);
+        assertEquals(2, jobs.size());
         this.verifyRefreshPoolsJobs(jobs, Arrays.asList(owner1, owner2), true);
 
-        jobs = productResource.refreshPoolsForProduct(Arrays.asList("p1", "p2"), false);
+        response = productResource.refreshPoolsForProduct(Arrays.asList("p1", "p2"), false);
+        jobs.clear();
+        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
+            jobs.add((JobDetail) entity);
+        }
         assertNotNull(jobs);
-        assertEquals(3, jobs.length);
+        assertEquals(3, jobs.size());
         this.verifyRefreshPoolsJobs(jobs, Arrays.asList(owner1, owner2, owner3), false);
 
-        jobs = productResource.refreshPoolsForProduct(Arrays.asList("p3"), false);
+        response = productResource.refreshPoolsForProduct(Arrays.asList("p3"), false);
+        jobs.clear();
+        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
+            jobs.add((JobDetail) entity);
+        }
         assertNotNull(jobs);
-        assertEquals(1, jobs.length);
+        assertEquals(1, jobs.size());
         this.verifyRefreshPoolsJobs(jobs, Arrays.asList(owner3), false);
 
-        jobs = productResource.refreshPoolsForProduct(Arrays.asList("nope"), false);
+        response = productResource.refreshPoolsForProduct(Arrays.asList("nope"), false);
+        jobs.clear();
+        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
+            jobs.add((JobDetail) entity);
+        }
         assertNotNull(jobs);
-        assertEquals(0, jobs.length);
+        assertEquals(0, jobs.size());
     }
 
     @Test(expected = BadRequestException.class)

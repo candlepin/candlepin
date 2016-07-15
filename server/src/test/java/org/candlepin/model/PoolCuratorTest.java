@@ -435,10 +435,10 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void testProductNameViaFindAll() {
         Product p = this.createProduct("another", "A Great Operating System", owner);
 
-        Pool pool = createPool(owner, p, 25L,
-            TestUtil.createDate(1999, 1, 10), TestUtil.createDate(2099, 1, 9));
+        Pool pool = createPool(owner, p, 25L, TestUtil.createDate(1999, 1, 10),
+            TestUtil.createDate(2099, 1, 9));
         poolCurator.create(pool);
-        pool = poolCurator.listAll().get(0);
+        pool = poolCurator.listAll().list().get(0);
 
         assertEquals("A Great Operating System", pool.getProductName());
     }

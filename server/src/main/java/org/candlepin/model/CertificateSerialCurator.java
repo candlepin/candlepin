@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 
+
 /**
  * CertificateSerialCurator - Interface to request a unique certificate serial number.
  */
@@ -52,19 +53,23 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
      * and put into CRL
      */
     @SuppressWarnings("unchecked")
-    public List<CertificateSerial> retrieveTobeCollectedSerials() {
-        return this.currentSession().createCriteria(CertificateSerial.class)
+    public CandlepinQuery<CertificateSerial> retrieveTobeCollectedSerials() {
+        DetachedCriteria criteria = DetachedCriteria.forClass(CertificateSerial.class)
             .add(getRevokedCriteria())
-            .add(Restrictions.eq("collected", false)).list();
+            .add(Restrictions.eq("collected", false));
+
+        return this.cpQueryFactory.<CertificateSerial>buildCandlepinQuery(this.currentSession(), criteria);
     }
 
     @SuppressWarnings("unchecked")
-    public List<CertificateSerial> getExpiredSerials() {
+    public CandlepinQuery<CertificateSerial> getExpiredSerials() {
         //TODO - Should date fields be truncated when checking expiration?
-        return this.currentSession()
-            .createCriteria(CertificateSerial.class)
+
+        DetachedCriteria criteria = DetachedCriteria.forClass(CertificateSerial.class)
             .add(Restrictions.le("expiration", Util.yesterday()))
-            .add(getRevokedCriteria()).list();
+            .add(getRevokedCriteria());
+
+        return this.cpQueryFactory.<CertificateSerial>buildCandlepinQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -101,7 +106,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
     }
 
     @SuppressWarnings("unchecked")
-    public List<CertificateSerial> listBySerialIds(String[] ids) {
+    public CandlepinQuery<CertificateSerial> listBySerialIds(String[] ids) {
         if (ids == null) {
             return null;
         }
@@ -112,8 +117,10 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
             lids[i] = Long.valueOf(ids[i]);
         }
 
-        return currentSession().createCriteria(
-            CertificateSerial.class).add(Restrictions.in("id", lids)).list();
+        DetachedCriteria criteria = DetachedCriteria.forClass(CertificateSerial.class)
+            .add(CPRestrictions.in("id", lids));
+
+        return this.cpQueryFactory.<CertificateSerial>buildCandlepinQuery(this.currentSession(), criteria);
     }
 
     /*
@@ -124,12 +131,15 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
     @SuppressWarnings("rawtypes")
     private Criterion getRevokedCriteria() {
         Conjunction crit = Restrictions.conjunction();
+
         for (Class clazz : CERTCLASSES) {
             DetachedCriteria certSerialQuery = DetachedCriteria.forClass(clazz)
                 .createCriteria("serial")
                 .setProjection(Projections.property("id"));
+
             crit.add(Subqueries.propertyNotIn("id", certSerialQuery));
         }
+
         return crit;
     }
 

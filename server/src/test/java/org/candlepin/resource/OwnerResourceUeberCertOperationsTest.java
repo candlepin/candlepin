@@ -40,6 +40,7 @@ import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.User;
+import org.candlepin.resteasy.IterableStreamingOutputFactory;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ServiceLevelValidator;
@@ -75,6 +76,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     @Inject private ContentOverrideValidator contentOverrideValidator;
     @Inject private ProductManager productManager;
     @Inject private ContentManager contentManager;
+    @Inject private IterableStreamingOutputFactory isoFactory;
 
     private Owner owner;
     private OwnerResource or;
@@ -101,7 +103,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
             ownerCurator, null, consumerCurator, i18n, null, null, null, null, null, poolManager, null, null,
             null, null, consumerTypeCurator, entCertCurator, entitlementCurator, ueberCertGenerator, null,
             null, contentOverrideValidator, serviceLevelValidator, null, null, null, productManager,
-            contentManager
+            contentManager, isoFactory
         );
     }
 

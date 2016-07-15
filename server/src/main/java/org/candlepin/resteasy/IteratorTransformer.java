@@ -20,10 +20,13 @@ package org.candlepin.resteasy;
  * The IteratorTransformer interface is used with the IterableStreamingOutput object to provide
  * transformation services for each element.
  *
- * @param <T>
- *  The element type to be handled by this transformer
+ * @param <I>
+ *  The element type to be processed by this transformer
+ *
+ * @param <O>
+ *  The element type to be output by this transformer
  */
-public interface IteratorTransformer<T> {
+public interface IteratorTransformer<I, O> {
 
     /**
      * Transforms a given element. If the element is to be ignored, this method should return null.
@@ -34,6 +37,6 @@ public interface IteratorTransformer<T> {
      * @return
      *  the transformed element, or null to skip the value
      */
-    Object transform(T element);
+    O transform(I element);
 
 }

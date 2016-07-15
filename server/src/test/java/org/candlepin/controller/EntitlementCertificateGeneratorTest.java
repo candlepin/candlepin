@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
@@ -203,7 +204,9 @@ public class EntitlementCertificateGeneratorTest {
     public void testLazyRegnerateForEnvironmentContent() {
         Environment environment = new Environment();
         List<Entitlement> entitlements = this.generateEntitlements();
-        when(this.mockEntitlementCurator.listByEnvironment(environment)).thenReturn(entitlements);
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.iterator()).thenReturn(entitlements.iterator());
+        when(this.mockEntitlementCurator.listByEnvironment(environment)).thenReturn(cqmock);
 
         this.ecGenerator.regenerateCertificatesOf(environment, Arrays.asList("c1", "c2", "c4"), true);
 
@@ -224,7 +227,9 @@ public class EntitlementCertificateGeneratorTest {
             ecMap.put(entitlement.getPool().getId(), new EntitlementCertificate());
         }
 
-        when(this.mockEntitlementCurator.listByEnvironment(environment)).thenReturn(entitlements);
+        CandlepinQuery<Entitlement> cqmock = mock(CandlepinQuery.class);
+        when(cqmock.iterator()).thenReturn(entitlements.iterator());
+        when(this.mockEntitlementCurator.listByEnvironment(environment)).thenReturn(cqmock);
         when(this.mockEntCertAdapter.generateEntitlementCerts(any(Consumer.class), any(Map.class),
             any(Map.class))).thenReturn(ecMap);
 
