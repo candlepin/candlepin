@@ -20,7 +20,7 @@ import org.candlepin.util.Util;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
@@ -116,6 +116,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @Column(nullable = true)
     private Long metadataExpire;
 
+    @BatchSize(size = 128)
     @ElementCollection
     @CollectionTable(name = "cp2_content_modified_products", joinColumns = @JoinColumn(name = "content_uuid"))
     @Column(name = "element")

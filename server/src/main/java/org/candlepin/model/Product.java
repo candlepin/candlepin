@@ -21,6 +21,7 @@ import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.Util;
 
 import org.hibernate.LazyInitializationException;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Fetch;
@@ -105,11 +106,13 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     private Long multiplier;
 
     @OneToMany(mappedBy = "product", orphanRemoval = true)
+    @BatchSize(size = 32)
     @Cascade({ CascadeType.ALL })
     @Fetch(FetchMode.SUBSELECT)
     private List<ProductAttribute> attributes;
 
     @ElementCollection
+    @BatchSize(size = 32)
     @CollectionTable(name = "cp2_product_content", joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
@@ -124,6 +127,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @CollectionTable(name = "cp2_product_dependent_products",
         joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
+    @BatchSize(size = 32)
     @LazyCollection(LazyCollectionOption.FALSE)
     private Set<String> dependentProductIds;
 
