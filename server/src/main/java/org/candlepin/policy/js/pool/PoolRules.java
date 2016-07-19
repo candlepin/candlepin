@@ -343,6 +343,18 @@ public class PoolRules {
      */
     public List<PoolUpdate> updatePoolsFromStack(Consumer consumer, List<Pool> pools,
         boolean deleteIfNoStackedEnts) {
+        return updatePoolsFromStack(consumer, pools, null, deleteIfNoStackedEnts);
+    }
+
+    /**
+     * Updates the pool based on the entitlements in the specified stack.
+     *
+     * @param pools
+     * @param consumer
+     * @return updates
+     */
+    public List<PoolUpdate> updatePoolsFromStack(Consumer consumer, List<Pool> pools,
+        Set<String> alreadyDeletedPools, boolean deleteIfNoStackedEnts) {
         Map<String, List<Entitlement>> entitlementMap = new HashMap<String, List<Entitlement>>();
         Set<String> sourceStackIds = new HashSet<String>();
         List<PoolUpdate> result = new ArrayList<PoolUpdate>();
@@ -373,7 +385,7 @@ public class PoolRules {
         }
 
         if (!poolsToDelete.isEmpty()) {
-            this.poolManager.deletePools(poolsToDelete);
+            this.poolManager.deletePools(poolsToDelete, alreadyDeletedPools);
         }
 
         return result;
