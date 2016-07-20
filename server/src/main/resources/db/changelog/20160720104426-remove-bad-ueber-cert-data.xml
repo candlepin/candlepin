@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+    <!-- POSTGRES/ORACLE QUERIES -->
+    <property
+        dbms="postgresql,oracle,hsqldb"
+        name="delete_stray_ueber_consumers"
+        value="delete from cp_consumer
+               where id IN (
+                    select c.id from cp_consumer c
+                    left outer join cp_entitlement e on e.consumer_id = c.id
+                    where c.name = 'ueber_cert_consumer' and e.id is null);"/>
+
+    <property
+        dbms="postgresql,oracle,hsqldb"
+        name="delete_stray_ueber_subs"
+        value="delete from cp_subscription
+               where id in (
+                 select s.id from cp_subscription s
+                 inner join cp_product p on s.product_id = p.id
+                 left outer join cp_pool pool on pool.productid = p.id
+                 where p.name LIKE '%_ueber_product' and pool.id is null
+               );"/>
+
+    <property
+        dbms="postgresql,oracle,hsqldb"
+        name="delete_stray_ueber_content"
+        value="delete from cp_content
+               where id in (
+                   select c.id from cp_content c
+                   inner join cp_product_content pc on pc.content_id=c.id
+                   inner join cp_product p on p.id=pc.product_id
+                   left outer join cp_pool pool on pool.productid = p.id
+                   where p.name LIKE '%_ueber_product' and pool.id is null
+               );"/>
+
+    <property
+        dbms="postgresql,oracle,hsqldb"
+        name="delete_stray_ueber_products"
+        value="delete from cp_product
+                  where id in (
+                      select p.id from cp_product p
+                      left outer join cp_pool pool on pool.productid = p.id
+                      where p.name LIKE '%ueber%' and pool.id is null
+                  );"/>
+
+    <!-- MYSQL QUERIES -->
+
+    <property
+        dbms="mysql"
+        name="delete_stray_ueber_consumers"
+        value="delete c from cp_consumer c
+               left outer join cp_entitlement e on e.consumer_id = c.id
+               where c.name = 'ueber_cert_consumer' and e.id is null;"/>
+
+    <property
+        dbms="mysql"
+        name="delete_stray_ueber_subs"
+        value="delete s from cp_subscription s
+               inner join cp_product p on s.product_id = p.id
+               left outer join cp_pool pool on pool.productid = p.id
+               where p.name LIKE '%_ueber_product' and pool.id is null;"/>
+
+    <property
+        dbms="mysql"
+        name="delete_stray_ueber_content"
+        value="delete c from cp_content c
+               inner join cp_product_content pc on pc.content_id=c.id
+               inner join cp_product p on p.id=pc.product_id
+               left outer join cp_pool pool on pool.productid = p.id
+               where p.name LIKE '%_ueber_product' and pool.id is null;"/>
+
+    <property
+        dbms="mysql"
+        name="delete_stray_ueber_products"
+        value="delete p from cp_product p
+               left outer join cp_pool pool on pool.productid = p.id
+               where p.name LIKE '%ueber%' and pool.id is null;"/>
+
+
+    <changeSet id="20160720104426-1" author="mstead">
+        <comment>
+            Cleans up stray ueber consumers, subscriptions, products and content that gets left
+            around due to BZ#####. The fix for this BZ prevents the data from becoming stray,
+            but does not address a situation where the stray data already exists as reported
+            by BZ 1354633. Cleaning up the stray records will allow for a clean debug cert to
+            be created without error.
+        </comment>
+        <sql>${delete_stray_ueber_consumers}</sql>
+        <sql>${delete_stray_ueber_subs}</sql>
+        <sql>${delete_stray_ueber_content}</sql>
+        <sql>${delete_stray_ueber_products}</sql>
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->
