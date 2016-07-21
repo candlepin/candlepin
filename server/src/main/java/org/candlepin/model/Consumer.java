@@ -169,6 +169,13 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
     private Map<String, String> facts;
 
+    @ElementCollection
+    @CollectionTable(name = "cp_consumer_facts_lower", joinColumns = @JoinColumn(name = "cp_consumer_id"))
+    @MapKeyColumn(name = "mapkey")
+    @Column(name = "element")
+    @Cascade({org.hibernate.annotations.CascadeType.ALL})
+    private Map<String, String> factsLower;
+
     @OneToOne(cascade = CascadeType.ALL)
     private KeyPair keyPair;
 
@@ -220,6 +227,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.owner = owner;
         this.type = type;
         this.facts = new HashMap<String, String>();
+        this.factsLower = new HashMap<String, String>();
         this.installedProducts = new HashSet<ConsumerInstalledProduct>();
         this.guestIds = new ArrayList<GuestId>();
         this.autoheal = true;
@@ -375,6 +383,21 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      */
     public void setFacts(Map<String, String> factsIn) {
         facts = factsIn;
+        if (factsIn == null) {
+            factsLower = null;
+        }
+        else {
+            factsLower = new HashMap<String, String>();
+            for (Entry<String, String> f : factsIn.entrySet()) {
+                String val = f.getValue();
+                if (val != null) {
+                    val = val.toLowerCase();
+                }
+
+                factsLower.put(f.getKey(), val);
+            }
+        }
+
     }
 
     /**
@@ -425,8 +448,15 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     public void setFact(String name, String value) {
         if (facts == null) {
             facts = new HashMap<String, String>();
+            factsLower = new HashMap<String, String>();
         }
         this.facts.put(name, value);
+
+        String lowVal = value;
+        if (lowVal != null) {
+            lowVal = lowVal.toLowerCase();
+        }
+        this.factsLower.put(name, lowVal);
     }
 
     public long getEntitlementCount() {

@@ -48,14 +48,14 @@ public class GuestIdCurator extends AbstractHibernateCurator<GuestId> {
     public GuestId findByConsumerAndId(Consumer consumer, String guestId) {
         return (GuestId) this.currentSession().createCriteria(GuestId.class)
             .add(Restrictions.eq("consumer", consumer))
-            .add(Restrictions.eq("guestId", guestId).ignoreCase())
+            .add(Restrictions.eq("guestIdLower", guestId.toLowerCase()))
             .setMaxResults(1)
             .uniqueResult();
     }
 
     public GuestId findByGuestIdAndOrg(String guestUuid, Owner owner) {
         return (GuestId) this.currentSession().createCriteria(GuestId.class)
-            .add(Restrictions.eq("guestId", guestUuid).ignoreCase())
+            .add(Restrictions.eq("guestIdLower", guestUuid.toLowerCase()))
             .createAlias("consumer", "gconsumer")
             .add(Restrictions.eq("gconsumer.owner", owner))
             .setMaxResults(1)

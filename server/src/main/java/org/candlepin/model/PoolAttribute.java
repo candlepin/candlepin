@@ -59,7 +59,11 @@ public class PoolAttribute extends AbstractHibernateObject implements Attribute 
 
     @Column
     @Size(max = 255)
-    protected String value;
+    private String value;
+
+    @Column(name = "value_lower")
+    @Size(max = 255)
+    private String valueLower;
 
     /*
      * After Jackson version is upgraded:
@@ -75,7 +79,7 @@ public class PoolAttribute extends AbstractHibernateObject implements Attribute 
 
     public PoolAttribute(String name, String val) {
         this.name = name;
-        this.value = val;
+        setValue(val);
     }
 
     public String getId() {
@@ -111,6 +115,12 @@ public class PoolAttribute extends AbstractHibernateObject implements Attribute 
 
     public void setValue(String value) {
         this.value = value;
+        if (value != null) {
+            valueLower = value.toLowerCase();
+        }
+        else {
+            valueLower = null;
+        }
     }
 
     @Override

@@ -124,6 +124,9 @@ public class HypervisorId extends AbstractHibernateObject {
     public void setHypervisorId(String hypervisorId) {
         // Hypervisor uuid is case insensitive, we need to force it to lower
         // case in order to enforce the unique hypervisorId per org constraint
+        //
+        // Queries in Candlepin are dependent on the fact this attribute is
+        // being stored in lower case.
         if (hypervisorId != null) {
             hypervisorId = hypervisorId.toLowerCase();
         }
