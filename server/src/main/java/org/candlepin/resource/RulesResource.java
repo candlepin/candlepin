@@ -98,7 +98,7 @@ public class RulesResource {
         sink.emitRulesModified(oldRules, rules);
 
         // Trigger a recompile of the JS rules so version/source are set correctly:
-        jsProvider.compileRules();
+        jsProvider.compileRules(true);
 
         return rulesBuffer;
     }
@@ -142,6 +142,6 @@ public class RulesResource {
         sink.emitRulesDeleted(deleteRules);
 
         // Trigger a recompile of the JS rules so version/source are set correctly:
-        jsProvider.compileRules();
+        jsProvider.compileRules(true);
     }
 }
