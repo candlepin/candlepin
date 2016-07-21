@@ -59,12 +59,14 @@ import org.candlepin.resource.PoolResource;
 import org.candlepin.resource.ProductResource;
 import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.service.EntitlementCertServiceAdapter;
+import org.candlepin.service.ExportExtensionAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.impl.DefaultExportExtensionAdapter;
 import org.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultProductServiceAdapter;
@@ -283,8 +285,8 @@ public class TestingModules {
 
             bind(CertificateRevocationListTask.class);
             // temporary
-            bind(IdentityCertServiceAdapter.class).to(
-                DefaultIdentityCertServiceAdapter.class);
+            bind(IdentityCertServiceAdapter.class).to(DefaultIdentityCertServiceAdapter.class);
+            bind(ExportExtensionAdapter.class).to(DefaultExportExtensionAdapter.class);
             bind(PoolRules.class);
             bind(CriteriaRules.class);
             bind(PoolManager.class).to(CandlepinPoolManager.class);

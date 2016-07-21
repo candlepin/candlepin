@@ -1781,7 +1781,9 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("cdn_label") String cdnLabel,
         @QueryParam("webapp_prefix") String webAppPrefix,
-        @QueryParam("api_url") String apiUrl) {
+        @QueryParam("api_url") String apiUrl,
+        @QueryParam("ext") @CandlepinParam(type = KeyValueParameter.class)
+        List<KeyValueParameter> extensionArgs) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         if (consumer.getType() == null ||
@@ -1804,7 +1806,8 @@ public class ConsumerResource {
 
         File archive;
         try {
-            archive = exporter.getFullExport(consumer, cdnLabel, webAppPrefix, apiUrl);
+            archive = exporter.getFullExport(consumer, cdnLabel, webAppPrefix, apiUrl,
+                getExtensionParamMap(extensionArgs));
             response.addHeader("Content-Disposition", "attachment; filename=" +
                 archive.getName());
 
@@ -2053,6 +2056,21 @@ public class ConsumerResource {
         Map<String, String> calculatedAttributes =
             calculatedAttributesUtil.buildCalculatedAttributes(ent.getPool(), null, null);
         ent.getPool().setCalculatedAttributes(calculatedAttributes);
+    }
+
+    /**
+     * Builds a map of String -> String from a list of {@link KeyValueParameter} query parameters
+     * where param.key is the map key and param.value is the map value.
+     *
+     * @param params the query parameters to build the map from.
+     * @return a Map<String, String> of the key/value pairs in the specified parameters.
+     */
+    private Map<String, String> getExtensionParamMap(List<KeyValueParameter> params) {
+        Map<String, String> paramMap = new HashMap<String, String>();
+        for (KeyValueParameter param : params) {
+            paramMap.put(param.key(), param.value());
+        }
+        return paramMap;
     }
 
 }
