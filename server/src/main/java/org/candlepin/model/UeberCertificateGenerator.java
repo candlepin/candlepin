@@ -22,7 +22,6 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
-import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 
 import com.google.inject.Inject;
@@ -41,12 +40,9 @@ public class UeberCertificateGenerator {
 
     private PoolManager poolManager;
     private PoolCurator poolCurator;
-    private ProductCurator productCurator;
     private ProductManager productManager;
-    private ContentCurator contentCurator;
     private ContentManager contentManager;
     private UniqueIdGenerator idGenerator;
-    private SubscriptionServiceAdapter subService;
     private ConsumerTypeCurator consumerTypeCurator;
     private ConsumerCurator consumerCurator;
     private I18n i18n;
@@ -54,24 +50,18 @@ public class UeberCertificateGenerator {
     @Inject
     public UeberCertificateGenerator(PoolManager poolManager,
         PoolCurator poolCurator,
-        ProductCurator productCurator,
         ProductManager productManager,
-        ContentCurator contentCurator,
         ContentManager contentManager,
         UniqueIdGenerator idGenerator,
-        SubscriptionServiceAdapter subService,
         ConsumerTypeCurator consumerTypeCurator,
         ConsumerCurator consumerCurator,
         I18n i18n) {
 
         this.poolManager = poolManager;
         this.poolCurator = poolCurator;
-        this.productCurator = productCurator;
         this.productManager = productManager;
-        this.contentCurator = contentCurator;
         this.contentManager = contentManager;
         this.idGenerator = idGenerator;
-        this.subService = subService;
         this.consumerTypeCurator = consumerTypeCurator;
         this.consumerCurator = consumerCurator;
         this.i18n = i18n;
@@ -116,8 +106,6 @@ public class UeberCertificateGenerator {
         subscription.setId(idGenerator.generateId());
         subscription.setCreated(now);
         subscription.setUpdated(now);
-
-        // return subService.createSubscription(subscription);
         return subscription;
     }
 
