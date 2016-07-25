@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 
@@ -54,7 +53,6 @@ public class CheckIn extends AbstractHibernateObject {
     private String id;
 
     @ManyToOne
-    @ForeignKey(name = "fk_consumer_checkin_consumer")
     @JoinColumn(nullable = false)
     @Index(name = "idx_consumer_checkin_consumer")
     @NotNull
