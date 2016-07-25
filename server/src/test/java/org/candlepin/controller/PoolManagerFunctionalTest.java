@@ -571,7 +571,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         Pool pool1 = createPool(owner, p, 10L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
-        pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
+        pool1.addAttribute(new PoolAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true"));
         poolCurator.create(pool1);
         Pool pool2 = createPool(owner, p, 10L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
@@ -607,8 +607,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         Pool pool1 = createPool(owner, p, 10L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
-        pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
-        pool1.addAttribute(new PoolAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, devSystem.getUuid()));
+        pool1.addAttribute(new PoolAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true"));
+        pool1.addAttribute(new PoolAttribute(Pool.Attributes.REQUIRES_CONSUMER, devSystem.getUuid()));
         poolCurator.create(pool1);
         Pool pool2 = createPool(owner, p, 10L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
@@ -641,8 +641,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         Pool pool1 = createPool(owner, p, 10L, TestUtil.createDate(2000, 3, 2),
             TestUtil.createDate(2050, 3, 2));
-        pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
-        pool1.addAttribute(new PoolAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, devSystem.getUuid()));
+        pool1.addAttribute(new PoolAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true"));
+        pool1.addAttribute(new PoolAttribute(Pool.Attributes.REQUIRES_CONSUMER, devSystem.getUuid()));
         poolCurator.create(pool1);
         Pool pool2 = createPool(owner, p, 10L, TestUtil.createDate(2000, 3, 2),
             TestUtil.createDate(2050, 3, 2));
@@ -669,7 +669,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testBatchBindError() throws EntitlementRefusedException {
         Owner owner = createOwner();
         Product p = TestUtil.createProduct("test-product", "Test Product");
-        p.addAttribute(new ProductAttribute(Pool.MULTI_ENTITLEMENT_ATTRIBUTE, "yes"));
+        p.addAttribute(new ProductAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes"));
         productCurator.create(p);
 
         Consumer devSystem = new Consumer("dev", "user", owner, systemType);
@@ -679,8 +679,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         Pool pool1 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),
             TestUtil.createDate(2050, 3, 2));
-        pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
-        pool1.addAttribute(new PoolAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, devSystem.getUuid()));
+        pool1.addAttribute(new PoolAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true"));
+        pool1.addAttribute(new PoolAttribute(Pool.Attributes.REQUIRES_CONSUMER, devSystem.getUuid()));
         poolCurator.create(pool1);
         Entitlement ent = createEntitlement(owner, devSystem, pool1,
             createEntitlementCertificate("keycert", "cert"));
@@ -731,8 +731,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         Pool pool1 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),
             TestUtil.createDate(2050, 3, 2));
-        pool1.addAttribute(new PoolAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true"));
-        pool1.addAttribute(new PoolAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, devSystem.getUuid()));
+        pool1.addAttribute(new PoolAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true"));
+        pool1.addAttribute(new PoolAttribute(Pool.Attributes.REQUIRES_CONSUMER, devSystem.getUuid()));
         pool1.setConsumed(1L);
         poolCurator.create(pool1);
 
@@ -838,8 +838,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Pool pool3 = this.createPool(owner, product2, 1L, activeStart, activeEnd);
         Pool pool4 = this.createPool(owner, product2, 1L, expiredStart, expiredEnd);
 
-        pool3.setAttribute(Pool.DERIVED_POOL_ATTRIBUTE, "true");
-        pool4.setAttribute(Pool.DERIVED_POOL_ATTRIBUTE, "true");
+        pool3.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
+        pool4.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         this.poolCurator.merge(pool3);
         this.poolCurator.merge(pool4);
 
@@ -863,7 +863,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Pool pool2 = this.createPool(owner, product1, 1L, suscriptionId, "master", expiredStart, expiredEnd);
         Pool pool3 = this.createPool(owner, product1, 1L, suscriptionId, "derived", expiredStart, expiredEnd);
 
-        pool3.setAttribute(Pool.DERIVED_POOL_ATTRIBUTE, "true");
+        pool3.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         this.poolCurator.merge(pool3);
 
         Entitlement ent = this.createEntitlement(owner, this.createConsumer(owner), pool3, null);

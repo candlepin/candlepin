@@ -108,8 +108,6 @@ public class RulesObjectMapper {
         }
 
         try {
-            log.debug("RETURNING: {}", this.mapper.writeValueAsString(mainNode));
-
             return this.mapper.writeValueAsString(mainNode);
         }
         catch (Exception e) {

@@ -656,7 +656,7 @@ public class CandlepinPoolManager implements PoolManager {
         List<PoolUpdate> updatedPools = poolRules.updatePools(pool, existingPools, originalQuantity,
             changedProducts);
 
-        String virtLimit = pool.getProduct().getAttributeValue("virt_limit");
+        String virtLimit = pool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT);
         boolean createsSubPools = !StringUtils.isBlank(virtLimit) && !"0".equals(virtLimit);
 
         // Update subpools if necessary
@@ -1148,8 +1148,8 @@ public class CandlepinPoolManager implements PoolManager {
             boolean providesProduct = false;
             // Would parse the int here, but it can be 'unlimited'
             // and we only need to check that it's non-zero
-            if (pool.getProduct().hasAttribute("virt_limit") &&
-                !pool.getProduct().getAttributeValue("virt_limit").equals("0")) {
+            if (pool.getProduct().hasAttribute(Product.Attributes.VIRT_LIMIT) &&
+                !pool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT).equals("0")) {
                 for (String productId : productIds) {
                     // If this is a derived pool, we need to see if the derived product
                     // provides anything for the guest, otherwise we use the parent.
@@ -1211,7 +1211,9 @@ public class CandlepinPoolManager implements PoolManager {
     private Set<String> getProductsToRemove(List<Pool> allOwnerPoolsForGuest, Set<String> tmpSet) {
         Set<String> productsToRemove = new HashSet<String>();
         for (Pool pool : allOwnerPoolsForGuest) {
-            if (pool.getProduct().hasAttribute("virt_only") || pool.hasAttribute("virt_only")) {
+            if (pool.getProduct().hasAttribute(Product.Attributes.VIRT_ONLY) ||
+                pool.hasAttribute(Pool.Attributes.VIRT_ONLY)) {
+
                 for (String prodId : tmpSet) {
                     if (pool.provides(prodId)) {
                         productsToRemove.add(prodId);
@@ -1274,8 +1276,9 @@ public class CandlepinPoolManager implements PoolManager {
             // If We want to complete partial stacks if possible,
             // even if they do not provide any products
             Product poolProduct = pool.getProduct();
-            if (poolProduct.hasAttribute("stacking_id") &&
-                compliance.getPartialStacks().containsKey(poolProduct.getAttributeValue("stacking_id"))) {
+            String stackingId = poolProduct.getAttributeValue(Product.Attributes.STACKING_ID);
+
+            if (stackingId != null && compliance.getPartialStacks().containsKey(stackingId)) {
                 providesProduct = true;
             }
             else {
@@ -1779,8 +1782,8 @@ public class CandlepinPoolManager implements PoolManager {
                 for (Entitlement ent : ents) {
                     Pool pool = ent.getPool();
 
-                    if (!"true".equals(pool.getAttributeValue("pool_derived")) &&
-                        pool.getProduct().hasAttribute("stacking_id")) {
+                    if (!"true".equals(pool.getAttributeValue(Pool.Attributes.DERIVED_POOL)) &&
+                        pool.getProduct().hasAttribute(Product.Attributes.STACKING_ID)) {
                         List<Entitlement> entList = stackingEntitlements.get(consumer);
                         if (entList == null) {
                             entList = new ArrayList<Entitlement>();
@@ -1922,14 +1925,6 @@ public class CandlepinPoolManager implements PoolManager {
         pool = poolCurator.lockAndLoad(pool);
         pool.setQuantity(set);
         return poolCurator.merge(pool);
-    }
-
-    @Override
-    public void regenerateDirtyEntitlements(Consumer consumer) {
-        List<Entitlement> ents = entitlementCurator.listDirty(consumer);
-        if (CollectionUtils.isNotEmpty(ents)) {
-            regenerateDirtyEntitlements(ents);
-        }
     }
 
     @Override
@@ -2093,7 +2088,7 @@ public class CandlepinPoolManager implements PoolManager {
         // Only postfilter if we have to
         boolean postFilter = consumer != null || key != null;
         if (consumer != null && !consumer.isDev()) {
-            filters.addAttributeFilter(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "!true");
+            filters.addAttributeFilter(Pool.Attributes.DEVELOPMENT_POOL, "!true");
         }
 
         Page<List<Pool>> page = this.poolCurator.listAvailableEntitlementPools(consumer,
@@ -2180,7 +2175,9 @@ public class CandlepinPoolManager implements PoolManager {
          * is present, we must further divide the poolQuantity by
          * product.getAttributeValue("instance_multiplier").
          */
-        if (poolQuantity != null && multiplier != null && multiplier != 0 && pool.getProduct() != null) {
+        Product sku = pool.getProduct();
+
+        if (poolQuantity != null && multiplier != null && multiplier != 0 && sku != null) {
             if (poolQuantity % multiplier != 0) {
                 log.error("Pool {} from which we fabricate subscription has quantity {} that " +
                     "is not divisable by its product's multiplier {}! Division wont be made.",
@@ -2192,9 +2189,11 @@ public class CandlepinPoolManager implements PoolManager {
 
             //This is reverse of what part of PooRules.calculateQuantity does. See that method
             //to understand why we check that upstreamPoolId must be null.
-            if (pool.getProduct().hasAttribute("instance_multiplier") && pool.getUpstreamPoolId() == null) {
+            if (sku.hasAttribute(Product.Attributes.INSTANCE_MULTIPLIER) &&
+                pool.getUpstreamPoolId() == null) {
+
                 Integer instMult = null;
-                String stringInstmult = pool.getProduct().getAttributeValue("instance_multiplier");
+                String stringInstmult = sku.getAttributeValue(Product.Attributes.INSTANCE_MULTIPLIER);
                 try {
                     instMult = Integer.parseInt(stringInstmult);
                 }
@@ -2213,7 +2212,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
         else {
             log.warn("Either quantity or multiplier or product is null: {}, {}, productInstance={}",
-                poolQuantity, multiplier, pool.getProduct());
+                poolQuantity, multiplier, sku);
         }
 
         Subscription subscription = new Subscription(pool);

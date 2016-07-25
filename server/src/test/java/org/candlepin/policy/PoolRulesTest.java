@@ -841,7 +841,7 @@ public class PoolRulesTest {
     public void productNameChangedDevPool() {
         Pool p = TestUtil.createPool(TestUtil.createProduct());
         p.setSourceSubscription(null);
-        p.setAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
+        p.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
         List<Pool> floatingPools = new ArrayList<Pool>();
         floatingPools.add(p);
 

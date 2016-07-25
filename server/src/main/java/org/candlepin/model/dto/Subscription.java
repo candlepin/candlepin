@@ -384,20 +384,21 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
     }
 
     public boolean isStacked() {
-        return !StringUtils.isBlank(this.product.getAttributeValue("stacking_id"));
+        return !StringUtils.isBlank(this.product.getAttributeValue(Product.Attributes.STACKING_ID));
     }
 
     public String getStackId() {
         // Check if we are stacked first so we return null over empty string
         // when stacking_id = ""
         if (this.isStacked()) {
-            return this.product.getAttributeValue("stacking_id");
+            return this.product.getAttributeValue(Product.Attributes.STACKING_ID);
         }
+
         return null;
     }
 
     public boolean createsSubPools() {
-        String virtLimit = this.getProduct().getAttributeValue("virt_limit");
+        String virtLimit = this.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT);
         return !StringUtils.isBlank(virtLimit) && !"0".equals(virtLimit);
     }
 
@@ -406,6 +407,7 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         if (getProduct() != null) {
             return getProduct().getName();
         }
+
         return null;
     }
 

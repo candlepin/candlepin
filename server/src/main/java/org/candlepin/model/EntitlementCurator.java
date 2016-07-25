@@ -122,14 +122,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Entitlement> listDirty(Consumer consumer) {
-        Criteria criteria = currentSession().createCriteria(Entitlement.class)
-            .add(Restrictions.eq("consumer", consumer))
-            .add(Restrictions.eq("dirty", true));
-        return listByCriteria(criteria);
-    }
-
-    @SuppressWarnings("unchecked")
     public List<Entitlement> listByConsumerAndPoolId(Consumer consumer, String poolId) {
         Criteria query = currentSession().createCriteria(Entitlement.class)
             .add(Restrictions.eq("pool.id", poolId));

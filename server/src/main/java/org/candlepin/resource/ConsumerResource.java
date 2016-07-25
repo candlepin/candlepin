@@ -1130,11 +1130,13 @@ public class ConsumerResource {
             Pool pool = entitlement.getPool();
 
             // If there is no host required or the pool isn't for unmapped guests, skip it
-            if (!(pool.hasAttribute("requires_host") || isUnmappedGuestPool(pool) || isVirtOnly(pool))) {
+            if (!(pool.hasAttribute(Pool.Attributes.REQUIRES_HOST) || isUnmappedGuestPool(pool) ||
+                isVirtOnly(pool))) {
+
                 continue;
             }
 
-            if (pool.hasAttribute("requires_host")) {
+            if (pool.hasAttribute(Pool.Attributes.REQUIRES_HOST)) {
                 String requiredHost = getRequiredHost(pool);
                 if (host == null || !requiredHost.equals(host.getUuid())) {
                     log.debug("Removing entitlement {} from guest {} due to host mismatch.",
@@ -1156,6 +1158,7 @@ public class ConsumerResource {
             // auto heal guests after revocations
             boolean hasInstalledProducts = guest.getInstalledProducts() != null &&
                 !guest.getInstalledProducts().isEmpty();
+
             if (guest.isAutoheal() && !deletableGuestEntitlements.isEmpty() && hasInstalledProducts) {
                 AutobindData autobindData = AutobindData.create(guest).on(new Date());
                 List<Entitlement> ents = entitler.bindByProducts(autobindData);
@@ -1165,19 +1168,18 @@ public class ConsumerResource {
     }
 
     private String getRequiredHost(Pool pool) {
-        return pool.hasAttribute("requires_host") ?
-            pool.getAttributeValue("requires_host") : "";
+        String value = pool.getAttributeValue(Pool.Attributes.REQUIRES_HOST);
+        return value != null ? value : "";
     }
 
     private boolean isVirtOnly(Pool pool) {
-        String virtOnly = pool.hasAttribute("virt_only") ?
-            pool.getAttributeValue("virt_only") : "false";
-        return virtOnly.equalsIgnoreCase("true") || virtOnly.equals("1");
+        String value = pool.getAttributeValue(Pool.Attributes.VIRT_ONLY);
+        return "true".equalsIgnoreCase(value) || "1".equals(value);
     }
 
     private boolean isUnmappedGuestPool(Pool pool) {
-        return pool.hasAttribute("unmapped_guests_only") &&
-            "true".equals(pool.getAttributeValue("unmapped_guests_only"));
+        String value = pool.getAttributeValue(Pool.Attributes.UNMAPPED_GUESTS_ONLY);
+        return "true".equalsIgnoreCase(value);
     }
 
     @ApiOperation(notes = "Removes a Consumer", value = "deleteConsumer")
@@ -1221,7 +1223,8 @@ public class ConsumerResource {
 
         log.debug("Getting client certificates for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        poolManager.regenerateDirtyEntitlements(consumer);
+        poolManager.regenerateDirtyEntitlements(
+            entitlementCurator.listByConsumer(consumer));
 
         Set<Long> serialSet = this.extractSerials(serials);
 
@@ -1250,7 +1253,8 @@ public class ConsumerResource {
 
         log.debug("Getting client certificate zip file for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        poolManager.regenerateDirtyEntitlements(consumer);
+        poolManager.regenerateDirtyEntitlements(
+            entitlementCurator.listByConsumer(consumer));
 
         Set<Long> serialSet = this.extractSerials(serials);
         // filtering requires a null set, so make this null if it is
@@ -1312,7 +1316,8 @@ public class ConsumerResource {
 
         log.debug("Getting client certificate serials for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        poolManager.regenerateDirtyEntitlements(consumer);
+        poolManager.regenerateDirtyEntitlements(
+            entitlementCurator.listByConsumer(consumer));
 
         List<CertificateSerialDto> allCerts = new LinkedList<CertificateSerialDto>();
         for (EntitlementCertificate cert : entCertService
@@ -1787,7 +1792,7 @@ public class ConsumerResource {
                 i18n.tr("A CDN with label {0} does not exist on this system.", cdnLabel));
         }
 
-        poolManager.regenerateDirtyEntitlements(consumer);
+        poolManager.regenerateDirtyEntitlements(entitlementCurator.listByConsumer(consumer));
 
         File archive;
         try {

@@ -63,10 +63,10 @@ public class ConsumerInstalledProductEnricher {
      */
     public void enrich(ConsumerInstalledProduct cip, Product prod) {
         if (cip.getVersion() == null) {
-            cip.setVersion(prod.getAttributeValue("version"));
+            cip.setVersion(prod.getAttributeValue(Product.Attributes.VERSION));
         }
         if (cip.getArch() == null) {
-            cip.setArch(prod.getAttributeValue("arch"));
+            cip.setArch(prod.getAttributeValue(Product.Attributes.ARCHITECTURE));
         }
         cip.setStatus(getStatus(prod.getId()));
 
@@ -198,13 +198,13 @@ public class ConsumerInstalledProductEnricher {
                 //If this entitlement is stackable,
                 //the whole stack may be required, even if
                 //this is the only ent that provides the product
-                if (pool.getProduct().hasAttribute("stacking_id")) {
-                    stackIds.add(pool.getProduct().getAttributeValue("stacking_id"));
+                if (pool.getProduct().hasAttribute(Product.Attributes.STACKING_ID)) {
+                    stackIds.add(pool.getProduct().getAttributeValue(Product.Attributes.STACKING_ID));
                 }
             }
             // Save the stacking id so we don't have to loop over everything again
-            if (pool.getProduct().hasAttribute("stacking_id")) {
-                String key = pool.getProduct().getAttributeValue("stacking_id");
+            if (pool.getProduct().hasAttribute(Product.Attributes.STACKING_ID)) {
+                String key = pool.getProduct().getAttributeValue(Product.Attributes.STACKING_ID);
                 if (!stackIdMap.containsKey(key)) {
                     stackIdMap.put(key, new HashSet<Entitlement>());
                 }

@@ -557,7 +557,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Product p = this.createProduct(owner);
 
         Pool pool1 = TestUtil.createPool(owner, p);
-        pool1.setAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
+        pool1.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
         poolCurator.create(pool1);
 
         Product p2 = this.createProduct(owner);
@@ -570,7 +570,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(2, pools.size());
 
         params = new ArrayList<KeyValueParameter>();
-        params.add(createKeyValueParam(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "!true"));
+        params.add(createKeyValueParam(Pool.Attributes.DEVELOPMENT_POOL, "!true"));
         pools = ownerResource.listPools(owner.getKey(), null,
             null, null, null, true, null, null, params, principal, null);
         assertEquals(1, pools.size());

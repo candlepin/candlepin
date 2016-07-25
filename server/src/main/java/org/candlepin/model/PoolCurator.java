@@ -953,8 +953,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     public Pool findDevPool(Consumer consumer) {
         PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addAttributeFilter(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
-        filters.addAttributeFilter(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
+        filters.addAttributeFilter(Pool.Attributes.DEVELOPMENT_POOL, "true");
+        filters.addAttributeFilter(Pool.Attributes.REQUIRES_CONSUMER, consumer.getUuid());
 
         Criteria criteria =  currentSession().createCriteria(Pool.class);
         criteria.add(Restrictions.eq("owner", consumer.getOwner()));

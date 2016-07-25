@@ -60,6 +60,7 @@ var RAM_ATTRIBUTE = "ram";
 var INSTANCE_ATTRIBUTE = "instance_multiplier";
 var REQUIRES_HOST_ATTRIBUTE = "requires_host";
 var REQUIRES_CONSUMER_ATTRIBUTE = "requires_consumer";
+var REQUIRES_CONSUMER_TYPE_ATTRIBUTE = "requires_consumer_type";
 var VIRT_ONLY = "virt_only";
 var PHYSICAL_ONLY = "physical_only";
 var POOL_DERIVED = "pool_derived";
@@ -67,6 +68,7 @@ var UNMAPPED_GUESTS_ONLY = "unmapped_guests_only";
 var GUEST_LIMIT_ATTRIBUTE = "guest_limit";
 var VCPU_ATTRIBUTE = "vcpu";
 var MULTI_ENTITLEMENT_ATTRIBUTE = "multi-entitlement";
+var STACKING_ID_ATTRIBUTE = "stacking_id";
 var STORAGE_BAND_ATTRIBUTE = "storage_band";
 
 // caller types
@@ -299,7 +301,7 @@ function createActivationKey(key) {
             key.requires_host = pool_host_requires;
             key.virt_only = true;
         }
-        var pool_consumer_type = pool.getAttribute("requires_consumer_type");
+        var pool_consumer_type = pool.getAttribute(REQUIRES_CONSUMER_TYPE_ATTRIBUTE);
         if (pool_consumer_type !== null && pool_consumer_type != "") {
             key.consumer_type = pool_consumer_type;
         }
@@ -1069,7 +1071,7 @@ function createComplianceTracker(consumer, id) {
                 guest_limit: function (currentStackValue, poolValue, pool, quantity) {
                     return -1; //Value doesn't matter, just need it to be enforced
                 }
-                
+
             };
 
             var strategy = strategies.default;
@@ -1156,7 +1158,7 @@ function createComplianceTracker(consumer, id) {
  *  to cover the consumer.
  */
 function createComplianceTrackerFromPool(pool, consumer) {
-    var complianceTracker = createComplianceTracker(consumer, pool.getProductAttribute("stacking_id"));
+    var complianceTracker = createComplianceTracker(consumer, pool.getProductAttribute(STACKING_ID_ATTRIBUTE));
     // There are no entitlements for this stack, but
     // we have to tell the stack what attributes it must
     // enforce. This is determined by attributes that are
@@ -1263,7 +1265,7 @@ var ActivationKey = {
      * Do not allow pools that require a "person" type consumer to be added to an activation key.
      */
     validate_consumer_type: function(key, pool, result) {
-        pool_consumer_type = pool.getAttribute("requires_consumer_type");
+        pool_consumer_type = pool.getAttribute(REQUIRES_CONSUMER_TYPE_ATTRIBUTE);
         if (pool_consumer_type == "person") {
             result.addError("rulefailed.actkey.cannot.use.person.pools");
         }
@@ -1479,8 +1481,8 @@ var Entitlement = {
         }
 
         if (!context.hostConsumer ||
-            context.hostConsumer.uuid != context.getAttribute(context.pool,
-                                                                   REQUIRES_HOST_ATTRIBUTE)) {
+            context.hostConsumer.uuid != context.getAttribute(context.pool, REQUIRES_HOST_ATTRIBUTE)) {
+
             result.addError("virt.guest.host.does.not.match.pool.owner");
         }
     },
@@ -1496,8 +1498,7 @@ var Entitlement = {
             return JSON.stringify(result);
         }
 
-        if (context.consumer.uuid != context.getAttribute(context.pool,
-                                                          REQUIRES_CONSUMER_ATTRIBUTE)) {
+        if (context.consumer.uuid != context.getAttribute(context.pool, REQUIRES_CONSUMER_ATTRIBUTE)) {
             result.addError("consumer.does.not.match.pool.consumer.requirement");
         }
     },
@@ -1513,7 +1514,7 @@ var Entitlement = {
             return JSON.stringify(result);
         }
 
-        var requiresConsumerType = context.getAttribute(context.pool, "requires_consumer_type");
+        var requiresConsumerType = context.getAttribute(context.pool, REQUIRES_CONSUMER_TYPE_ATTRIBUTE);
         // skip if the attribtue is not defined, or if generating an uebercert.
         if (requiresConsumerType != null &&
             context.consumer.type.label != UEBERCERT_TYPE ) {
@@ -1540,7 +1541,7 @@ var Entitlement = {
         if (!consumer.type.manifest) {
             if (Utils.isGuest(consumer)) {
                 var consumerCores = FactValueCalculator.getFact(VCPU_ATTRIBUTE, consumer);
-                if (consumerCores && !pool.getProductAttribute("stacking_id")) {
+                if (consumerCores && !pool.getProductAttribute(STACKING_ID_ATTRIBUTE)) {
                     var poolCores = parseInt(pool.getProductAttribute(VCPU_ATTRIBUTE));
                     if (poolCores > 0 && poolCores < consumerCores) {
                         result.addWarning("rulewarning.unsupported.number.of.vcpus");
@@ -1564,8 +1565,8 @@ var Entitlement = {
         }
 
         if (!architectureMatches(context.pool.getProductAttribute(ARCH_ATTRIBUTE),
-                                 context.consumer.facts[ARCH_FACT],
-                                 context.consumer.type.label)) {
+            context.consumer.facts[ARCH_FACT], context.consumer.type.label)) {
+
             result.addWarning("rulewarning.architecture.mismatch");
         }
     },
@@ -1584,9 +1585,10 @@ var Entitlement = {
 
         //usually, we assume socket count to be 1 if it is undef. However, we need to know if it's
         //undef here in order to know to skip the socket comparison (per acarter/jomara)
-        if (consumer.facts[SOCKET_FACT] && !pool.getProductAttribute("stacking_id")) {
+        if (consumer.facts[SOCKET_FACT] && !pool.getProductAttribute(STACKING_ID_ATTRIBUTE)) {
             if ((parseInt(pool.getProductAttribute(SOCKETS_ATTRIBUTE)) > 0) &&
                 (parseInt(pool.getProductAttribute(SOCKETS_ATTRIBUTE)) < parseInt(consumer.facts[SOCKET_FACT]))) {
+
                 result.addWarning("rulewarning.unsupported.number.of.sockets");
             }
         }
@@ -1604,7 +1606,7 @@ var Entitlement = {
         if (!consumer.type.manifest) {
             if (!Utils.isGuest(consumer)) {
                 var consumerCores = FactValueCalculator.getFact(CORES_ATTRIBUTE, consumer);
-                if (consumerCores && !pool.getProductAttribute("stacking_id")) {
+                if (consumerCores && !pool.getProductAttribute(STACKING_ID_ATTRIBUTE)) {
                     var poolCores = parseInt(pool.getProductAttribute(CORES_ATTRIBUTE));
                     if (poolCores > 0 && poolCores < consumerCores) {
                         result.addWarning("rulewarning.unsupported.number.of.cores");
@@ -1639,7 +1641,7 @@ var Entitlement = {
 
             var productRam = parseInt(context.pool.getProductAttribute(RAM_ATTRIBUTE));
             log.debug("Product has " + productRam + "GB of RAM");
-            if (consumerRam > productRam && !context.pool.getProductAttribute("stacking_id")) {
+            if (consumerRam > productRam && !context.pool.getProductAttribute(STACKING_ID_ATTRIBUTE)) {
                 result.addWarning("rulewarning.unsupported.ram");
             }
         }
@@ -1670,7 +1672,9 @@ var Entitlement = {
 
             var productBandStorage = parseInt(context.pool.getProductAttribute(STORAGE_BAND_ATTRIBUTE));
             log.debug("Product has " + productBandStorage + "TB of storage.");
-            if (consumerBandUsage > productBandStorage && !context.pool.getProductAttribute("stacking_id")) {
+            if (consumerBandUsage > productBandStorage &&
+                !context.pool.getProductAttribute(STACKING_ID_ATTRIBUTE)) {
+
                 result.addWarning("rulewarning.unsupported.storageband");
             }
         }
@@ -1706,8 +1710,7 @@ var Entitlement = {
                 log.debug("instance_multiplier: [" + multiplier + "]");
 
                 var mod = (context.quantity % multiplier);
-                log.debug("result [" + context.quantity  + " % " +
-                    multiplier + " = " + mod + "]");
+                log.debug("result [" + context.quantity  + " % " + multiplier + " = " + mod + "]");
                 if (mod != 0) {
                     log.debug("quantity NOT divisible by multplier");
                     result.addError("rulefailed.quantity.mismatch");
@@ -1762,7 +1765,7 @@ var Entitlement = {
 
             // If the product has no required consumer type, assume it is restricted to "system".
             // "hypervisor"/"uebercert" type are essentially the same as "system".
-            if (!pool.getProductAttribute("requires_consumer_type")) {
+            if (!pool.getProductAttribute(REQUIRES_CONSUMER_TYPE_ATTRIBUTE)) {
                 if (consumer.type.label != SYSTEM_TYPE && consumer.type.label != HYPERVISOR_TYPE &&
                         consumer.type.label != UEBERCERT_TYPE) {
                     result.addError("rulefailed.consumer.type.mismatch");
@@ -1770,7 +1773,8 @@ var Entitlement = {
             }
 
             if (pool.restrictedToUsername != null && pool.restrictedToUsername != consumer.username) {
-                result.addError("pool.not.available.to.user, pool= '" + pool.restrictedToUsername + "', actual username='" + consumer.username + "'" );
+                result.addError("pool.not.available.to.user, pool= '" + pool.restrictedToUsername +
+                    "', actual username='" + consumer.username + "'" );
             }
         }
     },
@@ -2168,7 +2172,7 @@ var Autobind = {
                 for (var i = 0; i < this.pools.length; i++) {
                     var pool = this.pools[i];
                     var increment = 1;
-                    if (pool.hasProductAttribute("instance_multiplier") && !Utils.isGuest(this.consumer)) {
+                    if (pool.hasProductAttribute(INSTANCE_ATTRIBUTE) && !Utils.isGuest(this.consumer)) {
                         increment = parseInt(pool.getProductAttribute(INSTANCE_ATTRIBUTE));
                     }
 
@@ -2396,7 +2400,7 @@ var Autobind = {
 
             if (is_pool_stacked(pool)) {
                 var found = false;
-                var stack_id = pool.getProductAttribute("stacking_id");
+                var stack_id = pool.getProductAttribute(STACKING_ID_ATTRIBUTE);
                 for (var j = 0; j < ent_groups.length; j++) {
                     ent_group = ent_groups[j];
                     if (ent_group.stack_id == stack_id) {
@@ -2813,7 +2817,7 @@ var Compliance = {
             var ent_is_stacked = is_stacked(e);
             // If the pool is stacked, check that the stack requirements are met:
             if (ent_is_stacked) {
-                var stack_id = e.pool.getProductAttribute("stacking_id");
+                var stack_id = e.pool.getProductAttribute(STACKING_ID_ATTRIBUTE);
                 log.debug("    pool has stack ID: " + stack_id);
 
                 // Shortcuts for stacks we've already checked:
@@ -2974,7 +2978,7 @@ var Compliance = {
             var ent = ents[k];
 
             if (is_stacked(ent)) {
-                var currentStackId = ent.pool.getProductAttribute("stacking_id");
+                var currentStackId = ent.pool.getProductAttribute(STACKING_ID_ATTRIBUTE);
                 if (currentStackId == stack_id) {
                     complianceTracker.updateAccumulatedFromEnt(ent);
                 }
@@ -3056,13 +3060,13 @@ var Quantity = {
             return result;
         }
 
-        if (pool.hasProductAttribute("stacking_id")) {
+        if (pool.hasProductAttribute(STACKING_ID_ATTRIBUTE)) {
             var complianceTracker = createComplianceTrackerFromPool(pool, consumer);
 
             for (var j = 0; j < validEntitlements.length; j++) {
                 var ent = validEntitlements[j];
-                if (ent.pool.hasProductAttribute("stacking_id") &&
-                        ent.pool.getProductAttribute("stacking_id") == pool.getProductAttribute("stacking_id")) {
+                if (ent.pool.hasProductAttribute(STACKING_ID_ATTRIBUTE) &&
+                    ent.pool.getProductAttribute(STACKING_ID_ATTRIBUTE) == pool.getProductAttribute(STACKING_ID_ATTRIBUTE)) {
                     complianceTracker.updateAccumulatedFromEnt(ent);
                 }
             }
@@ -3073,15 +3077,15 @@ var Quantity = {
         }
 
         // Adjust the suggested quantity increment if necessary:
-        if (pool.hasProductAttribute("instance_multiplier") && !Utils.isGuest(consumer)) {
-            result.increment = parseInt(pool.getProductAttribute("instance_multiplier"));
+        if (pool.hasProductAttribute(INSTANCE_ATTRIBUTE) && !Utils.isGuest(consumer)) {
+            result.increment = parseInt(pool.getProductAttribute(INSTANCE_ATTRIBUTE));
         }
 
         return result;
     },
 
     get_suggested_pool_quantity: function(pool, consumer, entitlements) {
-        if (Utils.isMultiEnt(pool) && pool.hasProductAttribute("stacking_id")) {
+        if (Utils.isMultiEnt(pool) && pool.hasProductAttribute(STACKING_ID_ATTRIBUTE)) {
             var complianceTracker = createComplianceTrackerFromPool(pool, consumer);
             return CoverageCalculator.getQuantityToCoverStack(complianceTracker, pool, consumer, entitlements);
         }
@@ -3110,7 +3114,7 @@ var PoolType = {
      * subscriptions.
      */
     get_arg_pool_type: function(pool) {
-        var hasStacking = pool.hasProductAttribute("stacking_id");
+        var hasStacking = pool.hasProductAttribute(STACKING_ID_ATTRIBUTE);
         var multiEnt = Utils.isMultiEnt(pool);
         var isInstanceBased = pool.hasProductAttribute(INSTANCE_ATTRIBUTE);
         if (isInstanceBased) {

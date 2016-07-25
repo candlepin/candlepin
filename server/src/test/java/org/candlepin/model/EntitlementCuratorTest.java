@@ -808,17 +808,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void listDirty() {
-        Entitlement ent = entitlementCurator.listByConsumer(consumer).get(0);
-        ent.setDirty(true);
-        entitlementCurator.save(ent);
-        List<Entitlement> ents = entitlementCurator.listDirty(consumer);
-        assertNotNull(ents);
-        assertEquals(1, ents.size());
-        assertEquals(ent.getId(), ents.get(0).getId());
-    }
-
-    @Test
     public void listByConsumersFilteringByPoolAttribute() {
         EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
         filters.addAttributeFilter("pool_attr_1", "attr1");

@@ -108,7 +108,7 @@ public class X509ExtensionUtil  extends X509Util{
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ENDDATE_KEY), false,
             iso8601DateFormat.format(pool.getEndDate())));
         // TODO : use keys
-        String warningPeriod = pool.getProduct().getAttributeValue("warning_period");
+        String warningPeriod = pool.getProduct().getAttributeValue(Product.Attributes.WARNING_PERIOD);
         if (warningPeriod == null) {
             warningPeriod = "0";
         }
@@ -127,14 +127,14 @@ public class X509ExtensionUtil  extends X509Util{
                 false, pool.getAccountNumber()));
         }
         // Add Smart Management, default to "not managed"
-        String mgmt = pool.getProduct().getAttributeValue("management_enabled");
+        String mgmt = pool.getProduct().getAttributeValue(Product.Attributes.MANAGEMENT_ENABLED);
         mgmt = (mgmt == null) ? "0" : mgmt;
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_PROVIDES_MANAGEMENT_KEY),
             false, mgmt));
 
-        String supportLevel = pool.getProduct().getAttributeValue("support_level");
-        String supportType = pool.getProduct().getAttributeValue("support_type");
+        String supportLevel = pool.getProduct().getAttributeValue(Product.Attributes.SUPPORT_LEVEL);
+        String supportType = pool.getProduct().getAttributeValue(Product.Attributes.SUPPORT_TYPE);
         if (supportLevel != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_LEVEL), false,
@@ -145,14 +145,14 @@ public class X509ExtensionUtil  extends X509Util{
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_TYPE), false,
                 supportType));
         }
-        String stackingId = pool.getProduct().getAttributeValue("stacking_id");
+        String stackingId = pool.getProduct().getAttributeValue(Product.Attributes.STACKING_ID);
         if (stackingId != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_STACKING_ID), false,
                 stackingId));
         }
         //code "true" as "1" so it matches other bools in the cert
-        String virtOnly = ent.getPool().getAttributeValue("virt_only");
+        String virtOnly = ent.getPool().getAttributeValue(Product.Attributes.VIRT_ONLY);
         if (virtOnly != null && virtOnly.equals("true")) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_VIRT_ONLY_KEY), false,
@@ -185,20 +185,18 @@ public class X509ExtensionUtil  extends X509Util{
             OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_NAME_KEY), false, product
             .getName()));
 
-        String arch = product.hasAttribute("arch") ?
-            product.getAttributeValue("arch") : "";
+        String arch = product.getAttributeValue(Product.Attributes.ARCHITECTURE);
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
-            OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_ARCH_KEY), false, arch));
+            OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_ARCH_KEY), false, arch != null ? arch : ""));
 
-        String version = product.hasAttribute("version") ?
-            product.getAttributeValue("version") : "";
+        String version = product.getAttributeValue(Product.Attributes.VERSION);
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
-            OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_VERSION_KEY), false, version));
+            OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_VERSION_KEY), false, version != null ? version : ""));
 
-        String brandType = product.hasAttribute("brand_type") ?
-            product.getAttributeValue("brand_type") : "";
+        String brandType = product.getAttributeValue(Product.Attributes.BRANDING_TYPE);
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
-            OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_BRAND_TYPE_KEY), false, brandType));
+            OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_BRAND_TYPE_KEY), false,
+            brandType != null ? brandType : ""));
 
         return toReturn;
     }
@@ -225,8 +223,9 @@ public class X509ExtensionUtil  extends X509Util{
             // If we get a content type we don't have content type OID for
             // skip it. see rhbz#997970
             if (!OIDUtil.CF_REPO_TYPE.containsKey(pc.getContent().getType())) {
-                log.warn("No content type OID found for " + pc.getContent() +
-                    " with content type: " + pc.getContent().getType());
+                log.warn("No content type OID found for {} with content type: {}",
+                    pc.getContent(), pc.getContent().getType());
+
                 continue;
             }
             String contentOid = OIDUtil.REDHAT_OID +
