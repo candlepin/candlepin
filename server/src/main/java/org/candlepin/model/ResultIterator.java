@@ -14,11 +14,8 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.ScrollableResults;
-
 import java.io.Closeable;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 
 
@@ -33,14 +30,14 @@ import java.util.NoSuchElementException;
  */
 public interface ResultIterator<T> extends Closeable, Iterator<T> {
 
-    public boolean hasNext();
-    public T next();
-    public void remove();
+    boolean hasNext();
+    T next();
+    void remove();
 
     /**
      * Closes this ResultIterator and frees it's backing database resources.
      */
-    public void close();
+    void close();
 
     // TODO:
     // Add support for iterator transformers here as the need arises.

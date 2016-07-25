@@ -38,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -293,7 +292,7 @@ public class ProductResource {
         ResultIterator<Owner> iterator = this.ownerCurator.lookupOwnersWithProduct(productUuids).iterate();
         final Boolean lazy = lazyRegen; // Necessary to deal with Java's limitations with closures
 
-        return Response.ok(this.isoFactory.create(iterator, new IteratorTransformer<Owner, JobDetail> () {
+        return Response.ok(this.isoFactory.create(iterator, new IteratorTransformer<Owner, JobDetail>() {
             @Override
             public JobDetail transform(Owner owner) {
                 return RefreshPoolsJob.forOwner(owner, lazy);

@@ -14,15 +14,14 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.Inject;
-
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.Date;
-import java.util.List;
+
+
 
 /**
  * DeletedConsumerCurator

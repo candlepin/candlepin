@@ -18,12 +18,9 @@ import org.candlepin.audit.Event;
 
 import com.google.inject.Inject;
 
-import org.hibernate.Criteria;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
-
-import java.util.List;
 
 
 

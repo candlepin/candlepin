@@ -19,7 +19,7 @@ import com.google.inject.Inject;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
-import java.util.List;
+
 
 /**
  * PermissionBlueprintCurator

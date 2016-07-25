@@ -233,8 +233,8 @@ public class ExporterTest {
         when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when (cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
-        when (ctc.listAll()).thenReturn(cqmock);
+        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
+        when(ctc.listAll()).thenReturn(cqmock);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
@@ -289,8 +289,8 @@ public class ExporterTest {
         when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when (cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
-        when (ctc.listAll()).thenReturn(cqmock);
+        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
+        when(ctc.listAll()).thenReturn(cqmock);
 
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne);
@@ -326,8 +326,8 @@ public class ExporterTest {
         when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when (cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
-        when (ctc.listAll()).thenReturn(cqmock);
+        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
+        when(ctc.listAll()).thenReturn(cqmock);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
@@ -373,8 +373,8 @@ public class ExporterTest {
         when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when (cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
-        when (ctc.listAll()).thenReturn(cqmock);
+        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
+        when(ctc.listAll()).thenReturn(cqmock);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
@@ -420,8 +420,8 @@ public class ExporterTest {
         when(consumer.getType()).thenReturn(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when (cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
-        when (ctc.listAll()).thenReturn(cqmock);
+        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
+        when(ctc.listAll()).thenReturn(cqmock);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
@@ -473,8 +473,8 @@ public class ExporterTest {
         when(dvc.findAll()).thenReturn(dvList);
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when (cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
-        when (ctc.listAll()).thenReturn(cqmock);
+        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
+        when(ctc.listAll()).thenReturn(cqmock);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,

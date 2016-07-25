@@ -36,8 +36,6 @@ import org.candlepin.model.ResultIterator;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
 import org.candlepin.resteasy.IterableStreamingOutputFactory;
-import org.candlepin.resteasy.JsonProvider;
-
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -52,8 +50,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -72,7 +68,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -197,8 +192,8 @@ public class OwnerProductResource {
         return content;
     }
 
-    @ApiOperation(notes = "Retrieves a list of Products", response=Product.class,
-        responseContainer="List", value = "list")
+    @ApiOperation(notes = "Retrieves a list of Products", response = Product.class,
+        responseContainer = "List", value = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response list(

@@ -18,12 +18,9 @@ import com.google.inject.persist.Transactional;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
-import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 
-import java.util.List;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 

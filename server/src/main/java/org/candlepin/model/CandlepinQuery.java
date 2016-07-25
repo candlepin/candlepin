@@ -15,8 +15,6 @@
 package org.candlepin.model;
 
 import org.hibernate.Session;
-import org.hibernate.Criteria;
-import org.hibernate.criterion.DetachedCriteria;
 
 import java.util.List;
 import java.util.Iterator;
@@ -48,7 +46,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      * @return
      *  this query instance
      */
-    public CandlepinQuery<T> useSession(Session session);
+    CandlepinQuery<T> useSession(Session session);
 
     /**
      * Sets the maximum results to be returned when executing this query.
@@ -60,7 +58,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      * @return
      *  this query instance
      */
-    public CandlepinQuery<T> setMaxResults(int limit);
+    CandlepinQuery<T> setMaxResults(int limit);
 
     // TODO:
     // Add some other utility/passthrough methods as a need arises:
@@ -81,7 +79,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      * @return
      *  a list containing the results of executing this criteria
      */
-    public List<T> list();
+    List<T> list();
 
     /**
      * Steps through the results of a column of the given query row-by-row, rather than dumping the
@@ -94,7 +92,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      * @return
      *  the number of rows processed and sent to the result processor
      */
-    public int scroll(ResultProcessor<T> processor);
+    int scroll(ResultProcessor<T> processor);
 
     /**
      * Steps through the results of a column of the given query row-by-row, rather than dumping the
@@ -109,7 +107,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      * @return
      *  the number of rows processed and sent to the result processor
      */
-    public int scroll(int column, ResultProcessor<T> processor);
+    int scroll(int column, ResultProcessor<T> processor);
 
     /**
      * Steps through the results of a query row-by-row, rather than dumping the entire query result
@@ -128,7 +126,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      * @return
      *  the number of rows processed and sent to the result processor
      */
-    public int scroll(int column, boolean evict, ResultProcessor<T> processor);
+    int scroll(int column, boolean evict, ResultProcessor<T> processor);
 
     /**
      * Steps through the results of a query row-by-row, rather than dumping the entire query result
@@ -141,7 +139,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      * @return
      *  the number of rows processed by the result processor
      */
-    public int scrollByRow(ResultProcessor<Object[]> processor);
+    int scrollByRow(ResultProcessor<Object[]> processor);
 
     /**
      * Executes this criteria and iterates over the first column of the results. Other columns in
@@ -153,7 +151,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      * @return
      *  an iterator over the first column of the results
      */
-    public ResultIterator<T> iterate();
+    ResultIterator<T> iterate();
 
     /**
      * Executes this criteria and iterates over the first column of the results. Other columns in
@@ -166,7 +164,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      * @return
      *  an iterator over the first column of the results
      */
-    public Iterator<T> iterator();
+    Iterator<T> iterator();
 
     /**
      * Executes this criteria and iterates over the specified column of the results. Other columns
@@ -181,7 +179,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      * @return
      *  an iterator over the specified column of the results
      */
-    public ResultIterator<T> iterate(int column);
+    ResultIterator<T> iterate(int column);
 
     /**
      * Executes this criteria and iterates over the specified column of the results, optionally
@@ -200,7 +198,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      * @return
      *  an iterator over the specified column of the results
      */
-    public ResultIterator<T> iterate(int column, boolean evict);
+    ResultIterator<T> iterate(int column, boolean evict);
 
     /**
      * Executes this criteria and iterates over the rows of results.
@@ -211,7 +209,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      * @return
      *  an iterator over the rows in the query results
      */
-    public ResultIterator<Object[]> iterateByRow();
+    ResultIterator<Object[]> iterateByRow();
 
     /**
      * Executes this criteria and returns a single, unique entity. If no entities could be found,
@@ -221,6 +219,6 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      * @return
      *  a single entity, or null if no entities were found
      */
-    public T uniqueResult();
+    T uniqueResult();
 
 }

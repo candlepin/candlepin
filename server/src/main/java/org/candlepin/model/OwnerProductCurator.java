@@ -17,7 +17,6 @@ package org.candlepin.model;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Session;
-import org.hibernate.Criteria;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -28,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.LinkedList;
 import java.util.Set;
 
 

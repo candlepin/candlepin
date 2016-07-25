@@ -33,7 +33,6 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.resteasy.IterableStreamingOutputFactory;
-import org.candlepin.resteasy.IterableStreamingOutput;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 
 import com.google.inject.Guice;

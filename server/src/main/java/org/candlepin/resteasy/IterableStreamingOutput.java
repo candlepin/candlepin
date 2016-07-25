@@ -14,8 +14,6 @@
  */
 package org.candlepin.resteasy;
 
-import org.candlepin.model.ResultIterator;
-
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -108,7 +106,7 @@ public class IterableStreamingOutput<T> implements StreamingOutput, Iterable {
      */
     @Override
     public Iterator<?> iterator() {
-        return new Iterator () {
+        return new Iterator() {
             @Override
             public boolean hasNext() {
                 return IterableStreamingOutput.this.iterator.hasNext();
