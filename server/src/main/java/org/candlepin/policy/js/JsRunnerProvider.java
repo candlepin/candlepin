@@ -83,20 +83,25 @@ public class JsRunnerProvider implements Provider<JsRunner> {
         this.compileRules();
     }
 
+    public void compileRules() {
+        compileRules(false);
+    }
+
     /**
      * These are the expensive operations (initStandardObjects and compileReader/exec).
      *  We do them once here, and define this provider as a singleton, so it's only
      *  done at provider creation or whenever rules are refreshed.
      *
-     * @param rulesCurator
+     * @param force If true, then compilation will be forced even when updated timestamp
+     * indicatese that the compilation is not necessary
      */
-    public void compileRules() {
+    public void compileRules(boolean force) {
         scriptLock.writeLock().lock();
         try {
             // Check to see if we need to recompile. we do this inside the write lock
             // just to avoid race conditions where we might double compile
             Date newUpdated = rulesCurator.getUpdated();
-            if (newUpdated.equals(this.updated)) {
+            if (!force && newUpdated.equals(this.updated)) {
                 return;
             }
 
