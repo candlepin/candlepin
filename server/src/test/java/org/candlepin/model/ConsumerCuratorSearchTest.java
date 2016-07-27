@@ -136,6 +136,29 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testSearchHypervisorIdsCaseInsensitive() {
+        String hypervisorid = "HyPuUiD";
+        String hypervisorid2 = "HyPuUiD2";
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setHypervisorId(new HypervisorId(hypervisorid));
+        consumer = consumerCurator.create(consumer);
+
+        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner, ct);
+        consumer2.setHypervisorId(new HypervisorId(hypervisorid2));
+        consumer2 = consumerCurator.create(consumer2);
+
+        List<String> hypervisorIds = new ArrayList<String>();
+        hypervisorIds.add(hypervisorid.toUpperCase());
+
+        Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
+            null, null, null, null, hypervisorIds, null, null, null, null, null);
+
+        List<Consumer> resultList = results.getPageData();
+        assertEquals(1, resultList.size());
+        assertEquals(consumer, resultList.get(0));
+    }
+
+    @Test
     public void testSearchConsumersUuidsAndOwner() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         Map<String, String> facts = new HashMap<String, String>();

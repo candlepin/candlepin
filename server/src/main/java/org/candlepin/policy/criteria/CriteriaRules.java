@@ -100,7 +100,7 @@ public class CriteriaRules  {
                         PoolAttribute.class, "attr")
                         .add(Restrictions.eq("name", "requires_host"))
                         //  Note: looking for pools that are not for this guest
-                        .add(Restrictions.ne("value", hostUuid).ignoreCase())
+                        .add(Restrictions.ne("valueLower", hostUuid.toLowerCase()))
                         .add(Property.forName("this.id")
                                 .eqProperty("attr.pool.id"))
                                 .setProjection(Projections.property("attr.id"));

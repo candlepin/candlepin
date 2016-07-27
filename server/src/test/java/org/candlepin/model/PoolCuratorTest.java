@@ -343,6 +343,51 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(pool, results.get(0));
     }
 
+
+    @Test
+    public void requiresHostIsCaseInsensitive() {
+        Product product1 = TestUtil.createProduct();
+
+        String gid = "AAABBB";
+
+        Consumer hostConsumer = createConsumer(owner);
+        Consumer guestConsumer = createConsumer(owner);
+        guestConsumer.setFact("virt.is_guest", "true");
+        guestConsumer.setFact("virt.uuid", gid);
+        hostConsumer.addGuestId(new GuestId(gid , guestConsumer));
+
+        guestConsumer = consumerCurator.merge(guestConsumer);
+        hostConsumer =  consumerCurator.merge(hostConsumer);
+
+        product1 = this.createProduct(product1, owner);
+
+        Date activeDate = TestUtil.createDate(2000, 3, 2);
+
+        Pool pool = createPool(owner, product1, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+        pool.addAttribute(new PoolAttribute("requires_host", hostConsumer.getUuid().toUpperCase()));
+        poolCurator.create(pool);
+
+        /**
+         * This pool should not be found!
+         */
+        Pool pool2 = createPool(owner, product1, 50L, activeDate, TestUtil.createDate(2005, 3, 2));
+        pool2.addAttribute(new PoolAttribute("requires_host", "poolForSomeOtherHost"));
+        poolCurator.create(pool2);
+
+
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+        req.setOrder(PageRequest.Order.ASCENDING);
+        req.setSortBy("id");
+
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
+            guestConsumer, owner, (Collection<String>) null, null, activeDate, false, null, req, false);
+        List<Pool> results = page.getPageData();
+        assertEquals(1, results.size());
+        assertEquals(pool, results.get(0));
+    }
     /**
      * When filtering pools by product/pool attributes, filters specified with
      * the same attribute name are ORed, and different attributes are ANDed.
