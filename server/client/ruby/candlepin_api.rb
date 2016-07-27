@@ -386,6 +386,10 @@ class Candlepin
     post("/jobs/scheduler", status)
   end
 
+  def trigger_job(job)
+    post("/jobs/schedule/#{job}")
+  end
+
   def create_consumer_type(type_label, manifest=false)
     consumer_type =  {
       'label' => type_label,
