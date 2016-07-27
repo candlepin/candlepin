@@ -252,7 +252,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         productResource.getProductOwners(new LinkedList<String>());
     }
 
-    private void verifyRefreshPoolsJobs(List<JobDetail> jobs, List<Owner> owners, boolean lazyRegen) {
+    private void verifyRefreshPoolsJobs(JobDetail[] jobs, List<Owner> owners, boolean lazyRegen) {
         for (JobDetail job : jobs) {
             assertTrue(RefreshPoolsJob.class.isAssignableFrom(job.getJobClass()));
 
@@ -294,43 +294,82 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Owner owner2 = owners.get(1);
         Owner owner3 = owners.get(2);
 
-        List<JobDetail> jobs = new LinkedList<JobDetail>();
+        JobDetail[] jobs;
 
-        Response response = productResource.refreshPoolsForProduct(Arrays.asList("p1"), true);
-        jobs.clear();
-        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
-            jobs.add((JobDetail) entity);
-        }
+        jobs = productResource.refreshPoolsForProduct(Arrays.asList("p1"), true);
         assertNotNull(jobs);
-        assertEquals(2, jobs.size());
+        assertEquals(2, jobs.length);
         this.verifyRefreshPoolsJobs(jobs, Arrays.asList(owner1, owner2), true);
 
-        response = productResource.refreshPoolsForProduct(Arrays.asList("p1", "p2"), false);
-        jobs.clear();
-        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
-            jobs.add((JobDetail) entity);
-        }
+        jobs = productResource.refreshPoolsForProduct(Arrays.asList("p1", "p2"), false);
         assertNotNull(jobs);
-        assertEquals(3, jobs.size());
+        assertEquals(3, jobs.length);
         this.verifyRefreshPoolsJobs(jobs, Arrays.asList(owner1, owner2, owner3), false);
 
-        response = productResource.refreshPoolsForProduct(Arrays.asList("p3"), false);
-        jobs.clear();
-        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
-            jobs.add((JobDetail) entity);
-        }
+        jobs = productResource.refreshPoolsForProduct(Arrays.asList("p3"), false);
         assertNotNull(jobs);
-        assertEquals(1, jobs.size());
+        assertEquals(1, jobs.length);
         this.verifyRefreshPoolsJobs(jobs, Arrays.asList(owner3), false);
 
-        response = productResource.refreshPoolsForProduct(Arrays.asList("nope"), false);
-        jobs.clear();
-        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
-            jobs.add((JobDetail) entity);
-        }
+        jobs = productResource.refreshPoolsForProduct(Arrays.asList("nope"), false);
         assertNotNull(jobs);
-        assertEquals(0, jobs.size());
+        assertEquals(0, jobs.length);
     }
+
+    // Temporarily disabled; reenable and remove the test above when the JobDetail streaming issue
+    // is resolved.
+    // @Test
+    // public void testRefreshPoolsByProduct() {
+    //     Configuration config = new MapConfiguration(this.config);
+    //     config.setProperty(ConfigProperties.STANDALONE, "false");
+
+    //     ProductResource productResource = new ProductResource(
+    //         this.productCurator, this.ownerCurator, this.productCertificateCurator, config, this.i18n,
+    //         this.isoFactory
+    //     );
+
+    //     List<Owner> owners = this.setupDBForOwnerProdTests();
+    //     Owner owner1 = owners.get(0);
+    //     Owner owner2 = owners.get(1);
+    //     Owner owner3 = owners.get(2);
+
+    //     List<JobDetail> jobs = new LinkedList<JobDetail>();
+
+    //     Response response = productResource.refreshPoolsForProduct(Arrays.asList("p1"), true);
+    //     jobs.clear();
+    //     for (Object entity : (IterableStreamingOutput) response.getEntity()) {
+    //         jobs.add((JobDetail) entity);
+    //     }
+    //     assertNotNull(jobs);
+    //     assertEquals(2, jobs.size());
+    //     this.verifyRefreshPoolsJobs(jobs, Arrays.asList(owner1, owner2), true);
+
+    //     response = productResource.refreshPoolsForProduct(Arrays.asList("p1", "p2"), false);
+    //     jobs.clear();
+    //     for (Object entity : (IterableStreamingOutput) response.getEntity()) {
+    //         jobs.add((JobDetail) entity);
+    //     }
+    //     assertNotNull(jobs);
+    //     assertEquals(3, jobs.size());
+    //     this.verifyRefreshPoolsJobs(jobs, Arrays.asList(owner1, owner2, owner3), false);
+
+    //     response = productResource.refreshPoolsForProduct(Arrays.asList("p3"), false);
+    //     jobs.clear();
+    //     for (Object entity : (IterableStreamingOutput) response.getEntity()) {
+    //         jobs.add((JobDetail) entity);
+    //     }
+    //     assertNotNull(jobs);
+    //     assertEquals(1, jobs.size());
+    //     this.verifyRefreshPoolsJobs(jobs, Arrays.asList(owner3), false);
+
+    //     response = productResource.refreshPoolsForProduct(Arrays.asList("nope"), false);
+    //     jobs.clear();
+    //     for (Object entity : (IterableStreamingOutput) response.getEntity()) {
+    //         jobs.add((JobDetail) entity);
+    //     }
+    //     assertNotNull(jobs);
+    //     assertEquals(0, jobs.size());
+    // }
 
     @Test(expected = BadRequestException.class)
     public void testRefreshPoolsByProductInputValidation() {
