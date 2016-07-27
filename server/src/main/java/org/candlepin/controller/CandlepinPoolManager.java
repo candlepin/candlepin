@@ -20,7 +20,6 @@ import org.candlepin.audit.Event.Type;
 import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
-import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
@@ -50,10 +49,7 @@ import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.pinsetter.core.PinsetterException;
-import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterKernel;
-import org.candlepin.pinsetter.tasks.ConsumerComplianceJob;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
@@ -76,7 +72,6 @@ import com.google.inject.persist.Transactional;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -1383,7 +1378,6 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     /**
-     * Some History, hopefully irrelavant henceforth:
      * This transaction used to update consumer's status hash and got dead
      * locked because:
      * T1 and T2 are entitlement jobs
@@ -1400,14 +1394,10 @@ public class CandlepinPoolManager implements PoolManager {
      * 5. Deadlock.  T2 is waiting for T1's shared lock to be released but
      *    T1 is waiting for T2's shared lock to be released.
      *
-     * The solution was to create a longer transaction and grab an exclusive lock
+     * The solution is to create a longer transaction and grab an exclusive lock
      * on the cp_consumer row (using a select for update) at the start of the transaction.
      * The other thread will then wait for the exclusive lock to be released instead of
      * deadlocking.
-     *
-     * Another effort on the solution removed compliance status evaluation from
-     * this thread and created a separate asynchronous job to accomplish that,
-     * thus removing the need to hold that exclusive lock on cp_consumer
      *
      * See BZ #1274074 and git history for details
      */
@@ -1478,6 +1468,16 @@ public class CandlepinPoolManager implements PoolManager {
             handler = new UpdateHandler();
         }
 
+        boolean isDistributor = consumer.getType().isManifest();
+
+        /*
+         * Grab an exclusive lock on the consumer to prevent deadlock.
+         * No need to lock for distributors as we wont compute compliance for it.
+         */
+        if (!isDistributor) {
+            consumer = consumerCurator.lockAndLoad(consumer);
+        }
+
         // Persist the entitlement after it has been created.  It requires an ID in order to
         // create an entitlement-derived subpool
         log.info("Processing entitlements and persisting.");
@@ -1504,17 +1504,15 @@ public class CandlepinPoolManager implements PoolManager {
         // we might have changed the bonus pool quantities, lets find out.
         handler.handleBonusPools(poolQuantities, entitlements);
 
-        JobDetail detail = ConsumerComplianceJob.scheduleWithForceUpdate(consumer);
-        detail.getJobDataMap().put(PinsetterJobListener.PRINCIPAL_KEY, new SystemPrincipal());
 
-        log.info("Triggering ConsumerComplianceJob: {} for consumer: {}", detail.getKey(),
-            consumer.getUuid());
-
-        try {
-            pinsetterKernel.scheduleSingleJob(detail);
-        }
-        catch (PinsetterException e) {
-            log.error("ConsumerComplianceJob schedule failed", e.getMessage());
+        /*
+         * If the consumer is not a distributor, check consumer's new compliance
+         * status and save. the getStatus call does that internally, so we only
+         * need to check for the update.
+         */
+        complianceRules.getStatus(consumer, null, false, false);
+        if (!isDistributor) {
+            consumerCurator.update(consumer);
         }
 
         poolCurator.flush();
