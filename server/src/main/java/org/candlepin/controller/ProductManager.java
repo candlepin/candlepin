@@ -152,7 +152,7 @@ public class ProductManager {
 
         // Check if we have an alternate version we can use instead.
         List<Product> alternateVersions = this.productCurator
-            .getProductsByVersion(entity.getId(), entity.hashCode())
+            .getProductsByVersion(entity.getId(), entity.getEntityVersion())
             .list();
 
         for (Product alt : alternateVersions) {
@@ -291,13 +291,12 @@ public class ProductManager {
         // their own version.
         // This is probably going to be a very expensive operation, though.
         List<Product> alternateVersions = this.productCurator
-            .getProductsByVersion(update.getId(), updated.hashCode())
+            .getProductsByVersion(update.getId(), updated.getEntityVersion())
             .list();
 
         log.debug("Checking {} alternate product versions", alternateVersions.size());
         for (Product alt : alternateVersions) {
             if (alt.equals(updated)) {
-                log.debug("UUIDS: {} => {}", entity, alt);
                 log.debug("Converging product with existing: {} => {}", updated, alt);
 
                 List<Owner> owners = Arrays.asList(owner);

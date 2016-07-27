@@ -38,6 +38,7 @@ import org.candlepin.util.RdbmsExceptionTranslator;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.quartz.JobDataMap;
@@ -53,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -199,7 +201,7 @@ public class EnvironmentResource {
 
     @ApiOperation(notes = "Promotes a Content into an Environment. This call accepts multiple " +
         "content sets to promote at once, after which all affected certificates for consumers" +
-        " in the enironment will be regenerated. Consumers registered to this environment " +
+        " in the environment will be regenerated. Consumers registered to this environment " +
         "will now receive this content in their entitlement certificates. Because the" +
         " certificate regeneraiton can be quite time consuming, this is done as an " +
         "asynchronous job. The content will be promoted and immediately available for new " +
@@ -217,7 +219,7 @@ public class EnvironmentResource {
 
         Environment env = lookupEnvironment(envId);
 
-        Set<String> contentIds = new HashSet<String>();
+
         // Make sure this content has not already been promoted within this environment
         // Impl note:
         // We have to do this in a separate loop or we'll end up with an undefined state, should
@@ -240,17 +242,22 @@ public class EnvironmentResource {
             }
         }
 
-        for (org.candlepin.model.dto.EnvironmentContent promoteMe : contentToPromote) {
-            // Make sure the content exists:
-            EnvironmentContent envcontent = new EnvironmentContent();
+        Set<String> contentIds = new HashSet<String>();
 
-            envcontent.setEnvironment(env);
-            envcontent.setContent(this.resolveContent(env, promoteMe.getContentId()));
-            envcontent.setEnabled(promoteMe.getEnabled());
-
-            envContentCurator.create(envcontent);
-            env.getEnvironmentContent().add(envcontent);
-            contentIds.add(promoteMe.getContentId());
+        try {
+            contentIds = batchCreate(contentToPromote, env);
+        }
+        catch (PersistenceException pe) {
+            if (rdbmsExceptionTranslator.isConstraintViolationDuplicateEntry(pe)) {
+                log.info("Concurrent content promotion will cause this request to fail.",
+                    pe);
+                throw new ConflictException(
+                    i18n.tr("Some of the content is already associated with Environment: {0}",
+                        contentToPromote));
+            }
+            else {
+                throw pe;
+            }
         }
 
         JobDataMap map = new JobDataMap();
@@ -303,8 +310,7 @@ public class EnvironmentResource {
         }
         catch (RollbackException hibernateException) {
             if (rdbmsExceptionTranslator.isUpdateHadNoEffectException(hibernateException)) {
-                log.info("Concurrent content demotion will cause this request to fail.",
-                    hibernateException);
+                log.info("Concurrent content demotion will cause this request to fail.", hibernateException);
                 throw new NotFoundException(
                     i18n.tr("One of the content does not exist in the environment anymore: {0}",
                         demotedContent.values()));
@@ -330,6 +336,34 @@ public class EnvironmentResource {
         return detail;
     }
 
+    /**
+     * To make promotion transactional
+     * @param contentToPromote
+     * @param env
+     * @return contentIds Ids of the promoted content
+     */
+    @Transactional
+    public Set<String>  batchCreate(List<org.candlepin.model.dto.EnvironmentContent> contentToPromote,
+        Environment env) {
+
+        Set<String> contentIds = new HashSet<String>();
+
+        for (org.candlepin.model.dto.EnvironmentContent promoteMe : contentToPromote) {
+            // Make sure the content exists:
+            EnvironmentContent envcontent = new EnvironmentContent();
+
+            envcontent.setEnvironment(env);
+            envcontent.setContent(this.resolveContent(env, promoteMe.getContentId()));
+            envcontent.setEnabled(promoteMe.getEnabled());
+
+            envContentCurator.create(envcontent);
+            env.getEnvironmentContent().add(envcontent);
+            contentIds.add(promoteMe.getContentId());
+        }
+
+        return contentIds;
+    }
+
     private Environment lookupEnvironment(String envId) {
         Environment e = envCurator.find(envId);
         if (e == null) {
@@ -353,8 +387,8 @@ public class EnvironmentResource {
 
         Environment e = lookupEnvironment(envId);
         consumer.setEnvironment(e);
-        return this.consumerResource.create(consumer, principal, userName,
-            e.getOwner().getKey(), activationKeys, true);
+        return this.consumerResource.create(consumer, principal, userName, e.getOwner().getKey(),
+            activationKeys, true);
     }
 
 }

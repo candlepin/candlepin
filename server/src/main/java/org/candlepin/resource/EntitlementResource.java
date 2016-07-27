@@ -22,6 +22,7 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.paging.Paginate;
+import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Cdn;
@@ -173,15 +174,22 @@ public class EntitlementResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{entitlement_id}")
     public Entitlement getEntitlement(
-        @PathParam("entitlement_id") @Verify(Entitlement.class) String dbid) {
-        Entitlement toReturn = entitlementCurator.find(dbid);
-        List<Entitlement> tempList = Arrays.asList(toReturn);
-        poolManager.regenerateDirtyEntitlements(tempList);
-        if (toReturn != null) {
-            return toReturn;
+        @PathParam("entitlement_id") @Verify(Entitlement.class) String entitlementId) {
+
+        Entitlement entitlement = entitlementCurator.find(entitlementId);
+
+        if (entitlement == null) {
+            throw new NotFoundException(
+                i18n.tr("Entitlement with ID ''{0}'' could not be found.", entitlementId)
+            );
         }
-        throw new NotFoundException(
-            i18n.tr("Entitlement with ID ''{0}'' could not be found.", dbid));
+
+        // Impl note:
+        // If the entitlement is dirty, this performs an in-place update of the entitlement, not a
+        // generation of a new entitlement object, as the name would imply.
+        poolManager.regenerateDirtyEntitlements(Arrays.asList(entitlement));
+
+        return entitlement;
     }
 
     @ApiOperation(notes = "Updates an Entitlement. This only works for the quantity.",
@@ -379,6 +387,7 @@ public class EntitlementResource {
      *
      * CdnInfo represents a container for subscription entitlement and cdn
      */
+    @SuppressSwaggerCheck
     public static class CdnInfo implements Serializable {
         private static final long serialVersionUID = 523637879312970984L;
 

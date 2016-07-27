@@ -34,6 +34,7 @@ import org.candlepin.util.Util;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.apache.commons.lang.StringUtils;
 import org.quartz.CronTrigger;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -135,7 +136,11 @@ public class PinsetterKernel {
     private void addToList(Set<String> impls, String confkey) {
         List<String> jobs = config.getList(confkey, null);
         if (jobs != null && !jobs.isEmpty()) {
-            impls.addAll(jobs);
+            for (String job : jobs) {
+                if (!StringUtils.isEmpty(job)) {
+                    impls.add(job);
+                }
+            }
         }
     }
 
@@ -405,6 +410,21 @@ public class PinsetterKernel {
             .build();
 
         return scheduleJob(jobDetail, SINGLE_JOB_GROUP, trigger);
+    }
+
+    public JobStatus scheduleSingleJob(Class job, String jobName) throws PinsetterException {
+        JobDataMap map = new JobDataMap();
+        map.put(PinsetterJobListener.PRINCIPAL_KEY, new SystemPrincipal());
+
+        JobDetail detail = newJob(job)
+            .withIdentity(jobName, CRON_GROUP)
+            .usingJobData(map)
+            .build();
+        Trigger trigger = newTrigger()
+            .withIdentity(detail.getKey().getName() + " trigger", SINGLE_JOB_GROUP)
+            .build();
+
+        return scheduleJob(detail, SINGLE_JOB_GROUP, trigger);
     }
 
     public void addTrigger(JobStatus status) throws SchedulerException {

@@ -14,6 +14,7 @@
  */
 package org.candlepin.hostedtest;
 
+import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.service.UniqueIdGenerator;
@@ -37,6 +38,7 @@ import javax.ws.rs.core.MediaType;
  * mode, while it is built with candlepin, it is not packaged in candlepin.war,
  * as the only purpose of this class is to support spec tests.
  */
+@SuppressSwaggerCheck
 @Path("/hostedtest/subscriptions")
 public class HostedTestSubscriptionResource {
 

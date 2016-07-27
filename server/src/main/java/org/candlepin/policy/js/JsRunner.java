@@ -25,10 +25,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * JsRunner - Responsible for running the javascript rules methods in all namespaces.
+ * JsRunner - Responsible for running the javascript rules methods in all
+ * namespaces.
  * Used by the various "Rules" classes.
  */
 public class JsRunner {
+
     private static Logger log = LoggerFactory.getLogger(JsRunner.class);
 
     private Object rulesNameSpace;
@@ -42,10 +44,12 @@ public class JsRunner {
     }
 
     /**
-     * initialize the javascript rules for the provided namespace. you must run this
+     * initialize the javascript rules for the provided namespace. you must run
+     * this
      * before trying to run a javascript rule or method.
      *
-     * @param namespace the javascript rules namespace containing the rules type you want
+     * @param namespace the javascript rules namespace containing the rules type
+     *        you want
      */
     public void init(String namespace) {
         this.namespace = namespace;
@@ -55,8 +59,8 @@ public class JsRunner {
             Context context = Context.enter();
             try {
                 Object func = ScriptableObject.getProperty(scope, namespace);
-                this.rulesNameSpace = unwrapReturnValue(((Function) func).call(context,
-                    scope, scope, Context.emptyArgs));
+                this.rulesNameSpace = unwrapReturnValue(((Function) func)
+                    .call(context, scope, scope, Context.emptyArgs));
 
                 this.initialized = true;
             }
@@ -84,17 +88,18 @@ public class JsRunner {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T invokeMethod(String method) throws NoSuchMethodException,
-            RhinoException {
+    public <T> T invokeMethod(String method)
+        throws NoSuchMethodException, RhinoException {
         Scriptable localScope = Context.toObject(this.rulesNameSpace, scope);
         Object func = ScriptableObject.getProperty(localScope, method);
         if (!(func instanceof Function)) {
-            throw new NoSuchMethodException("no such javascript method: " + method);
+            throw new NoSuchMethodException(
+                "no such javascript method: " + method);
         }
         Context context = Context.enter();
         try {
-            return (T) unwrapReturnValue(((Function) func).call(context, scope, localScope,
-                Context.emptyArgs));
+            return (T) unwrapReturnValue(((Function) func).call(context, scope,
+                localScope, Context.emptyArgs));
         }
         finally {
             Context.exit();
@@ -109,14 +114,14 @@ public class JsRunner {
     }
 
     public <T> T invokeRule(String ruleName) {
-        log.debug("Running rule: " + ruleName + " in namespace: " + namespace);
+        log.debug("Running rule: {} in namespace: {}", ruleName, namespace);
 
         T returner = null;
         try {
             returner = this.invokeMethod(ruleName);
         }
         catch (NoSuchMethodException ex) {
-            log.info("No rule found: " + ruleName + " in namespace: " + namespace);
+            log.info("No rule found: {} in namespace: {}", ruleName, namespace);
         }
         catch (RhinoException ex) {
             throw new RuleExecutionException(ex);
@@ -136,7 +141,7 @@ public class JsRunner {
             returner = invokeMethod(function, context);
         }
         catch (NoSuchMethodException e) {
-            log.warn("No javascript method found: " + function);
+            log.warn("No javascript method found: {}", function);
         }
         catch (RhinoException e) {
             throw new RuleExecutionException(e);

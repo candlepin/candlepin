@@ -15,10 +15,12 @@
 package org.candlepin.util;
 
 import org.hibernate.StaleStateException;
+import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.OptimisticLockException;
+import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 
 /**
@@ -51,6 +53,35 @@ public class RdbmsExceptionTranslator {
             }
         }
 
+        return false;
+    }
+
+    public boolean isConstraintViolationDuplicateEntry(PersistenceException pe) {
+        log.debug("Translating {}", pe);
+
+        if (pe.getCause() != null &&
+            pe.getCause() instanceof ConstraintViolationException) {
+
+            ConstraintViolationException cve = (ConstraintViolationException) pe.getCause();
+            log.info("ConstraintViolationException error code:" + cve.getErrorCode());
+
+            //MySQL error code ER_DUP_ENTRY
+            //http://dev.mysql.com/doc/refman/5.7/en/error-messages-server.html
+            if (cve.getSQLState() != null &&
+                cve.getSQLState().equals("23000") &&
+                cve.getErrorCode() == 1062) {
+                return true;
+            }
+
+            //Postgres error code DUPLICATE OBJECT
+            //https://www.postgresql.org/docs/8.3/static/errcodes-appendix.html
+            if (cve.getSQLState() != null &&
+                cve.getSQLState().equals("23505")) {
+                return true;
+            }
+
+            //TODO add Oracle
+        }
         return false;
     }
 

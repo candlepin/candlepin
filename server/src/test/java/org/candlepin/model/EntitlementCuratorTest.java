@@ -1087,4 +1087,15 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertTrue(ent2.isDirty());
         assertFalse(ent3.isDirty());
     }
+
+    @Test
+    public void testListDirty() {
+        Entitlement ent = entitlementCurator.listByConsumer(consumer).get(0);
+        ent.setDirty(true);
+        entitlementCurator.save(ent);
+        List<Entitlement> ents = entitlementCurator.listDirty(consumer);
+        assertNotNull(ents);
+        assertEquals(1, ents.size());
+        assertEquals(ent.getId(), ents.get(0).getId());
+    }
 }

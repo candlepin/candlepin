@@ -144,7 +144,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
     private Set<Product> getDerivedProductsForDistributor(Entitlement ent) {
         Set<Product> derivedProducts = new HashSet<Product>();
-        boolean derived = ent.getPool().hasAttribute("pool_derived");
+        boolean derived = ent.getPool().hasAttribute(Pool.Attributes.DERIVED_POOL);
         if (!derived && ent.getConsumer().getType().isManifest() &&
             ent.getPool().getDerivedProduct() != null) {
             derivedProducts.add(ent.getPool().getDerivedProduct());
@@ -201,7 +201,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         }
 
         boolean isUnmappedGuestPool = BooleanUtils.toBoolean(
-            pool.getAttributeValue("unmapped_guests_only"));
+            pool.getAttributeValue(Pool.Attributes.UNMAPPED_GUESTS_ONLY));
 
         if (isUnmappedGuestPool) {
             Date oneDayFromRegistration = new Date(startDate.getTime() + 24L * 60L * 60L * 1000L);

@@ -17,6 +17,7 @@ package org.candlepin.gutterball.resource;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.paging.Paginate;
+import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.gutterball.report.Report;
 import org.candlepin.gutterball.report.ReportFactory;
@@ -40,6 +41,7 @@ import javax.ws.rs.core.UriInfo;
  * the details of reports.
  */
 @Path("/reports")
+@SuppressSwaggerCheck
 public class ReportsResource {
 
     private ReportFactory reportFactory;

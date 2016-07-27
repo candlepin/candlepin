@@ -73,41 +73,39 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     Eventful {
 
     /**
-     * Attribute used to determine whether or not the pool is derived from the use of an
-     * entitlement.
+     * Common pool attributes
      */
-    public static final String DERIVED_POOL_ATTRIBUTE = "pool_derived";
+    public static final class Attributes {
+        /** Attribute used to determine whether or not the pool is derived from the use of an entitlement */
+        public static final String DERIVED_POOL = "pool_derived";
 
-    /**
-     * Attribute used to identify unmapped guest pools. Pool must also be a derived pool.
-     */
-    public static final String UNMAPPED_GUESTS_ATTRIBUTE = "unmapped_guests_only";
+        /** Attribute used to determine whether or not the pool was created for a development entitlement */
+        public static final String DEVELOPMENT_POOL = "dev_pool";
 
-    /**
-     * Product attribute used to identify stacked pools.
-     */
-    public static final String STACKING_ATTRIBUTE = "stacking_id";
+        /** Attribute used to identify unmapped guest pools. Pool must also be a derived pool */
+        public static final String UNMAPPED_GUESTS_ONLY = "unmapped_guests_only";
 
-    /**
-     * Product attribute used to identify multi-entitlement enabled pools.
-     */
-    public static final String MULTI_ENTITLEMENT_ATTRIBUTE = "multi-entitlement";
+        /** Product attribute used to identify multi-entitlement enabled pools. */
+        public static final String MULTI_ENTITLEMENT = "multi-entitlement";
 
-    /**
-     * Product attribute used to specify the instance multiplier for a pool.
-     */
-    public static final String INSTANCE_ATTRIBUTE = "instance_multiplier";
+        /** Attribute for specifying the pool is only available to physical systems */
+        public static final String PHYSICAL_ONLY = "physical_only";
 
-    /**
-     * Attribute used to determine whether or not the pool was created for a development
-     * entitlement.
-     */
-    public static final String DEVELOPMENT_POOL_ATTRIBUTE = "dev_pool";
+        /** Attribute used to determine which specific consumer the pool was created for */
+        public static final String REQUIRES_CONSUMER = "requires_consumer";
 
-    /**
-     * Attribute used to determine which specific consumer the pool was created for.
-     */
-    public static final String REQUIRES_CONSUMER_ATTRIBUTE = "requires_consumer";
+        /** Attribute used to determine which specific consumer type the pool was created for */
+        public static final String REQUIRES_CONSUMER_TYPE = "requires_consumer_type";
+
+        /** Attribute used to determine which specific host the pool was created for */
+        public static final String REQUIRES_HOST = "requires_host";
+
+        /** Attribute for specifying the source pool from which a derived pool originates */
+        public static final String SOURCE_POOL_ID = "source_pool_id";
+
+        /** Attribute for specifying the pool is only available to guests */
+        public static final String VIRT_ONLY = "virt_only";
+    }
 
     /**
      * PoolType
@@ -1122,8 +1120,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * @return pool type
      */
     public PoolType getType() {
-        if (hasAttribute(DERIVED_POOL_ATTRIBUTE)) {
-            if (hasAttribute(UNMAPPED_GUESTS_ATTRIBUTE)) {
+        if (hasAttribute(Attributes.DERIVED_POOL)) {
+            if (hasAttribute(Attributes.UNMAPPED_GUESTS_ONLY)) {
                 return PoolType.UNMAPPED_GUEST;
             }
             else if (getSourceEntitlement() != null) {
@@ -1136,7 +1134,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
                 return PoolType.BONUS;
             }
         }
-        else if (hasAttribute(DEVELOPMENT_POOL_ATTRIBUTE)) {
+        else if (hasAttribute(Attributes.DEVELOPMENT_POOL)) {
             return PoolType.DEVELOPMENT;
         }
         return PoolType.NORMAL;
@@ -1147,12 +1145,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         Product product = this.getProduct();
 
         if (product != null) {
-            boolean isStacking = product.hasAttribute(STACKING_ATTRIBUTE);
+            boolean isStacking = product.hasAttribute(Product.Attributes.STACKING_ID);
             boolean isMultiEnt = "yes".equalsIgnoreCase(
-                product.getAttributeValue(MULTI_ENTITLEMENT_ATTRIBUTE)
+                product.getAttributeValue(Attributes.MULTI_ENTITLEMENT)
             );
 
-            if (product.hasAttribute(INSTANCE_ATTRIBUTE)) {
+            if (product.hasAttribute(Product.Attributes.INSTANCE_MULTIPLIER)) {
                 if (isStacking && isMultiEnt) {
                     return PoolComplianceType.INSTANCE_BASED;
                 }
@@ -1170,20 +1168,22 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public boolean isStacked() {
-        return (this.getProduct() != null ? this.getProduct().hasAttribute(STACKING_ATTRIBUTE) : false);
+        return (this.getProduct() != null ?
+            this.getProduct().hasAttribute(Product.Attributes.STACKING_ID) : false);
     }
 
     public String getStackId() {
-        return (this.getProduct() != null ? this.getProduct().getAttributeValue(STACKING_ATTRIBUTE) : null);
+        return (this.getProduct() != null ?
+            this.getProduct().getAttributeValue(Product.Attributes.STACKING_ID) : null);
     }
 
     @JsonIgnore
     public boolean isUnmappedGuestPool() {
-        return "true".equalsIgnoreCase(this.getAttributeValue(UNMAPPED_GUESTS_ATTRIBUTE));
+        return "true".equalsIgnoreCase(this.getAttributeValue(Attributes.UNMAPPED_GUESTS_ONLY));
     }
 
     public boolean isDevelopmentPool() {
-        return "true".equalsIgnoreCase(this.getAttributeValue(DEVELOPMENT_POOL_ATTRIBUTE));
+        return "true".equalsIgnoreCase(this.getAttributeValue(Attributes.DEVELOPMENT_POOL));
     }
 
     public Set<Branding> getBranding() {

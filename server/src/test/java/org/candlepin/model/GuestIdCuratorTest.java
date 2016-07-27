@@ -107,4 +107,35 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
         GuestId result = curator.findByConsumerAndId(consumer, "1");
         assertEquals(new GuestId("1"), result);
     }
+
+    @Test
+    public void findByConsumerAndIdCaseInsensitive() {
+        String guestId = "GuEsTiD";
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.addGuestId(new GuestId(guestId));
+        consumerCurator.create(consumer);
+
+        GuestId result = curator.findByConsumerAndId(consumer, guestId.toUpperCase());
+        /**
+         * Note that we keep the original case of the guestId, we only search
+         * in case insensitive way
+         */
+        assertEquals(new GuestId(guestId), result);
+    }
+
+
+    @Test
+    public void findByGuestIdAndOrgCaseInsensitive() {
+        String guestId = "GuEsTiD";
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.addGuestId(new GuestId(guestId));
+        consumerCurator.create(consumer);
+
+        GuestId result = curator.findByGuestIdAndOrg(guestId.toUpperCase(), owner);
+        /**
+         * Note that we keep the original case of the guestId, we only search
+         * in case insensitive way
+         */
+        assertEquals(new GuestId(guestId), result);
+    }
 }

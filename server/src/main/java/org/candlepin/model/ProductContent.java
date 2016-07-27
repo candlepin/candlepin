@@ -144,6 +144,22 @@ public class ProductContent extends AbstractHibernateObject {
     }
 
     /**
+     * Calculates and returns a version hash for this entity. This method operates much like the
+     * hashCode method, except that it is more accurate and should have fewer collisions.
+     *
+     * @return
+     *  a version hash for this entity
+     */
+    public int getEntityVersion() {
+        int hash = 17;
+
+        hash = 7 * hash + (this.content != null ? this.content.getEntityVersion() : 0);
+        hash = 7 * hash + (this.enabled ? 1 : 0);
+
+        return hash;
+    }
+
+    /**
      * Determines whether or not this entity would be changed if the given DTO were applied to this
      * object.
      *

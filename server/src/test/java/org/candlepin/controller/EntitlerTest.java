@@ -628,8 +628,8 @@ public class EntitlerTest {
         cal.setTime(created.getStartDate());
         cal.add(Calendar.DAY_OF_YEAR, 47);
         assertEquals(created.getEndDate(), cal.getTime());
-        assertEquals("true", created.getAttributeValue(Pool.DEVELOPMENT_POOL_ATTRIBUTE));
-        assertEquals(devSystem.getUuid(), created.getAttributeValue(Pool.REQUIRES_CONSUMER_ATTRIBUTE));
+        assertEquals("true", created.getAttributeValue(Pool.Attributes.DEVELOPMENT_POOL));
+        assertEquals(devSystem.getUuid(), created.getAttributeValue(Pool.Attributes.REQUIRES_CONSUMER));
         assertEquals(p1.getId(), created.getProductId());
         assertEquals(2, created.getProvidedProducts().size());
         assertEquals("Premium", created.getProduct().getAttributeValue("support_level"));

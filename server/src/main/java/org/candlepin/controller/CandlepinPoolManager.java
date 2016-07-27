@@ -20,7 +20,6 @@ import org.candlepin.audit.Event.Type;
 import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
-import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
@@ -50,10 +49,7 @@ import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.pinsetter.core.PinsetterException;
-import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterKernel;
-import org.candlepin.pinsetter.tasks.ConsumerComplianceJob;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
@@ -76,7 +72,6 @@ import com.google.inject.persist.Transactional;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -656,7 +651,7 @@ public class CandlepinPoolManager implements PoolManager {
         List<PoolUpdate> updatedPools = poolRules.updatePools(pool, existingPools, originalQuantity,
             changedProducts);
 
-        String virtLimit = pool.getProduct().getAttributeValue("virt_limit");
+        String virtLimit = pool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT);
         boolean createsSubPools = !StringUtils.isBlank(virtLimit) && !"0".equals(virtLimit);
 
         // Update subpools if necessary
@@ -1153,8 +1148,8 @@ public class CandlepinPoolManager implements PoolManager {
             boolean providesProduct = false;
             // Would parse the int here, but it can be 'unlimited'
             // and we only need to check that it's non-zero
-            if (pool.getProduct().hasAttribute("virt_limit") &&
-                !pool.getProduct().getAttributeValue("virt_limit").equals("0")) {
+            if (pool.getProduct().hasAttribute(Product.Attributes.VIRT_LIMIT) &&
+                !pool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT).equals("0")) {
                 for (String productId : productIds) {
                     // If this is a derived pool, we need to see if the derived product
                     // provides anything for the guest, otherwise we use the parent.
@@ -1216,7 +1211,9 @@ public class CandlepinPoolManager implements PoolManager {
     private Set<String> getProductsToRemove(List<Pool> allOwnerPoolsForGuest, Set<String> tmpSet) {
         Set<String> productsToRemove = new HashSet<String>();
         for (Pool pool : allOwnerPoolsForGuest) {
-            if (pool.getProduct().hasAttribute("virt_only") || pool.hasAttribute("virt_only")) {
+            if (pool.getProduct().hasAttribute(Product.Attributes.VIRT_ONLY) ||
+                pool.hasAttribute(Pool.Attributes.VIRT_ONLY)) {
+
                 for (String prodId : tmpSet) {
                     if (pool.provides(prodId)) {
                         productsToRemove.add(prodId);
@@ -1279,8 +1276,9 @@ public class CandlepinPoolManager implements PoolManager {
             // If We want to complete partial stacks if possible,
             // even if they do not provide any products
             Product poolProduct = pool.getProduct();
-            if (poolProduct.hasAttribute("stacking_id") &&
-                compliance.getPartialStacks().containsKey(poolProduct.getAttributeValue("stacking_id"))) {
+            String stackingId = poolProduct.getAttributeValue(Product.Attributes.STACKING_ID);
+
+            if (stackingId != null && compliance.getPartialStacks().containsKey(stackingId)) {
                 providesProduct = true;
             }
             else {
@@ -1388,7 +1386,6 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     /**
-     * Some History, hopefully irrelavant henceforth:
      * This transaction used to update consumer's status hash and got dead
      * locked because:
      * T1 and T2 are entitlement jobs
@@ -1405,14 +1402,10 @@ public class CandlepinPoolManager implements PoolManager {
      * 5. Deadlock.  T2 is waiting for T1's shared lock to be released but
      *    T1 is waiting for T2's shared lock to be released.
      *
-     * The solution was to create a longer transaction and grab an exclusive lock
+     * The solution is to create a longer transaction and grab an exclusive lock
      * on the cp_consumer row (using a select for update) at the start of the transaction.
      * The other thread will then wait for the exclusive lock to be released instead of
      * deadlocking.
-     *
-     * Another effort on the solution removed compliance status evaluation from
-     * this thread and created a separate asynchronous job to accomplish that,
-     * thus removing the need to hold that exclusive lock on cp_consumer
      *
      * See BZ #1274074 and git history for details
      */
@@ -1483,6 +1476,16 @@ public class CandlepinPoolManager implements PoolManager {
             handler = new UpdateHandler();
         }
 
+        boolean isDistributor = consumer.getType().isManifest();
+
+        /*
+         * Grab an exclusive lock on the consumer to prevent deadlock.
+         * No need to lock for distributors as we wont compute compliance for it.
+         */
+        if (!isDistributor) {
+            consumer = consumerCurator.lockAndLoad(consumer);
+        }
+
         // Persist the entitlement after it has been created.  It requires an ID in order to
         // create an entitlement-derived subpool
         log.info("Processing entitlements and persisting.");
@@ -1509,17 +1512,15 @@ public class CandlepinPoolManager implements PoolManager {
         // we might have changed the bonus pool quantities, lets find out.
         handler.handleBonusPools(poolQuantities, entitlements);
 
-        JobDetail detail = ConsumerComplianceJob.scheduleWithForceUpdate(consumer);
-        detail.getJobDataMap().put(PinsetterJobListener.PRINCIPAL_KEY, new SystemPrincipal());
 
-        log.info("Triggering ConsumerComplianceJob: {} for consumer: {}", detail.getKey(),
-            consumer.getUuid());
-
-        try {
-            pinsetterKernel.scheduleSingleJob(detail);
-        }
-        catch (PinsetterException e) {
-            log.error("ConsumerComplianceJob schedule failed", e.getMessage());
+        /*
+         * If the consumer is not a distributor, check consumer's new compliance
+         * status and save. the getStatus call does that internally, so we only
+         * need to check for the update.
+         */
+        complianceRules.getStatus(consumer, null, false, false);
+        if (!isDistributor) {
+            consumerCurator.update(consumer);
         }
 
         poolCurator.flush();
@@ -1604,19 +1605,25 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public void revokeEntitlements(List<Entitlement> entsToRevoke) {
-        revokeEntitlements(entsToRevoke, true);
+        revokeEntitlements(entsToRevoke, null, true);
+    }
+
+    public void revokeEntitlements(List<Entitlement> entsToRevoke, Set<String> alreadyDeletedPools) {
+        revokeEntitlements(entsToRevoke, alreadyDeletedPools, true);
     }
 
     /**
      * Revokes the given set of entitlements.
      *
      * @param entsToRevoke entitlements to revoke
+     * @param alreadyDeletedPools pools to skip deletion as they have already been deleted
      * @param regenCertsAndStatuses if this revocation should also trigger regeneration of certificates
      * and recomputation of statuses. For performance reasons some callers might
      * choose to set this to false.
      */
     @Transactional
-    public void revokeEntitlements(List<Entitlement> entsToRevoke, boolean regenCertsAndStatuses) {
+    public void revokeEntitlements(List<Entitlement> entsToRevoke, Set<String> alreadyDeletedPools,
+        boolean regenCertsAndStatuses) {
         if (log.isDebugEnabled()) {
             log.debug("Starting batch revoke of entitlements: {}", getEntIds(entsToRevoke));
         }
@@ -1679,7 +1686,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         log.info("Starting batch delete of pools");
-        poolCurator.batchDelete(poolsToDelete);
+        poolCurator.batchDelete(poolsToDelete, alreadyDeletedPools);
         log.info("Starting batch delete of entitlements");
         entitlementCurator.batchDelete(entsToRevoke);
         log.info("Starting delete flush");
@@ -1689,7 +1696,7 @@ public class CandlepinPoolManager implements PoolManager {
         Map<Consumer, List<Entitlement>> consumerSortedEntitlements = entitlementCurator
             .getDistinctConsumers(entsToRevoke);
 
-        filterAndUpdateStackingEntitlements(consumerSortedEntitlements);
+        filterAndUpdateStackingEntitlements(consumerSortedEntitlements, alreadyDeletedPools);
 
         // post unbind actions
         for (Entitlement ent : entsToRevoke) {
@@ -1703,22 +1710,17 @@ public class CandlepinPoolManager implements PoolManager {
             return;
         }
 
-        log.info("Scheduling Compliance status for {} consumers.", consumerSortedEntitlements.size());
+        log.info("Recomputing status for {} consumers.", consumerSortedEntitlements.size());
+        int i = 1;
         for (Consumer consumer : consumerSortedEntitlements.keySet()) {
-            JobDetail detail = ConsumerComplianceJob.scheduleStatusCheck(consumer, null, false, true);
-            detail.getJobDataMap().put(PinsetterJobListener.PRINCIPAL_KEY, new SystemPrincipal());
-
-            log.info("Triggering ConsumerComplianceJob: {} for consumer: {}", detail.getKey(),
-                consumer.getUuid());
-            try {
-                pinsetterKernel.scheduleSingleJob(detail);
+            if (i++ % 1000 == 0) {
+                consumerCurator.flush();
             }
-            catch (PinsetterException e) {
-                log.error("ConsumerComplianceJob schedule failed", e.getMessage());
-            }
+            complianceRules.getStatus(consumer);
         }
+        consumerCurator.flush();
 
-        log.info("All statuses recomputation scheduled.");
+        log.info("All statuses recomputed.");
 
         sendDeletedEvents(entsToRevoke);
     }
@@ -1770,10 +1772,11 @@ public class CandlepinPoolManager implements PoolManager {
      * accordingly
      *
      * @param consumerSortedEntitlements Entitlements to be filtered
+     * @param alreadyDeletedPools pools to skip deletion as they have already been deleted
      * @return Entitlements that are stacked
      */
     private void filterAndUpdateStackingEntitlements(
-        Map<Consumer, List<Entitlement>> consumerSortedEntitlements) {
+        Map<Consumer, List<Entitlement>> consumerSortedEntitlements, Set<String> alreadyDeletedPools) {
         Map<Consumer, List<Entitlement>> stackingEntitlements = new HashMap<Consumer, List<Entitlement>>();
 
         for (Consumer consumer : consumerSortedEntitlements.keySet()) {
@@ -1782,8 +1785,8 @@ public class CandlepinPoolManager implements PoolManager {
                 for (Entitlement ent : ents) {
                     Pool pool = ent.getPool();
 
-                    if (!"true".equals(pool.getAttributeValue("pool_derived")) &&
-                        pool.getProduct().hasAttribute("stacking_id")) {
+                    if (!"true".equals(pool.getAttributeValue(Pool.Attributes.DERIVED_POOL)) &&
+                        pool.getProduct().hasAttribute(Product.Attributes.STACKING_ID)) {
                         List<Entitlement> entList = stackingEntitlements.get(consumer);
                         if (entList == null) {
                             entList = new ArrayList<Entitlement>();
@@ -1807,7 +1810,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
             List<Pool> subPools = poolCurator.getSubPoolForStackIds(entry.getKey(), stackIds);
             if (CollectionUtils.isNotEmpty(subPools)) {
-                poolRules.updatePoolsFromStack(entry.getKey(), subPools, true);
+                poolRules.updatePoolsFromStack(entry.getKey(), subPools, alreadyDeletedPools, true);
             }
         }
     }
@@ -1828,7 +1831,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Transactional
     public int revokeAllEntitlements(Consumer consumer, boolean regenCertsAndStatuses) {
         List<Entitlement> entsToDelete = entitlementCurator.listByConsumer(consumer);
-        revokeEntitlements(entsToDelete, regenCertsAndStatuses);
+        revokeEntitlements(entsToDelete, null, regenCertsAndStatuses);
         return entsToDelete.size();
     }
 
@@ -1852,10 +1855,19 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    @Transactional
     public void deletePools(List<Pool> pools) {
+        deletePools(pools, null);
+    }
+
+    @Override
+    @Transactional
+    public void deletePools(List<Pool> pools, Set<String> alreadyDeletedPools) {
         if (pools.isEmpty()) {
             return;
+        }
+
+        if (alreadyDeletedPools == null) {
+            alreadyDeletedPools = new HashSet<String>();
         }
 
         if (log.isDebugEnabled()) {
@@ -1873,9 +1885,9 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         if (!pools.isEmpty()) {
-            revokeEntitlements(entitlementsToRevoke);
+            revokeEntitlements(entitlementsToRevoke, alreadyDeletedPools);
             log.debug("Batch deleting pools after successful revocation");
-            poolCurator.batchDelete(pools);
+            poolCurator.batchDelete(pools, alreadyDeletedPools);
         }
 
         for (Pool pool : pools) {
@@ -1919,11 +1931,18 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
+    public void regenerateDirtyEntitlements(Consumer consumer) {
+        this.regenerateDirtyEntitlements(this.entitlementCurator.listDirty(consumer));
+    }
+
+    @Override
     public void regenerateDirtyEntitlements(Iterable<Entitlement> entitlements) {
-        for (Entitlement entitlement : entitlements) {
-            if (entitlement.isDirty()) {
-                log.info("Found dirty entitlement to regenerate: {}", entitlement);
-                this.ecGenerator.regenerateCertificatesOf(entitlement, false, false);
+        if (entitlements != null) {
+            for (Entitlement entitlement : entitlements) {
+                if (entitlement.isDirty()) {
+                    log.info("Found dirty entitlement to regenerate: {}", entitlement);
+                    this.ecGenerator.regenerateCertificatesOf(entitlement, false, false);
+                }
             }
         }
     }
@@ -2079,7 +2098,7 @@ public class CandlepinPoolManager implements PoolManager {
         // Only postfilter if we have to
         boolean postFilter = consumer != null || key != null;
         if (consumer != null && !consumer.isDev()) {
-            filters.addAttributeFilter(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "!true");
+            filters.addAttributeFilter(Pool.Attributes.DEVELOPMENT_POOL, "!true");
         }
 
         Page<List<Pool>> page = this.poolCurator.listAvailableEntitlementPools(consumer,
@@ -2166,7 +2185,9 @@ public class CandlepinPoolManager implements PoolManager {
          * is present, we must further divide the poolQuantity by
          * product.getAttributeValue("instance_multiplier").
          */
-        if (poolQuantity != null && multiplier != null && multiplier != 0 && pool.getProduct() != null) {
+        Product sku = pool.getProduct();
+
+        if (poolQuantity != null && multiplier != null && multiplier != 0 && sku != null) {
             if (poolQuantity % multiplier != 0) {
                 log.error("Pool {} from which we fabricate subscription has quantity {} that " +
                     "is not divisable by its product's multiplier {}! Division wont be made.",
@@ -2178,9 +2199,11 @@ public class CandlepinPoolManager implements PoolManager {
 
             //This is reverse of what part of PooRules.calculateQuantity does. See that method
             //to understand why we check that upstreamPoolId must be null.
-            if (pool.getProduct().hasAttribute("instance_multiplier") && pool.getUpstreamPoolId() == null) {
+            if (sku.hasAttribute(Product.Attributes.INSTANCE_MULTIPLIER) &&
+                pool.getUpstreamPoolId() == null) {
+
                 Integer instMult = null;
-                String stringInstmult = pool.getProduct().getAttributeValue("instance_multiplier");
+                String stringInstmult = sku.getAttributeValue(Product.Attributes.INSTANCE_MULTIPLIER);
                 try {
                     instMult = Integer.parseInt(stringInstmult);
                 }
@@ -2199,7 +2222,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
         else {
             log.warn("Either quantity or multiplier or product is null: {}, {}, productInstance={}",
-                poolQuantity, multiplier, pool.getProduct());
+                poolQuantity, multiplier, sku);
         }
 
         Subscription subscription = new Subscription(pool);

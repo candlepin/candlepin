@@ -95,4 +95,6 @@
     <include file="db/changelog/20160224171417-drop-stat-history-table.xml"/>
     <include file="db/changelog/20160412131122-add-unique-constraint-to-product-certificate-rows.xml"/>
     <include file="db/changelog/20160419110701-oracle-add-indexes-for-foreign-keys.xml"/>
+    <include file="db/changelog/20160714130753-add_lower_columns.xml"/>
+    <include file="db/changelog/20160722162105-remove-bad-ueber-cert-data.xml"/>
 </databaseChangeLog>

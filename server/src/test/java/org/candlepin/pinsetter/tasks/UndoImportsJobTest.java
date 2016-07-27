@@ -205,7 +205,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
             // TODO: Others as necessary
 
             case ENTITLEMENT_DERIVED:
-                pool.setAttribute(Pool.DERIVED_POOL_ATTRIBUTE, "true");
+                pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
                 consumer = TestUtil.createConsumer(owner);
                 entitlement = TestUtil.createEntitlement(owner, consumer, pool, null);
 
@@ -217,7 +217,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
                 break;
 
             case BONUS:
-                pool.setAttribute(Pool.DERIVED_POOL_ATTRIBUTE, "true");
+                pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
                 break;
 
             default:

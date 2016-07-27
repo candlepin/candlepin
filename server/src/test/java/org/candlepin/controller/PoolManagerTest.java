@@ -191,9 +191,9 @@ public class PoolManagerTest {
     public void deletePoolsTest() {
         List<Pool> pools = new ArrayList<Pool>();
         pools.add(TestUtil.createPool(TestUtil.createProduct()));
-        doNothing().when(mockPoolCurator).batchDelete(pools);
+        doNothing().when(mockPoolCurator).batchDelete(eq(pools), anySetOf(String.class));
         manager.deletePools(pools);
-        verify(mockPoolCurator).batchDelete(eq(pools));
+        verify(mockPoolCurator).batchDelete(eq(pools), anySetOf(String.class));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -697,7 +697,7 @@ public class PoolManagerTest {
         manager.revokeEntitlements(entsToDelete);
         entsToDelete.add(e3);
         verify(entitlementCurator).batchDelete(eq(entsToDelete));
-        verify(mockPoolCurator).batchDelete(eq(poolsWithSource));
+        verify(mockPoolCurator).batchDelete(eq(poolsWithSource), anySetOf(String.class));
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -846,7 +846,7 @@ public class PoolManagerTest {
 
         List<Entitlement> entsToDelete = Arrays.asList(ent);
         List<Pool> poolsToDelete = Arrays.asList(p);
-        verify(mockPoolCurator).batchDelete(eq(poolsToDelete));
+        verify(mockPoolCurator).batchDelete(eq(poolsToDelete), anySetOf(String.class));
         verify(entitlementCurator).batchDelete(eq(entsToDelete));
     }
 
@@ -900,7 +900,7 @@ public class PoolManagerTest {
         manager.cleanupExpiredPools();
 
         // And the pool should be deleted:
-        verify(mockPoolCurator).batchDelete(pools);
+        verify(mockPoolCurator).batchDelete(eq(pools), anySetOf(String.class));
     }
 
     @Test
@@ -924,7 +924,7 @@ public class PoolManagerTest {
         manager.cleanupExpiredPools();
 
         // And the pool should be deleted:
-        verify(mockPoolCurator).batchDelete(pools);
+        verify(mockPoolCurator).batchDelete(eq(pools), anySetOf(String.class));
         verify(mockSubAdapter, never()).getSubscription(any(String.class));
         verify(mockSubAdapter, never()).deleteSubscription(any(Subscription.class));
     }
@@ -1982,7 +1982,7 @@ public class PoolManagerTest {
         pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
 
         Pool derivedPool = TestUtil.createPool(owner, product, 1);
-        derivedPool.setAttribute(Pool.DERIVED_POOL_ATTRIBUTE, "true");
+        derivedPool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         derivedPool.setSourceSubscription(new SourceSubscription(sub.getId(), "der"));
         derivedPool.setConsumed(3L);
         derivedPool.setId("derivedPool");
@@ -2027,7 +2027,7 @@ public class PoolManagerTest {
         pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
 
         Pool derivedPool = TestUtil.createPool(owner, product, 1);
-        derivedPool.setAttribute(Pool.DERIVED_POOL_ATTRIBUTE, "true");
+        derivedPool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         derivedPool.setSourceSubscription(new SourceSubscription(sub.getId(), "der"));
         derivedPool.setConsumed(3L);
         derivedPool.setId("derivedPool");
@@ -2038,7 +2038,7 @@ public class PoolManagerTest {
         derivedEnt2.setId("2");
 
         Pool derivedPool2 = TestUtil.createPool(owner, product, 1);
-        derivedPool2.setAttribute(Pool.DERIVED_POOL_ATTRIBUTE, "true");
+        derivedPool2.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         derivedPool2.setSourceSubscription(new SourceSubscription(sub.getId(), "der"));
         derivedPool2.setConsumed(2L);
         derivedPool2.setId("derivedPool2");
@@ -2055,7 +2055,7 @@ public class PoolManagerTest {
         derivedPool2.setEntitlements(ents2);
 
         Pool derivedPool3 = TestUtil.createPool(owner, product, 1);
-        derivedPool3.setAttribute(Pool.DERIVED_POOL_ATTRIBUTE, "true");
+        derivedPool3.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         derivedPool3.setSourceSubscription(new SourceSubscription(sub.getId(), "der"));
         derivedPool3.setConsumed(2L);
         derivedPool3.setId("derivedPool3");

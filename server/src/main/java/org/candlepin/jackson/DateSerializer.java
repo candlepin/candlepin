@@ -24,15 +24,14 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-
-
 /**
  * DateSerializer
- *
- * This serializer removes milliseconds from Date objects in order to be more compatible with MySql.
+ * This serializer removes milliseconds from Date objects in order to be more
+ * compatible with MySql.
  * The format used is ISO 8601
  */
 public class DateSerializer extends JsonSerializer<Date> {
+
     // This SimpleDateFormat is iso 8601 without milliseconds
     public static final SimpleDateFormat ISO_8601_WITHOUT_MILLISECONDS;
 
@@ -42,8 +41,9 @@ public class DateSerializer extends JsonSerializer<Date> {
     }
 
     @Override
-    public void serialize(Date date, JsonGenerator jgen, SerializerProvider serializerProvider)
-            throws IOException, JsonProcessingException {
+    public void serialize(Date date, JsonGenerator jgen,
+        SerializerProvider serializerProvider)
+        throws IOException, JsonProcessingException {
 
         jgen.writeString(ISO_8601_WITHOUT_MILLISECONDS.format(date));
     }

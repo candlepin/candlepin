@@ -326,7 +326,7 @@ public class PoolTest extends DatabaseTestFixture {
 
     @Test
     public void testPoolType() {
-        pool.setAttribute(Pool.DERIVED_POOL_ATTRIBUTE, "true");
+        pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         assertEquals(PoolType.BONUS, pool.getType());
 
         pool.setSourceEntitlement(new Entitlement());
@@ -336,14 +336,14 @@ public class PoolTest extends DatabaseTestFixture {
         pool.setSourceStack(new SourceStack(new Consumer(), "something"));
         assertEquals(PoolType.STACK_DERIVED, pool.getType());
 
-        pool.setAttribute(Pool.UNMAPPED_GUESTS_ATTRIBUTE, "true");
+        pool.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
         assertEquals(PoolType.UNMAPPED_GUEST, pool.getType());
 
         pool.setSourceEntitlement(new Entitlement());
         pool.setSourceStack(null);
         assertEquals(PoolType.UNMAPPED_GUEST, pool.getType());
 
-        pool.removeAttribute(Pool.DERIVED_POOL_ATTRIBUTE);
+        pool.removeAttribute(Pool.Attributes.DERIVED_POOL);
         assertEquals(PoolType.NORMAL, pool.getType());
 
         pool.setSourceEntitlement(null);

@@ -20,7 +20,7 @@ import org.candlepin.util.Util;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
@@ -116,6 +116,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @Column(nullable = true)
     private Long metadataExpire;
 
+    @BatchSize(size = 128)
     @ElementCollection
     @CollectionTable(name = "cp2_content_modified_products", joinColumns = @JoinColumn(name = "content_uuid"))
     @Column(name = "element")
@@ -527,6 +528,20 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     @Override
     public int hashCode() {
+        HashCodeBuilder builder = new HashCodeBuilder(7, 17)
+            .append(this.id);
+
+        return builder.toHashCode();
+    }
+
+    /**
+     * Calculates and returns a version hash for this entity. This method operates much like the
+     * hashCode method, except that it is more accurate and should have fewer collisions.
+     *
+     * @return
+     *  a version hash for this entity
+     */
+    public int getEntityVersion() {
         // This must always be a subset of equals
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
             .append(this.id)
@@ -540,14 +555,23 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
             .append(this.gpgUrl)
             .append(this.metadataExpire)
             .append(this.arches)
-            .append(this.locked)
-            .append(this.modifiedProductIds);
+            .append(this.locked);
 
         // Impl note:
-        // Because we handle the collections specially in .equals, we have to do the same special
-        // treatment here to ensure our output doesn't give us wonky results when compared to the
-        // output of .equals
+        // We need to be certain that the hash code is calculated in a way that's order
+        // independent and not subject to Hibernate's poor hashCode implementation on proxy
+        // collections. This calculation follows that defined by the Set.hashCode method.
+        int accumulator = 0;
 
+        if (!this.modifiedProductIds.isEmpty()) {
+            for (String pid : this.modifiedProductIds) {
+                accumulator += (pid != null ? pid.hashCode() : 0);
+            }
+
+            builder.append(accumulator);
+        }
+
+        // Return
         return builder.toHashCode();
     }
 
@@ -635,6 +659,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @PrePersist
     @PreUpdate
     public void updateEntityVersion() {
-        this.entityVersion = this.hashCode();
+        this.entityVersion = this.getEntityVersion();
     }
 }

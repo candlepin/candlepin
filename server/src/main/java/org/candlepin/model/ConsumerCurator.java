@@ -29,12 +29,9 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
-import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
-import org.hibernate.criterion.CriteriaQuery;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
@@ -42,10 +39,6 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
-import org.hibernate.engine.spi.TypedValue;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.type.CompositeType;
-import org.hibernate.type.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -163,10 +156,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         List<String> possibleGuestIds = Util.getPossibleUuids(uuid);
 
         String sql = "select cp_consumer.id from cp_consumer " +
-            "inner join cp_consumer_facts " +
-            "on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
-            "where cp_consumer_facts.mapkey = 'virt.uuid' and " +
-            "lower(cp_consumer_facts.element) in (:guestids) " +
+            "inner join cp_consumer_facts_lower " +
+            "on cp_consumer.id = cp_consumer_facts_lower.cp_consumer_id " +
+            "where cp_consumer_facts_lower.mapkey = 'virt.uuid' and " +
+            "cp_consumer_facts_lower.element in (:guestids) " +
             "and cp_consumer.owner_id = :ownerid " +
             "order by cp_consumer.updated desc";
 
@@ -207,10 +200,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         List<String> possibleGuestIds = Util.getPossibleUuids(guestIds.toArray(new String [guestIds.size()]));
 
         String sql = "select cp_consumer.uuid from cp_consumer " +
-            "inner join cp_consumer_facts " +
-            "on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
-            "where cp_consumer_facts.mapkey = 'virt.uuid' and " +
-            "lower(cp_consumer_facts.element) in (:guestids) " +
+            "inner join cp_consumer_facts_lower " +
+            "on cp_consumer.id = cp_consumer_facts_lower.cp_consumer_id " +
+            "where cp_consumer_facts_lower.mapkey = 'virt.uuid' and " +
+            "cp_consumer_facts_lower.element in (:guestids) " +
             "and cp_consumer.owner_id = :ownerid " +
             "order by cp_consumer.updated desc";
 
@@ -513,7 +506,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public Consumer getHost(String guestId, Owner owner) {
         Disjunction guestIdCrit = Restrictions.disjunction();
         for (String possibleId : Util.getPossibleUuids(guestId)) {
-            guestIdCrit.add(Restrictions.eq("guestId", possibleId).ignoreCase());
+            guestIdCrit.add(Restrictions.eq("guestIdLower", possibleId.toLowerCase()));
         }
         Criteria crit = currentSession()
             .createCriteria(GuestId.class)
@@ -575,7 +568,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return (Consumer) currentSession().createCriteria(Consumer.class)
             .add(Restrictions.eq("owner", owner))
             .createAlias("hypervisorId", "hvsr")
-            .add(Restrictions.eq("hvsr.hypervisorId", hypervisorId).ignoreCase())
+            .add(Restrictions.eq("hvsr.hypervisorId", hypervisorId.toLowerCase()))
             .setMaxResults(1)
             .uniqueResult();
     }
@@ -628,7 +621,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     private Criterion getHypervisorIdRestriction(Iterable<String> hypervisorIds) {
         List<Criterion> ors = new LinkedList<Criterion>();
         for (String hypervisorId : hypervisorIds) {
-            ors.add(Restrictions.eq("hvsr.hypervisorId", hypervisorId).ignoreCase());
+            ors.add(Restrictions.eq("hvsr.hypervisorId", hypervisorId.toLowerCase()));
         }
         return Restrictions.or(ors.toArray(new Criterion[0]));
     }
@@ -708,7 +701,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             // Cannot use Restrictions.in here because hypervisorId is case insensitive
             Set<Criterion> ors = new HashSet<Criterion>();
             for (String hypervisorId : hypervisorIds) {
-                ors.add(Restrictions.eq("hvsr.hypervisorId", hypervisorId).ignoreCase());
+                ors.add(Restrictions.eq("hvsr.hypervisorId", hypervisorId.toLowerCase()));
             }
             crit.createAlias("hypervisorId", "hvsr");
             crit.add(Restrictions.or(ors.toArray(new Criterion[ors.size()])));
@@ -829,87 +822,5 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .list();
     }
 
-    /**
-     * InExpressionIgnoringCase
-     *
-     * Allows Criterion for case insensitive comparison to list of values
-     *
-     * @author wpoteat
-     */
-    public class InExpressionIgnoringCase implements Criterion {
-
-        private final String propertyName;
-        private final Object[] values;
-
-        public InExpressionIgnoringCase(final String propertyName, final Object[] values) {
-            this.propertyName = propertyName;
-            this.values = values;
-        }
-
-        public String toSqlString(final Criteria criteria, final CriteriaQuery criteriaQuery)
-            throws HibernateException {
-            final String[] columns = criteriaQuery.findColumns(this.propertyName, criteria);
-            final String[] wrappedLowerColumns = wrapLower(columns);
-            if (criteriaQuery.getFactory().getDialect().supportsRowValueConstructorSyntaxInInList() ||
-                columns.length <= 1) {
-
-                String singleValueParam = StringHelper.repeat("lower(?), ", columns.length - 1) + "lower(?)";
-                if (columns.length > 1) {
-                    singleValueParam = '(' + singleValueParam + ')';
-                }
-                final String params = this.values.length > 0 ? StringHelper.repeat(singleValueParam + ", ",
-                    this.values.length - 1) + singleValueParam : "";
-                String cols = StringHelper.join(", ", wrappedLowerColumns);
-                if (columns.length > 1) {
-                    cols = '(' + cols + ')';
-                }
-                return cols + " in (" + params + ')';
-            }
-            else {
-                String cols = " ( " + StringHelper.join(" = lower(?) and ",
-                    wrappedLowerColumns) + "= lower(?) ) ";
-                cols = this.values.length > 0 ? StringHelper.repeat(cols + "or ",
-                        this.values.length - 1) + cols : "";
-                cols = " ( " + cols + " ) ";
-                return cols;
-            }
-        }
-
-        public TypedValue[] getTypedValues(final Criteria criteria, final CriteriaQuery criteriaQuery)
-            throws HibernateException {
-            final ArrayList<TypedValue> list = new ArrayList<TypedValue>();
-            final Type type = criteriaQuery.getTypeUsingProjection(criteria, this.propertyName);
-            if (type.isComponentType()) {
-                final CompositeType actype = (CompositeType) type;
-                final Type[] types = actype.getSubtypes();
-                for (int j = 0; j < this.values.length; j++) {
-                    for (int i = 0; i < types.length; i++) {
-                        final Object subval = this.values[j] == null ? null :
-                            actype.getPropertyValues(this.values[j], EntityMode.POJO)[i];
-                        list.add(new TypedValue(types[i], subval, EntityMode.POJO));
-                    }
-                }
-            }
-            else {
-                for (int j = 0; j < this.values.length; j++) {
-                    list.add(new TypedValue(type, this.values[j], EntityMode.POJO));
-                }
-            }
-            return list.toArray(new TypedValue[list.size()]);
-        }
-
-        @Override
-        public String toString() {
-            return this.propertyName + " in (" + StringHelper.toString(this.values) + ')';
-        }
-
-        private String[] wrapLower(final String[] columns) {
-            final String[] wrappedColumns = new String[columns.length];
-            for (int i = 0; i < columns.length; i++) {
-                wrappedColumns[i] = "lower(" + columns[i] + ")";
-            }
-            return wrappedColumns;
-        }
-    }
 
 }

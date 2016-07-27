@@ -88,6 +88,7 @@ LOGGING = [LOGBACK, SLF4J_BRIDGES, SLF4J]
 JAVAX = ['org.hibernate.javax.persistence:hibernate-jpa-2.0-api:jar:1.0.1.Final',
          'javax.validation:validation-api:jar:1.0.0.GA',
          'javax.transaction:jta:jar:1.1']
+ANTLR = ['antlr:antlr:jar:2.7.7']
 
 HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0',
                    :under => 'org.hibernate',
@@ -95,7 +96,7 @@ HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0'
              'org.hibernate.common:hibernate-commons-annotations:jar:4.0.1.Final',
              'org.hibernate:hibernate-tools:jar:3.2.4.GA',
              'org.hibernate:hibernate-validator:jar:4.3.1.Final',
-             'antlr:antlr:jar:2.7.7',
+             ANTLR,
              'asm:asm:jar:3.0',
              'cglib:cglib:jar:2.2',
              'javassist:javassist:jar:3.12.0.GA',
@@ -197,9 +198,16 @@ JAVA_TOOLS = file(Java.tools_jar)
 
 SCANNOTATION = 'org.scannotation:scannotation:jar:1.0.3'
 
+CHECKSTYLE = ['com.puppycrawl.tools:checkstyle:jar:7.0',
+              'org.antlr:antlr4-runtime:jar:4.5.3'] + ANTLR
+
 # Make Util available in all projects.  See http://buildr.apache.org/extending.html#extensions
 class Project
   include Candlepin::Util
+end
+
+def enhance_checkstyle_task
+  task('checkstyle:plain').enhance([project('checks').build])
 end
 
 ### Project
@@ -212,11 +220,25 @@ define "candlepin" do
   compile.options.target = '1.6'
   compile.options.source = '1.6'
 
+  desc "Custom Checkstyle checks for candlepin"
+  define "checks" do
+    project.version = '0.1'
+    eclipse.natures :java
+
+    compile_classpath = [
+      CHECKSTYLE,
+    ]
+
+    compile.with(compile_classpath)
+  end
+
+
   # path_to() (and it's alias _()) simply provides the absolute path to
   # a directory relative to the project.
   # See http://buildr.apache.org/rdoc/Buildr/Project.html#method-i-path_to
   checkstyle_config_directory = path_to(:project_conf)
   checkstyle_eclipse_xml = path_to(:project_conf, 'eclipse-checkstyle.xml')
+  checkstyle_extra_dependencies = project('checks').path_to('target', 'classes')
   rpmlint_conf = path_to("rpmlint.config")
   rubocop.patterns = ['*.rb']
 
@@ -227,6 +249,7 @@ define "candlepin" do
   end
   download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
   include_hostedtest = ENV['hostedtest']
+
   desc "Common Candlepin Code"
   define "common" do
     project.version = spec_version('candlepin-common.spec.tmpl')
@@ -235,6 +258,8 @@ define "candlepin" do
 
     checkstyle.config_directory = checkstyle_config_directory
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
+    checkstyle.extra_dependencies << checkstyle_extra_dependencies
+    enhance_checkstyle_task
     rpmlint.rpmlint_conf = rpmlint_conf
 
     msgfmt.resource = "#{project.group}.common.i18n.Messages"
@@ -277,40 +302,6 @@ define "candlepin" do
     end
   end
 
-  desc "API Crawl"
-  define "apicrawl" do
-    project.version = "1.0"
-    eclipse.natures = :java
-    checkstyle.config_directory = checkstyle_config_directory
-    checkstyle.eclipse_xml = checkstyle_eclipse_xml
-
-    # API Crawl is not shipped so don't check for CVEs since checking is
-    # slow
-    project.dependency_check.enabled = false
-
-    compile_classpath = [
-      COMMONS,
-      JACKSON,
-      RESTEASY,
-      GUICE,
-      LOGGING,
-      JAVA_TOOLS,
-      SCANNOTATION,
-    ]
-
-    compile.with(compile_classpath)
-    compile.with(project('common'))
-
-    # Buildr tries to outsmart you and use classpath variables whenever
-    # possible. If we don't do the below, Buildr will add
-    # 'JAVA_HOMElib/tools.jar' to the .classpath file, but Eclipse doesn't
-    # have JAVA_HOME set as one of its classpath variables by default so the
-    # file isn't found. We will cheat by setting the classpath variable to
-    # be exactly the same as the file path.
-    tools_location = File.basename(Java.tools_jar)
-    eclipse.classpath_variables tools_location.to_sym => tools_location
-  end
-
   desc "The Gutterball Reporting Engine"
   define "gutterball" do
     spec_file = "gutterball.spec.tmpl"
@@ -319,6 +310,8 @@ define "candlepin" do
 
     checkstyle.config_directory = checkstyle_config_directory
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
+    checkstyle.extra_dependencies << checkstyle_extra_dependencies
+    enhance_checkstyle_task
     rpmlint.rpmlint_conf = rpmlint_conf
 
     gettext.keys_destination = project("common").gettext.keys_destination
@@ -408,6 +401,8 @@ define "candlepin" do
 
     checkstyle.config_directory = checkstyle_config_directory
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
+    checkstyle.extra_dependencies << checkstyle_extra_dependencies
+    enhance_checkstyle_task
     rpmlint.rpmlint_conf = rpmlint_conf
     liquibase.changelogs = ['changelog-update.xml', 'changelog-create.xml', 'changelog-testing.xml']
     liquibase.file_time_prefix_format = "%Y%m%d%H%M%S"
@@ -530,58 +525,6 @@ define "candlepin" do
     pom.plugin_procs << Proc.new do |xml, proj|
       xml.groupId("org.owasp")
       xml.artifactId("dependency-check-maven")
-    end
-
-    desc 'Crawl the REST API and print a summary.'
-    task :apicrawl => [project('apicrawl').task(:package), :compile] do
-      options.test = 'no'
-
-      # Join compile classpath with the package jar.
-      apicrawl = project('apicrawl').package(:jar)
-      cp = [compile.dependencies, compile.target, apicrawl].flatten.uniq
-
-      Java::Commands.java('org.candlepin.util.apicrawl.ApiCrawler',
-                          path_to(:target, 'candlepin_api.json'),
-                          :classpath => cp)
-
-      # Just run the doclet on the *Resource files
-      sources = project.compile.sources.collect do |dir|
-        Dir["#{dir}/**/*Resource.java"]
-      end.flatten
-
-      # Add in the options as the last arg
-      sources << {
-        :name => 'Candlepin API',
-        :classpath => cp,
-        :doclet => 'org.candlepin.util.apicrawl.ApiDoclet',
-        :docletpath => [path_to(:target, :classes), cp].flatten.map(&:to_s).join(File::PATH_SEPARATOR),
-        :output => path_to(:target)
-      }
-
-      Java::Commands.javadoc(*sources)
-
-      api_file = path_to(:target, "candlepin_api.json")
-      comments_file = path_to(:target, "candlepin_comments.json")
-      api = JSON.parse(File.read(api_file))
-      comments = JSON.parse(File.read(comments_file))
-
-      combined = Hash[api.collect { |a| [a['method'], a] }]
-      comments.each do |c|
-        if combined.key?(c['method'])
-          combined[c['method']].merge!(c)
-        else
-          warn "Ignoring #{c['method']} as only its comments were found"
-        end
-      end
-
-      final = JSON.pretty_generate(combined.values.sort_by { |v| v['method'] })
-      final_file = path_to(:target, "candlepin_methods.json")
-      File.open(final_file, 'w') { |f| f.write final }
-
-      # Cleanup
-      rm api_file
-      rm comments_file
-      info "Wrote Candlepin API to: #{final_file}"
     end
 
     desc 'Create an html report of the schema'

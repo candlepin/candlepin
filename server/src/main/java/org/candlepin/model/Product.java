@@ -20,7 +20,7 @@ import org.candlepin.model.dto.ProductData;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.Util;
 
-import org.hibernate.LazyInitializationException;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Fetch;
@@ -76,10 +76,78 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp2_products")
 public class Product extends AbstractHibernateObject implements SharedEntity, Linkable, Cloneable {
-    public static final String UEBER_PRODUCT_POSTFIX = "_ueber_product";
+    /**
+     * Commonly used/recognized product attributes
+     */
+    public static final class Attributes {
+        /** Attribute to specify the architecture on which a given product can be installed/run; may be set
+         *  to the value "ALL" to specify all architectures */
+        public static final String ARCHITECTURE = "arch";
 
-    public static final String CONTENT_OVERRIDE_ENABLED_ATTRIB = "content_override_enabled";
-    public static final String CONTENT_OVERRIDE_DISABLED_ATTRIB = "content_override_disabled";
+        /** Attribute for specifying the type of branding to apply to a marketing product (SKU) */
+        public static final String BRANDING_TYPE = "brand_type";
+
+        /** Attribute for enabling content overrides */
+        public static final String CONTENT_OVERRIDE_ENABLED = "content_override_enabled";
+
+        /** Attribute for disabling content overrides */
+        public static final String CONTENT_OVERRIDE_DISABLED = "content_override_disabled";
+
+        /** Attribute specifying the number of cores that can be covered by an entitlement using the SKU */
+        public static final String CORES = "cores";
+
+        /** Attribute specifying whether or not derived pools created for a given product will be
+         *  host-limited */
+        public static final String HOST_LIMITED = "host_limited";
+
+        /** Attribute used to specify the instance multiplier for a pool. When specified, pools using the
+         *  product will use instance-based subscriptions, multiplying the size of the pool, but consuming
+         *  multiples of this value for each physical bind. */
+        public static final String INSTANCE_MULTIPLIER = "instance_multiplier";
+
+        /** Attribute specifying whether or not management is enabled for a given product; passed down to the
+         *  certificate */
+        public static final String MANAGEMENT_ENABLED = "management_enabled";
+
+        /** Attribute specifying the amount of RAM that can be covered by an entitlement using the SKU */
+        public static final String RAM = "ram";
+
+        /** Attribute specifying the number of sockets that can be covered by an entitlement using the SKU */
+        public static final String SOCKETS = "sockets";
+
+        /** Attribute used to identify stacked products and pools */
+        public static final String STACKING_ID = "stacking_id";
+
+        /** Attribute for specifying the provided support level provided by a given product */
+        public static final String SUPPORT_LEVEL = "support_level";
+
+        /** Attribute providing a human-readable description of the support type; passed to the certificate */
+        public static final String SUPPORT_TYPE = "support_type";
+
+        /** Attribute for specifying the TTL of a product, in days */
+        public static final String TTL = "expires_after";
+
+        /** Attribute representing the product type; passed down to the certificate */
+        public static final String TYPE = "type";
+
+        /** Attribute representing the product variant; passed down to the certificate */
+        public static final String VARIANT = "variant";
+
+        /** Attribute for specifying the number of guests that can use a given product */
+        public static final String VIRT_LIMIT = "virt_limit";
+
+        /** Attribute for specifying the product is only available to guests */
+        public static final String VIRT_ONLY = "virt_only";
+
+        /** Attribute to specify the version of a product */
+        public static final String VERSION = "version";
+
+        /** Attribute specifying the number of days prior to expiration the client should be warned about an
+         *  expiring subscription for a given product */
+        public static final String WARNING_PERIOD = "warning_period";
+    }
+
+    public static final String UEBER_PRODUCT_POSTFIX = "_ueber_product";
 
     // Object ID
     @Id
@@ -105,11 +173,13 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     private Long multiplier;
 
     @OneToMany(mappedBy = "product", orphanRemoval = true)
+    @BatchSize(size = 32)
     @Cascade({ CascadeType.ALL })
     @Fetch(FetchMode.SUBSELECT)
     private List<ProductAttribute> attributes;
 
     @ElementCollection
+    @BatchSize(size = 32)
     @CollectionTable(name = "cp2_product_content", joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
@@ -124,6 +194,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @CollectionTable(name = "cp2_product_dependent_products",
         joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
+    @BatchSize(size = 32)
     @LazyCollection(LazyCollectionOption.FALSE)
     private Set<String> dependentProductIds;
 
@@ -164,10 +235,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     public Product(String productId, String name, String variant, String version, String arch, String type) {
         this(productId, name, 1L);
 
-        this.setAttribute("version", version);
-        this.setAttribute("variant", variant);
-        this.setAttribute("type", type);
-        this.setAttribute("arch", arch);
+        this.setAttribute(Attributes.VERSION, version);
+        this.setAttribute(Attributes.VARIANT, variant);
+        this.setAttribute(Attributes.TYPE, type);
+        this.setAttribute(Attributes.ARCHITECTURE, arch);
     }
 
     /**
@@ -678,7 +749,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     public List<String> getSkuEnabledContentIds() {
         List<String> skus = new LinkedList<String>();
 
-        ProductAttribute attrib = this.getAttribute(CONTENT_OVERRIDE_ENABLED_ATTRIB);
+        ProductAttribute attrib = this.getAttribute(Attributes.CONTENT_OVERRIDE_ENABLED);
 
         if (attrib != null && attrib.getValue() != null && attrib.getValue().length() > 0) {
             StringTokenizer tokenizer = new StringTokenizer(attrib.getValue(), ",");
@@ -695,7 +766,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     public List<String> getSkuDisabledContentIds() {
         List<String> skus = new LinkedList<String>();
 
-        ProductAttribute attrib = this.getAttribute(CONTENT_OVERRIDE_DISABLED_ATTRIB);
+        ProductAttribute attrib = this.getAttribute(Attributes.CONTENT_OVERRIDE_DISABLED);
 
         if (attrib != null && attrib.getValue() != null && attrib.getValue().length() > 0) {
             StringTokenizer tokenizer = new StringTokenizer(attrib.getValue(), ",");
@@ -1120,6 +1191,20 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
     @Override
     public int hashCode() {
+        HashCodeBuilder builder = new HashCodeBuilder(7, 17)
+            .append(this.id);
+
+        return builder.toHashCode();
+    }
+
+    /**
+     * Calculates and returns a version hash for this entity. This method operates much like the
+     * hashCode method, except that it is more accurate and should have fewer collisions.
+     *
+     * @return
+     *  a version hash for this entity
+     */
+    public int getEntityVersion() {
         // This must always be a subset of equals
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
             .append(this.id)
@@ -1127,46 +1212,40 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             .append(this.multiplier)
             .append(this.locked);
 
+        // We need to be certain that the hash code is calculated in a way that's order
+        // independent and not subject to Hibernate's poor hashCode implementation on proxy
+        // collections. This calculation follows that defined by the Set.hashCode method.
+        int accumulator = 0;
+
+        if (this.attributes.size() > 0) {
+            for (ProductAttribute attrib : this.attributes) {
+                accumulator += (attrib != null ? attrib.getEntityVersion() : 0);
+            }
+
+            builder.append(accumulator);
+        }
+
         // Impl note:
-        // Because we handle the collections specially in .equals, we have to do the same special
-        // treatment here to ensure our output doesn't give us wonky results when compared to the
-        // output of .equals
-        for (ProductAttribute attrib : this.attributes) {
-            builder.append(attrib);
-        }
-
-        try {
-            // Impl note:
-            // Stepping through the collections here is as painful as it looks, but Hibernate, once
-            // again, doesn't implement .hashCode reliably on the proxy collections. So, we have to
-            // manually step through these and add the elements to ensure the hash code is
-            // generated properly.
-            if (this.dependentProductIds.size() > 0) {
-                for (String pid : this.dependentProductIds) {
-                    builder.append(pid);
-                }
+        // Stepping through the collections here is as painful as it looks, but Hibernate, once
+        // again, doesn't implement .hashCode reliably on the proxy collections. So, we have to
+        // manually step through these and add the elements to ensure the hash code is
+        // generated properly.
+        if (!this.dependentProductIds.isEmpty()) {
+            accumulator = 0;
+            for (String pid : this.dependentProductIds) {
+                accumulator += (pid != null ? pid.hashCode() : 0);
             }
 
-            if (this.productContent.size() > 0) {
-                for (ProductContent pc : this.productContent) {
-                    builder.append(pc);
-                }
-            }
+            builder.append(accumulator);
         }
-        catch (LazyInitializationException e) {
-            // One of the above collections (likely the first) has not been initialized and we're
-            // not able to fetch them. We still need a hashCode, and the caller is likely to run
-            // into this exception in the very near future, but we still need to generate
-            // something here. We'll treat it as if they were empty (and not added).
 
-            // This typically only occurs when we're initially pulling the entity down from a normal
-            // lookup. Hibernate stores the entity in a hashmap, which triggers a call to this
-            // method before Hibernate has fully hydrated it and before it's assigned it to an
-            // entity manager or session. As such, as soon as we try to use one of the above
-            // collections, things explode.
+        if (!this.productContent.isEmpty()) {
+            accumulator = 0;
+            for (ProductContent pc : this.productContent) {
+                accumulator += (pc != null ? pc.getEntityVersion() : 0);
+            }
 
-            // Note that this only applies to lazy collections, so the product attributes are safe
-            // to check for now.
+            builder.append(accumulator);
         }
 
         return builder.toHashCode();
@@ -1250,7 +1329,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @PrePersist
     @PreUpdate
     public void updateEntityVersion() {
-        this.entityVersion = this.hashCode();
+        this.entityVersion = this.getEntityVersion();
     }
 
 }
