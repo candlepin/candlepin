@@ -15,6 +15,7 @@
 package org.candlepin.gutterball.resource;
 
 import org.candlepin.common.auth.SecurityHole;
+import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.common.util.VersionUtil;
 import org.candlepin.gutterball.model.Status;
 
@@ -33,6 +34,7 @@ import javax.ws.rs.core.MediaType;
  * Resource to respond with Gutterball's status.
  */
 @Path("status")
+@SuppressSwaggerCheck
 public class StatusResource {
 
     private Provider<I18n> i18nProvider;
