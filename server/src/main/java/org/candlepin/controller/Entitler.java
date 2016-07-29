@@ -265,10 +265,12 @@ public class Entitler {
 
     private Date getEndDate(Product prod, Date startTime) {
         int interval = maxDevLifeDays;
-        String prodExp = prod.getAttributeValue("expires_after");
+        String prodExp = prod.getAttributeValue(Product.Attributes.TTL);
+
         if (prodExp != null &&  Integer.parseInt(prodExp) < maxDevLifeDays) {
             interval = Integer.parseInt(prodExp);
         }
+
         Calendar cal = Calendar.getInstance();
         cal.setTime(startTime);
         cal.add(Calendar.DAY_OF_YEAR, interval);
@@ -289,17 +291,16 @@ public class Entitler {
      */
     protected Pool assembleDevPool(Consumer consumer, String sku) {
         DeveloperProducts devProducts = getDeveloperPoolProducts(consumer, sku);
-
         Product skuProduct = devProducts.getSku();
-
         Date startDate = consumer.getCreated();
         Date endDate = getEndDate(skuProduct, startDate);
-        Pool p = new Pool(consumer.getOwner(), skuProduct, devProducts.getProvided(), 1L, startDate,
+        Pool pool = new Pool(consumer.getOwner(), skuProduct, devProducts.getProvided(), 1L, startDate,
             endDate, "", "", "");
+
         log.info("Created development pool with SKU {}", skuProduct.getId());
-        p.setAttribute(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
-        p.setAttribute(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
-        return p;
+        pool.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
+        pool.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, consumer.getUuid());
+        return pool;
     }
 
     private DeveloperProducts getDeveloperPoolProducts(Consumer consumer, String sku) {
@@ -335,10 +336,10 @@ public class Entitler {
             pdata.setLocked(true);
 
             if (sku.equals(pdata.getId()) &&
-                StringUtils.isEmpty(pdata.getAttributeValue("support_level"))) {
+                StringUtils.isEmpty(pdata.getAttributeValue(Product.Attributes.SUPPORT_LEVEL))) {
 
                 // if there is no SLA, apply the default
-                pdata.setAttribute("support_level", this.DEFAULT_DEV_SLA);
+                pdata.setAttribute(Product.Attributes.SUPPORT_LEVEL, this.DEFAULT_DEV_SLA);
             }
 
             if (entity != null) {

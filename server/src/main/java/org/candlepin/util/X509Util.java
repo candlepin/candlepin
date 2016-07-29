@@ -47,7 +47,6 @@ public abstract class X509Util {
     };
 
     public static final String ARCH_FACT = "uname.machine";
-    public static final String PRODUCT_ARCH_ATTR = "arch";
 
     /**
      * Scan the product content looking for any we should filter out.
@@ -156,7 +155,7 @@ public abstract class X509Util {
             boolean canUse = true;
             Set<String> contentArches = Arch.parseArches(pc.getContent().getArches());
             Set<String> productArches =
-                Arch.parseArches(product.getAttributeValue(PRODUCT_ARCH_ATTR));
+                Arch.parseArches(product.getAttributeValue(Product.Attributes.ARCHITECTURE));
 
             // Empty or null Content.arches should result in
             // inheriting the arches from the product

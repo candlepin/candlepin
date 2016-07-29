@@ -129,10 +129,10 @@ public class PoolHelper {
                         sourceEntitlements.get(pool.getId()));
             }
 
-            consumerSpecificPool.setAttribute("requires_host", consumer.getUuid());
-            consumerSpecificPool.setAttribute("pool_derived", "true");
-            consumerSpecificPool.setAttribute("virt_only", "true");
-            consumerSpecificPool.setAttribute("physical_only", "false");
+            consumerSpecificPool.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer.getUuid());
+            consumerSpecificPool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
+            consumerSpecificPool.setAttribute(Pool.Attributes.VIRT_ONLY, "true");
+            consumerSpecificPool.setAttribute(Pool.Attributes.PHYSICAL_ONLY, "false");
 
             // If the originating pool is stacked, we want to create the derived
             // pool based on the entitlements in the stack, instead of just the
@@ -142,7 +142,7 @@ public class PoolHelper {
             }
             else {
                 // attribute per 795431, useful for rolling up pool info in headpin
-                consumerSpecificPool.setAttribute("source_pool_id", pool.getId());
+                consumerSpecificPool.setAttribute(Pool.Attributes.SOURCE_POOL_ID, pool.getId());
                 consumerSpecificPool.setSourceSubscription(new SourceSubscription(pool.getSubscriptionId(),
                     sourceEntitlements.get(pool.getId()).getId()));
             }
@@ -177,8 +177,7 @@ public class PoolHelper {
             Product destprod = curator.getProductById(destination.getOwner(), product.getId());
             if (destprod == null) {
                 throw new RuntimeException("Product " + product.getId() +
-                        " has not been imported into org " +
-                        destination.getOwner().getKey());
+                    " has not been imported into org " + destination.getOwner().getKey());
             }
             destination.addProvidedProduct(destprod);
         }
@@ -255,7 +254,7 @@ public class PoolHelper {
         }
 
         // temp - we need a way to specify this on the product
-        pool.setAttribute("requires_consumer_type", "system");
+        pool.setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, "system");
 
         return pool;
     }

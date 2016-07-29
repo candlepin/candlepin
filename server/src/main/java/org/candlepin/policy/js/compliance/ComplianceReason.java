@@ -26,6 +26,57 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @JsonFilter("ComplianceReasonFilter")
 public class ComplianceReason {
+    /** Commonly used/recognized attributes */
+    public static final class Attributes {
+        /** Attribute for specifying an entitlement ID which is not covered */
+        public static final String ENTITLEMENT_ID = "entitlement_id";
+
+        /** Attribute for specifying the marketing name of an entitlement stack which is not covered */
+        public static final String MARKETING_NAME = "name";
+
+        /** Attribute used to specify a product which is not covered */
+        public static final String PRODUCT_ID = "product_id";
+
+        /** Attribute used to identify stacked products and pools */
+        public static final String STACKING_ID = "stack_id";
+
+        /** Attribute used for specifying the property of an entitlement that is covered */
+        public static final String COVERED = "covered";
+
+        /** Attribute used for specifying the property of a system or product which is not covered by an
+         *  entitlement */
+        public static final String PRESENT = "has";
+    }
+
+    /** Commonly used keys for compliance failure reasons */
+    public static final class ReasonKeys {
+        /** Key for specifying the system is not covered */
+        public static final String NOT_COVERED = "NOTCOVERED";
+
+        /** TODO: Fill this in */
+        public static final String ARCHITECTURE = "ARCH";
+
+        /** TODO: Fill this in and update the const name */
+        public static final String SOCKETS = "SOCKETS";
+
+        /** TODO: Fill this in and update the const name */
+        public static final String CORES = "CORES";
+
+        /** TODO: Fill this in and update the const name */
+        public static final String RAM = "RAM";
+
+        /** TODO: Fill this in */
+        public static final String VIRT_LIMIT = "GUEST_LIMIT";
+
+        /** TODO: Fill this in */
+        public static final String VIRT_CPU = "VCPU";
+
+        /** TODO: Fill this in */
+        public static final String UNMAPPED_GUEST = "UNMAPPEDGUEST";
+
+        /** TODO: Fill this in */
+        public static final String STORAGE_BAND = "STORAGE_BAND";
+    }
 
     private String key;
     private String message;
@@ -61,11 +112,11 @@ public class ComplianceReason {
 
     @XmlTransient
     public boolean isStacked() {
-        return attributes.containsKey("stack_id");
+        return attributes.containsKey(Attributes.STACKING_ID);
     }
 
     @XmlTransient
     public boolean isNonCovered() {
-        return attributes.containsKey("product_id");
+        return attributes.containsKey(Attributes.PRODUCT_ID);
     }
 }

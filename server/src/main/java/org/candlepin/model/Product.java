@@ -77,10 +77,78 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp2_products")
 public class Product extends AbstractHibernateObject implements SharedEntity, Linkable, Cloneable {
-    public static final String UEBER_PRODUCT_POSTFIX = "_ueber_product";
+    /**
+     * Commonly used/recognized product attributes
+     */
+    public static final class Attributes {
+        /** Attribute to specify the architecture on which a given product can be installed/run; may be set
+         *  to the value "ALL" to specify all architectures */
+        public static final String ARCHITECTURE = "arch";
 
-    public static final String CONTENT_OVERRIDE_ENABLED_ATTRIB = "content_override_enabled";
-    public static final String CONTENT_OVERRIDE_DISABLED_ATTRIB = "content_override_disabled";
+        /** Attribute for specifying the type of branding to apply to a marketing product (SKU) */
+        public static final String BRANDING_TYPE = "brand_type";
+
+        /** Attribute for enabling content overrides */
+        public static final String CONTENT_OVERRIDE_ENABLED = "content_override_enabled";
+
+        /** Attribute for disabling content overrides */
+        public static final String CONTENT_OVERRIDE_DISABLED = "content_override_disabled";
+
+        /** Attribute specifying the number of cores that can be covered by an entitlement using the SKU */
+        public static final String CORES = "cores";
+
+        /** Attribute specifying whether or not derived pools created for a given product will be
+         *  host-limited */
+        public static final String HOST_LIMITED = "host_limited";
+
+        /** Attribute used to specify the instance multiplier for a pool. When specified, pools using the
+         *  product will use instance-based subscriptions, multiplying the size of the pool, but consuming
+         *  multiples of this value for each physical bind. */
+        public static final String INSTANCE_MULTIPLIER = "instance_multiplier";
+
+        /** Attribute specifying whether or not management is enabled for a given product; passed down to the
+         *  certificate */
+        public static final String MANAGEMENT_ENABLED = "management_enabled";
+
+        /** Attribute specifying the amount of RAM that can be covered by an entitlement using the SKU */
+        public static final String RAM = "ram";
+
+        /** Attribute specifying the number of sockets that can be covered by an entitlement using the SKU */
+        public static final String SOCKETS = "sockets";
+
+        /** Attribute used to identify stacked products and pools */
+        public static final String STACKING_ID = "stacking_id";
+
+        /** Attribute for specifying the provided support level provided by a given product */
+        public static final String SUPPORT_LEVEL = "support_level";
+
+        /** Attribute providing a human-readable description of the support type; passed to the certificate */
+        public static final String SUPPORT_TYPE = "support_type";
+
+        /** Attribute for specifying the TTL of a product, in days */
+        public static final String TTL = "expires_after";
+
+        /** Attribute representing the product type; passed down to the certificate */
+        public static final String TYPE = "type";
+
+        /** Attribute representing the product variant; passed down to the certificate */
+        public static final String VARIANT = "variant";
+
+        /** Attribute for specifying the number of guests that can use a given product */
+        public static final String VIRT_LIMIT = "virt_limit";
+
+        /** Attribute for specifying the product is only available to guests */
+        public static final String VIRT_ONLY = "virt_only";
+
+        /** Attribute to specify the version of a product */
+        public static final String VERSION = "version";
+
+        /** Attribute specifying the number of days prior to expiration the client should be warned about an
+         *  expiring subscription for a given product */
+        public static final String WARNING_PERIOD = "warning_period";
+    }
+
+    public static final String UEBER_PRODUCT_POSTFIX = "_ueber_product";
 
     // Object ID
     @Id
@@ -168,10 +236,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     public Product(String productId, String name, String variant, String version, String arch, String type) {
         this(productId, name, 1L);
 
-        this.setAttribute("version", version);
-        this.setAttribute("variant", variant);
-        this.setAttribute("type", type);
-        this.setAttribute("arch", arch);
+        this.setAttribute(Attributes.VERSION, version);
+        this.setAttribute(Attributes.VARIANT, variant);
+        this.setAttribute(Attributes.TYPE, type);
+        this.setAttribute(Attributes.ARCHITECTURE, arch);
     }
 
     /**
@@ -682,7 +750,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     public List<String> getSkuEnabledContentIds() {
         List<String> skus = new LinkedList<String>();
 
-        ProductAttribute attrib = this.getAttribute(CONTENT_OVERRIDE_ENABLED_ATTRIB);
+        ProductAttribute attrib = this.getAttribute(Attributes.CONTENT_OVERRIDE_ENABLED);
 
         if (attrib != null && attrib.getValue() != null && attrib.getValue().length() > 0) {
             StringTokenizer tokenizer = new StringTokenizer(attrib.getValue(), ",");
@@ -699,7 +767,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     public List<String> getSkuDisabledContentIds() {
         List<String> skus = new LinkedList<String>();
 
-        ProductAttribute attrib = this.getAttribute(CONTENT_OVERRIDE_DISABLED_ATTRIB);
+        ProductAttribute attrib = this.getAttribute(Attributes.CONTENT_OVERRIDE_DISABLED);
 
         if (attrib != null && attrib.getValue() != null && attrib.getValue().length() > 0) {
             StringTokenizer tokenizer = new StringTokenizer(attrib.getValue(), ",");

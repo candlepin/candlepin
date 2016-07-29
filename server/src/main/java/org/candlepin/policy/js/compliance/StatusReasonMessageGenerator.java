@@ -17,6 +17,7 @@ package org.candlepin.policy.js.compliance;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Product;
 
 import com.google.inject.Inject;
 
@@ -24,8 +25,12 @@ import org.apache.commons.lang.StringUtils;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+
+
 
 /**
  * StatusReasonMessageGenerator
@@ -34,6 +39,43 @@ public class StatusReasonMessageGenerator {
 
     private I18n i18n;
 
+    private static final Map<String, String> REASON_MESSAGES;
+    private static final String DEFAULT_REASON_MESSAGE;
+
+    static {
+        // Reason messages can use the following variables
+        // {0} - reason key
+        // {1} - value covered by entitlement
+        // {2} - value present on consumer
+        REASON_MESSAGES = new HashMap<String, String>();
+
+        REASON_MESSAGES.put(ComplianceReason.ReasonKeys.NOT_COVERED,
+            I18n.marktr("Not supported by a valid subscription."));
+        REASON_MESSAGES.put(ComplianceReason.ReasonKeys.ARCHITECTURE,
+            I18n.marktr("Supports architecture {1} but the system is {2}."));
+        REASON_MESSAGES.put(ComplianceReason.ReasonKeys.SOCKETS,
+            I18n.marktr("Only supports {1} of {2} sockets."));
+        REASON_MESSAGES.put(ComplianceReason.ReasonKeys.CORES,
+            I18n.marktr("Only supports {1} of {2} cores."));
+        REASON_MESSAGES.put(ComplianceReason.ReasonKeys.RAM,
+            I18n.marktr("Only supports {1}GB of {2}GB of RAM."));
+        REASON_MESSAGES.put(ComplianceReason.ReasonKeys.VIRT_LIMIT,
+            I18n.marktr("Only supports {1} of {2} virtual guests."));
+        REASON_MESSAGES.put(ComplianceReason.ReasonKeys.VIRT_CPU,
+            I18n.marktr("Only supports {1} of {2} vCPUs."));
+        REASON_MESSAGES.put(ComplianceReason.ReasonKeys.UNMAPPED_GUEST,
+            I18n.marktr("Guest has not been reported on any host"));
+        REASON_MESSAGES.put(ComplianceReason.ReasonKeys.STORAGE_BAND,
+            I18n.marktr("Only supports {1}TB of {2}TB of storage."));
+        DEFAULT_REASON_MESSAGE =
+            I18n.marktr("{0} COVERAGE PROBLEM.  Supports {1} of {2}");
+    }
+
+    private static String getReasonMessage(String key) {
+        String message = REASON_MESSAGES.get(key);
+        return message != null ? message : DEFAULT_REASON_MESSAGE;
+    }
+
     @Inject
     public StatusReasonMessageGenerator(I18n i18n) {
         this.i18n = i18n;
@@ -41,86 +83,43 @@ public class StatusReasonMessageGenerator {
 
     public void setMessage(Consumer c, ComplianceReason reason, Date onDate) {
         String marketingName, id;
+
         if (reason.isStacked()) {
-            id = reason.getAttributes().get("stack_id");
+            id = reason.getAttributes().get(ComplianceReason.Attributes.STACKING_ID);
             marketingName = getStackedMarketingName(id, c, onDate);
-            reason.getAttributes().put("name", marketingName);
+            reason.getAttributes().put(ComplianceReason.Attributes.MARKETING_NAME, marketingName);
         }
         else if (reason.isNonCovered()) {
-            id = reason.getAttributes().get("product_id");
+            id = reason.getAttributes().get(ComplianceReason.Attributes.PRODUCT_ID);
             marketingName = getInstalledMarketingName(id, c);
-            reason.getAttributes().put("name", marketingName);
+            reason.getAttributes().put(ComplianceReason.Attributes.MARKETING_NAME, marketingName);
         }
         else { //nonstacked regular ent
-            id = reason.getAttributes().get("entitlement_id");
+            id = reason.getAttributes().get(ComplianceReason.Attributes.ENTITLEMENT_ID);
             marketingName = getMarketingName(id, c, onDate);
-            reason.getAttributes().put("name", marketingName);
+            reason.getAttributes().put(ComplianceReason.Attributes.MARKETING_NAME, marketingName);
         }
-        if (reason.getKey().equals("NOTCOVERED")) {
-            reason.setMessage(i18n.tr("Not supported by a valid subscription."));
-        }
-        else if (reason.getKey().equals("ARCH")) {
-            reason.setMessage(i18n.tr("Supports architecture {0} but the system is {1}.",
-                reason.getAttributes().get("covered"),
-                reason.getAttributes().get("has")));
-        }
-        else if (reason.getKey().equals("SOCKETS")) {
-            reason.setMessage(i18n.tr("Only supports {0} of {1} sockets.",
-                reason.getAttributes().get("covered"),
-                reason.getAttributes().get("has")));
-        }
-        else if (reason.getKey().equals("CORES")) {
-            reason.setMessage(i18n.tr("Only supports {0} of {1} cores.",
-                reason.getAttributes().get("covered"),
-                reason.getAttributes().get("has")));
-        }
-        else if (reason.getKey().equals("RAM")) {
-            reason.setMessage(i18n.tr("Only supports {0}GB of {1}GB of RAM.",
-                reason.getAttributes().get("covered"),
-                reason.getAttributes().get("has")));
-        }
-        else if (reason.getKey().equals("GUEST_LIMIT")) {
-            reason.setMessage(i18n.tr("Only supports {0} of {1} virtual guests.",
-                reason.getAttributes().get("covered"),
-                reason.getAttributes().get("has")));
-        }
-        else if (reason.getKey().equals("VCPU")) {
-            reason.setMessage(i18n.tr("Only supports {0} of {1} vCPUs.",
-                reason.getAttributes().get("covered"),
-                reason.getAttributes().get("has")));
-        }
-        else if (reason.getKey().equals("UNMAPPEDGUEST")) {
-            reason.setMessage(i18n.tr("Guest has not been reported on any host" +
-                " and is using a temporary unmapped guest subscription."));
-        }
-        else if (reason.getKey().equals("STORAGE_BAND")) {
-            reason.setMessage(i18n.tr("Only supports {0}TB of {1}TB of storage.",
-                reason.getAttributes().get("covered"),
-                reason.getAttributes().get("has")));
-        }
-        else { //default fallback
-            reason.setMessage(i18n.tr("{2} COVERAGE PROBLEM.  Supports {0} of {1}",
-                reason.getAttributes().get("covered"),
-                reason.getAttributes().get("has"), reason.getKey()));
-        }
+
+        String key = reason.getKey();
+
+        reason.setMessage(i18n.tr(getReasonMessage(key),
+            key,
+            reason.getAttributes().get(ComplianceReason.Attributes.COVERED),
+            reason.getAttributes().get(ComplianceReason.Attributes.PRESENT)
+        ));
     }
 
     private String getStackedMarketingName(String stackId, Consumer consumer, Date onDate) {
         Set<String> results = new HashSet<String>();
         for (Entitlement e : getEntitlementsOnDate(consumer, onDate)) {
-            if (e.getPool().getProduct().getAttribute("stacking_id") != null) {
-                if (e.getPool().getProduct().getAttribute("stacking_id")
-                    .getValue().equals(stackId)) {
-                    results.add(e.getPool().getProduct().getName());
-                }
+            String sid = e.getPool().getProduct().getAttributeValue(Product.Attributes.STACKING_ID);
+
+            if (stackId != null && stackId.equals(sid)) {
+                results.add(e.getPool().getProduct().getName());
             }
         }
-        if (results.size() > 0) {
-            return StringUtils.join(results, "/");
-        }
-        else {
-            return "UNABLE_TO_GET_NAME";
-        }
+
+        return results.size() > 0 ? StringUtils.join(results, "/") : "UNABLE_TO_GET_NAME";
     }
 
     private String getMarketingName(String id, Consumer consumer, Date onDate) {
@@ -129,6 +128,7 @@ public class StatusReasonMessageGenerator {
                 return e.getPool().getProductName();
             }
         }
+
         return "UNABLE_TO_GET_NAME";
     }
 
@@ -138,6 +138,7 @@ public class StatusReasonMessageGenerator {
                 return prod.getProductName();
             }
         }
+
         return "UNABLE_TO_GET_NAME";
     }
 
@@ -148,6 +149,7 @@ public class StatusReasonMessageGenerator {
                 result.add(ent);
             }
         }
+
         return result;
     }
 }
