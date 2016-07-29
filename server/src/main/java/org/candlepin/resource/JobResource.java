@@ -18,16 +18,21 @@ import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.JobCurator;
 import org.candlepin.model.SchedulerStatus;
 import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
+import org.candlepin.pinsetter.tasks.KingpinJob;
+import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Collection;
@@ -59,6 +64,8 @@ public class JobResource {
     private JobCurator curator;
     private PinsetterKernel pk;
     private I18n i18n;
+
+    private static Logger log = LoggerFactory.getLogger(JobResource.class);
 
     @Inject
     public JobResource(JobCurator curator, PinsetterKernel pk, I18n i18n) {
@@ -172,6 +179,45 @@ public class JobResource {
             throw new IseException(i18n.tr("Error setting scheduler status"));
         }
         return getSchedulerStatus();
+    }
+
+    @POST
+    @Path("schedule/{task}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @SuppressWarnings("unchecked")
+    public JobStatus schedule(@PathParam("task") String task) {
+
+        /*
+         * at the time of implementing this API, the only jobs that
+         * are permissible are cron jobs.
+         */
+        String className = "org.candlepin.pinsetter.tasks." + task;
+        try {
+            boolean allowed = false;
+            for (String permissibleJob : ConfigProperties.DEFAULT_TASK_LIST) {
+                if (className.equalsIgnoreCase(permissibleJob)) {
+                    allowed = true;
+                    // helps ignore case
+                    className = permissibleJob;
+                }
+            }
+            if (allowed) {
+                Class taskClass = Class.forName(className);
+                return pk.scheduleSingleJob((Class<? extends KingpinJob>) taskClass, Util.generateUUID());
+            }
+            else {
+                throw new BadRequestException(i18n.tr("Not a permissible job: {0}", task));
+            }
+        }
+        catch (ClassNotFoundException e) {
+            throw new IseException(i18n.tr("Error trying to schedule {0}: {1}", className,
+                e.getMessage()));
+        }
+        catch (PinsetterException e) {
+            throw new IseException(i18n.tr("Error trying to schedule {0}: {1}", className,
+                e.getMessage()));
+        }
     }
 
     @ApiOperation(notes = "Retrieves a single Job Status", value = "getStatus")
