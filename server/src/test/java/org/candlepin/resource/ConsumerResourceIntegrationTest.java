@@ -583,13 +583,15 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         List<Entitlement> resultList = (List<Entitlement>) rsp.getEntity();
         Entitlement ent = resultList.get(0);
-        Set<EntitlementCertificate> entCertsBefore = ent.getCertificates();
+        assertEquals(1, ent.getCertificates().size());
+        EntitlementCertificate entCertBefore = ent.getCertificates().iterator().next();
 
         cr.regenerateEntitlementCertificates(this.consumer.getUuid(),
-            ent.getId(), true);
-        Set<EntitlementCertificate> entCertsAfter = ent.getCertificates();
+            ent.getId(), false);
+        assertEquals(1, ent.getCertificates().size());
+        EntitlementCertificate entCertAfter = ent.getCertificates().iterator().next();
 
-        assertFalse(entCertsBefore.equals(entCertsAfter));
+        assertFalse(entCertBefore.equals(entCertAfter));
     }
 
     @Test(expected = BadRequestException.class)
