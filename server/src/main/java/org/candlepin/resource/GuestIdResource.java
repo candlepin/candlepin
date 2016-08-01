@@ -126,7 +126,7 @@ public class GuestIdResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public void updateGuests(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        List<GuestId> guestIds) {
+        List<GuestId> guestIds) throws GuestMigrationException {
         Consumer toUpdate = consumerCurator.findByUuid(consumerUuid);
         List<GuestId> startGuests = toUpdate.getGuestIds();
 

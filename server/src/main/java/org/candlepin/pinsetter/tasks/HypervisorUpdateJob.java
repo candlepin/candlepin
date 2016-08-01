@@ -30,11 +30,12 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.resource.ConsumerResource;
+import org.candlepin.resource.GuestMigrationException;
 import org.candlepin.resource.dto.HypervisorUpdateResult;
+import org.candlepin.resource.dto.PartialSuccessDetails;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
 import org.quartz.JobDataMap;
@@ -178,17 +179,16 @@ public class HypervisorUpdateJob extends KingpinJob {
      *
      * @param context the job's execution context
      */
-    @Transactional
     @SuppressWarnings("checkstyle:indentation")
     public void toExecute(JobExecutionContext context) throws JobExecutionException {
+        HypervisorUpdateResult result = new HypervisorUpdateResult();
+        Consumer incomingHypervisor = null;
         try {
             JobDataMap map = context.getMergedJobDataMap();
             String ownerKey = map.getString(JobStatus.TARGET_ID);
             Boolean create = map.getBoolean(CREATE);
             Principal principal = (Principal) map.get(PRINCIPAL);
             String jobReporterId = map.getString(REPORTER_ID);
-
-            HypervisorUpdateResult result = new HypervisorUpdateResult();
 
             Owner owner = ownerCurator.lookupByKey(ownerKey);
             if (owner == null) {
@@ -224,7 +224,13 @@ public class HypervisorUpdateJob extends KingpinJob {
 
             for (String hypervisorId : hosts) {
                 Consumer knownHost = hypervisorConsumersMap.get(hypervisorId);
-                Consumer incoming = incomingHosts.get(hypervisorId);
+                incomingHypervisor = incomingHosts.get(hypervisorId);
+                String fact = incomingHypervisor.getFact("test_fact");
+
+                if ("EXCEPTION_HYPERVISOR".equals(fact)) {
+                    throw new NullPointerException("EXCEPTION HYPERVISOR");
+                }
+
                 Consumer reportedOnConsumer = null;
                 List<GuestId> startGuests = new ArrayList<GuestId>();
                 if (knownHost == null) {
@@ -235,7 +241,8 @@ public class HypervisorUpdateJob extends KingpinJob {
                     else {
                         log.debug("Registering new host consumer for hypervisor ID: {}", hypervisorId);
                         Consumer newHost = createConsumerForHypervisorId(hypervisorId, owner, principal);
-                        consumerResource.performConsumerUpdates(incoming, newHost, guestConsumersMap, false);
+                        consumerResource.performConsumerUpdates(incomingHypervisor,
+                            newHost, guestConsumersMap, false);
                         consumerResource.create(newHost, principal, null, owner.getKey(), null, false);
                         hypervisorConsumersMap.add(hypervisorId, newHost);
                         result.created(newHost);
@@ -253,8 +260,8 @@ public class HypervisorUpdateJob extends KingpinJob {
                             hypervisorId, ownerKey, knownHost.getHypervisorId().getReporterId(),
                             jobReporterId);
                     }
-                    if (consumerResource.performConsumerUpdates(incoming, knownHost, guestConsumersMap,
-                        false)) {
+                    if (consumerResource.performConsumerUpdates(incomingHypervisor,
+                        knownHost, guestConsumersMap, false)) {
                         consumerCurator.update(knownHost);
                         result.updated(knownHost);
                     }
@@ -271,6 +278,7 @@ public class HypervisorUpdateJob extends KingpinJob {
                     (reportedOnConsumer.getHypervisorId().getReporterId() == null ||
                     !jobReporterId.contentEquals(reportedOnConsumer.getHypervisorId().getReporterId()))) {
                     reportedOnConsumer.getHypervisorId().setReporterId(jobReporterId);
+                    consumerCurator.merge(reportedOnConsumer);
                 }
                 else if (jobReporterId == null) {
                     log.debug("hypervisor checkin reported asynchronously without reporter id " +
@@ -281,6 +289,47 @@ public class HypervisorUpdateJob extends KingpinJob {
             context.setResult(result);
         }
         catch (Exception e) {
+            ensurePartialResult(context, result, incomingHypervisor, e);
+        }
+    }
+
+    /**
+     * In case of an Exception, the checkin can have be either failed or can
+     * partially succeed
+     */
+    private void ensurePartialResult(JobExecutionContext context, HypervisorUpdateResult result,
+        Consumer incomingHypervisor, Exception e) throws JobExecutionException {
+        if (result.getCreated().size() != 0 ||
+            result.getUpdated().size() != 0) {
+            log.error("HypervisorUpdateJob encountered a problem during checkin. The result will be " +
+                "partial update.", e);
+            Consumer failedConsumer = null;
+            String message = "";
+            Exception ex = null;
+
+            if (e instanceof GuestMigrationException) {
+                GuestMigrationException gme = (GuestMigrationException) e;
+                failedConsumer = gme.getGuest();
+                message = "Error when migrating guest: " + failedConsumer.getName();
+                ex = gme.getCauseException();
+            }
+            else {
+                /*
+                 * Assume the last processed hypervisor caused the error
+                 */
+                failedConsumer = incomingHypervisor;
+                message = "Error after processing a Hypervisor: " + failedConsumer.getName();
+                ex = e;
+            }
+
+            PartialSuccessDetails partialSuccessDetails =
+                new PartialSuccessDetails(failedConsumer, message, ex);
+
+            result.setPartialSuccessDetails(partialSuccessDetails);
+            context.setResult(result);
+            return;
+        }
+        else {
             log.error("HypervisorUpdateJob encountered a problem.", e);
             context.setResult(e.getMessage());
             throw new JobExecutionException(e.getMessage(), e, false);
