@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -181,6 +182,8 @@ public class JobResource {
         return getSchedulerStatus();
     }
 
+    @ApiOperation(notes = "Triggers select asynchronous jobs", value = "schedule")
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 500, message = "") })
     @POST
     @Path("schedule/{task}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -207,7 +210,9 @@ public class JobResource {
                 return pk.scheduleSingleJob((Class<? extends KingpinJob>) taskClass, Util.generateUUID());
             }
             else {
-                throw new BadRequestException(i18n.tr("Not a permissible job: {0}", task));
+                throw new BadRequestException(i18n.tr(
+                    "Not a permissible job: {0}. Only {1} are permissible", task,
+                    prettyPrintJobs(ConfigProperties.DEFAULT_TASK_LIST)));
             }
         }
         catch (ClassNotFoundException e) {
@@ -218,6 +223,14 @@ public class JobResource {
             throw new IseException(i18n.tr("Error trying to schedule {0}: {1}", className,
                 e.getMessage()));
         }
+    }
+
+    private String prettyPrintJobs(String... jobs) {
+        List<String> jobNames = new ArrayList<String>();
+        for (String job : jobs) {
+            jobNames.add(StringUtils.substringAfterLast(job, "."));
+        }
+        return StringUtils.join(jobNames, ", ");
     }
 
     @ApiOperation(notes = "Retrieves a single Job Status", value = "getStatus")
