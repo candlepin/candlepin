@@ -64,7 +64,8 @@ public class StatusReasonMessageGenerator {
         REASON_MESSAGES.put(ComplianceReason.ReasonKeys.VIRT_CPU,
             I18n.marktr("Only supports {1} of {2} vCPUs."));
         REASON_MESSAGES.put(ComplianceReason.ReasonKeys.UNMAPPED_GUEST,
-            I18n.marktr("Guest has not been reported on any host"));
+            I18n.marktr("Guest has not been reported on any host and is using a temporary unmapped guest " +
+            "subscription."));
         REASON_MESSAGES.put(ComplianceReason.ReasonKeys.STORAGE_BAND,
             I18n.marktr("Only supports {1}TB of {2}TB of storage."));
         DEFAULT_REASON_MESSAGE =
