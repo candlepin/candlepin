@@ -26,15 +26,17 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.pinsetter.tasks.RegenEnvEntitlementCertsJob;
+import org.candlepin.util.RdbmsExceptionTranslator;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.quartz.JobDataMap;
@@ -43,12 +45,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.PersistenceException;
+import javax.persistence.RollbackException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -66,6 +71,8 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
+
+
 /**
  * REST API for managing Environments.
  */
@@ -81,12 +88,14 @@ public class EnvironmentResource {
     private ConsumerResource consumerResource;
     private PoolManager poolManager;
     private ConsumerCurator consumerCurator;
-    private ContentCurator contentCurator;
+    private OwnerContentCurator ownerContentCurator;
+    private RdbmsExceptionTranslator rdbmsExceptionTranslator;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
         EnvironmentContentCurator envContentCurator, ConsumerResource consumerResource,
-        PoolManager poolManager, ConsumerCurator consumerCurator, ContentCurator contentCurator) {
+        PoolManager poolManager, ConsumerCurator consumerCurator, OwnerContentCurator ownerContentCurator,
+        RdbmsExceptionTranslator rdbmsExceptionTranslator) {
 
         this.envCurator = envCurator;
         this.i18n = i18n;
@@ -94,7 +103,8 @@ public class EnvironmentResource {
         this.consumerResource = consumerResource;
         this.poolManager = poolManager;
         this.consumerCurator = consumerCurator;
-        this.contentCurator = contentCurator;
+        this.ownerContentCurator = ownerContentCurator;
+        this.rdbmsExceptionTranslator = rdbmsExceptionTranslator;
     }
 
     @ApiOperation(notes = "Retrieves a single Environment", value = "getEnv")
@@ -172,7 +182,7 @@ public class EnvironmentResource {
             );
         }
 
-        Content resolved = this.contentCurator.lookupById(environment.getOwner(), contentId);
+        Content resolved = this.ownerContentCurator.getContentById(environment.getOwner(), contentId);
 
         if (resolved == null) {
             throw new NotFoundException(i18n.tr(
@@ -204,7 +214,7 @@ public class EnvironmentResource {
 
         Environment env = lookupEnvironment(envId);
 
-        Set<String> contentIds = new HashSet<String>();
+
         // Make sure this content has not already been promoted within this environment
         // Impl note:
         // We have to do this in a separate loop or we'll end up with an undefined state, should
@@ -227,17 +237,22 @@ public class EnvironmentResource {
             }
         }
 
-        for (org.candlepin.model.dto.EnvironmentContent promoteMe : contentToPromote) {
-            // Make sure the content exists:
-            EnvironmentContent envcontent = new EnvironmentContent();
+        Set<String> contentIds = new HashSet<String>();
 
-            envcontent.setEnvironment(env);
-            envcontent.setContent(this.resolveContent(env, promoteMe.getContentId()));
-            envcontent.setEnabled(promoteMe.getEnabled());
-
-            envContentCurator.create(envcontent);
-            env.getEnvironmentContent().add(envcontent);
-            contentIds.add(promoteMe.getContentId());
+        try {
+            contentIds = batchCreate(contentToPromote, env);
+        }
+        catch (PersistenceException pe) {
+            if (rdbmsExceptionTranslator.isConstraintViolationDuplicateEntry(pe)) {
+                log.info("Concurrent content promotion will cause this request to fail.",
+                    pe);
+                throw new ConflictException(
+                    i18n.tr("Some of the content is already associated with Environment: {0}",
+                        contentToPromote));
+            }
+            else {
+                throw pe;
+            }
         }
 
         JobDataMap map = new JobDataMap();
@@ -261,7 +276,7 @@ public class EnvironmentResource {
         "EnvironmentContent object created after a promotion. This is to help integrate " +
         "with other management apps which should not have to track/lookup a specific ID " +
         "for the content to demote.", value = "demoteContent")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
+    @ApiResponses({ @ApiResponse(code = 404, message = "When the content has already been demoted.") })
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{env_id}/content")
@@ -284,9 +299,21 @@ public class EnvironmentResource {
             demotedContent.put(contentId, envContent);
         }
 
-        // We've validated everything here, so we're clear to start deleting...
-        for (EnvironmentContent envContent : demotedContent.values()) {
-            this.envContentCurator.delete(envContent);
+        try {
+            envContentCurator.bulkDeleteTransactional(
+                new ArrayList<EnvironmentContent>(demotedContent.values()));
+        }
+        catch (RollbackException hibernateException) {
+            if (rdbmsExceptionTranslator.isUpdateHadNoEffectException(hibernateException)) {
+                log.info("Concurrent content demotion will cause this request to fail.",
+                    hibernateException);
+                throw new NotFoundException(
+                    i18n.tr("One of the content does not exist in the environment anymore: {0}",
+                        demotedContent.values()));
+            }
+            else {
+                throw hibernateException;
+            }
         }
 
         // Impl note: Unfortunately, we have to make an additional set here, as the keySet isn't
@@ -303,6 +330,34 @@ public class EnvironmentResource {
             .build();
 
         return detail;
+    }
+
+    /**
+     * To make promotion transactional
+     * @param contentToPromote
+     * @param env
+     * @return contentIds Ids of the promoted content
+     */
+    @Transactional
+    public Set<String>  batchCreate(List<org.candlepin.model.dto.EnvironmentContent> contentToPromote,
+        Environment env) {
+
+        Set<String> contentIds = new HashSet<String>();
+
+        for (org.candlepin.model.dto.EnvironmentContent promoteMe : contentToPromote) {
+            // Make sure the content exists:
+            EnvironmentContent envcontent = new EnvironmentContent();
+
+            envcontent.setEnvironment(env);
+            envcontent.setContent(this.resolveContent(env, promoteMe.getContentId()));
+            envcontent.setEnabled(promoteMe.getEnabled());
+
+            envContentCurator.create(envcontent);
+            env.getEnvironmentContent().add(envcontent);
+            contentIds.add(promoteMe.getContentId());
+        }
+
+        return contentIds;
     }
 
     private Environment lookupEnvironment(String envId) {

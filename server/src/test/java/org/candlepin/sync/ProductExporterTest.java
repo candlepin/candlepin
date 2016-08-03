@@ -20,6 +20,7 @@ import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Product;
 import org.candlepin.model.Owner;
+import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -47,8 +48,9 @@ public class ProductExporterTest {
 
         StringWriter writer = new StringWriter();
 
-        Owner owner = new Owner("Example-Corporation");
-        Product product = new Product("my-id", "product name", owner);
+        Owner owner = TestUtil.createOwner("Example-Corporation");
+        Product product = TestUtil.createProduct("my-id", "product name");
+
         exporter.export(mapper, writer, product);
         String s = writer.toString();
         assertTrue(s.contains("\"name\":\"product name\""));

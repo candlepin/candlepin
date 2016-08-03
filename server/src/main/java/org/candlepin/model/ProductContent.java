@@ -14,8 +14,11 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.model.dto.ProductContentData;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import org.hibernate.annotations.Parent;
 
 import java.io.Serializable;
@@ -39,36 +42,26 @@ public class ProductContent extends AbstractHibernateObject {
     private Product product;
 
     @ManyToOne
-    @JoinColumn(name = "content_uuid", nullable = false, updatable = false)
+    @JoinColumn(name = "content_uuid", nullable = false)
     @NotNull
     private Content content;
 
-    private Boolean enabled;
+    private boolean enabled;
 
     public ProductContent() {
-
+        // Intentionally left empty
     }
 
-    public ProductContent(Product product, Content content, Boolean enabled) {
+    public ProductContent(Product product, Content content, boolean enabled) {
         this.setContent(content);
         this.setProduct(product);
         this.setEnabled(enabled);
     }
 
-    public String toString() {
-        return "ProductContent [product = " + getProduct() +
-                ", content = " + content +
-                ", enabled = " + enabled + "]";
-    }
-
+    @Override
     @XmlTransient
     public Serializable getId() {
-        // TODO: just here to appease AbstractHibernateObject
-        return null;
-    }
-
-    public void setId(String s) {
-        // TODO: just here to appease jackson
+        return null; // return new ProductContentKey(this.productUuid, this.contentUuid);
     }
 
     /**
@@ -103,34 +96,117 @@ public class ProductContent extends AbstractHibernateObject {
     /**
      * @param enabled the enabled to set
      */
-    public void setEnabled(Boolean enabled) {
+    public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
 
     /**
      * @return the enabled
      */
-    public Boolean getEnabled() {
+    public boolean isEnabled() {
         return enabled;
     }
 
     @Override
-    public int hashCode() {
-        return new HashCodeBuilder(3, 23).append(this.enabled)
-            .append(this.content.hashCode()).toHashCode();
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (this == other) {
+    public boolean equals(Object obj) {
+        if (this == obj) {
             return true;
         }
-        if (other instanceof ProductContent) {
-            ProductContent that = (ProductContent) other;
-            return new EqualsBuilder().append(this.enabled, that.enabled)
-                .isEquals() && this.content.equals(that.content);
+
+        if (obj instanceof ProductContent) {
+            ProductContent that = (ProductContent) obj;
+
+            // Impl note:
+            // Product is not included in this calculation because it only exists in this object to
+            // properly map products to content -- it should not be used for comparing two
+            // instances.
+
+            return new EqualsBuilder()
+                .append(this.content, that.content)
+                .append(this.enabled, that.enabled)
+                .isEquals();
         }
+
         return false;
     }
 
+    @Override
+    public int hashCode() {
+        // Impl note:
+        // Product is not included in this calculation because it only exists in this object to
+        // properly map products to content -- it should not be used for comparing two
+        // instances.
+
+        return new HashCodeBuilder(3, 23)
+            .append(this.content)
+            .append(this.enabled)
+            .toHashCode();
+    }
+
+    /**
+     * Calculates and returns a version hash for this entity. This method operates much like the
+     * hashCode method, except that it is more accurate and should have fewer collisions.
+     *
+     * @return
+     *  a version hash for this entity
+     */
+    public int getEntityVersion() {
+        int hash = 17;
+
+        hash = 7 * hash + (this.content != null ? this.content.getEntityVersion() : 0);
+        hash = 7 * hash + (this.enabled ? 1 : 0);
+
+        return hash;
+    }
+
+    /**
+     * Determines whether or not this entity would be changed if the given DTO were applied to this
+     * object.
+     *
+     * @param dto
+     *  The product content DTO to check for changes
+     *
+     * @throws IllegalArgumentException
+     *  if dto is null
+     *
+     * @return
+     *  true if this product content would be changed by the given DTO; false otherwise
+     */
+    public boolean isChangedBy(ProductContentData dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("dto is null");
+        }
+
+        if (dto.isEnabled() != null && !dto.isEnabled().equals(this.enabled)) {
+            return true;
+        }
+
+        if (dto.getContent() != null) {
+            if (this.content == null || this.content.isChangedBy(dto.getContent())) {
+                return true;
+            }
+        }
+
+        // Impl note:
+        // Product content DTOs do not contain product information
+
+        return false;
+    }
+
+    /**
+     * Returns a DTO representing this entity.
+     *
+     * @return
+     *  a DTO representing this entity
+     */
+    public ProductContentData toDTO() {
+        return new ProductContentData(this);
+    }
+
+    public String toString() {
+        return String.format(
+            "ProductContent [product = %s, content = %s, enabled = %s]",
+            this.getProduct(), this.getContent(), this.isEnabled()
+        );
+    }
 }

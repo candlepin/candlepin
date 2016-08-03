@@ -313,4 +313,6 @@ public interface PoolManager {
     List<Pool> listMasterPools();
 
     void deletePools(List<Pool> pools);
+
+    void deletePools(List<Pool> pools, Set<String> alreadyDeletedPools);
 }

@@ -23,6 +23,7 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestDateUtil;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.junit.Before;
@@ -41,10 +42,7 @@ import javax.inject.Inject;
  * ConsumerCuratorSearchTest
  */
 public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private EntitlementCurator entitlementCurator;
+
     @Inject private Configuration config;
 
     private Owner owner;
@@ -57,8 +55,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ct = consumerTypeCurator.create(ct);
 
-        config.setProperty(ConfigProperties.INTEGER_FACTS,
-            "system.count, system.multiplier");
+        config.setProperty(ConfigProperties.INTEGER_FACTS, "system.count, system.multiplier");
         config.setProperty(ConfigProperties.NON_NEG_INTEGER_FACTS, "system.count");
     }
 
@@ -133,6 +130,29 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         uuids.add(consumer.getUuid());
         Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
             null, null, null, uuids, null, factFilters, null, null, null, null);
+        List<Consumer> resultList = results.getPageData();
+        assertEquals(1, resultList.size());
+        assertEquals(consumer, resultList.get(0));
+    }
+
+    @Test
+    public void testSearchHypervisorIdsCaseInsensitive() {
+        String hypervisorid = "HyPuUiD";
+        String hypervisorid2 = "HyPuUiD2";
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setHypervisorId(new HypervisorId(hypervisorid));
+        consumer = consumerCurator.create(consumer);
+
+        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner, ct);
+        consumer2.setHypervisorId(new HypervisorId(hypervisorid2));
+        consumer2 = consumerCurator.create(consumer2);
+
+        List<String> hypervisorIds = new ArrayList<String>();
+        hypervisorIds.add(hypervisorid.toUpperCase());
+
+        Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
+            null, null, null, null, hypervisorIds, null, null, null, null, null);
+
         List<Consumer> resultList = results.getPageData();
         assertEquals(1, resultList.size());
         assertEquals(consumer, resultList.get(0));
@@ -464,7 +484,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumer = consumerCurator.create(consumer);
 
-        Product p = new Product("SKU1", "Product 1", owner);
+        Product p = TestUtil.createProduct("SKU1", "Product 1");
         productCurator.create(p);
 
         Pool pool = new Pool(
@@ -524,7 +544,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumer = consumerCurator.create(consumer);
 
-        Product p = new Product("SKU1", "Product 1", owner);
+        Product p = TestUtil.createProduct("SKU1", "Product 1");
         productCurator.create(p);
 
         Pool pool = new Pool(
@@ -582,10 +602,10 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
         otherConsumer = consumerCurator.create(otherConsumer);
 
-        Product p = new Product("SKU1", "Product 1", owner);
+        Product p = TestUtil.createProduct("SKU1", "Product 1");
         p.addAttribute(new ProductAttribute("type", "MKT"));
 
-        Product p2 = new Product("SVC_ID", "Product 2", owner);
+        Product p2 = TestUtil.createProduct("SVC_ID", "Product 2");
         p2.addAttribute(new ProductAttribute("type", "SVC"));
 
         productCurator.create(p);
@@ -653,10 +673,10 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
         otherConsumer = consumerCurator.create(otherConsumer);
 
-        Product p = new Product("SKU1", "Product 1", owner);
+        Product p = TestUtil.createProduct("SKU1", "Product 1");
         p.addAttribute(new ProductAttribute("type", "MKT"));
 
-        Product p2 = new Product("SKU2", "Product 2", owner);
+        Product p2 = TestUtil.createProduct("SKU2", "Product 2");
         p2.addAttribute(new ProductAttribute("type", "MKT"));
 
         productCurator.create(p);
@@ -738,10 +758,10 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         otherConsumer = consumerCurator.create(otherConsumer);
 
         // Two owners, two different products, but with the same SKU
-        Product p = new Product("SKU1", "Product 1", owner);
+        Product p = TestUtil.createProduct("SKU1", "Product 1");
         p.addAttribute(new ProductAttribute("type", "MKT"));
 
-        Product p2 = new Product("SKU1", "Product 1", owner2);
+        Product p2 = TestUtil.createProduct("SKU1", "Product 1");
         p2.addAttribute(new ProductAttribute("type", "MKT"));
 
         productCurator.create(p);
@@ -814,7 +834,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
         otherConsumer = consumerCurator.create(otherConsumer);
 
-        Product p = new Product("SKU1", "Product 1", owner);
+        Product p = TestUtil.createProduct("SKU1", "Product 1");
         p.addAttribute(new ProductAttribute("type", "MKT"));
 
         productCurator.create(p);
@@ -895,10 +915,10 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Consumer consumer3 = new Consumer("testConsumer3", "testUser3", owner, ct);
         consumer3 = consumerCurator.create(consumer3);
 
-        Product p = new Product("SKU1", "Product 1", owner);
+        Product p = TestUtil.createProduct("SKU1", "Product 1");
         p.addAttribute(new ProductAttribute("type", "MKT"));
 
-        Product p2 = new Product("SKU2", "Product 2", owner);
+        Product p2 = TestUtil.createProduct("SKU2", "Product 2");
         p2.addAttribute(new ProductAttribute("type", "MKT"));
 
         productCurator.create(p);

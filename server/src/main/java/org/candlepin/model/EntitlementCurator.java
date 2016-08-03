@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 
@@ -52,15 +53,16 @@ import javax.persistence.Query;
  */
 public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     private static Logger log = LoggerFactory.getLogger(EntitlementCurator.class);
-    private ProductCurator productCurator;
+
+    private OwnerProductCurator ownerProductCurator;
 
     /**
      * default ctor
      */
     @Inject
-    public EntitlementCurator(ProductCurator productCurator) {
+    public EntitlementCurator(OwnerProductCurator ownerProductCurator) {
         super(Entitlement.class);
-        this.productCurator = productCurator;
+        this.ownerProductCurator = ownerProductCurator;
     }
 
     // TODO: handles addition of new entitlements only atm!
@@ -151,7 +153,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
         // No need to add filters when matching by product.
         if (object != null && productId != null) {
-            Product p = productCurator.lookupById(owner, productId);
+            Product p = this.ownerProductCurator.getProductById(owner, productId);
             if (p == null) {
                 throw new BadRequestException(i18n.tr(
                     "Product with ID ''{0}'' could not be found.", productId));
@@ -363,16 +365,65 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return page;
     }
 
+    /**
+     * Deletes the given entitlement.
+     *
+     * @param entity
+     *  The entitlement entity to delete
+     */
     @Transactional
     public void delete(Entitlement entity) {
         Entitlement toDelete = find(entity.getId());
-        log.debug("Deleting entitlement: {}", toDelete);
-        log.debug("certs.size = {}", toDelete.getCertificates().size());
 
-        for (EntitlementCertificate cert : toDelete.getCertificates()) {
-            currentSession().delete(cert);
+        if (toDelete != null) {
+            this.deleteImpl(toDelete);
+
+            // Maintain runtime consistency.
+            entity.getCertificates().clear();
+            entity.getConsumer().getEntitlements().remove(entity);
+            entity.getPool().getEntitlements().remove(entity);
         }
-        currentSession().delete(toDelete);
+    }
+
+    /**
+     * Deletes the given collection of entitlements.
+     * <p/></p>
+     * Note: Unlike the standard delete method, this method does not perform a lookup on an entity
+     * before deleting it.
+     *
+     * @param entitlements
+     *  The collection of entitlement entities to delete
+     */
+    public void batchDelete(Collection<Entitlement> entitlements) {
+        for (Entitlement entitlement : entitlements) {
+            this.deleteImpl(entitlement);
+
+            // Maintain runtime consistency.
+            entitlement.getCertificates().clear();
+
+            if (Hibernate.isInitialized(entitlement.getConsumer().getEntitlements())) {
+                entitlement.getConsumer().getEntitlements().remove(entitlement);
+            }
+
+            if (Hibernate.isInitialized(entitlement.getPool().getEntitlements())) {
+                entitlement.getPool().getEntitlements().remove(entitlement);
+            }
+        }
+    }
+
+    private void deleteImpl(Entitlement entity) {
+        log.debug("Deleting entitlement: {}", entity);
+        EntityManager entityManager = this.getEntityManager();
+
+        if (entity.getCertificates() != null) {
+            log.debug("certs.size = {}", entity.getCertificates().size());
+
+            for (EntitlementCertificate cert : entity.getCertificates()) {
+                entityManager.remove(cert);
+            }
+        }
+
+        entityManager.remove(entity);
     }
 
     @Transactional
@@ -445,31 +496,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         }
 
         return criteria.list();
-    }
-
-    /**
-     * Batch deletes a list of entitlements.
-     * @param pools
-     */
-    public void batchDelete(List<Entitlement> entitlements) {
-        for (Entitlement ent : entitlements) {
-            log.debug("Deleting entitlement: {}", ent);
-            log.debug("certs.size = {}", ent.getCertificates().size());
-
-            for (EntitlementCertificate cert : ent.getCertificates()) {
-                getEntityManager().remove(cert);
-            }
-            ent.getCertificates().clear();
-            getEntityManager().remove(ent);
-
-            // Maintain runtime consistency.
-            ent.getCertificates().clear();
-            ent.getConsumer().getEntitlements().remove(ent);
-
-            if (Hibernate.isInitialized(ent.getPool().getEntitlements())) {
-                ent.getPool().getEntitlements().remove(ent);
-            }
-        }
     }
 
     @SuppressWarnings("unchecked")

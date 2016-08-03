@@ -35,11 +35,7 @@ import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 
 public class ConsumerTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private UserCurator userCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
+
     @Inject private ConsumerResource consumerResource;
     @Inject private RoleCurator roleCurator;
     @Inject private Configuration config;
@@ -55,13 +51,9 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Before
     public void setUpTestObjects() {
-        owner = new Owner("Example Corporation");
-        rhel = new Product("rhel", "Red Hat Enterprise Linux", owner);
-        jboss = new Product("jboss", "JBoss", owner);
-
-        ownerCurator.create(owner);
-        productCurator.create(rhel);
-        productCurator.create(jboss);
+        owner = this.createOwner("Example Corporation");
+        rhel = this.createProduct("rhel", "Red Hat Enterprise Linux", owner);
+        jboss = this.createProduct("jboss", "JBoss", owner);
 
         consumerType = new ConsumerType(CONSUMER_TYPE_NAME);
         consumerTypeCurator.create(consumerType);
@@ -208,8 +200,8 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testAddEntitlements() {
         Owner o = createOwner();
-        Product newProduct = TestUtil.createProduct(o);
-        productCurator.create(newProduct);
+        Product newProduct = this.createProduct(o);
+
         Pool pool = createPool(o, newProduct,
             1000L, TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));

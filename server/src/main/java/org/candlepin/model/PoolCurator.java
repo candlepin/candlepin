@@ -33,11 +33,13 @@ import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Junction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.SimpleExpression;
+import org.hibernate.criterion.Subqueries;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
@@ -200,7 +202,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     /**
-     * Fetches a block of non-derived, expired pools
+     * Fetches the list of non-derived, expired pools
      *
      * @return
      *  the list of non-derived, expired pools pools
@@ -230,15 +232,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> listExpiredPools(int blockSize) {
         Date now = new Date();
 
-        Criteria criteria = this.createSecureCriteria("pool")
-            .createAlias("pool.entitlements", "entitlement")
-            .createAlias("pool.attributes", "attributes")
-            .add(Restrictions.lt("pool.endDate", now))
-            .add(Restrictions.ne("attributes.name", "derived_pool"))
-            .add(Restrictions.or(
-                Restrictions.isNull("entitlement.endDateOverride"),
-                Restrictions.lt("entitlement.endDateOverride", now)
-            ));
+        DetachedCriteria entCheck = DetachedCriteria.forClass(Pool.class, "entPool")
+            .createAlias("entitlements", "ent", JoinType.INNER_JOIN)
+            .add(Restrictions.eqProperty("entPool.id", "tgtPool.id"))
+            .add(Restrictions.ge("ent.endDateOverride", now))
+            .setProjection(Projections.property("entPool.id"));
+
+        Criteria criteria = this.createSecureCriteria("tgtPool")
+            .add(Restrictions.lt("tgtPool.endDate", now))
+            .add(Subqueries.notExists(entCheck));
 
         if (blockSize > 0) {
             criteria.setMaxResults(blockSize);
@@ -717,10 +719,25 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     /**
      * Batch deletes a list of pools.
-     * @param pools
+     *
+     * @param pools pools to delete
+     * @param alreadyDeletedPools pools to skip, they have already been deleted.
      */
-    public void batchDelete(List<Pool> pools) {
+    public void batchDelete(List<Pool> pools, Set<String> alreadyDeletedPools) {
+        if (alreadyDeletedPools == null) {
+            alreadyDeletedPools = new HashSet<String>();
+        }
+
         for (Pool pool : pools) {
+
+            // As we batch pool operations, pools may be deleted at multiple places in the code path.
+            // We may request to delete the same pool in multiple places too, for example if an expired
+            // stack derived pool has no entitlements, ExpiredPoolsJob will request to delete it twice,
+            // for each reason.
+            if (alreadyDeletedPools.contains(pool.getId())) {
+                continue;
+            }
+            alreadyDeletedPools.add(pool.getId());
             this.currentSession().delete(pool);
 
             // Maintain runtime consistency. The entitlements for the pool have been deleted on the
@@ -936,8 +953,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     public Pool findDevPool(Consumer consumer) {
         PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addAttributeFilter(Pool.DEVELOPMENT_POOL_ATTRIBUTE, "true");
-        filters.addAttributeFilter(Pool.REQUIRES_CONSUMER_ATTRIBUTE, consumer.getUuid());
+        filters.addAttributeFilter(Pool.Attributes.DEVELOPMENT_POOL, "true");
+        filters.addAttributeFilter(Pool.Attributes.REQUIRES_CONSUMER, consumer.getUuid());
 
         Criteria criteria =  currentSession().createCriteria(Pool.class);
         criteria.add(Restrictions.eq("owner", consumer.getOwner()));

@@ -20,11 +20,8 @@ import static org.mockito.Mockito.*;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductContent;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,8 +35,9 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+
+
+
 /**
  * ProductImporterTest
  */
@@ -47,8 +45,6 @@ public class ProductImporterTest {
 
     private ObjectMapper mapper;
     private ProductImporter importer;
-    private ProductCurator productCuratorMock;
-    private ContentCurator contentCuratorMock;
     private Owner owner = new Owner("Test Corporation");
 
     @Before
@@ -60,14 +56,16 @@ public class ProductImporterTest {
                 }
             }
         ));
-        productCuratorMock = mock(ProductCurator.class);
-        contentCuratorMock = mock(ContentCurator.class);
-        importer = new ProductImporter(productCuratorMock, contentCuratorMock);
+
+        importer = new ProductImporter();
     }
 
     @Test
     public void testCreateObject() throws Exception {
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
+        product.setAttribute("a1", "a1");
+        product.setAttribute("a2", "a2");
+
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
         Product created = importer.createObject(mapper, reader, owner);
@@ -78,107 +76,65 @@ public class ProductImporterTest {
 
     @Test
     public void testNewProductCreated() throws Exception {
-        Product product = TestUtil.createProduct(owner);
-
-        String json = getJsonForProduct(product);
-        Reader reader = new StringReader(json);
-        Product created = importer.createObject(mapper, reader, owner);
-        Set<Product> storeThese = new HashSet<Product>();
-        storeThese.add(created);
-    }
-
-    @Test
-    public void testExistingProductUpdated() throws Exception {
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
 
         Product created = importer.createObject(mapper, reader, owner);
 
-        // Dummy up some changes to this product:
-        String newProductName = "New Name";
-        created.setName(newProductName);
-
-        Set<Product> storeThese = new HashSet<Product>();
-        storeThese.add(created);
-
-        // Simulate the pre-existing product:
-        when(productCuratorMock.lookupById(owner, product.getId())).thenReturn(product);
+        assertEquals(product, created);
     }
 
     @Test
     public void testContentCreated() throws Exception {
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
         addContentTo(product);
 
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
         Product created = importer.createObject(mapper, reader, owner);
         Content c = created.getProductContent().iterator().next().getContent();
-        Set<Product> storeThese = new HashSet<Product>();
-        storeThese.add(created);
 
         // Metadata expiry should be overridden to 0 on import:
         assertEquals(new Long(1), c.getMetadataExpire());
     }
 
     @Test
-    public void testExistingProductContentAdded() throws Exception {
-        Owner owner = new Owner("Test Corporation");
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name", owner);
-        Product newProduct = TestUtil.createProduct("fake id", "fake name", owner);
-
-        addContentTo(newProduct);
-        Content c = newProduct.getProductContent().iterator().next().getContent();
-
-        when(productCuratorMock.find(oldProduct.getUuid()))
-            .thenReturn(oldProduct);
-
-        Set<Product> storeThese = new HashSet<Product>();
-        storeThese.add(newProduct);
-    }
-
-    @Test
     public void testVendorSetToUnknown() throws Exception {
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
         addNoVendorContentTo(product);
 
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
         Product created = importer.createObject(mapper, reader, owner);
         Content c = created.getProductContent().iterator().next().getContent();
-        Set<Product> storeThese = new HashSet<Product>();
-        storeThese.add(created);
         assertEquals("unknown", c.getVendor());
     }
 
     // Returns the Content object added
-    private Content addContentTo(Product p) {
-        Owner owner = new Owner("Example-Corporation");
-        Content c = new Content(
-            owner, "name", "100130", "label", "type", "vendor", "url", "gpgurl", "arch"
-        );
+    private Content addContentTo(Product product) {
+        Content content = TestUtil.createContent("100130", "content_name");
+        content.setMetadataExpire(1000L);
 
-        c.setMetadataExpire(1000L);
-        p.getProductContent().add(new ProductContent(p, c, true));
+        product.addContent(content, true);
 
-        return c;
+        return content;
     }
 
     // Returns the Content object added without vendor
-    private void addNoVendorContentTo(Product p) {
-        Owner owner = new Owner("Example-Corporation");
-        Content c = new Content(
-            owner, "name", "100130", "label", "type", "", "url", "gpgurl", "arch"
-        );
+    private Content addNoVendorContentTo(Product product) {
+        Content content = TestUtil.createContent("100130", "name");
+        content.setVendor("");
+        content.setMetadataExpire(1000L);
 
-        c.setMetadataExpire(1000L);
-        p.getProductContent().add(new ProductContent(p, c, true));
+        product.addContent(content, true);
+
+        return content;
     }
 
-    private String getJsonForProduct(Product p) throws Exception {
+    private String getJsonForProduct(Product product) throws Exception {
         Writer writer = new StringWriter();
-        mapper.writeValue(writer, p);
+        mapper.writeValue(writer, product);
         return writer.toString();
     }
 

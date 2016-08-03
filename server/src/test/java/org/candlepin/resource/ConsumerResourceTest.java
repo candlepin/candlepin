@@ -176,7 +176,7 @@ public class ConsumerResourceTest {
         CandlepinPoolManager poolManager = new CandlepinPoolManager(
             null, null, null, new CandlepinCommonTestConfig(), null, null, mockedEntitlementCurator,
             mockedConsumerCurator, null, null, null, null, mockedActivationKeyRules, null, null,
-            null, null, null, null, null
+            null, null, null, null, null, null
         );
 
         ConsumerResource consumerResource = new ConsumerResource(
@@ -217,6 +217,7 @@ public class ConsumerResourceTest {
             null, mockedSubscriptionServiceAdapter, null, null, null, null, null, null, null, null, null,
             mgr, null, null, null, null, null, null, null, null,
             new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil, null);
+
         cr.regenerateEntitlementCertificates(consumer.getUuid(), null, true);
         Mockito.verify(mgr, Mockito.times(1)).regenerateCertificatesOf(eq(consumer), eq(true));
     }
@@ -416,6 +417,7 @@ public class ConsumerResourceTest {
             null, null, null, null, null, null, null, null, null, null,
             null, null, null, e, null, null, null, null,
             new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil, null);
+
         String dtStr = "2011-09-26T18:10:50.184081+00:00";
         Date dt = ResourceDateParser.parseDateString(dtStr);
         cr.bind("fakeConsumer", null, null, null, null, null, false, dtStr, null, null, null);

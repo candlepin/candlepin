@@ -559,7 +559,7 @@ public class Importer {
         Meta meta = mapper.readValue(metadata, Meta.class);
         List<Subscription> importSubs = new ArrayList<Subscription>();
         if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
-            ProductImporter importer = new ProductImporter(productCurator, contentCurator);
+            ProductImporter importer = new ProductImporter();
 
             Set<Product> productsToImport = importProducts(
                 importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(), importer, owner

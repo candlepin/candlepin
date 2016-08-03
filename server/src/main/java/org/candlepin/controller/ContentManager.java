@@ -14,13 +14,15 @@
  */
 package org.candlepin.controller;
 
-import org.candlepin.common.config.Configuration;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.dto.ContentData;
+import org.candlepin.model.dto.ProductData;
+import org.candlepin.model.dto.ProductContentData;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -31,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+
 
 
 /**
@@ -45,19 +48,57 @@ public class ContentManager {
     private static Logger log = LoggerFactory.getLogger(ContentManager.class);
 
     private ContentCurator contentCurator;
+    private EntitlementCertificateGenerator entitlementCertGenerator;
+    private OwnerContentCurator ownerContentCurator;
     private ProductCurator productCurator;
     private ProductManager productManager;
-    private EntitlementCertificateGenerator entitlementCertGenerator;
 
     @Inject
-    public ContentManager(ContentCurator contentCurator, ProductCurator productCurator,
-        ProductManager productManager, EntitlementCertificateGenerator entitlementCertGenerator,
-        Configuration config) {
+    public ContentManager(
+        ContentCurator contentCurator, EntitlementCertificateGenerator entitlementCertGenerator,
+        OwnerContentCurator ownerContentCurator, ProductCurator productCurator,
+        ProductManager productManager) {
 
         this.contentCurator = contentCurator;
+        this.entitlementCertGenerator = entitlementCertGenerator;
+        this.ownerContentCurator = ownerContentCurator;
         this.productCurator = productCurator;
         this.productManager = productManager;
-        this.entitlementCertGenerator = entitlementCertGenerator;
+    }
+
+    /**
+     * Creates a new Content for the given owner, using the data in the provided DTO.
+     *
+     * @param contentData
+     *  A content DTO representing the content to create
+     *
+     * @param owner
+     *  The owner for which to create the content
+     *
+     * @throws IllegalArgumentException
+     *  if contentData is null or incomplete, or owner is null
+     *
+     * @return
+     *  a new Content instance representing the specified content for the given owner
+     */
+    public Content createContent(ContentData contentData, Owner owner) {
+        if (contentData == null) {
+            throw new IllegalArgumentException("contentData is null");
+        }
+
+        if (contentData.getId() == null || contentData.getType() == null || contentData.getLabel() == null ||
+            contentData.getName() == null || contentData.getVendor() == null) {
+
+            throw new IllegalArgumentException("contentData is incomplete");
+        }
+
+        // TODO: more validation here...?
+
+        Content entity = new Content(contentData.getId());
+        this.applyContentChanges(entity, contentData, owner);
+
+        return this.createContent(entity, owner);
+
     }
 
     /**
@@ -75,20 +116,31 @@ public class ContentManager {
      *  given owner
      *
      * @throws NullPointerException
-     *  if the provided content entity is null
+     *  if entity or owner is null
      *
      * @return
      *  a new Content instance representing the specified content for the given owner
      */
     @Transactional
     public Content createContent(Content entity, Owner owner) {
-        log.debug("Creating new content for org: {}, {}", entity, owner);
-
         if (entity == null) {
-            throw new NullPointerException("entity");
+            throw new IllegalArgumentException("entity is null");
         }
 
-        Content existing = this.contentCurator.lookupById(owner, entity.getId());
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
+        }
+
+        log.debug("Creating new content for org: {}, {}", entity, owner);
+
+        Content existing = this.ownerContentCurator.getContentById(owner, entity.getId());
+
+        // TODO: FIXME:
+        // There's a bug here where if changes are applied to an entity's collections, and then
+        // this method is called, the check below will trigger an illegal state exception, but
+        // Hibernate's helpful nature will have persisted the changes during the lookup above.
+        // This needs to be re-written to use DTOs as the primary source of entity creation, rather
+        // than a bolted-on utility method.
 
         if (existing != null) {
             // If we're doing an exclusive creation, this should be an error condition
@@ -96,24 +148,24 @@ public class ContentManager {
         }
 
         // Check if we have an alternate version we can use instead.
-        List<Content> alternateVersions = this.contentCurator.getContentByVersion(
-            entity.getId(), entity.hashCode()
-        );
+        List<Content> alternateVersions = this.contentCurator
+            .getContentByVersion(entity.getId(), entity.getEntityVersion())
+            .list();
 
+        log.debug("Checking {} alternate content versions", alternateVersions.size());
         for (Content alt : alternateVersions) {
             if (alt.equals(entity)) {
                 // If we're "creating" a content, we shouldn't have any other object references to
                 // update for this content. Instead, we'll just add the new owner to the content.
-                alt.addOwner(owner);
-                return this.contentCurator.merge(alt);
+                this.ownerContentCurator.mapContentToOwner(alt, owner);
+                return alt;
             }
         }
 
-        // No other owners have matching version of this content. Since it's net new, we set the
-        // owners explicitly to the owner given to ensure we don't accidentally clobber other owner
-        // mappings
-        entity.setOwners(Arrays.asList(owner));
-        return this.contentCurator.create(entity);
+        entity = this.contentCurator.create(entity);
+        this.ownerContentCurator.mapContentToOwner(entity, owner);
+
+        return entity;
     }
 
     /**
@@ -136,138 +188,138 @@ public class ContentManager {
      *  if this method is called with an entity does not exist in the backing database for the given
      *  owner
      *
-     * @throws NullPointerException
-     *  if the provided content entity is null
+     * @throws IllegalArgumentException
+     *  if either the provided content entity or owner are null
      *
      * @return
      *  the updated content entity, or a new content entity
      */
     @Transactional
-    public Content updateContent(Content entity, Owner owner, boolean regenerateEntitlementCerts) {
-        log.debug("Applying content update for org: {}, {}", entity, owner);
+    public Content updateContent(Content entity, ContentData update, Owner owner,
+        boolean regenerateEntitlementCerts) {
 
         if (entity == null) {
-            throw new NullPointerException("entity");
+            throw new IllegalArgumentException("entity is null");
         }
 
-        // This has to fetch a new instance, or we'll be unable to compare the objects
-        Content existing = this.contentCurator.lookupById(owner, entity.getId());
+        if (update == null) {
+            throw new IllegalArgumentException("update is null");
+        }
 
-        if (existing == null) {
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
+        }
+
+        log.debug("Applying content update for org: {}, {}", entity, owner);
+
+        // Resolve the entity to ensure we're working with the merged entity, and to ensure it's
+        // already been created.
+        entity = this.ownerContentCurator.getContentById(owner, entity.getId());
+
+        if (entity == null) {
             // If we're doing an exclusive update, this should be an error condition
             throw new IllegalStateException("Content has not yet been created");
         }
 
-        if (existing == entity) {
-            // Nothing to do, really. The caller likely intends for the changes to be persisted, so
-            // we can do that for them.
-            return this.contentCurator.merge(entity);
+        // Make sure we actually have a change to apply
+        if (!entity.isChangedBy(update)) {
+            return entity;
         }
 
-        // Check for newer versions of the same content. We want to try to dedupe as much data as we
-        // can, and if we have a newer version of the content (which matches the version provided by
-        // the caller), we can just point the given orgs to the new content instead of giving them
-        // their own version.
-        // This is probably going to be a very expensive operation, though.
-        List<Content> alternateVersions = this.contentCurator.getContentByVersion(
-            entity.getId(), entity.hashCode()
-        );
+        Content updated = this.applyContentChanges((Content) entity.clone(), update, owner);
 
+        List<Content> alternateVersions = this.contentCurator
+            .getContentByVersion(update.getId(), updated.getEntityVersion())
+            .list();
+
+        log.debug("Checking {} alternate content versions", alternateVersions.size());
         for (Content alt : alternateVersions) {
-            if (alt.equals(entity)) {
-                log.debug("Merging content with existing version: {} => {}", entity, alt);
-
-                alt.addOwner(owner);
-                this.contentCurator.merge(alt);
+            if (alt.equals(updated)) {
+                log.debug("Merging content with existing version: {} => {}", updated, alt);
 
                 // Make sure every product using the old version/entity are updated to use the new one
                 List<Product> affectedProducts = this.productCurator.getProductsWithContent(
-                    owner, Arrays.asList(entity.getId())
+                    owner, Arrays.asList(updated.getId())
                 );
 
-                entity = this.contentCurator.updateOwnerContentReferences(
-                    existing, alt, Arrays.asList(owner)
-                );
-
-                for (Product product : affectedProducts) {
-                    product = (Product) product.clone();
-
-                    for (ProductContent pc : product.getProductContent()) {
-                        if (entity.equals(pc.getContent())) {
-                            pc.setContent(alt);
-                        }
-                    }
-
-                    // Impl note: This should also take care of our entitlement cert regeneration
-                    this.productManager.updateProduct(product, owner, regenerateEntitlementCerts);
-                }
-
-                return entity;
-            }
-        }
-
-        // Make sure we actually have something to update.
-        if (!existing.equals(entity)) {
-            // If we're making the update for every owner using the content, don't bother creating
-            // a new version -- just do a raw update.
-            if (existing.getOwners().size() == 1) {
-                log.debug("Applying in-place update to content: {}", entity);
-
-                existing.merge(entity);
-                entity = existing;
-
-                this.contentCurator.merge(entity);
-
-                if (regenerateEntitlementCerts) {
-                    // Every owner with a pool using any of the affected products needs an update.
-                    this.entitlementCertGenerator.regenerateCertificatesOf(
-                        this.productCurator.getProductsWithContent(Arrays.asList(existing.getUuid())), true
-                    );
-                }
-            }
-            else {
-                log.debug("Forking content and applying update: {}", entity);
-
-                // This org isn't the only org using the content. We need to create a new content
-                // instance and move the org over to the new content.
                 List<Owner> owners = Arrays.asList(owner);
-                Content copy = (Content) entity.clone();
+                updated = this.ownerContentCurator.updateOwnerContentReferences(updated, alt, owners);
 
-                // Clear the UUID so Hibernate doesn't think our copy is a detached entity
-                copy.setUuid(null);
-
-                // Get products that currently use this content...
-                List<Product> affectedProducts = this.productCurator.getProductsWithContent(
-                    owner, Arrays.asList(existing.getId())
-                );
-
-                // Set the owner so when we create it, we don't end up with duplicate keys...
-                existing.removeOwner(owner);
-                copy.setOwners(owners);
-
-                this.contentCurator.merge(existing);
-                copy = this.contentCurator.create(copy);
-
-                // Update the products using this content so they are regenerated using the new
-                // content
+                // Impl note:
+                // This block is a consequence of products and contents not being strongly related.
+                log.debug("Updating {} affected products", affectedProducts.size());
+                ContentData cdata = updated.toDTO();
                 for (Product product : affectedProducts) {
-                    product = (Product) product.clone();
+                    log.debug("Updating affected product: {}", product);
+                    ProductData pdata = product.toDTO();
 
-                    for (ProductContent pc : product.getProductContent()) {
-                        if (existing.equals(pc.getContent())) {
-                            pc.setContent(copy);
-                        }
+                    // We're taking advantage of the mutable nature of our joining objects.
+                    // Probably not the best idea for long-term maintenance, but it works for now.
+                    ProductContentData pcd = pdata.getProductContent(updated.getId());
+                    if (pcd != null) {
+                        pcd.setContent(cdata);
+
+                        // Impl note: This should also take care of our entitlement cert regeneration
+                        this.productManager.updateProduct(product, pdata, owner, regenerateEntitlementCerts);
                     }
-
-                    // Impl note: This should also take care of our entitlement cert regeneration ??
-                    this.productManager.updateProduct(product, owner, regenerateEntitlementCerts);
                 }
 
-                entity = this.contentCurator.updateOwnerContentReferences(existing, copy, owners);
+                return updated;
             }
         }
 
-        return entity;
+        // No alternate versions with which to converge. Check if we can do an in-place update instead
+        if (this.ownerContentCurator.getOwnerCount(updated) < 2) {
+            log.debug("Applying in-place update to content: {}", updated);
+
+            updated = this.contentCurator.merge(this.applyContentChanges(entity, update, owner));
+
+            if (regenerateEntitlementCerts) {
+                // Every owner with a pool using any of the affected products needs an update.
+                List<Product> affectedProducts = this.productCurator.getProductsWithContent(
+                    Arrays.asList(updated.getUuid())
+                );
+
+                this.entitlementCertGenerator.regenerateCertificatesOf(
+                    Arrays.asList(owner), affectedProducts, true
+                );
+            }
+
+            return updated;
+        }
+
+
+        log.debug("Forking content and applying update: {}", updated);
+
+        // Clear the UUID so Hibernate doesn't think our copy is a detached entity
+        updated.setUuid(null);
+
+        // Get products that currently use this content...
+        List<Product> affectedProducts = this.productCurator.getProductsWithContent(
+            owner, Arrays.asList(updated.getId())
+        );
+
+        updated = this.contentCurator.create(updated);
+        updated = this.ownerContentCurator.updateOwnerContentReferences(
+            entity, updated, Arrays.asList(owner)
+        );
+
+        log.debug("Updating {} affected products", affectedProducts.size());
+        ContentData cdata = updated.toDTO();
+        for (Product product : affectedProducts) {
+            log.debug("Updating affected product: {}", product);
+            ProductData pdata = product.toDTO();
+
+            ProductContentData pcd = pdata.getProductContent(updated.getId());
+            if (pcd != null) {
+                pcd.setContent(cdata);
+
+                // Impl note: This should also take care of our entitlement cert regeneration
+                this.productManager.updateProduct(product, pdata, owner, regenerateEntitlementCerts);
+            }
+        }
+
+        return updated;
     }
 
     /**
@@ -287,22 +339,26 @@ public class ContentManager {
      *  if this method is called with an entity does not exist in the backing database for the given
      *  owner
      *
-     * @throws NullPointerException
-     *  if the provided content entity is null
+     * @throws IllegalArgumentException
+     *  if entity or owner is null
      *
      * @return
      *  a list of products affected by the removal of the given content
      */
     @Transactional
     public List<Product> removeContent(Content entity, Owner owner, boolean regenerateEntitlementCerts) {
-        log.debug("Removing content for org: {}, {}", entity, owner);
-
         if (entity == null) {
-            throw new NullPointerException("entity");
+            throw new IllegalArgumentException("entity is null");
         }
 
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
+        }
+
+        log.debug("Removing content from owner: {}, {}", entity, owner);
+
         // This has to fetch a new instance, or we'll be unable to compare the objects
-        Content existing = this.contentCurator.lookupById(owner, entity.getId());
+        Content existing = this.ownerContentCurator.getContentById(owner, entity.getId());
 
         if (existing == null) {
             // If we're doing an exclusive update, this should be an error condition
@@ -316,7 +372,9 @@ public class ContentManager {
         List<Product> updatedAffectedProducts = new LinkedList<Product>();
         List<Content> contentList = Arrays.asList(existing);
 
+        log.debug("Updating {} affected products", affectedProducts.size());
         for (Product product : affectedProducts) {
+            log.debug("Updating affected product: {}", product);
             product = this.productManager.removeProductContent(
                 product, contentList, owner, regenerateEntitlementCerts
             );
@@ -324,18 +382,99 @@ public class ContentManager {
             updatedAffectedProducts.add(product);
         }
 
-        existing.removeOwner(owner);
-        if (existing.getOwners().size() == 0) {
+        this.ownerContentCurator.removeOwnerFromContent(existing, owner);
+        if (this.ownerContentCurator.getOwnerCount(existing) == 0) {
+            // No one is using this product anymore; delete the entity
             this.contentCurator.delete(existing);
         }
         else {
-            this.contentCurator.merge(existing);
+            // Clean up any dangling references to content
+            this.ownerContentCurator.removeOwnerContentReferences(existing, Arrays.asList(owner));
         }
 
-        // Clean up any dangling references to content
-        this.contentCurator.removeOwnerContentReferences(existing, Arrays.asList(owner));
-
         return updatedAffectedProducts;
+    }
+
+    /**
+     * Applies the changes from the given DTO to the specified entity
+     *
+     * @param entity
+     *  The entity to modify
+     *
+     * @param update
+     *  The DTO containing the modifications to apply
+     *
+     * @param owner
+     *  An owner to use for resolving entity references
+     *
+     * @throws IllegalArgumentException
+     *  if entity, update or owner is null
+     *
+     * @return
+     *  The updated product entity
+     */
+    private Content applyContentChanges(Content entity, ContentData update, Owner owner) {
+        if (entity == null) {
+            throw new IllegalArgumentException("entity is null");
+        }
+
+        if (update == null) {
+            throw new IllegalArgumentException("update is null");
+        }
+
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
+        }
+
+        if (update.getType() != null) {
+            entity.setType(update.getType());
+        }
+
+        if (update.getLabel() != null) {
+            entity.setLabel(update.getLabel());
+        }
+
+        if (update.getName() != null) {
+            entity.setName(update.getName());
+        }
+
+        if (update.getVendor() != null) {
+            entity.setVendor(update.getVendor());
+        }
+
+        if (update.getContentUrl() != null) {
+            entity.setContentUrl(update.getContentUrl());
+        }
+
+        if (update.getRequiredTags() != null) {
+            entity.setRequiredTags(update.getRequiredTags());
+        }
+
+        if (update.getReleaseVersion() != null) {
+            entity.setReleaseVersion(update.getReleaseVersion());
+        }
+
+        if (update.getGpgUrl() != null) {
+            entity.setGpgUrl(update.getGpgUrl());
+        }
+
+        if (update.getMetadataExpire() != null) {
+            entity.setMetadataExpire(update.getMetadataExpire());
+        }
+
+        if (update.getModifiedProductIds() != null) {
+            entity.setModifiedProductIds(update.getModifiedProductIds());
+        }
+
+        if (update.getArches() != null) {
+            entity.setArches(update.getArches());
+        }
+
+        if (update.isLocked() != null) {
+            entity.setLocked(update.isLocked());
+        }
+
+        return entity;
     }
 
 }

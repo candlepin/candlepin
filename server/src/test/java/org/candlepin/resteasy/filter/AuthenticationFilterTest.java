@@ -27,7 +27,6 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.common.auth.SecurityHole;
-import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotAuthorizedException;
 import org.candlepin.config.ConfigProperties;
@@ -68,11 +67,9 @@ import javax.ws.rs.container.ResourceInfo;
  */
 @RunWith(JukitoRunner.class)
 public class AuthenticationFilterTest extends DatabaseTestFixture {
-    @Inject private ConsumerCurator consumerCurator;
     @Inject private DeletedConsumerCurator deletedConsumerCurator;
     @Inject private Provider<UserServiceAdapter> usaProvider;
     @Inject private Injector injector;
-    @Inject private Configuration config;
 
     @Mock private HttpServletRequest mockHttpServletRequest;
     @Mock private ContainerRequestContext mockRequestContext;

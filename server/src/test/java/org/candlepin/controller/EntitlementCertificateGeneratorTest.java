@@ -168,20 +168,20 @@ public class EntitlementCertificateGeneratorTest {
     private List<Entitlement> generateEntitlements() {
         Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
 
-        Content c1 = TestUtil.createContent(owner, "c1");
-        Content c2 = TestUtil.createContent(owner, "c2");
-        Content c3 = TestUtil.createContent(owner, "c3");
+        Content c1 = TestUtil.createContent("c1");
+        Content c2 = TestUtil.createContent("c2");
+        Content c3 = TestUtil.createContent("c3");
 
-        Product prod1 = TestUtil.createProduct(owner);
-        Product prod2 = TestUtil.createProduct(owner);
-        Product prod3 = TestUtil.createProduct(owner);
-        Product pprod1 = TestUtil.createProduct(owner);
-        Product pprod2 = TestUtil.createProduct(owner);
-        Product pprod3 = TestUtil.createProduct(owner);
+        Product prod1 = TestUtil.createProduct();
+        Product prod2 = TestUtil.createProduct();
+        Product prod3 = TestUtil.createProduct();
+        Product pprod1 = TestUtil.createProduct();
+        Product pprod2 = TestUtil.createProduct();
+        Product pprod3 = TestUtil.createProduct();
 
-        prod1.addContent(c1);
-        pprod2.addContent(c2);
-        prod3.addContent(c3);
+        prod1.addContent(c1, true);
+        pprod2.addContent(c2, true);
+        prod3.addContent(c3, true);
 
         Pool pool1 = TestUtil.createPool(owner, prod1, Arrays.asList(pprod1), 1);
         Pool pool2 = TestUtil.createPool(owner, prod2, Arrays.asList(pprod2), 1);
@@ -244,7 +244,7 @@ public class EntitlementCertificateGeneratorTest {
     public void testLazyRegenerationForProductById() throws Exception {
         Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
         Consumer consumer = TestUtil.createConsumer(owner);
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
         Pool pool = TestUtil.createPool(owner, product);
         Entitlement entitlement = TestUtil.createEntitlement(owner, consumer, pool, null);
         Set<Entitlement> entitlements = new HashSet<Entitlement>();
@@ -265,7 +265,7 @@ public class EntitlementCertificateGeneratorTest {
     public void testNonLazyRegenerationForProductById() throws Exception {
         Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
         Consumer consumer = TestUtil.createConsumer(owner);
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
         Pool pool = TestUtil.createPool(owner, product);
         Entitlement entitlement = TestUtil.createEntitlement(owner, consumer, pool, null);
         Set<Entitlement> entitlements = new HashSet<Entitlement>();
@@ -305,7 +305,7 @@ public class EntitlementCertificateGeneratorTest {
     @Test
     public void testNonLazyRegenerate() throws Exception {
         Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
 
         Pool pool = TestUtil.createPool(owner, product);
         pool.setSourceSubscription(new SourceSubscription("source-sub-id", "master"));
@@ -338,7 +338,7 @@ public class EntitlementCertificateGeneratorTest {
     public void testLazyRegenerationByEntitlementId() throws Exception {
         Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
         Consumer consumer = TestUtil.createConsumer(owner);
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
         Pool pool = TestUtil.createPool(owner, product);
         Entitlement entitlement = TestUtil.createEntitlement(owner, consumer, pool, null);
         entitlement.setId("lazy-ent-id");
@@ -360,7 +360,7 @@ public class EntitlementCertificateGeneratorTest {
     public void testNonLazyRegenerationByEntitlementId() throws Exception {
         Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
         Consumer consumer = TestUtil.createConsumer(owner);
-        Product product = TestUtil.createProduct(owner);
+        Product product = TestUtil.createProduct();
         Pool pool = TestUtil.createPool(owner, product);
         Entitlement entitlement = TestUtil.createEntitlement(owner, consumer, pool, null);
         entitlement.setId("test-ent-id");

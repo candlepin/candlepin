@@ -17,6 +17,7 @@ package org.candlepin.model;
 import static org.junit.Assert.assertEquals;
 
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -42,23 +43,24 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         this.owner = new Owner("Example-Corporation");
         ownerCurator.create(owner);
 
-        updates = new Content(
-            this.owner, "Test Content 1", "100", "test-content-label-1", "yum-1", "test-vendor-1",
-            "test-content-url-1", "test-gpg-url-1", "test-arch1,test-arch2"
-        );
+        updates = TestUtil.createContent("100", "Test Content 1");
+
+        updates.setLabel("test-content-label-1");
+        updates.setType("yum-1");
+        updates.setVendor("test-vendor-1");
+        updates.setContentUrl("test-content-url-1");
+        updates.setGpgUrl("test-gpg-url-1");
+        updates.setArches("test-arch1,test-arch2");
 
         updates.setRequiredTags("required-tags");
-        updates.setReleaseVer("releaseVer");
+        updates.setReleaseVersion("releaseVer");
         updates.setMetadataExpire(new Long(1));
         updates.setModifiedProductIds(new HashSet<String>() { { add("productIdOne"); } });
     }
 
     @Test
     public void shouldUpdateContentWithNewValues() {
-        Content toBeUpdated = new Content(
-            this.owner, "Test Content", updates.getId(), "test-content-label", "yum", "test-vendor",
-            "test-content-url", "test-gpg-url", "test-arch1"
-        );
+        Content toBeUpdated = TestUtil.createContent(updates.getId(), "Test Content");
 
         contentCurator.create(toBeUpdated);
 
@@ -71,7 +73,7 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         assertEquals(toBeUpdated.getVendor(), updates.getVendor());
         assertEquals(toBeUpdated.getContentUrl(), updates.getContentUrl());
         assertEquals(toBeUpdated.getRequiredTags(), updates.getRequiredTags());
-        assertEquals(toBeUpdated.getReleaseVer(), updates.getReleaseVer());
+        assertEquals(toBeUpdated.getReleaseVersion(), updates.getReleaseVersion());
         assertEquals(toBeUpdated.getMetadataExpire(), updates.getMetadataExpire());
         assertEquals(toBeUpdated.getModifiedProductIds(), updates.getModifiedProductIds());
         assertEquals(toBeUpdated.getArches(), updates.getArches());

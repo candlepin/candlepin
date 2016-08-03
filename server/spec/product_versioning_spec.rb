@@ -204,6 +204,8 @@ describe 'Product Versioning' do
         owner2["key"], content_name, content_id, content_label, content_type, content_vendor
     )
 
+    content1["uuid"].should eq(content2["uuid"])
+
     prod3 = @cp.add_content_to_product(owner1["key"], id, content_id)
     prod4 = @cp.add_content_to_product(owner2["key"], id, content_id)
     prod3["uuid"].should_not eq(prod1["uuid"])
@@ -316,8 +318,8 @@ describe 'Product Versioning' do
   end
 
   it "converges identical products when converging content" do
-    owner1 = create_owner random_string('test_owner')
-    owner2 = create_owner random_string('test_owner')
+    owner1 = create_owner random_string('test_owner-1')
+    owner2 = create_owner random_string('test_owner-2')
 
     id = random_string("product")
     name = "shared_product"
@@ -379,8 +381,5 @@ describe 'Product Versioning' do
     prod6["uuid"].should_not eq(prod4["uuid"])
     prod6["uuid"].should eq(prod5["uuid"])
   end
-
-  # TODO ? :
-  # - Updating a shared product used by another resource properly links the new product
 
 end

@@ -22,6 +22,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.Product;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.ValidationWarning;
@@ -117,12 +118,13 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             Rule rule = parseRule(mapping);
             for (String attribute : rule.getAttributes()) {
                 if (!toReturn.containsKey(attribute)) {
-                    toReturn.put(attribute,
-                        new HashSet<Rule>(Collections.singletonList(rule)));
+                    toReturn.put(attribute, new HashSet<Rule>(Collections.singletonList(rule)));
                 }
+
                 toReturn.get(attribute).add(rule);
             }
         }
+
         return toReturn;
     }
 
@@ -131,9 +133,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
         if (tokens.length < 3) {
             throw new IllegalArgumentException(
-                i18n.tr(
-                    "''{0}'' Should contain name, priority and at least one attribute",
-                    toParse));
+                i18n.tr("''{0}'' Should contain name, priority and at least one attribute", toParse));
         }
 
         Set<String> attributes = new HashSet<String>();
@@ -287,37 +287,38 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     protected void runPostUnbind(PoolManager poolManager, Entitlement entitlement) {
         Pool pool = entitlement.getPool();
 
-        if (pool.hasAttribute("virt_limit") || pool.getProduct().hasAttribute("virt_limit")) {
+        // Can this attribute appear on pools?
+        if (pool.hasAttribute(Product.Attributes.VIRT_LIMIT) ||
+            pool.getProduct().hasAttribute(Product.Attributes.VIRT_LIMIT)) {
+
             Map<String, String> attributes = PoolHelper.getFlattenedAttributes(pool);
             Consumer c = entitlement.getConsumer();
             postUnbindVirtLimit(poolManager, entitlement, pool, c, attributes);
         }
     }
 
-    private void postUnbindVirtLimit(PoolManager poolManager,
-        Entitlement entitlement, Pool pool, Consumer c,
+    private void postUnbindVirtLimit(PoolManager poolManager, Entitlement entitlement, Pool pool, Consumer c,
         Map<String, String> attributes) {
+
         log.debug("Running virt_limit post unbind.");
-        boolean hostLimited = attributes.containsKey("host_limited") &&
-            attributes.get("host_limited").equals("true");
-        if (!config.getBoolean(ConfigProperties.STANDALONE) && !hostLimited &&
-            c.getType().isManifest()) {
-            String virtLimit = attributes.get("virt_limit");
+
+        boolean hostLimited = "true".equals(attributes.get(Product.Attributes.HOST_LIMITED));
+
+        if (!config.getBoolean(ConfigProperties.STANDALONE) && !hostLimited && c.getType().isManifest()) {
+            // We're making an assumption that VIRT_LIMIT is defined the same way in every possible
+            // source for the attributes map.
+            String virtLimit = attributes.get(Product.Attributes.VIRT_LIMIT);
+
             if (!"unlimited".equals(virtLimit)) {
-                // As we have unbound an entitlement from a physical pool that
-                // was previously
-                // exported, we need to add back the reduced bonus pool
-                // quantity.
-                int virtQuantity = Integer.parseInt(virtLimit) *
-                    entitlement.getQuantity();
+                // As we have unbound an entitlement from a physical pool that was previously
+                // exported, we need to add back the reduced bonus pool quantity.
+                int virtQuantity = Integer.parseInt(virtLimit) * entitlement.getQuantity();
                 if (virtQuantity > 0) {
-                    List<Pool> pools = poolManager.lookupBySubscriptionId(pool
-                        .getSubscriptionId());
+                    List<Pool> pools = poolManager.lookupBySubscriptionId(pool.getSubscriptionId());
                     for (int idex = 0; idex < pools.size(); idex++) {
                         Pool derivedPool = pools.get(idex);
-                        if (derivedPool.getAttributeValue("pool_derived") != null) {
-                            poolManager.updatePoolQuantity(derivedPool,
-                                virtQuantity);
+                        if (derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null) {
+                            poolManager.updatePoolQuantity(derivedPool, virtQuantity);
                         }
                     }
                 }
@@ -327,12 +328,12 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                 // was previously
                 // exported, we need to set the unlimited bonus pool quantity to
                 // -1.
-                List<Pool> pools = poolManager.lookupBySubscriptionId(pool
-                    .getSubscriptionId());
+                List<Pool> pools = poolManager.lookupBySubscriptionId(pool.getSubscriptionId());
                 for (int idex = 0; idex < pools.size(); idex++) {
                     Pool derivedPool = pools.get(idex);
-                    if (derivedPool.getAttributeValue("pool_derived") != null &&
+                    if (derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null &&
                         derivedPool.getQuantity() == 0) {
+
                         poolManager.setPoolQuantity(derivedPool, -1);
                     }
                 }
@@ -343,6 +344,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     private void postBindVirtLimit(PoolManager poolManager, Consumer c,
         Map<String, Entitlement> entitlementMap, Map<String, Map<String, String>> attributeMaps,
         List<Pool> subPoolsForStackIds) {
+
         Set<String> stackIdsThathaveSubPools = new HashSet<String>();
         if (CollectionUtils.isNotEmpty(subPoolsForStackIds)) {
             for (Pool pool : subPoolsForStackIds) {
@@ -363,13 +365,13 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         for (Entitlement entitlement : entitlementMap.values()) {
             Pool pool = entitlement.getPool();
             Map<String, String> attributes = attributeMaps.get(pool.getId());
-            boolean hostLimited = "true".equals(attributes.get("host_limited"));
+            boolean hostLimited = "true".equals(attributes.get(Product.Attributes.HOST_LIMITED));
 
             if (consumerFactExpression && (isStandalone || hostLimited)) {
-                String virtLimit = attributes.get("virt_limit");
-                String stackId = attributes.get("stacking_id");
-                boolean createSubPool = stackId == null || !stackIdsThathaveSubPools.contains(stackId);
-                if (createSubPool) {
+                String virtLimit = attributes.get(Product.Attributes.VIRT_LIMIT);
+                String stackId = attributes.get(Product.Attributes.STACKING_ID);
+
+                if (stackId == null || !stackIdsThathaveSubPools.contains(stackId)) {
                     log.debug("Creating a new sub-pool for {}", pool);
                     try {
                         int virtQuantity = Integer.parseInt(virtLimit);
@@ -395,8 +397,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
         if (CollectionUtils.isNotEmpty(createHostRestrictedPoolFor)) {
             log.debug("creating host restricted pools for: {}", createHostRestrictedPoolFor);
-            PoolHelper.createHostRestrictedPools(poolManager, c, createHostRestrictedPoolFor,
-                entitlementMap, attributeMaps);
+            PoolHelper.createHostRestrictedPools(poolManager, c, createHostRestrictedPoolFor, entitlementMap,
+                attributeMaps);
         }
         if (CollectionUtils.isNotEmpty(decrementHostedBonusPoolQuantityFor)) {
             log.debug("decrementHostedBonusPoolQuantity for: {}", decrementHostedBonusPoolQuantityFor);
@@ -432,10 +434,10 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             Pool pool = entitlement.getPool();
             Map<String, String> attributes = attributesMaps.get(pool.getId());
 
-            boolean hostLimited = "true".equals(attributes.get("host_limited"));
+            boolean hostLimited = "true".equals(attributes.get(Product.Attributes.HOST_LIMITED));
 
             if (consumerFactExpression && !hostLimited) {
-                String virtLimit = attributes.get("virt_limit");
+                String virtLimit = attributes.get(Product.Attributes.VIRT_LIMIT);
                 if (!"unlimited".equals(virtLimit)) {
                     // if the bonus pool is not unlimited, then the bonus pool
                     // quantity needs to be adjusted based on the virt limit
@@ -444,9 +446,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                         List<Pool> pools = subscriptionPoolMap.get(pool.getSubscriptionId());
                         for (int idex = 0; idex < pools.size(); idex++) {
                             Pool derivedPool = pools.get(idex);
-                            if (derivedPool.getAttributeValue("pool_derived") != null) {
-                                derivedPool = poolManager
-                                        .updatePoolQuantity(derivedPool, -1 * virtQuantity);
+                            if (derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null) {
+                                derivedPool = poolManager.updatePoolQuantity(derivedPool, -1 * virtQuantity);
                             }
                         }
                     }
@@ -463,7 +464,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                         if (pools != null) {
                             for (int idex = 0; idex < pools.size(); idex++) {
                                 Pool derivedPool = pools.get(idex);
-                                if (derivedPool.getAttributeValue("pool_derived") != null) {
+                                if (derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null) {
                                     derivedPool = poolManager.setPoolQuantity(derivedPool, 0);
                                 }
                             }
@@ -480,8 +481,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         runPostEntitlement(poolManager, consumer, entitlements, subPoolsForStackIds);
     }
 
-    public void postUnbind(Consumer c, PoolManager poolManager,
-        Entitlement ent) {
+    public void postUnbind(Consumer c, PoolManager poolManager, Entitlement ent) {
         runPostUnbind(poolManager, ent);
     }
 
@@ -496,10 +496,11 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     protected void logResult(ValidationResult result) {
         if (log.isDebugEnabled()) {
             for (ValidationError error : result.getErrors()) {
-                log.debug("  Rule error: " + error.getResourceKey());
+                log.debug("  Rule error: {}", error.getResourceKey());
             }
+
             for (ValidationWarning warning : result.getWarnings()) {
-                log.debug("  Rule warning: " + warning.getResourceKey());
+                log.debug("  Rule warning: {}", warning.getResourceKey());
             }
         }
     }

@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.model.dto.CandlepinDTO;
+
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -80,5 +82,34 @@ public abstract class AbstractHibernateObject implements Persisted, Serializable
 
     public void setUpdated(Date updated) {
         this.updated = updated;
+    }
+
+    /**
+     * Populates this entity with the data contained in the source DTO. Unpopulated values within
+     * the DTO will be ignored.
+     *
+     * @param source
+     *  The source DTO containing the data to use to update this entity
+     *
+     * @throws IllegalArgumentException
+     *  if source is null
+     *
+     * @return
+     *  A reference to this entity
+     */
+    public AbstractHibernateObject populate(CandlepinDTO source) {
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
+
+        if (source.getCreated() != null) {
+            this.setCreated(source.getCreated());
+        }
+
+        if (source.getUpdated() != null) {
+            this.setUpdated(source.getUpdated());
+        }
+
+        return this;
     }
 }

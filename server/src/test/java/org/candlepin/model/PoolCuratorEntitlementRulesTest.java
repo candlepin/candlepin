@@ -40,11 +40,7 @@ import javax.inject.Inject;
  * PoolCuratorEntitlementRulesTest
  */
 public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private PoolCurator poolCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
+
     @Inject private CandlepinPoolManager poolManager;
     @Inject private Injector injector;
 
@@ -54,11 +50,9 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        owner = createOwner();
-        ownerCurator.create(owner);
+        owner = this.createOwner();
 
-        product = TestUtil.createProduct(owner);
-        productCurator.create(product);
+        product = this.createProduct(owner);
 
         consumer = TestUtil.createConsumer(owner);
         consumer.setFact("cpu_cores", "4");
@@ -68,21 +62,19 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void concurrentCreationOfEntitlementsShouldWorkIfUnderMaxMemberLimit()
-        throws Exception {
+    public void concurrentCreationOfEntitlementsShouldWorkIfUnderMaxMemberLimit() throws Exception {
         Long numAvailEntitlements = 2L;
 
-        Product newProduct = TestUtil.createProduct(owner);
+        Product newProduct = TestUtil.createProduct();
         newProduct.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
-        productCurator.create(newProduct);
+        newProduct = this.createProduct(newProduct, owner);
 
         Pool consumerPool = createPool(owner, newProduct,
             numAvailEntitlements, TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
 
-        CandlepinPoolManager anotherEntitler =
-            injector.getInstance(CandlepinPoolManager.class);
+        CandlepinPoolManager anotherEntitler = injector.getInstance(CandlepinPoolManager.class);
 
         Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
         poolQuantities.put(consumerPool.getId(), 1);
@@ -94,19 +86,16 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
     }
 
     @Test(expected = EntitlementRefusedException.class)
-    public void concurrentCreationOfEntitlementsShouldFailIfOverMaxMemberLimit()
-        throws Exception {
+    public void concurrentCreationOfEntitlementsShouldFailIfOverMaxMemberLimit() throws Exception {
         Long numAvailEntitlements = 1L;
 
-        Product newProduct = TestUtil.createProduct(owner);
-        productCurator.create(newProduct);
+        Product newProduct = this.createProduct(owner);
 
         Pool consumerPool = createPool(owner, newProduct, numAvailEntitlements,
             TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
         poolCurator.create(consumerPool);
 
-        CandlepinPoolManager anotherEntitler =
-            injector.getInstance(CandlepinPoolManager.class);
+        CandlepinPoolManager anotherEntitler = injector.getInstance(CandlepinPoolManager.class);
 
         Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
         poolQuantities.put(consumerPool.getId(), 1);

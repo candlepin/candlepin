@@ -92,6 +92,32 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void deleteByNameCaseInsensitive() {
+        ConsumerContentOverride cco = new ConsumerContentOverride(
+            consumer, "test-content", "naME", "value");
+        consumerContentOverrideCurator.create(cco);
+
+        consumerContentOverrideCurator.removeByName(consumer, "test-content", "nAMe");
+        ConsumerContentOverride cco2 = consumerContentOverrideCurator.retrieve(
+            consumer, "test-content", "naME");
+        assertNull(cco2);
+    }
+
+    @Test
+    public void retrieveByNameCaseInsensitive() {
+        ConsumerContentOverride cco = new ConsumerContentOverride(
+            consumer, "test-content", "naME", "value");
+        consumerContentOverrideCurator.create(cco);
+
+        ConsumerContentOverride ccof1 = consumerContentOverrideCurator.retrieve(
+            consumer, "test-content", "naME");
+        ConsumerContentOverride ccof2 = consumerContentOverrideCurator.retrieve(
+            consumer, "test-content", "Name");
+        assertNotNull(ccof1);
+        assertNotNull(ccof2);
+    }
+
+    @Test
     public void deleteByLabel() {
         ConsumerContentOverride cco1 = new ConsumerContentOverride(
             consumer, "test-content", "name1", "value");

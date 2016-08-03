@@ -529,13 +529,15 @@ public class Exporter {
 
             // Real products have a numeric id.
             if (StringUtils.isNumeric(product.getId())) {
-                ProductCertificate cert = productAdapter.getProductCertificate(product);
+                ProductCertificate cert = productAdapter.getProductCertificate(
+                    consumer.getOwner(), product.getId()
+                );
+
                 // XXX: not all product adapters implement getProductCertificate,
                 // so just skip over this if we get null back
                 // XXX: need to decide if the cert should always be in the export, or never.
                 if (cert != null) {
-                    file = new File(productDir.getCanonicalPath(),
-                        product.getId() + ".pem");
+                    file = new File(productDir.getCanonicalPath(), product.getId() + ".pem");
                     writer = new FileWriter(file);
                     productCertExporter.export(writer, cert);
                     writer.close();

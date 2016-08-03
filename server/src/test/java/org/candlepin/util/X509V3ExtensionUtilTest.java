@@ -101,7 +101,7 @@ public class X509V3ExtensionUtilTest {
     @Test
     public void testPrefixLogic() {
         Owner owner = new Owner("Test Corporation");
-        Product p = new Product("JarJar", "Binks", owner);
+        Product p = new Product("JarJar", "Binks");
         Content c = new Content();
         c.setContentUrl("/some/path");
         ProductContent pc = new ProductContent(p, c, true);
@@ -136,10 +136,10 @@ public class X509V3ExtensionUtilTest {
         String engProdId = "1000";
         String brandedName = "Branded Eng Product";
         Owner owner = new Owner("Test Corporation");
-        Product p = new Product(engProdId, "Eng Product 1000", owner);
+        Product p = new Product(engProdId, "Eng Product 1000");
         p.setAttribute("brand_type", "OS");
         Set<Product> prods = new HashSet<Product>(Arrays.asList(p));
-        Product mktProd = new Product("mkt", "MKT SKU", owner);
+        Product mktProd = new Product("mkt", "MKT SKU");
         Pool pool = TestUtil.createPool(mktProd);
         pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
         Consumer consumer = new Consumer();
@@ -158,10 +158,10 @@ public class X509V3ExtensionUtilTest {
         String engProdId = "1000";
         String brandedName = "Branded Eng Product";
         Owner owner = new Owner("Test Corporation");
-        Product p = new Product(engProdId, "Eng Product 1000", owner);
+        Product p = new Product(engProdId, "Eng Product 1000");
         p.setAttribute("brand_type", "OS");
         Set<Product> prods = new HashSet<Product>(Arrays.asList(p));
-        Product mktProd = new Product("mkt", "MKT SKU", owner);
+        Product mktProd = new Product("mkt", "MKT SKU");
         Pool pool = TestUtil.createPool(mktProd);
         pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
         pool.getBranding().add(new Branding(engProdId, "OS", "another brand name"));

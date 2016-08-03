@@ -58,6 +58,7 @@ public class EnvironmentContent extends AbstractHibernateObject {
     private Boolean enabled;
 
     public EnvironmentContent() {
+        // Intentionally left empty
     }
 
     public EnvironmentContent(Environment env, Content content, Boolean enabled) {
@@ -118,6 +119,14 @@ public class EnvironmentContent extends AbstractHibernateObject {
                 .isEquals() && this.content.equals(that.content);
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return "EnvironmentContent [id=" + id + ", environment=" +
+                 (environment != null ?  environment.getId() : "") +
+                 ", content=" +
+                 (content != null ? content.getId() : "" + "]");
     }
 
 }

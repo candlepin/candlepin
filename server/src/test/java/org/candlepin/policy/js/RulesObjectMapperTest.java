@@ -107,7 +107,7 @@ public class RulesObjectMapperTest {
 
     @Test
     public void filterTimestampsOffAttributes() {
-        Product prod = TestUtil.createProduct(owner);
+        Product prod = TestUtil.createProduct();
         Pool p = new Pool();
         p.setProduct(prod);
 

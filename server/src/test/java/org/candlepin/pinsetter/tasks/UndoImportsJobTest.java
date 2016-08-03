@@ -23,13 +23,10 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
@@ -75,9 +72,6 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     @Inject protected CandlepinPoolManager poolManagerBase;
     @Inject protected ImportRecordCurator importRecordCurator;
     @Inject protected ExporterMetadataCurator exportCuratorBase;
-    @Inject protected ConsumerCurator consumerCurator;
-    @Inject protected ConsumerTypeCurator consumerTypeCurator;
-    @Inject protected EntitlementCurator entitlementCurator;
 
     protected CandlepinPoolManager poolManager;
     protected OwnerCurator ownerCurator;
@@ -195,8 +189,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     }
 
     protected Pool createPool(String name, Owner owner, boolean keepSourceSub, PoolType type) {
-        Product product = TestUtil.createProduct(name, name, owner);
-        this.productCurator.create(product);
+        Product product = this.createProduct(name, name, owner);
 
         Pool pool = TestUtil.createPool(owner, product);
         if (!keepSourceSub) {
@@ -212,7 +205,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
             // TODO: Others as necessary
 
             case ENTITLEMENT_DERIVED:
-                pool.setAttribute(Pool.DERIVED_POOL_ATTRIBUTE, "true");
+                pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
                 consumer = TestUtil.createConsumer(owner);
                 entitlement = TestUtil.createEntitlement(owner, consumer, pool, null);
 
@@ -224,7 +217,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
                 break;
 
             case BONUS:
-                pool.setAttribute(Pool.DERIVED_POOL_ATTRIBUTE, "true");
+                pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
                 break;
 
             default:

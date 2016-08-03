@@ -115,4 +115,10 @@ public class EnvironmentContent {
         this.enabled = enabled;
     }
 
+    @Override
+    public String toString() {
+        return "EnvironmentContent [environmentId=" + environmentId + ", contentId=" + contentId + "]";
+    }
+
+
 }

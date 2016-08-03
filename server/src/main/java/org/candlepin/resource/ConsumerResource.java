@@ -69,10 +69,10 @@ import org.candlepin.model.HypervisorId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.User;
 import org.candlepin.model.VirtConsumerMap;
@@ -159,9 +159,11 @@ public class ConsumerResource {
     private Pattern consumerPersonNamePattern;
 
     private static Logger log = LoggerFactory.getLogger(ConsumerResource.class);
+    private static final int FEED_LIMIT = 1000;
+
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
-    private ProductCurator productCurator;
+    private OwnerProductCurator ownerProductCurator;
     private SubscriptionServiceAdapter subAdapter;
     private EntitlementCurator entitlementCurator;
     private IdentityCertServiceAdapter identityCertService;
@@ -172,7 +174,6 @@ public class ConsumerResource {
     private EventFactory eventFactory;
     private EventCurator eventCurator;
     private EventAdapter eventAdapter;
-    private static final int FEED_LIMIT = 1000;
     private PoolManager poolManager;
     private ConsumerRules consumerRules;
     private OwnerCurator ownerCurator;
@@ -191,7 +192,7 @@ public class ConsumerResource {
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        ProductCurator productCurator,
+        OwnerProductCurator ownerProductCurator,
         SubscriptionServiceAdapter subAdapter,
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
@@ -209,7 +210,7 @@ public class ConsumerResource {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
-        this.productCurator = productCurator;
+        this.ownerProductCurator = ownerProductCurator;
         this.subAdapter = subAdapter;
         this.entitlementCurator = entitlementCurator;
         this.identityCertService = identityCertService;
@@ -1127,11 +1128,13 @@ public class ConsumerResource {
             Pool pool = entitlement.getPool();
 
             // If there is no host required or the pool isn't for unmapped guests, skip it
-            if (!(pool.hasAttribute("requires_host") || isUnmappedGuestPool(pool) || isVirtOnly(pool))) {
+            if (!(pool.hasAttribute(Pool.Attributes.REQUIRES_HOST) || isUnmappedGuestPool(pool) ||
+                isVirtOnly(pool))) {
+
                 continue;
             }
 
-            if (pool.hasAttribute("requires_host")) {
+            if (pool.hasAttribute(Pool.Attributes.REQUIRES_HOST)) {
                 String requiredHost = getRequiredHost(pool);
                 if (host == null || !requiredHost.equals(host.getUuid())) {
                     log.debug("Removing entitlement {} from guest {} due to host mismatch.",
@@ -1153,6 +1156,7 @@ public class ConsumerResource {
             // auto heal guests after revocations
             boolean hasInstalledProducts = guest.getInstalledProducts() != null &&
                 !guest.getInstalledProducts().isEmpty();
+
             if (guest.isAutoheal() && !deletableGuestEntitlements.isEmpty() && hasInstalledProducts) {
                 AutobindData autobindData = AutobindData.create(guest).on(new Date());
                 List<Entitlement> ents = entitler.bindByProducts(autobindData);
@@ -1162,19 +1166,18 @@ public class ConsumerResource {
     }
 
     private String getRequiredHost(Pool pool) {
-        return pool.hasAttribute("requires_host") ?
-            pool.getAttributeValue("requires_host") : "";
+        String value = pool.getAttributeValue(Pool.Attributes.REQUIRES_HOST);
+        return value != null ? value : "";
     }
 
     private boolean isVirtOnly(Pool pool) {
-        String virtOnly = pool.hasAttribute("virt_only") ?
-            pool.getAttributeValue("virt_only") : "false";
-        return virtOnly.equalsIgnoreCase("true") || virtOnly.equals("1");
+        String value = pool.getAttributeValue(Pool.Attributes.VIRT_ONLY);
+        return "true".equalsIgnoreCase(value) || "1".equals(value);
     }
 
     private boolean isUnmappedGuestPool(Pool pool) {
-        return pool.hasAttribute("unmapped_guests_only") &&
-            "true".equals(pool.getAttributeValue("unmapped_guests_only"));
+        String value = pool.getAttributeValue(Pool.Attributes.UNMAPPED_GUESTS_ONLY);
+        return "true".equalsIgnoreCase(value);
     }
 
     @ApiOperation(notes = "Removes a Consumer", value = "deleteConsumer")
@@ -2095,7 +2098,7 @@ public class ConsumerResource {
 
         for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
             String prodId = cip.getProductId();
-            Product prod = this.productCurator.lookupById(consumer.getOwner(), prodId);
+            Product prod = this.ownerProductCurator.getProductById(consumer.getOwner(), prodId);
 
             if (prod != null) {
                 enricher.enrich(cip, prod);

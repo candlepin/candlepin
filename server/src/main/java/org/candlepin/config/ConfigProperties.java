@@ -58,8 +58,7 @@ public class ConfigProperties {
     public static final String AUTH_OVER_HTTP = "candlepin.allow_auth_over_http";
     public static final String CA_KEY = "candlepin.ca_key";
     public static final String CA_CERT = "candlepin.ca_cert";
-    public static final String FAIL_ON_UNKNOWN_IMPORT_PROPERTIES =
-        "candlepin.importer.fail_on_unknown";
+    public static final String FAIL_ON_UNKNOWN_IMPORT_PROPERTIES = "candlepin.importer.fail_on_unknown";
     public static final String CA_CERT_UPSTREAM = "candlepin.upstream_ca_cert";
     public static final String CA_KEY_PASSWORD = "candlepin.ca_key_password";
 
@@ -126,10 +125,8 @@ public class ConfigProperties {
     public static final String AUDIT_LOG_VERBOSE = "candlepin.audit.log_verbose";
 
     public static final String PRETTY_PRINT = "candlepin.pretty_print";
-    public static final String REVOKE_ENTITLEMENT_IN_FIFO_ORDER =
-        "candlepin.entitlement.revoke.order.fifo";
-    public static final String ACTIVATION_DEBUG_PREFIX =
-        "candlepin.subscription.activation.debug_prefix";
+    public static final String REVOKE_ENTITLEMENT_IN_FIFO_ORDER = "candlepin.entitlement.revoke.order.fifo";
+    public static final String ACTIVATION_DEBUG_PREFIX = "candlepin.subscription.activation.debug_prefix";
 
     // Space separated list of resources to hide in the GET / list:
     public static final String HIDDEN_RESOURCES = "candlepin.hidden_resources";
@@ -146,8 +143,7 @@ public class ConfigProperties {
     public static final String AMQP_KEYSTORE = "candlepin.amqp.keystore";
     public static final String AMQP_KEYSTORE_PASSWORD = "candlepin.amqp.keystore_password";
     public static final String AMQP_TRUSTSTORE = "candlepin.amqp.truststore";
-    public static final String AMQP_TRUSTSTORE_PASSWORD =
-        "candlepin.amqp.truststore_password";
+    public static final String AMQP_TRUSTSTORE_PASSWORD = "candlepin.amqp.truststore_password";
     public static final String AMQP_CONNECTION_RETRY_ATTEMPTS = "gutterball.amqp.connection.retry_attempts";
     public static final String AMQP_CONNECTION_RETRY_INTERVAL = "gutterball.amqp.connection.retry_interval";
 
@@ -161,18 +157,20 @@ public class ConfigProperties {
     public static final String TASKS = "pinsetter.tasks";
     public static final String DEFAULT_TASKS = "pinsetter.default_tasks";
     public static final String ENABLE_PINSETTER = "candlepin.pinsetter.enable";
-    public static final String PINSETTER_ASYNC_JOB_TIMEOUT =
-        "pinsetter.waiting.timeout.seconds";
+    public static final String PINSETTER_ASYNC_JOB_TIMEOUT = "pinsetter.waiting.timeout.seconds";
     public static final String PINSETTER_MAX_RETRIES = "pinsetter.retries.max";
     public static final int PINSETTER_MAX_RETRIES_DEFAULT = 10;
 
-    private static final String[] DEFAULT_TASK_LIST = new String[]{
+    public static final String[] DEFAULT_TASK_LIST = new String[] {
         CertificateRevocationListTask.class.getName(),
         JobCleaner.class.getName(),
         ImportRecordJob.class.getName(),
-        CancelJobJob.class.getName(), ExpiredPoolsJob.class.getName(),
-        UnpauseJob.class.getName(), SweepBarJob.class.getName(),
         ManifestCleanerJob.class.getName(), ActiveEntitlementJob.class.getName(),
+        CancelJobJob.class.getName(),
+        ExpiredPoolsJob.class.getName(),
+        UnpauseJob.class.getName(),
+        SweepBarJob.class.getName(),
+        ActiveEntitlementJob.class.getName(),
         UnmappedGuestEntitlementCleanerJob.class.getName(),
     };
 
@@ -194,13 +192,10 @@ public class ConfigProperties {
     public static final String SHARD_WEBAPP = "candlepin.shard.webapp";
 
     public static final String STANDALONE = "candlepin.standalone";
-    public static final String ENV_CONTENT_FILTERING =
-        "candlepin.environment_content_filtering";
+    public static final String ENV_CONTENT_FILTERING = "candlepin.environment_content_filtering";
 
-    public static final String CONSUMER_SYSTEM_NAME_PATTERN =
-        "candlepin.consumer_system_name_pattern";
-    public static final String CONSUMER_PERSON_NAME_PATTERN =
-        "candlepin.consumer_person_name_pattern";
+    public static final String CONSUMER_SYSTEM_NAME_PATTERN = "candlepin.consumer_system_name_pattern";
+    public static final String CONSUMER_PERSON_NAME_PATTERN = "candlepin.consumer_person_name_pattern";
 
     public static final String PREFIX_WEBURL = "candlepin.export.prefix.weburl";
     public static final String PREFIX_APIURL = "candlepin.export.prefix.apiurl";
@@ -258,149 +253,140 @@ public class ConfigProperties {
 
     public static final String SWAGGER_ENABLED = "candlepin.swagger.enabled";
 
-    public static final Map<String, String> DEFAULT_PROPERTIES =
-        new HashMap<String, String>() {
+    public static final Map<String, String> DEFAULT_PROPERTIES = new HashMap<String, String>() {
+        private static final long serialVersionUID = 1L;
 
-            private static final long serialVersionUID = 1L;
-            {
-                this.put(CANDLEPIN_URL, "https://localhost");
+        {
+            this.put(CANDLEPIN_URL, "https://localhost");
 
-                this.put(CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
-                this.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
-                this.put(CA_CERT_UPSTREAM, "/etc/candlepin/certs/upstream");
+            this.put(CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
+            this.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
+            this.put(CA_CERT_UPSTREAM, "/etc/candlepin/certs/upstream");
 
-                this.put(ACTIVATION_DEBUG_PREFIX, "");
+            this.put(ACTIVATION_DEBUG_PREFIX, "");
 
-                this.put(HORNETQ_ENABLED, "true");
-                this.put(HORNETQ_BASE_DIR, "/var/lib/candlepin/hornetq");
-                this.put(HORNETQ_LARGE_MSG_SIZE, Integer.toString(100 * 1024));
+            this.put(HORNETQ_ENABLED, "true");
+            this.put(HORNETQ_BASE_DIR, "/var/lib/candlepin/hornetq");
+            this.put(HORNETQ_LARGE_MSG_SIZE, Integer.toString(100 * 1024));
 
-                this.put(HORNETQ_MAX_THREADS, "-1");
-                this.put(HORNETQ_MAX_SCHEDULED_THREADS, "-1");
-                this.put(HORNETQ_ADDRESS_FULL_POLICY, "PAGE");
-                this.put(HORNETQ_MAX_QUEUE_SIZE, "10");
-                this.put(HORNETQ_MAX_PAGE_SIZE, "1");
-                this.put(AUDIT_LISTENERS,
-                    "org.candlepin.audit.DatabaseListener," +
-                    "org.candlepin.audit.LoggingListener," +
-                    "org.candlepin.audit.ActivationListener");
-                this.put(AUDIT_LOG_FILE, "/var/log/candlepin/audit.log");
-                this.put(AUDIT_LOG_VERBOSE, "false");
-                this.put(AUDIT_FILTER_ENABLED, "false");
+            this.put(HORNETQ_MAX_THREADS, "-1");
+            this.put(HORNETQ_MAX_SCHEDULED_THREADS, "-1");
+            this.put(HORNETQ_ADDRESS_FULL_POLICY, "PAGE");
+            this.put(HORNETQ_MAX_QUEUE_SIZE, "10");
+            this.put(HORNETQ_MAX_PAGE_SIZE, "1");
+            this.put(AUDIT_LISTENERS,
+                "org.candlepin.audit.DatabaseListener," +
+                "org.candlepin.audit.LoggingListener," +
+                "org.candlepin.audit.ActivationListener");
+            this.put(AUDIT_LOG_FILE, "/var/log/candlepin/audit.log");
+            this.put(AUDIT_LOG_VERBOSE, "false");
+            this.put(AUDIT_FILTER_ENABLED, "false");
 
-                /**
-                * These default DO_NOT_FILTER events are those events needed by
-                * other Satellite components. See sources:
-                *
-                * https://gitlab.sat.lab.tlv.redhat.com/satellite6/katello/blob/
-                * SATELLITE-6.1.0/app/lib/actions/candlepin/reindex_pool_subscription_handler.rb#L43
-                */
-                this.put(AUDIT_FILTER_DO_NOT_FILTER,
-                    "CREATED-ENTITLEMENT," +
-                    "DELETED-ENTITLEMENT," +
-                    "CREATED-POOL," +
-                    "DELETED-POOL," +
-                    "CREATED-COMPLIANCE");
+            /**
+            * These default DO_NOT_FILTER events are those events needed by
+            * other Satellite components. See sources:
+            *
+            * https://gitlab.sat.lab.tlv.redhat.com/satellite6/katello/blob/
+            * SATELLITE-6.1.0/app/lib/actions/candlepin/reindex_pool_subscription_handler.rb#L43
+            */
+            this.put(AUDIT_FILTER_DO_NOT_FILTER,
+                "CREATED-ENTITLEMENT," +
+                "DELETED-ENTITLEMENT," +
+                "CREATED-POOL," +
+                "DELETED-POOL," +
+                "CREATED-COMPLIANCE");
 
-                this.put(AUDIT_FILTER_DO_FILTER, "");
-                this.put(AUDIT_FILTER_DEFAULT_POLICY, "DO_FILTER");
+            this.put(AUDIT_FILTER_DO_FILTER, "");
+            this.put(AUDIT_FILTER_DEFAULT_POLICY, "DO_FILTER");
 
-                this.put(PRETTY_PRINT, "false");
-                this.put(REVOKE_ENTITLEMENT_IN_FIFO_ORDER, "true");
-                this.put(CRL_FILE_PATH, "/var/lib/candlepin/candlepin-crl.crl");
-                this.put(CRL_NEXT_UPDATE_DELTA, "1");
+            this.put(PRETTY_PRINT, "false");
+            this.put(REVOKE_ENTITLEMENT_IN_FIFO_ORDER, "true");
+            this.put(CRL_FILE_PATH, "/var/lib/candlepin/candlepin-crl.crl");
+            this.put(CRL_NEXT_UPDATE_DELTA, "1");
 
-                this.put(SYNC_WORK_DIR, "/var/cache/candlepin/sync");
-                this.put(CONSUMER_FACTS_MATCHER, ".*");
-                this.put(TRUSTED_AUTHENTICATION, "false");
-                this.put(SSL_AUTHENTICATION, "true");
-                this.put(OAUTH_AUTHENTICATION, "false");
-                this.put(BASIC_AUTHENTICATION, "true");
-                this.put(AUTH_OVER_HTTP, "false");
-                // By default, environments should be hidden so clients do not need to
-                // submit one when registering.
-                this.put(HIDDEN_RESOURCES, "environments");
+            this.put(SYNC_WORK_DIR, "/var/cache/candlepin/sync");
+            this.put(CONSUMER_FACTS_MATCHER, ".*");
+            this.put(TRUSTED_AUTHENTICATION, "false");
+            this.put(SSL_AUTHENTICATION, "true");
+            this.put(OAUTH_AUTHENTICATION, "false");
+            this.put(BASIC_AUTHENTICATION, "true");
+            this.put(AUTH_OVER_HTTP, "false");
+            // By default, environments should be hidden so clients do not need to
+            // submit one when registering.
+            this.put(HIDDEN_RESOURCES, "environments");
 
-                this.put(FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+            this.put(FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
 
-                // Pinsetter
-                // prevent Quartz from checking for updates
-                this.put("org.quartz.scheduler.skipUpdateCheck", "true");
-                this.put("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");
-                this.put("org.quartz.threadPool.threadCount", "15");
-                this.put("org.quartz.threadPool.threadPriority", "5");
-                this.put(DEFAULT_TASKS, StringUtils.join(DEFAULT_TASK_LIST, ","));
-                this.put(ENTITLER_JOB_THROTTLE, "7");
-                this.put(BATCH_BIND_NUMBER_OF_POOLS_LIMIT, "100");
+            // Pinsetter
+            // prevent Quartz from checking for updates
+            this.put("org.quartz.scheduler.skipUpdateCheck", "true");
+            this.put("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");
+            this.put("org.quartz.threadPool.threadCount", "15");
+            this.put("org.quartz.threadPool.threadPriority", "5");
+            this.put(DEFAULT_TASKS, StringUtils.join(DEFAULT_TASK_LIST, ","));
+            this.put(ENTITLER_JOB_THROTTLE, "7");
+            this.put(BATCH_BIND_NUMBER_OF_POOLS_LIMIT, "100");
 
-                // AMQP (Qpid) configuration used by events
-                this.put(AMQP_INTEGRATION_ENABLED, String.valueOf(false));
-                this.put(AMQP_CONNECT_STRING,
-                    "tcp://localhost:5671?ssl='true'&ssl_cert_alias='candlepin'");
-                this.put(AMQP_KEYSTORE, "/etc/candlepin/certs/amqp/candlepin.jks");
-                this.put(AMQP_KEYSTORE_PASSWORD, "password");
-                this.put(AMQP_TRUSTSTORE, "/etc/candlepin/certs/amqp/candlepin.truststore");
-                this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
+            // AMQP (Qpid) configuration used by events
+            this.put(AMQP_INTEGRATION_ENABLED, String.valueOf(false));
+            this.put(AMQP_CONNECT_STRING, "tcp://localhost:5671?ssl='true'&ssl_cert_alias='candlepin'");
+            this.put(AMQP_KEYSTORE, "/etc/candlepin/certs/amqp/candlepin.jks");
+            this.put(AMQP_KEYSTORE_PASSWORD, "password");
+            this.put(AMQP_TRUSTSTORE, "/etc/candlepin/certs/amqp/candlepin.truststore");
+            this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
 
-                this.put(AMQP_CONNECTION_RETRY_INTERVAL, "10"); // Every 10 seconds
-                this.put(AMQP_CONNECTION_RETRY_ATTEMPTS, "12"); // Try for 2 mins (10s * 12)
+            this.put(AMQP_CONNECTION_RETRY_INTERVAL, "10"); // Every 10 seconds
+            this.put(AMQP_CONNECTION_RETRY_ATTEMPTS, "12"); // Try for 2 mins (10s * 12)
 
-                this.put(IDENTITY_CERT_YEAR_ADDENDUM, "16");
-                this.put(IDENTITY_CERT_EXPIRY_THRESHOLD, "90");
-                this.put(SHARD_WEBAPP, "candlepin");
-                this.put(ENABLE_PINSETTER, "true");
+            this.put(IDENTITY_CERT_YEAR_ADDENDUM, "16");
+            this.put(IDENTITY_CERT_EXPIRY_THRESHOLD, "90");
+            this.put(SHARD_WEBAPP, "candlepin");
+            this.put(ENABLE_PINSETTER, "true");
 
-                // defaults
-                this.put(SHARD_USERNAME, "admin");
-                this.put(SHARD_PASSWORD, "admin");
-                this.put(STANDALONE, "true");
+            // defaults
+            this.put(SHARD_USERNAME, "admin");
+            this.put(SHARD_PASSWORD, "admin");
+            this.put(STANDALONE, "true");
 
-                this.put(ENV_CONTENT_FILTERING, "true");
+            this.put(ENV_CONTENT_FILTERING, "true");
 
-                // what constitutes a valid consumer name
-                this.put(CONSUMER_SYSTEM_NAME_PATTERN,
-                    "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
-                this.put(CONSUMER_PERSON_NAME_PATTERN,
-                    "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
+            // what constitutes a valid consumer name
+            this.put(CONSUMER_SYSTEM_NAME_PATTERN, "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
+            this.put(CONSUMER_PERSON_NAME_PATTERN, "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
 
-                this.put(PREFIX_WEBURL, "localhost:8443/candlepin");
-                this.put(PREFIX_APIURL, "localhost:8443/candlepin");
-                this.put(PASSPHRASE_SECRET_FILE,
-                    "/etc/katello/secure/passphrase");
+            this.put(PREFIX_WEBURL, "localhost:8443/candlepin");
+            this.put(PREFIX_APIURL, "localhost:8443/candlepin");
+            this.put(PASSPHRASE_SECRET_FILE, "/etc/katello/secure/passphrase");
 
-                /**
-                 *  Defines the maximum number of products allowed in the product cache.
-                 *  On deployments with a large number of products, it might be better
-                 *  to set this to a large number, keeping in mind that it will yield
-                 *  a larger memory footprint as the cache fills up.
-                 */
-                this.put(PRODUCT_CACHE_MAX, "100");
+            /**
+             *  Defines the maximum number of products allowed in the product cache.
+             *  On deployments with a large number of products, it might be better
+             *  to set this to a large number, keeping in mind that it will yield
+             *  a larger memory footprint as the cache fills up.
+             */
+            this.put(PRODUCT_CACHE_MAX, "100");
 
-                /**
-                 * As we do math on some facts and attributes, we need to constrain
-                 * some values
-                 */
-                this.put(INTEGER_FACTS, INTEGER_FACT_LIST);
-                this.put(NON_NEG_INTEGER_FACTS, NON_NEG_INTEGER_FACT_LIST);
-                this.put(INTEGER_ATTRIBUTES, INTEGER_ATTRIBUTE_LIST);
-                this.put(NON_NEG_INTEGER_ATTRIBUTES, NON_NEG_INTEGER_ATTRIBUTE_LIST);
-                this.put(LONG_ATTRIBUTES, LONG_ATTRIBUTE_LIST);
-                this.put(NON_NEG_LONG_ATTRIBUTES, NON_NEG_LONG_ATTRIBUTE_LIST);
-                this.put(BOOLEAN_ATTRIBUTES, BOOLEAN_ATTRIBUTE_LIST);
+            /**
+             * As we do math on some facts and attributes, we need to constrain
+             * some values
+             */
+            this.put(INTEGER_FACTS, INTEGER_FACT_LIST);
+            this.put(NON_NEG_INTEGER_FACTS, NON_NEG_INTEGER_FACT_LIST);
+            this.put(INTEGER_ATTRIBUTES, INTEGER_ATTRIBUTE_LIST);
+            this.put(NON_NEG_INTEGER_ATTRIBUTES, NON_NEG_INTEGER_ATTRIBUTE_LIST);
+            this.put(LONG_ATTRIBUTES, LONG_ATTRIBUTE_LIST);
+            this.put(NON_NEG_LONG_ATTRIBUTES, NON_NEG_LONG_ATTRIBUTE_LIST);
+            this.put(BOOLEAN_ATTRIBUTES, BOOLEAN_ATTRIBUTE_LIST);
 
-                // Default 20 minutes
-                this.put(PINSETTER_ASYNC_JOB_TIMEOUT, Integer.toString(1200));
-                this.put(PINSETTER_MAX_RETRIES, Integer.toString(PINSETTER_MAX_RETRIES_DEFAULT));
+            // Default 20 minutes
+            this.put(PINSETTER_ASYNC_JOB_TIMEOUT, Integer.toString(1200));
+            this.put(PINSETTER_MAX_RETRIES, Integer.toString(PINSETTER_MAX_RETRIES_DEFAULT));
+            this.put(SWAGGER_ENABLED, Boolean.toString(true));
 
-                // ManifestCleanerJob config
-                // Max Age: 24 hours
-                this.put(MANIFEST_CLEANER_JOB_MAX_AGE_IN_MINUTES, "1440");
-
-                this.put(SWAGGER_ENABLED, Boolean.toString(true));
-            }
-        };
-
-
-
+            // ManifestCleanerJob config
+            // Max Age: 24 hours
+            this.put(MANIFEST_CLEANER_JOB_MAX_AGE_IN_MINUTES, "1440");
+        }
+    };
 
 }

@@ -25,6 +25,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.SubscriptionsCertificate;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.util.Util;
 
@@ -96,7 +97,6 @@ public class EntitlementImporter {
                 b.getName()));
         }
 
-        subscription.setProduct(findProduct(productsById, entitlement.getPool().getProductId()));
         String cdnLabel = meta.getCdnLabel();
         if (!StringUtils.isBlank(cdnLabel)) {
             Cdn cdn = cdnCurator.lookupByLabel(cdnLabel);
@@ -105,11 +105,13 @@ public class EntitlementImporter {
             }
         }
 
+        Product product = this.findProduct(productsById, entitlement.getPool().getProductId());
+        subscription.setProduct(product.toDTO());
+
         // Add any sub product data to the subscription.
         if (entitlement.getPool().getDerivedProductId() != null) {
-            subscription.setDerivedProduct(findProduct(
-                productsById, entitlement.getPool().getDerivedProductId()
-            ));
+            product = this.findProduct(productsById, entitlement.getPool().getDerivedProductId());
+            subscription.setDerivedProduct(product.toDTO());
         }
 
         associateProvidedProducts(productsById, entitlement, subscription);
@@ -157,27 +159,28 @@ public class EntitlementImporter {
      * before. On import we load into these transient collections, and here we transfer
      * to the actual persisted location.
      */
-    public void associateProvidedProducts(Map<String, Product> productsById,
-        Entitlement entitlement, Subscription subscription)
+    public void associateProvidedProducts(Map<String, Product> productsById, Entitlement entitlement,
+        Subscription subscription)
         throws SyncDataFormatException {
 
         // Associate main provided products:
-        Set<Product> providedProducts = new HashSet<Product>();
+        Set<ProductData> providedProducts = new HashSet<ProductData>();
         for (ProvidedProduct providedProduct : entitlement.getPool().getProvidedProductDtos()) {
-            providedProducts.add(findProduct(productsById, providedProduct.getProductId()));
+            Product product = this.findProduct(productsById, providedProduct.getProductId());
+            providedProducts.add(product.toDTO());
         }
         subscription.setProvidedProducts(providedProducts);
 
         // Associate derived provided products:
-        Set<Product> derivedProvidedProducts = new HashSet<Product>();
+        Set<ProductData> derivedProvidedProducts = new HashSet<ProductData>();
         for (ProvidedProduct pp : entitlement.getPool().getDerivedProvidedProductDtos()) {
-            derivedProvidedProducts.add(this.findProduct(productsById, pp.getProductId()));
+            Product product = this.findProduct(productsById, pp.getProductId());
+            derivedProvidedProducts.add(product.toDTO());
         }
         subscription.setDerivedProvidedProducts(derivedProvidedProducts);
 
         log.debug("Subscription has {} provided products.", derivedProvidedProducts.size());
         log.debug("Subscription has {} derived provided products.", derivedProvidedProducts.size());
-
     }
 
     private Product findProduct(Map<String, Product> productsById, String productId)

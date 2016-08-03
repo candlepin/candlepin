@@ -16,46 +16,55 @@ package org.candlepin.service.impl;
 
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
-import org.candlepin.model.ProductCurator;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 
 import com.google.inject.Inject;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.LinkedList;
+
+
 
 /**
  * Default implementation of the ProductserviceAdapter.
  */
 public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
-    private ProductCurator prodCurator;
-
-    // for product cert storage/generation - not sure if this should go in
-    // a separate service?
+    private OwnerProductCurator ownerProductCurator;
     private ProductCertificateCurator prodCertCurator;
 
     @Inject
-    public DefaultProductServiceAdapter(ProductCurator prodCurator,
+    public DefaultProductServiceAdapter(OwnerProductCurator ownerProductCurator,
         ProductCertificateCurator prodCertCurator, ContentCurator contentCurator,
         UniqueIdGenerator idGenerator) {
 
-        this.prodCurator = prodCurator;
+        this.ownerProductCurator = ownerProductCurator;
         this.prodCertCurator = prodCertCurator;
     }
 
     @Override
-    public ProductCertificate getProductCertificate(Product product) {
-        return this.prodCertCurator.getCertForProduct(product);
+    public ProductCertificate getProductCertificate(Owner owner, String productId) {
+        // for product cert storage/generation - not sure if this should go in
+        // a separate service?
+        Product entity = this.ownerProductCurator.getProductById(owner, productId);
+        return entity != null ? this.prodCertCurator.getCertForProduct(entity) : null;
     }
 
     @Override
-    public List<Product> getProductsByIds(Owner owner, Collection<String> ids) {
-        return prodCurator.listAllByIds(owner, ids);
+    public Collection<ProductData> getProductsByIds(Owner owner, Collection<String> ids) {
+        Collection<ProductData> productData = new LinkedList<ProductData>();
+
+        for (Product product : this.ownerProductCurator.getProductsByIds(owner, ids)) {
+            productData.add(product.toDTO());
+        }
+
+        return productData;
     }
 
 }

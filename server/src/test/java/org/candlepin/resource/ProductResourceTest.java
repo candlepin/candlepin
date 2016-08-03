@@ -24,7 +24,6 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -33,6 +32,8 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.dto.ContentData;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
@@ -67,43 +68,60 @@ public class ProductResourceTest extends DatabaseTestFixture {
     @Inject private Configuration config;
     @Inject private I18n i18n;
 
-    private Product createProduct(Owner owner) {
-        String label = "test_product";
-        String name = "Test Product";
-        String variant = "server";
-        String version = "1.0";
-        String arch = "ALL";
-        String type = "SVC";
-        Product prod = new Product(label, name, owner, variant, version, arch, type);
-        return prod;
+    private ProductData buildTestProductDTO() {
+        ProductData dto = TestUtil.createProductDTO("test_product");
+
+        dto.setAttribute("version", "1.0");
+        dto.setAttribute("variant", "server");
+        dto.setAttribute("type", "SVC");
+        dto.setAttribute("arch", "ALL");
+
+        return dto;
+    }
+
+    private Product buildTestProduct() {
+        Product entity = TestUtil.createProduct("test_product");
+
+        entity.setAttribute("version", "1.0");
+        entity.setAttribute("variant", "server");
+        entity.setAttribute("type", "SVC");
+        entity.setAttribute("arch", "ALL");
+
+        return entity;
     }
 
     @Test(expected = BadRequestException.class)
     public void testCreateProductResource() {
-        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
+        Owner owner = this.createOwner("Example-Corporation");
+        ProductData productData = this.buildTestProductDTO();
 
-        Product toSubmit = createProduct(owner);
-        productResource.createProduct(toSubmit);
+        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), productData.getId()));
+
+        ProductData result = productResource.createProduct(productData);
+        Product entity = this.ownerProductCurator.getProductById(owner.getKey(), productData.getId());
+
+        assertNotNull(entity);
+        assertFalse(entity.isChangedBy(result));
     }
 
     @Test(expected = BadRequestException.class)
     public void testCreateProductWithContent() {
-        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
+        Owner owner = this.createOwner("Example-Corporation");
+        ProductData productData = this.buildTestProductDTO();
+        ContentData contentData = TestUtil.createContentDTO();
+        productData.addContent(contentData, true);
 
-        Product toSubmit = createProduct(owner);
-        String  contentHash = String.valueOf(Math.abs(Long.valueOf("test-content".hashCode())));
+        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), productData.getId()));
 
-        Content testContent = new Content(
-            owner, "test-content", contentHash, "test-content-label", "yum", "test-vendor",
-            "test-content-url", "test-gpg-url", "test-arch"
-        );
+        ProductData result = productResource.createProduct(productData);
+        Product entity = this.ownerProductCurator.getProductById(owner.getKey(), productData.getId());
 
-        HashSet<Content> contentSet = new HashSet<Content>();
-        testContent = contentCurator.create(testContent);
-        contentSet.add(testContent);
-        toSubmit.setContent(contentSet);
+        assertNotNull(entity);
+        assertFalse(entity.isChangedBy(result));
 
-        productResource.createProduct(toSubmit);
+        assertNotNull(result.getProductContent());
+        assertEquals(1, result.getProductContent().size());
+        assertEquals(contentData, result.getProductContent().iterator().next().getContent());
     }
 
     @Test(expected = BadRequestException.class)
@@ -113,7 +131,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         ProductResource pr = new ProductResource(pc, null, null, config, i18n);
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);
-        when(pc.lookupById(eq(o), eq("10"))).thenReturn(p);
+        // when(pc.lookupById(eq(o), eq("10"))).thenReturn(p);
         Set<Subscription> subs = new HashSet<Subscription>();
         Subscription s = mock(Subscription.class);
         subs.add(s);
@@ -124,32 +142,36 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
     @Test
     public void getProduct() {
-        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
-        Product product = productCurator.create(createProduct(owner));
+        Owner owner = this.createOwner("Example-Corporation");
+        Product entity = this.createProduct("test_product", "test_product", owner);
+
+        if (entity.isLocked()) {
+            throw new RuntimeException("entity is locked...?");
+        }
 
         securityInterceptor.enable();
+        ProductData result = productResource.getProduct(entity.getUuid());
 
-        Product expected = (Product) product.clone();
-
-        Product actual = productResource.getProduct(product.getUuid());
-        assertEquals(actual, expected);
+        assertNotNull(result);
+        assertFalse(entity.isChangedBy(result));
     }
 
     @Test
     public void getProductCertificate() {
-        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
-        Product p = productCurator.create(createProduct(owner));
+        Owner owner = this.createOwner("Example-Corporation");
 
+        Product entity = this.createProduct(owner);
         // ensure we check SecurityHole
         securityInterceptor.enable();
 
         ProductCertificate cert = new ProductCertificate();
         cert.setCert("some text");
         cert.setKey("some key");
-        cert.setProduct(p);
+        cert.setProduct(entity);
         productCertificateCurator.create(cert);
 
-        ProductCertificate cert1 = productResource.getProductCertificate(p.getUuid());
+        ProductCertificate cert1 = productResource.getProductCertificate(entity.getUuid());
+
         assertEquals(cert, cert1);
     }
 
@@ -158,17 +180,17 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Owner owner2 = this.ownerCurator.create(new Owner("TestCorp-02"));
         Owner owner3 = this.ownerCurator.create(new Owner("TestCorp-03"));
 
-        Product prod1 = this.productCurator.create(TestUtil.createProduct("p1", "p1", owner1));
-        Product prod2 = this.productCurator.create(TestUtil.createProduct("p1", "p1", owner2));
-        Product prod3 = this.productCurator.create(TestUtil.createProduct("p2", "p2", owner2));
-        Product prod4 = this.productCurator.create(TestUtil.createProduct("p2", "p2", owner3));
-        Product prod5 = this.productCurator.create(TestUtil.createProduct("p3", "p3", owner3));
+        Product prod1 = this.createProduct("p1", "p1", owner1);
+        Product prod2 = this.createProduct("p1", "p1", owner2);
+        Product prod3 = this.createProduct("p2", "p2", owner2);
+        Product prod4 = this.createProduct("p2", "p2", owner3);
+        Product prod5 = this.createProduct("p3", "p3", owner3);
 
-        Product poolProd1 = this.productCurator.create(TestUtil.createProduct(owner1));
-        Product poolProd2 = this.productCurator.create(TestUtil.createProduct(owner2));
-        Product poolProd3 = this.productCurator.create(TestUtil.createProduct(owner2));
-        Product poolProd4 = this.productCurator.create(TestUtil.createProduct(owner3));
-        Product poolProd5 = this.productCurator.create(TestUtil.createProduct(owner3));
+        Product poolProd1 = this.createProduct(owner1);
+        Product poolProd2 = this.createProduct(owner2);
+        Product poolProd3 = this.createProduct(owner2);
+        Product poolProd4 = this.createProduct(owner3);
+        Product poolProd5 = this.createProduct(owner3);
 
         Pool pool1 = this.poolCurator.create(TestUtil.createPool(
             owner1, poolProd1, new HashSet(Arrays.asList(prod1)), 5));

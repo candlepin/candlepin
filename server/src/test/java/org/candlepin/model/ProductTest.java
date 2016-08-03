@@ -18,7 +18,15 @@ import static org.junit.Assert.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
 import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collection;
 
 import javax.inject.Inject;
 
@@ -26,14 +34,15 @@ import javax.inject.Inject;
 /**
  * ProductTest
  */
+@RunWith(JUnitParamsRunner.class)
 public class ProductTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;
 
     @Test
     public void testLockStateAffectsEquality() {
         Owner owner = new Owner("Example-Corporation");
-        Product p1 = new Product("test-prod", "test-prod-name", owner, "variant", "1.0.0", "x86", "type");
-        Product p2 = new Product("test-prod", "test-prod-name", owner, "variant", "1.0.0", "x86", "type");
+        Product p1 = new Product("test-prod", "test-prod-name", "variant", "1.0.0", "x86", "type");
+        Product p2 = new Product("test-prod", "test-prod-name", "variant", "1.0.0", "x86", "type");
 
         assertEquals(p1, p2);
 
@@ -44,18 +53,151 @@ public class ProductTest extends DatabaseTestFixture {
         assertEquals(p1, p2);
     }
 
+    protected Object[][] getValuesForEqualityAndReplication() {
+        Collection<ProductAttribute> attributes1 = Arrays.asList(
+            new ProductAttribute("a1", "v1"),
+            new ProductAttribute("a2", "v2"),
+            new ProductAttribute("a3", "v3")
+        );
+
+        Collection<ProductAttribute> attributes2 = Arrays.asList(
+            new ProductAttribute("a4", "v4"),
+            new ProductAttribute("a5", "v5"),
+            new ProductAttribute("a6", "v6")
+        );
+
+        Content[] content = new Content[] {
+            new Content("c1", "content-1", "test_type", "test_label-1", "test_vendor-1"),
+            new Content("c2", "content-2", "test_type", "test_label-2", "test_vendor-2"),
+            new Content("c3", "content-3", "test_type", "test_label-3", "test_vendor-3"),
+            new Content("c4", "content-4", "test_type", "test_label-4", "test_vendor-4"),
+            new Content("c5", "content-5", "test_type", "test_label-5", "test_vendor-5"),
+            new Content("c6", "content-6", "test_type", "test_label-6", "test_vendor-6")
+        };
+
+        Collection<ProductContent> productContent1 = Arrays.asList(
+            new ProductContent(null, content[0], true),
+            new ProductContent(null, content[1], false),
+            new ProductContent(null, content[2], true)
+        );
+
+        Collection<ProductContent> productContent2 = Arrays.asList(
+            new ProductContent(null, content[3], true),
+            new ProductContent(null, content[4], false),
+            new ProductContent(null, content[5], true)
+        );
+
+        return new Object[][] {
+            new Object[] { "Id", "test_value", "alt_value" },
+            new Object[] { "Name", "test_value", "alt_value" },
+            new Object[] { "Multiplier", 1234L, 4567L },
+            new Object[] { "Attributes", attributes1, attributes2 },
+            new Object[] { "ProductContent", productContent1, productContent2 },
+            new Object[] { "DependentProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5") },
+            // new Object[] { "Href", "test_value", null },
+            new Object[] { "Locked", Boolean.TRUE, false }
+        };
+    }
+
+    protected Method[] getAccessorAndMutator(String methodSuffix, Class mutatorInputClass)
+        throws Exception {
+
+        Method accessor = null;
+        Method mutator = null;
+
+        try {
+            accessor = Product.class.getDeclaredMethod("get" + methodSuffix, null);
+        }
+        catch (NoSuchMethodException e) {
+            accessor = Product.class.getDeclaredMethod("is" + methodSuffix, null);
+        }
+
+        try {
+            mutator = Product.class.getDeclaredMethod("set" + methodSuffix, mutatorInputClass);
+        }
+        catch (NoSuchMethodException e) {
+            if (Collection.class.isAssignableFrom(mutatorInputClass)) {
+                mutator = Product.class.getDeclaredMethod("set" + methodSuffix, Collection.class);
+            }
+            else if (Boolean.class.isAssignableFrom(mutatorInputClass)) {
+                mutator = Product.class.getDeclaredMethod("set" + methodSuffix, boolean.class);
+            }
+            else {
+                throw e;
+            }
+        }
+
+        return new Method[] { accessor, mutator };
+    }
+
     @Test
-    public void testLockStateAffectsHashCode() {
-        Owner owner = new Owner("Example-Corporation");
-        Product p1 = new Product("test-prod", "test-prod-name", owner, "variant", "1.0.0", "x86", "type");
-        Product p2 = new Product("test-prod", "test-prod-name", owner, "variant", "1.0.0", "x86", "type");
+    public void testBaseEquality() {
+        Product lhs = new Product();
+        Product rhs = new Product();
 
-        assertEquals(p1.hashCode(), p2.hashCode());
+        assertFalse(lhs.equals(null));
+        assertTrue(lhs.equals(lhs));
+        assertTrue(rhs.equals(rhs));
+        assertTrue(lhs.equals(rhs));
+        assertTrue(rhs.equals(lhs));
+    }
 
-        p2.setLocked(true);
-        assertNotEquals(p1.hashCode(), p2.hashCode());
+    @Test
+    @Parameters(method = "getValuesForEqualityAndReplication")
+    public void testEquality(String valueName, Object value1, Object value2) throws Exception {
+        Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
+        Method accessor = methods[0];
+        Method mutator = methods[1];
 
-        p1.setLocked(true);
-        assertEquals(p1.hashCode(), p2.hashCode());
+        Product lhs = new Product();
+        Product rhs = new Product();
+
+        mutator.invoke(lhs, value1);
+        mutator.invoke(rhs, value1);
+
+        assertEquals(accessor.invoke(lhs), accessor.invoke(rhs));
+        assertTrue(lhs.equals(rhs));
+        assertTrue(rhs.equals(lhs));
+        assertTrue(lhs.equals(lhs));
+        assertTrue(rhs.equals(rhs));
+        assertEquals(lhs.hashCode(), rhs.hashCode());
+
+        mutator.invoke(rhs, value2);
+
+        assertNotEquals(accessor.invoke(lhs), accessor.invoke(rhs));
+        assertFalse(lhs.equals(rhs));
+        assertFalse(rhs.equals(lhs));
+        assertTrue(lhs.equals(lhs));
+        assertTrue(rhs.equals(rhs));
+    }
+
+    @Test
+    public void testBaseEntityVersion() {
+        Product lhs = new Product();
+        Product rhs = new Product();
+
+        assertEquals(lhs.getEntityVersion(), rhs.getEntityVersion());
+    }
+
+    @Test
+    @Parameters(method = "getValuesForEqualityAndReplication")
+    public void testEntityVersion(String valueName, Object value1, Object value2) throws Exception {
+        Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
+        Method accessor = methods[0];
+        Method mutator = methods[1];
+
+        Product lhs = new Product();
+        Product rhs = new Product();
+
+        mutator.invoke(lhs, value1);
+        mutator.invoke(rhs, value1);
+
+        assertEquals(accessor.invoke(lhs), accessor.invoke(rhs));
+        assertEquals(lhs.getEntityVersion(), rhs.getEntityVersion());
+
+        mutator.invoke(rhs, value2);
+
+        assertNotEquals(accessor.invoke(lhs), accessor.invoke(rhs));
+        assertNotEquals(lhs.getEntityVersion(), rhs.getEntityVersion());
     }
 }

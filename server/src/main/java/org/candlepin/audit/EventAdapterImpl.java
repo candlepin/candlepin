@@ -106,38 +106,34 @@ public class EventAdapterImpl implements EventAdapter {
         for (Event event : events) {
             String eventType = (event.getTarget().name() + event.getType().name());
             String message = MESSAGES.get(eventType);
+
             if (message == null) {
-                message = i18n.tr("Unknown event for user {0} and target {1}");
+                message = i18n.marktr("Unknown event for user {0} and target {1}");
             }
+
             PrincipalData pd = event.getPrincipal();
-            event.setMessageText(i18n.tr(message,
-                pd.getName(),
-                event.getTargetName()));
+            event.setMessageText(i18n.tr(message, pd.getName(), event.getTargetName()));
         }
     }
 
     //TODO: Make them nicer strings if the system did it
     static {
         MESSAGES = new HashMap<String, String>();
+
         MESSAGES.put("CONSUMERCREATED", I18n.marktr("{0} created new unit {1}"));
         MESSAGES.put("CONSUMERMODIFIED", I18n.marktr("{0} modified the unit {1}"));
         MESSAGES.put("CONSUMERDELETED", I18n.marktr("{0} deleted the unit {1}"));
         MESSAGES.put("OWNERCREATED", I18n.marktr("{0} created new owner {1}"));
         MESSAGES.put("OWNERMODIFIED", I18n.marktr("{0} modified the owner {1}"));
         MESSAGES.put("OWNERDELETED", I18n.marktr("{0} deleted the owner {1}"));
-        MESSAGES.put("ENTITLEMENTCREATED",
-            I18n.marktr("{0} attached a subscription for product {1}"));
-        MESSAGES.put("ENTITLEMENTMODIFIED",
-            I18n.marktr("{0} modified a subscription for product {1}"));
-        MESSAGES.put("ENTITLEMENTDELETED",
-            I18n.marktr("{0} returned the subscription for {1}"));
-        MESSAGES.put("ENTITLEMENTEXPIRED",
-            I18n.marktr("{0} returned the subscription for {1}"));
+        MESSAGES.put("ENTITLEMENTCREATED", I18n.marktr("{0} attached a subscription for product {1}"));
+        MESSAGES.put("ENTITLEMENTMODIFIED", I18n.marktr("{0} modified a subscription for product {1}"));
+        MESSAGES.put("ENTITLEMENTDELETED", I18n.marktr("{0} returned the subscription for {1}"));
+        MESSAGES.put("ENTITLEMENTEXPIRED", I18n.marktr("{0} returned the subscription for {1}"));
         MESSAGES.put("POOLCREATED", I18n.marktr("{0} created a pool for product {1}"));
         MESSAGES.put("POOLMODIFIED", I18n.marktr("{0} modified a pool for product {1}"));
         MESSAGES.put("POOLDELETED", I18n.marktr("{0} deleted a pool for product {1}"));
-        MESSAGES.put("EXPORTCREATED",
-            I18n.marktr("{0} created an export for unit {1}"));
+        MESSAGES.put("EXPORTCREATED", I18n.marktr("{0} created an export for unit {1}"));
         MESSAGES.put("IMPORTCREATED", I18n.marktr("{0} imported a manifest for owner {1}"));
         MESSAGES.put("USERCREATED", I18n.marktr("{0} created new user {1}"));
         MESSAGES.put("USERMODIFIED", I18n.marktr("{0} modified the user {1}"));
@@ -145,24 +141,16 @@ public class EventAdapterImpl implements EventAdapter {
         MESSAGES.put("ROLECREATED", I18n.marktr("{0} created new role {1}"));
         MESSAGES.put("ROLEMODIFIED", I18n.marktr("{0} modified the role {1}"));
         MESSAGES.put("ROLEDELETED", I18n.marktr("{0} deleted the role {1}"));
-        MESSAGES.put("SUBSCRIPTIONCREATED",
-            I18n.marktr("{0} created new subscription for product {1}"));
-        MESSAGES.put("SUBSCRIPTIONMODIFIED",
-            I18n.marktr("{0} modified a subscription for product {1}"));
-        MESSAGES.put("SUBSCRIPTIONDELETED",
-            I18n.marktr("{0} deleted a subscription for product {1}"));
-        MESSAGES.put("ACTIVATIONKEYCREATED",
-            I18n.marktr("{0} created the activation key {1}"));
-        MESSAGES.put("ACTIVATIONKEYDELETED",
-            I18n.marktr("{0} deleted the activation key {1}"));
+        MESSAGES.put("SUBSCRIPTIONCREATED", I18n.marktr("{0} created new subscription for product {1}"));
+        MESSAGES.put("SUBSCRIPTIONMODIFIED", I18n.marktr("{0} modified a subscription for product {1}"));
+        MESSAGES.put("SUBSCRIPTIONDELETED", I18n.marktr("{0} deleted a subscription for product {1}"));
+        MESSAGES.put("ACTIVATIONKEYCREATED", I18n.marktr("{0} created the activation key {1}"));
+        MESSAGES.put("ACTIVATIONKEYDELETED", I18n.marktr("{0} deleted the activation key {1}"));
         MESSAGES.put("GUESTIDCREATED", I18n.marktr("{0} created the guest id {1}"));
         MESSAGES.put("GUESTIDDELETED", I18n.marktr("{0} deleted the guest id {1}"));
-        MESSAGES.put("RULESMODIFIED",
-            I18n.marktr("{0} updated the rules in the database to version {1}"));
-        MESSAGES.put("RULESDELETED",
-            I18n.marktr("{0} removed the rules from the database"));
-        MESSAGES.put("COMPLIANCECREATED",
-            I18n.marktr("Compliance recalculated for consumer {1}"));
+        MESSAGES.put("RULESMODIFIED", I18n.marktr("{0} updated the rules in the database to version {1}"));
+        MESSAGES.put("RULESDELETED", I18n.marktr("{0} removed the rules from the database"));
+        MESSAGES.put("COMPLIANCECREATED", I18n.marktr("Compliance recalculated for consumer {1}"));
     }
 
 }

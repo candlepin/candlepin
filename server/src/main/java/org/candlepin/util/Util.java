@@ -40,6 +40,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -459,7 +460,7 @@ public class Util {
      * <p></p>
      * WARNING: This method will not work with collections which use iterators that return its
      * elements in an inconsistent order. The order does not need to be known, but it must be
-     * consistent for a given collection state.
+     * consistent and repeatable for a given collection state.
      *
      * @param c1
      *  A collection to compare to c2
@@ -491,6 +492,70 @@ public class Util {
                 }
 
                 if (lhs == rhs || (lhs != null && lhs.equals(rhs))) {
+                    indexes.add(offset);
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Compares two collections for equality without using the collection's equals method. This is
+     * primarily only useful when working with collections that may actually be Hibernate bags, as
+     * bags and proxies do not properly implement the equals method, which tends to lead to
+     * incorrect results and unnecessary work.
+     * <p></p>
+     * WARNING: This method will not work with collections which use iterators that return its
+     * elements in an inconsistent order. The order does not need to be known, but it must be
+     * consistent and repeatable for a given collection state.
+     *
+     * @param c1
+     *  A collection to compare to c2
+     *
+     * @param c2
+     *  A collection to compare to c1
+     *
+     * @param comp
+     *  A comparator to use to compare elements of c1 and c2 for equality
+     *
+     * @throws IllegalArgumentException
+     *  if the provided compator is null
+     *
+     * @return
+     *  true if both collections are the same instance, are both null or contain the same elements;
+     *  false otherwise
+     */
+    public static <T> boolean collectionsAreEqual(Collection<T> c1, Collection<T> c2, Comparator<T> comp) {
+        if (comp == null) {
+            throw new IllegalArgumentException("comp is null");
+        }
+
+        if (c1 == c2) {
+            return true;
+        }
+
+        if (c1 == null || c2 == null || c1.size() != c2.size()) {
+            return false;
+        }
+
+        Set<Integer> indexes = new HashSet<Integer>();
+        for (T lhs : c1) {
+            boolean found = false;
+            int offset = -1;
+
+            for (T rhs : c2) {
+                if (indexes.contains(++offset)) {
+                    continue;
+                }
+
+                if (lhs == rhs || (lhs != null && comp.compare(lhs, rhs) == 0)) {
                     indexes.add(offset);
                     found = true;
                     break;

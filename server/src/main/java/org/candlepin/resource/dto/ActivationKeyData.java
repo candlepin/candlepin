@@ -206,7 +206,8 @@ public class ActivationKeyData {
      */
     public ActivationKeyData(ActivationKey source) {
         this();
-        this.fromModel(source);
+
+        this.populate(source);
     }
 
     /**
@@ -580,7 +581,7 @@ public class ActivationKeyData {
      *  a collection of content overrides associated with the activation key
      */
     public Collection<AKContentOverride> getContentOverrides() {
-        return Collections.unmodifiableCollection(this.contentOverrides);
+        return Collections.unmodifiableSet(this.contentOverrides);
     }
 
     /**
@@ -592,6 +593,7 @@ public class ActivationKeyData {
      * @return
      *  a reference to this DTO
      */
+    @JsonProperty("releaseVer")
     public ActivationKeyData setReleaseVersion(Release releaseVersion) {
         this.releaseVersion = releaseVersion;
         return this;
@@ -725,7 +727,7 @@ public class ActivationKeyData {
      * @return
      *  a reference to this DTO
      */
-    public ActivationKeyData fromModel(ActivationKey source) {
+    public ActivationKeyData populate(ActivationKey source) {
         this.setId(source.getId());
         this.setName(source.getName());
         this.setDescription(source.getDescription());

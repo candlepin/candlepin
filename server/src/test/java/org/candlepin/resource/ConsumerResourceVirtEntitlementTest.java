@@ -23,17 +23,14 @@ import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -55,12 +52,10 @@ import javax.inject.Inject;
  * ConsumerResourceVirtEntitlementTest
  */
 public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
+
     @Inject private ConsumerResource consumerResource;
     @Inject private PoolManager poolManager;
+    @Inject private SubscriptionServiceAdapter subAdapter;
 
     private ConsumerType manifestType;
     private ConsumerType systemType;
@@ -97,35 +92,33 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         consumerCurator.create(systemConsumer);
 
         // create a physical pool with numeric virt_limit
-        productLimit = TestUtil.createProduct(owner);
+        productLimit = TestUtil.createProduct();
         productLimit.setAttribute("virt_limit", "10");
         productLimit.setAttribute("multi-entitlement", "yes");
-        productCurator.create(productLimit);
+        productLimit = this.createProduct(productLimit, owner);
 
-        Subscription limitSub = new Subscription(owner,
-            productLimit, new HashSet<Product>(),
-            10L,
-            TestUtil.createDate(2010, 1, 1),
-            TestUtil.createDate(2020, 1, 1),
-            TestUtil.createDate(2000, 1, 1));
+        Subscription limitSub = TestUtil.createSubscription(owner, productLimit, new HashSet<Product>());
         limitSub.setId(Util.generateDbUUID());
+        limitSub.setQuantity(10L);
+        limitSub.setStartDate(TestUtil.createDate(2010, 1, 1));
+        limitSub.setEndDate(TestUtil.createDate(2020, 1, 1));
+        limitSub.setModified(TestUtil.createDate(2000, 1, 1));
         subscriptions.add(limitSub);
 
         limitPools = poolManager.createAndEnrichPools(limitSub);
 
         // create a physical pool with unlimited virt_limit
-        productUnlimit = TestUtil.createProduct(owner);
+        productUnlimit = TestUtil.createProduct();
         productUnlimit.setAttribute("virt_limit", "unlimited");
         productUnlimit.setAttribute("multi-entitlement", "yes");
-        productCurator.create(productUnlimit);
+        productUnlimit = this.createProduct(productUnlimit, owner);
 
-        Subscription unlimitSub = new Subscription(owner,
-            productUnlimit, new HashSet<Product>(),
-            10L,
-            TestUtil.createDate(2010, 1, 1),
-            TestUtil.createDate(2020, 1, 1),
-            TestUtil.createDate(2000, 1, 1));
+        Subscription unlimitSub = TestUtil.createSubscription(owner, productUnlimit, new HashSet<Product>());
         unlimitSub.setId(Util.generateDbUUID());
+        unlimitSub.setQuantity(10L);
+        unlimitSub.setStartDate(TestUtil.createDate(2010, 1, 1));
+        unlimitSub.setEndDate(TestUtil.createDate(2020, 1, 1));
+        unlimitSub.setModified(TestUtil.createDate(2000, 1, 1));
         subscriptions.add(unlimitSub);
 
         unlimitPools = poolManager.createAndEnrichPools(unlimitSub);

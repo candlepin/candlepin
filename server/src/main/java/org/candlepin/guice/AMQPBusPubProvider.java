@@ -100,6 +100,7 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
         for (BrokerDetails broker : connectionFactory.getConnectionURL().getAllBrokerDetails()) {
             broker.setProperty("trust_store",
                 config.getString(ConfigProperties.AMQP_TRUSTSTORE));
+            broker.setProperty("sasl_mechs", "ANONYMOUS");
             broker.setProperty("trust_store_password",
                 config.getString(ConfigProperties.AMQP_TRUSTSTORE_PASSWORD));
             broker.setProperty("key_store", config.getString(ConfigProperties.AMQP_KEYSTORE));

@@ -1360,8 +1360,7 @@ public class OwnerResource {
         }
         catch (Exception e) {
             log.error("Problem generating uber cert for owner: " + o.getKey(), e);
-            throw new BadRequestException(i18n.tr(
-                "Problem generating uber cert for owner {0}", e));
+            throw new BadRequestException(i18n.tr("Problem generating uber cert for owner {0}", e), e);
         }
     }
 

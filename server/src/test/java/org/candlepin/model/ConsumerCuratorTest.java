@@ -44,11 +44,7 @@ import javax.persistence.EntityManager;
  * ConsumerCuratorTest JUnit tests for Consumer database code
  */
 public class ConsumerCuratorTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private EntitlementCurator entitlementCurator;
+
     @Inject private Configuration config;
     @Inject private DeletedConsumerCurator dcc;
     @Inject private EntityManager em;
@@ -224,6 +220,23 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         Consumer guestHost = consumerCurator.getHost(
             "daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
+        assertEquals(host, guestHost);
+    }
+
+    @Test
+    public void caseInsensitiveGetHost() {
+        Consumer host = new Consumer("hostConsumer", "testUser", owner, ct);
+        consumerCurator.create(host);
+
+        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
+        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        consumerCurator.create(gConsumer1);
+
+        host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
+        consumerCurator.update(host);
+
+        Consumer guestHost = consumerCurator.getHost(
+            "Daf0fe10-956b-7b4e-b7dc-B383CE681ba8", owner);
         assertEquals(host, guestHost);
     }
 
@@ -523,6 +536,33 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void getGuestConsumerMapCaseInsensitive() {
+        String guestId1 = "06f81b41-AAC0-7685-FBE9-79AA4A326511";
+        String guestId1ReverseEndian = "411bf806-c0aa-8576-fbe9-79aa4a326511";
+        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
+        gConsumer1.getFacts().put("virt.uuid", guestId1);
+        consumerCurator.create(gConsumer1);
+
+        String guestId2 = "4c4c4544-0046-4210-8031-C7C04F445831";
+        Consumer gConsumer2 = new Consumer("guestConsumer2", "testUser", owner, ct);
+        gConsumer2.getFacts().put("virt.uuid", guestId2);
+        consumerCurator.create(gConsumer2);
+
+        Set<String> guestIds = new HashSet<String>();
+        guestIds.add(guestId1ReverseEndian.toUpperCase()); // reversed endian match
+        guestIds.add(guestId2.toUpperCase()); // direct match
+        VirtConsumerMap guestMap = consumerCurator.getGuestConsumersMap(owner, guestIds);
+
+        assertEquals(2, guestMap.size());
+
+        assertEquals(gConsumer1.getId(), guestMap.get(guestId1.toLowerCase()).getId());
+        assertEquals(gConsumer1.getId(), guestMap.get(guestId1ReverseEndian).getId());
+
+        assertEquals(gConsumer2.getId(), guestMap.get(guestId2.toLowerCase()).getId());
+        assertEquals(gConsumer2.getId(), guestMap.get(Util.transformUuid(guestId2.toLowerCase())).getId());
+    }
+
+    @Test
     public void testDoesConsumerExistNo() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumer.setUuid("1");
@@ -583,6 +623,16 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testGetHypervisorCaseInsensitive() {
+        String hypervisorid = "HYpervisor";
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setHypervisorId(new HypervisorId(hypervisorid));
+        consumer = consumerCurator.create(consumer);
+        Consumer result = consumerCurator.getHypervisor(hypervisorid.toUpperCase(), owner);
+        assertEquals(consumer, result);
+    }
+
+    @Test
     public void testGetHypervisorWrongOwner() {
         Owner otherOwner = new Owner("test-owner-other", "Test Other Owner");
         otherOwner = ownerCurator.create(otherOwner);
@@ -633,6 +683,22 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testGetHypervisorsBulkCaseInsensitive() {
+        String hypervisorid = "hYPervisor";
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setHypervisorId(new HypervisorId(hypervisorid));
+        consumer = consumerCurator.create(consumer);
+        List<String> hypervisorIds = new LinkedList<String>();
+        hypervisorIds.add(hypervisorid.toUpperCase());
+        hypervisorIds.add("NOT really a hypervisor");
+        List<Consumer> results = consumerCurator.getHypervisorsBulk(
+            hypervisorIds, owner.getKey());
+        assertEquals(1, results.size());
+        assertEquals(consumer, results.get(0));
+    }
+
+
+    @Test
     public void testGetHypervisorsBulkEmpty() {
         String hypervisorid = "hypervisor";
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
@@ -663,8 +729,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetConsumerIdsWithStartedEnts() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumerCurator.create(consumer);
-        Product prod = new Product("1", "2", owner);
-        this.productCurator.create(prod);
+        Product prod = this.createProduct("1", "2", owner);
+
         Pool p = createPool(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
         Entitlement ent = this.createEntitlement(owner, consumer, p,
             createEntitlementCertificate("entkey", "ecert"));
@@ -680,8 +746,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetConsumerIdsWithStartedEntsAlreadyDone() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumerCurator.create(consumer);
-        Product prod = new Product("1", "2", owner);
-        this.productCurator.create(prod);
+        Product prod = this.createProduct("1", "2", owner);
+
         Pool p = createPool(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
         Entitlement ent = this.createEntitlement(owner, consumer, p,
             createEntitlementCertificate("entkey", "ecert"));

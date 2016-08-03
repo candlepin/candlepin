@@ -15,27 +15,29 @@
 package org.candlepin.resource;
 
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.ProductCertificateCurator;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.dto.ContentData;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.util.Util;
+import org.candlepin.test.TestUtil;
 
+import org.junit.Before;
 import org.junit.Test;
+
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -51,67 +53,93 @@ import javax.inject.Inject;
  * OwnerProductResourceTest
  */
 public class OwnerProductResourceTest extends DatabaseTestFixture {
-    @Inject private ProductCertificateCurator productCertificateCurator;
-    @Inject private ContentCurator contentCurator;
-    @Inject private OwnerProductResource ownerProductResource;
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductManager productManager;
-    @Inject private Configuration config;
 
-    private Product createProduct(Owner owner) {
-        String label = "test_product";
-        String name = "Test Product";
-        String variant = "server";
-        String version = "1.0";
-        String arch = "ALL";
-        String type = "SVC";
-        Product prod = new Product(label, name, owner, variant, version, arch, type);
-        return prod;
+    @Inject protected ProductManager productManager;
+
+    private OwnerProductResource ownerProductResource;
+
+    @Before
+    public void setup() {
+        this.ownerProductResource = new OwnerProductResource(this.config, this.i18n, this.ownerCurator,
+            this.ownerContentCurator, this.ownerProductCurator, this.productCertificateCurator,
+            this.productCurator, this.productManager
+        );
+    }
+
+    private ProductData buildTestProductDTO() {
+        ProductData dto = TestUtil.createProductDTO("test_product");
+
+        dto.setAttribute("version", "1.0");
+        dto.setAttribute("variant", "server");
+        dto.setAttribute("type", "SVC");
+        dto.setAttribute("arch", "ALL");
+
+        return dto;
+    }
+
+    private Product buildTestProduct() {
+        Product entity = TestUtil.createProduct("test_product");
+
+        entity.setAttribute("version", "1.0");
+        entity.setAttribute("variant", "server");
+        entity.setAttribute("type", "SVC");
+        entity.setAttribute("arch", "ALL");
+
+        return entity;
     }
 
     @Test
     public void testCreateProductResource() {
-        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
+        Owner owner = this.createOwner("Example-Corporation");
+        ProductData productData = this.buildTestProductDTO();
 
-        Product toSubmit = createProduct(owner);
-        ownerProductResource.createProduct(owner.getKey(), toSubmit);
+        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), productData.getId()));
+
+        ProductData result = this.ownerProductResource.createProduct(owner.getKey(), productData);
+        Product entity = this.ownerProductCurator.getProductById(owner, productData.getId());
+
+        assertNotNull(result);
+        assertNotNull(entity);
+        assertFalse(entity.isChangedBy(result));
     }
 
     @Test
     public void testCreateProductWithContent() {
-        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
+        Owner owner = this.createOwner("Example-Corporation");
+        Content content = this.createContent("content-1", "content-1", owner);
+        ProductData productData = this.buildTestProductDTO();
+        ContentData contentData = content.toDTO();
+        productData.addContent(contentData, true);
 
-        Product toSubmit = createProduct(owner);
-        String  contentHash = String.valueOf(
-            Math.abs(Long.valueOf("test-content".hashCode())));
+        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), productData.getId()));
 
-        Content testContent = new Content(
-            owner, "test-content", contentHash, "test-content-label", "yum", "test-vendor",
-            "test-content-url", "test-gpg-url", "test-arch"
-        );
+        ProductData result = this.ownerProductResource.createProduct(owner.getKey(), productData);
+        Product entity = this.ownerProductCurator.getProductById(owner, productData.getId());
 
-        HashSet<Content> contentSet = new HashSet<Content>();
-        testContent = contentCurator.create(testContent);
-        contentSet.add(testContent);
-        toSubmit.setContent(contentSet);
+        assertNotNull(result);
+        assertNotNull(entity);
+        assertFalse(entity.isChangedBy(result));
 
-        ownerProductResource.createProduct(owner.getKey(), toSubmit);
+        assertNotNull(result.getProductContent());
+        assertEquals(1, result.getProductContent().size());
+        assertEquals(contentData, result.getProductContent().iterator().next().getContent());
     }
 
     @Test(expected = BadRequestException.class)
     public void testDeleteProductWithSubscriptions() {
-        ProductCurator pc = mock(ProductCurator.class);
         OwnerCurator oc = mock(OwnerCurator.class);
+        OwnerProductCurator opc = mock(OwnerProductCurator.class);
+        ProductCurator pc = mock(ProductCurator.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        OwnerProductResource pr = new OwnerProductResource(pc, null, oc, null, productManager,
-            config, i18n);
+        OwnerProductResource pr = new OwnerProductResource(
+            config, i18n, oc, null, opc, null, pc, null
+        );
 
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);
 
         when(oc.lookupByKey(eq("owner"))).thenReturn(o);
-        when(pc.lookupById(eq(o), eq("10"))).thenReturn(p);
-        when(p.getOwners()).thenReturn(Util.asSet(o));
+        when(opc.getProductById(eq(o), eq("10"))).thenReturn(p);
 
         Set<Subscription> subs = new HashSet<Subscription>();
         Subscription s = mock(Subscription.class);
@@ -123,31 +151,32 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
 
     @Test
     public void getProduct() {
-        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
+        Owner owner = this.createOwner("Example-Corporation");
+        Product entity = this.createProduct("test_product", "test_product", owner);
 
-        Product p = createProduct(owner);
-        p = ownerProductResource.createProduct(owner.getKey(), p);
         securityInterceptor.enable();
+        ProductData result = ownerProductResource.getProduct(owner.getKey(), entity.getId());
 
-        Product p1 = ownerProductResource.getProduct(owner.getKey(), p.getId());
-        assertEquals(p1, p);
+        assertNotNull(result);
+        assertFalse(entity.isChangedBy(result));
     }
 
     @Test
     public void getProductCertificate() {
-        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
+        Owner owner = this.createOwner("Example-Corporation");
 
-        Product p = createProduct(owner);
-        p = ownerProductResource.createProduct(owner.getKey(), p);
+        Product entity = this.createProduct(owner);
         // ensure we check SecurityHole
         securityInterceptor.enable();
 
         ProductCertificate cert = new ProductCertificate();
         cert.setCert("some text");
         cert.setKey("some key");
-        cert.setProduct(p);
+        cert.setProduct(entity);
         productCertificateCurator.create(cert);
-        ProductCertificate cert1 = ownerProductResource.getProductCertificate(owner.getKey(), p.getId());
+
+        ProductCertificate cert1 = ownerProductResource.getProductCertificate(owner.getKey(), entity.getId());
+
         assertEquals(cert, cert1);
     }
 }

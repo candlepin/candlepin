@@ -74,19 +74,7 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
         envCurator.create(new Environment("env2", "Another Env", owner));
 
         final String contentId = "contentId";
-        Content content = new Content(
-            this.owner,
-            "test content",
-            contentId,
-            "test content",
-            "content type",
-            "vendor",
-            "url.content.com",
-            "gpg.content.com",
-            "arches"
-        );
-
-        contentCurator.create(content);
+        Content content = this.createContent(contentId, "test content", this.owner);
 
         envContentCurator.create(new EnvironmentContent(environment, content, true));
 

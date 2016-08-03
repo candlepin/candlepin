@@ -21,11 +21,11 @@ import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.Subscription;
 
 import com.google.inject.Inject;
@@ -45,6 +45,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+
+
 /**
  * Rules for creation and updating of pools during a refresh pools operation.
  */
@@ -55,16 +57,16 @@ public class PoolRules {
     private PoolManager poolManager;
     private Configuration config;
     private EntitlementCurator entCurator;
-    private ProductCurator prodCurator;
+    private OwnerProductCurator ownerProductCurator;
 
     @Inject
     public PoolRules(PoolManager poolManager, Configuration config, EntitlementCurator entCurator,
-        ProductCurator prodCurator) {
+        OwnerProductCurator ownerProductCurator) {
 
         this.poolManager = poolManager;
         this.config = config;
         this.entCurator = entCurator;
-        this.prodCurator = prodCurator;
+        this.ownerProductCurator = ownerProductCurator;
     }
 
     private long calculateQuantity(long quantity, Product product, String upstreamPoolId) {
@@ -73,11 +75,12 @@ public class PoolRules {
         // In hosted, we increase the quantity on the subscription. However in standalone,
         // we assume this already has happened in hosted and the accurate quantity was
         // exported:
-        if (product.hasAttribute("instance_multiplier") && upstreamPoolId == null) {
+        String multiplier = product.getAttributeValue(Product.Attributes.INSTANCE_MULTIPLIER);
 
-            int instanceMultiplier = Integer.parseInt(product.getAttributeValue("instance_multiplier"));
-            log.debug("Increasing pool quantity for instance multiplier: " +
-                instanceMultiplier);
+        if (multiplier != null && upstreamPoolId == null) {
+            int instanceMultiplier = Integer.parseInt(multiplier);
+
+            log.debug("Increasing pool quantity for instance multiplier: {}", instanceMultiplier);
             result = result * instanceMultiplier;
         }
         return result;
@@ -110,12 +113,12 @@ public class PoolRules {
         masterPool.setQuantity(calculateQuantity(masterPool.getQuantity(),
             masterPool.getProduct(), masterPool.getUpstreamPoolId()));
 
-        ProductAttribute virtAtt = masterPool.getProduct().getAttribute("virt_only");
+        ProductAttribute virtAtt = masterPool.getProduct().getAttribute(Product.Attributes.VIRT_ONLY);
         // The following will make virt_only a pool attribute. That makes the
         // pool explicitly virt_only to subscription manager and any other
         // downstream consumer.
         if (virtAtt != null && virtAtt.getValue() != null && !virtAtt.getValue().equals("")) {
-            masterPool.addAttribute(new PoolAttribute("virt_only", virtAtt.getValue()));
+            masterPool.addAttribute(new PoolAttribute(Pool.Attributes.VIRT_ONLY, virtAtt.getValue()));
         }
 
         log.info("Checking if pools need to be created for: {}", masterPool);
@@ -144,24 +147,26 @@ public class PoolRules {
      */
     private Pool createBonusPool(Pool masterPool, List<Pool> existingPools) {
         Map<String, String> attributes = PoolHelper.getFlattenedAttributes(masterPool.getProduct());
-        String virtQuantity = getVirtQuantity(attributes.get("virt_limit"), masterPool.getQuantity());
+        String virtQuantity = getVirtQuantity(
+            attributes.get(Product.Attributes.VIRT_LIMIT), masterPool.getQuantity()
+        );
 
         log.info("Checking if bonus pools need to be created for pool: {}", masterPool);
 
-        if (attributes.containsKey("virt_limit") && !hasBonusPool(existingPools) && virtQuantity != null) {
+        if (attributes.containsKey(Product.Attributes.VIRT_LIMIT) && !hasBonusPool(existingPools) &&
+            virtQuantity != null) {
 
-            boolean hostLimited = attributes.containsKey("host_limited") &&
-                attributes.get("host_limited").equals("true");
+            boolean hostLimited = "true".equals(attributes.get(Product.Attributes.HOST_LIMITED));
             HashMap<String, String> virtAttributes = new HashMap<String, String>();
-            virtAttributes.put("virt_only", "true");
-            virtAttributes.put("pool_derived", "true");
-            virtAttributes.put("physical_only", "false");
+            virtAttributes.put(Pool.Attributes.VIRT_ONLY, "true");
+            virtAttributes.put(Pool.Attributes.DERIVED_POOL, "true");
+            virtAttributes.put(Pool.Attributes.PHYSICAL_ONLY, "false");
             if (hostLimited || config.getBoolean(ConfigProperties.STANDALONE)) {
-                virtAttributes.put("unmapped_guests_only", "true");
+                virtAttributes.put(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
             }
             // Make sure the virt pool does not have a virt_limit,
             // otherwise this will recurse infinitely
-            virtAttributes.put("virt_limit", "0");
+            virtAttributes.put(Product.Attributes.VIRT_LIMIT, "0");
 
             // Favor derived products if they are available
             Product sku = masterPool.getDerivedProduct() != null ? masterPool.getDerivedProduct() :
@@ -170,7 +175,7 @@ public class PoolRules {
             // Using derived here because only one derived pool is created for
             // this subscription
             Pool bonusPool = PoolHelper.clonePool(masterPool, sku, virtQuantity, virtAttributes, "derived",
-                prodCurator, null);
+                ownerProductCurator, null);
 
             log.info("Creating new derived pool: {}", bonusPool);
             return bonusPool;
@@ -226,8 +231,7 @@ public class PoolRules {
      * @param floatingPools pools with no subscription ID
      * @return pool updates
      */
-    public List<PoolUpdate> updatePools(List<Pool> floatingPools,
-        Set<Product> changedProducts) {
+    public List<PoolUpdate> updatePools(List<Pool> floatingPools, Set<Product> changedProducts) {
         List<PoolUpdate> updates = new LinkedList<PoolUpdate>();
         for (Pool p : floatingPools) {
 
@@ -264,8 +268,9 @@ public class PoolRules {
 
         List<PoolUpdate> poolsUpdated = new LinkedList<PoolUpdate>();
         Map<String, String> attributes = PoolHelper.getFlattenedAttributes(masterPool.getProduct());
+
         for (Pool existingPool : existingPools) {
-            log.debug("Checking pool: {}", existingPool.getId());
+            log.debug("Checking pool: {}", existingPool);
 
             // Ensure subscription details are maintained on the master pool
             if ("master".equalsIgnoreCase(existingPool.getSubscriptionSubKey())) {
@@ -287,15 +292,15 @@ public class PoolRules {
                 existingPools, attributes));
 
             if (!existingPool.isMarkedForDelete()) {
-                boolean useDerived = BooleanUtils.toBoolean(
-                    existingPool.getAttributeValue("pool_derived")) &&
-                    masterPool.getDerivedProduct() != null;
+                boolean useDerived = masterPool.getDerivedProduct() != null &&
+                    BooleanUtils.toBoolean(existingPool.getAttributeValue(Pool.Attributes.DERIVED_POOL));
 
                 update.setProductsChanged(checkForChangedProducts(
                     useDerived ? masterPool.getDerivedProduct() : masterPool.getProduct(),
                     getExpectedProvidedProducts(masterPool, useDerived),
                     existingPool,
-                    changedProducts));
+                    changedProducts)
+                );
 
                 if (!useDerived) {
                     update.setDerivedProductsChanged(
@@ -306,6 +311,7 @@ public class PoolRules {
 
                 update.setBrandingChanged(checkForBrandingChanges(masterPool, existingPool));
             }
+
             // All done, see if we found any changes and return an update object if so:
             if (update.changed()) {
                 poolsUpdated.add(update);
@@ -342,6 +348,18 @@ public class PoolRules {
      */
     public List<PoolUpdate> updatePoolsFromStack(Consumer consumer, List<Pool> pools,
         boolean deleteIfNoStackedEnts) {
+        return updatePoolsFromStack(consumer, pools, null, deleteIfNoStackedEnts);
+    }
+
+    /**
+     * Updates the pool based on the entitlements in the specified stack.
+     *
+     * @param pools
+     * @param consumer
+     * @return updates
+     */
+    public List<PoolUpdate> updatePoolsFromStack(Consumer consumer, List<Pool> pools,
+        Set<String> alreadyDeletedPools, boolean deleteIfNoStackedEnts) {
         Map<String, List<Entitlement>> entitlementMap = new HashMap<String, List<Entitlement>>();
         Set<String> sourceStackIds = new HashSet<String>();
         List<PoolUpdate> result = new ArrayList<PoolUpdate>();
@@ -372,7 +390,7 @@ public class PoolRules {
         }
 
         if (!poolsToDelete.isEmpty()) {
-            this.poolManager.deletePools(poolsToDelete);
+            this.poolManager.deletePools(poolsToDelete, alreadyDeletedPools);
         }
 
         return result;
@@ -400,7 +418,7 @@ public class PoolRules {
         if (eldestWithVirtLimit != null) {
             // Quantity may have changed, lets see.
             String virtLimit =
-                eldestWithVirtLimit.getPool().getProductAttributeValue("virt_limit");
+                eldestWithVirtLimit.getPool().getProductAttributeValue(Product.Attributes.VIRT_LIMIT);
 
             Long quantity =
                 virtLimit.equalsIgnoreCase("unlimited") ? -1L : Long.parseLong(virtLimit);
@@ -508,13 +526,25 @@ public class PoolRules {
 
         Product existingProduct = existingPool.getProduct();
         Set<Product> currentProvided = existingPool.getProvidedProducts();
+        String pid = existingProduct.getId();
 
         // TODO: ideally we would differentiate between these different product changes
         // a little, but in the end it probably doesn't matter:
         boolean productsChanged =
-            !incomingProduct.getId().equals(existingProduct.getId()) ||
-            (changedProducts != null && changedProducts.contains(existingProduct)) ||
+            (pid != null && !pid.equals(incomingProduct.getId())) ||
             !currentProvided.equals(incomingProvided);
+
+        // Check if the existing product is in the set of changed products
+        if (!productsChanged && changedProducts != null && existingProduct.getId() != null) {
+            for (Product product : changedProducts) {
+                if (pid.equals(product.getId())) {
+                    // TODO: Should we maybe check if the products have actually changed, or is it
+                    // safe to assume their presence is enough?
+                    productsChanged = true;
+                    break;
+                }
+            }
+        }
 
         if (productsChanged) {
             existingPool.setProduct(incomingProduct);
@@ -585,9 +615,9 @@ public class PoolRules {
         // virt only pools we expect it to be main pool quantity * virt_limit:
         long expectedQuantity = calculateQuantity(originalQuantity, pool.getProduct(),
             pool.getUpstreamPoolId());
+
         expectedQuantity = processVirtLimitPools(existingPools,
             attributes, existingPool, expectedQuantity);
-
 
         boolean quantityChanged = !(expectedQuantity == existingPool.getQuantity());
 
@@ -611,13 +641,14 @@ public class PoolRules {
          * derived products on the subscription are graduated to be the pool products and
          * derived products aren't going to have a virt_limit attribute
          */
-        if (existingPool.hasAttribute("pool_derived") &&
-            existingPool.attributeEquals("virt_only", "true") &&
-            (attributes.containsKey("virt_limit") || existingPool.getProduct().hasAttribute("virt_limit"))) {
+        if (existingPool.hasAttribute(Pool.Attributes.DERIVED_POOL) &&
+            existingPool.attributeEquals(Pool.Attributes.VIRT_ONLY, "true") &&
+            (attributes.containsKey(Product.Attributes.VIRT_LIMIT) ||
+            existingPool.getProduct().hasAttribute(Product.Attributes.VIRT_LIMIT))) {
 
-            if (!attributes.containsKey("virt_limit")) {
+            if (!attributes.containsKey(Product.Attributes.VIRT_LIMIT)) {
                 log.warn("virt_limit attribute has been removed from subscription, " +
-                    "flagging pool for deletion if supported: " + existingPool.getId());
+                    "flagging pool for deletion if supported: {}", existingPool.getId());
                 // virt_limit has been removed! We need to clean up this pool. Set
                 // attribute to notify the server of this:
                 existingPool.setMarkedForDelete(true);
@@ -627,7 +658,7 @@ public class PoolRules {
                 expectedQuantity = 0;
             }
             else {
-                String virtLimitStr = attributes.get("virt_limit");
+                String virtLimitStr = attributes.get(Product.Attributes.VIRT_LIMIT);
 
                 if ("unlimited".equals(virtLimitStr)) {
                     // 0 will only happen if the rules set it to be 0 -- don't modify
@@ -638,8 +669,9 @@ public class PoolRules {
                 else {
                     try {
                         int virtLimit = Integer.parseInt(virtLimitStr);
-                        if (config.getBoolean(ConfigProperties.STANDALONE) &&
-                            !"true".equals(existingPool.getAttributeValue("unmapped_guests_only"))) {
+                        if (config.getBoolean(ConfigProperties.STANDALONE) && !"true".equals(
+                            existingPool.getAttributeValue(Pool.Attributes.UNMAPPED_GUESTS_ONLY))) {
+
                             // this is how we determined the quantity
                             expectedQuantity = virtLimit;
                         }
@@ -657,7 +689,8 @@ public class PoolRules {
                             long adjust = 0L;
                             for (Pool derivedPool : existingPools) {
                                 String isDerived =
-                                    derivedPool.getAttributeValue("pool_derived");
+                                    derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL);
+
                                 if (isDerived == null) {
                                     adjust = derivedPool.getExported();
                                 }

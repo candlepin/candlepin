@@ -71,6 +71,11 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
     @NotNull
     private String guestId;
 
+    @Column(name = "guest_id_lower", nullable = false)
+    @Size(max = 255)
+    @NotNull
+    private String guestIdLower;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @ForeignKey(name = "fk_consumer_guests")
     @JoinColumn(nullable = false)
@@ -94,7 +99,7 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
 
     public GuestId(String guestId) {
         this();
-        this.guestId = guestId;
+        setGuestId(guestId);
     }
 
     public GuestId(String guestId, Consumer consumer) {
@@ -114,6 +119,13 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
 
     public void setGuestId(String guestId) {
         this.guestId = guestId;
+
+        if (guestId != null) {
+            guestIdLower = guestId.toLowerCase();
+        }
+        else {
+            guestIdLower = null;
+        }
     }
 
     @HateoasInclude

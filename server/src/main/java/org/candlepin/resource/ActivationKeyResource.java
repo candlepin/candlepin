@@ -18,9 +18,9 @@ import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
@@ -72,25 +72,23 @@ import io.swagger.annotations.ApiResponses;
 public class ActivationKeyResource {
     private static Logger log = LoggerFactory.getLogger(ActivationKeyResource.class);
     private ActivationKeyCurator activationKeyCurator;
-    private ProductCurator productCurator;
+    private OwnerProductCurator ownerProductCurator;
     private PoolManager poolManager;
     private I18n i18n;
     private ServiceLevelValidator serviceLevelValidator;
     private ActivationKeyRules activationKeyRules;
 
     @Inject
-    public ActivationKeyResource(ActivationKeyCurator activationKeyCurator,
-        I18n i18n, PoolManager poolManager,
-        ServiceLevelValidator serviceLevelValidator,
-        ActivationKeyRules activationKeyRules,
-        ProductCurator productCurator) {
+    public ActivationKeyResource(ActivationKeyCurator activationKeyCurator, I18n i18n,
+        PoolManager poolManager, ServiceLevelValidator serviceLevelValidator,
+        ActivationKeyRules activationKeyRules, OwnerProductCurator ownerProductCurator) {
 
         this.activationKeyCurator = activationKeyCurator;
         this.i18n = i18n;
         this.poolManager = poolManager;
         this.serviceLevelValidator = serviceLevelValidator;
         this.activationKeyRules = activationKeyRules;
-        this.productCurator = productCurator;
+        this.ownerProductCurator = ownerProductCurator;
     }
 
     @ApiOperation(notes = "Retrieves a single Activation Key", value = "Get Activation Key")
@@ -303,7 +301,7 @@ public class ActivationKeyResource {
     }
 
     private Product confirmProduct(Owner o, String prodId) {
-        Product prod = productCurator.lookupById(o, prodId);
+        Product prod = this.ownerProductCurator.getProductById(o, prodId);
 
         if (prod == null) {
             throw new BadRequestException(i18n.tr("Product with id {0} could not be found.", prodId));

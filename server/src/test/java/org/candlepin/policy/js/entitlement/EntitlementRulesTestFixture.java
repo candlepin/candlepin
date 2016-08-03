@@ -26,11 +26,11 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.dto.Subscription;
@@ -57,6 +57,7 @@ import java.util.Locale;
 
 public class EntitlementRulesTestFixture {
     protected Enforcer enforcer;
+
     @Mock
     protected RulesCurator rulesCurator;
     @Mock
@@ -72,7 +73,7 @@ public class EntitlementRulesTestFixture {
     @Mock
     protected EntitlementCurator entCurMock;
     @Mock
-    protected ProductCurator prodCuratorMock;
+    protected OwnerProductCurator ownerProductCuratorMock;
     @Mock
     private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock
@@ -115,14 +116,14 @@ public class EntitlementRulesTestFixture {
         consumer = new Consumer("test consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
-        poolRules = new PoolRules(poolManagerMock, config, entCurMock, prodCuratorMock);
+        poolRules = new PoolRules(poolManagerMock, config, entCurMock, ownerProductCuratorMock);
     }
 
     protected Subscription createVirtLimitSub(String productId, int quantity,
         String virtLimit) {
-        Product product = new Product(productId, productId, owner);
+        Product product = TestUtil.createProduct(productId, productId);
         product.setAttribute("virt_limit", virtLimit);
-        when(prodCuratorMock.lookupById(owner, productId)).thenReturn(product);
+        when(ownerProductCuratorMock.getProductById(owner, productId)).thenReturn(product);
         Subscription s = TestUtil.createSubscription(owner, product);
         s.setQuantity(new Long(quantity));
         s.setId("subId");
@@ -136,7 +137,7 @@ public class EntitlementRulesTestFixture {
     }
 
     protected Pool setupVirtLimitPool() {
-        Product product = new Product(productId, "A virt_limit product", owner);
+        Product product = TestUtil.createProduct(productId, "A virt_limit product");
         Pool pool = TestUtil.createPool(owner, product);
         pool.addAttribute(new PoolAttribute("virt_limit", "10"));
         pool.setId("fakeid" + TestUtil.randomInt());

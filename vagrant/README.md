@@ -12,7 +12,8 @@ The vagrant test setup performs the following actions:
 
 ## Prerequisits
 Running the Candlepin Vagrant deployer needs an up to date version of Vagrant 
-and Ansible. 
+and Ansible. If the vagrant-hostmanager pluign is installed then the hostname
+for the development candlepin box will automatically be added to your hosts file. 
 
 The NFS service requires +x attribute on all parent directories in order to mount 
 the source directory. If you are running into problems with the NFS mount this would 

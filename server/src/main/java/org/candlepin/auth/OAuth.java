@@ -151,15 +151,15 @@ public class OAuth implements AuthProvider {
         I18n i18n = i18nProvider.get();
         try {
             OAuthAccessor accessor = accessors.get(msg.getConsumerKey());
+
             if (accessor == null) {
-                throw new NotAuthorizedException(
-                    i18n.tr("Invalid OAuth unit or secret"));
+                throw new NotAuthorizedException(i18n.tr("Invalid OAuth unit or secret"));
             }
+
             return accessor;
         }
         catch (IOException e) {
-            throw new IseException(i18n.tr("Error getting OAuth unit key",
-                e));
+            throw new IseException(i18n.tr("Error getting OAuth unit key", e));
         }
 
     }
@@ -179,8 +179,7 @@ public class OAuth implements AuthProvider {
                 String secret = oauthConfig.getString(key);
                 log.debug(String.format("Creating consumer '%s'", consumerName));
 
-                OAuthConsumer consumer = new OAuthConsumer("", consumerName,
-                    secret, null);
+                OAuthConsumer consumer = new OAuthConsumer("", consumerName, secret, null);
                 OAuthAccessor accessor = new OAuthAccessor(consumer);
                 accessors.put(consumerName, accessor);
             }
