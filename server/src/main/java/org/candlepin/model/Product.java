@@ -20,7 +20,6 @@ import org.candlepin.model.dto.ProductData;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.Util;
 
-import org.hibernate.LazyInitializationException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
@@ -1192,6 +1191,20 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
     @Override
     public int hashCode() {
+        HashCodeBuilder builder = new HashCodeBuilder(7, 17)
+            .append(this.id);
+
+        return builder.toHashCode();
+    }
+
+    /**
+     * Calculates and returns a version hash for this entity. This method operates much like the
+     * hashCode method, except that it is more accurate and should have fewer collisions.
+     *
+     * @return
+     *  a version hash for this entity
+     */
+    public int getEntityVersion() {
         // This must always be a subset of equals
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
             .append(this.id)
@@ -1199,46 +1212,40 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             .append(this.multiplier)
             .append(this.locked);
 
+        // We need to be certain that the hash code is calculated in a way that's order
+        // independent and not subject to Hibernate's poor hashCode implementation on proxy
+        // collections. This calculation follows that defined by the Set.hashCode method.
+        int accumulator = 0;
+
+        if (this.attributes.size() > 0) {
+            for (ProductAttribute attrib : this.attributes) {
+                accumulator += (attrib != null ? attrib.getEntityVersion() : 0);
+            }
+
+            builder.append(accumulator);
+        }
+
         // Impl note:
-        // Because we handle the collections specially in .equals, we have to do the same special
-        // treatment here to ensure our output doesn't give us wonky results when compared to the
-        // output of .equals
-        for (ProductAttribute attrib : this.attributes) {
-            builder.append(attrib);
-        }
-
-        try {
-            // Impl note:
-            // Stepping through the collections here is as painful as it looks, but Hibernate, once
-            // again, doesn't implement .hashCode reliably on the proxy collections. So, we have to
-            // manually step through these and add the elements to ensure the hash code is
-            // generated properly.
-            if (this.dependentProductIds.size() > 0) {
-                for (String pid : this.dependentProductIds) {
-                    builder.append(pid);
-                }
+        // Stepping through the collections here is as painful as it looks, but Hibernate, once
+        // again, doesn't implement .hashCode reliably on the proxy collections. So, we have to
+        // manually step through these and add the elements to ensure the hash code is
+        // generated properly.
+        if (!this.dependentProductIds.isEmpty()) {
+            accumulator = 0;
+            for (String pid : this.dependentProductIds) {
+                accumulator += (pid != null ? pid.hashCode() : 0);
             }
 
-            if (this.productContent.size() > 0) {
-                for (ProductContent pc : this.productContent) {
-                    builder.append(pc);
-                }
-            }
+            builder.append(accumulator);
         }
-        catch (LazyInitializationException e) {
-            // One of the above collections (likely the first) has not been initialized and we're
-            // not able to fetch them. We still need a hashCode, and the caller is likely to run
-            // into this exception in the very near future, but we still need to generate
-            // something here. We'll treat it as if they were empty (and not added).
 
-            // This typically only occurs when we're initially pulling the entity down from a normal
-            // lookup. Hibernate stores the entity in a hashmap, which triggers a call to this
-            // method before Hibernate has fully hydrated it and before it's assigned it to an
-            // entity manager or session. As such, as soon as we try to use one of the above
-            // collections, things explode.
+        if (!this.productContent.isEmpty()) {
+            accumulator = 0;
+            for (ProductContent pc : this.productContent) {
+                accumulator += (pc != null ? pc.getEntityVersion() : 0);
+            }
 
-            // Note that this only applies to lazy collections, so the product attributes are safe
-            // to check for now.
+            builder.append(accumulator);
         }
 
         return builder.toHashCode();
@@ -1322,7 +1329,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @PrePersist
     @PreUpdate
     public void updateEntityVersion() {
-        this.entityVersion = this.hashCode();
+        this.entityVersion = this.getEntityVersion();
     }
 
 }

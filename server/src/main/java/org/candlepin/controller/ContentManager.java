@@ -149,7 +149,7 @@ public class ContentManager {
 
         // Check if we have an alternate version we can use instead.
         List<Content> alternateVersions = this.contentCurator
-            .getContentByVersion(entity.getId(), entity.hashCode())
+            .getContentByVersion(entity.getId(), entity.getEntityVersion())
             .list();
 
         log.debug("Checking {} alternate content versions", alternateVersions.size());
@@ -229,7 +229,7 @@ public class ContentManager {
         Content updated = this.applyContentChanges((Content) entity.clone(), update, owner);
 
         List<Content> alternateVersions = this.contentCurator
-            .getContentByVersion(update.getId(), updated.hashCode())
+            .getContentByVersion(update.getId(), updated.getEntityVersion())
             .list();
 
         log.debug("Checking {} alternate content versions", alternateVersions.size());

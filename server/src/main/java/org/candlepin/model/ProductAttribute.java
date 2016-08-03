@@ -163,6 +163,17 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
     }
 
     /**
+     * Calculates and returns a version hash for this entity. This method operates much like the
+     * hashCode method, except that it is more accurate and should have fewer collisions.
+     *
+     * @return
+     *  a version hash for this entity
+     */
+    public int getEntityVersion() {
+        return this.hashCode();
+    }
+
+    /**
      * Determines whether or not this entity would be changed if the given DTO were applied to this
      * object.
      *
