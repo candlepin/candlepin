@@ -16,6 +16,7 @@ package org.candlepin.resource;
 
 import static org.junit.Assert.assertEquals;
 
+import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.config.CandlepinCommonTestConfig;
 
 import org.junit.Before;
@@ -31,6 +32,7 @@ import javax.ws.rs.Path;
  */
 public class RootResourceTest {
 
+    @SuppressSwaggerCheck
     @Path("/foo")
     public class FooResource {
 

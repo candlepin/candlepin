@@ -21,6 +21,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.SSLAuth;
 import org.candlepin.auth.Verify;
 import org.candlepin.auth.permissions.PermissionFactory;
+import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -227,6 +228,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
      * FakeResource simply to create a Method object to pass down into
      * the interceptor.
      */
+    @SuppressSwaggerCheck
     @Path("fake")
     public static class FakeResource {
         @POST

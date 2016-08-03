@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2016 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,14 +12,12 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.util.apicrawl;
+package org.candlepin.common.util;
 
-public class Placeholder {
-    private Placeholder() {
-    }
 
-    public static void main(String[] args) {
-        System.out.println("This class is a placeholder to keep Buildr " +
-            "from failing which it would if there were no tests at all.");
-    }
+/**
+ * Annotation used with REST resource on which we wish to skip Swagger Checkstyle check.
+ */
+public @interface SuppressSwaggerCheck {
+
 }

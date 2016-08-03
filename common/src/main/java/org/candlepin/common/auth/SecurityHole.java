@@ -32,14 +32,14 @@ import javax.ws.rs.NameBinding;
 @NameBinding
 public @interface SecurityHole {
     /**
-     * Set to true if the method does not require an identity (e.g.
+     * @return true if the method does not require an identity (e.g.
      * a ConsumerPrincipal) but the engine should at least try to establish
      * a principal.
      */
     boolean noAuth() default false;
 
     /**
-     * Set to true if the method does not require an identity (e.g.
+     * @return true if the method does not require an identity (e.g.
      * a ConsumerPrincipal) and the engine should not bother creating a
      * real principal.
      */
