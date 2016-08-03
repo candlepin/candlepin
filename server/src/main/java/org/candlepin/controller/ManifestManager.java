@@ -241,7 +241,7 @@ public class ManifestManager {
     @Transactional
     public void writeStoredExportToResponse(String exportId, String exportedConsumerUuid,
         HttpServletResponse response) throws ManifestFileServiceException, NotFoundException,
-            BadRequestException, IseException {
+        BadRequestException, IseException {
         Consumer exportedConsumer = consumerCurator.verifyAndLookupConsumer(exportedConsumerUuid);
 
         // In order to stream the results from the DB to the client
