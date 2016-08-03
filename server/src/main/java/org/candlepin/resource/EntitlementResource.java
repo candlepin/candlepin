@@ -22,6 +22,7 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.paging.Paginate;
+import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Cdn;
@@ -379,6 +380,7 @@ public class EntitlementResource {
      *
      * CdnInfo represents a container for subscription entitlement and cdn
      */
+    @SuppressSwaggerCheck
     public static class CdnInfo implements Serializable {
         private static final long serialVersionUID = 523637879312970984L;
 

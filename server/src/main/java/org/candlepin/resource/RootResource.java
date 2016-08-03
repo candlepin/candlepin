@@ -39,6 +39,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.swagger.annotations.ApiOperation;
 
 /**
  * A root resource, responsible for returning client a struct of links to the
@@ -90,14 +91,15 @@ public class RootResource {
     }
 
     protected List<Link> createLinks() {
-        // Hidden resources will be omitted from the supported list we send to the clients:
-        List<String> hideResources = Arrays.asList(config.getString(
-            ConfigProperties.HIDDEN_RESOURCES).split(" "));
+        // Hidden resources will be omitted from the supported list we send to
+        // the clients:
+        List<String> hideResources = Arrays.asList(
+            config.getString(ConfigProperties.HIDDEN_RESOURCES).split(" "));
 
         List<Link> newLinks = new LinkedList<Link>();
         for (Map.Entry<Object, String> entry : RESOURCE_CLASSES.entrySet()) {
-            add(resourceLink(entry.getKey(), entry.getValue()),
-                hideResources, newLinks);
+            add(resourceLink(entry.getKey(), entry.getValue()), hideResources,
+                newLinks);
         }
         return newLinks;
     }
@@ -140,7 +142,8 @@ public class RootResource {
         return classLink(rel, (Class) resource);
     }
 
-    private void add(Link link, List<String> hideResources, List<Link> newLinks) {
+    private void add(Link link, List<String> hideResources,
+        List<Link> newLinks) {
         String rel = link.getRel();
         if (!hideResources.contains(rel)) {
             newLinks.add(link);
@@ -150,6 +153,8 @@ public class RootResource {
         }
     }
 
+    @ApiOperation(notes = "Retrieves a list of links corresponding to Root resources",
+        value = "getRootResources")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole(noAuth = true, anon = true)

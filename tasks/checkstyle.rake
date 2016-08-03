@@ -26,7 +26,7 @@ module AntTaskCheckstyle
     attr_reader :project
 
     def dependencies
-      Buildr.transitive('com.puppycrawl.tools:checkstyle:jar:6.9')
+      Buildr.transitive('com.puppycrawl.tools:checkstyle:jar:7.0')
     end
 
     def execute(*args)
@@ -159,7 +159,7 @@ module AntTaskCheckstyle
     # and project.test.compile.dependencies by default.  We don't need all that
     # stuff on the classpath because we aren't even compiling the project.
     def extra_dependencies
-      @extra_dependencies || []
+      @extra_dependencies ||= []
     end
 
     attr_writer :properties

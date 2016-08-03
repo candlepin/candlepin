@@ -30,13 +30,10 @@ import io.swagger.models.auth.BasicAuthDefinition;
  * in this package.
  *
  * @author fnguyen
- *
  */
-@SwaggerDefinition(
-    info = @Info(description = "Candlepin is subscription management" +
+@SwaggerDefinition(info = @Info(description = "Candlepin is subscription management" +
     " server written in Java. It helps with management " +
-    "of software subscriptions.", title = "Candlepin", version = "")
-    )
+    "of software subscriptions.", title = "Candlepin", version = ""))
 public class CandlepinSwaggerConfig implements ReaderListener {
 
     public static final String BASIC_AUTH = "basic";
@@ -47,9 +44,11 @@ public class CandlepinSwaggerConfig implements ReaderListener {
 
     @Override
     public void afterScan(Reader reader, Swagger swagger) {
-        swagger.setExternalDocs(new ExternalDocs("Project website: ", "http://candlepinproject.org/"));
+        swagger.setExternalDocs(new ExternalDocs("Project website: ",
+            "http://candlepinproject.org/"));
         BasicAuthDefinition basic = new BasicAuthDefinition();
-        basic.setDescription("Candlepin requires HTTP Basic authentication of an owner");
+        basic.setDescription(
+            "Candlepin requires HTTP Basic authentication of an owner");
         swagger.addSecurityDefinition(BASIC_AUTH, basic);
         SecurityRequirement req = new SecurityRequirement();
         req.setRequirements(BASIC_AUTH, new ArrayList<String>());
