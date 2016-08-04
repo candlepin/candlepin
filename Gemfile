@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
 gem 'buildr', '1.4.24'
-# Not a typo - we use both buildr and buildr
+# Not a typo - we use both buildr and builder
 gem 'builder'
 gem 'rspec', '~> 3.0'
 gem 'mime-types', '~> 1.25.0'
@@ -12,7 +12,7 @@ gem 'pmd'
 gem 'stringex'
 gem 'digest-murmurhash'
 gem 'httpclient'
-gem 'activesupport'
+gem 'activesupport', '~> 4.2'
 
 # Remove this once we are fully using the new Ruby bindings
 gem 'rest-client', '~> 1.6.0'
