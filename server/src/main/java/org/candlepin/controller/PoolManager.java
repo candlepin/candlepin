@@ -155,6 +155,8 @@ public interface PoolManager {
 
     Pool setPoolQuantity(Pool pool, long set);
 
+    void regenerateDirtyEntitlements(Consumer consumer);
+
     void regenerateDirtyEntitlements(Iterable<Entitlement> entitlements);
 
     Entitlement adjustEntitlementQuantity(Consumer consumer, Entitlement entitlement,
