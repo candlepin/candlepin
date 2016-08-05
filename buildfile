@@ -96,13 +96,14 @@ HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0'
              'org.hibernate.common:hibernate-commons-annotations:jar:4.0.1.Final',
              'org.hibernate:hibernate-tools:jar:3.2.4.GA',
              'org.hibernate:hibernate-validator:jar:4.3.1.Final',
+             ANTLR,
              'asm:asm:jar:3.0',
              'cglib:cglib:jar:2.2',
              'javassist:javassist:jar:3.12.0.GA',
              'org.freemarker:freemarker:jar:2.3.15',
              'c3p0:c3p0:jar:0.9.1.2',
              'dom4j:dom4j:jar:1.6.1',
-             'org.jboss.logging:jboss-logging:jar:3.1.1.GA'] + JAVAX + ANTLR
+             'org.jboss.logging:jboss-logging:jar:3.1.1.GA'] + JAVAX
 
 POSTGRESQL = 'postgresql:postgresql:jar:9.0-801.jdbc4'
 
@@ -274,7 +275,6 @@ define "candlepin" do
       JACKSON,
       JAVAX,
       OAUTH,
-      CHECKSTYLE,
     ]
 
     compile.with(compile_classpath)
