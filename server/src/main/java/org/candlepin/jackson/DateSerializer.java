@@ -36,8 +36,7 @@ public class DateSerializer extends JsonSerializer<Date> {
     public static final SimpleDateFormat ISO_8601_WITHOUT_MILLISECONDS;
 
     static {
-        ISO_8601_WITHOUT_MILLISECONDS = new SimpleDateFormat(
-            "yyyy-MM-dd'T'HH:mm:ssZ");
+        ISO_8601_WITHOUT_MILLISECONDS = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
         ISO_8601_WITHOUT_MILLISECONDS.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
