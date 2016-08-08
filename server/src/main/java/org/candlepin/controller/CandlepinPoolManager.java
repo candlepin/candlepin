@@ -1926,11 +1926,18 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
+    public void regenerateDirtyEntitlements(Consumer consumer) {
+        this.regenerateDirtyEntitlements(this.entitlementCurator.listDirty(consumer));
+    }
+
+    @Override
     public void regenerateDirtyEntitlements(Iterable<Entitlement> entitlements) {
-        for (Entitlement entitlement : entitlements) {
-            if (entitlement.isDirty()) {
-                log.info("Found dirty entitlement to regenerate: {}", entitlement);
-                this.ecGenerator.regenerateCertificatesOf(entitlement, false, false);
+        if (entitlements != null) {
+            for (Entitlement entitlement : entitlements) {
+                if (entitlement.isDirty()) {
+                    log.info("Found dirty entitlement to regenerate: {}", entitlement);
+                    this.ecGenerator.regenerateCertificatesOf(entitlement, false, false);
+                }
             }
         }
     }
