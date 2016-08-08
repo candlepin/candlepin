@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="20160803113238-1" author="fnguyen">
+    <comment>Former smallint type was causing problems on some PostgreSql versions</comment>
+    <modifyDataType 
+      tableName="cp2_products"
+      columnName="locked" 
+      newDataType="int" 
+      />
+ 
+     <modifyDataType 
+      tableName="cp2_content"
+      columnName="locked" 
+      newDataType="int" 
+      />
+       
+  </changeSet>
+</databaseChangeLog>
