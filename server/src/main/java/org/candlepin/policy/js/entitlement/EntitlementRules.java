@@ -72,7 +72,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     @Override
     public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
         Integer quantity, CallerType caller) {
-        return preEntitlement(consumer, getHost(consumer), entitlementPool, quantity, caller);
+        return preEntitlement(consumer, consumerCurator.getHost(consumer), entitlementPool, quantity, caller);
     }
 
     public ValidationResult preEntitlement(Consumer consumer, Consumer host,
@@ -86,7 +86,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     public Map<String, ValidationResult> preEntitlement(Consumer consumer,
         Collection<PoolQuantity> entitlementPoolQuantities,
         CallerType caller) {
-        return preEntitlement(consumer, getHost(consumer), entitlementPoolQuantities, caller);
+        return preEntitlement(consumer, consumerCurator.getHost(consumer), entitlementPoolQuantities, caller);
     }
 
     @Override
@@ -126,7 +126,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     public List<Pool> filterPools(Consumer consumer, List<Pool> pools, boolean showAll) {
         JsonJsContext args = new JsonJsContext(objectMapper);
         args.put("consumer", consumer);
-        args.put("hostConsumer", getHost(consumer));
+        args.put("hostConsumer", consumerCurator.getHost(consumer));
         args.put("consumerEntitlements", consumer.getEntitlements());
         args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
         args.put("pools", pools);
@@ -163,12 +163,6 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
             }
         }
         return filteredPools;
-    }
-
-    private Consumer getHost(Consumer consumer) {
-        Consumer host = consumer.hasFact("virt.uuid") ? consumerCurator.getHost(
-            consumer.getFact("virt.uuid"), consumer.getOwner()) : null;
-        return host;
     }
 
     private void finishValidation(ValidationResult result, Pool pool, Integer quantity) {

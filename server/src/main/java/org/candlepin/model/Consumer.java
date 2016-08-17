@@ -221,6 +221,13 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Column(name = "annotations", length = 4194304)
     private String annotations;
 
+    @Transient
+    private boolean hasHost = true;
+
+    @Transient
+    private Consumer host;
+
+
     public Consumer(String name, String userName, Owner owner, ConsumerType type) {
         this();
 
@@ -748,5 +755,23 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public boolean isDev() {
         return !StringUtils.isEmpty(getFact("dev_sku"));
+    }
+
+    @XmlTransient
+    public Consumer getHost() {
+        return this.host;
+    }
+
+    public void setHost(Consumer host) {
+        this.host = host;
+    }
+
+    @XmlTransient
+    public boolean hasHost() {
+        return this.hasHost;
+    }
+
+    public void setHasHost(boolean hasHost) {
+        this.hasHost = hasHost;
     }
 }

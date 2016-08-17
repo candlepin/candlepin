@@ -133,7 +133,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         consumer.setFact("virt.is_guest", "true");
         consumer.setFact("virt.uuid", "GUESTUUID");
         consumerCurator.update(consumer);
-        assertEquals(host.getUuid(), consumerCurator.getHost("GUESTUUID", owner).getUuid());
+        assertEquals(host.getUuid(), consumerCurator.getHost(consumer).getUuid());
         results = poolCurator.listAvailableEntitlementPools(consumer, null,
             (Collection<String>) null, null, false);
 

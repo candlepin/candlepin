@@ -189,11 +189,10 @@ public class Entitler {
         // Dev consumers should not need to worry about the host or unmapped guest
         // entitlements based on the planned design of the subscriptions
         if (consumer.hasFact("virt.uuid") && !consumer.isDev()) {
-            String guestUuid = consumer.getFact("virt.uuid");
             // Remove any expired unmapped guest entitlements
             revokeUnmappedGuestEntitlements(consumer);
 
-            Consumer host = consumerCurator.getHost(guestUuid, consumer.getOwner());
+            Consumer host = consumerCurator.getHost(consumer);
             if (host != null && (force || host.isAutoheal())) {
                 log.info("Attempting to heal host machine with UUID \"{}\" for guest with UUID \"{}\"",
                     host.getUuid(), consumer.getUuid());

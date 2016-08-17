@@ -487,6 +487,21 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return toReturn;
     }
 
+    public Consumer getHost(Consumer consumer) {
+        if (!consumer.hasFact("virt.uuid")) { return null; }
+        Consumer host = consumer.getHost();
+        if (host == null && consumer.hasHost()) {
+            host = getHost(consumer.getFact("virt.uuid"), consumer.getOwner());
+            if (host == null) {
+                consumer.setHasHost(false);
+            }
+            else {
+                consumer.setHost(host);
+            }
+        }
+        return host;
+    }
+
     /**
      * Get host consumer for a guest system id.
      *
