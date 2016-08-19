@@ -231,6 +231,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      * @return
      *  a reference to the updated product
      */
+    @Transactional
     public Product updateOwnerProductReferences(Product current, Product updated, Collection<Owner> owners) {
         // Impl note:
         // We're doing this in straight SQL because direct use of the ORM would require querying all
@@ -337,6 +338,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      * @param owners
      *  A collection of owners for which to apply the reference changes
      */
+    @Transactional
     public void removeOwnerProductReferences(Product entity, Collection<Owner> owners) {
         // Impl note:
         // We're doing this in straight SQL because direct use of the ORM would require querying all

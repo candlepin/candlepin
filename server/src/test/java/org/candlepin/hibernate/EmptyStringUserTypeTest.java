@@ -17,7 +17,6 @@ package org.candlepin.hibernate;
 import static org.junit.Assert.*;
 
 import org.hibernate.annotations.Type;
-import org.hibernate.ejb.Ejb3Configuration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,6 +28,7 @@ import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
+import javax.persistence.Persistence;
 import javax.persistence.Table;
 
 /**
@@ -40,7 +40,7 @@ public class EmptyStringUserTypeTest {
 
     @Entity
     @Table(name = "Thing")
-    static class Thing {
+    public static class Thing {
         @Id
         private int id;
 
@@ -79,24 +79,11 @@ public class EmptyStringUserTypeTest {
     @Before
     public void setUp() throws Exception {
         Properties props = new Properties();
-        props.put("javax.persistence.provider", "org.hibernate.ejb.HibernatePersistence");
-        props.put("javax.persistence.transactionType", "RESOURCE_LOCAL");
-        props.put("hibernate.dialect", "org.hibernate.dialect.HSQLDialect");
-        props.put("hibernate.connection.driver_class", "org.hsqldb.jdbcDriver");
-        props.put("hibernate.connection.url",
-            "jdbc:hsqldb:mem:unit-testing-jpa;sql.enforce_strict_size=true");
-        props.put("hibernate.hbm2ddl.auto", "create-drop");
-        props.put("hibernate.connection.username", "sa");
-        props.put("hibernate.connection.password", "");
-        props.put("hibernate.show_sql", "false");
+
         props.put("hibernate.ejb.interceptor",
             "org.candlepin.hibernate.EmptyStringInterceptor");
 
-        Ejb3Configuration cfg = new Ejb3Configuration();
-        cfg.addAnnotatedClass(Thing.class);
-        cfg.addProperties(props);
-
-        emf = cfg.buildEntityManagerFactory();
+        emf =  Persistence.createEntityManagerFactory("testingUserType");
         em = emf.createEntityManager();
     }
 
