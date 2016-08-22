@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.7
+Version: 0.9.54.8
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,13 @@ fi
 
 #raw
 %changelog
+* Mon Aug 22 2016 Vritant Jain <vrjain@redhat.com> 0.9.54.8-1
+- 1366798: Clean up all ueber cert data on DB upgrade (mstead@redhat.com)
+- Sleep in spec test to allow mysql to catch up (mstead@redhat.com)
+- 1358742: UniqueTag cannot be cast to Function (nguyen.filip@gmail.com)
+- 1354633: Cleanup stray ueber objects (mstead@redhat.com)
+- 1338950: prevent successful concurrent imports (vrjain@redhat.com)
+
 * Mon Jun 13 2016 Vritant Jain <vrjain@redhat.com> 0.9.54.7-1
 - 1344402: Unique product content violation (nguyen.filip@gmail.com)
 - 1343753: logrotate permission denied error (vrjain@redhat.com)
