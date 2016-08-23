@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.51.19
+Version: 0.9.51.20
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -218,6 +218,10 @@ fi
 
 #raw
 %changelog
+* Tue Aug 23 2016 Vritant Jain <vrjain@redhat.com> 0.9.51.20-1
+- 1358742: UniqueTag cannot be cast to Function (nguyen.filip@gmail.com)
+- 1335287: Allow manifest exports to be extended (mstead@redhat.com)
+
 * Wed Jun 01 2016 Alex Wood <awood@redhat.com> 0.9.51.19-1
 - 1337906: Stack derived pool cleanup (nguyen.filip@gmail.com)
 
