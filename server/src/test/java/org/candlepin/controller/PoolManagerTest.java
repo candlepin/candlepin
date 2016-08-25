@@ -82,6 +82,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
@@ -184,6 +185,31 @@ public class PoolManagerTest {
                 return (Consumer) args[0];
             }
         });
+    }
+
+    @Test
+    public void doesntMergeDeletedPools() {
+        reset(mockPoolCurator);
+
+        Map<String, EventBuilder> poolEvents = new HashMap<String, EventBuilder>();
+        List<PoolUpdate> updatedPools = new ArrayList<PoolUpdate>();
+        Pool deletedPool = Mockito.mock(Pool.class);
+        Pool normalPool = Mockito.mock(Pool.class);
+        when(mockPoolCurator.exists(deletedPool)).thenReturn(false);
+        when(mockPoolCurator.exists(normalPool)).thenReturn(true);
+
+        PoolUpdate deletedPu = Mockito.mock(PoolUpdate.class);
+        PoolUpdate normalPu = Mockito.mock(PoolUpdate.class);
+        when(deletedPu.getPool()).thenReturn(deletedPool);
+        when(normalPu.getPool()).thenReturn(normalPool);
+
+        updatedPools.add(deletedPu);
+        updatedPools.add(normalPu);
+
+        manager.processPoolUpdates(poolEvents, updatedPools);
+
+        verify(mockPoolCurator, never()).merge(deletedPool);
+        verify(mockPoolCurator, times(1)).merge(normalPool);
     }
 
     @Test
