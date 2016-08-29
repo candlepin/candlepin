@@ -26,6 +26,8 @@ import org.candlepin.util.Util;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
+import static org.mockito.Mockito.*;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -324,6 +326,60 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Consumer guestHost = consumerCurator.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
         assertTrue(host1Guest.getUpdated().after(host2Guest.getUpdated()));
         assertEquals(host1.getUuid(), guestHost.getUuid());
+    }
+
+    @Test
+    public void getHostOnceFromDb() {
+        ConsumerCurator spy = Mockito.spy(consumerCurator);
+        Consumer host = new Consumer("hostConsumer", "testUser", owner, ct);
+        consumerCurator.create(host);
+
+        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
+        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        consumerCurator.create(gConsumer1);
+
+        host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
+        consumerCurator.update(host);
+
+        Consumer guestHost = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
+        assertEquals(host, guestHost);
+        guestHost = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
+        assertEquals(host, guestHost);
+        guestHost = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
+        assertEquals(host, guestHost);
+        verify(spy, times(1)).currentSession();
+    }
+
+    @Test
+    public void getCorrectHostFromCache() {
+        ConsumerCurator spy = Mockito.spy(consumerCurator);
+        Consumer hostA = new Consumer("hostConsumer", "testUser", owner, ct);
+        consumerCurator.create(hostA);
+        Consumer hostB = new Consumer("hostConsumer", "testUser", owner, ct);
+        consumerCurator.create(hostB);
+
+        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
+        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        consumerCurator.create(gConsumer1);
+
+        Consumer gConsumer2 = new Consumer("guestConsumer2", "testUser", owner, ct);
+        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba9");
+        consumerCurator.create(gConsumer2);
+
+        hostA.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
+        consumerCurator.update(hostA);
+        hostB.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA9"));
+        consumerCurator.update(hostB);
+
+        Consumer guestHostA = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
+        Consumer guestHostB = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba9", owner);
+        assertEquals(hostA, guestHostA);
+        assertEquals(hostB, guestHostB);
+        guestHostA = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
+        assertEquals(hostA, guestHostA);
+        guestHostB = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba9", owner);
+        assertEquals(hostB, guestHostB);
+        verify(spy, times(2)).currentSession();
     }
 
     @Test
