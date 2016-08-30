@@ -2,25 +2,26 @@
 The vagrant test setup performs the following actions:
 * Deploy a Centos 7 vm
 * NFS mount your local source directory into the VM
-* Configure Tomcat remote debugging 
+* Configure Tomcat remote debugging
 * Install Postgres and configure the candlepin user
   without an external messaging broker).
 * Compile & install Candlepin
 * Forward Ports to your local system for debugging
   * Tomcat remote debug on port 8000
   * REST access for Candlepin on port 8080 and 8443
+* Optionally, setup yourkit profiler to enable profiling of the vm
 
-## Prerequisits
-Running the Candlepin Vagrant deployer needs an up to date version of Vagrant 
+## Prerequisites
+Running the Candlepin Vagrant deployer needs an up to date version of Vagrant
 and Ansible. If the vagrant-hostmanager pluign is installed then the hostname
-for the development candlepin box will automatically be added to your hosts file. 
+for the development candlepin box will automatically be added to your hosts file.
 
-The NFS service requires +x attribute on all parent directories in order to mount 
-the source directory. If you are running into problems with the NFS mount this would 
+The NFS service requires +x attribute on all parent directories in order to mount
+the source directory. If you are running into problems with the NFS mount this would
 be the first thing to check.  
 
-If you have other services running on ports 8000, 8080, or 8443 they will either have 
-to be stopped or you will have to edit the Vagrantfile and choose different ports. 
+If you have other services running on ports 8000, 8080, or 8443 they will either have
+to be stopped or you will have to edit the Vagrantfile and choose different ports.
 
 ## Getting Started
 1. From the root directory of your Candlepin checkout run `vagrant up`
@@ -38,3 +39,21 @@ to be stopped or you will have to edit the Vagrantfile and choose different port
 1. `cd /vagrant`
 1. `buildr clean test=no package`
 1. `./server/bin/deploy`
+
+## Use of environment variables
+Any environment variables set starting with 'CANDLEPIN_' will be  passed to
+the ansible playbook as their name less the prefix of 'CANDLEPIN_'.
+As an example, if you have set 'CANDLEPIN_TEST=2' then a variable named 'test'
+will be passed to ansible with value '2'. These vars are used to modify the
+behavior of our ansible playbooks.
+
+NOTE TO DEVS: If you'd like to add any optional behavior to the ansible
+playbooks, add something like 'when: my_cool_var is defined' to the optional
+tasks that are dependant on the existance of the variable 'my_cool_var'.
+
+## Profiling the vagrant machine using YourKit
+1. `export CANDLEPIN_SETUP_YOURKIT=True`
+1. `export CANDLEPIN_YOURKIT_LIBRARY=/path/to/libyjpagent.so`
+1. Optionally specify the port to connect to the profiling agent by setting the `CANDLEPIN_YOURKIT_AGENT_PORT`.
+   The default port is 35675.
+1. Run `vagrant up`
