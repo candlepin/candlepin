@@ -14,7 +14,16 @@
  */
 package org.candlepin.cache;
 
+import org.candlepin.model.Status;
+
 import com.google.inject.Injector;
+
+import java.util.concurrent.TimeUnit;
+
+import javax.cache.CacheManager;
+import javax.cache.configuration.MutableConfiguration;
+import javax.cache.expiry.CreatedExpiryPolicy;
+import javax.cache.expiry.Duration;
 
 /**
  * Configuration of caches in candlepin. This is configuration according to JCache API.
@@ -24,7 +33,17 @@ import com.google.inject.Injector;
  *
  */
 public class CacheContextListener {
+    public static final String CACHE_STATUS = "statuscache";
+
 
     public void contextInitialized(Injector injector) {
+        CacheManager cacheManager = injector.getInstance(CacheManager.class);
+
+        MutableConfiguration<String, Status> config = new MutableConfiguration<String, Status>();
+        config.setExpiryPolicyFactory(CreatedExpiryPolicy.factoryOf(new Duration(TimeUnit.SECONDS, 5)));
+        config.setTypes(String.class, Status.class);
+        config.setStoreByValue(false);
+
+        cacheManager.createCache(CACHE_STATUS, config);
     }
 }

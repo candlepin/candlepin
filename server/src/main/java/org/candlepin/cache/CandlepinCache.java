@@ -14,8 +14,11 @@
  */
 package org.candlepin.cache;
 
+import org.candlepin.model.Status;
+
 import com.google.inject.Inject;
 
+import javax.cache.Cache;
 import javax.cache.CacheManager;
 
 /**
@@ -25,9 +28,20 @@ import javax.cache.CacheManager;
  */
 public class CandlepinCache {
     private CacheManager cacheManager;
+    public static final String STATUS_KEY = "status";
 
     @Inject
     public CandlepinCache(CacheManager cacheManager) {
         this.cacheManager = cacheManager;
+    }
+
+    /**
+     * Retrieves Candlepin Status cache. This cache will be used only to cache
+     * status resource responses using single key STATUS_KEY
+     *
+     * @return Cache for Status entity
+     */
+    public Cache<String, Status> getStatusCache() {
+        return cacheManager.getCache(CacheContextListener.CACHE_STATUS, String.class, Status.class);
     }
 }
