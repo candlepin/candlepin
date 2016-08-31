@@ -18,13 +18,15 @@ import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.Util;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -32,6 +34,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.Cacheable;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -58,6 +61,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp2_content")
+@Cacheable(true)
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Content extends AbstractHibernateObject implements SharedEntity, Cloneable {
 
     public static final  String UEBER_CONTENT_NAME = "ueber_content";
@@ -121,6 +126,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @CollectionTable(name = "cp2_content_modified_products", joinColumns = @JoinColumn(name = "content_uuid"))
     @Column(name = "element")
     @Size(max = 255)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<String> modifiedProductIds;
 
     @Column(nullable = true)
