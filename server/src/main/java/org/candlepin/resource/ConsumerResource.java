@@ -553,8 +553,10 @@ public class ConsumerResource {
         else {
             // update
             if (update.getCapabilities() != null) {
-                change = update.getCapabilities().equals(existing.getCapabilities());
-                existing.setCapabilities(update.getCapabilities());
+                if (!update.getCapabilities().equals(existing.getCapabilities())) {
+                    existing.setCapabilities(update.getCapabilities());
+                    change = true;
+                }
             }
             else if (update.getFact("distributor_version") !=  null) {
                 DistributorVersion dv = distributorVersionCurator.findByName(
@@ -572,7 +574,10 @@ public class ConsumerResource {
             }
         }
         if (change) {
-            log.info("Capabilities changed.");
+            log.debug("Capabilities changed.");
+        }
+        else {
+            log.debug("Capability list either null or does not contain changes.");
         }
         return change;
     }
