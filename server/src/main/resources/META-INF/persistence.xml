@@ -4,7 +4,7 @@
     version="2.0">
 
     <persistence-unit name="default" transaction-type="RESOURCE_LOCAL">
-        <provider>org.hibernate.ejb.HibernatePersistence</provider>
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         <validation-mode>NONE</validation-mode>
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
@@ -28,7 +28,7 @@
 
     <!--  testing persistence uses an in-memory hsqldb. -->
     <persistence-unit name="testing" transaction-type="RESOURCE_LOCAL">
-        <provider>org.hibernate.ejb.HibernatePersistence</provider>
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         <validation-mode>NONE</validation-mode>
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/>
@@ -42,4 +42,37 @@
         </properties>
     </persistence-unit>
 
+    <!--  testing persistence unit for user types -->
+    <persistence-unit name="testingUserType" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <class>org.candlepin.hibernate.EmptyStringUserTypeTest$Thing</class>
+         <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <validation-mode>NONE</validation-mode>
+        <properties>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/>
+            <property name="hibernate.connection.driver_class" value="org.hsqldb.jdbcDriver"/>
+            <property name="hibernate.connection.url" value="jdbc:hsqldb:mem:unit-testing-jpa;sql.enforce_strict_size=true;shutdown=true;"/>
+            <property name="hibernate.connection.username" value="sa"/>
+            <property name="hibernate.connection.password" value=""/>
+            <property name="hibernate.hbm2ddl.auto" value="create-drop" />
+            <property name="hibernate.show_sql" value="false" />
+            <property name="hibernate.ejb.interceptor" value="org.candlepin.hibernate.EmptyStringInterceptor"/>
+        </properties>
+    </persistence-unit>
+
+    <persistence-unit name="testingEmptyStringInterceptor" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <class>org.candlepin.hibernate.EmptyStringInterceptorTest$Person</class>
+         <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <validation-mode>NONE</validation-mode>
+        <properties>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/>
+            <property name="hibernate.connection.driver_class" value="org.hsqldb.jdbcDriver"/>
+            <property name="hibernate.connection.url" value="jdbc:hsqldb:mem:unit-testing-jpa;sql.enforce_strict_size=true;shutdown=true;"/>
+            <property name="hibernate.connection.username" value="sa"/>
+            <property name="hibernate.connection.password" value=""/>
+            <property name="hibernate.hbm2ddl.auto" value="create-drop" />
+            <property name="hibernate.show_sql" value="false" />
+        </properties>
+    </persistence-unit>
 </persistence>

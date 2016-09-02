@@ -646,9 +646,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public Set<String> retrieveServiceLevelsForOwner(Owner owner, boolean exempt) {
         String stmt = "SELECT DISTINCT attribute.name, attribute.value, product.id " +
             "FROM Pool AS pool " +
-            "  INNER JOIN Pool.product AS product " +
-            "  INNER JOIN Product.attributes AS attribute " +
-            "  LEFT JOIN Pool.entitlements AS entitlement " +
+            "  INNER JOIN pool.product AS product " +
+            "  INNER JOIN product.attributes AS attribute " +
+            "  LEFT JOIN pool.entitlements AS entitlement " +
             "WHERE pool.owner.id = :owner_id " +
             "  AND (attribute.name = 'support_level' OR attribute.name = 'support_level_exempt') " +
             "  AND (pool.endDate >= current_date() OR entitlement.endDateOverride >= current_date()) " +
