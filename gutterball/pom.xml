@@ -43,6 +43,11 @@
     <org.hibernate-hibernate-tools.version>3.2.4.GA</org.hibernate-hibernate-tools.version>
     <org.hibernate-hibernate-validator.version>4.3.1.Final</org.hibernate-hibernate-validator.version>
     <antlr-antlr.version>2.7.7</antlr-antlr.version>
+    <org.hibernate-hibernate-ehcache.version>5.1.1.Final</org.hibernate-hibernate-ehcache.version>
+    <net.sf.ehcache-ehcache.version>2.10.1</net.sf.ehcache-ehcache.version>
+    <org.ehcache-jcache.version>1.0.0</org.ehcache-jcache.version>
+    <javax.cache-cache-api.version>1.0.0</javax.cache-cache-api.version>
+    <net.sf.ehcache-management-ehcache-v2.version>2.10.1</net.sf.ehcache-management-ehcache-v2.version>
     <asm-asm.version>3.0</asm-asm.version>
     <cglib-cglib.version>2.2</cglib-cglib.version>
     <org.javassist-javassist.version>3.20.0-GA</org.javassist-javassist.version>
@@ -389,6 +394,61 @@
       <groupId>antlr</groupId>
       <artifactId>antlr</artifactId>
       <version>${antlr-antlr.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-ehcache</artifactId>
+      <version>${org.hibernate-hibernate-ehcache.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>net.sf.ehcache</groupId>
+      <artifactId>ehcache</artifactId>
+      <version>${net.sf.ehcache-ehcache.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.ehcache</groupId>
+      <artifactId>jcache</artifactId>
+      <version>${org.ehcache-jcache.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>javax.cache</groupId>
+      <artifactId>cache-api</artifactId>
+      <version>${javax.cache-cache-api.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>net.sf.ehcache</groupId>
+      <artifactId>management-ehcache-v2</artifactId>
+      <version>${net.sf.ehcache-management-ehcache-v2.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>

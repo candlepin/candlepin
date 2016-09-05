@@ -90,6 +90,11 @@ JAVAX = ['org.hibernate.javax.persistence:hibernate-jpa-2.1-api:jar:1.0.0.Final'
          'javax.transaction:jta:jar:1.1']
 ANTLR = ['antlr:antlr:jar:2.7.7']
 
+EHCACHE = ['org.hibernate:hibernate-ehcache:jar:5.1.1.Final', 
+           'net.sf.ehcache:ehcache:jar:2.10.1', 
+           'org.ehcache:jcache:jar:1.0.0', 'javax.cache:cache-api:jar:1.0.0',
+           'net.sf.ehcache:management-ehcache-v2:jar:2.10.1']
+
 HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0',
                    :under => 'org.hibernate',
                    :version => '5.1.1.Final'),
@@ -97,6 +102,7 @@ HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0'
              'org.hibernate:hibernate-tools:jar:3.2.4.GA',
              'org.hibernate:hibernate-validator:jar:4.3.1.Final',
              ANTLR,
+             EHCACHE,
              'asm:asm:jar:3.0',
              'cglib:cglib:jar:2.2',
              'org.javassist:javassist:jar:3.20.0-GA',

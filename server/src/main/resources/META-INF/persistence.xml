@@ -19,6 +19,10 @@
             <property name="hibernate.c3p0.min_size" value="5" />
             <property name="hibernate.c3p0.max_size" value="20" />
             <property name="hibernate.c3p0.timeout" value="300" />
+            <property name="hibernate.cache.use_second_level_cache" value="true" />
+            <property name="hibernate.cache.use_query_cache" value="true" />
+            <property name="hibernate.cache.region.factory_class" value="org.hibernate.cache.ehcache.EhCacheRegionFactory" />
+            <property name="net.sf.ehcache.configurationResourceName" value="ehcache.xml" />
             <!-- test period in seconds -->
             <property name="hibernate.c3p0.idle_test_period" value="300" />
             <!-- max_statements should always be 0 -->
