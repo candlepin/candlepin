@@ -19,6 +19,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
 import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.auth.Principal;
+import org.candlepin.cache.JCacheManagerProvider;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationPrefixes;
 import org.candlepin.common.exceptions.mappers.BadRequestExceptionMapper;
@@ -146,6 +147,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.Properties;
 
+import javax.cache.CacheManager;
 import javax.inject.Provider;
 import javax.validation.MessageInterpolator;
 import javax.validation.Validation;
@@ -273,6 +275,7 @@ public class CandlepinModule extends AbstractModule {
             configureAmqp();
         }
 
+        bind(CacheManager.class).toProvider(JCacheManagerProvider.class).in(Singleton.class);
     }
 
     @Provides @Named("ValidationProperties")
