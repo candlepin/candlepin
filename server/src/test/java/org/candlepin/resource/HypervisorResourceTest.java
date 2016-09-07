@@ -427,4 +427,24 @@ public class HypervisorResourceTest {
         List<GuestId> gids = created.get(0).getGuestIds();
         assertEquals(0, gids.size());
     }
+
+    @Test
+    public void ensureFailureWhenAutobindIsDisabledOnOwner() {
+        Owner owner = new Owner("test_admin");
+        owner.setAutobindDisabled(true);
+
+        Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
+        hostGuestMap.put("HYPERVISOR_A", new ArrayList());
+        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+
+        try {
+            hypervisorResource.hypervisorCheckIn(
+                    hostGuestMap, principal, owner.getKey(), true);
+            fail("Exception should have been thrown since autobind was disabled for the owner.");
+        }
+        catch (BadRequestException bre) {
+            assertEquals("Could not update host/guest mapping. Autobind is disabled for owner test_admin.",
+                bre.getMessage());
+        }
+    }
 }

@@ -14,8 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -141,6 +140,19 @@ public class OwnerTest extends DatabaseTestFixture {
         }
 
 
+    }
+
+    @Test
+    public void testAutobindDisabledUtilityMethod() {
+        Owner o = createOwner();
+        o.setAutobindDisabled(true);
+        assertTrue(o.autobindDisabled());
+
+        o.setAutobindDisabled(false);
+        assertFalse(o.autobindDisabled());
+
+        o.setAutobindDisabled(null);
+        assertFalse(o.autobindDisabled());
     }
 
     interface MixIn {

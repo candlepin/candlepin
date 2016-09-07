@@ -148,7 +148,8 @@ public class Entitler {
     }
 
     public List<Entitlement> bindByProducts(String[] productIds,
-        String consumeruuid, Date entitleDate, Collection<String> fromPools) {
+        String consumeruuid, Date entitleDate, Collection<String> fromPools)
+        throws AutobindDisabledForOwnerException {
         Consumer c = consumerCurator.findByUuid(consumeruuid);
         AutobindData data = AutobindData.create(c).on(entitleDate)
                 .forProducts(productIds).withPools(fromPools);
@@ -162,8 +163,10 @@ public class Entitler {
      *
      * @param data AutobindData encapsulating data required for an autobind request
      * @return List of Entitlements
+     * @throws AutobindDisabledForOwnerException when an autobind attempt is made and the owner
+     *         has it disabled.
      */
-    public List<Entitlement> bindByProducts(AutobindData data) {
+    public List<Entitlement> bindByProducts(AutobindData data) throws AutobindDisabledForOwnerException {
         return bindByProducts(data, false);
     }
 
@@ -174,9 +177,20 @@ public class Entitler {
      * @param data AutobindData encapsulating data required for an autobind request
      * @param force heal host even if it has autoheal disabled
      * @return List of Entitlements
+     * @throws AutobindDisabledForOwnerException when an autobind attempt is made and the owner
+     *         has it disabled.
      */
-    public List<Entitlement> bindByProducts(AutobindData data, boolean force) {
+    public List<Entitlement> bindByProducts(AutobindData data, boolean force)
+        throws AutobindDisabledForOwnerException {
         Consumer consumer = data.getConsumer();
+        Owner owner = consumer.getOwner();
+
+        if (!consumer.isDev() && owner.autobindDisabled()) {
+            String errorMsg = String.format("AutoBind is disabled for owner '%s'.", owner.getKey());
+            log.info("Skipping autobind for consumer '{}'. {}", consumer, errorMsg);
+            throw new AutobindDisabledForOwnerException(errorMsg);
+        }
+
         // If the consumer is a guest, and has a host, try to heal the host first
         // Dev consumers should not need to worry about the host or unmapped guest
         // entitlements based on the planned design of the subscriptions

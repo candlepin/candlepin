@@ -891,8 +891,7 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}")
     @Transactional
-    public Owner updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key,
-        Owner owner) {
+    public Owner updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key, Owner owner) {
         Owner toUpdate = findOwner(key);
         EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.OWNER, Type.MODIFIED)
                 .setOldEntity(toUpdate);
@@ -917,6 +916,11 @@ public class OwnerResource {
                 serviceLevelValidator.validate(toUpdate, owner.getDefaultServiceLevel());
                 toUpdate.setDefaultServiceLevel(owner.getDefaultServiceLevel());
             }
+        }
+
+        // Update the autobindDisabled field if the incoming value is null.
+        if (owner.getAutobindDisabled() != null) {
+            toUpdate.setAutobindDisabled(owner.getAutobindDisabled());
         }
 
         ownerCurator.merge(toUpdate);

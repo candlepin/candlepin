@@ -295,4 +295,19 @@ describe 'Hypervisor Resource', :type => :virt do
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     return consumer_client
   end
+
+  it 'should raise bad request exception if owner has autobind disabled' do
+    # Create a new owner and disable autobind.
+    owner = create_owner random_string('test_owner1')
+    owner['autobindDisabled'] = true
+    @cp.update_owner(owner['key'], owner)
+
+    # Attempt to check in.
+    user = user_client(owner, random_string("test-user"))
+    virtwho = create_virtwho_client(user)
+    host_guest_mapping = get_host_guest_mapping(random_string('my-host'), ['g1', 'g2'])
+    lambda do
+      virtwho.hypervisor_check_in(owner['key'], host_guest_mapping)
+    end.should raise_exception(RestClient::BadRequest)
+  end
 end

@@ -38,6 +38,7 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.paging.Paginate;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.CdnCurator;
@@ -445,15 +446,13 @@ public class ConsumerResource {
                 throw new BadRequestException(i18n.tr(
                         "System name cannot contain most special characters."));
             }
-
             verifyPersonConsumer(consumer, type, owner, userName, principal);
         }
 
-        if (type.isType(ConsumerTypeEnum.SYSTEM) &&
-            !isConsumerSystemNameValid(consumer.getName())) {
-
+        if (type.isType(ConsumerTypeEnum.SYSTEM) && !isConsumerSystemNameValid(consumer.getName())) {
             throw new BadRequestException(i18n.tr("System name cannot contain most special characters."));
         }
+
         consumer.setOwner(owner);
         consumer.setType(type);
         consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
@@ -511,6 +510,11 @@ public class ConsumerResource {
         catch (CandlepinException ce) {
             // If it is one of ours, rethrow it.
             throw ce;
+        }
+        catch (AutobindDisabledForOwnerException e) {
+            throw new BadRequestException(i18n.tr(
+                "Could not register unit with key enabling autobind. Autobind is disabled for owner ''{0}''.",
+                    consumer.getOwner().getKey()));
         }
         catch (Exception e) {
             log.error("Problem creating unit:", e);
@@ -1094,7 +1098,8 @@ public class ConsumerResource {
      * Check if this consumer is a guest, and if it appears to have migrated.
      * We only check for existing entitlements, restricted to a host that does not match
      * the guest's current host, as determined by the most recent guest ID report in the
-     * db.
+     * db. If autobind has been disabled for the guest's owner, the host_restricted entitlements
+     * from the old host are still removed, but no auto-bind occurs.
      */
     protected void checkForGuestMigration(Consumer guest) {
         if (!"true".equalsIgnoreCase(guest.getFact("virt.is_guest"))) {
@@ -1145,8 +1150,15 @@ public class ConsumerResource {
                     !guest.getInstalledProducts().isEmpty();
             if (guest.isAutoheal() && !deletableGuestEntitlements.isEmpty() && hasInstalledProducts) {
                 AutobindData autobindData = AutobindData.create(guest).on(new Date());
-                List<Entitlement> ents = entitler.bindByProducts(autobindData);
-                entitler.sendEvents(ents);
+                // Autobind could be disabled for the owner. If it is, we simply don't
+                // perform the autobind for the guest.
+                try {
+                    List<Entitlement> ents = entitler.bindByProducts(autobindData);
+                    entitler.sendEvents(ents);
+                }
+                catch (AutobindDisabledForOwnerException e) {
+                    log.info("Guest autobind skipped. {}", e.getMessage());
+                }
             }
         }
     }
@@ -1468,9 +1480,15 @@ public class ConsumerResource {
             entitlements = entitler.bindByPool(poolIdString, consumer, quantity);
         }
         else {
-            AutobindData autobindData = AutobindData.create(consumer).on(entitleDate)
-                    .forProducts(productIds).withPools(fromPools);
-            entitlements = entitler.bindByProducts(autobindData);
+            try {
+                AutobindData autobindData = AutobindData.create(consumer).on(entitleDate)
+                        .forProducts(productIds).withPools(fromPools);
+                entitlements = entitler.bindByProducts(autobindData);
+            }
+            catch (AutobindDisabledForOwnerException e) {
+                throw new BadRequestException(i18n.tr("Autobind is not enabled for owner ''{0}''.",
+                    consumer.getOwner().getKey()));
+            }
         }
 
         // Trigger events:
@@ -1511,6 +1529,11 @@ public class ConsumerResource {
 
         // Verify consumer exists:
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+
+        if (consumer.getOwner().autobindDisabled()) {
+            throw new BadRequestException(i18n.tr("Autobind is not enabled for owner ''{0}''.",
+                consumer.getOwner().getKey()));
+        }
 
         List<PoolQuantity> dryRunPools = new ArrayList<PoolQuantity>();
 

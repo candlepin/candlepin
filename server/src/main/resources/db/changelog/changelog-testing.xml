@@ -2269,4 +2269,5 @@
     <include file="db/changelog/20160614113932-add-owner-and-type-constraint-export-metadata.xml"/>
     <include file="db/changelog/20160720104426-remove-bad-ueber-cert-data.xml"/>
     <include file="db/changelog/20160819090519-delete-all-ueber-cert-data.xml"/>
+    <include file="db/changelog/20160907121757-add-autobind-disabled-column-to-owner.xml"/>
 </databaseChangeLog>
