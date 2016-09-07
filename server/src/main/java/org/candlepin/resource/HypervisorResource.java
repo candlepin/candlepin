@@ -124,6 +124,13 @@ public class HypervisorResource {
         }
 
         Owner owner = this.getOwner(ownerKey);
+        if (owner.autobindDisabled()) {
+            log.debug("Could not update host/guest mapping. Autobind is disabled for owner {}",
+                owner.getKey());
+            throw new BadRequestException(
+                i18n.tr("Could not update host/guest mapping. Autobind is disabled for owner {0}.",
+                    owner.getKey()));
+        }
 
         if (hostGuestMap.remove("") != null) {
             log.warn("Ignoring empty hypervisor id");

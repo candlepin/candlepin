@@ -499,6 +499,48 @@ describe 'Owner Resource' do
     found.delete("candlepin").should_not be_nil
   end
 
+  it 'allows updating autobindDisabled on an owner' do
+    owner = create_owner random_string("test_owner2")
+    owner_key = owner['key']
+    owner['autobindDisabled'].should be_nil
+
+    # disable autobind
+    owner['autobindDisabled'] = true
+    @cp.update_owner(owner_key, owner)
+
+    owner = @cp.get_owner(owner_key)
+    owner['autobindDisabled'].should == true
+
+    # re-enable autobind
+    owner['autobindDisabled'] = false
+    @cp.update_owner(owner_key, owner)
+
+    owner = @cp.get_owner(owner_key)
+    owner['autobindDisabled'].should == false
+  end
+
+  it 'ignores autobindDisabled when not set on incoming owner' do
+    owner = create_owner random_string("test_owner2")
+    owner_key = owner['key']
+    owner['autobindDisabled'].should be_nil
+
+    # disable autobind
+    owner['autobindDisabled'] = true
+    @cp.update_owner(owner_key, owner)
+
+    owner = @cp.get_owner(owner_key)
+    owner['autobindDisabled'].should == true
+
+    # Attempt to update owner display name
+    # and expect no update to the autobindDiabled
+    # field.
+    owner['autobindDisabled'] = nil
+    @cp.update_owner(owner_key, owner)
+
+    owner = @cp.get_owner(owner_key)
+    owner['autobindDisabled'].should == true
+  end
+
 end
 
 describe 'Owner Resource Pool Filter Tests' do

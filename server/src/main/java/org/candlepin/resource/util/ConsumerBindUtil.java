@@ -16,6 +16,7 @@ package org.candlepin.resource.util;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverride;
@@ -73,7 +74,8 @@ public class ConsumerBindUtil {
         this.serviceLevelValidator = serviceLevelValidator;
     }
 
-    public void handleActivationKeys(Consumer consumer, List<ActivationKey> keys) {
+    public void handleActivationKeys(Consumer consumer, List<ActivationKey> keys)
+        throws AutobindDisabledForOwnerException {
         // Process activation keys.
 
         boolean listSuccess = false;
@@ -126,7 +128,8 @@ public class ConsumerBindUtil {
         return onePassed;
     }
 
-    private void handleActivationKeyAutoBind(Consumer consumer, ActivationKey key) {
+    private void handleActivationKeyAutoBind(Consumer consumer, ActivationKey key)
+        throws AutobindDisabledForOwnerException {
         try {
             Set<String> productIds = new HashSet<String>();
             List<String> poolIds = new ArrayList<String>();
