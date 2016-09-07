@@ -41,7 +41,7 @@
             <property name="hibernate.connection.username" value="sa"/>
             <property name="hibernate.connection.password" value=""/>
             <property name="hibernate.show_sql" value="false" />
-
+            <property name="hibernate.cache.use_second_level_cache" value="false" />
             <property name="hibernate.ejb.interceptor" value="org.candlepin.hibernate.EmptyStringInterceptor"/>
         </properties>
     </persistence-unit>
@@ -60,6 +60,7 @@
             <property name="hibernate.connection.password" value=""/>
             <property name="hibernate.hbm2ddl.auto" value="create-drop" />
             <property name="hibernate.show_sql" value="false" />
+            <property name="hibernate.cache.use_second_level_cache" value="false" />
             <property name="hibernate.ejb.interceptor" value="org.candlepin.hibernate.EmptyStringInterceptor"/>
         </properties>
     </persistence-unit>
@@ -77,6 +78,7 @@
             <property name="hibernate.connection.password" value=""/>
             <property name="hibernate.hbm2ddl.auto" value="create-drop" />
             <property name="hibernate.show_sql" value="false" />
+            <property name="hibernate.cache.use_second_level_cache" value="false" />
         </properties>
     </persistence-unit>
 </persistence>

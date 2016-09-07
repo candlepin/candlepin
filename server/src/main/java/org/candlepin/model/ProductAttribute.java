@@ -23,8 +23,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -46,6 +49,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = "cp2_product_attributes")
 @Embeddable
 @JsonFilter("ProductAttributeFilter")
+@Cacheable(true)
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class ProductAttribute extends AbstractHibernateObject implements Attribute {
 
     @Id
