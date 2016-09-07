@@ -14,9 +14,16 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import org.candlepin.cache.CandlepinCache;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
@@ -27,6 +34,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +48,8 @@ import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
 
+import javax.cache.Cache;
+
 
 /**
  * StatusResourceTest
@@ -49,12 +59,16 @@ public class StatusResourceTest {
     @Mock private RulesCurator rulesCurator;
     @Mock private Configuration config;
     @Mock private JsRunnerProvider jsProvider;
+    @Mock private CandlepinCache candlepinCache;
+    @Mock private Cache mockedStatusCache;
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         when(rulesCurator.listAll()).thenReturn(new ArrayList<Rules>());
         when(rulesCurator.getRules()).thenReturn(new Rules("// Version: 2.0\nBLAH"));
+        when(mockedStatusCache.get(Mockito.any())).thenReturn(null);
+        when(candlepinCache.getStatusCache()).thenReturn(mockedStatusCache);
     }
 
     @Test
@@ -63,7 +77,7 @@ public class StatusResourceTest {
             .getClassLoader().getResource("version.properties").toURI()));
         ps.println("version=${version}");
         ps.println("release=${release}");
-        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider);
+        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache);
         Status s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -77,7 +91,7 @@ public class StatusResourceTest {
         PrintStream ps = new PrintStream(new File(this.getClass()
             .getClassLoader().getResource("version.properties").toURI()));
         ps.println("foo");
-        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider);
+        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache);
         Status s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -93,7 +107,7 @@ public class StatusResourceTest {
         ps.println("version=${version}");
         ps.println("release=${release}");
         when(rulesCurator.getUpdatedFromDB()).thenThrow(new RuntimeException());
-        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider);
+        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache);
         Status s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -116,7 +130,7 @@ public class StatusResourceTest {
             .getClassLoader().getResource("version.properties").toURI()));
         ps.println("version=${version}");
         ps.println("release=${release}");
-        StatusResource sr = new StatusResource(rulesCurator, null, jsProvider);
+        StatusResource sr = new StatusResource(rulesCurator, null, jsProvider, candlepinCache);
         Status s = sr.status();
         ps.close();
 
