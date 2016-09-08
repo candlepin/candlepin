@@ -282,7 +282,7 @@ describe 'Refresh Pools' do
     # Modify product attributes:
     attrs = product['attributes']
     attrs << {:name => 'newattribute', :value => 'something'}
-    @cp.update_product(owner['key'], product.id, :attributes => attrs)
+    update_product(owner['key'], product.id, :attributes => attrs)
 
     # Reduce the subscription quantity:
     sub = get_hostedtest_subscription(pool.subscriptionId)
