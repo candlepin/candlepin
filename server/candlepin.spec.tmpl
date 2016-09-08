@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.16
+Version: 2.0.17
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,40 @@ fi
 
 #raw
 %changelog
+* Thu Sep 08 2016 Christopher Snyder <csnyder@redhat.com> 2.0.17-1
+- Cache host consumers on curator (wpoteat@redhat.com)
+- Caching StatusResource response (nguyen.filip@gmail.com)
+- 2LC for Content and Product (nguyen.filip@gmail.com)
+- Integrate EHCache as 2LC and JCache (nguyen.filip@gmail.com)
+- 1334755: Stack Trace on Identical Manifest (pjonasti@redhat.com)
+- Capability list change detection wrong (wpoteat@redhat.com)
+- Hibernate upgrade to 5.1.1 (nguyen.filip@gmail.com)
+- List service levels only from non-expired pools. (dsarman@redhat.com)
+- 1361537: Import manifest fail with excess entitlement
+  (nguyen.filip@gmail.com)
+- 1349946: Revert accidental reversion of #1290 (crog@redhat.com)
+- Fixup of #1307 PR (dsarman@redhat.com)
+- Oracle index name length (nguyen.filip@gmail.com)
+- 1362701: Reverted accidental truncation of compliance status message
+  (crog@redhat.com)
+- Display list of jobs in error message for schedule job (vrjain@redhat.com)
+- Added Checkstyle check for Swagger annotations. (dsarman@redhat.com)
+- run buildr pom (vrjain@redhat.com)
+- 1354633: Cleanup stray ueber objects (mstead@redhat.com)
+- Added rest end point to trigger jobs (vrjain@redhat.com)
+- Undo async compliance in batch bind (vrjain@redhat.com)
+- 1350455: Improve case insensitive search (nguyen.filip@gmail.com)
+- Added attribute constants for pool and product attributes (crog@redhat.com)
+- fix deletePools - delete derived pools (vrjain@redhat.com)
+- Refactored hashCode implementations in certain high-traffic entities
+  (crog@redhat.com)
+- 1357036: N+1 fix for Content.modifiedProductIds (nguyen.filip@gmail.com)
+- Dont trigger async compliance during batch revoke (vrjain@redhat.com)
+- 1349946: Fetch only the entitlements that are dirty to regen
+  (vrjain@redhat.com)
+- Review changes (nguyen.filip@gmail.com)
+- 1345766: Concurrent content promotion cause 400 (nguyen.filip@gmail.com)
+
 * Wed Jul 06 2016 Vritant Jain <vrjain@redhat.com> 2.0.16-1
 - Added utility constructors to some of the new DTOs (crog@redhat.com)
 * Thu Jun 30 2016 Vritant Jain <vrjain@redhat.com> 2.0.15-1
