@@ -44,7 +44,7 @@ describe 'Entitlement Certificate V1 Size' do
     (1..10).each do |i|
       content_ids << @content_list[i].id
     end
-    @cp.add_batch_content_to_product(@owner['key'], @product1.id, content_ids, true)
+    add_batch_content_to_product(@owner['key'], @product1.id, content_ids, true)
     @cp.regenerate_entitlement_certificates_for_product(@product1.id)
     ent2 = @system.get_entitlement(ent1.id)
     ent2.certificates[0].serial.id.should_not == ent1.certificates[0].serial.id
@@ -55,7 +55,7 @@ describe 'Entitlement Certificate V1 Size' do
     (11..200).each do |i|
       content_ids.push(@content_list[i].id)
     end
-    @cp.add_batch_content_to_product(@owner['key'], @product1.id, content_ids, true)
+    add_batch_content_to_product(@owner['key'], @product1.id, content_ids, true)
     @cp.regenerate_entitlement_certificates_for_product(@product1.id)
     ent3 = @system.get_entitlement(ent1.id)
     ent3.certificates[0].serial.id.should == ent2.certificates[0].serial.id
@@ -76,9 +76,9 @@ describe 'Entitlement Certificate V1 Size' do
     ent1 = @system.consume_product(@product1.id)[0]
     ent2 = @system.consume_product(@product2.id)[0]
     (1..200).each do |i|
-      @cp.add_content_to_product(@owner['key'], @product1.id, @content_list[i].id, true)
+      add_content_to_product(@owner['key'], @product1.id, @content_list[i].id, true)
     end
-    @cp.add_content_to_product(@owner['key'], @product2.id, @content_list[1].id, true)
+    add_content_to_product(@owner['key'], @product2.id, @content_list[1].id, true)
     @cp.regenerate_entitlement_certificates_for_product(@product1.id)
     @cp.regenerate_entitlement_certificates_for_product(@product2.id)
 

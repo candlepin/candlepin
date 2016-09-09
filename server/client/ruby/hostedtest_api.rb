@@ -104,6 +104,43 @@ module HostedTest
     end
   end
 
+  def add_batch_content_to_product(owner_key, product_id, content_ids, enabled=true)
+    if is_hosted?
+      data = {} 
+      content_ids.each do |id| 
+        data[id] = enabled
+      end      
+      @cp.post("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}/batch_content", data)
+    else
+      @cp.add_batch_content_to_product(owner_key, product_id, content_ids, true)
+    end
+  end
+
+  def add_content_to_product(owner_key, product_id, content_id, enabled=true) 
+    if is_hosted?
+      @cp.post("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}/content/#{content_id}?enabled=#{enabled}")
+    else
+      @cp.add_content_to_product(owner_key, product_id, content_id, true)
+    end
+  end
+
+  def update_product(owner_key, product_id, params={})
+    if is_hosted?
+      product = {
+        :id => product_id
+      } 
+      product[:name] = params[:name] if params[:name]
+      product[:multiplier] = params[:multiplier] if params[:multiplier]
+      product[:attributes] = params[:attributes] if params[:attributes]
+      product[:dependentProductIds] = params[:dependentProductIds] if params[:dependentProductIds]
+      product[:relies_on] = params[:relies_on] if params[:relies_on]
+
+      @cp.put("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}", product)
+    else
+      @cp.update_product(owner_key, product_id, params)
+    end
+  end
+
   # Lets users be agnostic of what mode we are in, standalone or hosted.
   # Always returns the main pool that was created ( unless running in hosted mode and refresh is skipped )
   def create_pool_and_subscription(owner_key, product_id, quantity=1,

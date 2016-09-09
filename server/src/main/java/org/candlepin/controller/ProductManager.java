@@ -511,6 +511,10 @@ public class ProductManager {
             entity.setDependentProductIds(update.getDependentProductIds());
         }
 
+        if (update.isLocked() != null) {
+            entity.setLocked(update.isLocked());
+        }
+
         return entity;
     }
 

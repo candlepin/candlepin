@@ -183,9 +183,9 @@ describe 'Entitlement Certificate V3' do
 
   it 'encoded the content urls' do
     @content_1 = create_content({:content_url => '/content/dist/rhel/$releasever/$basearch/debug',})
-    @cp.add_content_to_product(@owner['key'], @product.id, @content_1.id, true)
+    add_content_to_product(@owner['key'], @product.id, @content_1.id, true)
     @content_2 = create_content({:content_url => '/content/beta/rhel/$releasever/$basearch/source/SRPMS',})
-    @cp.add_content_to_product(@owner['key'], @product.id, @content_2.id, true)
+    add_content_to_product(@owner['key'], @product.id, @content_2.id, true)
     #refresh the subscription - product resolution will take care of adding the content automatically
     refresh_upstream_subscription(@pool)
     entitlement = @system.consume_product(@product.id)[0]
@@ -208,7 +208,7 @@ describe 'Entitlement Certificate V3' do
     number = 100
     number.times do |i|
       content = create_content({:content_url => "/content/dist/rhel/$releasever#{i}/$basearch#{i}/debug#{i}",})
-      @cp.add_content_to_product(@owner['key'], @product.id, content.id, true)
+      add_content_to_product(@owner['key'], @product.id, content.id, true)
     end
     #refresh the subscription - product resolution will take care of adding the content automatically
     refresh_upstream_subscription(@pool)
