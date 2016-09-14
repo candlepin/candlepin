@@ -157,10 +157,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         List<String> possibleGuestIds = Util.getPossibleUuids(uuid);
 
         String sql = "select cp_consumer.id from cp_consumer " +
-            "inner join cp_consumer_facts_lower " +
-            "on cp_consumer.id = cp_consumer_facts_lower.cp_consumer_id " +
-            "where cp_consumer_facts_lower.mapkey = 'virt.uuid' and " +
-            "cp_consumer_facts_lower.element in (:guestids) " +
+            "inner join cp_consumer_facts " +
+            "on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
+            "where cp_consumer_facts.mapkey = 'virt.uuid' and " +
+            "lower(cp_consumer_facts.element) in (:guestids) " +
             "and cp_consumer.owner_id = :ownerid " +
             "order by cp_consumer.updated desc";
 
@@ -201,10 +201,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         List<String> possibleGuestIds = Util.getPossibleUuids(guestIds.toArray(new String [guestIds.size()]));
 
         String sql = "select cp_consumer.uuid from cp_consumer " +
-            "inner join cp_consumer_facts_lower " +
-            "on cp_consumer.id = cp_consumer_facts_lower.cp_consumer_id " +
-            "where cp_consumer_facts_lower.mapkey = 'virt.uuid' and " +
-            "cp_consumer_facts_lower.element in (:guestids) " +
+            "inner join cp_consumer_facts " +
+            "on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
+            "where cp_consumer_facts.mapkey = 'virt.uuid' and " +
+            "lower(cp_consumer_facts.element) in (:guestids) " +
             "and cp_consumer.owner_id = :ownerid " +
             "order by cp_consumer.updated desc";
 
