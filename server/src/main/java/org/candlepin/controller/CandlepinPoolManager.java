@@ -346,13 +346,19 @@ public class CandlepinPoolManager implements PoolManager {
         return processPoolUpdates(poolEvents, updatedPools);
     }
 
-    private Set<String> processPoolUpdates(
+    protected Set<String> processPoolUpdates(
         Map<String, EventBuilder> poolEvents, List<PoolUpdate> updatedPools) {
         Set<String> entitlementsToRegen = Util.newSet();
+
         for (PoolUpdate updatedPool : updatedPools) {
 
             Pool existingPool = updatedPool.getPool();
             log.info("Pool changed: " + updatedPool.toString());
+
+            if (!poolCurator.exists(existingPool)) {
+                log.info("Pool has already been deleted from the database.");
+                continue;
+            }
 
             // Delete pools the rules signal needed to be cleaned up:
             if (existingPool.isMarkedForDelete()) {
