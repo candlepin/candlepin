@@ -25,6 +25,68 @@ describe 'Activation Keys' do
     @activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'))
     @activation_key['id'].should_not be_nil
   end
+ 
+  #SLA = Service Level Agreement
+  it 'should assign custom product without SLA set even when SLA is set on activation key' do
+    custom_product = create_product('testp1','testp1', {:custom => true})
+    sub_custom_product = @cp.create_subscription(@owner['key'], custom_product['id'], 30)
+
+    # creating in order to be able set SLA on activation key
+    premium_product = create_product('testp2', 'testp2', {:attributes => {:support_level => 'Premium'}})
+    sub_premium_product = @cp.create_subscription(@owner['key'], premium_product['id'], 30)
+    
+    @cp.refresh_pools(@owner['key'])
+   
+    act_key = @cp.create_activation_key(@owner['key'], 'test_token')
+    act_key['serviceLevel'] = 'Premium'
+    act_key['autoAttach']= "true"
+    act_key = @cp.update_activation_key(act_key)
+    @cp.add_prod_id_to_key(act_key['id'], custom_product['id'])
+
+    consumer = @cp.register('hostbyact2', :system, nil,  {}, nil, @owner['key'], ['test_token'], [])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    @cp.get_consumer(consumer['uuid'])['entitlementCount'].should == 1
+  end
+
+  it 'should assign premium product with SLA set when SLA is set on activation key' do
+    premium_product = create_product('testp2', 'testp2', {:attributes => {:support_level => 'Premium'}})
+    sub_premium_product = @cp.create_subscription(@owner['key'], premium_product['id'], 30)
+    @cp.refresh_pools(@owner['key'])
+
+    act_key = @cp.create_activation_key(@owner['key'], 'test_token')
+    act_key['serviceLevel'] = 'Premium'
+    act_key['autoAttach']= "true"
+    act_key = @cp.update_activation_key(act_key)
+    @cp.add_prod_id_to_key(act_key['id'], premium_product['id'])
+
+    consumer = @cp.register('hostbyact2', :system, nil,  {}, nil, @owner['key'], ['test_token'], [])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    @cp.get_consumer(consumer['uuid'])['entitlementCount'].should == 1
+  end 
+
+  it 'should assign product without SLA set and product with SLA set when SLA is set on activation key' do
+    custom_product = create_product('testp1','testp1', {:custom => true})
+    premium_product = create_product('testp2', 'testp2', {:attributes => {:support_level => 'Premium'}})
+
+    sub_custom_product = @cp.create_subscription(@owner['key'], custom_product['id'], 30)
+    sub_premium_product = @cp.create_subscription(@owner['key'], premium_product['id'], 30)
+
+    @cp.refresh_pools(@owner['key'])
+
+    act_key = @cp.create_activation_key(@owner['key'], 'test_token')
+    act_key['serviceLevel'] = 'Premium'
+    act_key['autoAttach']= "true"
+    act_key = @cp.update_activation_key(act_key)
+    @cp.add_prod_id_to_key(act_key['id'], custom_product['id'])
+    @cp.add_prod_id_to_key(act_key['id'], premium_product['id'])
+
+    consumer = @cp.register('hostbyact2', :system, nil,  {}, nil, @owner['key'], ['test_token'], [])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    @cp.get_consumer(consumer['uuid'])['entitlementCount'].should == 2
+  end
 
   it 'should allow owners to list existing activation keys' do
     keys = @cp.list_activation_keys()
