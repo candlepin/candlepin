@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.8
+Version: 0.9.54.9
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,13 @@ fi
 
 #raw
 %changelog
+* Thu Sep 22 2016 Vritant Jain <adarshvritant@gmail.com> 0.9.54.9-1
+- 1370508: Allow consumer with service level to autobind to pool without
+  (wpoteat@redhat.com)
+- 1357596: SASL ANONYMOUS mechanism (nguyen.filip@gmail.com)
+- 1361491: Import manifest fail with excess entitlement
+  (nguyen.filip@gmail.com)
+
 * Mon Aug 22 2016 Vritant Jain <vrjain@redhat.com> 0.9.54.8-1
 - 1366798: Clean up all ueber cert data on DB upgrade (mstead@redhat.com)
 - Sleep in spec test to allow mysql to catch up (mstead@redhat.com)
