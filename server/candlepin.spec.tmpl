@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.18
+Version: 2.0.19
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,11 @@ fi
 
 #raw
 %changelog
+* Thu Sep 22 2016 Vritant Jain <adarshvritant@gmail.com> 2.0.19-1
+- Revert of cp_consumer_facts_lower (nguyen.filip@gmail.com)
+- Role shouldn't be cached (nguyen.filip@gmail.com)
+- Create Pool bug (nguyen.filip@gmail.com)
+
 * Fri Sep 09 2016 Christopher Snyder <csnyder@redhat.com> 2.0.18-1
 - Fixing hosted tests (nguyen.filip@gmail.com)
 - Product.locked should be updated (nguyen.filip@gmail.com)
