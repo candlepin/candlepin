@@ -671,6 +671,24 @@ describe 'Consumer Resource' do
 
   end
 
+  it 'should not list service levels from expired pools' do
+    product = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'Expired'},
+                               :owner => @owner1['key']})
+    create_pool_and_subscription(@owner1['key'], product.id,
+                                 1, [], '', '', '', Date.today - 2, Date.today - 1)
+
+    user_cp = user_client(@owner1, random_string('billy'))
+    consumer = user_cp.register(random_string('system'), :system, nil,
+                                {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    consumer = @cp.get_consumer(consumer['uuid'])
+
+    service_levels = consumer_client.list_owner_service_levels(@owner1['key'])
+    service_levels.length.should eq(0)
+  end
+
   it 'should allow a consumer dry run an autosubscribe based on service level' do
     product1 = create_product(random_string('product'),
       random_string('product'),

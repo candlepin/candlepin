@@ -815,6 +815,34 @@ public class ConsumerResourceUpdateTest {
     }
 
     @Test
+    public void consumerChangeDetection() {
+        Consumer existing = getFakeConsumer();
+        Set<ConsumerCapability> caps1 = new HashSet<ConsumerCapability>();
+        Set<ConsumerCapability> caps2 = new HashSet<ConsumerCapability>();
+        ConsumerCapability cca = new ConsumerCapability(existing, "capability_a");
+        ConsumerCapability ccb = new ConsumerCapability(existing, "capability_b");
+        ConsumerCapability ccc = new ConsumerCapability(existing, "capability_c");
+        caps1.add(cca);
+        caps1.add(ccb);
+        caps1.add(ccc);
+        caps2.add(ccb);
+
+        existing.setCapabilities(caps1);
+
+        Consumer update = getFakeConsumer();
+        update.setCapabilities(caps1);
+        assertFalse(resource.performConsumerUpdates(update, existing, null));
+
+        update.setCapabilities(caps2);
+        assertTrue(resource.performConsumerUpdates(update, existing, null));
+
+        // need a new consumer here, can't null out capabilities
+        update = getFakeConsumer();
+        assertFalse(resource.performConsumerUpdates(update, existing, null));
+
+    }
+
+    @Test
     public void consumerLastCheckin() {
         Consumer c = getFakeConsumer();
         Date now = new Date();

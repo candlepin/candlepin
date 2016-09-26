@@ -52,7 +52,7 @@ public class RegenEntitlementCertsJobTest {
         Owner owner = new Owner(ownerId);
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(Arrays.asList(owner).iterator());
+        when(cqmock.list()).thenReturn(Arrays.asList(owner));
         when(oc.listAll()).thenReturn(cqmock);
 
         when(jdm.getString(eq(RegenProductEntitlementCertsJob.PROD_ID))).thenReturn(prodId);

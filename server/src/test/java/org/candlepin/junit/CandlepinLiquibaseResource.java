@@ -14,7 +14,13 @@
  */
 package org.candlepin.junit;
 
-import org.hibernate.ejb.Ejb3Configuration;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.util.Collections;
+
+import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
+import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
+//import org.hibernate.ejb.Ejb3Configuration;
 import org.junit.rules.ExternalResource;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -30,10 +36,6 @@ import liquibase.resource.ResourceAccessor;
 import liquibase.sql.visitor.SqlVisitor;
 import liquibase.statement.SqlStatement;
 import liquibase.statement.core.RawSqlStatement;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.util.Collections;
 
 /**
  * This Rule builds an HSQL Database based on the changelog file it is constructed with.
@@ -102,15 +104,15 @@ public class CandlepinLiquibaseResource extends ExternalResource {
         }
     }
 
-    @SuppressWarnings("deprecation")
+
     private String getJdbcUrl(String persistenceUnit) {
-        /* JPA basically makes it impossible to get configuration information out of persistence.xml
-         * and the only non-deprecated Hibernate class (Configuration) wants to use hibernate.cfg.xml
-         * so without resorting to XML parsing, this is about the best we can do.
-         */
-        Ejb3Configuration ejbConf = new Ejb3Configuration();
-        ejbConf.configure(persistenceUnit, Collections.EMPTY_MAP);
-        return (String) ejbConf.getProperties().get("hibernate.connection.url");
+        for (ParsedPersistenceXmlDescriptor unit :
+            PersistenceXmlParser.locatePersistenceUnits(Collections.emptyMap())) {
+            if (unit.getName().equals("testing")) {
+                return unit.getProperties().getProperty("hibernate.connection.url");
+            }
+        }
+        throw new RuntimeException("Couldn't locate persistence unit [testing] in your persistence.xml!");
     }
 
     @Override

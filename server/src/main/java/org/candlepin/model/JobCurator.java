@@ -24,6 +24,7 @@ import org.candlepin.pinsetter.core.model.JobStatus.TargetType;
 import org.candlepin.pinsetter.tasks.KingpinJob;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
 import org.hibernate.Query;
@@ -50,6 +51,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
         this.config = config;
     }
 
+    @Transactional
     public JobStatus cancel(String jobId) {
         this.cancelNoReturn(jobId);
         JobStatus result = this.find(jobId);
@@ -59,6 +61,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
         return result;
     }
 
+    @Transactional
     public void cancelNoReturn(String jobId) {
         String hql = "update JobStatus j " +
             "set j.state = :canceled " +

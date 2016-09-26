@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.cache.CandlepinCacheRegions;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.util.VersionUtil;
 import org.candlepin.util.Util;
@@ -107,6 +108,8 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
 
     public Date getUpdatedFromDB() {
         return (Date) this.currentSession().createCriteria(Rules.class)
+                .setCacheable(true)
+                .setCacheRegion(CandlepinCacheRegions.FIVE_SECONDS_QUERY_CACHE)
             .setProjection(Projections.projectionList()
                 .add(Projections.max("updated")))
                 .uniqueResult();

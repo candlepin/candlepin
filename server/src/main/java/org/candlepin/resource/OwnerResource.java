@@ -83,6 +83,7 @@ import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
+import org.candlepin.sync.ImportConflictException;
 import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.Meta;
@@ -1273,21 +1274,32 @@ public class OwnerResource {
             return recordImportSuccess(owner, data, overrides, filename);
         }
         catch (IOException e) {
+            log.error("Reading error during importing", e);
             recordImportFailure(owner, data, e, filename);
             throw new IseException(i18n.tr("Error reading export archive"), e);
         }
         // These come back with internationalized messages, so we can transfer:
         catch (SyncDataFormatException e) {
+            log.error("Format error of the data in a manifest", e);
             recordImportFailure(owner, data, e, filename);
             throw new BadRequestException(e.getMessage(), e);
         }
         catch (ImporterException e) {
+            log.error("Problem with archive", e);
             recordImportFailure(owner, data, e, filename);
             throw new IseException(e.getMessage(), e);
+        }
+        catch (ImportConflictException e) {
+            //This is a normal path of operation
+            //and does not require a stack trace in the error log.
+            log.debug("Importing same manifest again", e);
+            recordImportFailure(owner, data, e, filename);
+            throw e;
         }
         // Grab candlepin exceptions to record the error and then rethrow
         // to pass on the http return code
         catch (CandlepinException e) {
+            log.error("Recording import failure", e);
             recordImportFailure(owner, data, e, filename);
             throw e;
         }
@@ -1503,7 +1515,6 @@ public class OwnerResource {
         String filename) {
         ImportRecord record = new ImportRecord(owner);
         Meta meta = (Meta) data.get("meta");
-        log.error("Recording import failure", error);
         if (meta != null) {
             record.setGeneratedBy(meta.getPrincipalName());
             record.setGeneratedDate(meta.getCreated());

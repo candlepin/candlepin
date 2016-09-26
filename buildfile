@@ -85,25 +85,34 @@ SLF4J = 'org.slf4j:slf4j-api:jar:1.7.12'
 
 LOGGING = [LOGBACK, SLF4J_BRIDGES, SLF4J]
 
-JAVAX = ['org.hibernate.javax.persistence:hibernate-jpa-2.0-api:jar:1.0.1.Final',
+JAVAX = ['org.hibernate.javax.persistence:hibernate-jpa-2.1-api:jar:1.0.0.Final',
          'javax.validation:validation-api:jar:1.0.0.GA',
          'javax.transaction:jta:jar:1.1']
 ANTLR = ['antlr:antlr:jar:2.7.7']
 
+EHCACHE = ['org.hibernate:hibernate-ehcache:jar:5.1.1.Final', 
+           'net.sf.ehcache:ehcache:jar:2.10.1', 
+           'org.ehcache:jcache:jar:1.0.0', 'javax.cache:cache-api:jar:1.0.0',
+           'net.sf.ehcache:management-ehcache-v2:jar:2.10.1']
+
 HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0',
                    :under => 'org.hibernate',
-                   :version => '4.2.5.Final'),
-             'org.hibernate.common:hibernate-commons-annotations:jar:4.0.1.Final',
+                   :version => '5.1.1.Final'),
+             'org.hibernate.common:hibernate-commons-annotations:jar:5.0.1.Final',
              'org.hibernate:hibernate-tools:jar:3.2.4.GA',
              'org.hibernate:hibernate-validator:jar:4.3.1.Final',
              ANTLR,
+             EHCACHE,
              'asm:asm:jar:3.0',
              'cglib:cglib:jar:2.2',
-             'javassist:javassist:jar:3.12.0.GA',
+             'org.javassist:javassist:jar:3.20.0-GA',
+             'com.fasterxml:classmate:jar:1.3.0',
              'org.freemarker:freemarker:jar:2.3.15',
              'c3p0:c3p0:jar:0.9.1.2',
              'dom4j:dom4j:jar:1.6.1',
-             'org.jboss.logging:jboss-logging:jar:3.1.1.GA'] + JAVAX
+             'org.jboss:jandex:jar:2.0.0.Final',
+              'org.jboss.logging:jboss-logging:jar:3.3.0.Final'
+             ] + JAVAX
 
 POSTGRESQL = 'postgresql:postgresql:jar:9.0-801.jdbc4'
 

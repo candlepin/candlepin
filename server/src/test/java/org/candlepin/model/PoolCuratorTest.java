@@ -992,6 +992,61 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testListServiceLevelForOwnersWithExpiredPool() {
+        Product product1 = TestUtil.createProduct();
+        product1.addAttribute(new ProductAttribute("support_level", "expired"));
+        product1 = this.createProduct(product1, owner);
+
+        Product product2 = TestUtil.createProduct();
+        product2.addAttribute(new ProductAttribute("support_level", "fresh"));
+        product2 = this.createProduct(product2, owner);
+
+        int year = Calendar.getInstance().get(Calendar.YEAR);
+        Date pastDate = TestUtil.createDate(year - 2, 3, 2);
+        Date expiredDate = TestUtil.createDate(year - 1, 3, 2);
+        Date futureDate = TestUtil.createDate(year + 10, 3, 2);
+
+        Pool pool1 = createPool(owner, product1, 100L, pastDate, expiredDate);
+        poolCurator.create(pool1);
+        Pool pool2 = createPool(owner, product2, 100L, pastDate, futureDate);
+        poolCurator.create(pool2);
+
+        Set<String> levels = poolCurator.retrieveServiceLevelsForOwner(owner, false);
+        // list should only include levels from pools that are not expired
+        assertEquals(1, levels.size());
+    }
+
+    @Test
+    public void testListServiceLevelForOwnersWithExpiredPoolAndEndDateOverride() {
+        Product product1 = TestUtil.createProduct();
+        product1.addAttribute(new ProductAttribute("support_level", "expired"));
+        product1 = this.createProduct(product1, owner);
+
+        Product product2 = TestUtil.createProduct();
+        product2.addAttribute(new ProductAttribute("support_level", "fresh"));
+        product2 = this.createProduct(product2, owner);
+
+        int year = Calendar.getInstance().get(Calendar.YEAR);
+        Date pastDate = TestUtil.createDate(year - 2, 3, 2);
+        Date expiredDate = TestUtil.createDate(year - 1, 3, 2);
+        Date futureDate = TestUtil.createDate(year + 10, 3, 2);
+
+        Pool pool1 = createPool(owner, product1, 100L, pastDate, expiredDate);
+        poolCurator.create(pool1);
+        Pool pool2 = createPool(owner, product2, 100L, pastDate, futureDate);
+        poolCurator.create(pool2);
+
+        Entitlement e = new Entitlement(pool1, consumer, 1);
+        e.setEndDateOverride(futureDate);
+        entitlementCurator.create(e);
+
+        Set<String> levels = poolCurator.retrieveServiceLevelsForOwner(owner, false);
+        // list should only include levels from pools that are not expired
+        // (except when the pool has entitlement with valid endDateOverride)
+        assertEquals(2, levels.size());
+    }
+
+    @Test
     public void testExempt() {
         Product product1 = TestUtil.createProduct();
         product1.addAttribute(new ProductAttribute("support_level", "premium"));

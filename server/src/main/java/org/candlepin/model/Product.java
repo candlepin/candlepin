@@ -21,6 +21,8 @@ import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.Util;
 
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Fetch;
@@ -45,6 +47,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import javax.persistence.Cacheable;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -75,6 +78,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp2_products")
+@Cacheable(true)
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Product extends AbstractHibernateObject implements SharedEntity, Linkable, Cloneable {
     /**
      * Commonly used/recognized product attributes
@@ -176,6 +181,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @BatchSize(size = 32)
     @Cascade({ CascadeType.ALL })
     @Fetch(FetchMode.SUBSELECT)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private List<ProductAttribute> attributes;
 
     @ElementCollection
@@ -183,6 +189,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @CollectionTable(name = "cp2_product_content", joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private List<ProductContent> productContent;
 
     /*
@@ -196,6 +203,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @Column(name = "element")
     @BatchSize(size = 32)
     @LazyCollection(LazyCollectionOption.FALSE)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<String> dependentProductIds;
 
     @XmlTransient

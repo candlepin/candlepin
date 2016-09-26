@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 
 import java.util.Properties;
@@ -41,6 +42,6 @@ public class ValidationListenerProvider implements Provider<BeanValidationEventL
 
     @Override
     public BeanValidationEventListener get() {
-        return new BeanValidationEventListener(factory, properties);
+        return new BeanValidationEventListener(factory, properties, new ClassLoaderServiceImpl());
     }
 }

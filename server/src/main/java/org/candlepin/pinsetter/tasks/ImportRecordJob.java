@@ -57,7 +57,7 @@ public class ImportRecordJob extends KingpinJob {
     //        all databases.
     @Override
     public void toExecute(JobExecutionContext jec) throws JobExecutionException {
-        for (Owner owner : this.ownerCurator.listAll()) {
+        for (Owner owner : this.ownerCurator.listAll().list()) {
             List<ImportRecord> records = this.importRecordCurator.findRecords(owner);
 
             if (DEFAULT_KEEP < records.size()) {

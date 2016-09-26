@@ -1663,7 +1663,7 @@ module Candlepin
           prods = []
           v = [v] unless v.is_a?(Array)
           v.each do |p|
-            prods << { :id => p }
+            prods << { :productId => p }
           end
           body[camel_case(k)] = prods unless prods.empty?
         end

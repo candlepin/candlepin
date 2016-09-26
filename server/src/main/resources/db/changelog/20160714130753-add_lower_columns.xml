@@ -21,21 +21,8 @@
          </column>      
         </addColumn>
                
-        <createTable tableName="cp_consumer_facts_lower">
-             <column name="cp_consumer_id" type="VARCHAR(32)">
-                 <constraints nullable="false"/>
-             </column>
-             <column name="element" type="VARCHAR(255)"/>
-             <column name="mapkey" type="VARCHAR(255)">
-                 <constraints nullable="false"/>
-             </column>
-        </createTable>
-
-        <addPrimaryKey columnNames="cp_consumer_id, mapkey" constraintName="cp_consumer_facts_lower_pkey" tableName="cp_consumer_facts_lower"/>
-
         <sql>UPDATE cp_consumer_guests SET guest_id_lower = lower(guest_id)</sql>
         <sql>UPDATE cp_pool_attribute SET value_lower = lower(value)</sql>
-        <sql>INSERT INTO cp_consumer_facts_lower(cp_consumer_id, element, mapkey) SELECT cp_consumer_id, lower(element), mapkey FROM cp_consumer_facts</sql>
         
         <createIndex indexName="cp_cnsmr_guests_lower_idx" tableName="cp_consumer_guests" unique="false">
             <column name="guest_id_lower"/>
@@ -43,14 +30,6 @@
 
         <createIndex indexName="cp_pool_attr_lower_idx" tableName="cp_pool_attribute" unique="false">
             <column name="value_lower"/>
-        </createIndex>
-
-        <createIndex indexName="fact_lower_consumer_id_idx" tableName="cp_consumer_facts_lower" unique="false">
-            <column name="cp_consumer_id"/>
-        </createIndex>
-
-        <createIndex indexName="fact_lower_element_idx" tableName="cp_consumer_facts_lower" unique="false">
-            <column name="element"/>
         </createIndex>
     </changeSet>
 

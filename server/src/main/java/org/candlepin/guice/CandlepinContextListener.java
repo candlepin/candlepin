@@ -20,6 +20,7 @@ import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.HornetqContextListener;
+import org.candlepin.cache.CacheContextListener;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.EncryptedConfiguration;
@@ -39,21 +40,26 @@ import com.google.inject.Stage;
 import com.google.inject.util.Modules;
 
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
-import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.jboss.resteasy.plugins.guice.GuiceResteasyBootstrapServletContextListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18nManager;
 
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.management.ManagementService;
+
 import java.io.File;
+import java.lang.management.ManagementFactory;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
+import javax.management.MBeanServer;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -74,6 +80,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     public static final String CONFIGURATION_NAME = Configuration.class.getName();
 
     private HornetqContextListener hornetqListener;
+    private CacheContextListener cacheListener;
     private PinsetterContextListener pinsetterListener;
     private LoggerContextListener loggerListener;
 
@@ -132,9 +139,19 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         ResourceLocatorMap map = injector.getInstance(ResourceLocatorMap.class);
         map.init();
 
+
         if (config.getBoolean(HORNETQ_ENABLED)) {
             hornetqListener = injector.getInstance(HornetqContextListener.class);
             hornetqListener.contextInitialized(injector);
+        }
+
+        cacheListener = injector.getInstance(CacheContextListener.class);
+        cacheListener.contextInitialized(injector);
+
+        if (config.getBoolean(ConfigProperties.CACHE_JMX_STATS)) {
+            MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+            ManagementService.registerMBeans(CacheManager.getInstance(), mBeanServer,
+                true, true, true, true);
         }
 
         pinsetterListener = injector.getInstance(PinsetterContextListener.class);

@@ -17,6 +17,7 @@ package org.candlepin.model;
 import org.candlepin.util.Util;
 
 import com.google.common.collect.Iterables;
+import com.google.inject.persist.Transactional;
 
 import org.hibernate.Query;
 import org.hibernate.criterion.Conjunction;
@@ -77,6 +78,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
      *
      * @return the number of rows deleted.
      */
+    @Transactional
     public int deleteExpiredSerials() {
         // Some databases don't like to update based on a field that is being updated
         // So we must get expired ids, and then delete them

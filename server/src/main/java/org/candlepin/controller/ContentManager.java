@@ -266,7 +266,8 @@ public class ContentManager {
                             pcd.setContent(cdata);
 
                             // Impl note: This should also take care of our entitlement cert regeneration
-                            this.productManager.updateProduct(product, pdata, owner, regenerateEntitlementCerts);
+                            this.productManager.updateProduct(
+                                product, pdata, owner, regenerateEntitlementCerts);
                         }
                     }
                 }
