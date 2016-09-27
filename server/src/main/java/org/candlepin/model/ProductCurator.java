@@ -33,6 +33,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 
@@ -249,36 +250,60 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
     @SuppressWarnings("unchecked")
     public CandlepinQuery<Product> getProductsWithContent(Owner owner, Collection<String> contentIds) {
-        if (owner == null || contentIds == null || contentIds.isEmpty()) {
-            return this.cpQueryFactory.<Product>buildCandlepinQuery();
+        if (owner != null && contentIds != null && !contentIds.isEmpty()) {
+            // Impl note:
+            // We have to break this up into two queries for proper cursor and pagination support.
+            // Hibernate currently has two nasty "features" which break these in their own special
+            // way:
+            // - Distinct, when applied in any way outside of direct SQL, happens in Hibernate
+            //   *after* the results are pulled down, if and only if the results are fetched as a
+            //   list. The filtering does not happen when the results are fetched with a cursor.
+            // - Because result limiting (first+last result specifications) happens at the query
+            //   level and distinct filtering does not, cursor-based pagination breaks due to
+            //   potential results being removed after a page of results is fetched.
+            Criteria idCriteria = this.createSecureCriteria(OwnerProduct.class, null)
+                .createAlias("product", "product")
+                .createAlias("product.productContent", "pcontent")
+                .createAlias("pcontent.content", "content")
+                .createAlias("owner", "owner")
+                .add(Restrictions.eq("owner.id", owner.getId()))
+                .add(CPRestrictions.in("content.id", contentIds))
+                .setProjection(Projections.distinct(Projections.property("product.uuid")));
+
+            List<String> productUuids = idCriteria.list();
+
+            if (productUuids != null && !productUuids.isEmpty()) {
+                DetachedCriteria criteria = this.createSecureDetachedCriteria()
+                    .add(CPRestrictions.in("uuid", productUuids));
+
+                return this.cpQueryFactory.<Product>buildCandlepinQuery(this.currentSession(), criteria);
+            }
         }
 
-        DetachedCriteria criteria = this.createSecureDetachedCriteria(OwnerProduct.class, null)
-            .createAlias("product", "product")
-            .createAlias("product.productContent", "pcontent")
-            .createAlias("pcontent.content", "content")
-            .createAlias("owner", "owner")
-            .add(Restrictions.eq("owner.id", owner.getId()))
-            .add(Restrictions.in("content.id", contentIds))
-            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
-            .setProjection(Projections.property("product"));
-
-        return this.cpQueryFactory.<Product>buildDistinctCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Product>buildCandlepinQuery();
     }
 
     @SuppressWarnings("unchecked")
     public CandlepinQuery<Product> getProductsWithContent(Collection<String> contentUuids) {
-        if (contentUuids == null || contentUuids.isEmpty()) {
-            return new EmptyCandlepinQuery<Product>();
+        if (contentUuids != null && !contentUuids.isEmpty()) {
+            // See note above in getProductsWithContent for details on why we do two queries here
+            // instead of one.
+            Criteria idCriteria = this.createSecureCriteria()
+                .createAlias("productContent", "pcontent")
+                .createAlias("pcontent.content", "content")
+                .add(CPRestrictions.in("content.uuid", contentUuids))
+                .setProjection(Projections.distinct(Projections.id()));
+
+            List<String> productUuids = idCriteria.list();
+
+            if (productUuids != null && !productUuids.isEmpty()) {
+                DetachedCriteria criteria = this.createSecureDetachedCriteria()
+                    .add(CPRestrictions.in("uuid", productUuids));
+
+                return this.cpQueryFactory.<Product>buildCandlepinQuery(this.currentSession(), criteria);
+            }
         }
 
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .createAlias("productContent", "pcontent")
-            .createAlias("pcontent.content", "content")
-            .add(Restrictions.in("content.uuid", contentUuids))
-            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-            // .setProjection(Projections.id())
-
-        return this.cpQueryFactory.<Product>buildDistinctCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Product>buildCandlepinQuery();
     }
 }

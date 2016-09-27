@@ -49,6 +49,18 @@ public interface CandlepinQuery<T> extends Iterable<T> {
     CandlepinQuery<T> useSession(Session session);
 
     /**
+     * Sets the offset (first result) into a result set at which to begin fetching results.
+     *
+     * @param offset
+     *  The offset at which to begin fetching results when executing this query. Negative values
+     *  will clear any previously set offset.
+     *
+     * @return
+     *  this query instance
+     */
+    CandlepinQuery<T> setFirstResult(int offset);
+
+    /**
      * Sets the maximum results to be returned when executing this query.
      *
      * @param limit
@@ -63,8 +75,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
     // TODO:
     // Add some other utility/passthrough methods as a need arises:
     //  - setReadOnly
-    //  - setFirstResults
-    //  - setOrder
+    //  - add/setOrder (needs a column choice as well, if we don't use Hibernate's Order objects)
     //  - setFetchMode
     //  - setCacheMode/setCacheable
 

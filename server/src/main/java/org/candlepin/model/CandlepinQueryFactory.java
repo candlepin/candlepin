@@ -52,33 +52,6 @@ public class CandlepinQueryFactory {
         return new DetachedCandlepinQuery<T>(session, criteria);
     }
 
-    /**
-     * Builds a special CandlepinQuery for handling queries which return distinct entities, using
-     * the specified session and detached criteria.
-     *
-     * @deprecated
-     *  This method is intended to be a temporary workaround for a major shortcoming in Hibernate
-     *  which disregards the DISTINCT specification when working with entities and cursors. If a
-     *  proper, query-level workaround is found for every query using this method, it will be
-     *  removed.
-     *
-     * @param session
-     *  The session to use to build the CandlepinQuery
-     *
-     * @param criteria
-     *  The session to use to build the CandlepinQuery
-     *
-     * @return
-     *  a CandlepinQuery built from the given session and criteria
-     */
-    @Deprecated
-    public <T> CandlepinQuery<T> buildDistinctCandlepinQuery(Session session, DetachedCriteria criteria) {
-        return new DistinctCandlepinQuery<T>(session, criteria);
-    }
-
     // Add more implementations here as necessary
 
-
-
 }
-

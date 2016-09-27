@@ -20,7 +20,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ResultIterator;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.ProductContentData;
@@ -239,40 +238,33 @@ public class ContentManager {
                 log.debug("Merging content with existing version: {} => {}", updated, alt);
 
                 // Make sure every product using the old version/entity are updated to use the new one
-                ResultIterator<Product> affectedProducts = this.productCurator
+                List<Product> affectedProducts = this.productCurator
                     .getProductsWithContent(owner, Arrays.asList(updated.getId()))
-                    .iterate();
+                    .list();
 
-                try {
-                    List<Owner> owners = Arrays.asList(owner);
-                    updated = this.ownerContentCurator.updateOwnerContentReferences(updated, alt, owners);
+                List<Owner> owners = Arrays.asList(owner);
+                updated = this.ownerContentCurator.updateOwnerContentReferences(updated, alt, owners);
 
-                    // Impl note:
-                    // This block is a consequence of products and contents not being strongly related.
-                    log.debug("Updating affected products");
+                // Impl note:
+                // This block is a consequence of products and contents not being strongly related.
+                log.debug("Updating affected products");
 
-                    ContentData cdata = updated.toDTO();
+                ContentData cdata = updated.toDTO();
 
-                    while (affectedProducts.hasNext()) {
-                        Product product = affectedProducts.next();
-                        ProductData pdata = product.toDTO();
+                for (Product product : affectedProducts) {
+                    ProductData pdata = product.toDTO();
+                    log.debug("Updating affected product: {}", product);
 
-                        log.debug("Updating affected product: {}", product);
+                    // We're taking advantage of the mutable nature of our joining objects.
+                    // Probably not the best idea for long-term maintenance, but it works for now.
+                    ProductContentData pcd = pdata.getProductContent(updated.getId());
+                    if (pcd != null) {
+                        pcd.setContent(cdata);
 
-                        // We're taking advantage of the mutable nature of our joining objects.
-                        // Probably not the best idea for long-term maintenance, but it works for now.
-                        ProductContentData pcd = pdata.getProductContent(updated.getId());
-                        if (pcd != null) {
-                            pcd.setContent(cdata);
-
-                            // Impl note: This should also take care of our entitlement cert regeneration
-                            this.productManager.updateProduct(
-                                product, pdata, owner, regenerateEntitlementCerts);
-                        }
+                        // Impl note: This should also take care of our entitlement cert regeneration
+                        this.productManager.updateProduct(
+                            product, pdata, owner, regenerateEntitlementCerts);
                     }
-                }
-                finally {
-                    affectedProducts.close();
                 }
 
                 return updated;
@@ -306,40 +298,35 @@ public class ContentManager {
         updated.setUuid(null);
 
         // Get products that currently use this content...
-        ResultIterator<Product> affectedProducts = this.productCurator
+        List<Product> affectedProducts = this.productCurator
             .getProductsWithContent(owner, Arrays.asList(updated.getId()))
-            .iterate();
+            .list();
 
-        try {
-            updated = this.contentCurator.create(updated);
-            updated = this.ownerContentCurator.updateOwnerContentReferences(
-                entity, updated, Arrays.asList(owner)
-            );
+        updated = this.contentCurator.create(updated);
+        updated = this.ownerContentCurator.updateOwnerContentReferences(
+            entity, updated, Arrays.asList(owner)
+        );
 
-            // Impl note:
-            // This block is a consequence of products and contents not being strongly related.
-            log.debug("Updating affected products");
+        // Impl note:
+        // This block is a consequence of products and contents not being strongly related.
+        log.debug("Updating affected products");
 
-            ContentData cdata = updated.toDTO();
+        ContentData cdata = updated.toDTO();
 
-            while (affectedProducts.hasNext()) {
-                Product product = affectedProducts.next();
-                ProductData pdata = product.toDTO();
+        for (Product product : affectedProducts) {
+            ProductData pdata = product.toDTO();
 
-                log.debug("Updating affected product: {}", product);
+            log.debug("Updating affected product: {}", product);
 
-                ProductContentData pcd = pdata.getProductContent(updated.getId());
-                if (pcd != null) {
-                    pcd.setContent(cdata);
+            ProductContentData pcd = pdata.getProductContent(updated.getId());
+            if (pcd != null) {
+                pcd.setContent(cdata);
 
-                    // Impl note: This should also take care of our entitlement cert regeneration
-                    this.productManager.updateProduct(product, pdata, owner, regenerateEntitlementCerts);
-                }
+                // Impl note: This should also take care of our entitlement cert regeneration
+                this.productManager.updateProduct(product, pdata, owner, regenerateEntitlementCerts);
             }
         }
-        finally {
-            affectedProducts.close();
-        }
+
 
         return updated;
     }

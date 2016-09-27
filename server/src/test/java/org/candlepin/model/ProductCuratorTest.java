@@ -524,6 +524,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         List<String> contentUuids = new LinkedList<String>();
         contentUuids.add(content.getUuid());
+        log.debug("BEGINNING TEST");
         List<Product> products = productCurator.getProductsWithContent(contentUuids).list();
         assertEquals(1, products.size());
         assertEquals(p, products.get(0));

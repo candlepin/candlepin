@@ -19,6 +19,7 @@ import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
 import org.hibernate.ReplicationMode;
+import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
@@ -28,6 +29,7 @@ import org.hibernate.sql.JoinType;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 
 
@@ -120,21 +122,44 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
      */
     @SuppressWarnings("checkstyle:indentation")
     public CandlepinQuery<Owner> lookupOwnersWithProduct(Collection<String> productIds) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(Owner.class, "Owner")
-            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
-            .createAlias("Owner.pools", "Pool")
-            .createAlias("Pool.product", "Prod", JoinType.LEFT_OUTER_JOIN)
-            .createAlias("Pool.derivedProduct", "DProd", JoinType.LEFT_OUTER_JOIN)
-            .createAlias("Pool.providedProducts", "PProd", JoinType.LEFT_OUTER_JOIN)
-            .createAlias("Pool.derivedProvidedProducts", "DPProd", JoinType.LEFT_OUTER_JOIN)
-            .add(Restrictions.or(
-                CPRestrictions.in("Prod.id", productIds),
-                CPRestrictions.in("DProd.id", productIds),
-                CPRestrictions.in("PProd.id", productIds),
-                CPRestrictions.in("DPProd.id", productIds)
-            ));
+        if (productIds != null && !productIds.isEmpty()) {
+            Session session = this.currentSession();
 
-        return this.cpQueryFactory.<Owner>buildDistinctCandlepinQuery(this.currentSession(), criteria);
+            // Impl note:
+            // We have to break this up into two queries for proper cursor and pagination support.
+            // Hibernate currently has two nasty "features" which break these in their own special
+            // way:
+            // - Distinct, when applied in any way outside of direct SQL, happens in Hibernate
+            //   *after* the results are pulled down, if and only if the results are fetched as a
+            //   list. The filtering does not happen when the results are fetched with a cursor.
+            // - Because result limiting (first+last result specifications) happens at the query
+            //   level and distinct filtering does not, cursor-based pagination breaks due to
+            //   potential results being removed after a page of results is fetched.
+            Criteria idCriteria = session.createCriteria(Owner.class, "Owner")
+                .setProjection(Projections.distinct(Projections.id()))
+                .createAlias("Owner.pools", "Pool")
+                .createAlias("Pool.product", "Prod", JoinType.LEFT_OUTER_JOIN)
+                .createAlias("Pool.derivedProduct", "DProd", JoinType.LEFT_OUTER_JOIN)
+                .createAlias("Pool.providedProducts", "PProd", JoinType.LEFT_OUTER_JOIN)
+                .createAlias("Pool.derivedProvidedProducts", "DPProd", JoinType.LEFT_OUTER_JOIN)
+                .add(Restrictions.or(
+                    CPRestrictions.in("Prod.id", productIds),
+                    CPRestrictions.in("DProd.id", productIds),
+                    CPRestrictions.in("PProd.id", productIds),
+                    CPRestrictions.in("DPProd.id", productIds)
+                ));
+
+            List<String> ownerIds = idCriteria.list();
+
+            if (ownerIds != null && !ownerIds.isEmpty()) {
+                DetachedCriteria criteria = DetachedCriteria.forClass(Owner.class)
+                    .add(CPRestrictions.in("id", ownerIds));
+
+                return this.cpQueryFactory.<Owner>buildCandlepinQuery(session, criteria);
+            }
+        }
+
+        return this.cpQueryFactory.<Owner>buildCandlepinQuery();
     }
 
     @SuppressWarnings("unchecked")

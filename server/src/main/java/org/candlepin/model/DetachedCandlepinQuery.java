@@ -23,6 +23,7 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 
+import java.util.Collections;
 import java.util.List;
 
 
@@ -39,6 +40,7 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
     protected Session session;
     protected DetachedCriteria criteria;
 
+    protected int offset;
     protected int limit;
 
     // TODO:
@@ -68,6 +70,8 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
 
         this.session = session;
         this.criteria = criteria;
+
+        this.offset = -1;
         this.limit = -1;
     }
 
@@ -86,6 +90,10 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
         //  - read only
         //  - first results, order
         //  - fetch and cache mode
+
+        if (this.offset > -1) {
+            executable.setFirstResult(this.offset);
+        }
 
         if (this.limit > -1) {
             executable.setMaxResults(this.limit);
@@ -117,6 +125,22 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
     }
 
     /**
+     * Sets the offset (first result) into a result set at which to begin fetching results.
+     *
+     * @param offset
+     *  The offset at which to begin fetching results when executing this query. Negative values
+     *  will clear any previously set offset.
+     *
+     * @return
+     *  this query instance
+     */
+    @Override
+    public CandlepinQuery<T> setFirstResult(int offset) {
+        this.offset = offset;
+        return this;
+    }
+
+    /**
      * Sets the maximum results to be returned when executing this query.
      *
      * @param limit
@@ -126,6 +150,7 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
      * @return
      *  this query instance
      */
+    @Override
     public CandlepinQuery<T> setMaxResults(int limit) {
         this.limit = limit;
         return this;
@@ -146,7 +171,9 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
     @SuppressWarnings("unchecked")
     public List<T> list() {
         Criteria executable = this.getExecutableCriteria();
-        return (List<T>) executable.list();
+        List<T> list = (List<T>) executable.list();
+
+        return list != null ? list : Collections.<T>emptyList();
     }
 
     /**

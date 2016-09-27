@@ -68,7 +68,6 @@ public class EmptyCandlepinQuery<T> implements CandlepinQuery<T> {
      * Returns a reference to this CandlepinQuery instance.
      *
      * @param session
-     *  The session to use for executing this query
      *
      * @return
      *  this query instance
@@ -81,12 +80,25 @@ public class EmptyCandlepinQuery<T> implements CandlepinQuery<T> {
     /**
      * Returns a reference to this CandlepinQuery instance.
      *
-     * @param limit
-     *  The maximum number of results to be returned when executing this query.
+     * @param offset
      *
      * @return
      *  this query instance
      */
+    @Override
+    public CandlepinQuery<T> setFirstResult(int offset) {
+        return this;
+    }
+
+    /**
+     * Returns a reference to this CandlepinQuery instance.
+     *
+     * @param limit
+     *
+     * @return
+     *  this query instance
+     */
+    @Override
     public CandlepinQuery<T> setMaxResults(int limit) {
         return this;
     }
@@ -117,7 +129,6 @@ public class EmptyCandlepinQuery<T> implements CandlepinQuery<T> {
      * Immediately returns zero without invoking any of the given processor's methods.
      *
      * @param column
-     *  The zero-indexed offset of the column to iterate
      *
      * @return
      *  zero
@@ -131,10 +142,7 @@ public class EmptyCandlepinQuery<T> implements CandlepinQuery<T> {
      * Immediately returns zero without invoking any of the given processor's methods.
      *
      * @param column
-     *  The zero-indexed offset of the column to iterate
-     *
      * @param evict
-     *  Whether or not to auto-evict queried objects after they've been processed
      *
      * @return
      *  zero
@@ -181,7 +189,6 @@ public class EmptyCandlepinQuery<T> implements CandlepinQuery<T> {
      * Always returns an iterator with no elements.
      *
      * @param column
-     *  The zero-indexed offset of the column to iterate
      *
      * @return
      *  a ResultIterator containing no elements
@@ -194,10 +201,7 @@ public class EmptyCandlepinQuery<T> implements CandlepinQuery<T> {
      * Always returns an iterator with no elements.
      *
      * @param column
-     *  The zero-indexed offset of the column to iterate
-     *
      * @param evict
-     *  Whether or not to auto-evict queried objects after they've been processed
      *
      * @return
      *  a ResultIterator containing no elements
