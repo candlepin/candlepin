@@ -158,7 +158,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         Product output = this.productManager.updateProduct(product, update, owner, regenCerts);
 
-        assertEquals(output.getUuid(), product.getUuid());
+        assertNotEquals(output.getUuid(), product.getUuid());
         assertEquals(output.getName(), update.getName());
 
         if (regenCerts) {
@@ -395,8 +395,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
             product, Arrays.asList(new ProductContent(null, content, true)), owner, false
         );
 
-        assertEquals(product, output);
-        assertTrue(product.hasContent(content.getId()));
+        assertNotEquals(product, output);
         assertTrue(output.hasContent(content.getId()));
 
         verifyZeroInteractions(this.mockEntCertGenerator);

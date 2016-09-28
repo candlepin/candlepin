@@ -15,8 +15,6 @@ describe 'Product Versioning' do
     id = random_string("product")
     name = "shared_product"
 
-    updated_upstream = Date.today
-
     prod1 = @cp.create_product(owner1["key"], id, name)
     prod2 = @cp.create_product(owner2["key"], id, name)
 
@@ -30,12 +28,35 @@ describe 'Product Versioning' do
     id = random_string("product")
     name = "shared_product"
 
-    updated_upstream = Date.today
-
     prod1 = @cp.create_product(owner1["key"], id, name)
     prod2 = @cp.create_product(owner2["key"], id, name + "2")
 
     prod1["uuid"].should_not eq(prod2["uuid"])
+  end
+
+  it "creates a new instance when making changes to an existing instance" do
+    # If we enable clustered caching and re-enable the in-place content update branch, this
+    # test will need to be updated or removed.
+
+    owner1 = create_owner random_string('test_owner1')
+
+    id = random_string("product")
+    name = "shared_product"
+
+
+    prod1 = @cp.create_product(owner1["key"], id, name)
+    expect(prod1).to_not be_nil
+
+    prod2 = @cp.update_product(owner1["key"], id, { :name => "new product name" })
+    expect(prod2).to_not be_nil
+
+    expect(prod1["uuid"]).to_not eq(prod2["uuid"])
+
+    # content should now be different from both content1 and 2, and content2 should no longer exist
+    prods = @cp.list_products_by_owner(owner1["key"])
+    prods.size.should eq(1)
+    expect(prods[0]["uuid"]).to_not eq(prod1["uuid"])
+    expect(prods[0]["uuid"]).to eq(prod2["uuid"])
   end
 
   it "creates a new product instance when an org updates a shared instance" do
@@ -45,8 +66,6 @@ describe 'Product Versioning' do
 
     id = random_string("product")
     name = "shared_product"
-
-    updated_upstream = Date.today
 
     prod1 = @cp.create_product(owner1["key"], id, name)
     prod2 = @cp.create_product(owner2["key"], id, name)
@@ -80,8 +99,6 @@ describe 'Product Versioning' do
     id = random_string("product")
     name = "shared_product"
 
-    updated_upstream = Date.today
-
     prod1 = @cp.create_product(owner1["key"], id, name)
     prod2 = @cp.create_product(owner2["key"], id, name)
     prod3 = @cp.create_product(owner3["key"], id, "differing product name")
@@ -114,8 +131,6 @@ describe 'Product Versioning' do
     id = random_string("product")
     name = "shared_product"
 
-    updated_upstream = Date.today
-
     prod1 = @cp.create_product(owner1["key"], id, name)
     prod2 = @cp.create_product(owner2["key"], id, name)
 
@@ -141,8 +156,6 @@ describe 'Product Versioning' do
 
     id = random_string("product")
     name = "shared_product"
-
-    updated_upstream = Date.today
 
     prod1 = @cp.create_product(owner1["key"], id, name)
     prod2 = @cp.create_product(owner2["key"], id, name)
@@ -182,8 +195,6 @@ describe 'Product Versioning' do
 
     id = random_string("product")
     name = "shared_product"
-
-    updated_upstream = Date.today
 
     prod1 = @cp.create_product(owner1["key"], id, name)
     prod2 = @cp.create_product(owner2["key"], id, name)
@@ -251,8 +262,6 @@ describe 'Product Versioning' do
 
     id = random_string("product")
     name = "shared_product"
-
-    updated_upstream = Date.today
 
     prod1 = @cp.create_product(owner1["key"], id, name)
     prod2 = @cp.create_product(owner2["key"], id, name)
@@ -324,8 +333,6 @@ describe 'Product Versioning' do
     id = random_string("product")
     name = "shared_product"
 
-    updated_upstream = Date.today
-
     prod1 = @cp.create_product(owner1["key"], id, name)
     prod2 = @cp.create_product(owner2["key"], id, name)
 
@@ -355,8 +362,10 @@ describe 'Product Versioning' do
     # addition of the content to prod1 triggered the generation of a new product for org1 (prod3),
     # leaving org2 as the only owner for prod2. That being the case, prod2 was updated in-place,
     # allowing it to retain its UUID, and make this test look strange
-    prod4["uuid"].should eq(prod1["uuid"])
-    prod4["uuid"].should eq(prod2["uuid"])
+    # NOTE: The above will only be true when in-place updates are enabled. When they are disabled
+    # (as they are now), the UUIDs will not match, since we're always forking on any change.
+    prod4["uuid"].should_not eq(prod1["uuid"]) # ^
+    prod4["uuid"].should_not eq(prod2["uuid"]) # ^
     prod4["uuid"].should_not eq(prod3["uuid"])
 
     # Actual test starts here

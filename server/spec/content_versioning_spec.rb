@@ -78,6 +78,33 @@ describe 'Content Versioning' do
     content[0]["uuid"].should eq(content3["uuid"])
   end
 
+  it "creates a new instance when making changes to an existing instance" do
+    # If we enable clustered caching and re-enable the in-place content update branch, this
+    # test will need to be updated or removed.
+
+    owner1 = create_owner random_string('test_owner1')
+
+    id = random_string("content")
+    name = "shared_content"
+    label = "shared content"
+    type = "shared_content_type"
+    vendor = "generous vendor"
+
+    content1 = @cp.create_content(owner1["key"], name, id, label, type, vendor)
+    expect(content1).to_not be_nil
+
+    content2 = @cp.update_content(owner1["key"], id, { :name => name + "-2" })
+    expect(content2).to_not be_nil
+
+    expect(content1["uuid"]).to_not eq(content2["uuid"])
+
+    # content should now be different from both content1 and 2, and content2 should no longer exist
+    content = @cp.list_content(owner1["key"])
+    content.size.should eq(1)
+    expect(content[0]["uuid"]).to_not eq(content1["uuid"])
+    expect(content[0]["uuid"]).to eq(content2["uuid"])
+  end
+
   it "converges content when a given version already exists" do
     owner1 = create_owner random_string('test_owner1')
     owner2 = create_owner random_string('test_owner2')
@@ -88,7 +115,6 @@ describe 'Content Versioning' do
     label = "shared content"
     type = "shared_content_type"
     vendor = "generous vendor"
-    updated_upstream = Date.today
 
     content1 = @cp.create_content(owner1["key"], name, id, label, type, vendor)
     content2 = @cp.create_content(owner2["key"], name, id, label, type, vendor)
@@ -112,6 +138,41 @@ describe 'Content Versioning' do
     content.size.should eq(1)
     content[0]["uuid"].should eq(content1["uuid"])
     content[0]["uuid"].should_not eq(content3["uuid"])
+  end
+
+  it "diverges when updating shared content" do
+    owner1 = create_owner random_string('test_owner1')
+    owner2 = create_owner random_string('test_owner2')
+
+    id = random_string("content")
+    name = "shared_content"
+    label = "shared content"
+    type = "shared_content_type"
+    vendor = "generous vendor"
+
+    content1 = @cp.create_content(owner1["key"], name, id, label, type, vendor)
+    content2 = @cp.create_content(owner2["key"], name, id, label, type, vendor)
+
+    # content should be the same here
+    expect(content1).to_not be_nil
+    expect(content2).to_not be_nil
+    expect(content1["uuid"]).to eq(content2["uuid"])
+
+    content3 = @cp.update_content(owner2["key"], id, { :name => name + "-2" })
+    expect(content3).to_not be_nil
+
+    # content3 should now be different from both content1 and 2, and content2 should no longer exist
+    content = @cp.list_content(owner1["key"])
+    content.size.should eq(1)
+    expect(content[0]["uuid"]).to eq(content1["uuid"])
+    expect(content[0]["uuid"]).to eq(content2["uuid"])
+    expect(content[0]["uuid"]).to_not eq(content3["uuid"])
+
+    content = @cp.list_content(owner2["key"])
+    content.size.should eq(1)
+    expect(content[0]["uuid"]).to_not eq(content1["uuid"])
+    expect(content[0]["uuid"]).to_not eq(content2["uuid"])
+    expect(content[0]["uuid"]).to eq(content3["uuid"])
   end
 
   it "deletes content without affecting other orgs" do

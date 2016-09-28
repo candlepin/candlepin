@@ -175,7 +175,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
         Content output = this.contentManager.updateContent(content, update, owner, regenCerts);
 
-        assertEquals(output.getUuid(), content.getUuid());
+        assertNotEquals(output.getUuid(), content.getUuid());
         assertEquals(output.getName(), update.getName());
 
         if (regenCerts) {

@@ -45,7 +45,7 @@ describe 'Owner Product Resource' do
 
     # Delay here a moment to ensure an in-place update on the product doesn't trigger
     # attributes to be cloned/updated (as we're not updating attributes here)
-    sleep 1
+    # sleep 1
 
     prod = @cp.update_product(@owner['key'], prod.id, {:multiplier => prod2.multiplier, :attributes => nil})
 
@@ -251,7 +251,7 @@ describe 'Owner Product Resource' do
       lambda do
         @cp.delete_product(@owner['key'], @product.id)
       end.should raise_exception(RestClient::Forbidden)
-    else 
+    else
       lambda do
         @cp.delete_product(@owner['key'], @product.id)
       end.should raise_exception(RestClient::BadRequest)
@@ -263,7 +263,7 @@ describe 'Owner Product Resource' do
       lambda do
         @cp.delete_product(@owner['key'], @prov_product.id)
       end.should raise_exception(RestClient::Forbidden)
-    else 
+    else
       lambda do
         @cp.delete_product(@owner['key'], @prov_product.id)
       end.should raise_exception(RestClient::BadRequest)
@@ -275,7 +275,7 @@ describe 'Owner Product Resource' do
       lambda do
         @cp.delete_product(@owner['key'], @derived_product.id)
       end.should raise_exception(RestClient::Forbidden)
-    else 
+    else
       lambda do
         @cp.delete_product(@owner['key'], @derived_product.id)
       end.should raise_exception(RestClient::BadRequest)
@@ -287,7 +287,7 @@ describe 'Owner Product Resource' do
       lambda do
         @cp.delete_product(@owner['key'], @derived_prov_product.id)
       end.should raise_exception(RestClient::Forbidden)
-    else 
+    else
       lambda do
         @cp.delete_product(@owner['key'], @derived_prov_product.id)
       end.should raise_exception(RestClient::BadRequest)
