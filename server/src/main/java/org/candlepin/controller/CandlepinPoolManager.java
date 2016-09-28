@@ -25,6 +25,7 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Branding;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
@@ -2267,7 +2268,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public List<Pool> listPoolsByOwner(Owner owner) {
+    public CandlepinQuery<Pool> listPoolsByOwner(Owner owner) {
         return poolCurator.listByOwner(owner);
     }
 

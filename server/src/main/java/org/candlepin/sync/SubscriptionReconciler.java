@@ -179,9 +179,9 @@ public class SubscriptionReconciler {
      * Maps upstream pool ID to a map of upstream entitlement ID to Subscription.
      */
     private Map<String, Map<String, Pool>> mapPoolsByUpstreamPool(Owner owner, PoolCurator poolCurator) {
-        Map<String, Map<String, Pool>> existingSubsByUpstreamPool =
-            new HashMap<String, Map<String, Pool>>();
+        Map<String, Map<String, Pool>> existingSubsByUpstreamPool = new HashMap<String, Map<String, Pool>>();
         int idx = 0;
+
         for (Pool p : poolCurator.listByOwnerAndType(owner, PoolType.NORMAL)) {
             // if the upstream pool id is null,
             // this must be a locally controlled sub.
@@ -196,20 +196,20 @@ public class SubscriptionReconciler {
              * Suspect this is an old migration path, likely all pools have their
              * entitlement ID stamped by now. - dgoodwin 2015-04-14
              */
-            if (p.getUpstreamEntitlementId() == null ||
-                p.getUpstreamEntitlementId().trim().equals("")) {
+            if (p.getUpstreamEntitlementId() == null || p.getUpstreamEntitlementId().trim().equals("")) {
                 p.setUpstreamEntitlementId("" + idx++);
             }
 
-            Map<String, Pool> subs = existingSubsByUpstreamPool.get(
-                p.getUpstreamPoolId());
+            Map<String, Pool> subs = existingSubsByUpstreamPool.get(p.getUpstreamPoolId());
+
             if (subs == null) {
                 subs = new HashMap<String, Pool>();
+                existingSubsByUpstreamPool.put(p.getUpstreamPoolId(), subs);
             }
+
             subs.put(p.getUpstreamEntitlementId(), p);
-            existingSubsByUpstreamPool.put(p.getUpstreamPoolId(),
-                subs);
         }
+
         return existingSubsByUpstreamPool;
     }
 

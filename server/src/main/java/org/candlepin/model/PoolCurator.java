@@ -87,32 +87,41 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     /**
      * Returns list of pools owned by the given Owner.
-     * @param o Owner to filter
+     * @param owner Owner to filter
      * @return pools owned by the given Owner.
      */
     @Transactional
-    public List<Pool> listByOwner(Owner o) {
-        return listByOwner(o, null);
-    }
-
-    @Transactional
-    public List<Pool> listByOwnerAndType(Owner o, PoolType t) {
-        Criteria crit = currentSession().createCriteria(Pool.class)
-            .add(Restrictions.eq("owner", o))
-            .add(Restrictions.eq("type", t));
-
-        return crit.list();
+    public CandlepinQuery<Pool> listByOwner(Owner owner) {
+        return listByOwner(owner, null);
     }
 
     /**
      * Returns list of pools owned by the given Owner.
-     * @param o Owner to filter
+     * @param owner Owner to filter
      * @param activeOn only include pools active on the given date.
      * @return pools owned by the given Owner.
      */
     @Transactional
-    public List<Pool> listByOwner(Owner o, Date activeOn) {
-        return listAvailableEntitlementPools(null, o, (Collection<String>) null, activeOn, true);
+    public CandlepinQuery<Pool> listByOwner(Owner owner, Date activeOn) {
+        DetachedCriteria criteria = DetachedCriteria.forClass(Pool.class)
+            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.eq("activeSubscription", Boolean.TRUE));
+
+        if (activeOn != null) {
+            criteria.add(Restrictions.le("startDate", activeOn))
+                .add(Restrictions.ge("endDate", activeOn));
+        }
+
+        return this.cpQueryFactory.<Pool>buildCandlepinQuery(this.currentSession(), criteria);
+    }
+
+    @Transactional
+    public CandlepinQuery<Pool> listByOwnerAndType(Owner owner, PoolType type) {
+        DetachedCriteria criteria = DetachedCriteria.forClass(Pool.class)
+            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.eq("type", type));
+
+        return this.cpQueryFactory.<Pool>buildCandlepinQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -121,13 +130,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param e Entitlement
      * @return Pools created as a result of this entitlement.
      */
-    public List<Pool> listBySourceEntitlement(Entitlement e) {
-        List<Pool> results = createSecureCriteria()
-            .add(Restrictions.eq("sourceEntitlement", e)).list();
-        if (results == null) {
-            results = new LinkedList<Pool>();
-        }
-        return results;
+    public CandlepinQuery<Pool> listBySourceEntitlement(Entitlement e) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
+            .add(Restrictions.eq("sourceEntitlement", e));
+
+        return this.cpQueryFactory.<Pool>buildCandlepinQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -560,8 +567,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     // TODO: watch out for performance. Should we limit the certificates
     // retrieved?
     @SuppressWarnings("unchecked")
-    public List<EntitlementCertificate> retrieveEntCertsOfPoolsWithSourceEntitlement(
-        String entId) {
+    public List<EntitlementCertificate> retrieveEntCertsOfPoolsWithSourceEntitlement(String entId) {
         return currentSession().createCriteria(EntitlementCertificate.class)
             .createCriteria("entitlement")
             .createCriteria("pool")

@@ -16,6 +16,7 @@ package org.candlepin.controller;
 
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Environment;
@@ -226,7 +227,7 @@ public interface PoolManager {
      * @param owner the Owner to get the pools for
      * @return a list of pools for the specified Owner
      */
-    List<Pool> listPoolsByOwner(Owner owner);
+    CandlepinQuery<Pool> listPoolsByOwner(Owner owner);
 
     /**
      * Updates the pool based on the entitlements in the specified stack.

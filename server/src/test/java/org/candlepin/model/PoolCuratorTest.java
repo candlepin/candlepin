@@ -610,8 +610,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
         poolCurator.create(pool3);
 
-        assertEquals(2, poolCurator.listBySourceEntitlement(e).size());
-
+        assertEquals(2, poolCurator.listBySourceEntitlement(e).list().size());
     }
 
     @Test

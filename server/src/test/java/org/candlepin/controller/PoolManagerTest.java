@@ -48,6 +48,7 @@ import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.PoolQuantity;
@@ -251,6 +252,11 @@ public class PoolManagerTest {
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
         when(mockOwnerProductCurator.getProductById(owner, product.getId())).thenReturn(product);
 
+        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(pools);
+        when(cqmock.iterator()).thenReturn(pools.iterator());
+        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
+
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
         List<Pool> expectedFloating = new LinkedList();
 
@@ -286,6 +292,11 @@ public class PoolManagerTest {
         mockPoolsList(pools);
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
         when(mockOwnerProductCurator.getProductById(owner, product.getId())).thenReturn(product);
+
+        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(pools);
+        when(cqmock.iterator()).thenReturn(pools.iterator());
+        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
         List<Pool> expectedModified = new LinkedList();
@@ -422,9 +433,14 @@ public class PoolManagerTest {
         Pool p = TestUtil.createPool(TestUtil.createProduct());
         p.setSourceSubscription(new SourceSubscription("112", "master"));
         pools.add(p);
-        mockSubsList(subscriptions);
 
+        mockSubsList(subscriptions);
         mockPoolsList(pools);
+
+        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(pools);
+        when(cqmock.iterator()).thenReturn(pools.iterator());
+        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
         Owner owner = getOwner();
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
@@ -447,11 +463,15 @@ public class PoolManagerTest {
 
         pools.add(p);
         mockSubsList(subscriptions);
-
         mockPoolsList(pools);
 
         Owner owner = getOwner();
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
+
+        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(pools);
+        when(cqmock.iterator()).thenReturn(pools.iterator());
+        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
         List<Pool> delPools = Arrays.asList(p);
@@ -472,9 +492,14 @@ public class PoolManagerTest {
 
         pools.add(p);
         mockSubsList(subscriptions);
-
         mockPoolsList(pools);
         Owner owner = getOwner();
+
+        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(pools);
+        when(cqmock.iterator()).thenReturn(pools.iterator());
+        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
+
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
         verify(this.manager, never()).deletePool(same(p));
@@ -494,8 +519,13 @@ public class PoolManagerTest {
 
         pools.add(p);
         mockSubsList(subscriptions);
-
         mockPoolsList(pools);
+
+        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(pools);
+        when(cqmock.iterator()).thenReturn(pools.iterator());
+        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
+
         Owner owner = getOwner();
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
@@ -514,8 +544,13 @@ public class PoolManagerTest {
 
         pools.add(p);
         mockSubsList(subscriptions);
-
         mockPoolsList(pools);
+
+        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(pools);
+        when(cqmock.iterator()).thenReturn(pools.iterator());
+        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
+
         Owner owner = getOwner();
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
 
@@ -535,10 +570,15 @@ public class PoolManagerTest {
 
         pools.add(p);
         mockSubsList(subscriptions);
-
         mockPoolsList(pools);
+
         Owner owner = getOwner();
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
+
+        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(pools);
+        when(cqmock.iterator()).thenReturn(pools.iterator());
+        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
         ArgumentCaptor<List> poolCaptor = ArgumentCaptor.forClass(List.class);
@@ -572,6 +612,11 @@ public class PoolManagerTest {
         when(poolRulesMock.createAndEnrichPools(argPool.capture(), any(List.class))).thenReturn(newPools);
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
         when(mockOwnerProductCurator.getProductById(owner, product.getId())).thenReturn(product);
+
+        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(pools);
+        when(cqmock.iterator()).thenReturn(pools.iterator());
+        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
 
@@ -613,6 +658,11 @@ public class PoolManagerTest {
 
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
         when(mockOwnerProductCurator.getProductById(owner, product.getId())).thenReturn(product);
+
+        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(pools);
+        when(cqmock.iterator()).thenReturn(pools.iterator());
+        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
         verify(poolRulesMock).createAndEnrichPools(argPool.capture(), any(List.class));
@@ -681,7 +731,11 @@ public class PoolManagerTest {
     public void testRevokeCleansUpPoolsWithSourceEnt() throws Exception {
         Entitlement e = new Entitlement(pool, TestUtil.createConsumer(owner), 1);
         List<Pool> poolsWithSource = createPoolsWithSourceEntitlement(e, product);
-        when(mockPoolCurator.listBySourceEntitlement(e)).thenReturn(poolsWithSource);
+
+        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(poolsWithSource);
+
+        when(mockPoolCurator.listBySourceEntitlement(e)).thenReturn(cqmock);
         PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
@@ -867,6 +921,11 @@ public class PoolManagerTest {
         when(preHelper.getResult()).thenReturn(result);
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
         when(mockOwnerProductCurator.getProductById(owner, product.getId())).thenReturn(product);
+
+        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(pools);
+        when(cqmock.iterator()).thenReturn(pools.iterator());
+        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
 
@@ -1058,6 +1117,11 @@ public class PoolManagerTest {
         when(preHelper.getResult()).thenReturn(result);
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
         when(mockOwnerProductCurator.getProductById(owner, product.getId())).thenReturn(product);
+
+        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(pools);
+        when(cqmock.iterator()).thenReturn(pools.iterator());
+        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
 

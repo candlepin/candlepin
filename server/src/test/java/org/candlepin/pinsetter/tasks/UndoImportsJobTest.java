@@ -157,9 +157,10 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
 
         // Verify initial state
         assertEquals(
-            Arrays.asList(pool1, pool2, pool3, pool4, pool5, pool6), this.poolManager.listPoolsByOwner(owner1)
+            Arrays.asList(pool1, pool2, pool3, pool4, pool5, pool6),
+            this.poolManager.listPoolsByOwner(owner1).list()
         );
-        assertEquals(Arrays.asList(pool7, pool8, pool9), this.poolManager.listPoolsByOwner(owner2));
+        assertEquals(Arrays.asList(pool7, pool8, pool9), this.poolManager.listPoolsByOwner(owner2).list());
         assertEquals(metadata1, exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner1));
         assertEquals(metadata2, exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner2));
         assertEquals(0, this.importRecordCurator.findRecords(owner1).size());
@@ -175,8 +176,10 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         this.undoImportsJob.toExecute(this.jobContext);
 
         // Verify deletions
-        assertEquals(Arrays.asList(pool3, pool4, pool5, pool6), this.poolManager.listPoolsByOwner(owner1));
-        assertEquals(Arrays.asList(pool7, pool8, pool9), this.poolManager.listPoolsByOwner(owner2));
+        assertEquals(Arrays.asList(pool3, pool4, pool5, pool6),
+            this.poolManager.listPoolsByOwner(owner1).list());
+
+        assertEquals(Arrays.asList(pool7, pool8, pool9), this.poolManager.listPoolsByOwner(owner2).list());
         assertNull(exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner1));
         assertEquals(metadata2, exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner2));
         assertNull(owner1.getUpstreamConsumer());
