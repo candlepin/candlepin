@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.9
+Version: 0.9.54.10
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,9 @@ fi
 
 #raw
 %changelog
+* Wed Sep 28 2016 Vritant Jain <adarshvritant@gmail.com> 0.9.54.10-1
+- fixed qpid dependency in pom (adarshvritant@gmail.com)
+
 * Thu Sep 22 2016 Vritant Jain <adarshvritant@gmail.com> 0.9.54.9-1
 - 1370508: Allow consumer with service level to autobind to pool without
   (wpoteat@redhat.com)
