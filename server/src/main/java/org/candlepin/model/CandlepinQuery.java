@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.hibernate.Session;
+import org.hibernate.criterion.Order;
 
 import java.util.List;
 import java.util.Iterator;
@@ -72,15 +73,25 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      */
     CandlepinQuery<T> setMaxResults(int limit);
 
+    /**
+     * Adds the specified ordering when executing this query.
+     *
+     * @param order
+     *  The ordering to apply when executing this query
+     *
+     * @return
+     *  this query instance
+     */
+    CandlepinQuery<T> addOrder(Order order);
+
     // TODO:
     // Add some other utility/passthrough methods as a need arises:
     //  - setReadOnly
-    //  - add/setOrder (needs a column choice as well, if we don't use Hibernate's Order objects)
     //  - setFetchMode
     //  - setCacheMode/setCacheable
 
     /**
-     * Executes this criteria and returns the entities as a list. If no entities could be found,
+     * Executes this query and returns the entities as a list. If no entities could be found,
      * this method returns an empty list.
      * <p></p>
      * <strong>Warning</strong>:
@@ -153,7 +164,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
     int scrollByRow(ResultProcessor<Object[]> processor);
 
     /**
-     * Executes this criteria and iterates over the first column of the results. Other columns in
+     * Executes this query and iterates over the first column of the results. Other columns in
      * each row are silently discarded.
      * <p></p>
      * WARNING: This method must be called from within a transaction, and the iterator must
@@ -165,7 +176,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
     ResultIterator<T> iterate();
 
     /**
-     * Executes this criteria and iterates over the first column of the results. Other columns in
+     * Executes this query and iterates over the first column of the results. Other columns in
      * each row are silently discarded. This method is functionally identical to iterate, and is
      * only provided for compatibility with the foreach construct.
      * <p></p>
@@ -178,7 +189,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
     Iterator<T> iterator();
 
     /**
-     * Executes this criteria and iterates over the specified column of the results. Other columns
+     * Executes this query and iterates over the specified column of the results. Other columns
      * in each row are silently discarded.
      * <p></p>
      * WARNING: This method must be called from within a transaction, and the iterator must
@@ -193,7 +204,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
     ResultIterator<T> iterate(int column);
 
     /**
-     * Executes this criteria and iterates over the specified column of the results, optionally
+     * Executes this query and iterates over the specified column of the results, optionally
      * automatically evicting returned entities after they are processed. Other columns in each row
      * are silently discarded.
      * <p></p>
@@ -212,7 +223,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
     ResultIterator<T> iterate(int column, boolean evict);
 
     /**
-     * Executes this criteria and iterates over the rows of results.
+     * Executes this query and iterates over the rows of results.
      * <p></p>
      * WARNING: This method must be called from within a transaction, and the iterator must
      * remain within the bounds of that transaction.
@@ -223,7 +234,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
     ResultIterator<Object[]> iterateByRow();
 
     /**
-     * Executes this criteria and returns a single, unique entity. If no entities could be found,
+     * Executes this query and returns a single, unique entity. If no entities could be found,
      * this method returns null. If more than one entity is found, a runtime exception will be
      * thrown.
      *
@@ -231,5 +242,13 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      *  a single entity, or null if no entities were found
      */
     T uniqueResult();
+
+    /**
+     * Executes this query and fetches the number of results.
+     *
+     * @return
+     *  the number of results found by executing this query
+     */
+    int getRowCount();
 
 }

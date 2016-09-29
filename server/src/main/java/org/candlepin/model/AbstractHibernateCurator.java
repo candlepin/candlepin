@@ -174,6 +174,10 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return resultsPage;
     }
 
+    public Page<ResultIterator<E>> iterateAll(PageRequest pageRequest) {
+        return this.paginateResults(this.listAll(), pageRequest);
+    }
+
     @SuppressWarnings("unchecked")
     @Transactional
     public Page<List<E>> listAll(PageRequest pageRequest) {
@@ -225,6 +229,26 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     private Integer findRowCount(Criteria c) {
         c.setProjection(Projections.rowCount());
         return ((Long) c.uniqueResult()).intValue();
+    }
+
+    @SuppressWarnings("unchecked")
+    public Page<ResultIterator<E>> paginateResults(CandlepinQuery<E> query, PageRequest pageRequest) {
+        Page<ResultIterator<E>> page = new Page<ResultIterator<E>>();
+
+        if (pageRequest != null) {
+            page.setMaxRecords(query.getRowCount());
+
+            query.addOrder(this.createPagingOrder(pageRequest));
+            if (pageRequest.isPaging()) {
+                query.setFirstResult((pageRequest.getPage() - 1) * pageRequest.getPerPage());
+                query.setMaxResults(pageRequest.getPerPage());
+            }
+
+            page.setPageRequest(pageRequest);
+        }
+
+        page.setPageData(query.iterate());
+        return page;
     }
 
     @SuppressWarnings("unchecked")

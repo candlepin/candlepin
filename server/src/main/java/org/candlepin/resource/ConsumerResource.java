@@ -328,8 +328,7 @@ public class ConsumerResource {
                     days, expire, futureExpire);
 
                 if (expire.before(futureExpire)) {
-                    log.info("Regenerating identity certificate for consumer: {}, expiry: {}",
-                        uuid, expire);
+                    log.info("Regenerating identity certificate for consumer: {}, expiry: {}", uuid, expire);
                     consumer = this.regenerateIdentityCertificate(consumer);
                 }
             }

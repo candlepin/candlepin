@@ -22,6 +22,15 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projection;
+import org.hibernate.criterion.Projections;
+
+// Potentially temporary entries. Sort these into the above blob if we're keeping them.
+import org.hibernate.internal.CriteriaImpl;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.criteria.CriteriaQueryTranslator;
+import org.hibernate.type.Type;
 
 import java.util.Collections;
 import java.util.List;
@@ -157,7 +166,26 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
     }
 
     /**
-     * Executes this criteria and returns the entities as a list. If no entities could be found,
+     * Adds the specified ordering when executing this query.
+     *
+     * @param order
+     *  The ordering to apply when executing this query
+     *
+     * @return
+     *  this query instance
+     */
+    @Override
+    public CandlepinQuery<T> addOrder(Order order) {
+        if (order == null) {
+            throw new IllegalArgumentException("order is null");
+        }
+
+        this.criteria.addOrder(order);
+        return this;
+    }
+
+    /**
+     * Executes this query and returns the entities as a list. If no entities could be found,
      * this method returns an empty list.
      * <p></p>
      * <strong>Warning</strong>:
@@ -311,7 +339,7 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
     }
 
     /**
-     * Executes this criteria and iterates over the first column of the results. Other columns in
+     * Executes this query and iterates over the first column of the results. Other columns in
      * each row are silently discarded.
      * <p></p>
      * WARNING: This method must be called from within a transaction, and the iterator must
@@ -326,7 +354,7 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
     }
 
     /**
-     * Executes this criteria and iterates over the first column of the results. Other columns in
+     * Executes this query and iterates over the first column of the results. Other columns in
      * each row are silently discarded. This method is functionally identical to iterate, and is
      * only provided for compatibility with the foreach construct.
      * <p></p>
@@ -342,7 +370,7 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
     }
 
     /**
-     * Executes this criteria and iterates over the specified column of the results. Other columns
+     * Executes this query and iterates over the specified column of the results. Other columns
      * in each row are silently discarded.
      * <p></p>
      * WARNING: This method must be called from within a transaction, and the iterator must
@@ -360,7 +388,7 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
     }
 
     /**
-     * Executes this criteria and iterates over the specified column of the results, optionally
+     * Executes this query and iterates over the specified column of the results, optionally
      * automatically evicting returned entities after they are processed. Other columns in each row
      * are silently discarded.
      * <p></p>
@@ -391,7 +419,7 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
     }
 
     /**
-     * Executes this criteria and iterates over the rows of results.
+     * Executes this query and iterates over the rows of results.
      * <p></p>
      * WARNING: This method must be called from within a transaction, and the iterator must
      * remain within the bounds of that transaction.
@@ -408,7 +436,7 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
     }
 
     /**
-     * Executes this criteria and returns a single, unique entity. If no entities could be found,
+     * Executes this query and returns a single, unique entity. If no entities could be found,
      * this method returns null. If more than one entity is found, a runtime exception will be
      * thrown.
      *
@@ -422,4 +450,52 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
         return (T) executable.uniqueResult();
     }
 
+    /**
+     * Executes this query and fetches the number of results. This operates by applying the
+     * rowCount projection to the query and executing it. Depending on the query itself, and
+     * whether or not it has existing projections, this may affect the results fetched.
+     *
+     * @return
+     *  the number of results found by executing this query
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public int getRowCount() {
+        CriteriaImpl executable = (CriteriaImpl) this.getExecutableCriteria();
+        Projection projection = executable.getProjection();
+
+        if (projection != null && projection.isGrouped()) {
+            // We have a projection that alters the grouping of the query. We need to rebuild the
+            // projection such that it gets our row count and properly applies the group by
+            // statement.
+            // The logic for this block is largely derived from this Stack Overflow posting:
+            // http://stackoverflow.com/
+            //     questions/32498229/hibernate-row-count-on-criteria-with-already-set-projection
+            //
+            // A safer alternative may be to generate a query that uses the given criteria as a
+            // subquery (SELECT count(*) FROM (<criteria SQL>)), but is probably less performant
+            // than this hack.
+            CriteriaQueryTranslator translator = new CriteriaQueryTranslator(
+                (SessionFactoryImplementor) this.session.getSessionFactory(),
+                executable,
+                executable.getEntityOrClassName(),
+                CriteriaQueryTranslator.ROOT_SQL_ALIAS
+            );
+
+            projection = Projections.projectionList()
+                .add(Projections.rowCount())
+                .add(Projections.sqlGroupProjection(
+                    "count(count(1))",
+                    translator.getGroupBy(),
+                    new String[] {},
+                    new Type[] {}
+                ));
+        }
+        else {
+            projection = Projections.rowCount();
+        }
+
+        executable.setProjection(projection);
+        return ((Long) executable.uniqueResult()).intValue();
+    }
 }

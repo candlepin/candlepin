@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.hibernate.Session;
+import org.hibernate.criterion.Order;
 
 import java.util.Collections;
 import java.util.List;
@@ -100,6 +101,19 @@ public class EmptyCandlepinQuery<T> implements CandlepinQuery<T> {
      */
     @Override
     public CandlepinQuery<T> setMaxResults(int limit) {
+        return this;
+    }
+
+    /**
+     * Returns a reference to this CandlepinQuery instance.
+     *
+     * @param order
+     *
+     * @return
+     *  this query instance
+     */
+    @Override
+    public CandlepinQuery<T> addOrder(Order order) {
         return this;
     }
 
@@ -231,5 +245,16 @@ public class EmptyCandlepinQuery<T> implements CandlepinQuery<T> {
     @Override
     public T uniqueResult() {
         return null;
+    }
+
+    /**
+     * Always returns zero.
+     *
+     * @return
+     *  zero
+     */
+    @Override
+    public int getRowCount() {
+        return 0;
     }
 }

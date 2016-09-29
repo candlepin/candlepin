@@ -151,7 +151,6 @@ public class EntitlementResource {
         EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
         Page<List<Entitlement>> p;
         if (consumerUuid != null) {
-
             Consumer consumer = consumerCurator.findByUuid(consumerUuid);
             if (consumer == null) {
                 throw new BadRequestException(
