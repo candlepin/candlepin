@@ -226,6 +226,7 @@ define "candlepin" do
   project.version = pom_version(path_to('pom.xml'))
   manifest["Copyright"] = "Red Hat, Inc. #{Date.today.strftime('%Y')}"
 
+  compile.using(:javac, :debug => true)
   compile.options.target = '1.6'
   compile.options.source = '1.6'
 
