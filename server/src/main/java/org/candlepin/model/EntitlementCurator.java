@@ -500,7 +500,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         for (Entitlement ent : entitlements) {
             ent.getCertificates().clear();
             ent.getConsumer().getEntitlements().remove(ent);
-    
+
             if (Hibernate.isInitialized(ent.getPool().getEntitlements())) {
                 ent.getPool().getEntitlements().remove(ent);
             }

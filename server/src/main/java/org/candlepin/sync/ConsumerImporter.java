@@ -66,9 +66,9 @@ public class ConsumerImporter {
         // Make sure no other owner is already using this upstream UUID:
         Owner alreadyUsing = curator.lookupWithUpstreamUuid(consumer.getUuid());
         if (alreadyUsing != null && !alreadyUsing.getKey().equals(owner.getKey())) {
-            log.error("Cannot import manifest for org: " + owner.getKey());
-            log.error("Upstream distributor " + consumer.getUuid() +
-                " already in use by org: " + alreadyUsing.getKey());
+            log.error("Cannot import manifest for org: {}", owner.getKey());
+            log.error("Upstream distributor {} already in use by org: {}",
+                consumer.getUuid(), alreadyUsing.getKey());
 
             // NOTE: this is not a conflict that can be overridden because we simply don't
             // allow two orgs to use the same manifest at once. The other org would have to
@@ -87,10 +87,10 @@ public class ConsumerImporter {
                     Importer.Conflict.DISTRIBUTOR_CONFLICT);
             }
             else {
-                log.warn("Forcing import from a new distributor for org: " +
+                log.warn("Forcing import from a new distributor for org: {}",
                         owner.getKey());
-                log.warn("Old distributor UUID: " + owner.getUpstreamUuid());
-                log.warn("New distributor UUID: " + consumer.getUuid());
+                log.warn("Old distributor UUID: {}", owner.getUpstreamUuid());
+                log.warn("New distributor UUID: {}", consumer.getUuid());
             }
         }
 

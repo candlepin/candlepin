@@ -55,13 +55,13 @@ public class CdnImporter {
             Cdn existing = curator.lookupByLabel(cdn.getLabel());
             if (existing == null) {
                 curator.create(cdn);
-                log.debug("Created CDN: " + cdn.getName());
+                log.debug("Created CDN: {}", cdn.getName());
             }
             else {
                 existing.setName(cdn.getName());
                 existing.setUrl(cdn.getUrl());
                 curator.merge(existing);
-                log.debug("Updating CDN: " + cdn.getName());
+                log.debug("Updating CDN: {}",  cdn.getName());
             }
         }
     }

@@ -194,28 +194,18 @@ public class EntitlementImporter {
                 subscription.getUpstreamPoolId());
             if (map == null || map.isEmpty()) {
                 createSubscription(subscription);
-                log.info("Creating new subscription for incoming entitlement with id [" +
-                    subscription.getUpstreamEntitlementId() +
-                    "]");
+                log.info("Creating new subscription for incoming entitlement with id [{}]",
+                    subscription.getUpstreamEntitlementId());
                 continue;
             }
             local = map.get(subscription.getUpstreamEntitlementId());
             if (local != null) {
                 mergeSubscription(subscription, local, map);
-                log.info("Merging subscription for incoming entitlement id [" +
-                    subscription.getUpstreamEntitlementId() +
-                    "] into subscription with existing entitlement id [" +
-                    local.getUpstreamEntitlementId() +
-                    "]. Entitlement id match.");
+                infoLogMergingSubscription(subscription, local, "Entitlement id match.");
             }
             else {
                 subscriptionsStillToImport.add(subscription);
-                log.warn("Subscription for incoming entitlement id [" +
-                    subscription.getUpstreamEntitlementId() +
-                    "] does not have an entitlement id match " +
-                    "in the current subscriptions for the upstream pool id [" +
-                    subscription.getUpstreamPoolId() +
-                    "]");
+                warnLogForNotMatching(subscription, "entitlement id match");
             }
         }
 
@@ -237,20 +227,11 @@ public class EntitlementImporter {
             }
             if (local != null) {
                 mergeSubscription(subscription, local, map);
-                log.info("Merging subscription for incoming entitlement id [" +
-                    subscription.getUpstreamEntitlementId() +
-                    "] into subscription with existing entitlement id [" +
-                    local.getUpstreamEntitlementId() +
-                    "]. Exact quantity match.");
+                infoLogMergingSubscription(subscription, local, "Exact quantity match.");
             }
             else {
                 subscriptionsNeedQuantityMatch.add(subscription);
-                log.warn("Subscription for incoming entitlement id [" +
-                    subscription.getUpstreamEntitlementId() +
-                    "] does not have an exact quantity match " +
-                    "in the current subscriptions for the upstream pool id [" +
-                    subscription.getUpstreamPoolId() +
-                    "]");
+                warnLogForNotMatching(subscription, "exact quantity match");
             }
         }
 
@@ -266,22 +247,35 @@ public class EntitlementImporter {
                 subscription.getUpstreamPoolId());
             if (map == null || map.isEmpty()) {
                 createSubscription(subscription);
-                log.info("Creating new subscription for incoming entitlement with id [" +
-                    subscription.getUpstreamEntitlementId() +
-                    "]");
+                log.info("Creating new subscription for incoming entitlement with id [{}]",
+                    subscription.getUpstreamEntitlementId());
                 continue;
             }
             Subscription[] locals = map.values().toArray(new Subscription[0]);
             Arrays.sort(locals, new QuantityComparator());
             local = locals[0];
+
             mergeSubscription(subscription, local, map);
-            log.info("Merging subscription for incoming entitlement id [" +
-                subscription.getUpstreamEntitlementId() +
-                "] into subscription with existing entitlement id [" +
-                local.getUpstreamEntitlementId() +
-                "]. Ordered quantity match.");
+            infoLogMergingSubscription(subscription, local, "Ordered quantity match.");
         }
         deleteRemainingLocalSubscriptions(existingSubsByUpstreamPool);
+    }
+
+    private void infoLogMergingSubscription(Subscription subscription,
+        Subscription local, String partOfMessage) {
+        log.info("Merging subscription for incoming entitlement id [{}]" +
+            " into subscription with existing entitlement id [{}]. {}",
+            subscription.getUpstreamEntitlementId(),
+            local.getUpstreamEntitlementId(),
+            partOfMessage);
+    }
+
+    private void warnLogForNotMatching(Subscription subscription, String partOfMessage) {
+        log.warn("Subscription for incoming entitlement id [{}]" +
+            " does not have an {} in the current subscriptions for the upstream pool id [{}]",
+            subscription.getUpstreamEntitlementId(),
+            partOfMessage,
+            subscription.getUpstreamPoolId());
     }
 
     private Map<String, Map<String, Subscription>> mapSubsByUpstreamPool(Owner owner) {
