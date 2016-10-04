@@ -309,8 +309,10 @@ public class X509CRLStreamWriter {
                 return this;
             }
             newExtensions = updateExtensions(oldExtensions);
-            extensionsDelta = (newExtensions.length - oldExtensions.length) +
-                findHeaderBytesDelta(oldExtensions.length, newExtensions.length);
+            // newExtension and oldExtensions have already been converted to DER so any difference
+            // in the length of the L bytes will be accounted for in the overall difference between
+            // the length of the two byte arrays.
+            extensionsDelta = newExtensions.length - oldExtensions.length;
         }
         finally {
             if (reaperStream != null) {

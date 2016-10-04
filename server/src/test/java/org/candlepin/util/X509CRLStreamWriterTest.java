@@ -32,6 +32,7 @@ import org.bouncycastle.cert.X509v2CRLBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CRLConverter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.provider.X509CRLEntryObject;
+import org.bouncycastle.openssl.PEMReader;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
@@ -47,6 +48,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.KeyPair;
@@ -157,6 +159,127 @@ public class X509CRLStreamWriterTest {
 
         Set<BigInteger> expected = new HashSet<BigInteger>();
         expected.add(new BigInteger("100"));
+        assertEquals(expected, discoveredSerials);
+    }
+
+    @Test
+    public void testAddEntryToActualCRL() throws Exception {
+        ClassLoader classLoader = this.getClass().getClassLoader();
+        InputStream crl = classLoader.getResourceAsStream("real-crl.der");
+        InputStream keyStream = classLoader.getResourceAsStream("real.key");
+
+        InputStreamReader keyReader = new InputStreamReader(keyStream);
+        PEMReader reader = null;
+
+        try {
+            reader = new PEMReader(keyReader);
+
+            Object pemObj = reader.readObject();
+            if (pemObj == null) {
+                crl.close();
+                throw new RuntimeException("Reading CA private key failed");
+            }
+
+            if (pemObj instanceof KeyPair) {
+                keyPair = (KeyPair) pemObj;
+            }
+            else {
+                crl.close();
+                throw new RuntimeException("Unexepected CA key object: " + pemObj.getClass().getName());
+            }
+        }
+        finally {
+            reader.close();
+        }
+
+        File outfile = new File(folder.getRoot(), "new.crl");
+        X509CRLStreamWriter stream = new X509CRLStreamWriter(crl,
+            (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
+
+        // Add enough items to cause the number of length bytes to change
+        Set<BigInteger> newSerials = new HashSet<BigInteger>(Arrays.asList(
+            new BigInteger("2358215310"),
+            new BigInteger("7231352433"),
+            new BigInteger("8233181205"),
+            new BigInteger("1455615868"),
+            new BigInteger("4323487764"),
+            new BigInteger("6673256679")
+        ));
+
+        for (BigInteger i : newSerials) {
+            stream.add(i, new Date(), CRLReason.privilegeWithdrawn);
+        }
+
+        // Since we have to walk the stream twice, we need two streams!
+        stream.preScan(classLoader.getResourceAsStream("real-crl.der")).lock();
+        OutputStream o = new BufferedOutputStream(new FileOutputStream(outfile));
+        stream.write(o);
+        o.close();
+
+        X509CRL changedCrl = readCRL();
+
+        Set<BigInteger> discoveredSerials = new HashSet<BigInteger>();
+
+        for (X509CRLEntry entry : changedCrl.getRevokedCertificates()) {
+            discoveredSerials.add(entry.getSerialNumber());
+        }
+
+        assertTrue(discoveredSerials.containsAll(newSerials));
+    }
+
+    @Test
+    public void testAddEntryToBigCRL() throws Exception {
+        X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(issuer, new Date());
+        crlBuilder.addExtension(X509Extension.authorityKeyIdentifier, false,
+            new AuthorityKeyIdentifierStructure(keyPair.getPublic()));
+        /* With a CRL number of 127, incrementing it should cause the number of bytes in the length
+         * portion of the TLV to increase by one.*/
+        crlBuilder.addExtension(X509Extension.cRLNumber, false, new CRLNumber(new BigInteger("127")));
+
+        BigInteger serial = new BigInteger("741696FE9E30AD27", 16);
+        Set<BigInteger> expected = new HashSet<BigInteger>();
+        for (int i = 0; i < 10000; i++) {
+            serial = serial.add(BigInteger.TEN);
+            crlBuilder.addCRLEntry(serial, new Date(), CRLReason.privilegeWithdrawn);
+            expected.add(serial);
+        }
+
+        X509CRLHolder holder = crlBuilder.build(signer);
+
+        File crlToChange = writeCRL(holder);
+
+        File outfile = new File(folder.getRoot(), "new.crl");
+        X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
+            (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
+
+        // Add enough items to cause the number of length bytes to change
+        Set<BigInteger> newSerials = new HashSet<BigInteger>(Arrays.asList(
+            new BigInteger("2358215310"),
+            new BigInteger("7231352433"),
+            new BigInteger("8233181205"),
+            new BigInteger("1455615868"),
+            new BigInteger("4323487764"),
+            new BigInteger("6673256679")
+        ));
+
+        for (BigInteger i : newSerials) {
+            stream.add(i, new Date(), CRLReason.privilegeWithdrawn);
+            expected.add(i);
+        }
+
+        stream.preScan(crlToChange).lock();
+        OutputStream o = new BufferedOutputStream(new FileOutputStream(outfile));
+        stream.write(o);
+        o.close();
+
+        X509CRL changedCrl = readCRL();
+
+        Set<BigInteger> discoveredSerials = new HashSet<BigInteger>();
+
+        for (X509CRLEntry entry : changedCrl.getRevokedCertificates()) {
+            discoveredSerials.add(entry.getSerialNumber());
+        }
+
         assertEquals(expected, discoveredSerials);
     }
 
