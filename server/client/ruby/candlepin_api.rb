@@ -275,6 +275,10 @@ class Candlepin
     end
   end
 
+  def heal_owner(owner_key)
+    post "owners/#{owner_key}/entitlements"
+  end
+
   def create_user(login, password, superadmin=false)
     user = {
       'username' => login,
@@ -895,12 +899,16 @@ class Candlepin
     return get("/owner/#{owner_key}/activation_keys")
   end
 
-  def create_activation_key(owner_key, name, service_level=nil)
+  def create_activation_key(owner_key, name, service_level=nil, autobind=false)
     key = {
       :name => name,
     }
     if service_level
       key['serviceLevel'] = service_level
+    end
+
+    if autobind
+      key['autoAttach'] = true
     end
     return post("/owners/#{owner_key}/activation_keys", key)
   end

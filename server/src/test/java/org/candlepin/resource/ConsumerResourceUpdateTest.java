@@ -451,7 +451,7 @@ public class ConsumerResourceUpdateTest {
     // ignored out per mkhusid, see 768872 comment #41
     @Ignore
     @Test
-    public void ensureNewGuestIsHealedIfItWasMigratedFromAnotherHost() {
+    public void ensureNewGuestIsHealedIfItWasMigratedFromAnotherHost() throws Exception {
         String uuid = "TEST_CONSUMER";
         Consumer existingHost = createConsumerWithGuests("Guest 1", "Guest 2");
         existingHost.setUuid(uuid);

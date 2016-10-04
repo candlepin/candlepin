@@ -66,6 +66,7 @@ public class EntitlerTest {
     private EventSink sink;
     private I18n i18n;
     private Entitler entitler;
+    private Owner owner;
     private Consumer consumer;
     private ConsumerCurator cc;
     private EntitlementRulesTranslator translator;
@@ -89,7 +90,9 @@ public class EntitlerTest {
         ef = mock(EventFactory.class);
         sink = mock(EventSink.class);
         cc = mock(ConsumerCurator.class);
+        owner = mock(Owner.class);
         consumer = mock(Consumer.class);
+        when(consumer.getOwner()).thenReturn(owner);
 
         entitlementCurator = mock(EntitlementCurator.class);
         i18n = I18nFactory.getI18n(
@@ -138,7 +141,7 @@ public class EntitlerTest {
     }
 
     @Test
-    public void bindByProductsString() throws EntitlementRefusedException {
+    public void bindByProductsString() throws Exception {
         String[] pids = {"prod1", "prod2", "prod3"};
         when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
         entitler.bindByProducts(pids, "abcd1234", null, null);
@@ -147,7 +150,7 @@ public class EntitlerTest {
     }
 
     @Test
-    public void bindByProducts() throws EntitlementRefusedException {
+    public void bindByProducts() throws Exception  {
         String[] pids = {"prod1", "prod2", "prod3"};
         AutobindData data = AutobindData.create(consumer).forProducts(pids);
         entitler.bindByProducts(data);
@@ -252,17 +255,17 @@ public class EntitlerTest {
     }
 
     @Test(expected = ForbiddenException.class)
-    public void alreadyHasProduct() {
+    public void alreadyHasProduct() throws Exception {
         bindByProductErrorTest("rulefailed.consumer.already.has.product");
     }
 
     @Test(expected = ForbiddenException.class)
-    public void noEntitlementsForProduct() {
+    public void noEntitlementsForProduct() throws Exception {
         bindByProductErrorTest("rulefailed.no.entitlements.available");
     }
 
     @Test(expected = ForbiddenException.class)
-    public void mismatchByProduct() {
+    public void mismatchByProduct() throws Exception {
         bindByProductErrorTest("rulefailed.consumer.type.mismatch");
     }
 
@@ -279,7 +282,7 @@ public class EntitlerTest {
     }
 
     @Test
-    public void physicalOnly() {
+    public void physicalOnly() throws Exception {
         String expected = "Pool is restricted to physical systems: 'pool10'.";
         try {
             bindByPoolErrorTest("rulefailed.physical.only");
@@ -291,11 +294,11 @@ public class EntitlerTest {
     }
 
     @Test(expected = ForbiddenException.class)
-    public void allOtherErrors() {
+    public void allOtherErrors() throws Exception {
         bindByProductErrorTest("generic.error");
     }
 
-    private void bindByProductErrorTest(String msg) {
+    private void bindByProductErrorTest(String msg) throws Exception {
         try {
             String[] pids = {"prod1", "prod2", "prod3"};
             EntitlementRefusedException ere = new EntitlementRefusedException(
@@ -424,7 +427,7 @@ public class EntitlerTest {
     }
 
     @Test
-    public void testDevPoolCreationAtBind() throws EntitlementRefusedException {
+    public void testDevPoolCreationAtBind() throws Exception {
         Owner owner = new Owner("o");
         List<Product> devProds = new ArrayList<Product>();
         Product p = new Product("test-product", "Test Product");
@@ -450,7 +453,7 @@ public class EntitlerTest {
     }
 
     @Test(expected = ForbiddenException.class)
-    public void testDevPoolCreationAtBindFailStandalone() throws EntitlementRefusedException {
+    public void testDevPoolCreationAtBindFailStandalone() throws Exception {
         Owner owner = new Owner("o");
         List<Product> devProds = new ArrayList<Product>();
         Product p = new Product("test-product", "Test Product");
@@ -472,7 +475,7 @@ public class EntitlerTest {
     }
 
     @Test(expected = ForbiddenException.class)
-    public void testDevPoolCreationAtBindFailNotActive() throws EntitlementRefusedException {
+    public void testDevPoolCreationAtBindFailNotActive() throws Exception {
         Owner owner = new Owner("o");
         List<Product> devProds = new ArrayList<Product>();
         Product p = new Product("test-product", "Test Product");
@@ -491,7 +494,7 @@ public class EntitlerTest {
     }
 
     @Test
-    public void testDevPoolCreationAtBindFailNoSkuProduct() throws EntitlementRefusedException {
+    public void testDevPoolCreationAtBindFailNoSkuProduct() throws Exception  {
         Owner owner = new Owner("o");
         List<Product> devProds = new ArrayList<Product>();
         Product p = new Product("test-product", "Test Product");
@@ -519,8 +522,7 @@ public class EntitlerTest {
     }
 
     @Test
-    public void testDevPoolCreationAtBindNoFailMissingInstalledProduct()
-        throws EntitlementRefusedException {
+    public void testDevPoolCreationAtBindNoFailMissingInstalledProduct() throws Exception {
         Owner owner = new Owner("o");
         List<Product> devProds = new ArrayList<Product>();
         Product p = new Product("test-product", "Test Product");

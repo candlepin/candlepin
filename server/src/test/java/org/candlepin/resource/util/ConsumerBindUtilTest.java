@@ -92,7 +92,7 @@ public class ConsumerBindUtilTest {
     }
 
     @Test
-    public void registerWithKeyWithPoolAndInstalledProductsAutoAttach() {
+    public void registerWithKeyWithPoolAndInstalledProductsAutoAttach() throws Exception {
         Product prod = TestUtil.createProduct();
         String[] prodIds = new String[]{prod.getId()};
 
@@ -119,7 +119,7 @@ public class ConsumerBindUtilTest {
     }
 
     @Test
-    public void registerWithKeyWithInstalledProductsAutoAttach() {
+    public void registerWithKeyWithInstalledProductsAutoAttach() throws Exception {
         Product prod = TestUtil.createProduct();
         String[] prodIds = new String[]{prod.getId()};
 
@@ -140,7 +140,7 @@ public class ConsumerBindUtilTest {
     }
 
     @Test
-    public void registerWithKeyWithInstalledProductsPlusAutoAttach() {
+    public void registerWithKeyWithInstalledProductsPlusAutoAttach() throws Exception {
         // installed product
         Product prod1 = TestUtil.createProduct();
         // key product
@@ -165,7 +165,7 @@ public class ConsumerBindUtilTest {
     }
 
     @Test(expected = BadRequestException.class)
-    public void registerFailWithKeyServiceLevelNotExist() {
+    public void registerFailWithKeyServiceLevelNotExist() throws Exception {
         List<ActivationKey> keys = new ArrayList<ActivationKey>();
         ActivationKey key1 = new ActivationKey("key1", owner);
         keys.add(key1);
@@ -178,7 +178,7 @@ public class ConsumerBindUtilTest {
     }
 
     @Test
-    public void registerPassWithKeyServiceLevelNotExistOtherKeysSucceed() {
+    public void registerPassWithKeyServiceLevelNotExistOtherKeysSucceed() throws Exception {
         List<ActivationKey> keys = mockActivationKeys();
         ActivationKey key1 = new ActivationKey("key1", owner);
         keys.add(key1);
@@ -191,7 +191,7 @@ public class ConsumerBindUtilTest {
     }
 
     @Test(expected = BadRequestException.class)
-    public void registerFailWithNoGoodKeyPool() {
+    public void registerFailWithNoGoodKeyPool() throws Exception {
         List<ActivationKey> keys = new ArrayList<ActivationKey>();
         ActivationKey key1 = new ActivationKey("key1", owner);
         keys.add(key1);
@@ -208,7 +208,7 @@ public class ConsumerBindUtilTest {
     }
 
     @Test
-    public void registerPassWithOneGoodKeyPool() {
+    public void registerPassWithOneGoodKeyPool() throws Exception {
         List<ActivationKey> keys = new ArrayList<ActivationKey>();
         ActivationKey key1 = new ActivationKey("key1", owner);
         keys.add(key1);
@@ -235,7 +235,7 @@ public class ConsumerBindUtilTest {
     }
 
     @Test
-    public void registerPassWithOneGoodKey() {
+    public void registerPassWithOneGoodKey() throws Exception {
         List<ActivationKey> keys = new ArrayList<ActivationKey>();
         ActivationKey key1 = new ActivationKey("key1", owner);
         ActivationKey key2 = new ActivationKey("key2", owner);

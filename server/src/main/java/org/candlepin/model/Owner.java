@@ -105,6 +105,16 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     private String logLevel;
 
     /**
+     * When set, autobind will be disabled no matter if it is set
+     * on the Consumer or not.
+     *
+     * NOTE: Need to allow null values here so that we can check
+     *       it on Owner update.
+     */
+    @Column(name = "autobind_disabled")
+    private Boolean autobindDisabled;
+
+    /**
      * Default constructor
      */
     public Owner() {
@@ -282,6 +292,10 @@ public class Owner extends AbstractHibernateObject implements Serializable,
             !this.contentPrefix.equals(other.contentPrefix)) {
             return false;
         }
+        if ((this.autobindDisabled == null) ? (other.autobindDisabled != null) :
+            !this.autobindDisabled.equals(other.autobindDisabled)) {
+            return false;
+        }
         return true;
     }
 
@@ -396,5 +410,31 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     @XmlTransient
     public String getName() {
         return getDisplayName();
+    }
+
+    /**
+     * Utility method that checks null case for
+     * autobind setting since the getter can return null. If autobindDisabled is null,
+     * it is considered enabled.
+     *
+     * @return true if autobind is disabled, false otherwise.
+     */
+    @XmlTransient
+    public boolean autobindDisabled() {
+        return getAutobindDisabled() == null ? false : getAutobindDisabled();
+    }
+
+    /**
+     * Returns the true value of the autobindDisabled setting.
+     *
+     * @return True if autobind is disabled for this owner, False or null otherwise.
+     *         A value of null means that it is unset, and considered in code as False.
+     */
+    public Boolean getAutobindDisabled() {
+        return autobindDisabled;
+    }
+
+    public void setAutobindDisabled(Boolean autobindDisabled) {
+        this.autobindDisabled = autobindDisabled;
     }
 }
