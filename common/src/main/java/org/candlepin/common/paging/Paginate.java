@@ -25,9 +25,8 @@ import javax.ws.rs.NameBinding;
  * Annotation used to mark a method for paging.  Methods marked with
  * this annotation will be picked up by the PageRequestFilter.
  */
-@NameBinding
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Paginate {
-
+    // Intentionally left empty
 }

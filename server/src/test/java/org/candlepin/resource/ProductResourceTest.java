@@ -24,6 +24,7 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -37,8 +38,6 @@ import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
-import org.candlepin.resteasy.IterableStreamingOutputFactory;
-import org.candlepin.resteasy.IterableStreamingOutput;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -71,7 +70,6 @@ public class ProductResourceTest extends DatabaseTestFixture {
     @Inject private ProductCurator productCurator;
     @Inject private Configuration config;
     @Inject private I18n i18n;
-    @Inject private IterableStreamingOutputFactory isoFactory;
 
     private ProductData buildTestProductDTO() {
         ProductData dto = TestUtil.createProductDTO("test_product");
@@ -133,7 +131,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     public void testDeleteProductWithSubscriptions() {
         ProductCurator pc = mock(ProductCurator.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        ProductResource pr = new ProductResource(pc, null, null, config, i18n, this.isoFactory);
+        ProductResource pr = new ProductResource(pc, null, null, config, i18n);
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);
         // when(pc.lookupById(eq(o), eq("10"))).thenReturn(p);
@@ -218,32 +216,16 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Owner owner2 = owners.get(1);
         Owner owner3 = owners.get(2);
 
-        Response response = productResource.getProductOwners(Arrays.asList("p1"));
-        owners = new LinkedList<Owner>();
-        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
-            owners.add((Owner) entity);
-        }
+        owners = productResource.getProductOwners(Arrays.asList("p1")).list();
         assertEquals(Arrays.asList(owner1, owner2), owners);
 
-        response = productResource.getProductOwners(Arrays.asList("p1", "p2"));
-        owners.clear();
-        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
-            owners.add((Owner) entity);
-        }
+        owners = productResource.getProductOwners(Arrays.asList("p1", "p2")).list();
         assertEquals(Arrays.asList(owner1, owner2, owner3), owners);
 
-        response = productResource.getProductOwners(Arrays.asList("p3"));
-        owners.clear();
-        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
-            owners.add((Owner) entity);
-        }
+        owners = productResource.getProductOwners(Arrays.asList("p3")).list();
         assertEquals(Arrays.asList(owner3), owners);
 
-        response = productResource.getProductOwners(Arrays.asList("nope"));
-        owners.clear();
-        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
-            owners.add((Owner) entity);
-        }
+        owners = productResource.getProductOwners(Arrays.asList("nope")).list();
         assertEquals(0, owners.size());
     }
 
@@ -285,8 +267,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
         ProductResource productResource = new ProductResource(
-            this.productCurator, this.ownerCurator, this.productCertificateCurator, config, this.i18n,
-            this.isoFactory
+            this.productCurator, this.ownerCurator, this.productCertificateCurator, config, this.i18n
         );
 
         List<Owner> owners = this.setupDBForOwnerProdTests();

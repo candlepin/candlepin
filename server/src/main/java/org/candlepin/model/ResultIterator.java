@@ -39,6 +39,4 @@ public interface ResultIterator<T> extends Closeable, Iterator<T> {
      */
     void close();
 
-    // TODO:
-    // Add support for iterator transformers here as the need arises.
 }

@@ -16,7 +16,7 @@ package org.candlepin.model;
 
 import com.google.inject.Inject;
 
-import org.hibernate.Criteria;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
@@ -29,8 +29,6 @@ import java.util.List;
  */
 public class ImportRecordCurator extends AbstractHibernateCurator<ImportRecord> {
 
-    @Inject private CandlepinQueryFactory cpQueryFactory;
-
     public ImportRecordCurator() {
         super(ImportRecord.class);
     }
@@ -42,10 +40,11 @@ public class ImportRecordCurator extends AbstractHibernateCurator<ImportRecord> 
      * @param owner the {@link Owner}
      * @return the import records
      */
-    public List<ImportRecord> findRecords(Owner owner) {
-        Criteria query = currentSession().createCriteria(ImportRecord.class);
-        query.add(Restrictions.eq("owner", owner)).addOrder(Order.desc("created"));
+    public CandlepinQuery<ImportRecord> findRecords(Owner owner) {
+        DetachedCriteria criteria = DetachedCriteria.forClass(ImportRecord.class)
+            .add(Restrictions.eq("owner", owner))
+            .addOrder(Order.desc("created"));
 
-        return this.listByCriteria(query);
+        return this.cpQueryFactory.<ImportRecord>buildCandlepinQuery(this.currentSession(), criteria);
     }
 }

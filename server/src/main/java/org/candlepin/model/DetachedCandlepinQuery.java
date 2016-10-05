@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.util.ElementTransformer;
+
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.CacheMode;
@@ -33,6 +35,8 @@ import org.hibernate.loader.criteria.CriteriaQueryTranslator;
 import org.hibernate.type.Type;
 
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -92,21 +96,34 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
      *  a fully configured, executable criteria
      */
     protected Criteria getExecutableCriteria() {
-        Criteria executable = this.criteria.getExecutableCriteria(this.session);
+        // Impl/sadness note:
+        // As of Hibernate 5.0, this does not actually result in a new criteria instance -- it just
+        // returns its internal CriteriaImpl instance. Changes we make will be reflected between
+        // calls.
+        CriteriaImpl executable = (CriteriaImpl) this.criteria.getExecutableCriteria(this.session);
 
-        // TODO:
-        // Apply pending changes to the executable criteria:
-        //  - read only
-        //  - first results, order
-        //  - fetch and cache mode
+        // These values can be safely passed through and are checked by Hibernate before actually
+        // applying them.
+        executable.setCacheMode(null);
 
+        // WARNING:
+        // These values cannot be reset without using reflection. Once they're set, they can only
+        // be changed. We'll try to use reasonable pseudo-defaults, but only if we need to.
         if (this.offset > -1) {
             executable.setFirstResult(this.offset);
+        }
+        else if (executable.getFirstResult() != null) {
+            executable.setFirstResult(0);
         }
 
         if (this.limit > -1) {
             executable.setMaxResults(this.limit);
         }
+        else if (executable.getMaxResults() != null) {
+            executable.setMaxResults(Integer.MAX_VALUE);
+        }
+
+        // TODO: Add read-only when we have a requirement to do so.
 
         return executable;
     }
@@ -182,6 +199,14 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
 
         this.criteria.addOrder(order);
         return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <O> CandlepinQuery<O> transform(ElementTransformer<T, O> transformer) {
+        return new TransformedCandlepinQuery(this, transformer);
     }
 
     /**
@@ -463,6 +488,22 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
     public int getRowCount() {
         CriteriaImpl executable = (CriteriaImpl) this.getExecutableCriteria();
         Projection projection = executable.getProjection();
+        List<Order> ordering = new LinkedList<Order>();
+
+        // Impl note:
+        // We're using the projection method here over using a cursor to scroll the results due to
+        // limitations on various connectors' cursor implementations. Some don't properly support
+        // fast-forwarding/jumping (Oracle) and others fake the whole thing by running the query
+        // and pretending to scroll (MySQL). Until these are addressed, the hack below is going to
+        // be far more performant and significantly safer (which makes me sad).
+
+        // Remove any ordering that may be applied (since we almost certainly won't have the field
+        // available anymore)
+        Iterator iterator = executable.iterateOrderings();
+        while (iterator.hasNext()) {
+            ordering.add(((CriteriaImpl.OrderEntry) iterator.next()).getOrder());
+            iterator.remove();
+        }
 
         if (projection != null && projection.isGrouped()) {
             // We have a projection that alters the grouping of the query. We need to rebuild the
@@ -482,20 +523,28 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
                 CriteriaQueryTranslator.ROOT_SQL_ALIAS
             );
 
-            projection = Projections.projectionList()
+            executable.setProjection(Projections.projectionList()
                 .add(Projections.rowCount())
                 .add(Projections.sqlGroupProjection(
                     "count(count(1))",
                     translator.getGroupBy(),
                     new String[] {},
                     new Type[] {}
-                ));
+                )));
         }
         else {
-            projection = Projections.rowCount();
+            executable.setProjection(Projections.rowCount());
         }
 
+        Long count = (Long) executable.uniqueResult();
+
+        // Restore projection and ordering...
         executable.setProjection(projection);
-        return ((Long) executable.uniqueResult()).intValue();
+
+        for (Order order : ordering) {
+            executable.addOrder(order);
+        }
+
+        return count != null ? count.intValue() : 0;
     }
 }

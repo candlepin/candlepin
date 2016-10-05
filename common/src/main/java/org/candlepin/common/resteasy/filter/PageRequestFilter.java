@@ -34,7 +34,6 @@ import javax.ws.rs.ext.Provider;
 /**
  * DataPresentationInterceptor
  */
-@Paginate
 @Provider
 @Priority(Priorities.USER)
 public class PageRequestFilter implements ContainerRequestFilter {

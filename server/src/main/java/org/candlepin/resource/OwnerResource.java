@@ -40,6 +40,7 @@ import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ProductManager;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -78,7 +79,6 @@ import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resource.util.ResourceDateParser;
-import org.candlepin.resteasy.IterableStreamingOutputFactory;
 import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.OwnerServiceAdapter;
@@ -113,6 +113,7 @@ import ch.qos.logback.classic.Level;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -185,7 +186,6 @@ public class OwnerResource {
     private ResolverUtil resolverUtil;
     private ProductManager productManager;
     private ContentManager contentManager;
-    private IterableStreamingOutputFactory isoFactory;
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator,
@@ -214,8 +214,7 @@ public class OwnerResource {
         Configuration config,
         ResolverUtil resolverUtil,
         ProductManager productManager,
-        ContentManager contentManager,
-        IterableStreamingOutputFactory isoFactory) {
+        ContentManager contentManager) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -244,7 +243,6 @@ public class OwnerResource {
         this.resolverUtil = resolverUtil;
         this.productManager = productManager;
         this.contentManager = contentManager;
-        this.isoFactory = isoFactory;
     }
 
     /**
@@ -257,25 +255,10 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "owners")
     @ApiOperation(notes = "Retrieves a list of Owners", value = "List Owners", responseContainer = "owners")
-    public Response list(@QueryParam("key") String keyFilter) {
-        Iterator<Owner> iterator;
-
-        // For now, assuming key filter is just one key:
-        if (keyFilter != null) {
-            List<Owner> results = new LinkedList<Owner>();
-
-            Owner o = ownerCurator.lookupByKey(keyFilter);
-            if (o != null) {
-                results.add(o);
-            }
-
-            iterator = results.iterator();
-        }
-        else {
-            iterator = this.ownerCurator.listAll().iterate();
-        }
-
-        return Response.ok(this.isoFactory.create(iterator)).build();
+    public CandlepinQuery list(@QueryParam("key") String keyFilter) {
+        return keyFilter != null ?
+            this.ownerCurator.lookupByKeys(Arrays.asList(keyFilter)) :
+            this.ownerCurator.listAll();
     }
 
     /**
@@ -1237,7 +1220,7 @@ public class OwnerResource {
         }
         if (log.isDebugEnabled()) {
             for (String s : overrideConflicts) {
-                log.debug("Forcing conflict if encountered: " + s);
+                log.debug("Forcing conflict if encountered: {}", s);
             }
         }
 
@@ -1304,7 +1287,7 @@ public class OwnerResource {
             throw e;
         }
         finally {
-            log.info("Import attempt completed for owner " + owner.getDisplayName());
+            log.info("Import attempt completed for owner {}", owner.getDisplayName());
         }
     }
 
@@ -1321,7 +1304,7 @@ public class OwnerResource {
     @Path("{owner_key}/imports")
     @ApiOperation(notes = " Retrieves a list of Import Records for an Owner", value = "Get Imports")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public List<ImportRecord> getImports(
+    public CandlepinQuery<ImportRecord> getImports(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwner(ownerKey);
 
@@ -1455,15 +1438,13 @@ public class OwnerResource {
     @Path("/{owner_key}/hypervisors")
     @ApiOperation(notes = "Retrieves a list of Hypervisors for an Owner", value = "Get Hypervisors")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public Response getHypervisors(
+    public CandlepinQuery<Consumer> getHypervisors(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("hypervisor_id") List<String> hypervisorIds) {
 
-        ResultIterator<Consumer> iterator = (hypervisorIds == null || hypervisorIds.isEmpty()) ?
-            this.consumerCurator.getHypervisorsForOwner(ownerKey).iterate() :
-            this.consumerCurator.getHypervisorsBulk(hypervisorIds, ownerKey).iterate();
-
-        return Response.ok(this.isoFactory.create(iterator)).build();
+        return (hypervisorIds == null || hypervisorIds.isEmpty()) ?
+            this.consumerCurator.getHypervisorsForOwner(ownerKey) :
+            this.consumerCurator.getHypervisorsBulk(hypervisorIds, ownerKey);
     }
 
     private ImportRecord recordImportSuccess(Owner owner, Map data,

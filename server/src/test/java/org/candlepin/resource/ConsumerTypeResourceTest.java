@@ -19,7 +19,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.candlepin.model.ConsumerType;
-import org.candlepin.resteasy.IterableStreamingOutput;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Test;
@@ -70,12 +69,7 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
     }
 
     public boolean typeExists(String type) {
-        Response response = consumerTypeResource.list();
-        List<ConsumerType> types = new LinkedList<ConsumerType>();
-
-        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
-            types.add((ConsumerType) entity);
-        }
+        List<ConsumerType> types = consumerTypeResource.list().list();
 
         boolean found = false;
         for (ConsumerType aType : types) {

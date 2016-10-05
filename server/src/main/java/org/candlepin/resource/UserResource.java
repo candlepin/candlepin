@@ -26,7 +26,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
-import org.candlepin.resteasy.IterableStreamingOutputFactory;
 import org.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Inject;
@@ -66,16 +65,13 @@ public class UserResource {
     private UserServiceAdapter userService;
     private I18n i18n;
     private OwnerCurator ownerCurator;
-    private IterableStreamingOutputFactory isoFactory;
 
     @Inject
-    public UserResource(UserServiceAdapter userService, I18n i18n, OwnerCurator ownerCurator,
-        IterableStreamingOutputFactory isoFactory) {
+    public UserResource(UserServiceAdapter userService, I18n i18n, OwnerCurator ownerCurator) {
 
         this.userService = userService;
         this.i18n = i18n;
         this.ownerCurator = ownerCurator;
-        this.isoFactory = isoFactory;
     }
 
     @ApiOperation(notes = "Retrieves a list of Users", value = "list")
@@ -174,18 +170,15 @@ public class UserResource {
     @GET
     @Path("/{username}/owners")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response listUsersOwners(@PathParam("username") @Verify(User.class)
-        String username,
+    public Iterable<Owner> listUsersOwners(
+        @PathParam("username") @Verify(User.class) String username,
         @Context Principal principal) {
 
-        List<Owner> owners = new LinkedList<Owner>();
         User user = userService.findByLogin(username);
 
-        Iterator<Owner> iterator = user.isSuperAdmin() ?
-            this.ownerCurator.listAll().iterate() :
-            user.getOwners(SubResource.CONSUMERS, Access.CREATE).iterator();
-
-        return Response.ok(this.isoFactory.create(iterator)).build();
+        return user.isSuperAdmin() ?
+            this.ownerCurator.listAll() :
+            user.getOwners(SubResource.CONSUMERS, Access.CREATE);
     }
 
 }

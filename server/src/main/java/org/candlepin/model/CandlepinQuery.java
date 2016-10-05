@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.util.ElementTransformer;
+
 import org.hibernate.Session;
 import org.hibernate.criterion.Order;
 
@@ -27,7 +29,7 @@ import java.util.Iterator;
  * executing criteria, and methods for processing the results.
  *
  * @param <T>
- *  The entity type to be returned by this criteria's result output methods
+ *  The element type to be returned by this query's result output methods
  */
 public interface CandlepinQuery<T> extends Iterable<T> {
 
@@ -83,6 +85,19 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      *  this query instance
      */
     CandlepinQuery<T> addOrder(Order order);
+
+    /**
+     * Returns a CandlepinQuery instance that transforms the results using the given element
+     * transformer.
+     *
+     * @param transformer
+     *  The ElementTransformer to use for processing or transforming elements fetched by this
+     *  query
+     *
+     * @return
+     *  A transformed CandlepinQuery instance
+     */
+    <O> CandlepinQuery<O> transform(ElementTransformer<T, O> transformer);
 
     // TODO:
     // Add some other utility/passthrough methods as a need arises:

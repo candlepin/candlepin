@@ -43,7 +43,7 @@ import java.util.Set;
  */
 public class ProductCurator extends AbstractHibernateCurator<Product> {
 
-    private static Logger log = LoggerFactory.getLogger(ProductCurator.class);
+    public static Logger log = LoggerFactory.getLogger(ProductCurator.class);
 
     private Configuration config;
     private I18n i18n;

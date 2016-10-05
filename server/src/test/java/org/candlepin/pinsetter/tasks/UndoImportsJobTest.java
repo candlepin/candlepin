@@ -163,8 +163,8 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         assertEquals(Arrays.asList(pool7, pool8, pool9), this.poolManager.listPoolsByOwner(owner2).list());
         assertEquals(metadata1, exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner1));
         assertEquals(metadata2, exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner2));
-        assertEquals(0, this.importRecordCurator.findRecords(owner1).size());
-        assertEquals(0, this.importRecordCurator.findRecords(owner2).size());
+        assertEquals(0, this.importRecordCurator.findRecords(owner1).list().size());
+        assertEquals(0, this.importRecordCurator.findRecords(owner2).list().size());
 
         // Execute job
         Principal principal = new UserPrincipal("JarJarBinks", null, true);
@@ -184,11 +184,11 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         assertEquals(metadata2, exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner2));
         assertNull(owner1.getUpstreamConsumer());
 
-        List<ImportRecord> records = this.importRecordCurator.findRecords(owner1);
+        List<ImportRecord> records = this.importRecordCurator.findRecords(owner1).list();
         assertEquals(1, records.size());
         assertEquals(ImportRecord.Status.DELETE, records.get(0).getStatus());
 
-        assertEquals(0, this.importRecordCurator.findRecords(owner2).size());
+        assertEquals(0, this.importRecordCurator.findRecords(owner2).list().size());
     }
 
     protected Pool createPool(String name, Owner owner, boolean keepSourceSub, PoolType type) {

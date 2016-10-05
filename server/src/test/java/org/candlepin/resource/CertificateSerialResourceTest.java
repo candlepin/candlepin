@@ -14,16 +14,14 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.TestingModules;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
-import org.candlepin.resteasy.IterableStreamingOutputFactory;
-import org.candlepin.resteasy.IterableStreamingOutput;
 import org.candlepin.test.MockResultIterator;
 
 import com.google.inject.Guice;
@@ -45,8 +43,6 @@ import javax.ws.rs.core.Response;
  */
 public class CertificateSerialResourceTest {
 
-    @Inject private IterableStreamingOutputFactory isoFactory;
-
     @Before
     public void init() {
         Injector injector = Guice.createInjector(
@@ -62,27 +58,20 @@ public class CertificateSerialResourceTest {
     public void listall() {
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         CertificateSerialCurator csc = mock(CertificateSerialCurator.class);
-        CertificateSerialResource csr = new CertificateSerialResource(csc, isoFactory);
-        List<CertificateSerial> serials = new ArrayList<CertificateSerial>();
-        serials.add(mock(CertificateSerial.class));
+        CertificateSerialResource csr = new CertificateSerialResource(csc);
 
-        when(cqmock.iterate()).thenReturn(new MockResultIterator<CertificateSerial>(serials.iterator()));
         when(csc.listAll()).thenReturn(cqmock);
 
-        Response response = csr.getCertificateSerials();
-        List<CertificateSerial> result = new ArrayList<CertificateSerial>();
+        CandlepinQuery<CertificateSerial> result = csr.getCertificateSerials();
+        assertSame(cqmock, result);
 
-        for (Object serial : (IterableStreamingOutput) response.getEntity()) {
-            result.add((CertificateSerial) serial);
-        }
-
-        assertEquals(serials, result);
+        verify(csc, times(1)).listAll();
     }
 
     @Test
     public void getSerial() {
         CertificateSerialCurator csc = mock(CertificateSerialCurator.class);
-        CertificateSerialResource csr = new CertificateSerialResource(csc, isoFactory);
+        CertificateSerialResource csr = new CertificateSerialResource(csc);
         CertificateSerial cs = mock(CertificateSerial.class);
         when(csc.find(10L)).thenReturn(cs);
         assertEquals(cs, csr.getCertificateSerial(10L));
