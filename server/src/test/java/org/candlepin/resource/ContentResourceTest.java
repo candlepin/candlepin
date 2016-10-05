@@ -13,11 +13,11 @@
  * in this software or its documentation.
  */
 package org.candlepin.resource;
+
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.TestingModules;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
@@ -32,12 +32,8 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.resteasy.IterableStreamingOutputFactory;
+import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
-
-import com.google.inject.Guice;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -63,18 +59,8 @@ public class ContentResourceTest {
     private ProductCurator productCurator;
     private OwnerCurator oc;
 
-    @Inject IterableStreamingOutputFactory isoFactory;
-
     @Before
     public void init() {
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.ServletEnvironmentModule(),
-            new TestingModules.StandardTest()
-        );
-
-        injector.injectMembers(this);
-
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         cc = mock(ContentCurator.class);
         envContentCurator = mock(EnvironmentContentCurator.class);
@@ -83,7 +69,7 @@ public class ContentResourceTest {
         productCurator = mock(ProductCurator.class);
 
         cr = new ContentResource(cc, i18n, new DefaultUniqueIdGenerator(), envContentCurator,
-            poolManager, productCurator, oc, this.isoFactory);
+            poolManager, productCurator, oc);
     }
 
     @Test
@@ -104,13 +90,15 @@ public class ContentResourceTest {
     public void getContent() {
         Owner owner = mock(Owner.class);
         Content content = mock(Content.class);
+        ContentData contentData = mock(ContentData.class);
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
 
         when(cqmock.list()).thenReturn(Arrays.asList(owner));
         when(oc.listAll()).thenReturn(cqmock);
         when(cc.lookupByUuid(eq("10"))).thenReturn(content);
+        when(content.toDTO()).thenReturn(contentData);
 
-        assertEquals(content, cr.getContent("10"));
+        assertEquals(contentData, cr.getContent("10"));
     }
 
     @Test(expected = BadRequestException.class)

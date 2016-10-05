@@ -17,14 +17,15 @@ package org.candlepin.resource;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ResultIterator;
+import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.UniqueIdGenerator;
-import org.candlepin.resteasy.IterableStreamingOutputFactory;
+import org.candlepin.util.ElementTransformer;
 
 import com.google.inject.Inject;
 
@@ -41,7 +42,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -64,12 +64,11 @@ public class ContentResource {
     private PoolManager poolManager;
     private ProductCurator productCurator;
     private OwnerCurator ownerCurator;
-    private IterableStreamingOutputFactory isoFactory;
 
     @Inject
     public ContentResource(ContentCurator contentCurator, I18n i18n, UniqueIdGenerator idGenerator,
         EnvironmentContentCurator envContentCurator, PoolManager poolManager,
-        ProductCurator productCurator, OwnerCurator ownerCurator, IterableStreamingOutputFactory isoFactory) {
+        ProductCurator productCurator, OwnerCurator ownerCurator) {
 
         this.i18n = i18n;
         this.contentCurator = contentCurator;
@@ -78,15 +77,18 @@ public class ContentResource {
         this.poolManager = poolManager;
         this.productCurator = productCurator;
         this.ownerCurator = ownerCurator;
-        this.isoFactory = isoFactory;
     }
 
     @ApiOperation(notes = "Retrieves list of Content", value = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response list() {
-        ResultIterator<Content> iterator = this.contentCurator.listAll().iterate();
-        return Response.ok(this.isoFactory.create(iterator)).build();
+    public CandlepinQuery<ContentData> list() {
+        return this.contentCurator.listAll().transform(new ElementTransformer<Content, ContentData>() {
+            @Override
+            public ContentData transform(Content content) {
+                return content.toDTO();
+            }
+        });
     }
 
     @ApiOperation(notes = "Retrieves a single Content", value = "getContent")
@@ -94,7 +96,7 @@ public class ContentResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_uuid}")
-    public Content getContent(@PathParam("content_uuid") String contentUuid) {
+    public ContentData getContent(@PathParam("content_uuid") String contentUuid) {
         Content content = this.contentCurator.lookupByUuid(contentUuid);
 
         if (content == null) {
@@ -103,14 +105,14 @@ public class ContentResource {
             );
         }
 
-        return content;
+        return content.toDTO();
     }
 
     @ApiOperation(notes = "Creates a Content", value = "createContent")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Content createContent(Content content) {
+    public ContentData createContent(Content content) {
         throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic content write operations are not supported."
         ));
@@ -121,7 +123,7 @@ public class ContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/batch")
-    public List<Content> createBatchContent(List<Content> contents) {
+    public Iterable<ContentData> createBatchContent(List<Content> contents) {
         throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic content write operations are not supported."
         ));
@@ -132,7 +134,7 @@ public class ContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{content_uuid}")
-    public Content updateContent(@PathParam("content_uuid") String contentUuid, Content changes) {
+    public ContentData updateContent(@PathParam("content_uuid") String contentUuid, Content changes) {
         throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic content write operations are not supported."
         ));

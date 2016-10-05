@@ -23,6 +23,7 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Content;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
@@ -32,10 +33,9 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ResultIterator;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
-import org.candlepin.resteasy.IterableStreamingOutputFactory;
+import org.candlepin.util.ElementTransformer;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -69,7 +69,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 
 
@@ -85,7 +84,6 @@ public class OwnerProductResource {
 
     private Configuration config;
     private I18n i18n;
-    private IterableStreamingOutputFactory isoFactory;
     private OwnerContentCurator ownerContentCurator;
     private OwnerCurator ownerCurator;
     private OwnerProductCurator ownerProductCurator;
@@ -94,14 +92,13 @@ public class OwnerProductResource {
     private ProductManager productManager;
 
     @Inject
-    public OwnerProductResource(Configuration config, I18n i18n, IterableStreamingOutputFactory isoFactory,
-        OwnerCurator ownerCurator, OwnerContentCurator ownerContentCurator,
-        OwnerProductCurator ownerProductCurator, ProductCertificateCurator productCertCurator,
-        ProductCurator productCurator, ProductManager productManager) {
+    public OwnerProductResource(Configuration config, I18n i18n, OwnerCurator ownerCurator,
+        OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator,
+        ProductCertificateCurator productCertCurator, ProductCurator productCurator,
+        ProductManager productManager) {
 
         this.config = config;
         this.i18n = i18n;
-        this.isoFactory = isoFactory;
         this.ownerContentCurator = ownerContentCurator;
         this.ownerCurator = ownerCurator;
         this.ownerProductCurator = ownerProductCurator;
@@ -196,17 +193,22 @@ public class OwnerProductResource {
         responseContainer = "List", value = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response list(
+    public CandlepinQuery<ProductData> list(
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
         @QueryParam("product") List<String> productIds) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
 
-        ResultIterator<Product> iterator = productIds != null && !productIds.isEmpty() ?
-            this.ownerProductCurator.getProductsByIds(owner, productIds).iterate() :
-            this.ownerProductCurator.getProductsByOwner(owner).iterate();
+        CandlepinQuery<Product> query = productIds != null && !productIds.isEmpty() ?
+            this.ownerProductCurator.getProductsByIds(owner, productIds) :
+            this.ownerProductCurator.getProductsByOwner(owner);
 
-        return Response.ok(this.isoFactory.create(iterator)).build();
+        return query.transform(new ElementTransformer<Product, ProductData>() {
+            @Override
+            public ProductData transform(Product element) {
+                return element.toDTO();
+            }
+        });
     }
 
     @ApiOperation(notes = "Retrieves a single Product", value = "getProduct")
@@ -289,7 +291,7 @@ public class OwnerProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/batch_content")
     @Transactional
-    public Product addBatchContent(
+    public ProductData addBatchContent(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
         Map<String, Boolean> contentMap) {
@@ -310,7 +312,9 @@ public class OwnerProductResource {
             productContent.add(new ProductContent(product, content, entry.getValue()));
         }
 
-        return this.productManager.addContentToProduct(product, productContent, owner, true);
+        product = this.productManager.addContentToProduct(product, productContent, owner, true);
+
+        return product.toDTO();
     }
 
     @ApiOperation(notes = "Adds Content to a Product  Single mode", value = "addContent")

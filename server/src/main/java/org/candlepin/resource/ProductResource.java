@@ -19,6 +19,7 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
@@ -28,8 +29,6 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ResultIterator;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
-import org.candlepin.resteasy.IterableStreamingOutputFactory;
-// import org.candlepin.resteasy.IteratorTransformer;
 
 import com.google.inject.Inject;
 
@@ -53,7 +52,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -77,19 +75,16 @@ public class ProductResource {
     private ProductCertificateCurator productCertCurator;
     private Configuration config;
     private I18n i18n;
-    private IterableStreamingOutputFactory isoFactory;
 
     @Inject
     public ProductResource(ProductCurator productCurator, OwnerCurator ownerCurator,
-        ProductCertificateCurator productCertCurator, Configuration config, I18n i18n,
-        IterableStreamingOutputFactory isoFactory) {
+        ProductCertificateCurator productCertCurator, Configuration config, I18n i18n) {
 
         this.productCurator = productCurator;
         this.productCertCurator = productCertCurator;
         this.ownerCurator = ownerCurator;
         this.config = config;
         this.i18n = i18n;
-        this.isoFactory = isoFactory;
     }
 
     /**
@@ -263,15 +258,14 @@ public class ProductResource {
     @GET
     @Path("/owners")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getProductOwners(
+    public CandlepinQuery<Owner> getProductOwners(
         @QueryParam("product") List<String> productUuids) {
 
         if (productUuids.isEmpty()) {
             throw new BadRequestException(i18n.tr("No product IDs specified"));
         }
 
-        ResultIterator<Owner> iterator = this.ownerCurator.lookupOwnersWithProduct(productUuids).iterate();
-        return Response.ok(this.isoFactory.create(iterator)).build();
+        return this.ownerCurator.lookupOwnersWithProduct(productUuids);
     }
 
     @ApiOperation(notes = "Refreshes Pools by Product", value = "refreshPoolsForProduct")
@@ -292,11 +286,10 @@ public class ProductResource {
             return null;
         }
 
-        ResultIterator<Owner> iterator = this.ownerCurator.lookupOwnersWithProduct(productUuids).iterate();
-
         // TODO:
-        // Replace this with the commented out block once the job scheduling is no longer performed
+        // Replace this with the commented out block below once the job scheduling is no longer performed
         // via PinsetterAsyncFilter
+        ResultIterator<Owner> iterator = this.ownerCurator.lookupOwnersWithProduct(productUuids).iterate();
         List<JobDetail> details = new LinkedList<JobDetail>();
         while (iterator.hasNext()) {
             details.add(RefreshPoolsJob.forOwner(iterator.next(), lazyRegen));
@@ -305,14 +298,14 @@ public class ProductResource {
 
         return details.toArray(new JobDetail[0]);
 
-
         // final Boolean lazy = lazyRegen; // Necessary to deal with Java's limitations with closures
-
-        // return Response.ok(this.isoFactory.create(iterator, new IteratorTransformer<Owner, JobDetail>() {
-        //     @Override
-        //     public JobDetail transform(Owner owner) {
-        //         return RefreshPoolsJob.forOwner(owner, lazy);
+        // return this.ownerCurator.lookupOwnersWithProduct(productUuids).transform(
+        //     new ElementTransform<Owner, JobDetail>() {
+        //         @Override
+        //         public JobDetail transform(Owner owner) {
+        //             return RefreshPoolsJob.forOwner(owner, lazy);
+        //         }
         //     }
-        // })).build();
+        // );
     }
 }

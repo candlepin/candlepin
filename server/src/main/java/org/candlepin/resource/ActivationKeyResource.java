@@ -17,18 +17,19 @@ package org.candlepin.resource;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ResultIterator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.resource.dto.ActivationKeyData;
-import org.candlepin.resteasy.IterableStreamingOutputFactory;
+import org.candlepin.util.ElementTransformer;
 import org.candlepin.util.ServiceLevelValidator;
+import org.candlepin.util.TransformedIterator;
 
 import com.google.inject.Inject;
 
@@ -36,8 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -49,7 +49,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -71,13 +70,11 @@ public class ActivationKeyResource {
     private I18n i18n;
     private ServiceLevelValidator serviceLevelValidator;
     private ActivationKeyRules activationKeyRules;
-    private IterableStreamingOutputFactory isoFactory;
 
     @Inject
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator, I18n i18n,
         PoolManager poolManager, ServiceLevelValidator serviceLevelValidator,
-        ActivationKeyRules activationKeyRules, OwnerProductCurator ownerProductCurator,
-        IterableStreamingOutputFactory isoFactory) {
+        ActivationKeyRules activationKeyRules, OwnerProductCurator ownerProductCurator) {
 
         this.activationKeyCurator = activationKeyCurator;
         this.i18n = i18n;
@@ -85,7 +82,6 @@ public class ActivationKeyResource {
         this.serviceLevelValidator = serviceLevelValidator;
         this.activationKeyRules = activationKeyRules;
         this.ownerProductCurator = ownerProductCurator;
-        this.isoFactory = isoFactory;
     }
 
     @ApiOperation(notes = "Retrieves a single Activation Key", value = "Get Activation Key")
@@ -108,17 +104,19 @@ public class ActivationKeyResource {
     @GET
     @Path("{activation_key_id}/pools")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Pool> getActivationKeyPools(
+    public Iterator<Pool> getActivationKeyPools(
         @PathParam("activation_key_id") String activationKeyId) {
 
         ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
-        List<Pool> pools = new ArrayList<Pool>();
 
-        for (ActivationKeyPool akp : key.getPools()) {
-            pools.add(akp.getPool());
-        }
-
-        return pools;
+        return new TransformedIterator<ActivationKeyPool, Pool>(key.getPools().iterator(),
+            new ElementTransformer<ActivationKeyPool, Pool>() {
+                @Override
+                public Pool transform(ActivationKeyPool akp) {
+                    return akp.getPool();
+                }
+            }
+        );
     }
 
     @ApiOperation(notes = "Updates an Activation Key", value = "Update Activation Key")
@@ -248,9 +246,8 @@ public class ActivationKeyResource {
     @ApiResponses({ @ApiResponse(code = 200, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response findActivationKey() {
-        ResultIterator<ActivationKey> iterator = this.activationKeyCurator.listAll().iterate();
-        return Response.ok(this.isoFactory.create(iterator)).build();
+    public CandlepinQuery<ActivationKey> findActivationKey() {
+        return this.activationKeyCurator.listAll();
     }
 
     @ApiOperation(notes = "Removes an Activation Key", value = "deleteActivationKey")

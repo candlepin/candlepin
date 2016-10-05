@@ -16,10 +16,9 @@ package org.candlepin.resource;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.ResultIterator;
-import org.candlepin.resteasy.IterableStreamingOutputFactory;
 
 import com.google.inject.Inject;
 
@@ -37,7 +36,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -55,24 +53,20 @@ public class ConsumerTypeResource {
     private static Logger log = LoggerFactory.getLogger(ConsumerTypeResource.class);
     private ConsumerTypeCurator consumerTypeCurator;
     private I18n i18n;
-    private IterableStreamingOutputFactory isoFactory;
 
     @Inject
-    public ConsumerTypeResource(ConsumerTypeCurator consumerTypeCurator, I18n i18n,
-        IterableStreamingOutputFactory isoFactory) {
+    public ConsumerTypeResource(ConsumerTypeCurator consumerTypeCurator, I18n i18n) {
 
         this.consumerTypeCurator = consumerTypeCurator;
         this.i18n = i18n;
-        this.isoFactory = isoFactory;
     }
 
     @ApiOperation(notes = "Retrieves a list of Consumer Types", value = "list")
     @GET
     @Produces({MediaType.APPLICATION_JSON })
     @Wrapped(element = "consumertypes")
-    public Response list() {
-        ResultIterator<ConsumerType> iterator = this.consumerTypeCurator.listAll().iterate();
-        return Response.ok(this.isoFactory.create(iterator)).build();
+    public CandlepinQuery<ConsumerType> list() {
+        return this.consumerTypeCurator.listAll();
     }
 
     @ApiOperation(notes = "Retrieves a single Consumer Type", value = "getConsumerType")

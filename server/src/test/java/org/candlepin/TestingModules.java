@@ -58,7 +58,6 @@ import org.candlepin.resource.OwnerResource;
 import org.candlepin.resource.PoolResource;
 import org.candlepin.resource.ProductResource;
 import org.candlepin.resource.SubscriptionResource;
-import org.candlepin.resteasy.IterableStreamingOutputFactory;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.resteasy.filter.StoreFactory;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -298,9 +297,6 @@ public class TestingModules {
 
             bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
                 .to(ExpiryDateFunction.class).in(Singleton.class);
-
-            // Streaming output factory
-            bind(IterableStreamingOutputFactory.class);
 
         }
     }

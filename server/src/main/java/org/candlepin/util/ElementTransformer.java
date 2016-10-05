@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2016 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,12 +12,12 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy;
+package org.candlepin.util;
 
 
 
 /**
- * The IteratorTransformer interface is used with the IterableStreamingOutput object to provide
+ * The ElementTransformer interface is used with the CandlepinQuery objects to provide
  * transformation services for each element.
  *
  * @param <I>
@@ -26,16 +26,16 @@ package org.candlepin.resteasy;
  * @param <O>
  *  The element type to be output by this transformer
  */
-public interface IteratorTransformer<I, O> {
+public interface ElementTransformer<I, O> {
 
     /**
-     * Transforms a given element. If the element is to be ignored, this method should return null.
+     * Transforms a given element.
      *
      * @param element
      *  The element to transform
      *
      * @return
-     *  the transformed element, or null to skip the value
+     *  the transformed element
      */
     O transform(I element);
 

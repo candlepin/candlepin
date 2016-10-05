@@ -61,7 +61,7 @@ public class ImportRecordJobTest extends DatabaseTestFixture {
 
         this.job.execute(null);
 
-        List<ImportRecord> records = this.importRecordCurator.findRecords(owner);
+        List<ImportRecord> records = this.importRecordCurator.findRecords(owner).list();
 
         Assert.assertEquals(10, records.size());
     }
@@ -80,7 +80,7 @@ public class ImportRecordJobTest extends DatabaseTestFixture {
 
         this.job.execute(null);
 
-        List<ImportRecord> records = this.importRecordCurator.findRecords(owner);
+        List<ImportRecord> records = this.importRecordCurator.findRecords(owner).list();
 
         Assert.assertEquals(7, records.size());
     }
@@ -108,8 +108,8 @@ public class ImportRecordJobTest extends DatabaseTestFixture {
 
         this.job.execute(null);
 
-        Assert.assertEquals(10, importRecordCurator.findRecords(owner1).size());
-        Assert.assertEquals(4, importRecordCurator.findRecords(owner2).size());
+        Assert.assertEquals(10, importRecordCurator.findRecords(owner1).list().size());
+        Assert.assertEquals(4, importRecordCurator.findRecords(owner2).list().size());
     }
 
 }

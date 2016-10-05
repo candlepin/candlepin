@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.util.ElementTransformer;
+
 import org.hibernate.Session;
 import org.hibernate.criterion.Order;
 
@@ -115,6 +117,19 @@ public class EmptyCandlepinQuery<T> implements CandlepinQuery<T> {
     @Override
     public CandlepinQuery<T> addOrder(Order order) {
         return this;
+    }
+
+    /**
+     * Returns a reference to this CandlepinQuery instance.
+     *
+     * @param transformer
+     *
+     * @return
+     *  this query instance
+     */
+    @Override
+    public <O> CandlepinQuery<O> transform(ElementTransformer<T, O> transformer) {
+        return (CandlepinQuery<O>) this;
     }
 
     /**

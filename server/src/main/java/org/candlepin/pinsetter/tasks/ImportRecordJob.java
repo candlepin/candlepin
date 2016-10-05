@@ -58,7 +58,7 @@ public class ImportRecordJob extends KingpinJob {
     @Override
     public void toExecute(JobExecutionContext jec) throws JobExecutionException {
         for (Owner owner : this.ownerCurator.listAll().list()) {
-            List<ImportRecord> records = this.importRecordCurator.findRecords(owner);
+            List<ImportRecord> records = this.importRecordCurator.findRecords(owner).list();
 
             if (DEFAULT_KEEP < records.size()) {
                 // records are already sorted by date, so just shave off of the end

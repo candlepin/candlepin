@@ -42,7 +42,6 @@ import java.util.Set;
  * interact with Products.
  */
 public class ProductCurator extends AbstractHibernateCurator<Product> {
-
     private static Logger log = LoggerFactory.getLogger(ProductCurator.class);
 
     private Configuration config;

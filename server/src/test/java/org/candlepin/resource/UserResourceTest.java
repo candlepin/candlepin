@@ -32,7 +32,6 @@ import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
 import org.candlepin.model.User;
-import org.candlepin.resteasy.IterableStreamingOutput;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -44,7 +43,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
-import javax.ws.rs.core.Response;
 
 
 
@@ -93,10 +91,8 @@ public class UserResourceTest extends DatabaseTestFixture {
 
         Role owner1Role = new Role(owner1.getKey() + " role");
         Role owner2Role = new Role(owner2.getKey() + " role");
-        owner1Role.addPermission(new PermissionBlueprint(PermissionType.OWNER, owner1,
-            Access.ALL));
-        owner1Role.addPermission(new PermissionBlueprint(PermissionType.OWNER, owner2,
-            Access.READ_ONLY));
+        owner1Role.addPermission(new PermissionBlueprint(PermissionType.OWNER, owner1, Access.ALL));
+        owner1Role.addPermission(new PermissionBlueprint(PermissionType.OWNER, owner2, Access.READ_ONLY));
         owner1Role.addUser(user);
         owner2Role.addUser(user);
         roleCurator.create(owner1Role);
@@ -109,9 +105,9 @@ public class UserResourceTest extends DatabaseTestFixture {
 
         // Requesting the list of owners for this user should assume ALL, and not
         // return owner2:
-        Response response = userResource.listUsersOwners(user.getUsername(), userPrincipal);
+        Iterable<Owner> response = userResource.listUsersOwners(user.getUsername(), userPrincipal);
         List<Owner> owners = new LinkedList<Owner>();
-        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
+        for (Object entity : response) {
             owners.add((Owner) entity);
         }
 
@@ -138,9 +134,9 @@ public class UserResourceTest extends DatabaseTestFixture {
         perms.add(new UsernameConsumersPermission(user, owner1));
         Principal userPrincipal = new UserPrincipal(user.getUsername(), perms, false);
 
-        Response response = userResource.listUsersOwners(user.getUsername(), userPrincipal);
+        Iterable<Owner> response = userResource.listUsersOwners(user.getUsername(), userPrincipal);
         List<Owner> owners = new LinkedList<Owner>();
-        for (Object entity : (IterableStreamingOutput) response.getEntity()) {
+        for (Object entity : response) {
             owners.add((Owner) entity);
         }
 
