@@ -1465,15 +1465,19 @@ public class CandlepinPoolManager implements PoolManager {
 
         log.debug("Locking pools: {}", poolQuantityMap.keySet());
 
-        List<Pool> pools = poolCurator.lockAndLoadBatch(poolQuantityMap.keySet());
-
-        if (log.isDebugEnabled()) {
-            for (Pool pool : pools) {
-                log.debug("Locked pool: {} consumed: {}", pool, pool.getConsumed());
-            }
+        Set<String> ids = new HashSet<String>();
+        for(Pool p: unlockedPools) {
+        	ids.add(p.getId());
         }
 
         handler.unHandleConsumerAndPool(consumer, poolQuantities, entitlements);
+
+        List<Pool> pools = poolCurator.lockAndLoadBatch(ids);
+
+            for (Pool pool : pools) {
+                log.debug("Locked pool: {} consumed: {}", pool, pool.getConsumed());
+            }
+
 
         if (quantityFound) {
             log.info("Running pre-entitlement rules.");
