@@ -68,8 +68,11 @@ import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ServiceLevelValidator;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -97,6 +100,10 @@ import javax.ws.rs.core.Response;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ConsumerResourceTest {
+
+    @SuppressWarnings("checkstyle:visibilitymodifier")
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     private I18n i18n;
 
@@ -499,6 +506,45 @@ public class ConsumerResourceTest {
             usa, null, null,  null, oc, null, null, null, null, null,
             null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
         cr.create(c, up, null, "testOwner", null);
+    }
+
+    @Test
+    public void testCreateConsumerShouldFailOnMaxLengthOfName() {
+        thrown.expect(BadRequestException.class);
+        int max = Consumer.MAX_LENGTH_OF_CONSUMER_NAME;
+        String m = String.format("Name of the consumer " +
+            "should be shorter than %d characters.", max);
+        thrown.expectMessage(m);
+
+        Consumer c = mock(Consumer.class);
+        Owner o = mock(Owner.class);
+        UserPrincipal up = mock(UserPrincipal.class);
+        OwnerCurator oc = mock(OwnerCurator.class);
+        ConsumerType cType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        ConsumerResource consumerResource = createConsumerResource(oc);
+
+        String ownerKey = "testOwner";
+        when(oc.lookupByKey(eq(ownerKey))).thenReturn(o);
+        when(o.getKey()).thenReturn(ownerKey);
+        when(c.getType()).thenReturn(cType);
+        String s = RandomStringUtils.randomAlphanumeric(max + 1);
+        when(c.getName()).thenReturn(s);
+        when(up.canAccess(eq(o), eq(SubResource.CONSUMERS), eq(Access.CREATE))).
+            thenReturn(true);
+
+        consumerResource.create(c, up, null, ownerKey, null);
+    }
+
+    ConsumerResource createConsumerResource(OwnerCurator oc) {
+        ConsumerResource consumerResource = new ConsumerResource(
+            null, null, null, null, null, null, null,
+            i18n,
+            null, null, null, null, null, null, null, null,
+            oc,
+            null, null, null, null, null, null,
+            new CandlepinCommonTestConfig(),
+            null, null, null, null);
+        return consumerResource;
     }
 
     @Test
