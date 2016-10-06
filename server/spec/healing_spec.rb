@@ -149,4 +149,29 @@ describe 'Healing' do
     ents[0]['quantity'].should == 2
   end
 
+  it 'healing fails when autobind disabled on owner' do
+    owner = create_owner random_string('test_owner1')
+    owner['autobindDisabled'] = true
+    @cp.update_owner(owner['key'], owner)
+
+    owner = @cp.get_owner(owner['key'])
+    owner.should_not be_nil
+
+    user_cp = user_client(owner, random_string("test-user"))
+
+    consumer = user_cp.register("foofy", :system, nil, {'cpu.cpu_socket(s)' => '8'}, nil, owner['key'], [], [])
+    consumer_cp = Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
+
+    exception_thrown = false
+    begin
+      consumer_cp.consume_product()
+    rescue RestClient::BadRequest => e
+      exception_thrown = true
+      ex_message = "Autobind is not enabled for owner '#{owner['key']}'."
+      data = JSON.parse(e.response)
+      data['displayMessage'].should == ex_message
+    end
+    exception_thrown.should be true
+  end
+
 end

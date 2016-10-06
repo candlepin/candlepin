@@ -39,8 +39,11 @@ import org.quartz.JobExecutionException;
 import org.quartz.ListenerManager;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -55,10 +58,16 @@ public class HypervisorUpdateJobTest {
     private OwnerCurator ownerCurator;
     private ConsumerCurator consumerCurator;
     private ConsumerResource consumerResource;
+    private I18n i18n;
 
 
     @Before
     public void init() {
+        i18n = I18nFactory.getI18n(
+            getClass(),
+            Locale.US,
+            I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK
+        );
         owner = mock(Owner.class);
         principal = mock(Principal.class);
         ownerCurator = mock(OwnerCurator.class);
@@ -95,7 +104,8 @@ public class HypervisorUpdateJobTest {
         when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class)))
             .thenReturn(new VirtConsumerMap());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource,
+            i18n);
         job.execute(ctx);
         verify(consumerResource).create(any(Consumer.class), eq(principal), anyString(), eq("joe"),
             anyString(), eq(false));
@@ -112,7 +122,8 @@ public class HypervisorUpdateJobTest {
         when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class))).thenReturn(
             new VirtConsumerMap());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource,
+            i18n);
         job.execute(ctx);
         ArgumentCaptor<Consumer> argument = ArgumentCaptor.forClass(Consumer.class);
         verify(consumerResource).create(argument.capture(), eq(principal), anyString(), eq("joe"),
@@ -134,7 +145,8 @@ public class HypervisorUpdateJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource,
+            i18n);
         job.execute(ctx);
         verify(consumerResource).performConsumerUpdates(any(Consumer.class), eq(hypervisor),
             any(VirtConsumerMap.class), eq(false));
@@ -155,7 +167,8 @@ public class HypervisorUpdateJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource,
+            i18n);
         job.execute(ctx);
         assertEquals("updateReporterId", hypervisor.getHypervisorId().getReporterId());
     }
@@ -175,7 +188,8 @@ public class HypervisorUpdateJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource,
+            i18n);
         job.execute(ctx);
         verify(consumerResource, never()).create(any(Consumer.class), any(Principal.class),
             anyString(), anyString(), anyString(), eq(false));
@@ -202,7 +216,8 @@ public class HypervisorUpdateJobTest {
         when(consumerCurator.getGuestConsumersMap(eq(owner), any(Set.class)))
             .thenReturn(new VirtConsumerMap());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource,
+            i18n);
         job.execute(ctx);
 
         Set<String> expectedSet = new HashSet<String>();
@@ -219,7 +234,8 @@ public class HypervisorUpdateJobTest {
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobStatus preExistingJobStatus = new JobStatus();
         preExistingJobStatus.setState(JobState.WAITING);
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource,
+            i18n);
         JobStatus newlyScheduledJobStatus = new JobStatus();
 
         JobCurator jobCurator = mock(JobCurator.class);
@@ -240,12 +256,36 @@ public class HypervisorUpdateJobTest {
      */
     @Test
     public void monogamousJobTest() throws JobExecutionException, SchedulerException {
-
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobStatus newJob = new JobStatus(detail);
         JobCurator jobCurator = mock(JobCurator.class);
         when(jobCurator.findNumRunningByClassAndTarget(owner.getKey(), HypervisorUpdateJob.class))
                 .thenReturn(1L);
         assertFalse(HypervisorUpdateJob.isSchedulable(jobCurator, newJob));
+    }
+
+    @Test
+    public void ensureJobFailsWhenAutobindDisabledForTargetOwner() throws Exception {
+        // Disabled autobind
+        when(owner.autobindDisabled()).thenReturn(true);
+        when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
+
+        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
+        JobExecutionContext ctx = mock(JobExecutionContext.class);
+        when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
+        when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class)))
+            .thenReturn(new VirtConsumerMap());
+
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource,
+            i18n);
+
+        try {
+            job.execute(ctx);
+            fail("Expected exception due to autobind being disabled.");
+        }
+        catch (JobExecutionException jee) {
+            assertEquals(jee.getCause().getMessage(),
+                "Could not update host/guest mapping. Autobind is disabled for owner joe.");
+        }
     }
 }

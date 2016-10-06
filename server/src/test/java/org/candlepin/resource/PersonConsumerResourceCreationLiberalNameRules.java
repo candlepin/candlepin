@@ -32,6 +32,8 @@ import org.junit.Test;
  */
 public class PersonConsumerResourceCreationLiberalNameRules extends
     ConsumerResourceCreationLiberalNameRules {
+
+    @Override
     public ConsumerType initSystem() {
         ConsumerType systemtype = new ConsumerType(
             ConsumerType.ConsumerTypeEnum.PERSON);

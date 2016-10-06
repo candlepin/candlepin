@@ -901,6 +901,11 @@ public class OwnerResource {
             }
         }
 
+        // Update the autobindDisabled field if the incoming value is null.
+        if (owner.getAutobindDisabled() != null) {
+            toUpdate.setAutobindDisabled(owner.getAutobindDisabled());
+        }
+
         ownerCurator.merge(toUpdate);
         Event e = eventBuilder.setNewEntity(toUpdate).buildEvent();
         sink.queueEvent(e);

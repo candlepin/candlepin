@@ -29,7 +29,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -71,7 +70,7 @@ public class EntitleByProductsJobTest {
     }
 
     @Test
-    public void bindByProductsExec() throws JobExecutionException {
+    public void bindByProductsExec() throws Exception  {
         String[] pids = {"pid1", "pid2", "pid3"};
 
         JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumer, null, null);

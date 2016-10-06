@@ -2028,7 +2028,7 @@
     </changeSet>
     <changeSet author="awood" id="1413225753032-290">
         <comment>
-             Add the default quartz lock columns. 
+             Add the default quartz lock columns.
         </comment>
         <insert tableName="QRTZ_LOCKS">
             <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>
@@ -2279,4 +2279,5 @@
     <include file="db/changelog/20160419110701-oracle-add-indexes-for-foreign-keys.xml"/>
     <include file="db/changelog/20160714130753-add_lower_columns.xml"/>
     <include file="db/changelog/20160722162105-remove-bad-ueber-cert-data.xml"/>
+    <include file="db/changelog/20160907121757-add-autobind-disabled-column-to-owner.xml"/>
 </databaseChangeLog>
