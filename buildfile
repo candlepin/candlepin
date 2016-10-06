@@ -116,7 +116,7 @@ COMMONS = ['commons-codec:commons-codec:jar:1.4',
 
 LIQUIBASE = 'org.liquibase:liquibase-core:jar:3.1.0'
 
-GETTEXT_COMMONS = 'org.xnap.commons:gettext-commons:jar:0.9.6'
+GETTEXT_COMMONS = 'com.googlecode.gettext-commons:gettext-commons:jar:0.9.8'
 
 BOUNCYCASTLE = 'org.bouncycastle:bcprov-jdk16:jar:1.46'
 
