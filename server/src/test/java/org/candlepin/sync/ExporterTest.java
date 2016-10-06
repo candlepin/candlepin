@@ -27,6 +27,7 @@ import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
@@ -40,10 +41,11 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.KeyPair;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.Owner;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.pki.PKIUtility;
@@ -106,6 +108,8 @@ public class ExporterTest {
     private CandlepinCommonTestConfig config;
     private ExportRules exportRules;
     private PrincipalProvider pprov;
+    private ProductCurator pc;
+    private SyncUtils su;
 
     @Before
     public void setUp() {
@@ -130,7 +134,9 @@ public class ExporterTest {
         dve = new DistributorVersionExporter();
         cdnc = mock(CdnCurator.class);
         cdne = new CdnExporter();
-
+        pc = mock(ProductCurator.class);
+        ProductCachedSerializationModule productCachedModule = new ProductCachedSerializationModule(pc);
+        su = new SyncUtils(config, productCachedModule);
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
     }
 
@@ -202,10 +208,13 @@ public class ExporterTest {
         Set<Product> sppSet = new HashSet<Product>();
         sppSet.add(subProvidedProduct);
 
+        when(pool.getId()).thenReturn("MockedPoolId");
         when(pool.getProvidedProducts()).thenReturn(ppset);
+        when(pc.getPoolProvidedProductsCached(pool.getId())).thenReturn(ppset);
         when(pool.getProduct()).thenReturn(prod1);
 
         when(pool.getDerivedProvidedProducts()).thenReturn(sppSet);
+        when(pc.getPoolDerivedProvidedProductsCached(pool.getId())).thenReturn(sppSet);
         when(pool.getDerivedProduct()).thenReturn(subProduct);
 
         when(ent.getPool()).thenReturn(pool);
@@ -231,7 +240,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su);
 
         File export = e.getFullExport(consumer);
 
@@ -284,7 +293,7 @@ public class ExporterTest {
             .thenReturn("publicKey".getBytes());
 
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su);
 
         e.getFullExport(consumer);
     }
@@ -321,7 +330,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su);
         File export = e.getFullExport(consumer);
 
         // VERIFY
@@ -367,7 +376,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su);
         File export = e.getFullExport(consumer);
 
         // VERIFY
@@ -414,7 +423,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su);
         File export = e.getFullExport(consumer);
 
         verifyContent(export, "export/consumer.json",
@@ -468,7 +477,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su);
         File export = e.getFullExport(consumer);
 
         verifyContent(export, "export/distributor_version/test-dist-ver.json",
@@ -595,7 +604,7 @@ public class ExporterTest {
             }
             os.flush();
             os.close();
-            ObjectMapper om = SyncUtils.getObjectMapper(new MapConfiguration(
+            ObjectMapper om = TestSyncUtils.getTestSyncUtils(new MapConfiguration(
                 new HashMap<String, String>() {
                     {
                         put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
@@ -688,7 +697,7 @@ public class ExporterTest {
             os.flush();
             os.close();
 
-            ObjectMapper om = SyncUtils.getObjectMapper(new MapConfiguration(
+            ObjectMapper om = TestSyncUtils.getTestSyncUtils(new MapConfiguration(
                 new HashMap<String, String>() {
                     {
                         put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
@@ -722,7 +731,7 @@ public class ExporterTest {
             }
             os.flush();
             os.close();
-            ObjectMapper om = SyncUtils.getObjectMapper(new MapConfiguration(
+            ObjectMapper om = TestSyncUtils.getTestSyncUtils(new MapConfiguration(
                 new HashMap<String, String>() {
                     {
                         put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");

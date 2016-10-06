@@ -23,6 +23,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
 
@@ -88,7 +89,7 @@ public class PoolHelper {
      */
     public static List<Pool> createHostRestrictedPools(PoolManager poolManager, Consumer consumer,
         List<Pool> pools, Map<String, Entitlement> sourceEntitlements,
-        Map<String, Map<String, String>> attributeMaps) {
+        Map<String, Map<String, String>> attributeMaps, ProductCurator productCurator) {
         List<Pool> poolsToCreate = new ArrayList<Pool>();
         List<Pool> poolsToUpdateFromStack = new ArrayList<Pool>();
         for (Pool pool : pools) {
@@ -106,7 +107,7 @@ public class PoolHelper {
                         pool.getContractNumber(),
                         pool.getAccountNumber(),
                         pool.getOrderNumber(),
-                        pool.getProvidedProducts(),
+                        productCurator.getPoolProvidedProductsCached(pool.getId())                        ,
                         sourceEntitlements.get(pool.getId()));
             }
             else {
@@ -125,7 +126,7 @@ public class PoolHelper {
                         pool.getContractNumber(),
                         pool.getAccountNumber(),
                         pool.getOrderNumber(),
-                        pool.getDerivedProvidedProducts(),
+                        productCurator.getPoolDerivedProvidedProductsCached(pool.getId()),
                         sourceEntitlements.get(pool.getId()));
             }
 
@@ -157,18 +158,20 @@ public class PoolHelper {
 
     /**
      * Copies the provided products from a source pool to a derived pool.
-     *
+     * It assumes that source Pool is already in database and that the provided Products or
+     * derived provided Products are linked with the Pool in the database!
      * @param source subscription
      * @param destination pool
      */
-    private static void copyProvidedProducts(Pool source, Pool destination, OwnerProductCurator curator) {
+    private static void copyProvidedProducts(Pool source, Pool destination,
+        OwnerProductCurator curator, ProductCurator productCurator) {
         Set<Product> products;
 
         if (source.getDerivedProduct() != null) {
-            products = source.getDerivedProvidedProducts();
+            products = productCurator.getPoolDerivedProvidedProductsCached(source.getId());
         }
         else {
-            products = source.getProvidedProducts();
+            products = productCurator.getPoolProvidedProductsCached(source.getId());
         }
 
         for (Product product : products) {
@@ -185,7 +188,7 @@ public class PoolHelper {
 
     public static Pool clonePool(Pool sourcePool, Product product, String quantity,
         Map<String, String> attributes, String subKey, OwnerProductCurator curator,
-        Entitlement sourceEntitlement) {
+        Entitlement sourceEntitlement, ProductCurator productCurator) {
 
         Pool pool = createPool(product, sourcePool.getOwner(), quantity,
             sourcePool.getStartDate(), sourcePool.getEndDate(),
@@ -195,7 +198,7 @@ public class PoolHelper {
         pool.setSourceSubscription(
             new SourceSubscription(sourcePool.getSubscriptionId(), subKey));
 
-        copyProvidedProducts(sourcePool, pool, curator);
+        copyProvidedProducts(sourcePool, pool, curator, productCurator);
 
         // Add in the new attributes
         for (Entry<String, String> entry : attributes.entrySet()) {

@@ -32,7 +32,6 @@ import org.hibernate.annotations.LazyCollectionOption;
 
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -279,7 +278,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * Collection is transient and should never make it to the database.
      */
     @Transient
-    private Set<ProvidedProduct> providedProductDtos = null;
+    private Set<ProvidedProduct> providedProductDtos = new HashSet<ProvidedProduct>();
 
     /**
      * Set of provided product DTOs used for compatibility with the pre-2.0 JSON.
@@ -287,7 +286,14 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * Collection is transient and should never make it to the database.
      */
     @Transient
-    private Set<ProvidedProduct> derivedProvidedProductDtos = null;
+    private Set<ProvidedProduct> derivedProvidedProductDtos = new HashSet<ProvidedProduct>();;
+
+    /**
+     * Transient property that holds derived provided products from database. It is
+     * populated before serialization happens.
+     */
+    @Transient
+    private Set<ProvidedProduct> derivedProvidedProductDtosCached = new HashSet<ProvidedProduct>();;
 
     @OneToMany(mappedBy = "pool")
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
@@ -766,20 +772,41 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      */
     @JsonProperty("providedProducts")
     public Set<ProvidedProduct> getProvidedProductDtos() {
+        return providedProductDtos;
+    }
+
+    /**
+     * This is a helper method to fill in transient fields in this class.
+     * The transient fields are providedProductDtos, derivedProvidedProductDtosCached
+     *
+     * The reason we need to fill transient properties is, that various parts of code
+     * that rely on serialization expect Pool object.
+     *
+     * From style point of view, this method could be moved to other class as well
+     * (the ProductManager).
+     *
+     *
+     * @param productCurator
+     */
+    public void populateAllTransientProvidedProducts(ProductCurator productCurator) {
         Set<ProvidedProduct> prods = new HashSet<ProvidedProduct>();
 
-        // TODO:
-        // These DTOs need to be resolved or we could start running into conflicts. Including these
-        // DTOs in the list is not a long-term solution.
         if (this.providedProductDtos != null) {
             prods.addAll(this.providedProductDtos);
         }
 
-        for (Product p : getProvidedProducts()) {
+        for (Product p : productCurator.getPoolProvidedProductsCached(id)) {
             prods.add(new ProvidedProduct(p));
         }
 
-        return prods;
+        providedProductDtos = prods;
+
+        derivedProvidedProductDtosCached = new HashSet<ProvidedProduct>();
+
+        for (Product p : productCurator.getPoolDerivedProvidedProductsCached(id)) {
+            ProvidedProduct product = new ProvidedProduct(p);
+            derivedProvidedProductDtosCached.add(product);
+        }
     }
 
     /*
@@ -787,60 +814,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      */
     public void setProvidedProductDtos(Set<ProvidedProduct> dtos) {
         providedProductDtos = dtos;
-    }
-
-    /**
-     * Check if this pool provides the given product
-     *
-     * @param productId
-     *  The Red Hat product ID for which to search.
-     *
-     * @return true if pool provides this product
-     */
-    public Boolean provides(String productId) {
-        if (this.getProductId().equals(productId)) {
-            return true;
-        }
-
-        if (providedProducts != null) {
-            for (Product product : providedProducts) {
-                if (product.getId().equals(productId)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Check if this pool provides the given product ID as a derived provided product.
-     * Used when we're looking for pools we could give to a host that will create
-     * sub-pools for guest products.
-     *
-     * If derived product ID is not set, we just use the normal set of products.
-     *
-     * @param productId
-     * @return true if pool provides this product
-     */
-    public Boolean providesDerived(String productId) {
-        if (this.getDerivedProduct() != null) {
-            if (getDerivedProduct().equals(productId)) {
-                return true;
-            }
-
-            if (getDerivedProvidedProducts() != null) {
-                for (Product product : getDerivedProvidedProducts()) {
-                    if (product.getId().equals(productId)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        else {
-            return this.provides(productId);
-        }
-        return false;
     }
 
     /**
@@ -1058,25 +1031,23 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      */
     @JsonProperty("derivedProvidedProducts")
     public Set<ProvidedProduct> getDerivedProvidedProductDtos() {
-        Set<ProvidedProduct> prods = new HashSet<ProvidedProduct>();
-        Map<String, ProvidedProduct> prodMap = new HashMap<String, ProvidedProduct>();
+        Set<ProvidedProduct> pp = new HashSet<ProvidedProduct>();
+        Set<String> added = new HashSet<String>();
 
-        for (Product p : getDerivedProvidedProducts()) {
-            ProvidedProduct product = new ProvidedProduct(p);
-            prods.add(product);
-            prodMap.put(product.getProductId(), product);
+        for (ProvidedProduct p : derivedProvidedProductDtosCached) {
+            pp.add(p);
+            added.add(p.getProductId());
         }
 
-        if (this.derivedProvidedProductDtos != null) {
-            for (ProvidedProduct product : this.derivedProvidedProductDtos) {
-                if (!prodMap.containsKey(product.getProductId())) {
-                    prods.add(product);
-                }
+        for (ProvidedProduct p : derivedProvidedProductDtos) {
+            if (!added.contains(p.getProductId())) {
+                pp.add(p);
             }
         }
 
-        return prods;
+        return pp;
     }
+
 
     /*
      * Used temporarily while importing a manifest.

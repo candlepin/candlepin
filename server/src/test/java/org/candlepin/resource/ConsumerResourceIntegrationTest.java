@@ -575,7 +575,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             null, null, this.entitlementCurator, null, null, null, null, null,
             null, null, null, null, this.poolManager, null, null, null,
             null, null, null, null, null, new CandlepinCommonTestConfig(), null,
-            null, null, mock(ConsumerBindUtil.class));
+            null, null, mock(ConsumerBindUtil.class), productCurator);
 
         Response rsp = consumerResource.bind(
             consumer.getUuid(), pool.getId().toString(), null, 1, null,

@@ -15,6 +15,7 @@
 package org.candlepin.policy.js;
 
 import org.candlepin.common.exceptions.IseException;
+import org.candlepin.jackson.ProductCachedSerializationModule;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -28,6 +29,7 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate4.Hibernate4Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
+import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,13 +56,10 @@ public class RulesObjectMapper {
 
     private static Logger log = LoggerFactory.getLogger(RulesObjectMapper.class);
 
-    private static class InstanceHolder {
-        public static final RulesObjectMapper INSTANCE = new RulesObjectMapper();
-    }
-
     private ObjectMapper mapper;
 
-    private RulesObjectMapper() {
+    @Inject
+    public RulesObjectMapper(ProductCachedSerializationModule poolCachedSerializationModule) {
         this.mapper = new ObjectMapper();
 
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
@@ -82,8 +81,9 @@ public class RulesObjectMapper {
 
         Hibernate4Module hbm = new Hibernate4Module();
         hbm.enable(Hibernate4Module.Feature.FORCE_LAZY_LOADING);
-        mapper.registerModule(hbm);
 
+        mapper.registerModule(hbm);
+        mapper.registerModule(poolCachedSerializationModule);
         // Very important for deployments so new rules files can return additional
         // properties that this current server doesn't know how to serialize, but still
         // shouldn't fail on.
@@ -95,10 +95,6 @@ public class RulesObjectMapper {
             mapper.getTypeFactory());
         AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
         this.mapper.setAnnotationIntrospector(pair);
-    }
-
-    public static RulesObjectMapper instance() {
-        return InstanceHolder.INSTANCE;
     }
 
     public String toJsonString(Map<String, Object> toSerialize) {

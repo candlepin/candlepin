@@ -20,6 +20,7 @@ import static org.mockito.Mockito.when;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -31,12 +32,14 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.JsRunnerRequestCache;
+import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.service.ProductServiceAdapter;
@@ -45,12 +48,12 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.Util;
 
+import com.google.inject.Provider;
+
 import org.junit.Before;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18nFactory;
-
-import com.google.inject.Provider;
 
 import java.io.InputStream;
 import java.util.Locale;
@@ -78,6 +81,7 @@ public class EntitlementRulesTestFixture {
     private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock
     private JsRunnerRequestCache cache;
+    @Mock private ProductCurator productCurator;
 
     @Mock
     protected PoolCurator poolCurator;
@@ -109,14 +113,17 @@ public class EntitlementRulesTestFixture {
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config,
             consumerCurator,
-            poolCurator
+            poolCurator,
+            productCurator,
+            new RulesObjectMapper(new ProductCachedSerializationModule(productCurator))
         );
 
         owner = new Owner();
         consumer = new Consumer("test consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
-        poolRules = new PoolRules(poolManagerMock, config, entCurMock, ownerProductCuratorMock);
+        poolRules = new PoolRules(poolManagerMock, config, entCurMock, ownerProductCuratorMock,
+                productCurator);
     }
 
     protected Subscription createVirtLimitSub(String productId, int quantity,

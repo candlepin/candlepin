@@ -14,28 +14,33 @@
  */
 package org.candlepin.policy.js.activationkey;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.JsRunnerRequestCache;
+import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
+
+import com.google.inject.Provider;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
-
-import com.google.inject.Provider;
 
 import java.io.InputStream;
 import java.util.Date;
@@ -71,7 +76,9 @@ public class ActivationKeyRulesTest {
         when(cacheProvider.get()).thenReturn(cache);
 
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
-        actKeyRules = new ActivationKeyRules(provider.get(), i18n);
+        ProductCurator productCurator = Mockito.mock(ProductCurator.class);
+        actKeyRules = new ActivationKeyRules(provider.get(), i18n,
+                new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)));
     }
 
     @Test

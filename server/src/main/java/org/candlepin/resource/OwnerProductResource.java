@@ -22,6 +22,7 @@ import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ProductManager;
+import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
@@ -38,14 +39,8 @@ import org.candlepin.resteasy.JsonProvider;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 
 import org.quartz.JobDetail;
 import org.slf4j.Logger;
@@ -77,6 +72,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 
 
 /**
@@ -97,12 +97,13 @@ public class OwnerProductResource {
     private ProductCertificateCurator productCertCurator;
     private ProductCurator productCurator;
     private ProductManager productManager;
+    private ProductCachedSerializationModule productCachedModule;
 
     @Inject
     public OwnerProductResource(Configuration config, I18n i18n, OwnerCurator ownerCurator,
         OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator,
         ProductCertificateCurator productCertCurator, ProductCurator productCurator,
-        ProductManager productManager) {
+        ProductManager productManager, ProductCachedSerializationModule productCachedModule) {
 
         this.config = config;
         this.i18n = i18n;
@@ -112,6 +113,7 @@ public class OwnerProductResource {
         this.productCertCurator = productCertCurator;
         this.productCurator = productCurator;
         this.productManager = productManager;
+        this.productCachedModule = productCachedModule;
     }
 
     /**
@@ -207,7 +209,7 @@ public class OwnerProductResource {
         final Collection<Product> products = productIds != null && productIds.size() > 0 ?
             this.ownerProductCurator.getProductsByIds(owner, productIds) :
             this.ownerProductCurator.getProductsByOwner(owner);
-        final ObjectMapper mapper = new JsonProvider(true)
+        final ObjectMapper mapper = new JsonProvider(true, productCachedModule)
             .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
 
         StreamingOutput output = new StreamingOutput() {

@@ -32,6 +32,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -89,8 +90,9 @@ public class Exporter {
     private Configuration config;
     private ExportRules exportRules;
     private PrincipalProvider principalProvider;
-
+    private ProductCurator productCurator;
     private static final String LEGACY_RULES_FILE = "/rules/default-rules.js";
+    private SyncUtils syncUtils;
 
     @Inject
     public Exporter(ConsumerTypeCurator consumerTypeCurator, MetaExporter meta,
@@ -103,7 +105,9 @@ public class Exporter {
         PrincipalProvider principalProvider, DistributorVersionCurator distVerCurator,
         DistributorVersionExporter distVerExporter,
         CdnCurator cdnCurator,
-        CdnExporter cdnExporter) {
+        CdnExporter cdnExporter,
+        ProductCurator productCurator,
+        SyncUtils syncUtils) {
 
         this.consumerTypeCurator = consumerTypeCurator;
 
@@ -126,8 +130,9 @@ public class Exporter {
         this.distVerExporter = distVerExporter;
         this.cdnCurator = cdnCurator;
         this.cdnExporter = cdnExporter;
-
-        mapper = SyncUtils.getObjectMapper(this.config);
+        this.productCurator = productCurator;
+        this.syncUtils = syncUtils;
+        mapper = syncUtils.getObjectMapper();
     }
 
     public File getFullExport(Consumer consumer) throws ExportCreationException {
@@ -140,7 +145,7 @@ public class Exporter {
         // TODO: need to delete tmpDir (which contains the archive,
         // which we need to return...)
         try {
-            File tmpDir = new SyncUtils(config).makeTempDir("export");
+            File tmpDir = syncUtils.makeTempDir("export");
             File baseDir = new File(tmpDir.getAbsolutePath(), "export");
             baseDir.mkdir();
 
@@ -166,7 +171,7 @@ public class Exporter {
         // TODO: need to delete tmpDir (which contains the archive,
         // which we need to return...)
         try {
-            File tmpDir = new SyncUtils(config).makeTempDir("export");
+            File tmpDir = syncUtils.makeTempDir("export");
             File baseDir = new File(tmpDir.getAbsolutePath(), "export");
             baseDir.mkdir();
 
@@ -475,7 +480,7 @@ public class Exporter {
         for (Entitlement entitlement : consumer.getEntitlements()) {
             Pool pool = entitlement.getPool();
 
-            for (Product providedProduct : pool.getProvidedProducts()) {
+            for (Product providedProduct : productCurator.getPoolProvidedProductsCached(pool.getId())) {
                 products.put(providedProduct.getId(), providedProduct);
             }
 
@@ -489,7 +494,8 @@ public class Exporter {
                 products.put(derivedProduct.getId(), derivedProduct);
             }
 
-            for (Product derivedProvidedProduct : pool.getDerivedProvidedProducts()) {
+            for (Product derivedProvidedProduct : productCurator
+                .getPoolDerivedProvidedProductsCached(pool.getId())) {
                 products.put(derivedProvidedProduct.getId(), derivedProvidedProduct);
             }
         }

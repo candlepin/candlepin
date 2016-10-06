@@ -14,12 +14,17 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -146,7 +151,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(poolManager.find(eq("testPool"))).thenReturn(p);
 
         ActivationKeyResource akr = new ActivationKeyResource(
-            akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null);
+            akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null,
+            new ProductCachedSerializationModule(productCurator));
         akr.addPoolToKey("testKey", "testPool", 2L);
     }
 
@@ -162,7 +168,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(poolManager.find(eq("testPool"))).thenReturn(p);
 
         ActivationKeyResource akr = new ActivationKeyResource(
-            akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null);
+            akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null,
+            new ProductCachedSerializationModule(productCurator));
         akr.addPoolToKey("testKey", "testPool", -3L);
     }
 
@@ -178,8 +185,9 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
         when(poolManager.find(eq("testPool"))).thenReturn(p);
 
-        ActivationKeyResource akr = new ActivationKeyResource(
-            akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null);
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
+            serviceLevelValidator, activationKeyRules, null,
+            new ProductCachedSerializationModule(productCurator));
         akr.addPoolToKey("testKey", "testPool", 15L);
     }
 
@@ -195,8 +203,9 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
         when(poolManager.find(eq("testPool"))).thenReturn(p);
 
-        ActivationKeyResource akr = new ActivationKeyResource(
-            akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null);
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
+            serviceLevelValidator, activationKeyRules, null,
+            new ProductCachedSerializationModule(productCurator));
         akr.addPoolToKey("testKey", "testPool", 15L);
     }
 
@@ -214,7 +223,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(poolManager.find(eq("testPool"))).thenReturn(p);
 
         ActivationKeyResource akr = new ActivationKeyResource(
-            akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null);
+            akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null,
+            new ProductCachedSerializationModule(productCurator));
         akr.addPoolToKey("testKey", "testPool", 1L);
     }
 
@@ -229,8 +239,9 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
         when(poolManager.find(eq("testPool"))).thenReturn(p);
 
-        ActivationKeyResource akr = new ActivationKeyResource(
-            akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null);
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
+            serviceLevelValidator, activationKeyRules, null,
+            new ProductCachedSerializationModule(productCurator));
         assertNotNull(akr.addPoolToKey("testKey", "testPool", 1L));
     }
 
@@ -248,8 +259,9 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(poolManager.find(eq("testPool1"))).thenReturn(p1);
         when(poolManager.find(eq("testPool2"))).thenReturn(p2);
 
-        ActivationKeyResource akr = new ActivationKeyResource(
-            akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null);
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
+            serviceLevelValidator, activationKeyRules, null,
+            new ProductCachedSerializationModule(productCurator));
 
         akr.addPoolToKey("testKey", "testPool1", 1L);
         assertEquals(1, ak.getPools().size());
@@ -274,8 +286,9 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
         when(poolManager.find(eq("testPool1"))).thenReturn(p1);
 
-        ActivationKeyResource akr = new ActivationKeyResource(
-            akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null);
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
+            serviceLevelValidator, activationKeyRules, null,
+            new ProductCachedSerializationModule(productCurator));
         akr.addPoolToKey("testKey", "testPool1", 1L);
     }
 
@@ -293,8 +306,9 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(poolManager.find(eq("testPool1"))).thenReturn(p1);
         when(poolManager.find(eq("testPool2"))).thenReturn(p2);
 
-        ActivationKeyResource akr = new ActivationKeyResource(
-            akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null);
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
+            serviceLevelValidator, activationKeyRules, null,
+            new ProductCachedSerializationModule(productCurator));
         akr.addPoolToKey("testKey", "testPool1", 1L);
         assertEquals(1, ak.getPools().size());
         ak.addPool(p1, 1L);
@@ -312,8 +326,9 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
         when(poolManager.find(eq("testPool"))).thenReturn(p);
 
-        ActivationKeyResource akr = new ActivationKeyResource(
-            akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null);
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
+            serviceLevelValidator, activationKeyRules, null,
+            new ProductCachedSerializationModule(productCurator));
         akr.addPoolToKey("testKey", "testPool", null);
     }
 

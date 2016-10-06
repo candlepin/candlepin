@@ -17,6 +17,7 @@ package org.candlepin.policy.js.pool;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -38,8 +39,11 @@ public class StackedSubPoolValueAccumulator {
     private Date startDate;
     private Date endDate;
     private Set<Product> expectedProvidedProds = new HashSet<Product>();
+    private ProductCurator productCurator;
 
-    public StackedSubPoolValueAccumulator(Pool stackedSubPool, List<Entitlement> stackedEnts) {
+    public StackedSubPoolValueAccumulator(Pool stackedSubPool, List<Entitlement> stackedEnts,
+        ProductCurator productCurator) {
+        this.productCurator = productCurator;
         for (Entitlement nextStacked : stackedEnts) {
             Pool nextStackedPool = nextStacked.getPool();
             updateEldest(nextStacked);
@@ -109,12 +113,13 @@ public class StackedSubPoolValueAccumulator {
             nextStackedPool.getProduct();
 
         if (nextStackedPool.getDerivedProduct() == null) {
-            for (Product provided : nextStackedPool.getProvidedProducts()) {
+            for (Product provided : productCurator.getPoolProvidedProductsCached(nextStackedPool.getId())) {
                 this.expectedProvidedProds.add(provided);
             }
         }
         else {
-            for (Product provided : nextStackedPool.getDerivedProvidedProducts()) {
+            for (Product provided : productCurator
+                .getPoolDerivedProvidedProductsCached(nextStackedPool.getId())) {
                 this.expectedProvidedProds.add(provided);
             }
         }

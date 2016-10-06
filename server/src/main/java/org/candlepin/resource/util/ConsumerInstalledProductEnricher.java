@@ -19,6 +19,7 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
@@ -47,12 +48,15 @@ public class ConsumerInstalledProductEnricher {
     private ComplianceStatus status;
     private Consumer consumer;
     private ComplianceRules complianceRules;
+    private ProductCurator productCurator;
 
     public ConsumerInstalledProductEnricher(Consumer consumer,
-        ComplianceStatus populatedComplianceStatus, ComplianceRules complianceRules) {
+        ComplianceStatus populatedComplianceStatus, ComplianceRules complianceRules,
+        ProductCurator productCurator) {
         this.status = populatedComplianceStatus;
         this.consumer = consumer;
         this.complianceRules = complianceRules;
+        this.productCurator = productCurator;
     }
 
     /**
@@ -154,7 +158,7 @@ public class ConsumerInstalledProductEnricher {
     private List<Entitlement> getConsumerEntsProvidingOnDate(String productId, Date date) {
         List<Entitlement> active = new LinkedList<Entitlement>();
         for (Entitlement ent : consumer.getEntitlements()) {
-            if (ent.isValidOnDate(date) && ent.getPool().provides(productId)) {
+            if (ent.isValidOnDate(date) && productCurator.provides(ent.getPool(), productId)) {
                 active.add(ent);
             }
         }
@@ -193,7 +197,7 @@ public class ConsumerInstalledProductEnricher {
         for (Entitlement ent : this.consumer.getEntitlements()) {
             Pool pool = ent.getPool();
 
-            if (pool.provides(product.getId())) {
+            if (productCurator.provides(pool, product.getId())) {
                 productEnts.add(ent);
                 //If this entitlement is stackable,
                 //the whole stack may be required, even if
@@ -214,7 +218,7 @@ public class ConsumerInstalledProductEnricher {
             for (String attribute : globalAttrMap.keySet()) {
                 if (pool.getProduct().hasAttribute(attribute)) {
                     globalAttrMap.get(attribute).add(ent);
-                    if (pool.provides(product.getId())) {
+                    if (productCurator.provides(pool, product.getId())) {
                         requiredGlobalAttrs.add(attribute);
                     }
                 }

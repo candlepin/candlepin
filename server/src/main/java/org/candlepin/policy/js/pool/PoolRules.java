@@ -26,6 +26,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.Subscription;
 
 import com.google.inject.Inject;
@@ -58,15 +59,17 @@ public class PoolRules {
     private Configuration config;
     private EntitlementCurator entCurator;
     private OwnerProductCurator ownerProductCurator;
+    private ProductCurator productCurator;
 
     @Inject
     public PoolRules(PoolManager poolManager, Configuration config, EntitlementCurator entCurator,
-        OwnerProductCurator ownerProductCurator) {
+        OwnerProductCurator ownerProductCurator, ProductCurator productCurator) {
 
         this.poolManager = poolManager;
         this.config = config;
         this.entCurator = entCurator;
         this.ownerProductCurator = ownerProductCurator;
+        this.productCurator = productCurator;
     }
 
     private long calculateQuantity(long quantity, Product product, String upstreamPoolId) {
@@ -175,7 +178,7 @@ public class PoolRules {
             // Using derived here because only one derived pool is created for
             // this subscription
             Pool bonusPool = PoolHelper.clonePool(masterPool, sku, virtQuantity, virtAttributes, "derived",
-                ownerProductCurator, null);
+                ownerProductCurator, null, productCurator);
 
             log.info("Creating new derived pool: {}", bonusPool);
             return bonusPool;
@@ -408,7 +411,8 @@ public class PoolRules {
         pool.setSourceEntitlement(null);
         pool.setSourceSubscription(null);
 
-        StackedSubPoolValueAccumulator acc = new StackedSubPoolValueAccumulator(pool, stackedEnts);
+        StackedSubPoolValueAccumulator acc = new StackedSubPoolValueAccumulator(pool, stackedEnts,
+            productCurator);
 
         // Check if the quantity should be changed. If there was no
         // virt limiting entitlement, then we leave the quantity alone,
@@ -510,8 +514,12 @@ public class PoolRules {
     }
 
     private Set<Product> getExpectedProvidedProducts(Pool pool, boolean useDerived) {
-
         Set<Product> incomingProvided = new HashSet<Product>();
+        /**
+         * It is necessary to use getters for provided products here, because the pool
+         * is fabricated from subscrfiption (using CandlepinPoolManager.convertToMasterPool
+         * It is not an actual pool that would be stored in the DB.
+         */
         Set<Product> source = useDerived ? pool.getDerivedProvidedProducts() : pool.getProvidedProducts();
 
         if (source != null && !source.isEmpty()) {
@@ -525,7 +533,7 @@ public class PoolRules {
         Pool existingPool, Set<Product> changedProducts) {
 
         Product existingProduct = existingPool.getProduct();
-        Set<Product> currentProvided = existingPool.getProvidedProducts();
+        Set<Product> currentProvided = productCurator.getPoolProvidedProductsCached(existingPool.getId());
         String pid = existingProduct.getId();
 
         // TODO: ideally we would differentiate between these different product changes
@@ -566,8 +574,14 @@ public class PoolRules {
         }
 
         // Build expected set of ProvidedProducts and compare:
-        Set<Product> currentProvided = existingPool.getDerivedProvidedProducts();
+        Set<Product> currentProvided = productCurator
+            .getPoolDerivedProvidedProductsCached(existingPool.getId());
         Set<Product> incomingProvided = new HashSet<Product>();
+
+        /**
+         * Incoming pool is not in the database yet. It has the
+         * derived products on the instance itself.
+         */
         if (pool.getDerivedProvidedProducts() != null) {
             for (Product p : pool.getDerivedProvidedProducts()) {
                 incomingProvided.add(p);

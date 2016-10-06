@@ -130,6 +130,7 @@ public class Importer {
     private EventSink sink;
     private I18n i18n;
     private DistributorVersionCurator distVerCurator;
+    private SyncUtils syncUtils;
 
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator,
@@ -139,7 +140,8 @@ public class Importer {
         PKIUtility pki, Configuration config, ExporterMetadataCurator emc,
         CertificateSerialCurator csc, EventSink sink, I18n i18n,
         DistributorVersionCurator distVerCurator,
-        CdnCurator cdnCurator) {
+        CdnCurator cdnCurator,
+        SyncUtils syncUtils) {
 
         this.config = config;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -149,7 +151,8 @@ public class Importer {
         this.idCertCurator = idCertCurator;
         this.contentCurator = contentCurator;
         this.poolManager = pm;
-        this.mapper = SyncUtils.getObjectMapper(this.config);
+        this.syncUtils = syncUtils;
+        this.mapper = syncUtils.getObjectMapper();
         this.pki = pki;
         this.expMetaCurator = emc;
         this.csCurator = csc;
@@ -237,7 +240,7 @@ public class Importer {
         File tmpDir = null;
         Map<String, Object> result = new HashMap<String, Object>();
         try {
-            tmpDir = new SyncUtils(config).makeTempDir("import");
+            tmpDir = syncUtils.makeTempDir("import");
             extractArchive(tmpDir, exportFile);
 
             File signature = new File(tmpDir, "signature");
@@ -584,7 +587,7 @@ public class Importer {
         log.debug("Importing entitlements for owner: {}", owner);
 
         EntitlementImporter importer = new EntitlementImporter(csCurator, cdnCurator,
-            i18n);
+            i18n, productCurator);
 
         Map<String, Product> productsById = new HashMap<String, Product>();
         for (Product product : products) {

@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.cache.CandlepinCache;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
@@ -31,11 +32,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.Serializable;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import javax.cache.Cache;
+import javax.persistence.TypedQuery;
 
 
 
@@ -48,18 +54,68 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
     private Configuration config;
     private I18n i18n;
+    private CandlepinCache candlepinCache;
 
     /**
      * default ctor
      */
     @Inject
-    public ProductCurator(Configuration config, I18n i18n) {
+    public ProductCurator(Configuration config, I18n i18n, CandlepinCache candlepinCache) {
         super(Product.class);
 
         this.config = config;
         this.i18n = i18n;
+        this.candlepinCache = candlepinCache;
     }
 
+    /**
+     * Check if this pool provides the given product
+     *
+     * Figures out if the pool with poolId provides a product providedProductId.
+     * 'provides' means that the product is either Pool product or is linked through
+     * cp2_pool_provided_products table
+     * @param poolId
+     * @param providedProductId
+     * @return True if and only if providedProductId is provided product or pool product
+     */
+    public Boolean provides(Pool pool, String providedProductId) {
+        TypedQuery<Long> query = getEntityManager().createQuery(
+            "SELECT count(product.uuid) FROM Pool p " + "LEFT JOIN p.providedProducts pproduct " +
+            "LEFT JOIN p.product product " +
+            "WHERE p.id = :poolid and (pproduct.id = :providedProductId OR product.id = :providedProductId)",
+            Long.class);
+        query.setParameter("poolid", pool.getId());
+        query.setParameter("providedProductId", providedProductId);
+        return query.getSingleResult() > 0;
+    }
+
+    /**
+     * Check if this pool provides the given product ID as a derived provided product.
+     * Used when we're looking for pools we could give to a host that will create
+     * sub-pools for guest products.
+     *
+     * If derived product ID is not set, we just use the normal set of products.
+     *
+     * @param pool
+     * @param derivedProvidedProductId
+     * @return True if and only if derivedProvidedProductId is provided product or derived product
+     */
+    public Boolean providesDerived(Pool pool, String derivedProvidedProductId) {
+        if (pool.getDerivedProduct() != null) {
+            TypedQuery<Long> query = getEntityManager().createQuery(
+                "SELECT count(product.uuid) FROM Pool p " +
+                "LEFT JOIN p.derivedProvidedProducts pproduct " +
+                "LEFT JOIN p.derivedProduct product " + "WHERE p.id = :poolid and " +
+                "(pproduct.id = :providedProductId OR product.id = :providedProductId)",
+                Long.class);
+            query.setParameter("poolid", pool.getId());
+            query.setParameter("providedProductId", derivedProvidedProductId);
+            return query.getSingleResult() > 0;
+        }
+        else {
+            return provides(pool, derivedProvidedProductId);
+        }
+    }
     /**
      * Retrieves a Product instance for the product with the specified name. If a matching product
      * could not be found, this method returns null.
@@ -84,10 +140,107 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .uniqueResult();
     }
 
-    public List<Product> listAllByUuids(Collection<? extends Serializable> uuids) {
-        return this.listByCriteria(
-            this.createSecureCriteria().add(Restrictions.in("uuid", uuids))
-        );
+    public Set<Product> getPoolDerivedProvidedProductsCached(String poolId) {
+        Set<String> uuids = getDerivedPoolProvidedProducts(poolId);
+        return getProductsByUuidCached(uuids);
+    }
+
+    public Set<Product> getPoolProvidedProductsCached(String poolId) {
+        Set<String> providedUuids = getPoolProvidedProducts(poolId);
+        return getProductsByUuidCached(providedUuids);
+    }
+
+    /**
+     * Finds all provided products for a given poolId
+     *
+     * @param poolId
+     * @return Set of UUIDs
+     */
+    public Set<String> getPoolProvidedProducts(String poolId) {
+        TypedQuery<String> query = getEntityManager().createQuery(
+            "SELECT product.uuid FROM Pool p INNER JOIN p.providedProducts product where p.id = :poolid",
+            String.class);
+        query.setParameter("poolid", poolId);
+        return new HashSet<String>(query.getResultList());
+    }
+
+    /**
+     * Finds all derived provided products for a given poolId
+     *
+     * @param poolId
+     * @return Set of UUIDs
+     */
+    public Set<String> getDerivedPoolProvidedProducts(String poolId) {
+        TypedQuery<String> query = getEntityManager().createQuery(
+            "SELECT product.uuid FROM Pool p INNER JOIN p.derivedProvidedProducts product " +
+            "WHERE p.id = :poolid",
+            String.class);
+        query.setParameter("poolid", poolId);
+        return new HashSet<String>(query.getResultList());
+    }
+
+    /**
+     * Gets products by Id from JCache or database
+     *
+     * The retrieved objects are fully hydrated. If an entity is not present in the cache,
+     * then it is retrieved them from the database and is fully hydrated
+     *
+     * @param productUuids
+     * @return Fully hydrated Product objects
+     */
+    public Set<Product> getProductsByUuidCached(Set<String> productUuids) {
+        Set<Product> products = new HashSet<Product>();
+        Set<String> notInCache = new HashSet<String>();
+        Cache<String, Product> productCache = candlepinCache.getProductCache();
+
+        //First find all products that are in cache. Those keys that
+        //are not present in the cache will not be in the result Map
+        Map<String, Product> productsFromCache = productCache.getAll(productUuids);
+        products.addAll(productsFromCache.values());
+
+        notInCache.addAll(productUuids);
+        notInCache.removeAll(productsFromCache.keySet());
+
+        //Now find, hydrate and cache all the products that has been
+        //missing in the cache
+        Map<String, Product> freshProducts =  getHydratedProductsByUuid(notInCache);
+
+        productCache.putAll(freshProducts);
+        products.addAll(freshProducts.values());
+
+        return products;
+    }
+
+    public List<Product> listAllByUuids(Collection<String> uuids) {
+        return listByCriteria(createSecureCriteria().add(unboundedInCriterion("uuid", uuids)));
+    }
+
+    /**
+     * Loads the set of products from database and triggers all lazy loads.
+     * @param uuids
+     * @return Map of UUID to Product instance
+     */
+    public Map<String, Product> getHydratedProductsByUuid(Set<String> uuids) {
+        if (uuids == null || uuids.isEmpty()) {
+            return new HashMap<String, Product>();
+        }
+
+        List<Product> products = listAllByUuids(uuids);
+        Map<String, Product> productsByUuid = new HashMap<String, Product>();
+
+        for (Product p : products) {
+            if (p == null) {
+                continue;
+            }
+            p.getAttributes().size();
+            for (ProductContent cont : p.getProductContent()) {
+                cont.getContent().getModifiedProductIds().size();
+            }
+            p.getDependentProductIds().size();
+            productsByUuid.put(p.getUuid(), p);
+        }
+
+        return productsByUuid;
     }
 
     /**
@@ -280,4 +433,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             // .setProjection(Projections.id())
             .list();
     }
+
+
 }

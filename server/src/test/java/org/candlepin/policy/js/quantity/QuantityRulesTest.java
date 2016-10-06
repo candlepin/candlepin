@@ -14,9 +14,11 @@
  */
 package org.candlepin.policy.js.quantity;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
@@ -24,19 +26,21 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.JsRunnerRequestCache;
+import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
+
+import com.google.inject.Provider;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import com.google.inject.Provider;
 
 import java.io.InputStream;
 import java.util.Calendar;
@@ -72,6 +76,7 @@ public class QuantityRulesTest {
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock private JsRunnerRequestCache cache;
+    @Mock private ProductCurator productCurator;
 
     @Before
     public void setUp() {
@@ -85,7 +90,8 @@ public class QuantityRulesTest {
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         when(cacheProvider.get()).thenReturn(cache);
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
-        quantityRules = new QuantityRules(provider.get());
+        quantityRules = new QuantityRules(provider.get(),
+                new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)));
 
         owner = new Owner("Test Owner " + TestUtil.randomInt());
         product = TestUtil.createProduct();

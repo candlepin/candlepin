@@ -26,6 +26,38 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.audit.EventSink;
+import org.candlepin.jackson.ProductCachedSerializationModule;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.GuestId;
+import org.candlepin.model.Owner;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
+import org.candlepin.model.Rules;
+import org.candlepin.model.RulesCurator;
+import org.candlepin.policy.js.JsContext;
+import org.candlepin.policy.js.JsRunner;
+import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.policy.js.JsRunnerRequestCache;
+import org.candlepin.policy.js.RulesObjectMapper;
+import org.candlepin.test.TestUtil;
+import org.candlepin.util.Util;
+
+import com.google.inject.Provider;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
+
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -38,34 +70,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-
-import org.candlepin.audit.EventSink;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.ConsumerInstalledProduct;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.GuestId;
-import org.candlepin.model.Owner;
-import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
-import org.candlepin.model.Rules;
-import org.candlepin.model.RulesCurator;
-import org.candlepin.policy.js.JsContext;
-import org.candlepin.policy.js.JsRunner;
-import org.candlepin.policy.js.JsRunnerProvider;
-import org.candlepin.policy.js.JsRunnerRequestCache;
-import org.candlepin.test.TestUtil;
-import org.candlepin.util.Util;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
-
-import com.google.inject.Provider;
 
 
 
@@ -89,6 +93,7 @@ public class ComplianceRulesTest {
     @Mock private EventSink eventSink;
     @Mock private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock private JsRunnerRequestCache cache;
+    @Mock private ProductCurator productCurator;
 
     private I18n i18n;
     private JsRunnerProvider provider;
@@ -111,7 +116,7 @@ public class ComplianceRulesTest {
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
         compliance = new ComplianceRules(provider.get(),
             entCurator, new StatusReasonMessageGenerator(i18n), eventSink,
-            consumerCurator);
+            consumerCurator, new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)));
         owner = new Owner("test");
         activeGuestAttrs = new HashMap<String, String>();
         activeGuestAttrs.put("virtWhoType", "libvirt");
@@ -127,7 +132,7 @@ public class ComplianceRulesTest {
         JsRunner mockRunner = mock(JsRunner.class);
         compliance = new ComplianceRules(mockRunner,
             entCurator, new StatusReasonMessageGenerator(i18n), eventSink,
-            consumerCurator);
+            consumerCurator, new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)));
         when(mockRunner.runJsFunction(any(Class.class), eq("get_status"),
             any(JsContext.class))).thenReturn("{\"unknown\": \"thing\"}");
         Consumer c = mockConsumerWithTwoProductsAndNoEntitlements();
@@ -184,7 +189,8 @@ public class ComplianceRulesTest {
         pool.setId("pool_" + TestUtil.randomInt());
         pool.setUpdated(new Date());
         pool.setCreated(new Date());
-
+        when(productCurator.getPoolProvidedProductsCached(pool.getId()))
+            .thenReturn(pool.getProvidedProducts());
         Entitlement e = new Entitlement(pool, consumer, 1);
         e.setId("ent_" + TestUtil.randomInt());
         e.setUpdated(new Date());

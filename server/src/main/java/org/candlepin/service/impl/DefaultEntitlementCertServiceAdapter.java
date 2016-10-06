@@ -29,6 +29,7 @@ import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
@@ -76,7 +77,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     private EntitlementCurator entCurator;
     private I18n i18n;
     private Configuration config;
-
+    private ProductCurator productCurator;
     private static Logger log =
         LoggerFactory.getLogger(DefaultEntitlementCertServiceAdapter.class);
 
@@ -88,7 +89,8 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator,
         EntitlementCurator entCurator, I18n i18n,
-        Configuration config) {
+        Configuration config,
+        ProductCurator productCurator) {
 
         this.pki = pki;
         this.extensionUtil = extensionUtil;
@@ -99,6 +101,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         this.entCurator = entCurator;
         this.i18n = i18n;
         this.config = config;
+        this.productCurator = productCurator;
     }
 
 
@@ -148,7 +151,8 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         if (!derived && ent.getConsumer().getType().isManifest() &&
             ent.getPool().getDerivedProduct() != null) {
             derivedProducts.add(ent.getPool().getDerivedProduct());
-            derivedProducts.addAll(ent.getPool().getDerivedProvidedProducts());
+            derivedProducts
+                .addAll(productCurator.getPoolDerivedProvidedProductsCached(ent.getPool().getId()));
         }
         return derivedProducts;
     }
@@ -381,7 +385,8 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
             log.info("Generating entitlement cert for entitlement: {}", entitlement);
 
-            Set<Product> products = new HashSet<Product>(entitlement.getPool().getProvidedProducts());
+            Set<Product> products = new HashSet<Product>(
+                productCurator.getPoolProvidedProductsCached(entitlement.getPool().getId()));
 
             // If creating a certificate for a distributor, we need
             // to add any derived products as well so that their content

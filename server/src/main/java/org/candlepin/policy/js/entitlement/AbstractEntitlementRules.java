@@ -23,6 +23,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.ValidationWarning;
@@ -62,8 +63,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     protected Configuration config;
     protected ConsumerCurator consumerCurator;
     protected PoolCurator poolCurator;
-
-    protected RulesObjectMapper objectMapper = RulesObjectMapper.instance();
+    protected ProductCurator productCurator;
+    protected RulesObjectMapper objectMapper = null;
 
     protected static final String POST_PREFIX = "post_";
 
@@ -398,7 +399,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         if (CollectionUtils.isNotEmpty(createHostRestrictedPoolFor)) {
             log.debug("creating host restricted pools for: {}", createHostRestrictedPoolFor);
             PoolHelper.createHostRestrictedPools(poolManager, c, createHostRestrictedPoolFor, entitlementMap,
-                attributeMaps);
+                attributeMaps, productCurator);
         }
         if (CollectionUtils.isNotEmpty(decrementHostedBonusPoolQuantityFor)) {
             log.debug("decrementHostedBonusPoolQuantity for: {}", decrementHostedBonusPoolQuantityFor);

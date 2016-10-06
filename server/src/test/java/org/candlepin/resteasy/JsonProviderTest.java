@@ -18,6 +18,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.candlepin.common.config.Configuration;
+import org.candlepin.jackson.ProductCachedSerializationModule;
+import org.candlepin.model.ProductCurator;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,11 +41,13 @@ import javax.ws.rs.core.MediaType;
 public class JsonProviderTest {
 
     @Mock private Configuration config;
+    @Mock private ProductCurator productCurator;
 
     // This is kind of silly - basically just testing an initial setting...
     @Test
     public void dateFormat() {
-        JsonProvider provider = new JsonProvider(config);
+        JsonProvider provider = new JsonProvider(config,
+            new ProductCachedSerializationModule(productCurator));
 
         boolean datesAsTimestamps = isEnabled(provider, SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
@@ -57,7 +61,8 @@ public class JsonProviderTest {
         SimpleDateFormat iso8601WithoutMilliseconds = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
         iso8601WithoutMilliseconds.setTimeZone(TimeZone.getTimeZone("UTC"));
         String expectedDate = "\"" + iso8601WithoutMilliseconds.format(now) + "\"";
-        JsonProvider provider = new JsonProvider(config);
+        JsonProvider provider = new JsonProvider(config,
+            new ProductCachedSerializationModule(productCurator));
         ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
         String serializedDate = mapper.writeValueAsString(now);
         assertTrue(serializedDate.equals(expectedDate));
