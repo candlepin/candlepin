@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.49.16
+Version: 0.9.49.17
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -401,6 +401,11 @@ fi
 
 
 %changelog
+* Fri Oct 07 2016 Christopher Snyder <csnyder@redhat.com> 0.9.49.17-1
+- 1382138: Backport lock on host heal during guest bindByProducts
+  (csnyder@redhat.com)
+- 1350771: ExclusiveLock held by Candlepin (nguyen.filip@gmail.com)
+
 * Fri Jun 24 2016 Vritant Jain <vrjain@redhat.com> 0.9.49.16-1
 - 1345845: Stack derived pool cleanup (nguyen.filip@gmail.com)
 - 1330244: Candlepin logrotate error on RHEL6.7 (vrjain@redhat.com)
