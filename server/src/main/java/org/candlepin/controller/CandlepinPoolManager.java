@@ -548,6 +548,7 @@ public class CandlepinPoolManager implements PoolManager {
     public List<Entitlement> entitleByProductsForHost(Consumer guest, Consumer host,
             Date entitleDate, Collection<String> possiblePools)
         throws EntitlementRefusedException {
+        host = consumerCurator.lockAndLoad(host);
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
         if (!host.getOwner().equals(guest.getOwner())) {
             log.debug("Host " + host.getUuid() + " and guest " +
