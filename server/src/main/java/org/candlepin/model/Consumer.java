@@ -74,10 +74,13 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_consumer")
+@Table(name = Consumer.DB_TABLE)
 @JsonFilter("ConsumerFilter")
 public class Consumer extends AbstractHibernateObject implements Linkable, Owned, Named, ConsumerProperty,
     Eventful {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_consumer";
 
     public static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
 
@@ -342,11 +345,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     @Override
     public String toString() {
-        String consumerType = (getType() == null) ? "null" : getType().getLabel();
-        return "Consumer<id=" + getId() + ", uuid=" + getUuid() +
-                ", type=" + consumerType + ", name=" + getName() + ">";
-    }
+        String consumerType = (this.getType() != null) ? this.getType().getLabel() : "null";
 
+        return String.format("Consumer [id: %s, uuid: %s, consumerType: %s, name: %s] -- %s",
+            this.getId(), this.getUuid(), consumerType, this.getName(), super.toString());
+    }
 
     /**
      * @return all facts about this consumer.

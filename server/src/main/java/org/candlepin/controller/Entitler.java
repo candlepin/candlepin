@@ -24,6 +24,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
@@ -33,6 +34,8 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.dto.ContentData;
+import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationError;
@@ -54,11 +57,9 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 
 
@@ -68,19 +69,21 @@ import java.util.Set;
 public class Entitler {
     private static Logger log = LoggerFactory.getLogger(Entitler.class);
 
-    private PoolManager poolManager;
-    private I18n i18n;
+    private Configuration config;
+    private ConsumerCurator consumerCurator;
+    private ContentManager contentManager;
     private EventFactory evtFactory;
     private EventSink sink;
-    private ConsumerCurator consumerCurator;
     private EntitlementRulesTranslator messageTranslator;
     private EntitlementCurator entitlementCurator;
-    private Configuration config;
+    private I18n i18n;
     private OwnerProductCurator ownerProductCurator;
     private PoolCurator poolCurator;
+    private PoolManager poolManager;
     private ProductCurator productCurator;
     private ProductManager productManager;
     private ProductServiceAdapter productAdapter;
+
     private int maxDevLifeDays = 90;
     final String DEFAULT_DEV_SLA = "Self-Service";
 
@@ -89,7 +92,7 @@ public class Entitler {
         EventSink sink, EntitlementRulesTranslator messageTranslator,
         EntitlementCurator entitlementCurator, Configuration config, OwnerProductCurator ownerProductCurator,
         PoolCurator poolCurator, ProductCurator productCurator, ProductManager productManager,
-        ProductServiceAdapter productAdapter) {
+        ProductServiceAdapter productAdapter, ContentManager contentManager) {
 
         this.poolManager = pm;
         this.i18n = i18n;
@@ -104,6 +107,7 @@ public class Entitler {
         this.productCurator = productCurator;
         this.productManager = productManager;
         this.productAdapter = productAdapter;
+        this.contentManager = contentManager;
     }
 
     public List<Entitlement> bindByPoolQuantities(String consumeruuid,
@@ -340,40 +344,97 @@ public class Entitler {
         }
 
         Owner owner = consumer.getOwner();
-        Set<Product> products = new HashSet<Product>();
+        Map<String, ProductData> productMap = new HashMap<String, ProductData>();
+        Map<String, ContentData> contentMap = new HashMap<String, ContentData>();
 
-        for (ProductData pdata : this.productAdapter.getProductsByIds(owner, devProductIds)) {
-            Product entity = this.ownerProductCurator.getProductById(owner, pdata.getId());
+        log.debug("Importing products for dev pool resolution...");
+        for (ProductData product : this.productAdapter.getProductsByIds(owner, devProductIds)) {
+            if (product == null) {
+                continue;
+            }
 
-            // This product is coming from an upstream source. Lock it so only the upstream can
-            // make changes to it
-            pdata.setLocked(true);
-
-            if (sku.equals(pdata.getId()) &&
-                StringUtils.isEmpty(pdata.getAttributeValue(Product.Attributes.SUPPORT_LEVEL))) {
+            if (sku.equals(product.getId()) &&
+                StringUtils.isEmpty(product.getAttributeValue(Product.Attributes.SUPPORT_LEVEL))) {
 
                 // if there is no SLA, apply the default
-                pdata.setAttribute(Product.Attributes.SUPPORT_LEVEL, this.DEFAULT_DEV_SLA);
+                product.setAttribute(Product.Attributes.SUPPORT_LEVEL, this.DEFAULT_DEV_SLA);
             }
 
-            if (entity != null) {
-                entity = this.productManager.updateProduct(entity, pdata, consumer.getOwner(), true);
+            // Product is coming from an upstream source; lock it so only upstream can make
+            // further changes to it.
+            product.setLocked(true);
+
+            ProductData existingProduct = productMap.get(product.getId());
+            if (existingProduct != null && !existingProduct.equals(product)) {
+                log.warn("WARNING: Multiple versions of the same product received during dev pool " +
+                    "resolution; discarding duplicate: {} => {}, {}",
+                    product.getId(), existingProduct, product
+                );
             }
             else {
-                log.debug("Product doesn't yet exist locally; creating it now. {}", pdata);
-                entity = this.productManager.createProduct(pdata, consumer.getOwner());
-            }
+                productMap.put(product.getId(), product);
 
-            if (entity == null) {
-                throw new IllegalStateException("Unable to resolve product data received from adapter");
-            }
+                Collection<ProductContentData> pcdCollection = product.getProductContent();
+                if (pcdCollection != null) {
+                    for (ProductContentData pcd : pcdCollection) {
+                        // Impl note:
+                        // We aren't checking for duplicate mappings to the same content, since our
+                        // current implementation of ProductData prevents such a thing. However, if it
+                        // is reasonably possible that we could end up with ProductData instances which
+                        // do not prevent duplicate content mappings, we should add checks here to
+                        // check for, and throw out, such mappings
 
-            products.add(entity);
+                        if (pcd == null) {
+                            log.error(
+                                "ERROR: product contains a null product-content mapping: {}", product);
+                            throw new IllegalStateException(
+                                "product contains a null product-content mapping: " + product);
+                        }
+
+                        ContentData content = pcd.getContent();
+
+                        // Do some simple mapping validation. Our import method will handle minimal
+                        // population validation for us.
+                        if (content == null || content.getId() == null) {
+                            log.error("ERROR: product contains a null or incomplete product-content " +
+                                "mapping: {}", product);
+                            throw new IllegalStateException("product contains a null or incomplete " +
+                                "product-content mapping: " + product);
+                        }
+
+                        // We need to lock the incoming content here, but doing so will affect
+                        // the equality comparison for products. We'll correct them later.
+
+                        ContentData existingContent = contentMap.get(content.getId());
+                        if (existingContent != null && !existingContent.equals(content)) {
+                            log.warn("WARNING: Multiple versions of the same content received during dev " +
+                                "pool resolution; discarding duplicate: {} => {}, {}",
+                                content.getId(), existingContent, content
+                            );
+                        }
+                        else {
+                            contentMap.put(content.getId(), content);
+                        }
+                    }
+                }
+            }
         }
 
-        log.debug("New dev products with sku: {}", sku);
+        log.debug("Importing {} content...", contentMap.size());
 
-        return new DeveloperProducts(sku, products);
+        for (ContentData cdata : contentMap.values()) {
+            cdata.setLocked(true);
+        }
+
+        Map<String, Content> importedContent = this.contentManager
+            .importContent(owner, contentMap, productMap.keySet());
+
+        log.debug("Importing {} product(s)...", productMap.size());
+        Map<String, Product> importedProducts = this.productManager
+            .importProducts(owner, productMap, importedContent);
+
+        log.debug("Resolved {} dev product(s) for sku: {}", productMap.size(), sku);
+        return new DeveloperProducts(sku, importedProducts);
     }
 
     /**
@@ -508,17 +569,9 @@ public class Entitler {
         private Product sku;
         private Map<String, Product> provided;
 
-        public DeveloperProducts(String expectedSku, Collection<Product> products) {
-            provided = new HashMap<String, Product>();
-
-            for (Product prod : products) {
-                if (expectedSku.equals(prod.getId())) {
-                    sku = prod;
-                }
-                else {
-                    provided.put(prod.getId(), prod);
-                }
-            }
+        public DeveloperProducts(String expectedSku, Map<String, Product> products) {
+            this.sku = products.remove(expectedSku);
+            this.provided = products;
         }
 
         public Product getSku() {

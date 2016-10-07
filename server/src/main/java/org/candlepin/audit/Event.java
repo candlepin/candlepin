@@ -44,10 +44,13 @@ import javax.xml.bind.annotation.XmlTransient;
  * queue.
  */
 @Entity
-@Table(name = "cp_event")
+@Table(name = Event.DB_TABLE)
 @XmlRootElement(namespace = "http://fedorahosted.org/candlepin/Event")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class Event implements Persisted {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_event";
 
     private static final long serialVersionUID = 1L;
 

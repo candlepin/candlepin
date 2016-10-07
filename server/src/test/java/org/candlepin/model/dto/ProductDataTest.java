@@ -31,6 +31,7 @@ import org.junit.runner.RunWith;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 
 
@@ -399,7 +400,7 @@ public class ProductDataTest {
         assertSame(dto, output2);
 
         output = dto.getProductContent();
-        assertEquals(input, output);
+        assertTrue(Util.collectionsAreEqual(input, output));
 
         // Second pass to ensure setProductContent is actually clearing existing content before
         // adding new ones
@@ -407,14 +408,14 @@ public class ProductDataTest {
         assertSame(dto, output2);
 
         output = dto.getProductContent();
-        assertEquals(input, output);
+        assertTrue(Util.collectionsAreEqual(input, output));
 
         // Third pass to ensure setting duplicates doesn't allow the dupes to be retained
         output2 = dto.setProductContent(input2);
         assertSame(dto, output2);
 
         output = dto.getProductContent();
-        assertEquals(input, output);
+        assertTrue(Util.collectionsAreEqual(input, output));
     }
 
     @Test
@@ -505,7 +506,7 @@ public class ProductDataTest {
         output = dto.addProductContent(pcdata3);
         output2 = dto.getProductContent();
         assertTrue(output);
-        assertEquals(Arrays.asList(pcdata1, pcdata3), output2);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(pcdata1, pcdata3), output2));
     }
 
     @Test
@@ -549,7 +550,7 @@ public class ProductDataTest {
         output = dto.addProductContent(pcentity3);
         output2 = dto.getProductContent();
         assertTrue(output);
-        assertEquals(Arrays.asList(pcdata1, pcdata3), output2);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(pcdata1, pcdata3), output2));
     }
 
     @Test
@@ -584,7 +585,7 @@ public class ProductDataTest {
         output = dto.addContent(pcdata3.getContent(), pcdata3.isEnabled());
         output2 = dto.getProductContent();
         assertTrue(output);
-        assertEquals(Arrays.asList(pcdata1, pcdata3), output2);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(pcdata1, pcdata3), output2));
     }
 
     @Test
@@ -629,7 +630,7 @@ public class ProductDataTest {
         output = dto.addContent(pcentity3.getContent(), pcentity3.isEnabled());
         output2 = dto.getProductContent();
         assertTrue(output);
-        assertEquals(Arrays.asList(pcdata1, pcdata3), output2);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(pcdata1, pcdata3), output2));
     }
 
     @Test
@@ -652,18 +653,18 @@ public class ProductDataTest {
         boolean output = dto.removeContent(content[0].getId());
         Collection<ProductContentData> output2 = dto.getProductContent();
         assertTrue(output);
-        assertEquals(Arrays.asList(pcdata2), output2);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(pcdata2), output2));
 
         output = dto.removeContent(content[0].getId());
         output2 = dto.getProductContent();
         assertFalse(output);
-        assertEquals(Arrays.asList(pcdata2), output2);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(pcdata2), output2));
 
         // Note that the collection should not be nulled by removing the final element
         output = dto.removeContent(content[1].getId());
         output2 = dto.getProductContent();
         assertTrue(output);
-        assertEquals(Arrays.asList(), output2);
+        assertTrue(Util.collectionsAreEqual(Collections.<ProductContentData>emptyList(), output2));
     }
 
     @Test
@@ -688,19 +689,19 @@ public class ProductDataTest {
         boolean output = dto.removeContent(content[0]);
         Collection<ProductContentData> output2 = dto.getProductContent();
         assertTrue(output);
-        assertEquals(Arrays.asList(pcdata2), output2);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(pcdata2), output2));
 
         output = dto.removeContent(content[0]);
         output2 = dto.getProductContent();
         assertFalse(output);
-        assertEquals(Arrays.asList(pcdata2), output2);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(pcdata2), output2));
 
         // This should work because we remove by content ID, not by exact element match
         // Note that the collection should not be nulled by removing the final element
         output = dto.removeContent(content[2]);
         output2 = dto.getProductContent();
         assertTrue(output);
-        assertEquals(Arrays.asList(), output2);
+        assertTrue(Util.collectionsAreEqual(Collections.<ProductContentData>emptyList(), output2));
     }
 
     @Test
@@ -730,19 +731,19 @@ public class ProductDataTest {
         boolean output = dto.removeContent(contentEntities[0]);
         Collection<ProductContentData> output2 = dto.getProductContent();
         assertTrue(output);
-        assertEquals(Arrays.asList(pcdata2), output2);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(pcdata2), output2));
 
         output = dto.removeContent(contentEntities[0]);
         output2 = dto.getProductContent();
         assertFalse(output);
-        assertEquals(Arrays.asList(pcdata2), output2);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(pcdata2), output2));
 
         // This should work because we remove by content ID, not by exact element match
         // Note that the collection should not be nulled by removing the final element
         output = dto.removeContent(contentEntities[2]);
         output2 = dto.getProductContent();
         assertTrue(output);
-        assertEquals(Arrays.asList(), output2);
+        assertTrue(Util.collectionsAreEqual(Collections.<ProductContentData>emptyList(), output2));
     }
 
     @Test
@@ -768,19 +769,19 @@ public class ProductDataTest {
         boolean output = dto.removeProductContent(pcdata1);
         Collection<ProductContentData> output2 = dto.getProductContent();
         assertTrue(output);
-        assertEquals(Arrays.asList(pcdata2), output2);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(pcdata2), output2));
 
         output = dto.removeProductContent(pcdata1);
         output2 = dto.getProductContent();
         assertFalse(output);
-        assertEquals(Arrays.asList(pcdata2), output2);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(pcdata2), output2));
 
         // This should work because we remove by content ID, not by exact element match
         // Note that the collection should not be nulled by removing the final element
         output = dto.removeProductContent(pcdata3);
         output2 = dto.getProductContent();
         assertTrue(output);
-        assertEquals(Arrays.asList(), output2);
+        assertTrue(Util.collectionsAreEqual(Collections.<ProductContentData>emptyList(), output2));
     }
 
     @Test
@@ -814,19 +815,19 @@ public class ProductDataTest {
         boolean output = dto.removeProductContent(pcentity1);
         Collection<ProductContentData> output2 = dto.getProductContent();
         assertTrue(output);
-        assertEquals(Arrays.asList(pcdata2), output2);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(pcdata2), output2));
 
         output = dto.removeProductContent(pcentity1);
         output2 = dto.getProductContent();
         assertFalse(output);
-        assertEquals(Arrays.asList(pcdata2), output2);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(pcdata2), output2));
 
         // This should work because we remove by content ID, not by exact element match
         // Note that the collection should not be nulled by removing the final element
         output = dto.removeProductContent(pcentity3);
         output2 = dto.getProductContent();
         assertTrue(output);
-        assertEquals(Arrays.asList(), output2);
+        assertTrue(Util.collectionsAreEqual(Collections.<ProductContentData>emptyList(), output2));
     }
 
     @Test
@@ -1044,7 +1045,15 @@ public class ProductDataTest {
         mutator.invoke(lhs, value1);
         mutator.invoke(rhs, value1);
 
-        assertEquals(accessor.invoke(lhs), accessor.invoke(rhs));
+        if (value1 instanceof Collection) {
+            assertTrue(Util.collectionsAreEqual(
+                (Collection) accessor.invoke(lhs), (Collection) accessor.invoke(rhs)
+            ));
+        }
+        else {
+            assertEquals(accessor.invoke(lhs), accessor.invoke(rhs));
+        }
+
         assertTrue(lhs.equals(rhs));
         assertTrue(rhs.equals(lhs));
         assertTrue(lhs.equals(lhs));
@@ -1053,7 +1062,15 @@ public class ProductDataTest {
 
         mutator.invoke(rhs, value2);
 
-        assertNotEquals(accessor.invoke(lhs), accessor.invoke(rhs));
+        if (value2 instanceof Collection) {
+            assertFalse(Util.collectionsAreEqual(
+                (Collection) accessor.invoke(lhs), (Collection) accessor.invoke(rhs)
+            ));
+        }
+        else {
+            assertNotEquals(accessor.invoke(lhs), accessor.invoke(rhs));
+        }
+
         assertFalse(lhs.equals(rhs));
         assertFalse(rhs.equals(lhs));
         assertTrue(lhs.equals(lhs));
@@ -1073,7 +1090,15 @@ public class ProductDataTest {
 
         ProductData clone = (ProductData) base.clone();
 
-        assertEquals(accessor.invoke(base, null), accessor.invoke(clone, null));
+        if (value1 instanceof Collection) {
+            assertTrue(Util.collectionsAreEqual(
+                (Collection) accessor.invoke(base, null), (Collection) accessor.invoke(clone, null)
+            ));
+        }
+        else {
+            assertEquals(accessor.invoke(base, null), accessor.invoke(clone, null));
+        }
+
         assertEquals(base, clone);
         assertEquals(base.hashCode(), clone.hashCode());
     }
@@ -1299,7 +1324,9 @@ public class ProductDataTest {
         assertTrue(base.getDependentProductIds().isEmpty());
 
         assertNotNull(base.getProductContent());
-        assertEquals(Arrays.asList(pcdata1, pcdata2, pcdata3), base.getProductContent());
+        assertTrue(Util.collectionsAreEqual(
+            Arrays.asList(pcdata1, pcdata2, pcdata3), base.getProductContent()
+        ));
     }
 
     @Test

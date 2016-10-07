@@ -31,8 +31,11 @@ import javax.validation.constraints.NotNull;
  * the database for re-use when generating entitlement and identity certificates.
  */
 @Entity
-@Table(name = "cp_key_pair")
+@Table(name = KeyPair.DB_TABLE)
 public class KeyPair extends AbstractHibernateObject{
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_key_pair";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

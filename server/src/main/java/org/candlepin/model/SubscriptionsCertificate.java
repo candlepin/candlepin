@@ -41,9 +41,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_certificate")
+@Table(name = SubscriptionsCertificate.DB_TABLE)
 @JsonFilter("SubscriptionCertificateFilter")
 public class SubscriptionsCertificate extends AbstractCertificate {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_certificate";
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -76,5 +79,15 @@ public class SubscriptionsCertificate extends AbstractCertificate {
      */
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String toString() {
+        String serial = null;
+
+        if (this.serial != null) {
+            serial = String.format("Serial [id=%s]", this.serial.getId());
+        }
+
+        return String.format("Cert [id=%s, serial=%s]", this.id, serial);
     }
 }

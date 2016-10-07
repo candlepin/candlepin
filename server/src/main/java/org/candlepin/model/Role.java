@@ -37,8 +37,11 @@ import javax.validation.constraints.Size;
  * Roles represent the relationship between users and the permissions they have.
  */
 @Entity
-@Table(name = "cp_role")
+@Table(name = Role.DB_TABLE)
 public class Role extends AbstractHibernateObject implements Linkable {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_role";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

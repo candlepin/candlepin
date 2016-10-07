@@ -45,8 +45,11 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_installed_products")
+@Table(name = ConsumerInstalledProduct.DB_TABLE)
 public class ConsumerInstalledProduct extends AbstractHibernateObject {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_installed_products";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

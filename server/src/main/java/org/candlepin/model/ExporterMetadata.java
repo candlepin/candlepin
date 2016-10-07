@@ -33,8 +33,11 @@ import javax.validation.constraints.Size;
  * ExporterMetadata
  */
 @Entity
-@Table(name = "cp_export_metadata")
+@Table(name = ExporterMetadata.DB_TABLE)
 public class ExporterMetadata extends AbstractHibernateObject {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_export_metadata";
 
     public static final String TYPE_SYSTEM = "system";
     public static final String TYPE_PER_USER = "per_user";

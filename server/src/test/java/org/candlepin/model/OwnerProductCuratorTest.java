@@ -28,7 +28,9 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 
@@ -537,7 +539,10 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         assertTrue(this.isProductMappedToOwner(original, owner));
         assertFalse(this.isProductMappedToOwner(updated, owner));
 
-        this.ownerProductCurator.updateOwnerProductReferences(original, updated, Arrays.asList(owner));
+        Map<String, String> uuidMap = new HashMap<String, String>();
+        uuidMap.put(original.getUuid(), updated.getUuid());
+
+        this.ownerProductCurator.updateOwnerProductReferences(owner, uuidMap);
 
         assertFalse(this.isProductMappedToOwner(original, owner));
         assertTrue(this.isProductMappedToOwner(updated, owner));
@@ -551,14 +556,17 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         assertEquals(updated.getUuid(), pool1.getProduct().getUuid());
 
         this.poolCurator.refresh(pool2);
+        assertNotEquals(updated.getUuid(), pool2.getProduct().getUuid());
         products = pool2.getProvidedProducts();
         assertEquals(1, products.size());
         assertEquals(updated.getUuid(), products.iterator().next().getUuid());
 
         this.poolCurator.refresh(pool3);
+        assertNotEquals(updated.getUuid(), pool3.getProduct().getUuid());
         assertEquals(updated.getUuid(), pool3.getDerivedProduct().getUuid());
 
         this.poolCurator.refresh(pool4);
+        assertNotEquals(updated.getUuid(), pool4.getProduct().getUuid());
         products = pool4.getDerivedProvidedProducts();
         assertEquals(1, products.size());
         assertEquals(updated.getUuid(), products.iterator().next().getUuid());
@@ -577,7 +585,7 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
 
         assertTrue(this.isProductMappedToOwner(original, owner));
 
-        this.ownerProductCurator.removeOwnerProductReferences(original, Arrays.asList(owner));
+        this.ownerProductCurator.removeOwnerProductReferences(original, owner);
 
         assertFalse(this.isProductMappedToOwner(original, owner));
 

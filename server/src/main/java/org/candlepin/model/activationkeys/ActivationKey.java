@@ -53,9 +53,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_activation_key",
+@Table(name = ActivationKey.DB_TABLE,
     uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "owner_id"})})
 public class ActivationKey extends AbstractHibernateObject implements Owned, Named, Eventful {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_activation_key";
 
     public static final int RELEASE_VERSION_LENGTH = 255;
 

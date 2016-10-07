@@ -33,8 +33,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_deleted_consumers")
+@Table(name = DeletedConsumer.DB_TABLE)
 public class DeletedConsumer extends AbstractHibernateObject {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_deleted_consumers";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

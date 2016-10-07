@@ -14,10 +14,12 @@
  */
 package org.candlepin.model;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.Session;
 import org.hibernate.Criteria;
+import org.hibernate.Session;
+import org.hibernate.Query;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
@@ -25,9 +27,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -119,6 +123,64 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .getSingleResult();
 
         return count;
+    }
+
+    /**
+     * Checks if the owner has an existing version of the specified product. This lookup is
+     * different than the mapping check in that this check will find any product with the
+     * specified ID, as opposed to checking if a specific version is mapped to the owner.
+     *
+     * @param owner
+     *  The owner of the product to lookup
+     *
+     * @param productId
+     *  The Red Hat ID of the product to lookup
+     *
+     * @return
+     *  true if the owner has a product with the given RHID; false otherwise
+     */
+    @Transactional
+    public boolean productExists(Owner owner, String productId) {
+        String jpql = "SELECT count(op) FROM OwnerProduct op " +
+            "WHERE op.owner.id = :owner_id AND op.product.id = :product_id";
+
+        long count = (Long) this.getEntityManager()
+            .createQuery(jpql)
+            .setParameter("owner_id", owner.getId())
+            .setParameter("product_id", productId)
+            .getSingleResult();
+
+        return count > 0;
+    }
+
+    /**
+     * Filters the given list of Red Hat product IDs by removing the IDs which represent unknown
+     * products for the specified owner.
+     *
+     * @param owner
+     *  The owner to search
+     *
+     * @param productIds
+     *  A collection of Red Hat product IDs to filter
+     *
+     * @return
+     *  A new set containing only product IDs for products which exist for the given owner
+     */
+    @Transactional
+    public Set<String> filterUnknownProductIds(Owner owner, Collection<String> productIds) {
+        Set<String> existingIds = new HashSet<String>();
+
+        if (productIds != null && !productIds.isEmpty()) {
+            existingIds.addAll(this.createSecureCriteria()
+                .createAlias("owner", "owner")
+                .createAlias("product", "product")
+                .setProjection(Projections.property("product.id"))
+                .add(Restrictions.eq("owner.id", owner.getId()))
+                .add(this.unboundedInCriterion("product.id", productIds))
+                .list());
+        }
+
+        return existingIds;
     }
 
     @Transactional
@@ -219,20 +281,14 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      * should be manually evicted from the session and re-queried to ensure they will not clobber
      * the changes made by this method on persist, nor trigger any errors on refresh.
      *
-     * @param current
-     *  The current product other objects are referencing
+     * @param owner
+     *  The owners for which to apply the reference changes
      *
-     * @param updated
-     *  The product other objects should reference
-     *
-     * @param owners
-     *  A collection of owners for which to apply the reference changes
-     *
-     * @return
-     *  a reference to the updated product
+     * @param productUuidMap
+     *  A mapping of source product UUIDs to updated product UUIDs
      */
     @Transactional
-    public Product updateOwnerProductReferences(Product current, Product updated, Collection<Owner> owners) {
+    public void updateOwnerProductReferences(Owner owner, Map<String, String> productUuidMap) {
         // Impl note:
         // We're doing this in straight SQL because direct use of the ORM would require querying all
         // of these objects and the available HQL refuses to do any joining (implicit or otherwise),
@@ -240,85 +296,75 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         // As an added bonus, it's quicker, but we'll have to be mindful of the memory vs backend
         // state divergence.
 
-        if (owners.size() > AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE) {
-            throw new UnsupportedOperationException("Large owner collections are currently unsupported");
+        if (productUuidMap == null || productUuidMap.isEmpty()) {
+            // Nothing to update
+            return;
         }
 
         Session session = this.currentSession();
-        Set<String> ownerIds = new HashSet<String>();
 
-        for (Owner owner : owners) {
-            ownerIds.add(owner.getId());
-        }
+        Map<String, Object> criteria = new HashMap<String, Object>();
+        Map<Object, Object> uuidMap = Map.class.cast(productUuidMap);
+        criteria.put("product_uuid", productUuidMap.keySet());
+        criteria.put("owner_id", owner.getId());
 
         // Owner products
-        String sql = "UPDATE cp2_owner_products SET product_uuid = ?1 " +
-            "WHERE product_uuid = ?2 AND owner_id IN (?3)";
+        int count = this.bulkSQLUpdate(OwnerProduct.DB_TABLE, "product_uuid", uuidMap, criteria);
 
-        int opCount = session.createSQLQuery(sql)
-            .setParameter("1", updated.getUuid())
-            .setParameter("2", current.getUuid())
-            .setParameterList("3", ownerIds)
-            .executeUpdate();
-
-        log.debug("{} owner-product relations updated", opCount);
-
-        // Activation key products
-        List<String> ids = session.createSQLQuery("SELECT id FROM cp_activation_key WHERE owner_id IN (?1)")
-            .setParameterList("1", ownerIds)
-            .list();
-
-        sql = "UPDATE cp2_activation_key_products SET product_uuid = ?1 " +
-            "WHERE product_uuid = ?2 AND key_id IN (?3)";
-
-        int akCount = this.safeSQLUpdateWithCollection(sql, ids, updated.getUuid(), current.getUuid());
-        log.debug("{} activation keys updated", akCount);
+        log.debug("{} owner-product relations updated", count);
 
         // pool provided and derived products
-        sql = "UPDATE cp_pool SET product_uuid = ?1 WHERE product_uuid = ?2 AND owner_id IN (?3)";
+        count = this.bulkSQLUpdate(Pool.DB_TABLE, "product_uuid", uuidMap, criteria);
 
-        int ppCount = session.createSQLQuery(sql)
-            .setParameter("1", updated.getUuid())
-            .setParameter("2", current.getUuid())
-            .setParameterList("3", ownerIds)
-            .executeUpdate();
+        criteria.remove("product_uuid");
+        criteria.put("derived_product_uuid", productUuidMap.keySet());
 
-        log.debug("{} pools updated", ppCount);
+        count += this.bulkSQLUpdate(Pool.DB_TABLE, "derived_product_uuid", uuidMap, criteria);
 
-        sql = "UPDATE cp_pool SET derived_product_uuid = ?1 " +
-            "WHERE derived_product_uuid = ?2 AND owner_id IN (?3)";
-
-        int pdpCount = session.createSQLQuery(sql)
-            .setParameter("1", updated.getUuid())
-            .setParameter("2", current.getUuid())
-            .setParameterList("3", ownerIds)
-            .executeUpdate();
-
-        log.debug("{} pools updated", pdpCount);
+        log.debug("{} pools updated", count);
 
         // pool provided products
-        ids = session.createSQLQuery("SELECT id FROM cp_pool WHERE owner_id IN (?1)")
-            .setParameterList("1", ownerIds)
+        List<String> ids = session.createSQLQuery("SELECT id FROM cp_pool WHERE owner_id = ?1")
+            .setParameter("1", owner.getId())
             .list();
 
-        sql = "UPDATE cp2_pool_provided_products SET product_uuid = ?1 " +
-            "WHERE product_uuid = ?2 AND pool_id IN (?3)";
+        if (ids != null && !ids.isEmpty()) {
+            criteria.clear();
+            criteria.put("product_uuid", productUuidMap.keySet());
+            criteria.put("pool_id", ids);
 
-        int pppCount = this.safeSQLUpdateWithCollection(sql, ids, updated.getUuid(), current.getUuid());
-        log.debug("{} provided products updated", pppCount);
+            count = this.bulkSQLUpdate("cp2_pool_provided_products", "product_uuid", uuidMap, criteria);
+            log.debug("{} provided products updated", count);
 
-        // pool derived provided products
-        sql = "UPDATE cp2_pool_derprov_products SET product_uuid = ?1 " +
-            "WHERE product_uuid = ?2 AND pool_id IN (?3)";
+            count = this.bulkSQLUpdate("cp2_pool_derprov_products", "product_uuid", uuidMap, criteria);
+            log.debug("{} derived provided products updated", count);
+        }
+        else {
+            log.debug("0 provided products updated");
+            log.debug("0 derived provided products updated");
+        }
 
-        int pdppCount = this.safeSQLUpdateWithCollection(sql, ids, updated.getUuid(), current.getUuid());
-        log.debug("{} derived provided products updated", pdppCount);
+
+        // Activation key products
+        ids = session.createSQLQuery("SELECT id FROM cp_activation_key WHERE owner_id = ?1")
+            .setParameter("1", owner.getId())
+            .list();
+
+        if (ids != null && !ids.isEmpty()) {
+            criteria.clear();
+            criteria.put("product_uuid", productUuidMap.keySet());
+            criteria.put("key_id", ids);
+
+            count = this.bulkSQLUpdate("cp2_activation_key_products", "product_uuid", uuidMap, criteria);
+            log.debug("{} activation keys updated", count);
+        }
+        else {
+            log.debug("0 activation keys updated");
+        }
 
         // product certificates
         // Looks like we don't need to do anything here, since we generate them on request. By
         // leaving them alone, they'll be generated as needed and we save some overhead here.
-
-        return updated;
     }
 
     /**
@@ -335,11 +381,11 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      * @param entity
      *  The product other objects are referencing
      *
-     * @param owners
-     *  A collection of owners for which to apply the reference changes
+     * @param owner
+     *  The owners for which to apply the reference changes
      */
     @Transactional
-    public void removeOwnerProductReferences(Product entity, Collection<Owner> owners) {
+    public void removeOwnerProductReferences(Product entity, Owner owner) {
         // Impl note:
         // We're doing this in straight SQL because direct use of the ORM would require querying all
         // of these objects and the available HQL refuses to do any joining (implicit or otherwise),
@@ -352,35 +398,54 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         // from an owner if it is being used by a pool. As such, we shouldn't need to manually clean
         // the pool tables here.
 
-        if (owners.size() > AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE) {
-            throw new UnsupportedOperationException("Large owner collections are currently unsupported");
-        }
-
         Session session = this.currentSession();
-        Set<String> ownerIds = new HashSet<String>();
-
-        for (Owner owner : owners) {
-            ownerIds.add(owner.getId());
-        }
 
         // Owner products
-        String sql = "DELETE FROM cp2_owner_products WHERE product_uuid = ?1 AND owner_id IN (?2)";
+        String sql = "DELETE FROM cp2_owner_products WHERE product_uuid = ?1 AND owner_id = ?2";
 
-        int opCount = session.createSQLQuery(sql)
+        int count = session.createSQLQuery(sql)
             .setParameter("1", entity.getUuid())
-            .setParameterList("2", ownerIds)
+            .setParameter("2", owner.getId())
             .executeUpdate();
 
-        log.debug("{} owner-product relations removed", opCount);
+        log.debug("{} owner-product relations removed", count);
 
         // Activation key products
-        List<String> ids = session.createSQLQuery("SELECT id FROM cp_activation_key WHERE owner_id IN (?1)")
-            .setParameterList("1", ownerIds)
+        List<String> ids = session.createSQLQuery("SELECT id FROM cp_activation_key WHERE owner_id = ?1")
+            .setParameter("1", owner.getId())
             .list();
 
-        sql = "DELETE FROM cp2_activation_key_products WHERE product_uuid = ?1 AND key_id IN (?2)";
+        if (ids != null && !ids.isEmpty()) {
+            int inBlocks = ids.size() / AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE + 1;
 
-        int akCount = this.safeSQLUpdateWithCollection(sql, ids, entity.getUuid());
-        log.debug("{} activation keys removed", akCount);
+            StringBuilder builder = new StringBuilder("DELETE FROM cp2_activation_key_products ")
+                .append("WHERE product_uuid = ?1 AND (");
+
+            for (int i = 0; i < inBlocks; ++i) {
+                if (i != 0) {
+                    builder.append(" OR ");
+                }
+
+                builder.append("key_id IN (?").append(i + 2).append(')');
+            }
+
+            builder.append(')');
+
+            Query query = session.createSQLQuery(builder.toString())
+                .setParameter("1", entity.getUuid());
+
+            int args = 1;
+            for (List<String> block : Iterables.partition(ids,
+                AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE)) {
+
+                query.setParameterList(String.valueOf(++args), block);
+            }
+
+            count = query.executeUpdate();
+            log.debug("{} activation keys removed", count);
+        }
+        else {
+            log.debug("0 activation keys removed");
+        }
     }
 }

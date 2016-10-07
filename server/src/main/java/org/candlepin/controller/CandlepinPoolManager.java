@@ -183,51 +183,175 @@ public class CandlepinPoolManager implements PoolManager {
      * so we don't miss anything
      */
     @Transactional
+    @SuppressWarnings("checkstyle:methodlength")
     void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter, Owner owner, boolean lazy) {
         long start = System.currentTimeMillis();
         owner = this.refreshOwner(owner);
         log.info("Refreshing pools for owner: {}", owner);
-        List<Subscription> subs = subAdapter.getSubscriptions(owner);
 
-        log.debug("Found {} existing subscriptions.", subs.size());
+        Map<String, Subscription> subscriptionMap = new HashMap<String, Subscription>();
+        Map<String, ProductData> productMap = new HashMap<String, ProductData>();
+        Map<String, ContentData> contentMap = new HashMap<String, ContentData>();
+
+        // Resolve all our subscriptions, products and content to ensure we don't have bad or
+        // duplicate inbound data
 
         SubscriptionReconciler reconciler = new SubscriptionReconciler();
-        reconciler.reconcile(owner, subs, poolCurator);
+        for (Subscription subscription : reconciler.reconcile(owner, subAdapter.getSubscriptions(owner),
+            poolCurator)) {
 
-        Set<String> subIds = Util.newSet();
-
-        refreshContent(owner, subs);
-        Set<Product> changedProducts = refreshProducts(owner, subs);
-
-        List<String> deletedSubs = new LinkedList<String>();
-        for (Subscription sub : subs) {
-            String subId = sub.getId();
-            subIds.add(subId);
-
-            log.debug("Processing subscription: {}", sub);
-
-            // Remove expired subscriptions
-            if (isExpired(sub)) {
-                deletedSubs.add(subId);
-                log.info("Skipping expired subscription: {}", sub);
+            if (subscription == null) {
                 continue;
             }
 
-            refreshPoolsForMasterPool(convertToMasterPool(sub), false, lazy, changedProducts);
+            // At present, we should be safe from invalid subscriptions, as the reconciler should
+            // be handling validation and reconciliation for us.
+
+            Subscription existingSub = subscriptionMap.get(subscription.getId());
+            if (existingSub != null && !existingSub.equals(subscription)) {
+                log.warn("WARNING: Multiple versions of the same subscription received during refresh; " +
+                    "discarding duplicate: {} => {}, {}", subscription.getId(), existingSub, subscription);
+
+                continue;
+            }
+
+            subscriptionMap.put(subscription.getId(), subscription);
+
+            List<ProductData> products = new LinkedList<ProductData>();
+            products.add(subscription.getProduct());
+            products.add(subscription.getDerivedProduct());
+            products.addAll(subscription.getProvidedProducts());
+            products.addAll(subscription.getDerivedProvidedProducts());
+
+            for (ProductData product : products) {
+                if (product == null) {
+                    // Impl note: This is a (mostly) safe condition, since it's valid for a
+                    // subscription to have a null derived product. We'll just ignore it and plow
+                    // forward.
+                    continue;
+                }
+
+                if (product.getId() == null) {
+                    log.error("ERROR: product does not contain a mappable Red Hat ID: {}", product);
+                    throw new IllegalStateException("product does not contain a mappable Red Hat ID: " +
+                        product);
+                }
+
+                // Product is coming from an upstream source; lock it so only upstream can make
+                // further changes to it.
+                product.setLocked(true);
+
+                ProductData existingProduct = productMap.get(product.getId());
+                if (existingProduct != null && !existingProduct.equals(product)) {
+                    log.warn("WARNING: Multiple versions of the same product received during refresh; " +
+                        "discarding duplicate: {} => {}, {}", product.getId(), existingProduct, product);
+                }
+                else {
+                    productMap.put(product.getId(), product);
+
+                    Collection<ProductContentData> pcdCollection = product.getProductContent();
+                    if (pcdCollection != null) {
+                        for (ProductContentData pcd : pcdCollection) {
+                            // Impl note:
+                            // We aren't checking for duplicate mappings to the same content, since our
+                            // current implementation of ProductData prevents such a thing. However, if it
+                            // is reasonably possible that we could end up with ProductData instances which
+                            // do not prevent duplicate content mappings, we should add checks here to
+                            // check for, and throw out, such mappings
+
+                            if (pcd == null) {
+                                log.error(
+                                    "ERROR: product contains a null product-content mapping: {}", product);
+                                throw new IllegalStateException(
+                                    "product contains a null product-content mapping: " + product);
+                            }
+
+                            ContentData content = pcd.getContent();
+
+                            // Do some simple mapping validation. Our import method will handle minimal
+                            // population validation for us.
+                            if (content == null || content.getId() == null) {
+                                log.error("ERROR: product contains a null or incomplete product-content " +
+                                    "mapping: {}", product);
+                                throw new IllegalStateException("product contains a null or incomplete " +
+                                    "product-content mapping: " + product);
+                            }
+
+                            // We need to lock the incoming content here, but doing so will affect
+                            // the equality comparison for products. We'll correct them later.
+
+                            ContentData existingContent = contentMap.get(content.getId());
+                            if (existingContent != null && !existingContent.equals(content)) {
+                                log.warn("WARNING: Multiple versions of the same content received during " +
+                                    "refresh; discarding duplicate: {} => {}, {}",
+                                    content.getId(), existingContent, content
+                                );
+                            }
+                            else {
+                                contentMap.put(content.getId(), content);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Persist content changes
+        log.debug("Importing {} content...", contentMap.size());
+
+        // Lock our content
+        // TODO: Find a more efficient way of doing this, preferably within this method
+        for (ContentData cdata : contentMap.values()) {
+            cdata.setLocked(true);
+        }
+
+        Map<String, Content> importedContent = this.contentManager
+            .importContent(owner, contentMap, productMap.keySet());
+
+        // Determine which of our changes are net new
+        Set<Product> changedProducts = new HashSet<Product>();
+        Set<String> existingProductIds = this.ownerProductCurator
+            .filterUnknownProductIds(owner, productMap.keySet());
+
+        log.debug("Importing {} product(s)...", productMap.size());
+        Map<String, Product> importedProducts = this.productManager
+            .importProducts(owner, productMap, importedContent);
+
+        for (String pid : existingProductIds) {
+            // FIXME: This is technically wrong, at the moment. Products which did not change will
+            // still be reported as changed if they existed in the DB prior to import.
+            changedProducts.add(importedProducts.get(pid));
+        }
+
+        log.debug("Refreshing {} pool(s)...", subscriptionMap.size());
+        Iterator<Map.Entry<String, Subscription>> subsIterator = subscriptionMap.entrySet().iterator();
+        while (subsIterator.hasNext()) {
+            Map.Entry<String, Subscription> entry = subsIterator.next();
+            Subscription sub = entry.getValue();
+
+            if (this.isExpired(sub)) {
+                log.info("Skipping expired subscription: {}", sub);
+
+                subsIterator.remove();
+                continue;
+            }
+
+            log.debug("Processing subscription: {}", sub);
+
+            Pool pool = this.convertToMasterPoolImpl(sub, owner, importedProducts);
+            this.refreshPoolsForMasterPool(pool, false, lazy, changedProducts);
         }
 
         Pool ueberPool = this.findUeberPool(owner);
         String ueberPoolId = ueberPool != null ? ueberPool.getId() : null;
 
-        // We deleted some, need to take that into account so we
-        // remove everything that isn't actually active
-        subIds.removeAll(deletedSubs);
-
         // delete pools whose subscription disappeared:
+        log.debug("Deleting pools for absent subscriptions...");
         List<Pool> poolsToDelete = new ArrayList<Pool>();
-        for (Pool pool : poolCurator.getPoolsFromBadSubs(owner, subIds)) {
+        for (Pool pool : poolCurator.getPoolsFromBadSubs(owner, subscriptionMap.keySet())) {
             if (pool.getSourceSubscription() != null && !pool.getType().isDerivedType() &&
                 (ueberPoolId == null || !ueberPoolId.equals(pool.getId()))) {
+
                 poolsToDelete.add(pool);
             }
         }
@@ -235,8 +359,10 @@ public class CandlepinPoolManager implements PoolManager {
         deletePools(poolsToDelete);
 
         // TODO: break this call into smaller pieces. There may be lots of floating pools
+        log.debug("Updating floating pools...");
         List<Pool> floatingPools = poolCurator.getOwnersFloatingPools(owner);
         updateFloatingPools(floatingPools, lazy, changedProducts);
+
         log.info("Refresh pools for owner: {} completed in: {}ms", owner.getKey(),
             System.currentTimeMillis() - start);
     }
@@ -268,200 +394,6 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         return owner;
-    }
-
-    /**
-     * Refreshes the specified content under the given owner/org.
-     *
-     * @param owner
-     *  The owner for which to refresh content
-     *
-     * @param subs
-     *  The subscriptions from which to pull content
-     *
-     * @return
-     *  the set of existing content which was updated/changed as a result of this operation
-     */
-    protected Set<Content> refreshContent(Owner owner, Collection<Subscription> subs) {
-        // All inbound content, mapped by content ID. We're assuming it's all under the same org
-        Map<String, ContentData> content = new HashMap<String, ContentData>();
-
-        log.info("Refreshing content for {} subscriptions.", subs.size());
-
-        if (subs != null) {
-            for (Subscription sub : subs) {
-                // Grab all the content from each product
-                this.addProductContentToMap(content, sub.getProduct());
-                this.addProductContentToMap(content, sub.getDerivedProduct());
-
-                for (ProductData product : sub.getProvidedProducts()) {
-                    this.addProductContentToMap(content, product);
-                }
-
-                for (ProductData product : sub.getDerivedProvidedProducts()) {
-                    this.addProductContentToMap(content, product);
-                }
-            }
-        }
-
-        Set<Content> changed = this.getChangedContent(owner, content);
-
-        // We need to flush here to make sure our pending persists and merges get pushed to the DB
-        // so our reference updates don't fail.
-        this.ownerContentCurator.flush();
-
-        return changed;
-    }
-
-    private void addProductContentToMap(Map<String, ContentData> contentMap, ProductData product) {
-        if (product == null) {
-            return;
-        }
-
-        Map<String, ContentData> mapped = new HashMap<String, ContentData>();
-        List<ProductContentData> duplicates = new LinkedList<ProductContentData>();
-
-        if (product.getProductContent() != null) {
-            for (ProductContentData pcd : product.getProductContent()) {
-                ContentData content = pcd.getContent();
-
-                // Check that this product isn't linking to the same content multiple times...
-                if (mapped.containsKey(content.getId())) {
-                    log.warn(
-                        "Multiple references to the same content found on a single product; " +
-                        "discarding duplicate: {} => {}, {}",
-                        product, content, mapped.get(content.getId())
-                    );
-
-                    duplicates.add(pcd);
-                    continue;
-                }
-
-                mapped.put(content.getId(), content);
-
-
-                // Check that the content hasn't changed if we've already seen it.
-                ContentData existing = contentMap.get(content.getId());
-
-                if (existing != null && !content.equals(existing)) {
-                    log.warn(
-                        "Multiple versions of the same content found on a single subscription; " +
-                        "discarding previous version: {} => {}, {}",
-                        content.getId(), existing, content
-                    );
-                }
-
-                contentMap.put(content.getId(), content);
-            }
-        }
-
-        // Remove duplicate references from the product so we don't die trying to persist it...
-        if (duplicates.size() > 0) {
-            log.debug("WE SHOULD HAVE REMOVED {} ENTITIES");
-        }
-    }
-
-    public Set<Content> getChangedContent(Owner owner, Map<String, ContentData> contentCache) {
-        Set<Content> changed = Util.newSet();
-
-        log.debug("Syncing {} incoming content", contentCache.size());
-        for (String cid : contentCache.keySet()) {
-            // If cid and incoming.getId() aren't equal, we're in trouble.
-            ContentData incoming = contentCache.get(cid);
-            Content existing = this.ownerContentCurator.getContentById(owner, cid);
-
-            if (existing == null) {
-                log.info("Creating new content for org {}: {}", owner.getKey(), cid);
-                existing = this.contentManager.createContent(incoming, owner);
-            }
-            else if (existing.isChangedBy(incoming)) {
-                log.info("Updating existing content for org {}: {}", owner.getKey(), cid);
-                existing = this.contentManager.updateContent(existing, incoming, owner, false);
-
-                changed.add(existing);
-            }
-        }
-
-        return changed;
-    }
-
-    Set<Product> refreshProducts(Owner owner, List<Subscription> subs) {
-        /*
-         * Build a master list of all products on the incoming subscriptions. Note that
-         * these product objects are detached, and need to be synced with what's in the
-         * database.
-         */
-        Map<String, ProductData> products = new HashMap<String, ProductData>();
-
-        log.info("Refreshing products for {} subscriptions.", subs.size());
-
-        for (Subscription sub : subs) {
-            this.addProductToMap(products, sub.getProduct());
-            this.addProductToMap(products, sub.getDerivedProduct());
-
-            for (ProductData product : sub.getProvidedProducts()) {
-                this.addProductToMap(products, product);
-            }
-
-            for (ProductData product : sub.getDerivedProvidedProducts()) {
-                this.addProductToMap(products, product);
-            }
-        }
-
-        Set<Product> changed = this.getChangedProducts(owner, products);
-
-        // We need to flush here to make sure our pending persists and merges get pushed to the DB
-        // so our reference updates don't fail.
-        this.productCurator.flush();
-
-        return changed;
-    }
-
-    private void addProductToMap(Map<String, ProductData> productMap, ProductData product) {
-        if (product != null) {
-            // Check that the product hasn't changed if we've already seen it.
-            ProductData existing = productMap.get(product.getId());
-
-            if (existing != null && existing.equals(product)) {
-                log.warn(
-                    "Multiple versions of the same product found on a single subscription; " +
-                    "discarding previous version: {} => {}, {}",
-                    product.getId(), existing, product
-                );
-            }
-
-            productMap.put(product.getId(), product);
-        }
-    }
-
-    public Set<Product> getChangedProducts(Owner owner, Map<String, ProductData> productCache) {
-
-        log.debug("Syncing {} incoming products", productCache.size());
-
-        Set<Product> changedProducts = Util.newSet();
-
-        for (String pid : productCache.keySet()) {
-            // If the pid key and product.getId() don't match, we'll have some serious issues here.
-            ProductData incoming = productCache.get(pid);
-            Product existing = this.ownerProductCurator.getProductById(owner, pid);
-
-            // This is coming from a manifest or upstream; lock it so it can't be modified
-            // with the API
-            incoming.setLocked(true);
-
-            if (existing == null) {
-                log.info("Creating new product for org {}: {}", owner.getKey(), pid);
-                existing = this.productManager.createProduct(incoming, owner);
-            }
-            else if (existing.isChangedBy(incoming)) {
-                log.info("Product changed for org {}: {}", owner.getKey(), pid);
-                existing = this.productManager.updateProduct(existing, incoming, owner, false);
-
-                changedProducts.add(existing);
-            }
-        }
-
-        return changedProducts;
     }
 
     @Transactional
@@ -810,7 +742,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public List<Pool> createPools(List<Pool> pools) {
         if (CollectionUtils.isNotEmpty(pools)) {
-            poolCurator.saveOrUpdateAll(pools, false);
+            poolCurator.saveOrUpdateAll(pools, false, false);
 
             for (Pool pool : pools) {
                 log.debug("   new pool: {}", pool);
@@ -853,19 +785,43 @@ public class CandlepinPoolManager implements PoolManager {
         }
     }
 
-    /*
-     * if you are using this method, you might want to override the quantity
-     * with PoolRules.calculateQuantity
+    /**
+     * Builds a pool instance from the given subscription, using the specified owner and products
+     * for resolution.
+     * <p></p>
+     * The provided owner and products will be used to match and resolve the owner and product
+     * DTOs present on the subscription. If the subscription uses DTOs which cannot be resolved,
+     * this method will throw an exception.
+     *
+     * @param subscription
+     *  The subscription to convert to a pool
+     *
+     * @param owner
+     *  The owner the pool will be assigned to
      */
-    @Override
-    public Pool convertToMasterPool(Subscription sub) {
+    private Pool convertToMasterPoolImpl(Subscription sub, Owner owner, Map<String, Product> productMap) {
+
         if (sub == null) {
             throw new IllegalArgumentException("subscription is null");
         }
 
+        if (owner == null || (owner.getKey() == null && owner.getId() == null)) {
+            throw new IllegalArgumentException("owner is null or incomplete");
+        }
+
+        if (productMap == null) {
+            throw new IllegalArgumentException("productMap is null");
+        }
+
         Pool pool = new Pool();
 
-        Owner owner = this.ownerCurator.lookupByKey(sub.getOwner().getKey());
+        // Validate and resolve owner...
+        if (sub.getOwner() == null || (sub.getOwner().getId() != null ?
+            !owner.getId().equals(sub.getOwner().getId()) :
+            !owner.getKey().equals(sub.getOwner().getKey()))) {
+
+            throw new IllegalStateException("Subscription references an invalid owner: " + sub.getOwner());
+        }
 
         pool.setOwner(owner);
         pool.setQuantity(sub.getQuantity());
@@ -874,43 +830,6 @@ public class CandlepinPoolManager implements PoolManager {
         pool.setContractNumber(sub.getContractNumber());
         pool.setAccountNumber(sub.getAccountNumber());
         pool.setOrderNumber(sub.getOrderNumber());
-
-        // Copy over product details
-        pool.setProduct(this.ownerProductCurator.getProductById(owner, sub.getProduct().getId()));
-
-        if (sub.getDerivedProduct() != null) {
-            pool.setDerivedProduct(
-                this.ownerProductCurator.getProductById(owner, sub.getDerivedProduct().getId())
-            );
-        }
-
-        Collection<ProductData> productData = sub.getProvidedProducts();
-        if (productData != null) {
-            Collection<Product> products = new LinkedList<Product>();
-
-            for (ProductData pdata : productData) {
-                Product product = this.ownerProductCurator.getProductById(owner, pdata.getId());
-
-                // TODO: Is a null product at this point a silent ignore or an error condition?
-                products.add(product);
-            }
-
-            pool.setProvidedProducts(products);
-        }
-
-        productData = sub.getDerivedProvidedProducts();
-        if (productData != null) {
-            Collection<Product> products = new LinkedList<Product>();
-
-            for (ProductData pdata : productData) {
-                Product product = this.ownerProductCurator.getProductById(owner, pdata.getId());
-
-                // TODO: Is a null product at this point a silent ignore or an error condition?
-                products.add(product);
-            }
-
-            pool.setDerivedProvidedProducts(products);
-        }
 
         // Copy over subscription details
         pool.setSubscriptionId(sub.getId());
@@ -924,11 +843,142 @@ public class CandlepinPoolManager implements PoolManager {
         pool.setCertificate(sub.getCertificate());
 
         // Add in branding
-        for (Branding b : sub.getBranding()) {
-            pool.getBranding().add(new Branding(b.getProductId(), b.getType(), b.getName()));
+        if (sub.getBranding() != null) {
+            Set<Branding> branding = new HashSet<Branding>();
+
+            for (Branding brand : sub.getBranding()) {
+                // Impl note:
+                // We create a new instance here since we don't have a separate branding DTO (yet),
+                // and we need to be certain that we don't try to move or change a branding object
+                // associated with another pool.
+                branding.add(new Branding(brand.getProductId(), brand.getType(), brand.getName()));
+            }
+
+            pool.setBranding(branding);
+        }
+
+        if (sub.getProduct() == null || sub.getProduct().getId() == null) {
+            throw new IllegalStateException("Subscription has no product, or its product is incomplete: " +
+                sub.getProduct());
+        }
+
+        Product product = productMap.get(sub.getProduct().getId());
+        if (product == null) {
+            throw new IllegalStateException("Subscription references a product which cannot be resolved: " +
+                sub.getProduct());
+        }
+
+        pool.setProduct(product);
+
+        if (sub.getDerivedProduct() != null) {
+            product = productMap.get(sub.getDerivedProduct().getId());
+
+            if (product == null) {
+                throw new IllegalStateException("Subscription's derived product references a product which " +
+                    "cannot be resolved: " + sub.getDerivedProduct());
+            }
+
+            pool.setDerivedProduct(product);
+        }
+
+        if (sub.getProvidedProducts() != null) {
+            Set<Product> products = new HashSet<Product>();
+
+            for (ProductData pdata : sub.getProvidedProducts()) {
+                if (pdata != null) {
+                    product = productMap.get(pdata.getId());
+
+                    if (product == null) {
+                        throw new IllegalStateException("Subscription's provided products references a " +
+                            "product which cannot be resolved: " + pdata);
+                    }
+
+                    products.add(product);
+                }
+            }
+
+            pool.setProvidedProducts(products);
+        }
+
+        if (sub.getDerivedProvidedProducts() != null) {
+            Set<Product> products = new HashSet<Product>();
+
+            for (ProductData pdata : sub.getDerivedProvidedProducts()) {
+                if (pdata != null) {
+                    product = productMap.get(pdata.getId());
+
+                    if (product == null) {
+                        throw new IllegalStateException("Subscription's derived provided products " +
+                            "references a product which cannot be resolved: " + pdata);
+                    }
+
+                    products.add(product);
+                }
+            }
+
+            pool.setDerivedProvidedProducts(products);
         }
 
         return pool;
+    }
+
+    /*
+     * if you are using this method, you might want to override the quantity
+     * with PoolRules.calculateQuantity
+     */
+    @Override
+    public Pool convertToMasterPool(Subscription sub) {
+        if (sub == null) {
+            throw new IllegalArgumentException("subscription is null");
+        }
+
+        // Resolve the subscription's owner...
+        if (sub.getOwner() == null || (sub.getOwner().getId() == null && sub.getOwner().getKey() == null)) {
+            throw new IllegalStateException("Subscription references an invalid owner: " + sub.getOwner());
+        }
+
+        Owner owner = sub.getOwner().getId() != null ?
+            this.ownerCurator.find(sub.getOwner().getId()) :
+            this.ownerCurator.lookupByKey(sub.getOwner().getKey());
+
+        if (owner == null) {
+            throw new IllegalStateException("Subscription references an owner which cannot be resolved: " +
+                sub.getOwner());
+        }
+
+        // Gather the product IDs referenced by this subscription...
+        Set<ProductData> productDTOs = new HashSet<ProductData>();
+        Set<String> productIds = new HashSet<String>();
+        Map<String, Product> productMap = new HashMap<String, Product>();
+
+        productDTOs.add(sub.getProduct());
+        productDTOs.add(sub.getDerivedProduct());
+
+        if (sub.getProvidedProducts() != null) {
+            productDTOs.addAll(sub.getProvidedProducts());
+        }
+
+        if (sub.getDerivedProvidedProducts() != null) {
+            productDTOs.addAll(sub.getDerivedProvidedProducts());
+        }
+
+        for (ProductData pdata : productDTOs) {
+            if (pdata != null) {
+                if (pdata.getId() == null) {
+                    throw new IllegalStateException("Subscription references an incomplete product: " +
+                        pdata);
+                }
+
+                productIds.add(pdata.getId());
+            }
+        }
+
+        // Build the product map from the product IDs we pulled off the subscription...
+        for (Product product : this.ownerProductCurator.getProductsByIds(owner, productIds)) {
+            productMap.put(product.getId(), product);
+        }
+
+        return this.convertToMasterPoolImpl(sub, owner, productMap);
     }
 
     @Override
@@ -991,9 +1041,9 @@ public class CandlepinPoolManager implements PoolManager {
                     bestPools.add(pq);
                 }
                 else {
-                    bestPools = getBestPools(consumer, productIds,
-                        entitleDate, owner, null, fromPools);
+                    bestPools = getBestPools(consumer, productIds, entitleDate, owner, null, fromPools);
                 }
+
                 if (bestPools == null) {
                     return null;
                 }
@@ -1291,8 +1341,7 @@ public class CandlepinPoolManager implements PoolManager {
                 }
             }
             if (providesProduct) {
-                ValidationResult result = enforcer.preEntitlement(consumer,
-                    pool, 1, CallerType.BEST_POOLS);
+                ValidationResult result = enforcer.preEntitlement(consumer, pool, 1, CallerType.BEST_POOLS);
 
                 if (result.hasErrors() || result.hasWarnings()) {
                     failedResults.put(pool.getId(), result);
@@ -1864,7 +1913,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     @Transactional
     public void deletePools(List<Pool> pools, Set<String> alreadyDeletedPools) {
-        if (pools.isEmpty()) {
+        if (pools == null || pools.isEmpty()) {
             return;
         }
 
@@ -1997,7 +2046,7 @@ public class CandlepinPoolManager implements PoolManager {
                 result.put(entry.getKey(), newEntitlement);
             }
 
-            entitlementCurator.saveOrUpdateAll(entsToPersist, false);
+            entitlementCurator.saveOrUpdateAll(entsToPersist, false, false);
 
             /*
              * Why iterate twice? to persist the entitlement before we associate

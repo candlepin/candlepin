@@ -392,7 +392,7 @@ class StandardExporter < Exporter
         :attributes => { :arch => "x86_64", :virt_limit => "unlimited", 'stacking_id' => 'stack-vdc'}
     })
     @products[:product_dc] = create_product(random_string('prod-dc'), random_string(), {
-        :attributes => { :arch => "x86_64", 'stacking_id' => 'stack-dc', 'stacking_id' => 'stack-dc'}
+        :attributes => { :arch => "x86_64", 'stacking_id' => 'stack-dc'}
     })
 
     @products[:derived_product] = create_product(random_string('sub-prov-prod'), random_string(),

@@ -24,7 +24,7 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
-import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
@@ -266,15 +266,51 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      *  a criteria for fetching product by version
      */
     @SuppressWarnings("checkstyle:indentation")
-    public CandlepinCriteria<Product> getProductsByVersion(String productId, int hashcode) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
+    public List<Product> getProductsByVersion(String productId, int hashcode) {
+        List<Product> result = this.createSecureCriteria()
             .add(Restrictions.eq("id", productId))
             .add(Restrictions.or(
                 Restrictions.isNull("entityVersion"),
                 Restrictions.eq("entityVersion", hashcode)
-            ));
+            ))
+            .list();
 
-        return new CandlepinCriteria<Product>(criteria, this.currentSession());
+        return result != null ? result : new LinkedList<Product>();
+    }
+
+    /**
+     * Retrieves a criteria which can be used to fetch a list of products with the specified Red Hat
+     * product ID and entity version. If no products were found matching the given criteria, this
+     * method returns an empty list.
+     *
+     * @param productVersions
+     *  A mapping of Red Hat product IDs to product versions to fetch
+     *
+     * @return
+     *  a criteria for fetching products by version
+     */
+    @SuppressWarnings("checkstyle:indentation")
+    public List<Product> getProductByVersions(Map<String, Integer> productVersions) {
+        List<Product> result = null;
+
+        if (productVersions != null && !productVersions.isEmpty()) {
+            Disjunction disjunction = Restrictions.disjunction();
+            Criteria criteria = this.createSecureCriteria().add(disjunction);
+
+            for (Map.Entry<String, Integer> entry : productVersions.entrySet()) {
+                disjunction.add(Restrictions.and(
+                    Restrictions.eq("id", entry.getKey()),
+                    Restrictions.or(
+                        Restrictions.isNull("entityVersion"),
+                        Restrictions.eq("entityVersion", entry.getValue())
+                    )
+                ));
+            }
+
+            result = criteria.list();
+        }
+
+        return result != null ? result : new LinkedList<Product>();
     }
 
     // TODO:
@@ -411,20 +447,32 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
     @SuppressWarnings("unchecked")
     public List<Product> getProductsWithContent(Owner owner, Collection<String> contentIds) {
+        return this.getProductsWithContent(owner, contentIds, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Product> getProductsWithContent(Owner owner, Collection<String> contentIds,
+        Collection<String> productsToOmit) {
+
         if (owner == null || contentIds == null || contentIds.isEmpty()) {
             return new LinkedList<Product>();
         }
 
-        return this.createSecureCriteria(OwnerProduct.class, null)
+        Criteria criteria = this.createSecureCriteria(OwnerProduct.class, null)
             .createAlias("product", "product")
             .createAlias("product.productContent", "pcontent")
             .createAlias("pcontent.content", "content")
             .createAlias("owner", "owner")
             .add(Restrictions.eq("owner.id", owner.getId()))
-            .add(Restrictions.in("content.id", contentIds))
+            .add(this.unboundedInCriterion("content.id", contentIds))
             .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
-            .setProjection(Projections.property("product"))
-            .list();
+            .setProjection(Projections.property("product"));
+
+        if (productsToOmit != null && !productsToOmit.isEmpty()) {
+            criteria.add(Restrictions.not(this.unboundedInCriterion("product.id", productsToOmit)));
+        }
+
+        return criteria.list();
     }
 
     @SuppressWarnings("unchecked")
@@ -436,7 +484,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         return this.createSecureCriteria()
             .createAlias("productContent", "pcontent")
             .createAlias("pcontent.content", "content")
-            .add(Restrictions.in("content.uuid", contentUuids))
+            .add(this.unboundedInCriterion("content.uuid", contentUuids))
             .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
             // .setProjection(Projections.id())
             .list();

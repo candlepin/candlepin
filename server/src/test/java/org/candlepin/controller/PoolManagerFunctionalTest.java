@@ -320,8 +320,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         this.ownerContentCurator.mapContentToOwner(content, this.o);
 
         List<Subscription> subscriptions = new LinkedList<Subscription>();
-        ImportSubscriptionServiceAdapter subAdapter
-            = new ImportSubscriptionServiceAdapter(subscriptions);
+        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
 
         Subscription sub = TestUtil.createSubscription(o, modifier, new HashSet<Product>());
         sub.setQuantity(5L);
@@ -335,7 +334,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         poolManager.getRefresher(subAdapter).add(o).run();
 
-
         // This test simulates https://bugzilla.redhat.com/show_bug.cgi?id=676870
         // where entitling first to the modifier then to the modifiee causes the modifier's
         // entitlement cert to get regenerated, but since it's all in the same http call,
@@ -344,11 +342,13 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // inside an entitleByProducts call, we do it in two singular calls here.
         AutobindData data = AutobindData.create(parentSystem).on(new Date())
             .forProducts(new String [] {"modifier"});
+
         poolManager.entitleByProducts(data);
 
         try {
             data = AutobindData.create(parentSystem).on(new Date())
-                    .forProducts(new String [] {PRODUCT_VIRT_HOST});
+                .forProducts(new String [] {PRODUCT_VIRT_HOST});
+
             poolManager.entitleByProducts(data);
         }
         catch (EntityNotFoundException e) {

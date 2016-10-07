@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,8 +49,6 @@ public class SubscriptionReconciler {
     private static Logger log = LoggerFactory.getLogger(SubscriptionReconciler.class);
 
     /**
-     * @param subsToImport
-     *
      *  Reconciles incoming entitlements to existing pools to attempt to limit
      *  the number of pools we must destroy and revoke.
      *
@@ -71,8 +70,21 @@ public class SubscriptionReconciler {
      *
      *  Remaining incoming subscriptions that did not match any pools per the above are
      *  treated as new subscriptions.
+     *
+     * @param owner
+     *  The owner for which the subscriptions are being imported
+     *
+     * @param subsToImport
+     *  A collection of subscriptions which are being imported
+     *
+     * @param poolCurator
+     *  The PoolCurator to use for pool lookup and resolution
+     *
+     * @return
+     *  The collection of reconciled subscriptions
      */
-    public void reconcile(Owner owner, List<Subscription> subsToImport, PoolCurator poolCurator) {
+    public Collection<Subscription> reconcile(Owner owner, Collection<Subscription> subsToImport,
+        PoolCurator poolCurator) {
 
         Map<String, Map<String, Pool>> existingPoolsByUpstreamPool =
             mapPoolsByUpstreamPool(owner, poolCurator);
@@ -82,31 +94,29 @@ public class SubscriptionReconciler {
         Set<Subscription> subscriptionsStillToImport = new HashSet<Subscription>();
         for (Subscription subscription : subsToImport) {
             Pool local = null;
-            Map<String, Pool> map = existingPoolsByUpstreamPool.get(
-                subscription.getUpstreamPoolId());
+            Map<String, Pool> map = existingPoolsByUpstreamPool.get(subscription.getUpstreamPoolId());
+
             if (map == null || map.isEmpty()) {
-//                createSubscription(subscription);
-                log.info("New subscription for incoming entitlement ID: " +
+                log.info("New subscription for incoming entitlement ID: {}",
                     subscription.getUpstreamEntitlementId());
+
                 continue;
             }
+
             local = map.get(subscription.getUpstreamEntitlementId());
             if (local != null) {
                 mergeSubscription(subscription, local, map);
-                log.info("Merging subscription for incoming entitlement id [" +
-                    subscription.getUpstreamEntitlementId() +
-                    "] into subscription with existing entitlement id [" +
-                    local.getUpstreamEntitlementId() +
-                    "]. Entitlement id match.");
+                log.info("Merging subscription for incoming entitlement id [{}] into subscription with " +
+                    "existing entitlement id [{}]. Entitlement id match.",
+                    subscription.getUpstreamEntitlementId(), local.getUpstreamEntitlementId()
+                );
             }
             else {
                 subscriptionsStillToImport.add(subscription);
-                log.warn("Subscription for incoming entitlement id [" +
-                    subscription.getUpstreamEntitlementId() +
-                    "] does not have an entitlement id match " +
-                    "in the current subscriptions for the upstream pool id [" +
-                    subscription.getUpstreamPoolId() +
-                    "]");
+                log.warn("Subscription for incoming entitlement id [{}] does not have an entitlement id " +
+                    "match in the current subscriptions for the upstream pool id [{}]",
+                    subscription.getUpstreamEntitlementId(), subscription.getUpstreamPoolId()
+                );
             }
         }
 
@@ -115,11 +125,11 @@ public class SubscriptionReconciler {
         List<Subscription> subscriptionsNeedQuantityMatch = new ArrayList<Subscription>();
         for (Subscription subscription : subscriptionsStillToImport) {
             Pool local = null;
-            Map<String, Pool> map = existingPoolsByUpstreamPool.get(
-                subscription.getUpstreamPoolId());
+            Map<String, Pool> map = existingPoolsByUpstreamPool.get(subscription.getUpstreamPoolId());
             if (map == null) {
                 map = new HashMap<String, Pool>();
             }
+
             for (Pool localSub : map.values()) {
                 // TODO quantity
                 Long quantity = localSub.getQuantity() / localSub.getProduct().getMultiplier();
@@ -130,57 +140,56 @@ public class SubscriptionReconciler {
             }
             if (local != null) {
                 mergeSubscription(subscription, local, map);
-                log.info("Merging subscription for incoming entitlement id [" +
-                    subscription.getUpstreamEntitlementId() +
-                    "] into subscription with existing entitlement id [" +
-                    local.getUpstreamEntitlementId() +
-                    "]. Exact quantity match.");
+                log.info("Merging subscription for incoming entitlement id [{}] into subscription with " +
+                    "existing entitlement id [{}]. Exact quantity match.",
+                    subscription.getUpstreamEntitlementId(), local.getUpstreamEntitlementId()
+                );
             }
             else {
                 subscriptionsNeedQuantityMatch.add(subscription);
-                log.warn("Subscription for incoming entitlement id [" +
-                    subscription.getUpstreamEntitlementId() +
-                    "] does not have an exact quantity match " +
-                    "in the current subscriptions for the upstream pool id [" +
-                    subscription.getUpstreamPoolId() +
-                    "]");
+                log.warn("Subscription for incoming entitlement id [{}] does not have an exact quantity " +
+                    "match in the current subscriptions for the upstream pool id [{}]",
+                    subscription.getUpstreamEntitlementId(), subscription.getUpstreamPoolId()
+                );
             }
         }
 
         // matches will be made against the upstream pool id and quantity.
         // quantities will just match by position from highest to lowest
         // we need a new list to hold the ones that are left
-        Subscription[] inNeed = subscriptionsNeedQuantityMatch.toArray(
-            new Subscription[0]);
+        Subscription[] inNeed = subscriptionsNeedQuantityMatch.toArray(new Subscription[0]);
         Arrays.sort(inNeed, new SubQuantityComparator());
         for (Subscription subscription : inNeed) {
             Pool local = null;
-            Map<String, Pool> map = existingPoolsByUpstreamPool.get(
-                subscription.getUpstreamPoolId());
+            Map<String, Pool> map = existingPoolsByUpstreamPool.get(subscription.getUpstreamPoolId());
+
             if (map == null || map.isEmpty()) {
-                log.info("Creating new subscription for incoming entitlement with id [" +
-                    subscription.getUpstreamEntitlementId() +
-                    "]");
+                log.info("Creating new subscription for incoming entitlement with id [{}]",
+                    subscription.getUpstreamEntitlementId());
+
                 continue;
             }
+
             Pool[] locals = map.values().toArray(new Pool[0]);
             Arrays.sort(locals, new QuantityComparator());
             local = locals[0];
+
             mergeSubscription(subscription, local, map);
-            log.info("Merging subscription for incoming entitlement id [" +
-                subscription.getUpstreamEntitlementId() +
-                "] into subscription with existing entitlement id [" +
-                local.getUpstreamEntitlementId() +
-                "]. Ordered quantity match.");
+            log.info("Merging subscription for incoming entitlement id [{}] into subscription with " +
+                "existing entitlement id [{}] Ordered quantity match.",
+                subscription.getUpstreamEntitlementId(), local.getUpstreamEntitlementId()
+            );
         }
+
+        return subsToImport;
     }
 
     /*
      * Maps upstream pool ID to a map of upstream entitlement ID to Subscription.
      */
     private Map<String, Map<String, Pool>> mapPoolsByUpstreamPool(Owner owner, PoolCurator poolCurator) {
-        Map<String, Map<String, Pool>> existingSubsByUpstreamPool =
-            new HashMap<String, Map<String, Pool>>();
+        Map<String, Map<String, Pool>> existingSubsByUpstreamPool = new HashMap<String, Map<String, Pool>>();
+
         int idx = 0;
         for (Pool p : poolCurator.listByOwnerAndType(owner, PoolType.NORMAL)) {
             // if the upstream pool id is null,
@@ -196,25 +205,23 @@ public class SubscriptionReconciler {
              * Suspect this is an old migration path, likely all pools have their
              * entitlement ID stamped by now. - dgoodwin 2015-04-14
              */
-            if (p.getUpstreamEntitlementId() == null ||
-                p.getUpstreamEntitlementId().trim().equals("")) {
+            if (p.getUpstreamEntitlementId() == null || p.getUpstreamEntitlementId().trim().equals("")) {
                 p.setUpstreamEntitlementId("" + idx++);
             }
 
-            Map<String, Pool> subs = existingSubsByUpstreamPool.get(
-                p.getUpstreamPoolId());
+            Map<String, Pool> subs = existingSubsByUpstreamPool.get(p.getUpstreamPoolId());
             if (subs == null) {
                 subs = new HashMap<String, Pool>();
+                existingSubsByUpstreamPool.put(p.getUpstreamPoolId(), subs);
             }
+
             subs.put(p.getUpstreamEntitlementId(), p);
-            existingSubsByUpstreamPool.put(p.getUpstreamPoolId(),
-                subs);
         }
+
         return existingSubsByUpstreamPool;
     }
 
-    private void mergeSubscription(Subscription subscription, Pool local,
-        Map<String, Pool> map) {
+    private void mergeSubscription(Subscription subscription, Pool local, Map<String, Pool> map) {
         subscription.setId(local.getSubscriptionId());
         map.remove(local.getUpstreamEntitlementId());
     }

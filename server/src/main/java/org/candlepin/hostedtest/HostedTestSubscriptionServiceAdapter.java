@@ -117,7 +117,6 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
             productMap.put(s.getProduct().getId(), new ArrayList<Subscription>());
         }
 
-        log.debug("STORING PRODUCT: {} (name: {})", s.getProduct(), s.getProduct().getName());
         productMap.get(s.getProduct().getId()).add(s);
         return s;
     }

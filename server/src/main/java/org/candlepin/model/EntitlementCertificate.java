@@ -40,9 +40,12 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement(name = "cert")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_ent_certificate")
+@Table(name = EntitlementCertificate.DB_TABLE)
 @JsonFilter("EntitlementCertificateFilter")
 public class EntitlementCertificate extends AbstractCertificate {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_ent_certificate";
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")

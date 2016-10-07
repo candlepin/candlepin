@@ -265,21 +265,16 @@ public class TestingModules {
             bind(EnvironmentResource.class);
             bind(SubscriptionResource.class);
             bind(ActivationKeyResource.class);
-            bind(ProductServiceAdapter.class)
-                .to(DefaultProductServiceAdapter.class);
+            bind(ProductServiceAdapter.class).to(DefaultProductServiceAdapter.class);
             bind(ProductResource.class);
-            bind(DateSource.class).to(DateSourceForTesting.class)
-                .asEagerSingleton();
+            bind(DateSource.class).to(DateSourceForTesting.class).asEagerSingleton();
             bind(Enforcer.class).to(EnforcerForTesting.class); // .to(JavascriptEnforcer.class);
-            bind(SubjectKeyIdentifierWriter.class).to(
-                DefaultSubjectKeyIdentifierWriter.class);
+            bind(SubjectKeyIdentifierWriter.class).to(DefaultSubjectKeyIdentifierWriter.class);
             bind(PKIUtility.class).to(BouncyCastlePKIUtility.class);
             bind(PKIReader.class).to(PKIReaderForTesting.class).asEagerSingleton();
             bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
-            bind(OwnerServiceAdapter.class).to(
-                DefaultOwnerServiceAdapter.class);
-            bind(EntitlementCertServiceAdapter.class).to(
-                StubEntitlementCertServiceAdapter.class);
+            bind(OwnerServiceAdapter.class).to(DefaultOwnerServiceAdapter.class);
+            bind(EntitlementCertServiceAdapter.class).to(StubEntitlementCertServiceAdapter.class);
             bind(ManifestFileService.class).to(DBManifestService.class);
             bind(ScriptEngineProvider.class);
 
@@ -308,8 +303,7 @@ public class TestingModules {
 
             bind(CertificateRevocationListTask.class);
             // temporary
-            bind(IdentityCertServiceAdapter.class).to(
-                DefaultIdentityCertServiceAdapter.class);
+            bind(IdentityCertServiceAdapter.class).to(DefaultIdentityCertServiceAdapter.class);
             bind(PoolRules.class);
             bind(CriteriaRules.class);
             bind(PoolManager.class).to(CandlepinPoolManager.class);

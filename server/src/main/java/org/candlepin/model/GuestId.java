@@ -55,9 +55,12 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_consumer_guests")
+@Table(name = GuestId.DB_TABLE)
 @JsonFilter("GuestFilter")
 public class GuestId extends AbstractHibernateObject implements Owned, Named, ConsumerProperty, Eventful {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_consumer_guests";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

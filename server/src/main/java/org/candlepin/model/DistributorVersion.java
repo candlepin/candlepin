@@ -44,9 +44,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "distributorversion")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_dist_version")
+@Table(name = DistributorVersion.DB_TABLE)
 
 public class DistributorVersion extends AbstractHibernateObject {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_dist_version";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

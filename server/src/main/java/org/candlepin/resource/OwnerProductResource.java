@@ -243,8 +243,6 @@ public class OwnerProductResource {
         Owner owner = this.getOwnerByKey(ownerKey);
         Product product = this.fetchProduct(owner, productId);
 
-        log.debug("RETURNING PRODUCT WITH CONTENT: {}", product.getProductContent());
-
         return product.toDTO();
     }
 
@@ -279,8 +277,6 @@ public class OwnerProductResource {
         Owner owner = this.getOwnerByKey(ownerKey);
         Product entity = productManager.createProduct(product, owner);
 
-        log.debug("PRODUCT CREATED: {}", entity);
-
         return entity.toDTO();
     }
 
@@ -303,7 +299,7 @@ public class OwnerProductResource {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", existing.getId()));
         }
 
-        Product updated = this.productManager.updateProduct(existing, update, owner, true);
+        Product updated = this.productManager.updateProduct(update, owner, true);
 
         return updated.toDTO();
     }

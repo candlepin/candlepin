@@ -19,6 +19,7 @@ import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
@@ -79,19 +80,40 @@ public class UeberCertificateGenerator {
         return generateUeberCertificate(consumer, ueberPool);
     }
 
-    public Product createUeberProduct(Owner o) {
+    public Product createUeberProduct(Owner owner) {
         // TODO: These ueber objects are (heavily) reliant on implementation details of the
         // DefaultUniqueIdGenerator returning only numeric IDs, despite the interface and the return
         // value lacking any such guarantee.
         // Specifically, the X509 filtering functionality will only properly filter when these are
         // generated with numeric IDs.
 
-        Product ueberProduct = Product.createUeberProductForOwner(idGenerator, o);
-        Content ueberContent = Content.createUeberContent(idGenerator, o, ueberProduct);
-        ueberContent = this.contentManager.createContent(ueberContent, o);
-        ueberProduct.addContent(ueberContent, true);
+        ProductData productData = new ProductData()
+            .setId(idGenerator.generateId())
+            .setName(owner.getKey() + Product.UEBER_PRODUCT_POSTFIX)
+            .setMultiplier(1L);
 
-        return this.productManager.createProduct(ueberProduct, o);
+        ContentData contentData = new ContentData()
+            .setId(idGenerator.generateId())
+            .setName(Content.UEBER_CONTENT_NAME)
+            .setType("yum")
+            .setLabel(productData.getId() + '-' + Content.UEBER_CONTENT_NAME)
+            .setVendor("Custom")
+            .setContentUrl("/" + owner.getKey())
+            .setGpgUrl("")
+            .setArches("");
+
+        productData.addContent(contentData, true);
+
+        if (this.contentManager.createContent(contentData, owner) == null) {
+            throw new IllegalStateException("Unable to create ueber content for owner: " + owner.getKey());
+        }
+
+        Product ueberProduct = this.productManager.createProduct(productData, owner);
+        if (ueberProduct == null) {
+            throw new IllegalStateException("Unable to create ueber product for owner: " + owner.getKey());
+        }
+
+        return ueberProduct;
     }
 
     public Subscription createUeberSubscription(Owner o, Product ueberProduct) {
