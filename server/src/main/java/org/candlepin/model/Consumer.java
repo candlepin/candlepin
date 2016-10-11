@@ -73,7 +73,7 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 @Table(name = "cp_consumer")
 @JsonFilter("ConsumerFilter")
 public class Consumer extends AbstractHibernateObject implements Linkable, Owned, Named, ConsumerProperty {
-
+    public static final int MAX_LENGTH_OF_CONSUMER_NAME = 255;
     public static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
 
     @Id
@@ -89,7 +89,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     private String uuid;
 
     @Column(nullable = false)
-    @Size(max = 255)
+    @Size(max = MAX_LENGTH_OF_CONSUMER_NAME)
     @NotNull
     private String name;
 
