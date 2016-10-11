@@ -563,11 +563,10 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
         Pool pool = setupHostRestrictedPool(parent);
 
-        String guestId = "virtguestuuid";
         consumer.setFact("virt.is_guest", "true");
-        consumer.setFact("virt.uuid", guestId);
+        consumer.setFact("virt.uuid", "virtguestuuid");
 
-        when(consumerCurator.getHost(guestId, owner)).thenReturn(parent);
+        when(consumerCurator.getHost(consumer)).thenReturn(parent);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
@@ -586,11 +585,10 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
         Pool pool = setupHostRestrictedPool(otherParent);
 
-        String guestId = "virtguestuuid";
         consumer.setFact("virt.is_guest", "true");
-        consumer.setFact("virt.uuid", guestId);
+        consumer.setFact("virt.uuid", "virtguestuuid");
 
-        when(consumerCurator.getHost(guestId, owner)).thenReturn(parent);
+        when(consumerCurator.getHost(consumer)).thenReturn(parent);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasWarnings());
@@ -608,11 +606,10 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
         Pool pool = setupHostRestrictedPool(otherParent);
 
-        String guestId = "virtguestuuid";
         consumer.setFact("virt.is_guest", "true");
-        consumer.setFact("virt.uuid", guestId);
+        consumer.setFact("virt.uuid", "virtguestuuid");
 
-        when(consumerCurator.getHost(guestId, owner)).thenReturn(null);
+        when(consumerCurator.getHost(consumer)).thenReturn(null);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasWarnings());
@@ -716,10 +713,9 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         newborn.setCreated(new java.util.Date());
         Pool pool = setupUnmappedGuestPool();
 
-        String guestId = "virtguestuuid";
         newborn.setFact("virt.is_guest", "true");
-        newborn.setFact("virt.uuid", guestId);
-        when(consumerCurator.getHost(guestId, owner)).thenReturn(parent);
+        newborn.setFact("virt.uuid", "virtguestuuid");
+        when(consumerCurator.getHost(newborn)).thenReturn(parent);
 
         ValidationResult result = enforcer.preEntitlement(newborn, pool, 1);
         assertTrue(result.hasErrors());

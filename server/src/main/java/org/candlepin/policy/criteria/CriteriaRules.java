@@ -66,8 +66,7 @@ public class CriteriaRules  {
         // consumer UUID
         Consumer hostConsumer = null;
         if (consumer.getFact("virt.uuid") != null) {
-            hostConsumer = consumerCurator.getHost(
-                consumer.getFact("virt.uuid"), consumer.getOwner());
+            hostConsumer = consumerCurator.getHost(consumer);
         }
 
         List<Criterion> criteriaFilters = new LinkedList<Criterion>();

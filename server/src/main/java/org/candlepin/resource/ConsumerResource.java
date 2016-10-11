@@ -1940,7 +1940,7 @@ public class ConsumerResource {
                 "The system with UUID {0} is not a virtual guest.",
                 consumer.getUuid()));
         }
-        return consumerCurator.getHost(consumer.getFact("virt.uuid"), consumer.getOwner());
+        return consumerCurator.getHost(consumer);
     }
 
     @ApiOperation(notes = "Retrieves the Release of a Consumer", value = "getRelease")
