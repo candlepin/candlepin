@@ -53,7 +53,7 @@ public class ConsumerTypeImporter {
         for (ConsumerType consumerType : consumerTypes) {
             if (curator.lookupByLabel(consumerType.getLabel()) == null) {
                 curator.create(consumerType);
-                log.debug("Created consumer type: " + consumerType.getLabel());
+                log.debug("Created consumer type: {}", consumerType.getLabel());
             }
         }
     }

@@ -110,7 +110,18 @@ public class ImporterTest {
     }
 
     @After
-    public void cleanup() {
+    public void tearDown() throws Exception {
+        PrintStream ps = new PrintStream(new File(this.getClass()
+            .getClassLoader().getResource("version.properties").toURI()));
+        ps.println("version=${version}");
+        ps.println("release=${release}");
+        ps.close();
+        File mockJs = new File(MOCK_JS_PATH);
+        mockJs.delete();
+        cleanup();
+    }
+
+    private void cleanup() {
         for (File f : tempDir.listFiles()) {
             f.delete();
         }
@@ -567,17 +578,6 @@ public class ImporterTest {
             return;
         }
         fail();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        PrintStream ps = new PrintStream(new File(this.getClass()
-            .getClassLoader().getResource("version.properties").toURI()));
-        ps.println("version=${version}");
-        ps.println("release=${release}");
-        ps.close();
-        File mockJs = new File(MOCK_JS_PATH);
-        mockJs.delete();
     }
 
     private File createFile(String filename, String version, Date date,

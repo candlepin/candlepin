@@ -144,9 +144,9 @@ public class CandlepinPoolManager implements PoolManager {
      * so we don't miss anything
      */
     void refreshPoolsWithRegeneration(Owner owner, boolean lazy) {
-        log.info("Refreshing pools for owner: " + owner.getKey());
+        log.info("Refreshing pools for owner: {}", owner.getKey());
         List<String> subIds = subAdapter.getSubscriptionIds(owner);
-        log.debug("Found " + subIds.size() + " existing subscriptions.");
+        log.debug("Found {} existing subscriptions.", subIds.size());
 
         List<String> deletedSubs = new LinkedList<String>();
         for (String subId : subIds) {
@@ -155,14 +155,14 @@ public class CandlepinPoolManager implements PoolManager {
             // If this sub has been removed since getSubscriptionIds was called,
             if (sub == null) {
                 deletedSubs.add(subId);
-                log.warn("Couldn't load subscription, assuming it has been deleted: " + subId);
+                log.warn("Couldn't load subscription, assuming it has been deleted: {}", subId);
                 continue;
             }
 
             // Remove expired subscriptions
             if (isExpired(sub)) {
                 deletedSubs.add(subId);
-                log.info("Deleting expired subscription: " + sub);
+                log.info("Deleting expired subscription: {}", sub);
                 subAdapter.deleteSubscription(sub);
                 continue;
             }
@@ -266,7 +266,7 @@ public class CandlepinPoolManager implements PoolManager {
         for (Pool existing : existingPools) {
             if (!existing.getOwner().equals(sub.getOwner())) {
                 toRemove.add(existing);
-                log.warn("Removing " + existing + " because it exists in the wrong org");
+                log.warn("Removing {} because it exists in the wrong org", existing);
                 if (existing.getType() == PoolType.NORMAL ||
                     existing.getType() == PoolType.BONUS) {
                     deletePool(existing);
@@ -341,11 +341,11 @@ public class CandlepinPoolManager implements PoolManager {
         for (PoolUpdate updatedPool : updatedPools) {
 
             Pool existingPool = updatedPool.getPool();
-            log.info("Pool changed: " + updatedPool.toString());
+            log.info("Pool changed: {}", updatedPool);
 
             // Delete pools the rules signal needed to be cleaned up:
             if (existingPool.isMarkedForDelete()) {
-                log.warn("Deleting pool as requested by rules: " +
+                log.warn("Deleting pool as requested by rules: {}",
                     existingPool.getId());
                 deletePool(existingPool);
                 continue;
@@ -422,7 +422,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     public List<Pool> createPoolsForSubscription(Subscription sub, List<Pool> existingPools) {
         if (log.isDebugEnabled()) {
-            log.debug("Creating new pool for new sub: " + sub.getId());
+            log.debug("Creating new pool for new sub: {}", sub.getId());
         }
 
         List<Pool> pools = poolRules.createPools(sub, existingPools);
@@ -437,7 +437,7 @@ public class CandlepinPoolManager implements PoolManager {
     public Pool createPool(Pool p) {
         Pool created = poolCurator.create(p);
         if (log.isDebugEnabled()) {
-            log.debug("   new pool: " + p);
+            log.debug("   new pool: {}", p);
         }
         if (created != null) {
             sink.emitPoolCreated(created);
@@ -1013,7 +1013,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
             else {
                 // If it has been deleted, that's fine, one less to regenerate
-                log.info("Couldn't load Entitlement '" + entId + "' to regenerate, assuming deleted");
+                log.info("Couldn't load Entitlement '{}' to regenerate, assuming deleted", entId);
             }
         }
     }
@@ -1068,14 +1068,12 @@ public class CandlepinPoolManager implements PoolManager {
         boolean lazy) {
 
         if (lazy) {
-            log.info("Marking certificates dirty for entitlement: " + e);
+            log.info("Marking certificates dirty for entitlement: {}", e);
             e.setDirty(true);
             return;
         }
 
-        if (log.isDebugEnabled()) {
-            log.debug("Revoking entitlementCertificates of : " + e);
-        }
+        log.debug("Revoking entitlementCertificates of : {}", e);
 
         Entitlement tempE = new Entitlement();
         tempE.getCertificates().addAll(e.getCertificates());
@@ -1087,21 +1085,17 @@ public class CandlepinPoolManager implements PoolManager {
             e.setDirty(false);
             entitlementCurator.merge(e);
             for (EntitlementCertificate ec : tempE.getCertificates()) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Deleting entitlementCertificate: #" + ec.getId());
-                }
+                log.debug("Deleting entitlementCertificate: #{}", ec.getId());
                 this.entitlementCertificateCurator.delete(ec);
             }
 
             // send entitlement changed event.
             this.sink.queueEvent(this.eventFactory.entitlementChanged(e));
-            if (log.isDebugEnabled()) {
-                log.debug("Generated entitlementCertificate: #" + generated.getId());
-            }
+            log.debug("Generated entitlementCertificate: #{}", generated.getId());
         }
         catch (CertificateSizeException cse) {
             e.getCertificates().addAll(tempE.getCertificates());
-            log.warn("The certificate cannot be regenerated at this time: " +
+            log.warn("The certificate cannot be regenerated at this time: {}",
                 cse.getMessage());
         }
     }
@@ -1236,7 +1230,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         poolCurator.lock(poolsToLock);
 
-        log.info("Batch revoking entitlements: " + entsToRevoke.size());
+        log.info("Batch revoking entitlements: {}", entsToRevoke.size());
 
         entsToRevoke =  new ArrayList<Entitlement>(entsToRevoke);
 

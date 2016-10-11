@@ -663,11 +663,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     public void lock(List<Pool> poolsToLock) {
-        if (poolsToLock.isEmpty()) { 
+        if (poolsToLock.isEmpty()) {
             log.debug("Nothing to lock");
             return;
         }
-            
+
         log.debug("Locking pools");
         getEntityManager().createQuery("SELECT p FROM Pool p WHERE p in :pools")
         .setParameter("pools", poolsToLock)

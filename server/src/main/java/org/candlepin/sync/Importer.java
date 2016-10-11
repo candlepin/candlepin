@@ -73,6 +73,7 @@ import javax.persistence.PersistenceException;
  * Importer
  */
 public class Importer {
+    private static final String FILENAME_OF_CONSUMER_EXPORT = "consumer_export.zip";
     private static Logger log = LoggerFactory.getLogger(Importer.class);
 
     /**
@@ -236,61 +237,18 @@ public class Importer {
         ConflictOverrides overrides)
         throws ImporterException {
         File tmpDir = null;
-        Map<String, Object> result = new HashMap<String, Object>();
         try {
             tmpDir = new SyncUtils(config).makeTempDir("import");
             extractArchive(tmpDir, exportFile);
+            validateSignature(overrides, tmpDir);
 
-            File signature = new File(tmpDir, "signature");
-            if (signature.length() == 0) {
-                throw new ImportExtractionException(i18n.tr("The archive does not " +
-                                          "contain the required signature file"));
-            }
-
-            boolean verifiedSignature = pki.verifySHA256WithRSAHashAgainstCACerts(
-                new File(tmpDir, "consumer_export.zip"),
-                loadSignature(new File(tmpDir, "signature")));
-            if (!verifiedSignature) {
-                log.warn("Archive signature check failed.");
-                if (!overrides
-                    .isForced(Conflict.SIGNATURE_CONFLICT)) {
-
-                    /*
-                     * Normally for import conflicts that can be overridden, we try to
-                     * report them all the first time so if the user intends to override,
-                     * they can do so with just one more request. However in the case of
-                     * a bad signature, we're going to report immediately due to the nature
-                     * of what this might mean.
-                     */
-                    throw new ImportConflictException(
-                        i18n.tr("Archive failed signature check"),
-                        Conflict.SIGNATURE_CONFLICT);
-                }
-                else {
-                    log.warn("Ignoring signature check failure.");
-                }
-            }
-
-            File consumerExport = new File(tmpDir, "consumer_export.zip");
+            File consumerExport = new File(tmpDir, FILENAME_OF_CONSUMER_EXPORT);
             File exportDir = extractArchive(tmpDir, consumerExport);
-
-            Map<String, File> importFiles = new HashMap<String, File>();
-            File[] listFiles = exportDir.listFiles();
-            if (listFiles == null || listFiles.length == 0) {
-                throw new ImportExtractionException(i18n.tr("The consumer_export " +
-                    "archive has no contents"));
-            }
-            for (File file : listFiles) {
-                importFiles.put(file.getName(), file);
-            }
-
-            // Need the rules file as well which is in a nested dir:
-            File rulesFile = new File(exportDir, ImportFile.RULES_FILE.fileName());
-            importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFile);
-
+            Map<String, File> importFiles = mapArchiveContent(exportDir);
             ConsumerDto consumer = importObjects(owner, importFiles, overrides);
             Meta m = mapper.readValue(importFiles.get(ImportFile.META.fileName()),
                 Meta.class);
+            Map<String, Object> result = new HashMap<String, Object>();
             result.put("consumer", consumer);
             result.put("meta", m);
             return result;
@@ -328,6 +286,58 @@ public class Importer {
                 catch (IOException e) {
                     log.error("Failed to delete extracted export", e);
                 }
+            }
+        }
+    }
+
+    private Map<String, File> mapArchiveContent(File exportDir)
+        throws ImportExtractionException {
+        Map<String, File> importFiles = new HashMap<String, File>();
+        File[] listFiles = exportDir.listFiles();
+        if (listFiles == null || listFiles.length == 0) {
+            throw new ImportExtractionException(i18n.tr("The consumer_export " +
+                "archive has no contents"));
+        }
+        for (File file : listFiles) {
+            importFiles.put(file.getName(), file);
+        }
+
+        // Need the rules file as well which is in a nested dir:
+        File rulesFile = new File(exportDir, ImportFile.RULES_FILE.fileName());
+        importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFile);
+        return importFiles;
+    }
+
+    private void validateSignature(ConflictOverrides overrides, File tmpDir)
+        throws ImportExtractionException, CertificateException, IOException {
+
+        File signature = new File(tmpDir, "signature");
+        if (signature.length() == 0) {
+            throw new ImportExtractionException(i18n.tr("The archive does not " +
+                                      "contain the required signature file"));
+        }
+
+        boolean verifiedSignature = pki.verifySHA256WithRSAHashAgainstCACerts(
+            new File(tmpDir, FILENAME_OF_CONSUMER_EXPORT),
+            loadSignature(signature));
+        if (!verifiedSignature) {
+            log.warn("Archive signature check failed.");
+            if (!overrides
+                .isForced(Conflict.SIGNATURE_CONFLICT)) {
+
+                /*
+                 * Normally for import conflicts that can be overridden, we try to
+                 * report them all the first time so if the user intends to override,
+                 * they can do so with just one more request. However in the case of
+                 * a bad signature, we're going to report immediately due to the nature
+                 * of what this might mean.
+                 */
+                throw new ImportConflictException(
+                    i18n.tr("Archive failed signature check"),
+                    Conflict.SIGNATURE_CONFLICT);
+            }
+            else {
+                log.warn("Ignoring signature check failure.");
             }
         }
     }
@@ -429,33 +439,31 @@ public class Importer {
         Refresher refresher = poolManager.getRefresher();
         Meta meta = mapper.readValue(metadata, Meta.class);
         if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
-            ProductImporter importer = new ProductImporter(productCurator, contentCurator);
+            ProductImporter prodImporter = new ProductImporter(productCurator, contentCurator);
 
             Set<Product> productsToImport = importProducts(
                 importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(),
-                importer);
+                prodImporter);
 
-            Set<Product> modifiedProducts = importer.getChangedProducts(productsToImport);
+            Set<Product> modifiedProducts = prodImporter.getChangedProducts(productsToImport);
             for (Product product : modifiedProducts) {
                 refresher.add(product);
             }
 
-            importer.store(productsToImport);
+            prodImporter.store(productsToImport);
 
             meta = mapper.readValue(metadata, Meta.class);
             importEntitlements(owner, productsToImport, entitlements.listFiles(),
                 consumer, meta);
-
-            refresher.add(owner);
-            refresher.run();
         }
         else {
             log.warn("No products found to import, skipping product import.");
             log.warn("No entitlements in manifest, removing all subscriptions for owner.");
             importEntitlements(owner, new HashSet<Product>(), new File[]{}, consumer, meta);
-            refresher.add(owner);
-            refresher.run();
         }
+        refresher.add(owner);
+        refresher.run();
+
         return consumer;
     }
 
@@ -467,7 +475,7 @@ public class Importer {
             rulesImporter.importObject(reader);
         }
         catch (FileNotFoundException fnfe) {
-            log.warn("Skipping rules import, manifest does not contain rules file: " +
+            log.warn("Skipping rules import, manifest does not contain rules file: {}",
                 ImportFile.RULES_FILE.fileName());
             return;
         }
@@ -503,7 +511,7 @@ public class Importer {
         IdentityCertificate idcert = null;
         for (File uc : upstreamConsumer) {
             if (uc.getName().endsWith(".json")) {
-                log.debug("Import upstream consumeridentity certificate: " +
+                log.debug("Import upstream consumeridentity certificate: {}",
                     uc.getName());
                 Reader reader = null;
                 try {
@@ -517,7 +525,7 @@ public class Importer {
                 }
             }
             else {
-                log.warn("Extra file found in upstream_consumer directory: " +
+                log.warn("Extra file found in upstream_consumer directory: {}",
                     uc.getName());
             }
         }
@@ -559,7 +567,7 @@ public class Importer {
         for (File product : products) {
             // Skip product.pem's, we just need the json to import:
             if (product.getName().endsWith(".json")) {
-                log.debug("Import product: " + product.getName());
+                log.debug("Import product: {}", product.getName());
                 Reader reader = null;
                 try {
                     reader = new FileReader(product);
@@ -583,7 +591,7 @@ public class Importer {
     public void importEntitlements(Owner owner, Set<Product> products, File[] entitlements,
         ConsumerDto consumer, Meta meta)
         throws IOException, SyncDataFormatException {
-        EntitlementImporter importer = new EntitlementImporter(subCurator, csCurator,
+        EntitlementImporter entImporter = new EntitlementImporter(subCurator, csCurator,
             cdnCurator, sink, i18n);
 
         Map<String, Product> productsById = new HashMap<String, Product>();
@@ -595,9 +603,9 @@ public class Importer {
         for (File entitlement : entitlements) {
             Reader reader = null;
             try {
-                log.debug("Import entitlement: " + entitlement.getName());
+                log.debug("Import entitlement: {}", entitlement.getName());
                 reader = new FileReader(entitlement);
-                subscriptionsToImport.add(importer.importObject(mapper, reader, owner,
+                subscriptionsToImport.add(entImporter.importObject(mapper, reader, owner,
                     productsById, consumer, meta));
             }
             finally {
@@ -607,7 +615,7 @@ public class Importer {
             }
         }
 
-        importer.store(owner, subscriptionsToImport);
+        entImporter.store(owner, subscriptionsToImport);
     }
 
     /**
@@ -618,7 +626,7 @@ public class Importer {
      */
     private File extractArchive(File tempDir, File exportFile)
         throws IOException, ImportExtractionException {
-        log.debug("Extracting archive to: " + tempDir.getAbsolutePath());
+        log.debug("Extracting archive to: {}", tempDir.getAbsolutePath());
         byte[] buf = new byte[1024];
 
         ZipInputStream zipinputstream = null;
@@ -636,7 +644,7 @@ public class Importer {
                 //for each entry to be extracted
                 String entryName = zipentry.getName();
                 if (log.isDebugEnabled()) {
-                    log.debug("entryname " + entryName);
+                    log.debug("entryname {}", entryName);
                 }
                 File newFile = new File(entryName);
                 String directory = newFile.getParent();

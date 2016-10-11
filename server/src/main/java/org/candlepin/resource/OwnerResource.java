@@ -1054,52 +1054,16 @@ public class OwnerResource {
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("force") String[] overrideConflicts, MultipartInput input) {
 
-        if (overrideConflicts.length == 1) {
-            /*
-             * For backward compatibility, look for force=true and if found,
-             * treat it just like what it used to mean, ignore an old manifest
-             * creation date.
-             */
-            if (overrideConflicts[0].equalsIgnoreCase("true")) {
-                overrideConflicts = new String [] { "MANIFEST_OLD" };
-            }
-            else if (overrideConflicts[0].equalsIgnoreCase("false")) {
-                overrideConflicts = new String [] {};
-            }
-        }
-        if (log.isDebugEnabled()) {
-            for (String s : overrideConflicts) {
-                log.debug("Forcing conflict if encountered: " + s);
-            }
-        }
-
-        ConflictOverrides overrides = null;
-        try {
-            overrides = new ConflictOverrides(overrideConflicts);
-        }
-        catch (IllegalArgumentException e) {
-            throw new BadRequestException(i18n.tr("Unknown conflict to force"));
-        }
-
-        String filename = "";
+        ConflictOverrides overrides = createConflictOverrides(overrideConflicts);
         Owner owner = findOwner(ownerKey);
         Map<String, Object> data = new HashMap<String, Object>();
+        String filename = "";
         try {
             InputPart part = input.getParts().get(0);
-            MultivaluedMap<String, String> headers = part.getHeaders();
-            String contDis = headers.getFirst("Content-Disposition");
-            StringTokenizer st = new StringTokenizer(contDis, ";");
-            while (st.hasMoreTokens()) {
-                String entry = st.nextToken().trim();
-                if (entry.startsWith("filename")) {
-                    filename = entry.substring(entry.indexOf("=") + 2, entry.length() - 1);
-                    break;
-                }
-            }
-            File archive = part.getBody(new GenericType<File>() {
-            });
-            log.info("Importing archive " + archive.getAbsolutePath() +
-                " for owner " + owner.getDisplayName());
+            filename = extractFileNameFromHeaders(part);
+            File archive = part.getBody(new GenericType<File>() {});
+            log.info("Importing archive {} for owner {}",
+                archive.getAbsolutePath(), owner.getDisplayName());
             data = importer.loadExport(owner, archive, overrides);
 
             sink.emitImportCreated(owner);
@@ -1125,8 +1089,100 @@ public class OwnerResource {
             throw e;
         }
         finally {
-            log.info("Import attempt completed for owner " + owner.getDisplayName());
+            log.info("Import attempt completed for owner {}", owner.getDisplayName());
         }
+    }
+
+    private ConflictOverrides createConflictOverrides(
+        String[] overrideConflicts) {
+        overrideConflicts = ignoreOldManifestCreationDateIfNeeded(
+            overrideConflicts);
+        logConflictOverridesIfEnabled(overrideConflicts);
+
+        try {
+            return new ConflictOverrides(overrideConflicts);
+        }
+        catch (IllegalArgumentException e) {
+            throw new BadRequestException(i18n.tr("Unknown conflict to force"));
+        }
+    }
+
+    private String[] ignoreOldManifestCreationDateIfNeeded(
+        String[] overrideConflicts) {
+        if (overrideConflicts.length == 1) {
+            /*
+             * For backward compatibility, look for force=true and if found,
+             * treat it just like what it used to mean, ignore an old manifest
+             * creation date.
+             */
+            if (overrideConflicts[0].equalsIgnoreCase("true")) {
+                overrideConflicts = new String [] { "MANIFEST_OLD" };
+            }
+            else if (overrideConflicts[0].equalsIgnoreCase("false")) {
+                overrideConflicts = new String [] {};
+            }
+        }
+        return overrideConflicts;
+    }
+
+    private void logConflictOverridesIfEnabled(String[] overrideConflicts) {
+        if (log.isDebugEnabled()) {
+            for (String s : overrideConflicts) {
+                log.debug("Forcing conflict if encountered: {}", s);
+            }
+        }
+    }
+
+    private String extractFileNameFromHeaders(InputPart part) {
+        MultivaluedMap<String, String> headers = part.getHeaders();
+        String contDis = headers.getFirst("Content-Disposition");
+        StringTokenizer st = new StringTokenizer(contDis, ";");
+        while (st.hasMoreTokens()) {
+            String entry = st.nextToken().trim();
+            if (entry.startsWith("filename")) {
+                return entry.substring(entry.indexOf("=") + 2, entry.length() - 1);
+            }
+        }
+        return "";
+    }
+
+    private void recordImportSuccess(Owner owner, Map data,
+        ConflictOverrides forcedConflicts, String filename) {
+
+        ImportRecord record = new ImportRecord(owner);
+        Meta meta = (Meta) data.get("meta");
+        if (meta != null) {
+            record.setGeneratedBy(meta.getPrincipalName());
+            record.setGeneratedDate(meta.getCreated());
+        }
+        record.setUpstreamConsumer(createImportUpstreamConsumer(owner, null));
+        record.setFileName(filename);
+
+        String msg = i18n.tr("{0} file imported successfully.", owner.getKey());
+        if (!forcedConflicts.isEmpty()) {
+            msg = i18n.tr("{0} file imported forcibly", owner.getKey());
+        }
+
+        record.recordStatus(ImportRecord.Status.SUCCESS, msg);
+
+        this.importRecordCurator.create(record);
+    }
+
+    private void recordImportFailure(Owner owner, Map data, Throwable error,
+        String filename) {
+        log.error("Recording import failure", error);
+
+        ImportRecord record = new ImportRecord(owner);
+        Meta meta = (Meta) data.get("meta");
+        if (meta != null) {
+            record.setGeneratedBy(meta.getPrincipalName());
+            record.setGeneratedDate(meta.getCreated());
+        }
+        record.setUpstreamConsumer(createImportUpstreamConsumer(owner, null));
+        record.setFileName(filename);
+        record.recordStatus(ImportRecord.Status.FAILURE, error.getMessage());
+
+        this.importRecordCurator.create(record);
     }
 
     /**
@@ -1368,45 +1424,6 @@ public class OwnerResource {
             return consumerCurator.getHypervisorsForOwner(ownerKey);
         }
         return consumerCurator.getHypervisorsBulk(hypervisorIds, ownerKey);
-    }
-
-    private void recordImportSuccess(Owner owner, Map data,
-        ConflictOverrides forcedConflicts, String filename) {
-
-        ImportRecord record = new ImportRecord(owner);
-        Meta meta = (Meta) data.get("meta");
-        if (meta != null) {
-            record.setGeneratedBy(meta.getPrincipalName());
-            record.setGeneratedDate(meta.getCreated());
-        }
-        record.setUpstreamConsumer(createImportUpstreamConsumer(owner, null));
-        record.setFileName(filename);
-
-        String msg = i18n.tr("{0} file imported successfully.", owner.getKey());
-        if (!forcedConflicts.isEmpty()) {
-            msg = i18n.tr("{0} file imported forcibly", owner.getKey());
-        }
-
-        record.recordStatus(ImportRecord.Status.SUCCESS, msg);
-
-        this.importRecordCurator.create(record);
-    }
-
-    private void recordImportFailure(Owner owner, Map data, Throwable error,
-        String filename) {
-        ImportRecord record = new ImportRecord(owner);
-        Meta meta = (Meta) data.get("meta");
-        log.error("Recording import failure", error);
-        if (meta != null) {
-            record.setGeneratedBy(meta.getPrincipalName());
-            record.setGeneratedDate(meta.getCreated());
-        }
-        record.setUpstreamConsumer(createImportUpstreamConsumer(owner, null));
-        record.setFileName(filename);
-
-        record.recordStatus(ImportRecord.Status.FAILURE, error.getMessage());
-
-        this.importRecordCurator.create(record);
     }
 
     private void recordManifestDeletion(Owner owner, String username,
