@@ -36,6 +36,7 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.paging.Paginate;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ConsumerManager;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
@@ -179,6 +180,7 @@ public class OwnerResource {
     private ResolverUtil resolverUtil;
     private ProductManager productManager;
     private ContentManager contentManager;
+    private ConsumerManager consumerManager;
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator,
@@ -207,7 +209,8 @@ public class OwnerResource {
         Configuration config,
         ResolverUtil resolverUtil,
         ProductManager productManager,
-        ContentManager contentManager) {
+        ContentManager contentManager,
+        ConsumerManager consumerManager) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -236,6 +239,7 @@ public class OwnerResource {
         this.resolverUtil = resolverUtil;
         this.productManager = productManager;
         this.contentManager = contentManager;
+        this.consumerManager = consumerManager;
     }
 
     /**
@@ -694,11 +698,11 @@ public class OwnerResource {
             owner, userName, types, uuids, hypervisorIds, attrFilters, skus,
             subscriptionIds, contracts, pageRequest);
 
+        consumerManager.computeComplianceIfAsyncScheduled(page.getPageData());
         // Store the page for the LinkHeaderResponseFilter
         ResteasyProviderFactory.pushContext(Page.class, page);
         return page.getPageData();
     }
-
 
     /**
      * Retrieves a list of Pools for an Owner
