@@ -150,7 +150,7 @@ public class EmptyCandlepinQuery<T> implements CandlepinQuery<T> {
      *  zero
      */
     @Override
-    public int scroll(ResultProcessor<T> processor) {
+    public int forEach(ResultProcessor<T> processor) {
         return 0;
     }
 
@@ -163,7 +163,7 @@ public class EmptyCandlepinQuery<T> implements CandlepinQuery<T> {
      *  zero
      */
     @Override
-    public int scroll(int column, ResultProcessor<T> processor) {
+    public int forEach(int column, ResultProcessor<T> processor) {
         return 0;
     }
 
@@ -177,7 +177,7 @@ public class EmptyCandlepinQuery<T> implements CandlepinQuery<T> {
      *  zero
      */
     @Override
-    public int scroll(int column, boolean evict, ResultProcessor<T> processor) {
+    public int forEach(int column, boolean evict, ResultProcessor<T> processor) {
         return 0;
     }
 
@@ -188,7 +188,7 @@ public class EmptyCandlepinQuery<T> implements CandlepinQuery<T> {
      *  zero
      */
     @Override
-    public int scrollByRow(ResultProcessor<Object[]> processor) {
+    public int forEachRow(ResultProcessor<Object[]> processor) {
         return 0;
     }
 

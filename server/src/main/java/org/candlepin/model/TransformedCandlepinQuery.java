@@ -173,23 +173,23 @@ public class TransformedCandlepinQuery<I, O> implements CandlepinQuery<O> {
      * {@inheritDoc}
      */
     @Override
-    public int scroll(ResultProcessor<O> processor) {
-        return this.scroll(0, false, processor);
+    public int forEach(ResultProcessor<O> processor) {
+        return this.forEach(0, false, processor);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int scroll(int column, ResultProcessor<O> processor) {
-        return this.scroll(column, false, processor);
+    public int forEach(int column, ResultProcessor<O> processor) {
+        return this.forEach(column, false, processor);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int scroll(int column, boolean evict, ResultProcessor<O> processor) {
+    public int forEach(int column, boolean evict, ResultProcessor<O> processor) {
         if (processor == null) {
             throw new IllegalArgumentException("processor is null");
         }
@@ -197,7 +197,7 @@ public class TransformedCandlepinQuery<I, O> implements CandlepinQuery<O> {
         final ResultProcessor<O> wrapped = processor;
         final ElementTransformer<I, O> transformer = this.transformer;
 
-        return this.query.scroll(column, evict, new ResultProcessor<I>() {
+        return this.query.forEach(column, evict, new ResultProcessor<I>() {
             @Override
             public boolean process(I element) {
                 return wrapped.process(transformer.transform(element));
@@ -209,8 +209,8 @@ public class TransformedCandlepinQuery<I, O> implements CandlepinQuery<O> {
      * {@inheritDoc}
      */
     @Override
-    public int scrollByRow(ResultProcessor<Object[]> processor) {
-        return this.query.scrollByRow(processor);
+    public int forEachRow(ResultProcessor<Object[]> processor) {
+        return this.query.forEachRow(processor);
     }
 
     /**
