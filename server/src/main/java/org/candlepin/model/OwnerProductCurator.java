@@ -70,7 +70,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .setProjection(Projections.property("owner"))
             .add(Restrictions.eq("product.id", productId));
 
-        return this.cpQueryFactory.<Owner>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Owner>buildQuery(this.currentSession(), criteria);
     }
 
     public CandlepinQuery<Product> getProductsByOwner(Owner owner) {
@@ -83,7 +83,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .setProjection(Projections.property("product"))
             .add(Restrictions.eq("owner.id", ownerId));
 
-        return this.cpQueryFactory.<Product>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
     }
 
     public CandlepinQuery<Product> getProductsByIds(Owner owner, Collection<String> productIds) {
@@ -102,7 +102,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .add(Restrictions.eq("owner.id", ownerId))
             .add(CPRestrictions.in("product.id", productIds));
 
-        return this.cpQueryFactory.<Product>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
     }
 
     @Transactional

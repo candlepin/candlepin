@@ -56,7 +56,7 @@ public class EventCurator extends AbstractHibernateCurator<Event> {
     public CandlepinQuery<Event> listMostRecent(int limit) {
         DetachedCriteria criteria = this.createEventCriteria();
 
-        return this.cpQueryFactory.<Event>buildCandlepinQuery(this.currentSession(), criteria)
+        return this.cpQueryFactory.<Event>buildQuery(this.currentSession(), criteria)
             .setMaxResults(limit);
     }
 
@@ -65,7 +65,7 @@ public class EventCurator extends AbstractHibernateCurator<Event> {
         DetachedCriteria criteria = this.createEventCriteria()
             .add(Restrictions.eq("ownerId", owner.getId()));
 
-        return this.cpQueryFactory.<Event>buildCandlepinQuery(this.currentSession(), criteria)
+        return this.cpQueryFactory.<Event>buildQuery(this.currentSession(), criteria)
             .setMaxResults(limit);
     }
 
@@ -74,7 +74,7 @@ public class EventCurator extends AbstractHibernateCurator<Event> {
         DetachedCriteria criteria = this.createEventCriteria()
             .add(Restrictions.eq("consumerId", consumer.getId()));
 
-        return this.cpQueryFactory.<Event>buildCandlepinQuery(this.currentSession(), criteria)
+        return this.cpQueryFactory.<Event>buildQuery(this.currentSession(), criteria)
             .setMaxResults(limit);
     }
 

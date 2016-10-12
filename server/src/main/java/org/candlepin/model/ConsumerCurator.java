@@ -336,7 +336,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .add(Restrictions.eq("owner", owner));
 
-        return this.cpQueryFactory.<Consumer>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -621,7 +621,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     public CandlepinQuery<Consumer> getHypervisorsBulk(Iterable<String> hypervisorIds, String ownerKey) {
         if (hypervisorIds == null || !hypervisorIds.iterator().hasNext()) {
-            return this.cpQueryFactory.<Consumer>buildCandlepinQuery();
+            return this.cpQueryFactory.<Consumer>buildQuery();
         }
 
         DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
@@ -630,7 +630,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .add(Restrictions.eq("o.key", ownerKey))
             .add(this.getHypervisorIdRestriction(hypervisorIds));
 
-        return this.cpQueryFactory.<Consumer>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
     }
 
     private Criterion getHypervisorIdRestriction(Iterable<String> hypervisorIds) {
@@ -650,7 +650,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .add(Restrictions.eq("o.key", ownerKey))
             .add(Restrictions.isNotNull("hvsr.hypervisorId"));
 
-        return this.cpQueryFactory.<Consumer>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
     }
 
     public boolean doesConsumerExist(String uuid) {

@@ -14,20 +14,13 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterKernel;
@@ -118,8 +111,12 @@ public class JobResourceTest {
         List<JobStatus> statuses = new ArrayList<JobStatus>();
         JobStatus status = new JobStatus();
         statuses.add(status);
-        when(jobCurator.findByPrincipalName(eq("admin"))).thenReturn(statuses);
-        Collection<JobStatus> real = jobResource.getStatuses(null, null, "admin");
+
+        CandlepinQuery query = mock(CandlepinQuery.class);
+        when(query.list()).thenReturn(statuses);
+        when(jobCurator.findByPrincipalName(eq("admin"))).thenReturn(query);
+
+        Collection<JobStatus> real = jobResource.getStatuses(null, null, "admin").list();
         assertNotNull(real);
         assertEquals(1, real.size());
     }
@@ -129,8 +126,12 @@ public class JobResourceTest {
         List<JobStatus> statuses = new ArrayList<JobStatus>();
         JobStatus status = new JobStatus();
         statuses.add(status);
-        when(jobCurator.findByOwnerKey(eq("admin"))).thenReturn(statuses);
-        Collection<JobStatus> real = jobResource.getStatuses("admin", null, null);
+
+        CandlepinQuery query = mock(CandlepinQuery.class);
+        when(query.list()).thenReturn(statuses);
+        when(jobCurator.findByOwnerKey(eq("admin"))).thenReturn(query);
+
+        Collection<JobStatus> real = jobResource.getStatuses("admin", null, null).list();
         assertNotNull(real);
         assertEquals(1, real.size());
     }
@@ -140,8 +141,12 @@ public class JobResourceTest {
         List<JobStatus> statuses = new ArrayList<JobStatus>();
         JobStatus status = new JobStatus();
         statuses.add(status);
-        when(jobCurator.findByConsumerUuid(eq("abcd"))).thenReturn(statuses);
-        Collection<JobStatus> real = jobResource.getStatuses(null, "abcd", null);
+
+        CandlepinQuery query = mock(CandlepinQuery.class);
+        when(query.list()).thenReturn(statuses);
+        when(jobCurator.findByConsumerUuid(eq("abcd"))).thenReturn(query);
+
+        Collection<JobStatus> real = jobResource.getStatuses(null, "abcd", null).list();
         assertNotNull(real);
         assertEquals(1, real.size());
     }
@@ -179,7 +184,11 @@ public class JobResourceTest {
         List<JobStatus> statuses = new ArrayList<JobStatus>();
         JobStatus status = new JobStatus();
         statuses.add(status);
-        when(jobCurator.findByPrincipalName(eq("foo"))).thenReturn(statuses);
+
+        CandlepinQuery query = mock(CandlepinQuery.class);
+        when(query.list()).thenReturn(statuses);
+        when(jobCurator.findByPrincipalName(eq("foo"))).thenReturn(query);
+
         jobResource.getStatuses(null, "", "foo");
     }
 

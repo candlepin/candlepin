@@ -45,6 +45,6 @@ public class ImportRecordCurator extends AbstractHibernateCurator<ImportRecord> 
             .add(Restrictions.eq("owner", owner))
             .addOrder(Order.desc("created"));
 
-        return this.cpQueryFactory.<ImportRecord>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<ImportRecord>buildQuery(this.currentSession(), criteria);
     }
 }

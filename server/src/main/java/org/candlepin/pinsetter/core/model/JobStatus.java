@@ -326,8 +326,9 @@ public class JobStatus extends AbstractHibernateObject {
         return result;
     }
 
-    public void cloakResultData(boolean cloak) {
+    public JobStatus cloakResultData(boolean cloak) {
         this.cloakData = cloak;
+        return this;
     }
 
     public String toString() {

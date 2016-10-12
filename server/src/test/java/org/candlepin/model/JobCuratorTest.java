@@ -115,7 +115,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
     @Test
     public void findByPrincipalName() {
         JobStatus job = newJobStatus().principalName("donald").owner("ducks").create();
-        List<JobStatus> jobs = this.curator.findByPrincipalName("donald");
+        List<JobStatus> jobs = this.curator.findByPrincipalName("donald").list();
         assertNotNull(jobs);
         assertEquals("donald", job.getPrincipalName());
         assertEquals(job, jobs.get(0));
@@ -159,7 +159,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
             .startTime(Util.yesterday()).create();
         JobStatus finishedJob = newJobStatus().state(JobStatus.JobState.FINISHED)
             .startTime(Util.yesterday()).create();
-        List<JobStatus> waitingList = curator.findWaitingJobs();
+        List<JobStatus> waitingList = curator.findWaitingJobs().list();
         assertTrue(waitingList.contains(waitingJob1));
         assertTrue(waitingList.contains(waitingJob2));
         assertFalse(waitingList.contains(createdJob));
@@ -170,26 +170,34 @@ public class JobCuratorTest extends DatabaseTestFixture {
     public void findNumRunningByOwnerAndClass() {
         newJobStatus().state(JobStatus.JobState.WAITING)
             .owner("some_owner").create();
+
         newJobStatus().state(JobStatus.JobState.WAITING)
             .owner("my_owner").create();
+
         newJobStatus().state(JobStatus.JobState.RUNNING)
             .owner("my_owner").create();
+
         newJobStatus().state(JobStatus.JobState.CREATED)
             .owner("some_owner").create();
+
         newJobStatus().state(JobStatus.JobState.FINISHED)
             .owner("my_owner").create();
+
         newJobStatus().state(JobStatus.JobState.RUNNING)
             .owner("some_owner").create();
+
         newJobStatus().state(JobStatus.JobState.RUNNING)
             .owner("other_owner").create();
+
         newJobStatus().state(JobStatus.JobState.RUNNING)
             .jobClass(RefreshPoolsJob.class)
             .owner("my_owner").create();
+
         newJobStatus().state(JobStatus.JobState.RUNNING)
             .jobClass(HealEntireOrgJob.class)
             .owner("my_owner").create();
-        long result = curator.findNumRunningByClassAndTarget("my_owner",
-            RefreshPoolsJob.class);
+
+        long result = curator.findNumRunningByClassAndTarget("my_owner", RefreshPoolsJob.class);
         assertEquals(1, result);
     }
 
@@ -272,7 +280,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
 
         setupPrincipal("goofy", new Owner("ducks"), Access.READ_ONLY);
 
-        List<JobStatus> jobs = this.curator.findByPrincipalName("donald");
+        List<JobStatus> jobs = this.curator.findByPrincipalName("donald").list();
         assertNotNull(jobs);
         assertEquals(1, jobs.size());
         assertEquals("donald", job.getPrincipalName());
@@ -289,9 +297,9 @@ public class JobCuratorTest extends DatabaseTestFixture {
 
         setupPrincipal(new ConsumerPrincipal(consumer));
 
-        assertTrue(this.curator.findByPrincipalName("donald").isEmpty());
+        assertTrue(this.curator.findByPrincipalName("donald").list().isEmpty());
 
-        List<JobStatus> jobs = this.curator.findByPrincipalName(consumer.getUuid());
+        List<JobStatus> jobs = this.curator.findByPrincipalName(consumer.getUuid()).list();
         assertNotNull(jobs);
         assertEquals(1, jobs.size());
         assertEquals(consumer.getUuid(), job.getPrincipalName());
@@ -305,7 +313,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
         newJobStatus().principalName("p3").owner("owner2").create();
         setupAdminPrincipal("bob");
 
-        List<JobStatus> jobs = this.curator.findByOwnerKey("owner1");
+        List<JobStatus> jobs = this.curator.findByOwnerKey("owner1").list();
         assertNotNull(jobs);
         assertEquals(2, jobs.size());
 
@@ -313,7 +321,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
             assertEquals("owner1", job.getOwnerId());
         }
 
-        assertEquals(1, this.curator.findByOwnerKey("owner2").size());
+        assertEquals(1, this.curator.findByOwnerKey("owner2").list().size());
     }
 
     @Test
@@ -323,7 +331,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
         newJobStatus().principalName("p3").owner("owner2").create();
         setupPrincipal("goofy", new Owner("owner1"), Access.READ_ONLY);
 
-        List<JobStatus> jobs = this.curator.findByOwnerKey("owner1");
+        List<JobStatus> jobs = this.curator.findByOwnerKey("owner1").list();
         assertNotNull(jobs);
         assertEquals(2, jobs.size());
 
@@ -331,7 +339,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
             assertEquals("owner1", job.getOwnerId());
         }
 
-        assertTrue(this.curator.findByOwnerKey("owner2").isEmpty());
+        assertTrue(this.curator.findByOwnerKey("owner2").list().isEmpty());
     }
 
     @Test
@@ -346,10 +354,10 @@ public class JobCuratorTest extends DatabaseTestFixture {
 
         setupPrincipal(new ConsumerPrincipal(consumer));
 
-        assertTrue(this.curator.findByOwnerKey("owner1").isEmpty());
-        assertTrue(this.curator.findByOwnerKey("owner2").isEmpty());
+        assertTrue(this.curator.findByOwnerKey("owner1").list().isEmpty());
+        assertTrue(this.curator.findByOwnerKey("owner2").list().isEmpty());
 
-        List<JobStatus> found = this.curator.findByOwnerKey("testowner");
+        List<JobStatus> found = this.curator.findByOwnerKey("testowner").list();
         assertEquals(1, found.size());
         assertEquals(job, found.get(0));
     }
@@ -367,7 +375,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
 
         setupPrincipal("goofy", new Owner("owner1"), Access.READ_ONLY);
 
-        List<JobStatus> found = curator.findByConsumerUuid("c2");
+        List<JobStatus> found = curator.findByConsumerUuid("c2").list();
         assertEquals(1, found.size());
         assertEquals(job, found.get(0));
     }
@@ -390,7 +398,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
 
         setupPrincipal(new ConsumerPrincipal(consumer));
 
-        List<JobStatus> jobs = curator.findByConsumerUuid(consumer.getUuid());
+        List<JobStatus> jobs = curator.findByConsumerUuid(consumer.getUuid()).list();
         assertEquals(1, jobs.size());
         assertEquals(job, jobs.get(0));
     }

@@ -89,7 +89,7 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
                 Restrictions.eq("entityVersion", hashcode)
             ));
 
-        return this.cpQueryFactory.<Content>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Content>buildQuery(this.currentSession(), criteria);
     }
 
 

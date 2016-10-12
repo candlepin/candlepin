@@ -37,7 +37,7 @@ public class RoleCurator extends AbstractHibernateCurator<Role> {
             .createCriteria("permissions")
             .add(Restrictions.eq("owner", o));
 
-        return this.cpQueryFactory.<Role>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Role>buildQuery(this.currentSession(), criteria);
     }
 
     /**

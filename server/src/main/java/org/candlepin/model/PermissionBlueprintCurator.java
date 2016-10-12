@@ -36,6 +36,6 @@ public class PermissionBlueprintCurator extends AbstractHibernateCurator<Permiss
         DetachedCriteria criteria = DetachedCriteria.forClass(PermissionBlueprint.class)
             .add(Restrictions.eq("owner", owner));
 
-        return this.cpQueryFactory.<PermissionBlueprint>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<PermissionBlueprint>buildQuery(this.currentSession(), criteria);
     }
 }

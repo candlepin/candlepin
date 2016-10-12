@@ -62,7 +62,7 @@ public class CancelJobJob extends KingpinJob {
                 statusIds.add(key.getName());
             }
             try {
-                jobsToCancel = jobCurator.findCanceledJobs(statusIds);
+                jobsToCancel = jobCurator.findCanceledJobs(statusIds).list();
             }
             catch (HibernateException e) {
                 log.error("Cannot execute query: ", e);

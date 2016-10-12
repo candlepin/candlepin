@@ -19,6 +19,7 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.JobCurator;
 import org.candlepin.model.SchedulerStatus;
 import org.candlepin.pinsetter.core.PinsetterException;
@@ -26,6 +27,7 @@ import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.candlepin.pinsetter.tasks.KingpinJob;
+import org.candlepin.util.ElementTransformer;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -108,7 +110,7 @@ public class JobResource {
     @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<JobStatus> getStatuses(
+    public CandlepinQuery<JobStatus> getStatuses(
         @QueryParam("owner") String ownerKey,
         @QueryParam("consumer") String uuid,
         @QueryParam("principal") String principalName) {
@@ -123,7 +125,7 @@ public class JobResource {
                 "one of owner key, unit UUID, or principal name."));
         }
 
-        List<JobStatus> statuses = null;
+        CandlepinQuery<JobStatus> statuses = null;
         if (!StringUtils.isEmpty(ownerKey)) {
             statuses = curator.findByOwnerKey(ownerKey);
         }
@@ -138,11 +140,12 @@ public class JobResource {
             throw new NotFoundException("");
         }
 
-        for (JobStatus js : statuses) {
-            js.cloakResultData(true);
-        }
-
-        return statuses;
+        return statuses.transform(new ElementTransformer<JobStatus, JobStatus>() {
+            @Override
+            public JobStatus transform(JobStatus jobStatus) {
+                return jobStatus.cloakResultData(true);
+            }
+        });
     }
 
     @ApiOperation(notes = "Retrieves the Scheduler Status", value = "getSchedulerStatus")
@@ -210,9 +213,8 @@ public class JobResource {
                 return pk.scheduleSingleJob((Class<? extends KingpinJob>) taskClass, Util.generateUUID());
             }
             else {
-                throw new BadRequestException(i18n.tr(
-                    "Not a permissible job: {0}. Only {1} are permissible", task,
-                    prettyPrintJobs(ConfigProperties.DEFAULT_TASK_LIST)));
+                throw new BadRequestException(i18n.tr("Not a permissible job: {0}. Only {1} are permissible",
+                    task, prettyPrintJobs(ConfigProperties.DEFAULT_TASK_LIST)));
             }
         }
         catch (ClassNotFoundException e) {
@@ -255,8 +257,7 @@ public class JobResource {
             throw new BadRequestException(i18n.tr("job already canceled"));
         }
         if (j.isDone()) {
-            throw new BadRequestException(i18n.tr("cannot cancel a job that " +
-                "is in a finished state"));
+            throw new BadRequestException(i18n.tr("cannot cancel a job that is in a finished state"));
         }
         return curator.cancel(jobId);
     }

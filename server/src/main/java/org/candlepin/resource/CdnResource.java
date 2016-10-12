@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 
@@ -43,6 +44,8 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
+
+
 /**
  * CdnResource
  */
@@ -63,8 +66,8 @@ public class CdnResource {
     @ApiOperation(notes = "Retrieves a list of CDN's", value = "getContentDeliveryNetworks")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Cdn> getContentDeliveryNetworks() {
-        return curator.list();
+    public CandlepinQuery<Cdn> getContentDeliveryNetworks() {
+        return curator.listAll();
     }
 
     @ApiOperation(notes = "Removes a CDN", value = "delete")
@@ -88,9 +91,7 @@ public class CdnResource {
         @Context Principal principal) {
         Cdn existing = curator.lookupByLabel(cdn.getLabel());
         if (existing != null) {
-            throw new BadRequestException(
-                i18n.tr("A CDN with the label {0}" +
-                        "already exists", cdn.getLabel()));
+            throw new BadRequestException(i18n.tr("A CDN with the label {0} already exists", cdn.getLabel()));
         }
         return curator.create(cdn);
     }

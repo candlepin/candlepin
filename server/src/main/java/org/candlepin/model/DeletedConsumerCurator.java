@@ -52,7 +52,7 @@ public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedCons
             .add(Restrictions.eq("ownerId", oid))
             .addOrder(Order.desc("created"));
 
-        return this.cpQueryFactory.<DeletedConsumer>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<DeletedConsumer>buildQuery(this.currentSession(), criteria);
     }
 
     public int countByConsumer(Consumer c) {
@@ -71,6 +71,6 @@ public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedCons
             .add(Restrictions.ge("created", date))
             .addOrder(Order.desc("created"));
 
-        return this.cpQueryFactory.<DeletedConsumer>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<DeletedConsumer>buildQuery(this.currentSession(), criteria);
     }
 }

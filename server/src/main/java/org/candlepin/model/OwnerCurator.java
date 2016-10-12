@@ -73,7 +73,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .add(CPRestrictions.in("key", keys));
 
-        return this.cpQueryFactory.<Owner>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Owner>buildQuery(this.currentSession(), criteria);
     }
 
     public Owner lookupWithUpstreamUuid(String upstreamUuid) {
@@ -107,7 +107,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         DetachedCriteria criteria = DetachedCriteria.forClass(Owner.class, "o")
             .add(Subqueries.propertyIn("o.key", distinctQuery));
 
-        return this.cpQueryFactory.<Owner>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Owner>buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -155,22 +155,23 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
                 DetachedCriteria criteria = DetachedCriteria.forClass(Owner.class)
                     .add(CPRestrictions.in("id", ownerIds));
 
-                return this.cpQueryFactory.<Owner>buildCandlepinQuery(session, criteria);
+                return this.cpQueryFactory.<Owner>buildQuery(session, criteria);
             }
         }
 
-        return this.cpQueryFactory.<Owner>buildCandlepinQuery();
+        return this.cpQueryFactory.<Owner>buildQuery();
     }
 
     @SuppressWarnings("unchecked")
     public CandlepinQuery<String> getConsumerUuids(String ownerKey) {
-        DetachedCriteria ownerQuery = DetachedCriteria.forClass(Owner.class).add(
-            Restrictions.eq("key", ownerKey)).setProjection(Property.forName("id"));
+        DetachedCriteria ownerQuery = DetachedCriteria.forClass(Owner.class)
+            .add(Restrictions.eq("key", ownerKey))
+            .setProjection(Property.forName("id"));
 
         DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
             .add(Subqueries.propertyEq("owner.id", ownerQuery))
             .setProjection(Property.forName("uuid"));
 
-        return this.cpQueryFactory.<String>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<String>buildQuery(this.currentSession(), criteria);
     }
 }

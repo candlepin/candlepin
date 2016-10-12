@@ -59,7 +59,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
             .add(getRevokedCriteria())
             .add(Restrictions.eq("collected", false));
 
-        return this.cpQueryFactory.<CertificateSerial>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<CertificateSerial>buildQuery(this.currentSession(), criteria);
     }
 
     @SuppressWarnings("unchecked")
@@ -70,7 +70,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
             .add(Restrictions.le("expiration", Util.yesterday()))
             .add(getRevokedCriteria());
 
-        return this.cpQueryFactory.<CertificateSerial>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<CertificateSerial>buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -122,7 +122,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
         DetachedCriteria criteria = DetachedCriteria.forClass(CertificateSerial.class)
             .add(CPRestrictions.in("id", lids));
 
-        return this.cpQueryFactory.<CertificateSerial>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<CertificateSerial>buildQuery(this.currentSession(), criteria);
     }
 
     /*

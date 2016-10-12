@@ -32,7 +32,7 @@ public class CandlepinQueryFactory {
      * @return
      *  an empty CandlepinQuery
      */
-    public <T> CandlepinQuery<T> buildCandlepinQuery() {
+    public <T> CandlepinQuery<T> buildQuery() {
         return new EmptyCandlepinQuery<T>();
     }
 
@@ -48,7 +48,7 @@ public class CandlepinQueryFactory {
      * @return
      *  a CandlepinQuery built from the given session and criteria
      */
-    public <T> CandlepinQuery<T> buildCandlepinQuery(Session session, DetachedCriteria criteria) {
+    public <T> CandlepinQuery<T> buildQuery(Session session, DetachedCriteria criteria) {
         return new DetachedCandlepinQuery<T>(session, criteria);
     }
 

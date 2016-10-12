@@ -87,7 +87,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .add(CPRestrictions.in("uuid", uuids));
 
-        return this.cpQueryFactory.<Product>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -113,7 +113,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                 Restrictions.eq("entityVersion", hashcode)
             ));
 
-        return this.cpQueryFactory.<Product>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
     }
 
     // TODO:
@@ -276,11 +276,11 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                 DetachedCriteria criteria = this.createSecureDetachedCriteria()
                     .add(CPRestrictions.in("uuid", productUuids));
 
-                return this.cpQueryFactory.<Product>buildCandlepinQuery(this.currentSession(), criteria);
+                return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
             }
         }
 
-        return this.cpQueryFactory.<Product>buildCandlepinQuery();
+        return this.cpQueryFactory.<Product>buildQuery();
     }
 
     @SuppressWarnings("unchecked")
@@ -300,10 +300,10 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                 DetachedCriteria criteria = this.createSecureDetachedCriteria()
                     .add(CPRestrictions.in("uuid", productUuids));
 
-                return this.cpQueryFactory.<Product>buildCandlepinQuery(this.currentSession(), criteria);
+                return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
             }
         }
 
-        return this.cpQueryFactory.<Product>buildCandlepinQuery();
+        return this.cpQueryFactory.<Product>buildQuery();
     }
 }

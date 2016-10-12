@@ -138,14 +138,14 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public CandlepinQuery<E> listAll() {
         DetachedCriteria criteria = this.createSecureDetachedCriteria();
 
-        return this.cpQueryFactory.<E>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<E>buildQuery(this.currentSession(), criteria);
     }
 
     public CandlepinQuery<E> listAllByIds(Collection<? extends Serializable> ids) {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .add(CPRestrictions.in("id", ids));
 
-        return this.cpQueryFactory.<E>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<E>buildQuery(this.currentSession(), criteria);
     }
 
     @SuppressWarnings("unchecked")

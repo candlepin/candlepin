@@ -112,7 +112,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .add(Restrictions.ge("endDate", activeOn));
         }
 
-        return this.cpQueryFactory.<Pool>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Pool>buildQuery(this.currentSession(), criteria);
     }
 
     @Transactional
@@ -121,7 +121,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.eq("type", type));
 
-        return this.cpQueryFactory.<Pool>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Pool>buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -134,7 +134,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .add(Restrictions.eq("sourceEntitlement", e));
 
-        return this.cpQueryFactory.<Pool>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Pool>buildQuery(this.currentSession(), criteria);
     }
 
     /**

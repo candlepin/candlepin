@@ -180,7 +180,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         DetachedCriteria criteria = DetachedCriteria.forClass(Entitlement.class)
             .add(Restrictions.eq("owner", owner));
 
-        return this.cpQueryFactory.<Entitlement>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Entitlement>buildQuery(this.currentSession(), criteria);
     }
 
     public CandlepinQuery<Entitlement> listByEnvironment(Environment environment) {
@@ -188,7 +188,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .createCriteria("consumer")
             .add(Restrictions.eq("environment", environment));
 
-        return this.cpQueryFactory.<Entitlement>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Entitlement>buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -213,7 +213,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .add(Restrictions.le("startDate", activeOn))
             .add(Restrictions.ge("endDate", activeOn));
 
-        return this.cpQueryFactory.<Entitlement>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Entitlement>buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -505,7 +505,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .createAlias("ent_pool.sourceStack", "ss", JoinType.LEFT_OUTER_JOIN)
             .add(Restrictions.isNull("ss.id"));
 
-        return this.cpQueryFactory.<Entitlement>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Entitlement>buildQuery(this.currentSession(), criteria);
     }
 
     @SuppressWarnings("unchecked")
@@ -522,7 +522,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             criteria.add(Restrictions.eq("consumer", consumer));
         }
 
-        return this.cpQueryFactory.<Entitlement>buildCandlepinQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Entitlement>buildQuery(this.currentSession(), criteria);
     }
 
     @SuppressWarnings("unchecked")
