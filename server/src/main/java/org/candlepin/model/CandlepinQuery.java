@@ -129,7 +129,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      * @return
      *  the number of rows processed and sent to the result processor
      */
-    int scroll(ResultProcessor<T> processor);
+    int forEach(ResultProcessor<T> processor);
 
     /**
      * Steps through the results of a column of the given query row-by-row, rather than dumping the
@@ -144,7 +144,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      * @return
      *  the number of rows processed and sent to the result processor
      */
-    int scroll(int column, ResultProcessor<T> processor);
+    int forEach(int column, ResultProcessor<T> processor);
 
     /**
      * Steps through the results of a query row-by-row, rather than dumping the entire query result
@@ -163,12 +163,12 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      * @return
      *  the number of rows processed and sent to the result processor
      */
-    int scroll(int column, boolean evict, ResultProcessor<T> processor);
+    int forEach(int column, boolean evict, ResultProcessor<T> processor);
 
     /**
      * Steps through the results of a query row-by-row, rather than dumping the entire query result
-     * into memory before processing it. Unlike the base scroll method, this method sends each row
-     * to the processor without performing any preprocessing or cleanup.
+     * into memory before processing it. Unlike the standard forEach method, this method sends each
+     * row to the processor without performing any preprocessing, transformation or cleanup.
      *
      * @param processor
      *  A ResultProcessor instance to use for processing each row
@@ -176,19 +176,7 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      * @return
      *  the number of rows processed by the result processor
      */
-    int scrollByRow(ResultProcessor<Object[]> processor);
-
-    /**
-     * Executes this query and iterates over the first column of the results. Other columns in
-     * each row are silently discarded.
-     * <p></p>
-     * WARNING: This method must be called from within a transaction, and the iterator must
-     * remain within the bounds of that transaction.
-     *
-     * @return
-     *  an iterator over the first column of the results
-     */
-    ResultIterator<T> iterate();
+    int forEachRow(ResultProcessor<Object[]> processor);
 
     /**
      * Executes this query and iterates over the first column of the results. Other columns in
@@ -202,6 +190,18 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      *  an iterator over the first column of the results
      */
     Iterator<T> iterator();
+
+    /**
+     * Executes this query and iterates over the first column of the results. Other columns in
+     * each row are silently discarded.
+     * <p></p>
+     * WARNING: This method must be called from within a transaction, and the iterator must
+     * remain within the bounds of that transaction.
+     *
+     * @return
+     *  an iterator over the first column of the results
+     */
+    ResultIterator<T> iterate();
 
     /**
      * Executes this query and iterates over the specified column of the results. Other columns
@@ -238,7 +238,9 @@ public interface CandlepinQuery<T> extends Iterable<T> {
     ResultIterator<T> iterate(int column, boolean evict);
 
     /**
-     * Executes this query and iterates over the rows of results.
+     * Executes this query and iterates over the rows of results. Unlike the standard forEach
+     * method, this method sends each row to the processor without performing any preprocessing,
+     * transformation or cleanup.
      * <p></p>
      * WARNING: This method must be called from within a transaction, and the iterator must
      * remain within the bounds of that transaction.

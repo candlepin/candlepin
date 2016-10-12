@@ -16,7 +16,7 @@ package org.candlepin.model;
 
 import org.hibernate.criterion.Restrictions;
 
-import java.util.List;
+
 
 /**
  * Subscription manager.

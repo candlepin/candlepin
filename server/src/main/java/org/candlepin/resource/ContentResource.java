@@ -23,7 +23,6 @@ import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ResultIterator;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.ElementTransformer;
@@ -43,7 +42,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

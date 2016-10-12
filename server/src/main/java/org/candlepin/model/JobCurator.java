@@ -17,7 +17,6 @@ package org.candlepin.model;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
@@ -27,7 +26,6 @@ import org.candlepin.pinsetter.tasks.KingpinJob;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
@@ -36,9 +34,10 @@ import org.hibernate.criterion.Restrictions;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+
+
 
 /**
  *

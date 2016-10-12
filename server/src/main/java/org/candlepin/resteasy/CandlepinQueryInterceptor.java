@@ -104,7 +104,7 @@ public class CandlepinQueryInterceptor implements PostProcessInterceptor {
             }
 
             // Set the output streamer that will stream our query result
-            response.setEntity(new StreamingOutput () {
+            response.setEntity(new StreamingOutput() {
                 @Override
                 public void write(OutputStream stream) throws IOException, WebApplicationException {
                     JsonGenerator generator = mapper.getJsonFactory().createGenerator(stream);

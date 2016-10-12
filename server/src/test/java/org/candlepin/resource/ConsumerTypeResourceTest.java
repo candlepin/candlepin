@@ -23,11 +23,9 @@ import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Test;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.inject.Inject;
-import javax.ws.rs.core.Response;
 
 
 

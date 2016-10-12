@@ -23,7 +23,6 @@ import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.Owner;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -46,11 +45,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 

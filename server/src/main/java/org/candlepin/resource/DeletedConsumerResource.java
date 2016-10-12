@@ -17,7 +17,6 @@ package org.candlepin.resource;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
-import org.candlepin.model.ResultIterator;
 import org.candlepin.resource.util.ResourceDateParser;
 
 import com.google.inject.Inject;
@@ -27,7 +26,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

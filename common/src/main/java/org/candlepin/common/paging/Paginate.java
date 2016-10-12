@@ -19,7 +19,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import javax.ws.rs.NameBinding;
+
 
 /**
  * Annotation used to mark a method for paging.  Methods marked with

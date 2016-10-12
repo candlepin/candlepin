@@ -14,13 +14,9 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.Inject;
-
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
-
-import java.util.List;
 
 
 

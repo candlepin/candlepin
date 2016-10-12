@@ -18,7 +18,6 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.TestingModules;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
@@ -35,10 +34,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
-
-import com.google.inject.Guice;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 import org.junit.Before;
 import org.junit.Test;

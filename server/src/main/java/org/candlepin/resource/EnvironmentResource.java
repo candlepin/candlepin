@@ -32,8 +32,6 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.OwnerContentCurator;
-import org.candlepin.model.ResultIterator;
-import org.candlepin.model.dto.ContentData;
 import org.candlepin.pinsetter.tasks.RegenEnvEntitlementCertsJob;
 import org.candlepin.util.RdbmsExceptionTranslator;
 import org.candlepin.util.Util;
@@ -68,7 +66,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

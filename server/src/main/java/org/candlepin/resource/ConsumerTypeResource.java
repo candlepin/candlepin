@@ -19,7 +19,6 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.ResultIterator;
 
 import com.google.inject.Inject;
 
@@ -37,7 +36,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

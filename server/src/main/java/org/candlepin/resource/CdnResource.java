@@ -26,8 +26,6 @@ import com.google.inject.Inject;
 import org.apache.commons.lang.StringUtils;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.List;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;

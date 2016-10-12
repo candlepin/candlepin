@@ -14,7 +14,6 @@
  */
 package org.candlepin.resource;
 
-
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -24,7 +23,6 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -55,7 +53,6 @@ import java.util.Locale;
 import java.util.Set;
 
 import javax.inject.Inject;
-import javax.ws.rs.core.Response;
 
 
 

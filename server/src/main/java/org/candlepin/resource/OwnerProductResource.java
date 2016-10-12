@@ -33,7 +33,6 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ResultIterator;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
 import org.candlepin.util.ElementTransformer;
@@ -70,7 +69,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 
 
