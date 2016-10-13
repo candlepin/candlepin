@@ -312,6 +312,9 @@ public class ProductManager {
             }
         }
 
+        // Temporarily (?) disabled. If we ever move to clustered caching (rather than per-instance
+        // caching, this branch should be re-enabled.
+        /*
         // No alternate versions with which to converge. Check if we can do an in-place update instead
         if (this.ownerProductCurator.getOwnerCount(updated) < 2) {
             log.debug("Applying in-place update to product: {}", updated);
@@ -326,6 +329,7 @@ public class ProductManager {
 
             return updated;
         }
+        */
 
         // Product is shared by multiple owners; we have to diverge here
         log.debug("Forking product and applying update: {}", updated);
@@ -509,6 +513,10 @@ public class ProductManager {
 
         if (update.getDependentProductIds() != null) {
             entity.setDependentProductIds(update.getDependentProductIds());
+        }
+
+        if (update.isLocked() != null) {
+            entity.setLocked(update.isLocked());
         }
 
         return entity;

@@ -1190,4 +1190,5 @@
     <include file="db/changelog/20160419092221-add-db-file-storage.xml"/>
     <include file="db/changelog/20160714130753-add_lower_columns.xml"/>
     <include file="db/changelog/20160722162105-remove-bad-ueber-cert-data.xml"/>
+    <include file="db/changelog/20160907121757-add-autobind-disabled-column-to-owner.xml"/>
 </databaseChangeLog>

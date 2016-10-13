@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.cache.CandlepinCache;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.util.VersionUtil;
@@ -29,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
+import javax.cache.Cache;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -60,11 +62,13 @@ public class StatusResource {
 
     private RulesCurator rulesCurator;
     private JsRunnerProvider jsProvider;
+    private CandlepinCache candlepinCache;
 
     @Inject
-    public StatusResource(RulesCurator rulesCurator, Configuration config, JsRunnerProvider jsProvider) {
+    public StatusResource(RulesCurator rulesCurator, Configuration config, JsRunnerProvider jsProvider,
+        CandlepinCache candlepinCache) {
         this.rulesCurator = rulesCurator;
-
+        this.candlepinCache = candlepinCache;
         Map<String, String> map = VersionUtil.getVersionMap();
         version = map.get("version");
         release = map.get("release");
@@ -101,6 +105,14 @@ public class StatusResource {
     @Produces({ MediaType.APPLICATION_JSON})
     @SecurityHole(noAuth = true, anon = true)
     public Status status() {
+        Cache<String, Status> statusCache = candlepinCache.getStatusCache();
+
+        Status cached = statusCache.get(CandlepinCache.STATUS_KEY);
+
+        if (cached != null) {
+            return cached;
+        }
+
         /*
          * Originally this was used to indicate database connectivity being good/bad.
          * In reality it could never be false, the request would fail. This check has
@@ -117,6 +129,8 @@ public class StatusResource {
 
         Status status = new Status(good, version, release, standalone,
             jsProvider.getRulesVersion(), jsProvider.getRulesSource());
+
+        statusCache.put(CandlepinCache.STATUS_KEY, status);
         return status;
     }
 

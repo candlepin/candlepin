@@ -45,7 +45,7 @@ describe 'Owner Product Resource' do
 
     # Delay here a moment to ensure an in-place update on the product doesn't trigger
     # attributes to be cloned/updated (as we're not updating attributes here)
-    sleep 1
+    # sleep 1
 
     prod = @cp.update_product(@owner['key'], prod.id, {:multiplier => prod2.multiplier, :attributes => nil})
 
@@ -247,29 +247,51 @@ describe 'Owner Product Resource' do
   end
 
   it 'bad request on attempt to delete product attached to sub' do
-    lambda do
-      @cp.delete_product(@owner['key'], @product.id)
-    end.should raise_exception(RestClient::BadRequest)
+    if is_hosted? then
+      lambda do
+        @cp.delete_product(@owner['key'], @product.id)
+      end.should raise_exception(RestClient::Forbidden)
+    else
+      lambda do
+        @cp.delete_product(@owner['key'], @product.id)
+      end.should raise_exception(RestClient::BadRequest)
+    end
   end
 
   it 'bad request on attempt to delete provided product attached to sub' do
-    lambda do
-      @cp.delete_product(@owner['key'], @prov_product.id)
-    end.should raise_exception(RestClient::BadRequest)
+    if is_hosted? then
+      lambda do
+        @cp.delete_product(@owner['key'], @prov_product.id)
+      end.should raise_exception(RestClient::Forbidden)
+    else
+      lambda do
+        @cp.delete_product(@owner['key'], @prov_product.id)
+      end.should raise_exception(RestClient::BadRequest)
+    end
   end
 
   it 'bad request on attempt to delete derived product attached to sub' do
-    lambda do
-      @cp.delete_product(@owner['key'], @derived_product.id)
-    end.should raise_exception(RestClient::BadRequest)
+    if is_hosted? then
+      lambda do
+        @cp.delete_product(@owner['key'], @derived_product.id)
+      end.should raise_exception(RestClient::Forbidden)
+    else
+      lambda do
+        @cp.delete_product(@owner['key'], @derived_product.id)
+      end.should raise_exception(RestClient::BadRequest)
+    end
   end
 
   it 'bad request on attempt to delete derived provided product attached to sub' do
-    lambda do
-      @cp.delete_product(@owner['key'], @derived_prov_product.id)
-    end.should raise_exception(RestClient::BadRequest)
+    if is_hosted? then
+      lambda do
+        @cp.delete_product(@owner['key'], @derived_prov_product.id)
+      end.should raise_exception(RestClient::Forbidden)
+    else
+      lambda do
+        @cp.delete_product(@owner['key'], @derived_prov_product.id)
+      end.should raise_exception(RestClient::BadRequest)
+    end
   end
-
-
 end
 

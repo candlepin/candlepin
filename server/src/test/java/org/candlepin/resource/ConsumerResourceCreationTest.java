@@ -38,6 +38,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.IdentityCertificate;
@@ -314,6 +315,26 @@ public class ConsumerResourceCreationTest {
             verify(activationKeyCurator).lookupForOwner(keyName, owner);
         }
     }
+
+    @Test
+    public void registerFailsWithKeyWhenAutobindOnKeyAndDisabledOnOwner() {
+        ConsumerType consumerType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        when(consumerTypeCurator.lookupByLabel(consumerType.getLabel())).thenReturn(consumerType);
+
+        // Disable autobind for the owner.
+        owner.setAutobindDisabled(true);
+
+        // Create a key that has autobind disabled.
+        ActivationKey key = new ActivationKey("autobind-disabled-key", owner);
+        key.setAutoAttach(true);
+        when(activationKeyCurator.lookupForOwner(key.getName(), owner)).thenReturn(key);
+
+        // No auth should be required for registering with keys:
+        Principal p = new NoAuthPrincipal();
+        Consumer consumer = new Consumer("sys.example.com", null, null, consumerType);
+        resource.create(consumer, p, null, owner.getKey(), key.getName(), true);
+    }
+
     @Test(expected = BadRequestException.class)
     public void orgRequiredWithActivationKeys() {
         Principal p = new NoAuthPrincipal();

@@ -82,6 +82,7 @@ public class EntitlerTest {
     @Mock private PoolManager pm;
     @Mock private EventFactory ef;
     @Mock private EventSink sink;
+    @Mock private Owner owner;
     @Mock private Consumer consumer;
     @Mock private ConsumerCurator cc;
     @Mock private EntitlementCurator entitlementCurator;
@@ -101,6 +102,8 @@ public class EntitlerTest {
 
     @Before
     public void init() {
+        when(consumer.getOwner()).thenReturn(owner);
+
         i18n = I18nFactory.getI18n(
             getClass(),
             Locale.US,
@@ -149,7 +152,7 @@ public class EntitlerTest {
     }
 
     @Test
-    public void bindByProductsString() throws EntitlementRefusedException {
+    public void bindByProductsString() throws Exception {
         String[] pids = {"prod1", "prod2", "prod3"};
         when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
         entitler.bindByProducts(pids, "abcd1234", null, null);
@@ -158,7 +161,7 @@ public class EntitlerTest {
     }
 
     @Test
-    public void bindByProducts() throws EntitlementRefusedException {
+    public void bindByProducts() throws Exception  {
         String[] pids = {"prod1", "prod2", "prod3"};
         AutobindData data = AutobindData.create(consumer).forProducts(pids);
         entitler.bindByProducts(data);
@@ -269,17 +272,17 @@ public class EntitlerTest {
     }
 
     @Test(expected = ForbiddenException.class)
-    public void alreadyHasProduct() {
+    public void alreadyHasProduct() throws Exception {
         bindByProductErrorTest("rulefailed.consumer.already.has.product");
     }
 
     @Test(expected = ForbiddenException.class)
-    public void noEntitlementsForProduct() {
+    public void noEntitlementsForProduct() throws Exception {
         bindByProductErrorTest("rulefailed.no.entitlements.available");
     }
 
     @Test(expected = ForbiddenException.class)
-    public void mismatchByProduct() {
+    public void mismatchByProduct() throws Exception {
         bindByProductErrorTest("rulefailed.consumer.type.mismatch");
     }
 
@@ -296,7 +299,7 @@ public class EntitlerTest {
     }
 
     @Test
-    public void physicalOnly() {
+    public void physicalOnly() throws Exception {
         String expected = "Pool is restricted to physical systems: 'pool10'.";
         try {
             bindByPoolErrorTest("rulefailed.physical.only");
@@ -308,11 +311,11 @@ public class EntitlerTest {
     }
 
     @Test(expected = ForbiddenException.class)
-    public void allOtherErrors() {
+    public void allOtherErrors() throws Exception {
         bindByProductErrorTest("generic.error");
     }
 
-    private void bindByProductErrorTest(String msg) {
+    private void bindByProductErrorTest(String msg) throws Exception {
         try {
             String[] pids = {"prod1", "prod2", "prod3"};
             Map<String, ValidationResult> fakeResult = new HashMap<String, ValidationResult>();
@@ -443,10 +446,11 @@ public class EntitlerTest {
     }
 
     @Test
-    public void testDevPoolCreationAtBind() throws EntitlementRefusedException {
+    public void testDevPoolCreationAtBind() throws Exception {
         Owner owner = TestUtil.createOwner("o");
         List<ProductData> devProdDTOs = new ArrayList<ProductData>();
         Product p = TestUtil.createProduct("test-product", "Test Product");
+
         p.setAttribute("support_level", "Premium");
         devProdDTOs.add(p.toDTO());
         Pool activePool = TestUtil.createPool(owner, p);
@@ -473,11 +477,12 @@ public class EntitlerTest {
     }
 
     @Test(expected = ForbiddenException.class)
-    public void testDevPoolCreationAtBindFailStandalone() throws EntitlementRefusedException {
+    public void testDevPoolCreationAtBindFailStandalone() throws Exception {
         Owner owner = TestUtil.createOwner("o");
         List<ProductData> devProdDTOs = new ArrayList<ProductData>();
         Product p = TestUtil.createProduct("test-product", "Test Product");
         devProdDTOs.add(p.toDTO());
+
         Pool activePool = TestUtil.createPool(owner, p);
         List<Pool> activeList = new ArrayList<Pool>();
         activeList.add(activePool);
@@ -496,7 +501,7 @@ public class EntitlerTest {
     }
 
     @Test(expected = ForbiddenException.class)
-    public void testDevPoolCreationAtBindFailNotActive() throws EntitlementRefusedException {
+    public void testDevPoolCreationAtBindFailNotActive() throws Exception {
         Owner owner = TestUtil.createOwner("o");
         List<ProductData> devProdDTOs = new ArrayList<ProductData>();
         Product p = TestUtil.createProduct("test-product", "Test Product");
@@ -516,12 +521,13 @@ public class EntitlerTest {
     }
 
     @Test
-    public void testDevPoolCreationAtBindFailNoSkuProduct() throws EntitlementRefusedException {
+    public void testDevPoolCreationAtBindFailNoSkuProduct() throws Exception {
         Owner owner = TestUtil.createOwner("o");
         List<ProductData> devProdDTOs = new ArrayList<ProductData>();
         Product p = TestUtil.createProduct("test-product", "Test Product");
         Product ip = TestUtil.createProduct("test-product-installed", "Installed Test Product");
         devProdDTOs.add(ip.toDTO());
+
         Pool activePool = TestUtil.createPool(owner, p);
         List<Pool> activeList = new ArrayList<Pool>();
         activeList.add(activePool);
@@ -552,7 +558,7 @@ public class EntitlerTest {
     }
 
     @Test
-    public void testDevPoolCreationAtBindNoFailMissingInstalledProduct() throws EntitlementRefusedException {
+    public void testDevPoolCreationAtBindNoFailMissingInstalledProduct() throws Exception {
         Owner owner = TestUtil.createOwner("o");
         List<ProductData> devProdDTOs = new ArrayList<ProductData>();
         Product p = TestUtil.createProduct("test-product", "Test Product");
@@ -560,6 +566,7 @@ public class EntitlerTest {
         Product ip2 = TestUtil.createProduct("test-product-installed-2", "Installed Test Product 2");
         devProdDTOs.add(p.toDTO());
         devProdDTOs.add(ip1.toDTO());
+
         Pool activePool = TestUtil.createPool(owner, p);
         List<Pool> activeList = new ArrayList<Pool>();
         activeList.add(activePool);

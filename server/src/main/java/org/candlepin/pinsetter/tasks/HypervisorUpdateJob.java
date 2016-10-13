@@ -17,6 +17,7 @@ package org.candlepin.pinsetter.tasks;
 import static org.quartz.JobBuilder.newJob;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -45,6 +46,7 @@ import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -72,6 +74,7 @@ public class HypervisorUpdateJob extends KingpinJob {
     private OwnerCurator ownerCurator;
     private ConsumerCurator consumerCurator;
     private ConsumerResource consumerResource;
+    private I18n i18n;
 
     public static final String CREATE = "create";
     public static final String REPORTER_ID = "reporter_id";
@@ -81,10 +84,11 @@ public class HypervisorUpdateJob extends KingpinJob {
 
     @Inject
     public HypervisorUpdateJob(OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
-        ConsumerResource consumerResource) {
+        ConsumerResource consumerResource, I18n i18n) {
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.consumerResource = consumerResource;
+        this.i18n = i18n;
     }
 
     public static JobStatus scheduleJob(JobCurator jobCurator,
@@ -192,6 +196,15 @@ public class HypervisorUpdateJob extends KingpinJob {
                 log.warn("Hypervisor update attempted against non-existent org id ''{0}''", ownerKey);
                 return;
             }
+
+            if (owner.autobindDisabled()) {
+                log.debug("Could not update host/guest mapping. Autobind is disabled for owner {}",
+                    owner.getKey());
+                throw new BadRequestException(
+                    i18n.tr("Could not update host/guest mapping. Autobind is disabled for owner {0}.",
+                        owner.getKey()));
+            }
+
             byte[] data = (byte[]) map.get(DATA);
             String json = decompress(data);
             HypervisorList hypervisors = (HypervisorList) Util.fromJson(json, HypervisorList.class);

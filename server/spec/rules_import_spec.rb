@@ -10,7 +10,8 @@ describe 'Rules Import', :serial => true do
     # Make sure we're using the rpm rules by deleting any custom
     # ones that may have been left in the database:
     @cp.delete_rules
-
+   
+    sleep 6 #The status resource response is being cached for 5 seconds
     @orig_ver = @cp.get_status()['rulesVersion']
     rules_major_ver = @orig_ver.split(".")[0]
     # Come up with a rules version we know is greater than the current:
@@ -37,6 +38,7 @@ describe 'Rules Import', :serial => true do
     fetched_rules = @cp.list_rules
     decoded_fetched_rules = Base64.decode64(fetched_rules)
     (decoded_fetched_rules == @rules).should be true
+    sleep 6 #The status resource response is being cached for 5 seconds
     @cp.get_status()['rulesVersion'].should == @new_ver
   end
 
@@ -51,6 +53,7 @@ describe 'Rules Import', :serial => true do
     rules = @cp.list_rules
 
     # Version should be back to original:
+    sleep 6 #The status resource response is being cached for 5 seconds
     @cp.get_status()['rulesVersion'].should == @orig_ver
 
     # Shouldn't cause an error if there are none in db:

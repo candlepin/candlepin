@@ -644,13 +644,16 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return Set of levels based on exempt flag.
      */
     public Set<String> retrieveServiceLevelsForOwner(Owner owner, boolean exempt) {
-        String stmt = "SELECT DISTINCT Attribute.name, Attribute.value, Product.id " +
-            "FROM Pool AS Pool " +
-            "  INNER JOIN Pool.product AS Product " +
-            "  INNER JOIN Product.attributes AS Attribute " +
-            "WHERE Pool.owner.id = :owner_id " +
-            "  AND (Attribute.name = 'support_level' OR Attribute.name = 'support_level_exempt') " +
-            "  ORDER BY Attribute.name DESC";
+        String stmt = "SELECT DISTINCT attribute.name, attribute.value, product.id " +
+            "FROM Pool AS pool " +
+            "  INNER JOIN pool.product AS product " +
+            "  INNER JOIN product.attributes AS attribute " +
+            "  LEFT JOIN pool.entitlements AS entitlement " +
+            "WHERE pool.owner.id = :owner_id " +
+            "  AND (attribute.name = 'support_level' OR attribute.name = 'support_level_exempt') " +
+            "  AND (pool.endDate >= current_date() OR entitlement.endDateOverride >= current_date()) " +
+            // Needs to be ordered, because the code below assumes exempt levels are first
+            "ORDER BY attribute.name DESC";
 
         Query q = currentSession().createQuery(stmt);
         q.setParameter("owner_id", owner.getId());
@@ -961,6 +964,18 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         filters.applyTo(criteria);
         criteria.setMaxResults(1).uniqueResult();
         return (Pool) criteria.uniqueResult();
+    }
+
+    /**
+    * Uses a database query to check if the pool is still
+    * in the database.
+    * @param pool pool to be searched in the database
+    * @return true if and only if the pool is still in the database
+    */
+    public boolean exists(Pool pool) {
+        return getEntityManager()
+                .createQuery("SELECT COUNT(p) FROM Pool p WHERE p=:pool", Long.class)
+                .setParameter("pool", pool).getSingleResult() > 0;
     }
 
 }

@@ -211,6 +211,24 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     /**
+     * Lists dirty entitlements for the given consumer. If the consumer does not have any dirty
+     * entitlements, this method returns an empty collection.
+     *
+     * @param consumer
+     *  The consumer for which to find dirty entitlements
+     *
+     * @return
+     *  a collection of dirty entitlements for the given consumer
+     */
+    public List<Entitlement> listDirty(Consumer consumer) {
+        Criteria criteria = this.currentSession().createCriteria(Entitlement.class)
+            .add(Restrictions.eq("consumer", consumer))
+            .add(Restrictions.eq("dirty", true));
+
+        return criteria.list();
+    }
+
+    /**
      * List all entitled product IDs from entitlements which overlap the given date range.
      *
      * i.e. given start date must be within the entitlements start/end dates, or

@@ -602,11 +602,15 @@ describe 'Hypervisor Resource', :type => :virt do
     end
   end
 
-  def async_update_hypervisor(owner, consumer, host_name, host_hyp_id, guests, create=true, reporter_id=nil)
+  def run_async_update(owner, consumer, host_name, host_hyp_id, guests, create=true, reporter_id=nil)
     host_mapping = get_async_host_guest_mapping(host_name, host_hyp_id, guests)
     job_detail = JSON.parse(consumer.hypervisor_update(owner['key'], host_mapping, create, reporter_id))
     wait_for_job(job_detail['id'], 60)
-    job_detail = @cp.get_job(job_detail['id'], true)
+    return @cp.get_job(job_detail['id'], true)
+  end
+
+  def async_update_hypervisor(owner, consumer, host_name, host_hyp_id, guests, create=true, reporter_id=nil)
+    job_detail = run_async_update(owner, consumer, host_name, host_hyp_id, guests, create, reporter_id)
     job_detail['state'].should == 'FINISHED'
     job_detail['result'].should_not be_nil
     return job_detail
@@ -620,7 +624,7 @@ describe 'Hypervisor Resource', :type => :virt do
     return consumer_client
   end
 
-it 'should allow a single guest to be migrated and revoke host-limited ents' do
+  it 'should allow a single guest to be migrated and revoke host-limited ents' do
     owner = create_owner random_string('test_owner1')
     user = user_client(owner, random_string("user"))
     virtwho = create_virtwho_client(user)
@@ -679,7 +683,7 @@ it 'should allow a single guest to be migrated and revoke host-limited ents' do
     guest_client.list_entitlements().length.should == 0
   end
 
-it 'should allow a single guest to be migrated and revoke host-limited ents - async' do
+  it 'should allow a single guest to be migrated and revoke host-limited ents - async' do
     owner = create_owner random_string('test_owner1')
     user = user_client(owner, random_string("user"))
     virtwho = create_virtwho_client(user)
@@ -737,4 +741,40 @@ it 'should allow a single guest to be migrated and revoke host-limited ents - as
     # The guests host limited entitlement should be gone
     guest_client.list_entitlements().length.should == 0
   end
+
+  it 'should raise bad request exception if owner has autobind disabled' do
+    # Create a new owner and disable autobind.
+    owner = create_owner random_string('test_owner1')
+    owner['autobindDisabled'] = true
+    @cp.update_owner(owner['key'], owner)
+
+    # Attempt to check in.
+    user = user_client(owner, random_string("test-user"))
+    virtwho = create_virtwho_client(user)
+    host_guest_mapping = get_host_guest_mapping(random_string('my-host'), ['g1', 'g2'])
+    lambda do
+      virtwho.hypervisor_check_in(owner['key'], host_guest_mapping)
+    end.should raise_exception(RestClient::BadRequest)
+  end
+
+  it 'should fail update job when autobind is disabled for owner' do
+    # Create Owner and disable autobind
+    owner = create_owner random_string('test_owner1')
+    owner['autobindDisabled'] = true
+    @cp.update_owner(owner['key'], owner)
+    owner = @cp.get_owner(owner['key'])
+    owner.should_not be_nil
+
+    user_cp = user_client(owner, random_string("test-user"))
+    consumer = user_cp.register("foofy", :system, nil, {'cpu.cpu_socket(s)' => '8'}, nil, owner['key'], [], [])
+    consumer_cp = Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
+
+    host_hyp_id = random_string('host')
+    host_name = random_string('name')
+    job_detail = run_async_update(owner, consumer_cp, host_name, host_hyp_id, [])
+
+    job_detail['state'].should == 'FAILED'
+    job_detail['result'].should == "Could not update host/guest mapping. Autobind is disabled for owner #{owner['key']}."
+  end
+
 end

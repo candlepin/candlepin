@@ -16,14 +16,17 @@ package org.candlepin.pinsetter.tasks;
 
 import static org.quartz.JobBuilder.*;
 
+import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.util.Util;
+import org.jboss.resteasy.spi.BadRequestException;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -60,6 +63,11 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
         try {
             JobDataMap map = ctx.getMergedJobDataMap();
             String ownerId = (String) map.get("ownerId");
+            Owner owner = ownerCurator.lookupByKey(ownerId);
+            if (owner.autobindDisabled()) {
+                throw new BadRequestException("Autobind is disabled for owner " + owner.getKey());
+            }
+
             Date entitleDate = (Date) map.get("entitle_date");
             List<String> uuids = ownerCurator.getConsumerUuids(ownerId);
             for (String uuid : uuids) {
@@ -88,7 +96,7 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
      * Each consumer heal should be a separate transaction
      */
     @Transactional
-    private void healSingleConsumer(Consumer consumer, Date date) {
+    private void healSingleConsumer(Consumer consumer, Date date) throws AutobindDisabledForOwnerException {
         List<Entitlement> ents = entitler.bindByProducts(AutobindData.create(consumer).on(date), true);
         entitler.sendEvents(ents);
     }

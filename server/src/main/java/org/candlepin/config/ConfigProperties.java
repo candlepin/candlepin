@@ -147,7 +147,10 @@ public class ConfigProperties {
     public static final String AMQP_CONNECTION_RETRY_ATTEMPTS = "gutterball.amqp.connection.retry_attempts";
     public static final String AMQP_CONNECTION_RETRY_INTERVAL = "gutterball.amqp.connection.retry_interval";
 
+    // Hibernate
     public static final String DB_PASSWORD = JPA_CONFIG_PREFIX + "hibernate.connection.password";
+    // Cache
+    public static final String CACHE_JMX_STATS = "cache.jmx.statistics";
 
     public static final String[] ENCRYPTED_PROPERTIES = new String[] {
         DB_PASSWORD,
@@ -316,6 +319,8 @@ public class ConfigProperties {
             this.put(HIDDEN_RESOURCES, "environments");
 
             this.put(FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+
+            this.put(CACHE_JMX_STATS, "false");
 
             // Pinsetter
             // prevent Quartz from checking for updates

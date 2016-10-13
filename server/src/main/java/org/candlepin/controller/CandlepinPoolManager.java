@@ -680,13 +680,18 @@ public class CandlepinPoolManager implements PoolManager {
         return entsToRegen;
     }
 
-    private Set<String> processPoolUpdates(
+    protected Set<String> processPoolUpdates(
         Map<String, EventBuilder> poolEvents, List<PoolUpdate> updatedPools) {
         Set<String> entitlementsToRegen = Util.newSet();
         for (PoolUpdate updatedPool : updatedPools) {
 
             Pool existingPool = updatedPool.getPool();
             log.info("Pool changed: {}", updatedPool.toString());
+
+            if (!poolCurator.exists(existingPool)) {
+                log.info("Pool has already been deleted from the database.");
+                continue;
+            }
 
             // Delete pools the rules signal needed to be cleaned up:
             if (existingPool.isMarkedForDelete()) {
@@ -1926,11 +1931,18 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
+    public void regenerateDirtyEntitlements(Consumer consumer) {
+        this.regenerateDirtyEntitlements(this.entitlementCurator.listDirty(consumer));
+    }
+
+    @Override
     public void regenerateDirtyEntitlements(Iterable<Entitlement> entitlements) {
-        for (Entitlement entitlement : entitlements) {
-            if (entitlement.isDirty()) {
-                log.info("Found dirty entitlement to regenerate: {}", entitlement);
-                this.ecGenerator.regenerateCertificatesOf(entitlement, false, false);
+        if (entitlements != null) {
+            for (Entitlement entitlement : entitlements) {
+                if (entitlement.isDirty()) {
+                    log.info("Found dirty entitlement to regenerate: {}", entitlement);
+                    this.ecGenerator.regenerateCertificatesOf(entitlement, false, false);
+                }
             }
         }
     }

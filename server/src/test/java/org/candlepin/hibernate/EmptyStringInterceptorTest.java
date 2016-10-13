@@ -16,7 +16,6 @@ package org.candlepin.hibernate;
 
 import static org.junit.Assert.assertEquals;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,6 +27,7 @@ import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
+import javax.persistence.Persistence;
 import javax.persistence.Table;
 
 /**
@@ -36,7 +36,6 @@ import javax.persistence.Table;
 public class EmptyStringInterceptorTest {
     private EntityManagerFactory emf;
     private EntityManager em;
-    private Ejb3Configuration cfg;
     private Properties props;
 
     @Entity
@@ -65,25 +64,9 @@ public class EmptyStringInterceptorTest {
         }
     }
 
-    /**
-     * @throws java.lang.Exception
-     */
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         props = new Properties();
-        props.put("javax.persistence.provider", "org.hibernate.ejb.HibernatePersistence");
-        props.put("javax.persistence.transactionType", "RESOURCE_LOCAL");
-        props.put("hibernate.dialect", "org.hibernate.dialect.HSQLDialect");
-        props.put("hibernate.connection.driver_class", "org.hsqldb.jdbcDriver");
-        props.put("hibernate.connection.url",
-            "jdbc:hsqldb:mem:unit-testing-jpa;sql.enforce_strict_size=true");
-        props.put("hibernate.hbm2ddl.auto", "create-drop");
-        props.put("hibernate.connection.username", "sa");
-        props.put("hibernate.connection.password", "");
-        props.put("hibernate.show_sql", "false");
-
-        cfg = new Ejb3Configuration();
-        cfg.addAnnotatedClass(Person.class);
     }
 
     @After
@@ -94,8 +77,7 @@ public class EmptyStringInterceptorTest {
 
     @Test
     public void testNormalEmptyStringPersistence() {
-        cfg.addProperties(props);
-        emf = cfg.buildEntityManagerFactory();
+        emf = Persistence.createEntityManagerFactory("testingEmptyStringInterceptor");
         em = emf.createEntityManager();
 
         Person p = new Person();
@@ -113,8 +95,7 @@ public class EmptyStringInterceptorTest {
         props.put("hibernate.ejb.interceptor",
             "org.candlepin.hibernate.EmptyStringInterceptor");
 
-        cfg.addProperties(props);
-        emf = cfg.buildEntityManagerFactory();
+        emf = Persistence.createEntityManagerFactory("testingEmptyStringInterceptor", props);
         em = emf.createEntityManager();
 
         Person p = new Person();
@@ -129,11 +110,9 @@ public class EmptyStringInterceptorTest {
 
     @Test
     public void testInterceptedNullStringPersistence() {
-        props.put("hibernate.ejb.interceptor",
-            "org.candlepin.hibernate.EmptyStringInterceptor");
+        props.put("hibernate.ejb.interceptor", "org.candlepin.hibernate.EmptyStringInterceptor");
 
-        cfg.addProperties(props);
-        emf = cfg.buildEntityManagerFactory();
+        emf = Persistence.createEntityManagerFactory("testingEmptyStringInterceptor", props);
         em = emf.createEntityManager();
 
         Person p = new Person();

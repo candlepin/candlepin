@@ -21,6 +21,9 @@ PACKAGES=(
     tig
     gcc
     tomcat
+    java-1.6.0-openjdk-devel
+    java-1.7.0-openjdk-devel
+    java-1.8.0-openjdk-devel
     java-$JAVA_VERSION-openjdk-devel
     liquibase
     libxml2-python

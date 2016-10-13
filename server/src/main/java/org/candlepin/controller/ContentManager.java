@@ -268,6 +268,9 @@ public class ContentManager {
             }
         }
 
+        // Temporarily (?) disabled. If we ever move to clustered caching (rather than per-instance
+        // caching, this branch should be re-enabled.
+        /*
         // No alternate versions with which to converge. Check if we can do an in-place update instead
         if (this.ownerContentCurator.getOwnerCount(updated) < 2) {
             log.debug("Applying in-place update to content: {}", updated);
@@ -287,7 +290,7 @@ public class ContentManager {
 
             return updated;
         }
-
+        */
 
         log.debug("Forking content and applying update: {}", updated);
 

@@ -1087,6 +1087,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals("New Name", owner.getDisplayName());
         assertEquals(parentOwner1, owner.getParentOwner());
         assertEquals("premium", owner.getDefaultServiceLevel());
+        assertFalse(owner.getAutobindDisabled());
 
         // Update with Default Service Level only
         Owner upOwner2 = mock(Owner.class);
@@ -1095,6 +1096,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals("standard", owner.getDefaultServiceLevel());
         assertEquals("New Name", owner.getDisplayName());
         assertEquals(parentOwner1, owner.getParentOwner());
+        assertFalse(owner.getAutobindDisabled());
 
         // Update with Parent Owner only
         Owner upOwner3 = mock(Owner.class);
@@ -1103,6 +1105,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(parentOwner2, owner.getParentOwner());
         assertEquals("standard", owner.getDefaultServiceLevel());
         assertEquals("New Name", owner.getDisplayName());
+        assertFalse(owner.getAutobindDisabled());
 
         // Update with empty Service Level only
         Owner upOwner4 = mock(Owner.class);
@@ -1111,6 +1114,37 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNull(owner.getDefaultServiceLevel());
         assertEquals("New Name", owner.getDisplayName());
         assertEquals(parentOwner2, owner.getParentOwner());
+        assertFalse(owner.getAutobindDisabled());
+
+        // Update autobind with disabled value.
+        Owner upOwner5 = mock(Owner.class);
+        when(upOwner5.getAutobindDisabled()).thenReturn(Boolean.TRUE);
+        ownerResource.updateOwner(owner.getKey(), upOwner5);
+        assertNull(owner.getDefaultServiceLevel());
+        assertEquals("New Name", owner.getDisplayName());
+        assertEquals(parentOwner2, owner.getParentOwner());
+        assertTrue(owner.getAutobindDisabled());
+        assertTrue(owner.autobindDisabled());
+
+        // Update autobind with enabled value.
+        Owner upOwner6 = mock(Owner.class);
+        when(upOwner6.getAutobindDisabled()).thenReturn(Boolean.FALSE);
+        ownerResource.updateOwner(owner.getKey(), upOwner6);
+        assertNull(owner.getDefaultServiceLevel());
+        assertEquals("New Name", owner.getDisplayName());
+        assertEquals(parentOwner2, owner.getParentOwner());
+        assertFalse(owner.getAutobindDisabled());
+        assertFalse(owner.autobindDisabled());
+
+        // Unset autobindDisabled results in no update.
+        Owner upOwner7 = mock(Owner.class);
+        when(upOwner7.getAutobindDisabled()).thenReturn(null);
+        ownerResource.updateOwner(owner.getKey(), upOwner7);
+        assertNull(owner.getDefaultServiceLevel());
+        assertEquals("New Name", owner.getDisplayName());
+        assertEquals(parentOwner2, owner.getParentOwner());
+        assertFalse(owner.getAutobindDisabled());
+        assertFalse(owner.autobindDisabled());
     }
 
     public void testImportManifestSynchronousSuccess() throws IOException, ImporterException {

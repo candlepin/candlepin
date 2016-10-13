@@ -71,6 +71,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     private static final int MAX_IN_QUERY_LENGTH = 500;
     private static Logger log = LoggerFactory.getLogger(ConsumerCurator.class);
 
+    private Map<String, Consumer> cachedHosts = new HashMap<String, Consumer>();
+
     public ConsumerCurator() {
         super(Consumer.class);
     }
@@ -155,10 +157,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         List<String> possibleGuestIds = Util.getPossibleUuids(uuid);
 
         String sql = "select cp_consumer.id from cp_consumer " +
-            "inner join cp_consumer_facts_lower " +
-            "on cp_consumer.id = cp_consumer_facts_lower.cp_consumer_id " +
-            "where cp_consumer_facts_lower.mapkey = 'virt.uuid' and " +
-            "cp_consumer_facts_lower.element in (:guestids) " +
+            "inner join cp_consumer_facts " +
+            "on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
+            "where cp_consumer_facts.mapkey = 'virt.uuid' and " +
+            "lower(cp_consumer_facts.element) in (:guestids) " +
             "and cp_consumer.owner_id = :ownerid " +
             "order by cp_consumer.updated desc";
 
@@ -199,10 +201,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         List<String> possibleGuestIds = Util.getPossibleUuids(guestIds.toArray(new String [guestIds.size()]));
 
         String sql = "select cp_consumer.uuid from cp_consumer " +
-            "inner join cp_consumer_facts_lower " +
-            "on cp_consumer.id = cp_consumer_facts_lower.cp_consumer_id " +
-            "where cp_consumer_facts_lower.mapkey = 'virt.uuid' and " +
-            "cp_consumer_facts_lower.element in (:guestids) " +
+            "inner join cp_consumer_facts " +
+            "on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
+            "where cp_consumer_facts.mapkey = 'virt.uuid' and " +
+            "lower(cp_consumer_facts.element) in (:guestids) " +
             "and cp_consumer.owner_id = :ownerid " +
             "order by cp_consumer.updated desc";
 
@@ -496,11 +498,21 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * This search needs to be case insensitive as some hypervisors report uppercase
      * guest UUIDs, when the guest itself will report lowercase.
      *
+     * The first lookup will retrieve the host and then place it in the map. This
+     * will save from reloading the host from the database if it is asked for again
+     * during the session. An auto-bind can call this method up to 50 times and this
+     * will cut the database calls significantly.
+     *
      * @param guestId a virtual guest ID (not a consumer UUID)
      * @return host consumer who most recently reported the given guestId (if any)
      */
     @Transactional
     public Consumer getHost(String guestId, Owner owner) {
+        String guestLower = guestId.toLowerCase();
+        if (cachedHosts.containsKey(guestLower)) {
+            return cachedHosts.get(guestLower);
+        }
+
         Disjunction guestIdCrit = Restrictions.disjunction();
         for (String possibleId : Util.getPossibleUuids(guestId)) {
             guestIdCrit.add(Restrictions.eq("guestIdLower", possibleId.toLowerCase()));
@@ -509,10 +521,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .createCriteria(GuestId.class)
             .createAlias("consumer", "gconsumer")
             .add(Restrictions.eq("gconsumer.owner", owner))
+            .add(guestIdCrit)
             .addOrder(Order.desc("updated"))
             .setMaxResults(1)
             .setProjection(Projections.property("consumer"));
-        return (Consumer) crit.add(guestIdCrit).uniqueResult();
+        Consumer host = (Consumer) crit.uniqueResult();
+        cachedHosts.put(guestLower, host);
+        return host;
     }
 
     /**

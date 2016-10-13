@@ -897,6 +897,11 @@ public class OwnerResource {
             }
         }
 
+        // Update the autobindDisabled field if the incoming value is null.
+        if (owner.getAutobindDisabled() != null) {
+            toUpdate.setAutobindDisabled(owner.getAutobindDisabled());
+        }
+
         ownerCurator.merge(toUpdate);
         Event e = eventBuilder.setNewEntity(toUpdate).buildEvent();
         sink.queueEvent(e);
@@ -1221,16 +1226,19 @@ public class OwnerResource {
         }
         // These come back with internationalized messages, so we can transfer:
         catch (SyncDataFormatException e) {
+            log.error("Format error of the data in a manifest", e);
             manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
             throw new BadRequestException(e.getMessage(), e);
         }
         catch (ImporterException e) {
+            log.error("Problem with archive", e);
             manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
             throw new IseException(e.getMessage(), e);
         }
         // Grab candlepin exceptions to record the error and then rethrow
         // to pass on the http return code
         catch (CandlepinException e) {
+            log.error("Recording import failure", e);
             manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
             throw e;
         }

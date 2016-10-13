@@ -522,3 +522,44 @@ class AsyncStandardExporter < StandardExporter
   end
 
 end
+
+
+#To test virt_limit subscriptions and revocation of excess
+#ENTITLEMENT_DERIVED pools
+class VirtLimitExporter < Exporter
+
+  def initialize
+    @cdn_label = random_string("test-cdn")
+    super({:cdn_label => @cdn_label, :webapp_prefix => "webapp1", :api_url => "api1"})
+    # the before(:each) is not initialized yet, call create_product sans wrapper
+    @product3 = create_product(random_string('p3'), random_string(), {
+        :attributes => { :arch => "x86_64", :virt_limit => "2", :'multi-entitlement' => 'yes'}
+    })
+    end_date = Date.new(2025, 5, 29)
+    create_pool_and_subscription(@owner['key'], @product3.id, 2, [], '', '12345', '6789', nil, end_date, false,
+      {})
+    # Pool names is a list of names of instance variables that will be created
+    @pools = @cp.list_pools(:owner => @owner.id, :product => @product3.id)
+    @pool3 = @pools.select{|i| i['type']=='NORMAL'}[0]
+    @candlepin_client.update_consumer({:facts => {"distributor_version" => "sam-1.3"}})
+    @candlepin_consumer = @candlepin_client.get_consumer()
+
+    @candlepin_client.consume_pool(@pool3.id, {:quantity => 2})
+
+    @cdn = create_cdn(@cdn_label,
+                "Test CDN",
+                "https://cdn.test.com")
+
+  end
+
+  def create_candlepin_export_update
+    ents = @candlepin_client.list_entitlements()
+    ents.each do |ent|
+      @cp.unbind_entitlement(ent.id, {:uuid => @candlepin_client.uuid})
+    end
+
+    @candlepin_client.consume_pool(@pool3.id, {:quantity => 1})
+    create_candlepin_export()
+  end
+
+end

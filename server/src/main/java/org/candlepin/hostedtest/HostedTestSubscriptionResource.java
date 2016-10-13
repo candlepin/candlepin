@@ -14,14 +14,35 @@
  */
 package org.candlepin.hostedtest;
 
+import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.util.SuppressSwaggerCheck;
+import org.candlepin.controller.ProductManager;
+import org.candlepin.model.Content;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerContentCurator;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProductCurator;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductContent;
+import org.candlepin.model.ProductCurator;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.service.UniqueIdGenerator;
 
+import com.google.inject.persist.Transactional;
+
+import org.xnap.commons.i18n.I18n;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.inject.Inject;
+import javax.persistence.LockModeType;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -30,6 +51,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -44,10 +66,30 @@ public class HostedTestSubscriptionResource {
 
     @Inject
     private HostedTestSubscriptionServiceAdapter adapter;
+
     @Inject
     private UniqueIdGenerator idGenerator;
+
     @Inject
     private ResolverUtil resolverUtil;
+
+    @Inject
+    private ProductManager productManager;
+
+    @Inject
+    private ProductCurator productCurator;
+
+    @Inject
+    private OwnerContentCurator ownerContentCurator;
+
+    @Inject
+    private OwnerCurator ownerCurator;
+
+    @Inject
+    private OwnerProductCurator ownerProductCurator;
+
+    @Inject
+    private I18n i18n;
 
     /**
      * API to check if resource is alive
@@ -150,4 +192,108 @@ public class HostedTestSubscriptionResource {
         adapter.deleteAllSubscriptions();
     }
 
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/owners/{owner_key}/products/{product_id}/batch_content")
+    @Transactional
+    public Product addBatchContent(
+        @PathParam("owner_key") String ownerKey,
+        @PathParam("product_id") String productId,
+        Map<String, Boolean> contentMap) {
+
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product product = this.fetchProduct(owner, productId);
+        Collection<ProductContent> productContent = new LinkedList<ProductContent>();
+
+        this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
+
+        for (Entry<String, Boolean> entry : contentMap.entrySet()) {
+            Content content = this.fetchContent(owner, entry.getKey());
+            productContent.add(new ProductContent(product, content, entry.getValue()));
+        }
+
+        return this.productManager.addContentToProduct(product, productContent, owner, true);
+
+    }
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.WILDCARD)
+    @Path("/owners/{owner_key}/products/{product_id}/content/{content_id}")
+    @Transactional
+    public ProductData addContent(
+        @PathParam("owner_key") String ownerKey,
+        @PathParam("product_id") String productId,
+        @PathParam("content_id") String contentId,
+        @QueryParam("enabled") Boolean enabled) {
+
+
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product product = this.fetchProduct(owner, productId);
+        Content content = this.fetchContent(owner, contentId);
+
+        this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
+
+        product = this.productManager.addContentToProduct(
+            product, Arrays.asList(new ProductContent(product, content, enabled)), owner, true
+        );
+
+        return product.toDTO();
+
+    }
+
+    @PUT
+    @Path("/owners/{owner_key}/products/{product_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public ProductData updateProduct(
+        @PathParam("owner_key") String ownerKey,
+        @PathParam("product_id") String productId,
+        ProductData update) {
+
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product existing = this.fetchProduct(owner, productId);
+
+        Product updated = this.productManager.updateProduct(existing, update, owner, true);
+
+        return updated.toDTO();
+
+    }
+
+    protected Product fetchProduct(Owner owner, String productId) {
+        Product product = this.ownerProductCurator.getProductById(owner, productId);
+
+        if (product == null) {
+            throw new NotFoundException(
+                i18n.tr("Product with ID ''{0}'' could not be found.", productId)
+            );
+        }
+
+        return product;
+    }
+
+    protected Owner getOwnerByKey(String key) {
+        Owner owner = this.ownerCurator.lookupByKey(key);
+
+        if (owner == null) {
+            throw new NotFoundException(i18n.tr("Owner with key \"{0}\" was not found.", key));
+        }
+
+        return owner;
+    }
+
+    protected Content fetchContent(Owner owner, String contentId) {
+        Content content = this.ownerContentCurator.getContentById(owner, contentId);
+
+        if (content == null) {
+            throw new NotFoundException(
+                i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
+            );
+        }
+
+        return content;
+    }
 }

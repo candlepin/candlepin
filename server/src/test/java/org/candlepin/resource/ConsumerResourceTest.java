@@ -335,7 +335,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testProductNoPool() {
+    public void testProductNoPool() throws Exception {
         Consumer c = mock(Consumer.class);
         Owner o = mock(Owner.class);
         SubscriptionServiceAdapter sa = mock(SubscriptionServiceAdapter.class);
@@ -398,7 +398,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void futureHealing() {
+    public void futureHealing() throws Exception {
         Consumer c = mock(Consumer.class);
         Owner o = mock(Owner.class);
         SubscriptionServiceAdapter sa = mock(SubscriptionServiceAdapter.class);
@@ -811,6 +811,25 @@ public class ConsumerResourceTest {
         cr.exportDataAsync(null, consumer.getUuid(), cdn.getLabel(), "prefix", cdn.getUrl(), extParams);
         verify(manifestManager).generateManifestAsync(eq(consumer.getUuid()), eq(cdn.getLabel()),
             eq("prefix"), eq(cdn.getUrl()), any(Map.class));
+    }
+
+    public void testNoDryBindWhenAutobindDisabledForOwner() throws Exception {
+        Consumer consumer = createConsumer();
+        consumer.getOwner().setAutobindDisabled(true);
+        ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
+        when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
+
+        ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
+                null, null, null, null, null, i18n, null, null, null,
+                null, null, null, null, null, null, null, null, null, null,
+                null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil, null);
+        try {
+            consumerResource.dryBind(consumer.getUuid(), "some-sla");
+            fail("Should have thrown a BadRequestException.");
+        }
+        catch (BadRequestException e) {
+            assertEquals("Owner has autobind disabled.", e.getMessage());
+        }
     }
 
 }

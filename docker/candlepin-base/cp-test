@@ -16,10 +16,6 @@ source /etc/profile
 
 export HOME=/root
 
-# Detect Java version and set JAVA_HOME accordingly
-export JAVA_VERSION=$(java -version 2>&1 | head -1 | sed -r 's/^(java|openjdk) version \"([0-9]+\.[0-9]+\.[0-9]+).*\"/\2/')
-export JAVA_HOME=/usr/lib/jvm/java-$JAVA_VERSION
-
 export SUPERVISOR=1
 export AUTOCONF=1
 export FORCECERT=1
@@ -62,6 +58,7 @@ collect_artifacts() {
 # Be sure to run cleanup on any error, SIGINT, or SIGTERM
 trapex cleanup SIGINT SIGTERM ERR EXIT
 CLEANUP_RUN=0
+CLEAN_CP=0
 
 cleanup() {
     if [ "$CLEANUP_RUN" == "0" ]; then
@@ -72,8 +69,10 @@ cleanup() {
         trap "" ERR EXIT
 
         # Run buildr clean in our target CP directory
-        cd $CP_HOME
-        buildr clean
+        if [ "$CLEAN_CP" == "1" ]; then
+            cd $CP_HOME
+            buildr clean
+        fi
 
         # Collect artifacts up to this point. If we're about to drop into a shell, we'll leave any
         # additional artifact collection up to the user
@@ -110,15 +109,16 @@ OPTIONS:
                    of times u was specifed in the arguments
   -l               run the linters against the code
   -s               run a bash shell when done
-  -b <task>        execute arbitrary buildr task
+  -b <task>        execute the specified buildr task
   -c <ref>         git reference to checkout
   -p <project>     subproject to build (defaults to "server")
+  -j <version>     use a specific Java version instead of the auto-detected default
   -v               enable verbose/debug output
 HELP
 }
 
 ARGV=("$@")
-while getopts ":dtrHulsb:c:p:v" opt; do
+while getopts ":dtrHulsb:c:p:vj:" opt; do
     case $opt in
         d  ) DEPLOY="1";;
         t  )
@@ -150,16 +150,37 @@ while getopts ":dtrHulsb:c:p:v" opt; do
             ;;
         l  ) LINTER="1";;
         s  ) LAUNCHSHELL="1";;
-        b  ) ARBITRARY="${OPTARG}";;
+        b  ) BUILDR_TASK="${OPTARG}";;
         c  ) CHECKOUT="${OPTARG}";;
         p  ) PROJECT="${OPTARG}";;
         v  ) VERBOSE="1";;
+        j  ) JAVA_VERSION="${OPTARG}";;
         ?  ) usage; exit;;
     esac
 done
 
 shift $(($OPTIND - 1))
 
+
+# Auto-detect JAVA_VERSION if necessary and set JAVA_HOME and update executable links
+# Note that alternatives doesn't update the JDK binaries properly, and doesn't order
+# versions predictably, so we'll just explicitly make the links ourself.
+if [ -z "$JAVA_VERSION" ]; then
+    JAVA_VERSION=$(java -version 2>&1 | head -1 | sed -r 's/^(java|openjdk) version \"([0-9]+\.[0-9]+\.[0-9]+).*\"/\2/')
+fi
+
+export JAVA_VERSION
+export JAVA_HOME=/usr/lib/jvm/java-$JAVA_VERSION
+
+if [ -d "$JAVA_HOME" ]; then
+    ln -sf -t /usr/bin $JAVA_HOME/bin/*
+    echo "Using Java version: $JAVA_VERSION ($JAVA_HOME)"
+else
+    echo "Java home not found for version $JAVA_VERSION: $JAVA_HOME"
+    exit 1
+fi
+
+# Set our project to test
 PROJECT=${PROJECT:-server}
 
 # WARNING: control+c while this is running will take out supervisor as well.
@@ -170,11 +191,13 @@ PROJECT=${PROJECT:-server}
 # i.e. -v /home/dgoodwin/src/candlepin:/candlepin-dev
 if [ -d "/candlepin-dev" ]; then
     echo "Using mounted volume /candlepin-dev"
+
     CP_HOME="/candlepin-dev/"
     cd $CP_HOME
 else
     # Otherwise we use the clone in the image and try to update it.
     echo "Using /candlepin."
+
     CP_HOME="/candlepin"
     cd $CP_HOME
 
@@ -183,6 +206,7 @@ else
     git fetch
     git reset --hard
     git clean -df
+    git merge FETCH_HEAD
 
     if [ ! -z "$CHECKOUT" ]; then
         echo "Checking out: $CHECKOUT"
@@ -198,9 +222,10 @@ mkdir -p /var/log/candlepin
 mkfifo /tmp/teepipe
 
 if [ "$LINTER" == "1" ]; then
-    cd $CP_HOME
     echo "Running linter..."
+    CLEAN_CP=1
 
+    cd $CP_HOME
     tee /var/log/candlepin/lint.log < /tmp/teepipe &
     buildr lint > /tmp/teepipe 2>&1
 fi
@@ -210,8 +235,7 @@ cd "$CP_HOME/$PROJECT"
 
 if [ "$UNITTEST" -gt 0 ]; then
     echo "Running unit tests $UNITTEST time(s)"
-    # run $UNITTEST time(s) to increase chance of capturing
-    # non-deterministic unit test failures.
+    CLEAN_CP=1
 
     UTCMD="test"
 
@@ -219,6 +243,8 @@ if [ "$UNITTEST" -gt 0 ]; then
         UTCMD="${UTCMD}:${UNITTEST_FILTER}"
     fi
 
+    # run $UNITTEST time(s) to increase chance of capturing
+    # non-deterministic unit test failures.
     for (( i=1; i<=$UNITTEST; i++ ))
     do
         tee /var/log/candlepin/unit_tests.log < /tmp/teepipe &
@@ -230,6 +256,7 @@ fi
 
 if [ "$DEPLOY" == "1" ]; then
     echo "Deploying candlepin..."
+    CLEAN_CP=1
 
     DEPLOY_FLAGS="-g"
 
@@ -251,6 +278,7 @@ fi
 
 if [ "$RSPEC" == "1" ]; then
     echo "Running rspec tests..."
+    CLEAN_CP=1
 
     tee /var/log/candlepin/rspec.log < /tmp/teepipe &
 
@@ -262,11 +290,13 @@ if [ "$RSPEC" == "1" ]; then
     buildr "${BUILDR_ARGS}" > /tmp/teepipe 2>&1
 fi
 
-if [ ! -z "$ARBITRARY" ]; then
-    cd "$CP_HOME"
+if [ ! -z "$BUILDR_TASK" ]; then
+    echo "Running buildr $BUILDR_TASK..."
+    CLEAN_CP=1
+
+    cd $CP_HOME
     tee /var/log/candlepin/buildr.log < /tmp/teepipe &
-    echo "Running buildr $ARBITRARY..."
-    buildr $ARBITRARY > /tmp/teepipe 2>&1
+    buildr $BUILDR_TASK > /tmp/teepipe 2>&1
 fi
 
 cleanup
