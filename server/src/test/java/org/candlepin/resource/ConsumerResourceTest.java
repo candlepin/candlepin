@@ -820,9 +820,9 @@ public class ConsumerResourceTest {
         when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
 
         ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
-                null, null, null, null, null, i18n, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil, null);
+            null, null, null, null, null, i18n, null, null, null,
+            null, null, null, null, null, null, null, null, null, null,
+            null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil, null);
         try {
             consumerResource.dryBind(consumer.getUuid(), "some-sla");
             fail("Should have thrown a BadRequestException.");
