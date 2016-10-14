@@ -15,7 +15,7 @@
 package org.candlepin.resource;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
@@ -31,11 +31,11 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.model.Certificate;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -147,7 +147,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void testGetCerts() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null, null, null, null);
-        List<EntitlementCertificate> serials = consumerResource
+        List<Certificate> serials = consumerResource
             .getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
     }
@@ -162,7 +162,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             null, 1, null, null, false, null, null, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null, null, null, null);
-        List<EntitlementCertificate> certificates = consumerResource
+        List<Certificate> certificates = consumerResource
             .getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(4, certificates.size());
 
@@ -340,7 +340,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void unbindBySerialWithExistingCertificateShouldPass() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null, null, null, null);
-        List<EntitlementCertificate> serials = consumerResource
+        List<Certificate> serials = consumerResource
             .getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
 
@@ -575,7 +575,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             null, null, this.entitlementCurator, null, null, null, null, null,
             null, null, null, this.poolManager, null, null, null,
             null, null, null, null, null, new CandlepinCommonTestConfig(), null,
-            null, null, mock(ConsumerBindUtil.class), productCurator, null);
+            null, null, mock(ConsumerBindUtil.class), productCurator, null, null);
 
         Response rsp = consumerResource.bind(
             consumer.getUuid(), pool.getId().toString(), null, 1, null,
@@ -584,12 +584,12 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         List<Entitlement> resultList = (List<Entitlement>) rsp.getEntity();
         Entitlement ent = resultList.get(0);
         assertEquals(1, ent.getCertificates().size());
-        EntitlementCertificate entCertBefore = ent.getCertificates().iterator().next();
+        Certificate entCertBefore = ent.getCertificates().iterator().next();
 
         cr.regenerateEntitlementCertificates(this.consumer.getUuid(),
             ent.getId(), false);
         assertEquals(1, ent.getCertificates().size());
-        EntitlementCertificate entCertAfter = ent.getCertificates().iterator().next();
+        Certificate entCertAfter = ent.getCertificates().iterator().next();
 
         assertFalse(entCertBefore.equals(entCertAfter));
     }

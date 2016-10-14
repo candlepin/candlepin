@@ -40,6 +40,7 @@ public class Refresher {
 
     private CandlepinPoolManager poolManager;
     private SubscriptionServiceAdapter subAdapter;
+    private OwnerManager ownerManager;
     private boolean lazy;
     private UnitOfWork uow;
     private static Logger log = LoggerFactory.getLogger(Refresher.class);
@@ -48,9 +49,10 @@ public class Refresher {
     private Set<Product> products = Util.newSet();
 
     Refresher(CandlepinPoolManager poolManager, SubscriptionServiceAdapter subAdapter,
-        boolean lazy) {
+        OwnerManager ownerManager, boolean lazy) {
         this.poolManager = poolManager;
         this.subAdapter = subAdapter;
+        this.ownerManager = ownerManager;
         this.lazy = lazy;
     }
 
@@ -150,6 +152,7 @@ public class Refresher {
 
         for (Owner owner : this.owners.values()) {
             poolManager.refreshPoolsWithRegeneration(subAdapter, owner, lazy);
+            ownerManager.refreshOwnerForContentAccess(owner);
         }
     }
 

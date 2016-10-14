@@ -102,4 +102,12 @@ public interface EntitlementCertServiceAdapter {
      * @return All entitlement certs for this consumer.
      */
     List<EntitlementCertificate> listForConsumer(Consumer consumer);
+
+    /**
+     * Return a list of all entitlement certificate serial ids for a given consumer.
+     *
+     * @param consumer
+     * @return All entitlement cert serial ids for this consumer.
+     */
+    List<Long> listEntitlementSerialIds(Consumer consumer);
 }

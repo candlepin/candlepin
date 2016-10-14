@@ -1796,6 +1796,38 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
+    public void testSingleSegmentContent() throws IOException {
+        Set<Product> products = new HashSet<Product>();
+        products.add(largeContentProduct);
+
+        largeContentProduct.setProductContent(null);
+        largeContentProduct.addContent(createContent(CONTENT_NAME, CONTENT_ID,
+            CONTENT_LABEL, CONTENT_TYPE, CONTENT_VENDOR, "/single", CONTENT_GPG_URL, ARCH_LABEL), false);
+
+        consumer.setFact("system.certificate_version", "3.2");
+
+        Set<X509ByteExtensionWrapper> byteExtensions = certServiceAdapter.prepareV3ByteExtensions(
+            product, getProductModels(product, products, "", largeContentEntitlement),
+            largeContentEntitlement, "", null);
+        Map<String, X509ByteExtensionWrapper> byteMap =
+            new HashMap<String, X509ByteExtensionWrapper>();
+        for (X509ByteExtensionWrapper ext : byteExtensions) {
+            byteMap.put(ext.getOid(), ext);
+        }
+
+        assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
+        List<String> contentSetList = new ArrayList<String>();
+        try {
+            contentSetList = v3extensionUtil.hydrateContentPackage(
+                byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        assertTrue(contentSetList.contains("/single"));
+    }
+
+    @Test
     public void testContentExtensionLargeSet() throws IOException {
         Set<Product> products = new HashSet<Product>();
         Product extremeProduct = TestUtil.createProduct("12345", "a product");

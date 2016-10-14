@@ -161,6 +161,7 @@ class Candlepin
     consumer[:serviceLevel] = params[:serviceLevel] if params.has_key?(:serviceLevel)
     consumer[:capabilities] = params[:capabilities].collect { |name| {'name' => name} } if params[:capabilities]
     consumer[:hypervisorId] = {:hypervisorId => params[:hypervisorId]} if params[:hypervisorId]
+    consumer['contentAccessMode'] = params['contentAccessMode'] if params.key?('contentAccessMode')
 
     path = get_path("consumers")
     put("#{path}/#{uuid}", consumer)
@@ -271,10 +272,14 @@ class Candlepin
     parent = params[:parent] || nil
     name = params['name'] || key
     displayName = params['displayName'] || name
+    contentAccessModeList = params['contentAccessModeList'] || nil
+    contentAccessMode = params['contentAccessMode'] || nil
     owner = {
       'key' => key,
       'displayName' => displayName
     }
+    owner['contentAccessModeList'] = contentAccessModeList unless contentAccessModeList.nil?
+    owner['contentAccessMode'] = contentAccessMode unless contentAccessMode.nil?
     owner['parentOwner'] = parent if !parent.nil?
     post('/owners', owner)
   end
@@ -1137,6 +1142,18 @@ class Candlepin
     path = "/consumers/#{uuid}/certificates"
     path += "?serials=" + serials.join(",") if serials.length > 0
     return get(path)
+  end
+
+  def get_content_access_body(params = {})
+      uuid = if params[:uuid]
+      else
+        uuid = @uuid
+      end
+      since = params[:since] if params[:since]
+      path = "/consumers/#{uuid}/accessible_content"
+      response = get_client(path, Net::HTTP::Get, :get)[URI.escape(path)].get \
+        ({:accept => :json, :if_modified_since => since})
+      return JSON.parse(response.body)
   end
 
   def export_certificates(dest_dir, serials = [])

@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -119,4 +120,8 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
         return result;
     }
 
+    @Override
+    public List<Long> listEntitlementSerialIds(Consumer consumer) {
+        return serialCurator.listEntitlementSerialIds(consumer);
+    }
 }

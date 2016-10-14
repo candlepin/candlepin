@@ -1026,6 +1026,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testUpdateOwner() {
+        config.setProperty(ConfigProperties.STANDALONE, "false");
         Owner owner = new Owner("Test Owner", "test");
         ownerCurator.create(owner);
 

@@ -1193,4 +1193,8 @@
     <include file="db/changelog/20161025100925-remove-unique-content-name-constraint.xml"/>
     <include file="db/changelog/20160419092221-add-db-file-storage.xml"/>
     <include file="db/changelog/20161025103454-cleanup-ueber-certs-round2.xml"/>
+    <include file="db/changelog/20161012144719-add-content-access-mode-column-to-owner.xml"/>
+    <include file="db/changelog/20161013145834-add-content-access-cert-column-to-consumer.xml"/>
+    <include file="db/changelog/20161109145238-add-owner-environment-content-access.xml"/>
+    <include file="db/changelog/20161129104417-add-content-access-mode-column-to-consumer.xml"/>
 </databaseChangeLog>

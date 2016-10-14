@@ -119,7 +119,10 @@ public class ConsumerImporter {
         uc.setWebUrl(consumer.getUrlWeb());
         uc.setApiUrl(consumer.getUrlApi());
         uc.setIdCert(idcert);
+        uc.setContentAccessMode(consumer.getContentAccessMode());
         owner.setUpstreamConsumer(uc);
+        owner.setContentAccessMode(uc.getContentAccessMode());
+        owner.setContentAccessModeList(uc.getContentAccessMode());
 
         curator.merge(owner);
     }

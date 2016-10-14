@@ -80,6 +80,7 @@ import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
+import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ImporterException;
@@ -894,12 +895,38 @@ public class OwnerResource {
             }
         }
 
-        // Update the autobindDisabled field if the incoming value is null.
+        // Update the autobindDisabled field if the incoming value is not null.
         if (owner.getAutobindDisabled() != null) {
             toUpdate.setAutobindDisabled(owner.getAutobindDisabled());
         }
 
+        if (!ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE
+            .equals(owner.contentAccessMode()) &&
+            config.getBoolean(ConfigProperties.STANDALONE)) {
+            throw new BadRequestException(
+                i18n.tr("The owner content access mode cannot be set directly in standalone mode."));
+        }
+        // Update the contentAccess field if the incoming value is not null.
+        if (owner.getContentAccessMode() != null) {
+            if (toUpdate.isAllowedContentAccessMode(owner.contentAccessMode())) {
+                String before = toUpdate.getContentAccessMode();
+                String after = owner.getContentAccessMode();
+                toUpdate.setContentAccessMode(owner.getContentAccessMode());
+                if (!after.equals(before)) {
+                    toUpdate.setContentAccessModeDirty(true);
+                }
+            }
+            else {
+                throw new BadRequestException(
+                    i18n.tr("The content access mode is not allowed for this owner."));
+            }
+        }
+
         ownerCurator.merge(toUpdate);
+
+        if (toUpdate.isContentAccessModeDirty()) {
+            ownerManager.refreshOwnerForContentAccess(toUpdate);
+        }
         Event e = eventBuilder.setNewEntity(toUpdate).buildEvent();
         sink.queueEvent(e);
         return toUpdate;

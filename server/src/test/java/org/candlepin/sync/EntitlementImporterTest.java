@@ -87,7 +87,7 @@ public class EntitlementImporterTest {
 
         consumer = TestUtil.createConsumer(owner);
         consumerDto = new ConsumerDto(consumer.getUuid(), consumer.getName(),
-            consumer.getType(), consumer.getOwner(), "", "");
+            consumer.getType(), consumer.getOwner(), "", "", consumer.getContentAccessMode());
 
         cert = createEntitlementCertificate("my-test-key", "my-cert");
         reader = mock(Reader.class);

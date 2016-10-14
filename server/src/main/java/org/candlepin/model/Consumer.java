@@ -143,6 +143,10 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @JoinColumn(name = "consumer_idcert_id")
     private IdentityCertificate idCert;
 
+    @OneToOne (fetch = FetchType.LAZY)
+    @JoinColumn(name = "cont_acc_cert_id")
+    private ContentAccessCertificate contentAccessCert;
+
     @ManyToOne
     @JoinColumn(nullable = false)
     @ForeignKey(name = "fk_consumer_consumer_type")
@@ -212,6 +216,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     // WARNING: can't initialize to a default value here, we need to be able to see
     // if it was specified on an incoming update, so it must be null if no value came in.
     private Boolean autoheal;
+
+    // This is normally used from the owner setting. If this consumer is manifest then it
+    // can have a different setting as long as it exists in the owner's mode list.
+    @Column(name = "content_access_mode")
+    private String contentAccessMode;
 
     /**
      * Length of field is required by hypersonic in the unit tests only
@@ -287,6 +296,16 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public void setIdCert(IdentityCertificate idCert) {
         this.idCert = idCert;
+    }
+
+    @HateoasArrayExclude
+    @XmlTransient
+    public ContentAccessCertificate getContentAccessCert() {
+        return contentAccessCert;
+    }
+
+    public void setContentAccessCert(ContentAccessCertificate contentAccessCert) {
+        this.contentAccessCert = contentAccessCert;
     }
 
     /**
@@ -727,4 +746,12 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     public boolean isDev() {
         return !StringUtils.isEmpty(getFact("dev_sku"));
     }
+    public String getContentAccessMode() {
+        return this.contentAccessMode;
+    }
+
+    public void setContentAccessMode(String contentAccessMode) {
+        this.contentAccessMode = contentAccessMode;
+    }
+
 }

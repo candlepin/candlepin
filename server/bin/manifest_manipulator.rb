@@ -38,6 +38,10 @@ optparse = OptionParser.new do |opts|
         @pause = true
     end
 
+    opts.on('-g', '--goldenticket', "make this a Golden Ticket manifest") do |opt|
+        @golden = true
+    end
+
     opts.on( '-h', '--help', 'Display help and exit' ) do
         puts opts
         exit
@@ -76,15 +80,13 @@ print_and_pause "About to manipulate extracted files..."
 # tweak files here
 # dont forget to add force=SIGNATURE_CONFLICT&force=MANIFEST_SAME to the url
 ########################################################
-product_file = "tmpexport/export/products/ES0113909.json"
-fileText = File.read(product_file)
-product = JSON.parse(fileText)
-product['attributes'].each do |attr|
-  if attr['name'] == "virt_limit"
-    attr["value"] = "500"
-  end
+if @golden != nil
+  consumer_file = "tmpexport/export/consumer.json"
+  fileText = File.read(consumer_file)
+  consumer = JSON.parse(fileText)
+  consumer['contentAccessMode'] = "org_environment"
+  File.write(consumer_file, consumer.to_json)
 end
-File.write(product_file, product.to_json)
 ########################################################
 # end of tweak files
 ########################################################

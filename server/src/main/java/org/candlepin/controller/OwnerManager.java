@@ -17,6 +17,7 @@ package org.candlepin.controller;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
+import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.ExporterMetadata;
@@ -26,6 +27,7 @@ import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerEnvContentAccessCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.PermissionBlueprintCurator;
@@ -33,6 +35,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.service.ContentAccessCertServiceAdapter;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -61,6 +64,9 @@ public class OwnerManager {
     @Inject private OwnerContentCurator ownerContentCurator;
     @Inject private ContentManager contentManager;
     @Inject private OwnerCurator ownerCurator;
+    @Inject private ContentAccessCertServiceAdapter contentAccessCertService;
+    @Inject private ContentAccessCertificateCurator contentAccessCertCurator;
+    @Inject private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
 
     @Transactional
     public void cleanupAndDelete(Owner owner, boolean revokeCerts) {
@@ -151,4 +157,25 @@ public class OwnerManager {
         ownerCurator.delete(owner);
     }
 
+    public void determineContentAccessCertState(Owner owner) {
+        if (!owner.isContentAccessModeDirty()) {
+            return;
+        }
+        if (owner.contentAccessMode()
+            .equals(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE)) {
+            contentAccessCertCurator.deleteForOwner(owner);
+        }
+        owner.setContentAccessModeDirty(false);
+        ownerCurator.merge(owner);
+    }
+
+    @Transactional
+    public void refreshOwnerForContentAccess(Owner owner) {
+        // we need to update the owner's consumers if the content access mode has changed
+        owner = ownerCurator.findAndLock(owner.getKey());
+        this.determineContentAccessCertState(owner);
+        // removed cached versions of content access cert data
+        ownerEnvContentAccessCurator.removeAllForOwner(owner.getId());
+        ownerCurator.flush();
+    }
 }

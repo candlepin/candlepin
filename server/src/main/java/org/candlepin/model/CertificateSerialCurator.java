@@ -29,6 +29,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -151,5 +152,27 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
      */
     public Collection<CertificateSerial> saveOrUpdateAll(Map<String, CertificateSerial> serialMap) {
         return this.saveOrUpdateAll(serialMap.values(), false, false);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Long> listEntitlementSerialIds(Consumer c) {
+        List<Long> resultList = null;
+        String hql = "SELECT s.id" +
+            "    FROM EntitlementCertificate ec" +
+            "     JOIN ec.entitlement e" +
+            "     JOIN e.consumer c" +
+            "     JOIN ec.serial s" +
+            "     JOIN e.pool p" +
+            "    WHERE" +
+            "       c.id=:consumerId" +
+            "    AND" +
+            "       p.endDate >= :nowDate";
+        javax.persistence.Query query = this.getEntityManager().createQuery(hql);
+
+        resultList = (List<Long>) query
+            .setParameter("consumerId", c.getId())
+            .setParameter("nowDate", new Date())
+            .getResultList();
+        return resultList;
     }
 }

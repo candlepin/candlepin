@@ -43,6 +43,7 @@ public class RefresherTest {
 
     private CandlepinPoolManager poolManager;
     private SubscriptionServiceAdapter subAdapter;
+    private OwnerManager ownerManager;
 
     private Refresher refresher;
 
@@ -50,8 +51,9 @@ public class RefresherTest {
     public void setUp() {
         poolManager = mock(CandlepinPoolManager.class);
         subAdapter = mock(SubscriptionServiceAdapter.class);
+        ownerManager = mock(OwnerManager.class);
 
-        refresher = new Refresher(poolManager, subAdapter, false);
+        refresher = new Refresher(poolManager, subAdapter, ownerManager, false);
     }
 
     @Test

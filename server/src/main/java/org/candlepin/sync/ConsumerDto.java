@@ -28,18 +28,20 @@ public class ConsumerDto {
     private Owner owner;
     private String prefixUrlWeb;
     private String prefixUrlApi;
+    private String contentAccessMode;
 
     public ConsumerDto() {
     }
 
     ConsumerDto(String uuid, String name, ConsumerType type, Owner owner,
-        String prefixUrlWeb, String prefixUrlApi) {
+        String prefixUrlWeb, String prefixUrlApi, String contentAccessMode) {
         this.uuid = uuid;
         this.name = name;
         this.type = type;
         this.owner = owner;
         this.prefixUrlWeb = prefixUrlWeb;
         this.prefixUrlApi = prefixUrlApi;
+        this.contentAccessMode = contentAccessMode;
     }
 
     public String getUuid() {
@@ -90,12 +92,21 @@ public class ConsumerDto {
         this.prefixUrlApi = prefixUrlApi;
     }
 
+    public String getContentAccessMode() {
+        return contentAccessMode;
+    }
+
+    public void setContentAccessMode(String contentAccessMode) {
+        this.contentAccessMode = contentAccessMode;
+    }
+
     public Consumer consumer() {
         Consumer toReturn = new Consumer();
         toReturn.setUuid(uuid);
         toReturn.setName(name);
         toReturn.setType(type);
         toReturn.setOwner(owner);
+        toReturn.setContentAccessMode(contentAccessMode);
         return toReturn;
     }
 }
