@@ -6,15 +6,8 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-
-    <property name="date.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql,oracle"/>
-    <property name="date.type" value="DATETIME" dbms="mysql"/>
-
-    <property name="serial.type" value="BIGINT" dbms="oracle,mysql"/>
-    <property name="serial.type" value="int8" dbms="postgresql"/>
-
-    <property name="cert.type" value="BLOB" dbms="oracle,mysql"/>
-    <property name="cert.type" value="bytea" dbms="postgresql"/>
+    <!-- Include definitions for cert.type, timestamp.type, etc. -->
+    <include file="db/changelog/datatypes.xml"/>
 
     <changeSet id="20130722140547" author="wpoteat">
         <comment>CDN record</comment>
