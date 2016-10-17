@@ -22,7 +22,7 @@ class Candlepin
   def initialize(username=nil, password=nil, cert=nil, key=nil,
                  host='localhost', port=8443, lang=nil, uuid=nil,
                  trusted_user=false, context='candlepin',
-                 use_ssl = true)
+                 use_ssl = true, verify_ssl=nil)
 
     if not username.nil? and not cert.nil?
       raise "Cannot connect with both username and identity cert"
@@ -37,6 +37,13 @@ class Candlepin
     end
 
     @lang = lang
+    if not verify_ssl.nil?
+      @verify_ssl = verify_ssl
+    elsif host == 'localhost'
+      @verify_ssl = OpenSSL::SSL::VERIFY_NONE
+    else
+      @verify_ssl = OpenSSL::SSL::SSLContext::DEFAULT_PARAMS[:verify_mode]
+    end
 
     if not uuid.nil?
       create_trusted_consumer_client(uuid)
@@ -1379,7 +1386,8 @@ class Candlepin
   def create_basic_client(username=nil, password=nil)
     @client = RestClient::Resource.new(@base_url,
                                        :user => username, :password => password,
-                                       :headers => {:accept_language => @lang})
+                                       :headers => {:accept_language => @lang},
+                                       :verify_ssl => @verify_ssl)
   end
 
   def create_ssl_client(cert, key)
@@ -1390,23 +1398,24 @@ class Candlepin
     @client = RestClient::Resource.new(@base_url,
                                        :ssl_client_cert => @identity_certificate,
                                        :ssl_client_key => @identity_key,
-                                       :headers => {:accept_language => @lang})
+                                       :headers => {:accept_language => @lang},
+                                       :verify_ssl => @verify_ssl)
   end
 
   def create_trusted_consumer_client(uuid)
     @uuid = uuid
     @client = RestClient::Resource.new(@base_url,
                                        :headers => {"cp-consumer" => uuid,
-                                                    :accept_language => @lang}
-                                        )
+                                                    :accept_language => @lang},
+                                       :verify_ssl => @verify_ssl)
   end
 
   def create_trusted_user_client(username)
     @username = username
     @client = RestClient::Resource.new(@base_url,
                                        :headers => {"cp-user" => username,
-                                                    :accept_language => @lang}
-                                        )
+                                                    :accept_language => @lang},
+                                       :verify_ssl => @verify_ssl)
   end
 
 end
@@ -1421,7 +1430,8 @@ class OauthCandlepinApi < Candlepin
     host = params[:host] || 'localhost'
     port = params[:port] || 8443
     lang = params[:lang] || nil
-    super(username, password, nil, nil, host, port, lang, nil, false)
+    verify_ssl = params[:verify_ssl] || nil
+    super(username, password, nil, nil, host, port, lang, nil, false, verify_ssl)
   end
 
   protected
