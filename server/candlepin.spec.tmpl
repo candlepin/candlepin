@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.11
+Version: 0.9.54.12
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,9 @@ fi
 
 #raw
 %changelog
+* Wed Oct 19 2016 Vritant Jain <adarshvritant@gmail.com> 0.9.54.12-1
+- 1384159: Bump rules version (wpoteat@redhat.com)
+
 * Wed Oct 05 2016 Christopher Snyder <csnyder@redhat.com> 0.9.54.11-1
 - Disable autobind at Owner level (mstead@redhat.com)
 - Lock the hypervisor consumer earlier to avoid over-entitlement
