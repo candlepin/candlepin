@@ -28,7 +28,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="entity_version" type="int"/>
-            <column name="locked" type="smallint"/>
+            <column name="locked" type="int"/>
         </createTable>
     </changeSet>
 
@@ -118,7 +118,7 @@
             </column>
             <column name="arches" type="varchar(255)"/>
             <column name="entity_version" type="int"/>
-            <column name="locked" type="smallint"/>
+            <column name="locked" type="int"/>
         </createTable>
     </changeSet>
 
