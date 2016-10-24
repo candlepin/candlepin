@@ -23,7 +23,7 @@ describe 'Owner Product Resource' do
   it 'updates individual product fields' do
     prod = create_product(nil, 'tacos', {:multiplier => 2, :dependentProductIds => [2, 4]})
     #Ensure the dates are at least one second different
-    sleep 1
+    sleep 2
     prod2 = create_product(nil, 'enchiladas', {:multiplier => 4})
 
     prod.name.should_not == prod2.name
@@ -45,13 +45,15 @@ describe 'Owner Product Resource' do
 
     # Delay here a moment to ensure an in-place update on the product doesn't trigger
     # attributes to be cloned/updated (as we're not updating attributes here)
-    # sleep 1
+    sleep 1
 
-    prod = @cp.update_product(@owner['key'], prod.id, {:multiplier => prod2.multiplier, :attributes => nil})
+    prod = @cp.update_product(@owner['key'], prod.id, {:multiplier => prod2.multiplier, :attributes => nil })
 
     prod.multiplier.should == prod2.multiplier
-    prod.attributes.should == temp_attributes
-
+    prod.attributes.size.should == 1
+    temp_attributes.size.should == 1
+    prod.attributes[0]['name'].should == temp_attributes[0]['name']
+    prod.attributes[0]['value'].should == temp_attributes[0]['value']
     prod = @cp.update_product(@owner['key'], prod.id, {:dependentProductIds => prod2.dependentProductIds})
 
     prod.dependentProductIds.should == prod2.dependentProductIds
