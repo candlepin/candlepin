@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20161025100925-1" author="awood">
+        <comment>Remove unique content name constraint</comment>
+        <dropUniqueConstraint
+            tableName="cp_content"
+            constraintName="cp_content_label_key"/>
+
+        <createIndex
+            tableName="cp_content"
+            indexName="cp_content_label_key">
+            <column name="label"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->
