@@ -1264,34 +1264,7 @@ public class OwnerResource {
     @Path("{owner_key}/uebercert")
     public EntitlementCertificate createUeberCertificate(@Context Principal principal,
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
-
-        Owner o = findOwner(ownerKey);
-
-        if (o == null) {
-            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", ownerKey));
-        }
-
-        try {
-            Consumer ueberConsumer = consumerCurator.findByName(o, Consumer.UEBER_CERT_CONSUMER);
-
-            // ueber cert has already been generated - re-generate it now
-            if (ueberConsumer != null) {
-                List<Entitlement> ueberEntitlements = entitlementCurator.listByConsumer(ueberConsumer);
-
-                if (ueberEntitlements.size() > 0) {
-                    // Immediately revoke and regenerate ueber certificates:
-                    poolManager.regenerateCertificatesOf(ueberEntitlements.get(0), true, false);
-                    return entitlementCertCurator.listForConsumer(ueberConsumer).get(0);
-                }
-            }
-
-            return ueberCertGenerator.generate(o, principal);
-        }
-        catch (Exception e) {
-            log.error("Problem generating ueber cert for owner: " + o.getKey(), e);
-            throw new BadRequestException(i18n.tr(
-                "Problem generating ueber cert for owner {0}", e));
-        }
+        return ueberCertGenerator.generate(ownerKey, principal);
     }
 
     /**
