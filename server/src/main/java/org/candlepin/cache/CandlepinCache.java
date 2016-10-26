@@ -52,6 +52,6 @@ public class CandlepinCache {
      * @return Cache for Status entity
      */
     public Cache<String, Product> getProductCache() {
-        return cacheManager.getCache(CacheContextListener.CACHE_PRODUCT_FULL, String.class, Product.class);
+        return cacheManager.getCache(CacheContextListener.CACHE_PRODUCT_FULL);
     }
 }

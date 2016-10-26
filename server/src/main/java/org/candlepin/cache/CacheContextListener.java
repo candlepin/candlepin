@@ -14,7 +14,6 @@
  */
 package org.candlepin.cache;
 
-import org.candlepin.model.Product;
 import org.candlepin.model.Status;
 
 import com.google.inject.Injector;
@@ -47,11 +46,5 @@ public class CacheContextListener {
         config.setStoreByValue(false);
 
         cacheManager.createCache(CACHE_STATUS, config);
-
-        MutableConfiguration<String, Product> productConfig = new MutableConfiguration<String,  Product>();
-        productConfig.setTypes(String.class, Product.class);
-        productConfig.setStoreByValue(false);
-
-        cacheManager.createCache(CACHE_PRODUCT_FULL, productConfig);
     }
 }

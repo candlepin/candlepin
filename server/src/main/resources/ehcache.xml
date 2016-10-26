@@ -1,21 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<ehcache
-    maxEntriesLocalHeap="100000"
-    >
 
+<ehcache>
 	<sizeOfPolicy maxDepth="100" maxDepthExceededBehavior="abort"/>
 
+<!-- There are some internal caches created by hibernate that will
+     inherit these settings
+     -->
     <defaultCache 
-    	maxEntriesLocalHeap="100000"
         eternal="false" 
+        maxEntriesLocalHeap="1000000"
         timeToIdleSeconds="86400" 
         timeToLiveSeconds="86400"/>    
+    
+    <!-- We know we gonna have just one entry in this cache -->
      <cache
         name="query-5-seconds"
-        maxEntriesLocalHeap="100000"
+        maxEntriesLocalHeap="1"
         eternal="false"
         timeToIdleSeconds="5"
         timeToLiveSeconds="5"
     />
+    
+     <cache
+        name="productfullcache"
+        maxEntriesLocalHeap="100000"
+        eternal="true"
+        copyOnRead="false"
+		copyOnWrite="false"
+    />
+
 </ehcache>
