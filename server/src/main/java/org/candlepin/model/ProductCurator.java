@@ -140,9 +140,17 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .uniqueResult();
     }
 
+    public Set<Product> getPoolDerivedProvidedProductsCached(Pool pool) {
+        return getPoolDerivedProvidedProductsCached(pool.getId());
+    }
+
     public Set<Product> getPoolDerivedProvidedProductsCached(String poolId) {
         Set<String> uuids = getDerivedPoolProvidedProducts(poolId);
         return getProductsByUuidCached(uuids);
+    }
+
+    public Set<Product> getPoolProvidedProductsCached(Pool pool) {
+        return getPoolProvidedProductsCached(pool.getId());
     }
 
     public Set<Product> getPoolProvidedProductsCached(String poolId) {

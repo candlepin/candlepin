@@ -494,9 +494,9 @@ public class PoolRulesTest {
         p.getDerivedProvidedProducts().add(derivedProvidedProd1);
         p.getDerivedProvidedProducts().add(derivedProvidedProd2);
 
-        when(productCurator.getPoolProvidedProductsCached(p.getId()))
+        when(productCurator.getPoolProvidedProductsCached(p))
             .thenReturn(p.getProvidedProducts());
-        when(productCurator.getPoolDerivedProvidedProductsCached(p.getId()))
+        when(productCurator.getPoolDerivedProvidedProductsCached(p))
             .thenReturn(p.getDerivedProvidedProducts());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
 
@@ -531,7 +531,7 @@ public class PoolRulesTest {
             "derivedProd", 10, 10);
         Pool p = TestUtil.copyFromSub(s);
         p.setId("mockVirtLimitSubCreateDerived");
-        when(productCurator.getPoolDerivedProvidedProductsCached(p.getId()))
+        when(productCurator.getPoolDerivedProvidedProductsCached(p))
             .thenReturn(p.getDerivedProvidedProducts());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
 

@@ -152,7 +152,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             ent.getPool().getDerivedProduct() != null) {
             derivedProducts.add(ent.getPool().getDerivedProduct());
             derivedProducts
-                .addAll(productCurator.getPoolDerivedProvidedProductsCached(ent.getPool().getId()));
+                .addAll(productCurator.getPoolDerivedProvidedProductsCached(ent.getPool()));
         }
         return derivedProducts;
     }
@@ -386,7 +386,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             log.info("Generating entitlement cert for entitlement: {}", entitlement);
 
             Set<Product> products = new HashSet<Product>(
-                productCurator.getPoolProvidedProductsCached(entitlement.getPool().getId()));
+                productCurator.getPoolProvidedProductsCached(entitlement.getPool()));
 
             // If creating a certificate for a distributor, we need
             // to add any derived products as well so that their content

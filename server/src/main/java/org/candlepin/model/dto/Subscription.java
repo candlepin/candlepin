@@ -590,7 +590,7 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         );
 
         // Will work only if source is stored in the database and linked to provided products there!
-        Collection<Product> products = productCurator.getPoolProvidedProductsCached(source.getId());
+        Collection<Product> products = productCurator.getPoolProvidedProductsCached(source);
         if (products != null) {
             Collection<ProductData> pdata = new LinkedList<ProductData>();
 
@@ -604,7 +604,7 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
             this.setProvidedProducts(null);
         }
 
-        products = productCurator.getPoolDerivedProvidedProductsCached(source.getId());
+        products = productCurator.getPoolDerivedProvidedProductsCached(source);
         if (products != null) {
             Collection<ProductData> pdata = new LinkedList<ProductData>();
 

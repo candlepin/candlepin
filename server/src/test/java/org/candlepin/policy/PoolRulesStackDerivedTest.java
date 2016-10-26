@@ -217,9 +217,9 @@ public class PoolRulesStackDerivedTest {
     private Pool copyFromSub(Subscription sub) {
         Pool pool = TestUtil.copyFromSub(sub);
         pool.setId("" + lastPoolId++);
-        when(productCurator.getPoolProvidedProductsCached((pool.getId())))
+        when(productCurator.getPoolProvidedProductsCached(pool))
             .thenReturn(pool.getProvidedProducts());
-        when(productCurator.getPoolDerivedProvidedProductsCached(pool.getId()))
+        when(productCurator.getPoolDerivedProvidedProductsCached(pool))
             .thenReturn(pool.getDerivedProvidedProducts());
         return pool;
     }

@@ -253,7 +253,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 continue;
             }
             entitledProductIds.add(p.getProduct().getId());
-            for (Product pp : productCurator.getPoolProvidedProductsCached(p.getId())) {
+            for (Product pp : productCurator.getPoolProvidedProductsCached(p)) {
                 entitledProductIds.add(pp.getId());
             }
 
@@ -262,7 +262,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             if (c.getType().isManifest() && p.getDerivedProduct() != null) {
                 entitledProductIds.add(p.getDerivedProduct().getId());
 
-                for (Product dpp : productCurator.getPoolDerivedProvidedProductsCached(p.getId())) {
+                for (Product dpp : productCurator.getPoolDerivedProvidedProductsCached(p)) {
                     entitledProductIds.add(dpp.getId());
                 }
             }

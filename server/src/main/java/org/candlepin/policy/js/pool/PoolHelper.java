@@ -107,7 +107,7 @@ public class PoolHelper {
                         pool.getContractNumber(),
                         pool.getAccountNumber(),
                         pool.getOrderNumber(),
-                        productCurator.getPoolProvidedProductsCached(pool.getId())                        ,
+                        productCurator.getPoolProvidedProductsCached(pool)                        ,
                         sourceEntitlements.get(pool.getId()));
             }
             else {
@@ -126,7 +126,7 @@ public class PoolHelper {
                         pool.getContractNumber(),
                         pool.getAccountNumber(),
                         pool.getOrderNumber(),
-                        productCurator.getPoolDerivedProvidedProductsCached(pool.getId()),
+                        productCurator.getPoolDerivedProvidedProductsCached(pool),
                         sourceEntitlements.get(pool.getId()));
             }
 
@@ -168,10 +168,10 @@ public class PoolHelper {
         Set<Product> products;
 
         if (source.getDerivedProduct() != null) {
-            products = productCurator.getPoolDerivedProvidedProductsCached(source.getId());
+            products = productCurator.getPoolDerivedProvidedProductsCached(source);
         }
         else {
-            products = productCurator.getPoolProvidedProductsCached(source.getId());
+            products = productCurator.getPoolProvidedProductsCached(source);
         }
 
         for (Product product : products) {

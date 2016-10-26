@@ -220,7 +220,7 @@ public class PoolHelperTest {
         targetPool.setDerivedProduct(subProduct);
 
         targetPool.setDerivedProvidedProducts(derivedProducts);
-        when(productCurator.getPoolDerivedProvidedProductsCached(targetPool.getId()))
+        when(productCurator.getPoolDerivedProvidedProductsCached(targetPool))
             .thenReturn(derivedProducts);
         targetPool.setAttribute("virt_limit", "unlimited");
         // when(psa.getProductById(subProduct.getUuid())).thenReturn(subProduct);

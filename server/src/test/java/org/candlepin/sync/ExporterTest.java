@@ -210,11 +210,11 @@ public class ExporterTest {
 
         when(pool.getId()).thenReturn("MockedPoolId");
         when(pool.getProvidedProducts()).thenReturn(ppset);
-        when(pc.getPoolProvidedProductsCached(pool.getId())).thenReturn(ppset);
+        when(pc.getPoolProvidedProductsCached(pool)).thenReturn(ppset);
         when(pool.getProduct()).thenReturn(prod1);
 
         when(pool.getDerivedProvidedProducts()).thenReturn(sppSet);
-        when(pc.getPoolDerivedProvidedProductsCached(pool.getId())).thenReturn(sppSet);
+        when(pc.getPoolDerivedProvidedProductsCached(pool)).thenReturn(sppSet);
         when(pool.getDerivedProduct()).thenReturn(subProduct);
 
         when(ent.getPool()).thenReturn(pool);

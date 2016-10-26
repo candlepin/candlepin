@@ -1539,7 +1539,7 @@ public class PoolManagerTest {
 
         when(pool.getOwner()).thenReturn(owner);
         when(pool.getProduct()).thenReturn(product);
-        when(mockProductCurator.getPoolProvidedProductsCached(anyString())).thenReturn(provided);
+        when(mockProductCurator.getPoolProvidedProductsCached(any(Pool.class))).thenReturn(provided);
         when(pool.getQuantity()).thenReturn(quantity);
         when(pool.getStartDate()).thenReturn(startDate);
         when(pool.getEndDate()).thenReturn(endDate);

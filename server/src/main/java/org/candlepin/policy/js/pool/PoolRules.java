@@ -533,7 +533,7 @@ public class PoolRules {
         Pool existingPool, Set<Product> changedProducts) {
 
         Product existingProduct = existingPool.getProduct();
-        Set<Product> currentProvided = productCurator.getPoolProvidedProductsCached(existingPool.getId());
+        Set<Product> currentProvided = productCurator.getPoolProvidedProductsCached(existingPool);
         String pid = existingProduct.getId();
 
         // TODO: ideally we would differentiate between these different product changes
@@ -575,7 +575,7 @@ public class PoolRules {
 
         // Build expected set of ProvidedProducts and compare:
         Set<Product> currentProvided = productCurator
-            .getPoolDerivedProvidedProductsCached(existingPool.getId());
+            .getPoolDerivedProvidedProductsCached(existingPool);
         Set<Product> incomingProvided = new HashSet<Product>();
 
         /**

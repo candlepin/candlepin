@@ -113,13 +113,13 @@ public class StackedSubPoolValueAccumulator {
             nextStackedPool.getProduct();
 
         if (nextStackedPool.getDerivedProduct() == null) {
-            for (Product provided : productCurator.getPoolProvidedProductsCached(nextStackedPool.getId())) {
+            for (Product provided : productCurator.getPoolProvidedProductsCached(nextStackedPool)) {
                 this.expectedProvidedProds.add(provided);
             }
         }
         else {
             for (Product provided : productCurator
-                .getPoolDerivedProvidedProductsCached(nextStackedPool.getId())) {
+                .getPoolDerivedProvidedProductsCached(nextStackedPool)) {
                 this.expectedProvidedProds.add(provided);
             }
         }
