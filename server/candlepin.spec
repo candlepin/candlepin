@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.23.3
+Version: 0.9.23.4
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -390,6 +390,14 @@ fi
 
 
 %changelog
+* Wed Oct 26 2016 Vritant Jain <adarshvritant@gmail.com> 0.9.23.4-1
+- 1388551: Remove unique constraint on content keys; replace with index.
+  (awood@redhat.com)
+- 1371009:  Need clearer error message when register with system name exceeding
+  max characters. -throwing new exceptions with clear description + adding new
+  constant to Consumer -adding unit test -fix buildfile - repo of
+  org.xnap.commons.i18n was moved (pjonasti@redhat.com)
+
 * Fri Mar 11 2016 Alex Wood <awood@redhat.com> 0.9.23.3-1
 - removing initialization of pool.entitlements (fnguyen@redhat.com)
 
