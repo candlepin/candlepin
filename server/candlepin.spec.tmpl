@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.12
+Version: 0.9.54.13
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,10 @@ fi
 
 #raw
 %changelog
+* Wed Oct 26 2016 Vritant Jain <adarshvritant@gmail.com> 0.9.54.13-1
+- 1388234: Remove unique constraint on content keys; replace with index.
+  (awood@redhat.com)
+
 * Wed Oct 19 2016 Vritant Jain <adarshvritant@gmail.com> 0.9.54.12-1
 - 1384159: Bump rules version (wpoteat@redhat.com)
 
