@@ -24,6 +24,7 @@ import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -63,18 +64,20 @@ public class RefreshPoolsJob extends UniqueByOwnerJob {
      *
      * @param context the job's execution context
      */
+    @Transactional
     public void toExecute(JobExecutionContext context) throws JobExecutionException {
         try {
             JobDataMap map = context.getMergedJobDataMap();
             String ownerKey = map.getString(JobStatus.TARGET_ID);
-            Boolean lazy = map.getBoolean(LAZY_REGEN);
-            Owner owner = ownerCurator.lookupByKey(ownerKey);
+
+            Owner owner = ownerCurator.lookupAndLockByKey(ownerKey);
             if (owner == null) {
                 context.setResult("Nothing to do. Owner no longer exists");
                 return;
             }
 
             // Assume that we verified the request in the resource layer:
+            Boolean lazy = map.getBoolean(LAZY_REGEN);
             poolManager.getRefresher(lazy).setUnitOfWork(unitOfWork).add(owner).run();
             context.setResult("Pools refreshed for owner " + owner.getDisplayName());
         }

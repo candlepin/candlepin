@@ -27,6 +27,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import javax.persistence.LockModeType;
+
 /**
  * OwnerCurator
  */
@@ -64,6 +66,16 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     public List<Owner> lookupByKeys(Collection<String> keys) {
         return listByCriteria(
             createSecureCriteria().add(Restrictions.in("key", keys)));
+    }
+
+    @Transactional
+    //TODO: added annotation only for test purpose, working on solution
+    //undoImport transaction is not run in OwnerResourceTest.testImportRecordDeleteWithLogging
+    public Owner lookupAndLockByKey(String key) {
+        return getEntityManager()
+            .createQuery("select o from Owner o WHERE o.key = :key", Owner.class)
+            .setParameter("key", key)
+            .setLockMode(LockModeType.PESSIMISTIC_WRITE).getSingleResult();
     }
 
     public Owner lookupWithUpstreamUuid(String upstreamUuid) {

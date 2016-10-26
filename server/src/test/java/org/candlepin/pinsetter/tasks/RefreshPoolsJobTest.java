@@ -58,7 +58,7 @@ public class RefreshPoolsJobTest {
         when(ctx.getMergedJobDataMap()).thenReturn(jdm);
         when(jdm.getString(eq(JobStatus.TARGET_ID))).thenReturn("someownerkey");
         when(jdm.getBoolean(eq(RefreshPoolsJob.LAZY_REGEN))).thenReturn(true);
-        when(oc.lookupByKey(eq("someownerkey"))).thenReturn(owner);
+        when(oc.lookupAndLockByKey(eq("someownerkey"))).thenReturn(owner);
         when(owner.getDisplayName()).thenReturn("test owner");
         when(pm.getRefresher(eq(true))).thenReturn(refresher);
         when(refresher.add(eq(owner))).thenReturn(refresher);
