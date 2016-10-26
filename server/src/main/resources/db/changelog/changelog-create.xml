@@ -1162,4 +1162,5 @@
     <include file="db/changelog/20140408160212-add-pool-source-sub-table.xml" />
     <include file="db/changelog/20140506122111-remove-certserial-revoked.xml" />
     <include file="db/changelog/20140616140315-remove-reliant-product.xml" />
+    <include file="db/changelog/20161025100925-remove-unique-content-name-constraint.xml"/>
 </databaseChangeLog>
