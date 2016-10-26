@@ -1176,4 +1176,5 @@
     <include file="db/changelog/20150424150412-add-owner-id-to-jobstatus.xml"/>
     <include file="db/changelog/20150818110722-upgrade-to-quartz-2-dot-2.xml"/>
     <include file="db/changelog/20150820140403-revert-to-lastcheckin-column.xml"/>
+    <include file="db/changelog/20161025100925-remove-unique-content-name-constraint.xml"/>
 </databaseChangeLog>
