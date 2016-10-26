@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.49.17
+Version: 0.9.49.18
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -401,6 +401,12 @@ fi
 
 
 %changelog
+* Wed Oct 26 2016 Vritant Jain <adarshvritant@gmail.com> 0.9.49.18-1
+- 1388242: Remove unique constraint on content keys; replace with index.
+  (awood@redhat.com)
+- Manifest import: refactoring I found some long methods and duplicite code so
+  I did refactoring work around import manifest. (pjonasti@redhat.com)
+
 * Fri Oct 07 2016 Christopher Snyder <csnyder@redhat.com> 0.9.49.17-1
 - 1382138: Backport lock on host heal during guest bindByProducts
   (csnyder@redhat.com)
