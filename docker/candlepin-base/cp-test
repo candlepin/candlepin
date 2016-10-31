@@ -118,7 +118,7 @@ HELP
 }
 
 ARGV=("$@")
-while getopts ":dtrHulsb:c:p:vj:" opt; do
+while getopts ":dtqrHulsb:c:p:vj:" opt; do
     case $opt in
         d  ) DEPLOY="1";;
         t  )
@@ -153,6 +153,7 @@ while getopts ":dtrHulsb:c:p:vj:" opt; do
         b  ) BUILDR_TASK="${OPTARG}";;
         c  ) CHECKOUT="${OPTARG}";;
         p  ) PROJECT="${OPTARG}";;
+        q  ) QPID="1";;
         v  ) VERBOSE="1";;
         j  ) JAVA_VERSION="${OPTARG}";;
         ?  ) usage; exit;;
@@ -254,6 +255,15 @@ if [ "$UNITTEST" -gt 0 ]; then
     done
 fi
 
+if [ "$QPID" == "1" ]; then
+    echo "Setting up Qpid"
+    pushd . 
+    cd ../gutterball/bin/qpid
+    ./configure-qpid-docker.sh
+    popd 
+fi
+
+
 if [ "$DEPLOY" == "1" ]; then
     echo "Deploying candlepin..."
     CLEAN_CP=1
@@ -271,7 +281,11 @@ if [ "$DEPLOY" == "1" ]; then
     if [ "$VERBOSE" == "1" ]; then
         DEPLOY_FLAGS="$DEPLOY_FLAGS -v"
     fi
-
+    
+    if [ "$QPID" == "1" ]; then
+        DEPLOY_FLAGS="$DEPLOY_FLAGS -q"
+    fi
+    
     bin/deploy $DEPLOY_FLAGS
     sleep 7
 fi
