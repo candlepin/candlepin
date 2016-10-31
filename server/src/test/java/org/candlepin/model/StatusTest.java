@@ -19,6 +19,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import org.candlepin.model.CandlepinModeChange.Mode;
+import org.candlepin.model.CandlepinModeChange.Reason;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,11 +39,14 @@ public class StatusTest {
     @Before
     public void init() {
         status = new Status(Boolean.TRUE, "1.0", "2",
-            Boolean.TRUE, "2.0", Rules.RulesSourceEnum.DEFAULT);
+            Boolean.TRUE, "2.0", Rules.RulesSourceEnum.DEFAULT,
+            Mode.NORMAL, Reason.QPID_UP, new Date());
         statusUndef = new Status(Boolean.TRUE, "1.0", "2",
-            Boolean.TRUE, "2.0", Rules.RulesSourceEnum.UNDEFINED);
+            Boolean.TRUE, "2.0", Rules.RulesSourceEnum.UNDEFINED,
+            Mode.NORMAL, Reason.QPID_UP, new Date());
         statusDb = new Status(Boolean.TRUE, "1.0", "2",
-            Boolean.TRUE, "2.0", Rules.RulesSourceEnum.DATABASE);
+            Boolean.TRUE, "2.0", Rules.RulesSourceEnum.DATABASE,
+            Mode.NORMAL, Reason.QPID_UP, new Date());
     }
 
     @Test

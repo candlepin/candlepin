@@ -67,6 +67,8 @@ GEM
     pry-stack_explorer (0.4.9.2)
       binding_of_caller (>= 0.7)
       pry (>= 0.9.11)
+    qpid_proton (0.14.0)
+      json
     rainbow (2.1.0)
     rake (0.9.2.2)
     rest-client (1.6.9)
@@ -117,6 +119,7 @@ DEPENDENCIES
   pry
   pry-byebug
   pry-stack_explorer
+  qpid_proton
   rest-client (~> 1.6.0)
   rspec (~> 3.0)
   rubocop (= 0.36.0)
@@ -124,4 +127,4 @@ DEPENDENCIES
   webrick
 
 BUNDLED WITH
-   1.12.5
+   1.13.2

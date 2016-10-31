@@ -58,7 +58,6 @@ public class CandlepinContextListenerTest {
     private CacheContextListener cacheListener;
     private PinsetterContextListener pinlistener;
     private AMQPBusPublisher buspublisher;
-    private AMQPBusPubProvider busprovider;
     private ServletContextEvent evt;
     private ServletContext ctx;
     private VerifyConfigRead configRead;
@@ -79,7 +78,6 @@ public class CandlepinContextListenerTest {
         hqlistener = mock(HornetqContextListener.class);
         pinlistener = mock(PinsetterContextListener.class);
         buspublisher = mock(AMQPBusPublisher.class);
-        busprovider = mock(AMQPBusPubProvider.class);
         configRead = mock(VerifyConfigRead.class);
         cacheListener = mock(CacheContextListener.class);
 
@@ -149,7 +147,6 @@ public class CandlepinContextListenerTest {
         verifyNoMoreInteractions(evt); // destroy shouldn't use it
         verify(hqlistener).contextDestroyed();
         verify(pinlistener).contextDestroyed();
-        verifyZeroInteractions(busprovider);
         verifyZeroInteractions(buspublisher);
     }
 
@@ -157,6 +154,8 @@ public class CandlepinContextListenerTest {
     public void ensureAMQPClosedProperly() {
         when(config.getBoolean(
                 eq(ConfigProperties.AMQP_INTEGRATION_ENABLED))).thenReturn(true);
+        when(config.getLong(ConfigProperties.QPID_MODE_TANSITIONER_DELAY_GROWTH)).thenReturn(100L);
+        when(config.getLong(ConfigProperties.QPID_MODE_TRANSITIONER_INITIAL_DELAY)).thenReturn(100L);
         prepareForInitialization();
         // we actually have to call contextInitialized before we
         // can call contextDestroyed, otherwise the listener's
@@ -165,7 +164,6 @@ public class CandlepinContextListenerTest {
 
         // test & verify
         listener.contextDestroyed(evt);
-        verify(busprovider).close();
         verify(buspublisher).close();
     }
 
@@ -212,7 +210,6 @@ public class CandlepinContextListenerTest {
             bind(PinsetterContextListener.class).toInstance(pinlistener);
             bind(HornetqContextListener.class).toInstance(hqlistener);
             bind(AMQPBusPublisher.class).toInstance(buspublisher);
-            bind(AMQPBusPubProvider.class).toInstance(busprovider);
             bind(CacheContextListener.class).toInstance(cacheListener);
         }
     }

@@ -20,6 +20,8 @@ import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.HornetqContextListener;
+import org.candlepin.audit.QpidQmf;
+import org.candlepin.audit.QpidQmf.QpidStatus;
 import org.candlepin.cache.CacheContextListener;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationException;
@@ -27,6 +29,7 @@ import org.candlepin.common.config.EncryptedConfiguration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.logging.LoggingConfigurator;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.SuspendModeTransitioner;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 import org.candlepin.resteasy.ResourceLocatorMap;
@@ -102,9 +105,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     // Currently only needed for access to the Configuration.
     private ServletContext servletContext;
 
-    private AMQPBusPublisher busPublisher;
-    private AMQPBusPubProvider busProvider;
-
     private Injector injector;
 
     @Override
@@ -139,11 +139,29 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         ResourceLocatorMap map = injector.getInstance(ResourceLocatorMap.class);
         map.init();
 
+        if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED) &&
+            config.getBoolean(ConfigProperties.QPID_STARTUP_CHECK_ENABLED)) {
+            QpidQmf qmf = injector.getInstance(QpidQmf.class);
+            QpidStatus status = qmf.getStatus();
+            if (status != QpidStatus.CONNECTED) {
+                log.error("Qpid is in status {}. Please fix Qpid configuration " +
+                    "and make sure Qpid is up and running. Candlepin will shutdown " +
+                    "now.", status);
+                throw new RuntimeException("Error during Startup: Qpid is in status " + status);
+            }
+        }
+
+        if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED) &&
+            config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
+            SuspendModeTransitioner mw = injector.getInstance(SuspendModeTransitioner.class);
+            mw.startPeriodicExecutions();
+        }
 
         if (config.getBoolean(HORNETQ_ENABLED)) {
             hornetqListener = injector.getInstance(HornetqContextListener.class);
             hornetqListener.contextInitialized(injector);
         }
+
 
         cacheListener = injector.getInstance(CacheContextListener.class);
         cacheListener.contextInitialized(injector);
@@ -181,8 +199,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
             Util.closeSafely(injector.getInstance(AMQPBusPublisher.class),
                 "AMQPBusPublisher");
-            Util.closeSafely(injector.getInstance(AMQPBusPubProvider.class),
-                "AMQPBusPubProvider");
         }
     }
 

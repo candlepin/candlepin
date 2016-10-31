@@ -27,6 +27,8 @@
     - postgresql-jdbc
     - postgresql-server
     - postgresql
+    - qpid-proton-c-devel
+    - qpid-proton-c
     - zlib
     - zlib-devel
     - liquibase

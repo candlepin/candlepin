@@ -28,6 +28,8 @@ import org.candlepin.common.guice.JPAInitializer;
 import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.controller.ModeManager;
+import org.candlepin.controller.ModeManagerImpl;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.CandlepinRequestScoped;
@@ -41,6 +43,7 @@ import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.pinsetter.core.GuiceJobFactory;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
+import org.candlepin.pinsetter.core.PinsetterTriggerListener;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.PKIUtility;
@@ -110,6 +113,7 @@ import org.jukito.TestSingleton;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.quartz.JobListener;
+import org.quartz.TriggerListener;
 import org.quartz.spi.JobFactory;
 import org.xnap.commons.i18n.I18n;
 
@@ -311,7 +315,8 @@ public class TestingModules {
 
             bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
                 .to(ExpiryDateFunction.class).in(Singleton.class);
-
+            bind(ModeManager.class).to(ModeManagerImpl.class).asEagerSingleton();
+            bind(TriggerListener.class).to(PinsetterTriggerListener.class);
         }
     }
 }

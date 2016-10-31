@@ -147,6 +147,39 @@ public class ConfigProperties {
     public static final String AMQP_CONNECTION_RETRY_ATTEMPTS = "gutterball.amqp.connection.retry_attempts";
     public static final String AMQP_CONNECTION_RETRY_INTERVAL = "gutterball.amqp.connection.retry_interval";
 
+    /**
+     * A possibility to enable Suspend Mode. By default, the suspend mode is enabled
+     */
+    public static final String SUSPEND_MODE_ENABLED = "candlepin.suspend_mode_enabled";
+    /**
+     * Candlepin will by default use QMF at startup to check if the Qpid is available. When it isn't its gonna
+     * fail fast.
+     */
+    public static final String QPID_STARTUP_CHECK_ENABLED = "candlepin.amqp.qmf.startup_check_enabled";
+    /**
+     * Timeout that is used for QpidQmf while receiving messages. It shouldn't be necessary
+     * to modify this unless the environment and Qpid Broker is so heavily utilized, that
+     * reception takes longer.
+     */
+    public static final String QPID_QMF_RECEIVE_TIMEOUT = "candlepin.amqp.qmf.receive_timeout";
+
+    /**
+     * The delay is calculated using formula:
+     *
+     * INITIAL_DELAY + (DELAY_GROWTH * FAILED_ATTEMPTS)
+     *
+     * The MAX_DELAY gives ability to put upper limit to the resulting delay
+     * (-1 means unbounded). Its possible to also set the GROWTH to 0 which
+     * effectively disables incrementing the delay and the delay
+     * becomes fixed INITIAL_DELAY
+     */
+    public static final String QPID_MODE_TANSITIONER_DELAY_GROWTH =
+        "candlepin.amqp.suspend.transitioner_delay_growth";
+    public static final String QPID_MODE_TRANSITIONER_INITIAL_DELAY =
+        "candlepin.amqp.suspend.transitioner_initial_delay";
+    public static final String QPID_MODE_TRANSITIONER_MAX_DELAY =
+        "candlepin.amqp.suspend.transitioner_max_delay";
+
     // Hibernate
     public static final String DB_PASSWORD = JPA_CONFIG_PREFIX + "hibernate.connection.password";
     // Cache
@@ -339,9 +372,15 @@ public class ConfigProperties {
             this.put(AMQP_KEYSTORE_PASSWORD, "password");
             this.put(AMQP_TRUSTSTORE, "/etc/candlepin/certs/amqp/candlepin.truststore");
             this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
+            this.put(QPID_STARTUP_CHECK_ENABLED, "true");
+            this.put(SUSPEND_MODE_ENABLED, "true");
+            this.put(QPID_QMF_RECEIVE_TIMEOUT, "5000");
+            this.put(QPID_MODE_TANSITIONER_DELAY_GROWTH, "10");
+            this.put(QPID_MODE_TRANSITIONER_INITIAL_DELAY, "10");
+            this.put(QPID_MODE_TRANSITIONER_MAX_DELAY, "300"); // 300 seconds = 5 minutes
 
             this.put(AMQP_CONNECTION_RETRY_INTERVAL, "10"); // Every 10 seconds
-            this.put(AMQP_CONNECTION_RETRY_ATTEMPTS, "12"); // Try for 2 mins (10s * 12)
+            this.put(AMQP_CONNECTION_RETRY_ATTEMPTS, "1"); // Try for 10 seconds (1*10s)
 
             this.put(IDENTITY_CERT_YEAR_ADDENDUM, "16");
             this.put(IDENTITY_CERT_EXPIRY_THRESHOLD, "90");
@@ -393,5 +432,8 @@ public class ConfigProperties {
             this.put(MANIFEST_CLEANER_JOB_MAX_AGE_IN_MINUTES, "1440");
         }
     };
+
+
+
 
 }

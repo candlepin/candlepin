@@ -15,6 +15,8 @@
 
 package org.candlepin.model;
 
+import org.candlepin.model.CandlepinModeChange.Mode;
+import org.candlepin.model.CandlepinModeChange.Reason;
 import org.candlepin.model.Rules.RulesSourceEnum;
 
 import java.util.Date;
@@ -33,6 +35,19 @@ import io.swagger.annotations.ApiModelProperty;
 @XmlRootElement(name = "status")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class Status {
+    /**
+     * The current Suspend Mode of Candlepin
+     */
+    private Mode mode;
+    /**
+     * The reason for the last Suspend Mode change
+     */
+    private Reason modeReason;
+
+    /**
+     * Last time the mode was changed
+     */
+    private Date modeChangeTime;
 
     @ApiModelProperty(example = "true")
     private boolean result;
@@ -66,13 +81,17 @@ public class Status {
     }
 
     public Status(Boolean result, String version, String release, Boolean standalone,
-        String rulesVersion, Rules.RulesSourceEnum rulesSource) {
+        String rulesVersion, Rules.RulesSourceEnum rulesSource, Mode mode, Reason reason
+        , Date modeChangeTime) {
         this.result = result;
         this.version = version;
         this.release = release;
         this.standalone = standalone;
         this.timeUTC = new Date();
         this.rulesVersion = rulesVersion;
+        this.mode = mode;
+        this.modeReason = reason;
+        this.modeChangeTime = modeChangeTime;
         this.setRulesSource(rulesSource);
     }
 
@@ -139,5 +158,17 @@ public class Status {
 
     public String[] getManagerCapabilities() {
         return managerCapabilities;
+    }
+
+    public Mode getMode() {
+        return mode;
+    }
+
+    public Reason getModeReason() {
+        return modeReason;
+    }
+
+    public Date getModeChangeTime() {
+        return modeChangeTime;
     }
 }
