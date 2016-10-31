@@ -41,6 +41,20 @@ redirect_stderr=true
 TOMCAT_SUPERVISOR
 }
 
+setup_qpidd() {
+# qpid-proton-c-devel is dependency of qpid_proton ruby binding (needed for spec tests)
+yum install -y qpid-cpp-server qpid-cpp-client qpid-cpp-server-linearstore qpid-tools sudo qpid-proton-c-devel
+
+cat > /etc/supervisor/conf.d/qpid.conf <<  QPID_SUPERVISOR
+[program:qpidd]
+user=qpidd
+command=/usr/sbin/qpidd --config /etc/qpid/qpidd.conf --data-dir=/var/lib/qpidd
+stopsignal=INT
+redirect_stderr=true
+QPID_SUPERVISOR
+}
+
+
 setup_ssh() {
     yum install -y openssh-server
     echo 'root:redhat' |chpasswd
@@ -60,6 +74,7 @@ command=/usr/sbin/sshd -D
 SSH_SUPERVISOR
 }
 
+
 setup_candlepinrc() {
     cat > /root/.candlepinrc <<CANDLEPINRC
 SUPERVISOR=1
@@ -69,4 +84,5 @@ CANDLEPINRC
 setup_supervisor
 setup_ssh
 setup_tomcat
+setup_qpidd
 setup_candlepinrc

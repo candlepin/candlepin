@@ -302,7 +302,10 @@ if [ $IS_KATELLO -ne 0 ]; then
     setup_qpidd_config
 fi
 
-sudo service qpidd restart
+# In Docker image we use supervisord instead of systemd.
+# So the assumption of the following is that 'service' command 
+# fails, we try supervisord.
+sudo service qpidd restart || supervisorctl restart qpidd
 
 sleep 7
 create_exchange "event"
