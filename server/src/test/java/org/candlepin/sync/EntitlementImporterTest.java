@@ -14,8 +14,10 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.Cdn;
@@ -28,6 +30,7 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.TestUtil;
@@ -61,6 +64,7 @@ public class EntitlementImporterTest {
     @Mock private CertificateSerialCurator certSerialCurator;
     @Mock private CdnCurator cdnCurator;
     @Mock private ObjectMapper om;
+    @Mock private ProductCurator mockProductCurator;
 
     private Owner owner;
     private EntitlementImporter importer;
@@ -79,7 +83,7 @@ public class EntitlementImporterTest {
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.importer = new EntitlementImporter(certSerialCurator, cdnCurator,
-            i18n);
+            i18n, mockProductCurator);
 
         consumer = TestUtil.createConsumer(owner);
         consumerDto = new ConsumerDto(consumer.getUuid(), consumer.getName(),

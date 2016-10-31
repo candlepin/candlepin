@@ -43,11 +43,11 @@ public class ActivationKeyRules {
     private I18n i18n;
 
     @Inject
-    public ActivationKeyRules(JsRunner jsRules, I18n i18n) {
+    public ActivationKeyRules(JsRunner jsRules, I18n i18n, RulesObjectMapper mapper) {
         this.jsRules = jsRules;
         this.i18n = i18n;
 
-        mapper = RulesObjectMapper.instance();
+        this.mapper = mapper;
         jsRules.init("activation_key_name_space");
     }
 

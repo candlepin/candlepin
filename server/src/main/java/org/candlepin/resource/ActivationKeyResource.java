@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
@@ -31,7 +32,6 @@ import org.candlepin.util.ServiceLevelValidator;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
@@ -57,8 +57,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
-
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -77,11 +75,13 @@ public class ActivationKeyResource {
     private I18n i18n;
     private ServiceLevelValidator serviceLevelValidator;
     private ActivationKeyRules activationKeyRules;
+    private ProductCachedSerializationModule productCachedModule;
 
     @Inject
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator, I18n i18n,
         PoolManager poolManager, ServiceLevelValidator serviceLevelValidator,
-        ActivationKeyRules activationKeyRules, OwnerProductCurator ownerProductCurator) {
+        ActivationKeyRules activationKeyRules, OwnerProductCurator ownerProductCurator,
+        ProductCachedSerializationModule productCachedModule) {
 
         this.activationKeyCurator = activationKeyCurator;
         this.i18n = i18n;
@@ -89,6 +89,7 @@ public class ActivationKeyResource {
         this.serviceLevelValidator = serviceLevelValidator;
         this.activationKeyRules = activationKeyRules;
         this.ownerProductCurator = ownerProductCurator;
+        this.productCachedModule = productCachedModule;
     }
 
     @ApiOperation(notes = "Retrieves a single Activation Key", value = "Get Activation Key")
@@ -254,7 +255,7 @@ public class ActivationKeyResource {
     public Response findActivationKey() {
         // TODO: Replace this with use of a cursor/iterator
         final List<ActivationKey> keyList = activationKeyCurator.listAll();
-        final ObjectMapper mapper = new JsonProvider(true)
+        final ObjectMapper mapper = new JsonProvider(true, productCachedModule)
             .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
 
         StreamingOutput output = new StreamingOutput() {

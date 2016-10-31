@@ -14,12 +14,16 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -30,12 +34,14 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.JsRunnerRequestCache;
+import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.test.TestDateUtil;
@@ -43,15 +49,16 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
 
+import com.google.inject.Provider;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.google.inject.Provider;
-
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -68,6 +75,8 @@ public class AutobindRulesTest {
     @Mock private JsRunnerRequestCache cache;
     @Mock private Configuration config;
     @Mock private RulesCurator rulesCurator;
+    @Mock private ProductCurator mockProductCurator;
+
 
     private ComplianceStatus compliance;
     private AutobindRules autobindRules; // TODO rename
@@ -93,7 +102,8 @@ public class AutobindRulesTest {
             TestDateUtil.date(2010, 1, 1));
         when(cacheProvider.get()).thenReturn(cache);
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
-        autobindRules = new AutobindRules(jsRules);
+        autobindRules = new AutobindRules(jsRules, mockProductCurator,
+            new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)));
 
         owner = new Owner();
         consumer = new Consumer("test consumer", "test user", owner,
@@ -187,7 +197,6 @@ public class AutobindRulesTest {
         Product engProduct = TestUtil.createProduct(Integer.toString(TestUtil.randomInt()), "An ENG product");
 
         engProduct.setProductContent(null);
-        Set<Content> productContent = new HashSet<Content>();
         for (int i = 0; i < X509ExtensionUtil.V1_CONTENT_LIMIT + 1; i++) {
             Content content = TestUtil.createContent("fake" + i);
             content.setLabel("fake" + i);
@@ -201,9 +210,11 @@ public class AutobindRulesTest {
         }
 
         Pool pool = TestUtil.createPool(owner, mktProduct);
-        pool.setId("DEAD-BEEF");
+        pool.setId("DEAD-BEEFX");
 
         pool.addProvidedProduct(engProduct);
+        when(mockProductCurator.getPoolProvidedProductsCached(pool.getId()))
+            .thenReturn(Collections.singleton(engProduct));
 
         return pool;
     }
@@ -246,9 +257,7 @@ public class AutobindRulesTest {
         sku1.setAttribute("ram", "2");
         sku1.setAttribute("sockets", "2");
 
-        Pool pool1 = TestUtil.createPool(owner, sku1);
-        pool1.setId("DEAD-BEEF1");
-        pool1.addProvidedProduct(provided);
+        Pool pool1 = createPool("DEAD-BEEF1", owner, sku1, provided);
 
         //only enforce cores on pool 2:
         Product sku2 = mockStackingProduct("prod2", "Test Stack product", "1", "1");
@@ -256,13 +265,8 @@ public class AutobindRulesTest {
         sku2.setAttribute("ram", null);
         sku2.setAttribute("sockets", null);
 
-        Pool pool2 = TestUtil.createPool(owner, sku2);
-        pool2.setId("DEAD-BEEF2");
-        pool2.addProvidedProduct(provided);
-
-        Pool pool3 = TestUtil.createPool(owner, sku1);
-        pool3.setId("DEAD-BEEF3");
-        pool3.addProvidedProduct(provided);
+        Pool pool2 = createPool("DEAD-BEEF2", owner, sku2, provided);
+        Pool pool3 = createPool("DEAD-BEEF3", owner, sku1, provided);
 
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool1);
@@ -296,23 +300,16 @@ public class AutobindRulesTest {
         sku1.setAttribute("ram", "2");
         sku1.setAttribute("sockets", "2");
 
-        Pool pool1 = TestUtil.createPool(owner, sku1);
-        pool1.setId("DEAD-BEEF1");
+        Pool pool1 = createPool("DEAD-BEEF1", owner, sku1, provided);
         pool1.setAttribute("virt_only", "true");
-        pool1.addProvidedProduct(provided);
-
 
         //only enforce cores on pool 2:
         Product sku2 = mockStackingProduct("prod2", "Test Stack product", "1", "1");
         sku2.setAttribute("cores", "6");
 
-        Pool pool2 = TestUtil.createPool(owner, sku2);
-        pool2.setId("DEAD-BEEF2");
-        pool2.addProvidedProduct(provided);
+        Pool pool2 = createPool("DEAD-BEEF2", owner, sku2, provided);
 
-        Pool pool3 = TestUtil.createPool(owner, sku1);
-        pool3.setId("DEAD-BEEF3");
-        pool3.addProvidedProduct(provided);
+        Pool pool3 = createPool("DEAD-BEEF3", owner, sku1, provided);
 
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool1);
@@ -328,6 +325,24 @@ public class AutobindRulesTest {
         assertTrue(bestPools.contains(new PoolQuantity(pool1, 5)));
         assertTrue(bestPools.contains(new PoolQuantity(pool3, 3)));
     }
+
+    /**
+     * Creates a Pool and makes sure that Product curator can retrieve
+     * the provided products for the pool
+     * @param poolId
+     * @param owner
+     * @param sku
+     * @param provided
+     * @return
+     */
+    private Pool createPool(String poolId, Owner owner, Product sku, Product provided) {
+        Pool pool = TestUtil.createPool(owner, sku);
+        pool.setId(poolId);
+        when(mockProductCurator.getPoolProvidedProductsCached(poolId))
+            .thenReturn(Collections.singleton(provided));
+        return pool;
+    }
+
 
     @Test
     public void ensureSelectBestPoolsFiltersPoolsBySLAWhenConsumerHasSLASet() {
@@ -542,7 +557,10 @@ public class AutobindRulesTest {
             owner, product, new HashSet<Product>(), derivedProduct, derivedProvided, 100
         );
 
-        pool.setId("DEAD-BEEF");
+        pool.setId("DEAD-BEEF-DER");
+
+        when(mockProductCurator.getPoolDerivedProvidedProductsCached(pool.getId()))
+            .thenReturn(derivedProvided);
 
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);

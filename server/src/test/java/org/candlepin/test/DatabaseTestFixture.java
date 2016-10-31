@@ -155,7 +155,7 @@ public class DatabaseTestFixture {
     @Inject protected ResourceLocatorMap locatorMap;
 
     private static Injector parentInjector;
-    private Injector injector;
+    protected Injector injector;
     private CandlepinRequestScope cpRequestScope;
 
     protected TestingInterceptor securityInterceptor;

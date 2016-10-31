@@ -14,9 +14,18 @@
  */
 package org.candlepin.controller;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyMapOf;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
@@ -32,6 +41,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.test.TestUtil;
@@ -48,6 +58,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -69,6 +80,7 @@ public class EntitlementCertificateGeneratorTest {
     @Mock private PoolCurator mockPoolCurator;
     @Mock private EventSink mockEventSink;
     @Mock private EventFactory mockEventFactory;
+    @Mock private ProductCurator mockProductCurator;
 
     @Captor private ArgumentCaptor<Map<String, Entitlement>> entMapCaptor;
     @Captor private ArgumentCaptor<Map<String, Product>> productMapCaptor;
@@ -79,7 +91,7 @@ public class EntitlementCertificateGeneratorTest {
     public void init() throws Exception {
         this.ecGenerator = new EntitlementCertificateGenerator(
             this.mockEntCertCurator, this.mockEntCertAdapter, this.mockEntitlementCurator,
-            this.mockPoolCurator, this.mockEventSink, this.mockEventFactory
+            this.mockPoolCurator, this.mockEventSink, this.mockEventFactory, this.mockProductCurator
         );
     }
 
@@ -87,7 +99,7 @@ public class EntitlementCertificateGeneratorTest {
     public void testGenerateEntitlementCertificate() throws GeneralSecurityException, IOException {
         this.ecGenerator = new EntitlementCertificateGenerator(this.mockEntCertCurator,
                 this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
-                this.mockEventSink, this.mockEventFactory);
+                this.mockEventSink, this.mockEventFactory, this.mockProductCurator);
         Consumer consumer = mock(Consumer.class);
         Pool pool = mock(Pool.class);
         Product product = mock(Product.class);
@@ -108,7 +120,7 @@ public class EntitlementCertificateGeneratorTest {
     public void testGenerateEntitlementCertificatesUber() throws GeneralSecurityException, IOException {
         this.ecGenerator = new EntitlementCertificateGenerator(this.mockEntCertCurator,
                 this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
-                this.mockEventSink, this.mockEventFactory);
+                this.mockEventSink, this.mockEventFactory, this.mockProductCurator);
         Consumer consumer = mock(Consumer.class);
         Product product = mock(Product.class);
         Entitlement entitlement = mock(Entitlement.class);
@@ -124,7 +136,7 @@ public class EntitlementCertificateGeneratorTest {
     public void testGenerateEntitlementCertificates() throws GeneralSecurityException, IOException {
         this.ecGenerator = new EntitlementCertificateGenerator(this.mockEntCertCurator,
             this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
-            this.mockEventSink, this.mockEventFactory);
+            this.mockEventSink, this.mockEventFactory, this.mockProductCurator);
         Consumer consumer = mock(Consumer.class);
         Product product = mock(Product.class);
         Entitlement entitlement = mock(Entitlement.class);
@@ -183,9 +195,9 @@ public class EntitlementCertificateGeneratorTest {
         pprod2.addContent(c2, true);
         prod3.addContent(c3, true);
 
-        Pool pool1 = TestUtil.createPool(owner, prod1, Arrays.asList(pprod1), 1);
-        Pool pool2 = TestUtil.createPool(owner, prod2, Arrays.asList(pprod2), 1);
-        Pool pool3 = TestUtil.createPool(owner, prod3, Arrays.asList(pprod3), 1);
+        Pool pool1 = createPool(owner, prod1, Collections.singleton(pprod1), 1);
+        Pool pool2 = createPool(owner, prod2, Collections.singleton(pprod2), 1);
+        Pool pool3 = createPool(owner, prod3, Collections.singleton(pprod3), 1);
 
         Consumer consumer = TestUtil.createConsumer(owner);
 
@@ -198,6 +210,23 @@ public class EntitlementCertificateGeneratorTest {
 
         return Arrays.asList(ent1, ent2, ent3);
     }
+
+    private static int lastPoolId = 1;
+
+    /**
+     * This method creates pool for testing without in-memory database. The provided
+     * products are 'cached' in mocked product curator
+     */
+    private Pool createPool(Owner owner, Product prod, Set<Product> providedProd, int q) {
+        Pool p = TestUtil.createPool(owner, prod, providedProd, q);
+
+        p.setId("" + lastPoolId++);
+        System.out.println("Caching providedProducts for Pool:" + p.getId());
+        when(mockProductCurator.getPoolProvidedProductsCached(p.getId())).
+            thenReturn(providedProd);
+        return p;
+    }
+
 
     @Test
     public void testLazyRegnerateForEnvironmentContent() {

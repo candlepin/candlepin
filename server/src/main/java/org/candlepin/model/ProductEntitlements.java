@@ -31,10 +31,10 @@ import java.util.Set;
 public class ProductEntitlements {
     private Map<String, Set<Entitlement>> entsByProductIds = new HashMap<String, Set<Entitlement>>();
 
-    public ProductEntitlements(Collection<Entitlement> entitlements) {
+    public ProductEntitlements(Collection<Entitlement> entitlements, ProductCurator productCurator) {
         for (Entitlement ent : entitlements) {
             addProductIdToMap(ent.getPool().getProductId(), ent);
-            for (Product pp : ent.getPool().getProvidedProducts()) {
+            for (Product pp : productCurator.getPoolProvidedProductsCached(ent.getPool())) {
                 addProductIdToMap(pp.getId(), ent);
             }
         }

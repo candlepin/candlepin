@@ -43,6 +43,7 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
@@ -92,6 +93,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private ServiceLevelValidator serviceLevelValidator;
     @Mock private EventBuilder consumerEventBuilder;
     @Mock private ConsumerBindUtil consumerBindUtil;
+    @Mock private ProductCurator productCurator;
 
     private I18n i18n;
 
@@ -107,8 +109,8 @@ public class ConsumerResourceUpdateTest {
             this.userService, null, poolManager, null, null,
             this.activationKeyCurator, this.entitler, this.complianceRules,
             this.deletedConsumerCurator, this.environmentCurator, null,
-            new CandlepinCommonTestConfig(), null, null, null, this.consumerBindUtil);
 
+            new CandlepinCommonTestConfig(), null, null, null, this.consumerBindUtil, productCurator);
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class),
                 any(Boolean.class), any(Boolean.class)))
             .thenReturn(new ComplianceStatus(new Date()));

@@ -58,7 +58,7 @@ public class ConsumerTypeImporterTest {
         Reader reader = new StringReader(consumerTypeString);
 
         ConsumerType consumerType = new ConsumerTypeImporter(null).createObject(
-            SyncUtils.getObjectMapper(config), reader);
+            TestSyncUtils.getTestSyncUtils(config), reader);
 
         assertEquals("prosumer", consumerType.getLabel());
     }
@@ -70,7 +70,7 @@ public class ConsumerTypeImporterTest {
         Reader reader = new StringReader(consumerTypeString);
 
         ConsumerType consumerType = new ConsumerTypeImporter(null).createObject(
-            SyncUtils.getObjectMapper(config), reader);
+            TestSyncUtils.getTestSyncUtils(config), reader);
 
         assertEquals(null, consumerType.getId());
     }

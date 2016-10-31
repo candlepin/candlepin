@@ -20,6 +20,7 @@ import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.common.jackson.MultiFilter;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.jackson.DateSerializer;
+import org.candlepin.jackson.ProductCachedSerializationModule;
 
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
@@ -34,9 +35,6 @@ import com.fasterxml.jackson.jaxrs.cfg.Annotations;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.inject.Inject;
-
-import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import java.util.Date;
 
@@ -54,20 +52,12 @@ import javax.ws.rs.ext.Provider;
 @Produces({"application/*+json", "text/json"})
 @Consumes({"application/*+json", "text/json"})
 public class JsonProvider extends JacksonJsonProvider {
-
-    public static void register(boolean indentJson) {
-        ResteasyProviderFactory rpf = ResteasyProviderFactory.getInstance();
-        JsonProvider jsonprovider = new JsonProvider(indentJson);
-        rpf.registerProviderInstance(jsonprovider);
-        RegisterBuiltin.register(rpf);
-    }
-
     @Inject
-    public JsonProvider(Configuration config) {
-        this(config.getBoolean(ConfigProperties.PRETTY_PRINT));
+    public JsonProvider(Configuration config, ProductCachedSerializationModule productCachedModules) {
+        this(config.getBoolean(ConfigProperties.PRETTY_PRINT), productCachedModules);
     }
 
-    public JsonProvider(boolean indentJson) {
+    public JsonProvider(boolean indentJson, ProductCachedSerializationModule productCachedModules) {
         // Prefer jackson annotations, but use jaxb if no jackson.
         super(Annotations.JACKSON, Annotations.JAXB);
 
@@ -80,7 +70,7 @@ public class JsonProvider extends JacksonJsonProvider {
         // Ensure our DateSerializer is used for all Date objects
         dateModule.addSerializer(Date.class, new DateSerializer());
         mapper.registerModule(dateModule);
-
+        mapper.registerModule(productCachedModules);
         configureHateoasObjectMapper(mapper, indentJson);
         setMapper(mapper);
     }

@@ -14,7 +14,9 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -26,6 +28,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.dto.Subscription;
@@ -62,6 +65,7 @@ public class PoolRulesInstanceTest {
     @Mock private Configuration configMock;
     @Mock private EntitlementCurator entCurMock;
     @Mock private OwnerProductCurator ownerProdCuratorMock;
+    @Mock private ProductCurator productCurator;
 
     @Before
     public void setUp() {
@@ -73,7 +77,8 @@ public class PoolRulesInstanceTest {
 
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
 
-        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, ownerProdCuratorMock);
+        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, ownerProdCuratorMock,
+            productCurator);
     }
 
     @Test

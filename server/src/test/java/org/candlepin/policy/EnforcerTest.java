@@ -23,17 +23,20 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.JsRunnerRequestCache;
 import org.candlepin.policy.js.RuleExecutionException;
+import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.entitlement.AbstractEntitlementRules.Rule;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
@@ -43,13 +46,13 @@ import org.candlepin.test.DateSourceForTesting;
 import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
 
+import com.google.inject.Provider;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Provider;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -72,6 +75,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Mock private Configuration config;
     @Mock private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock private JsRunnerRequestCache cache;
+    @Mock private ProductCurator mockProductCurator;
 
     private Enforcer enforcer;
     private Owner owner;
@@ -110,7 +114,9 @@ public class EnforcerTest extends DatabaseTestFixture {
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
 
         enforcer = new EntitlementRules(
-            new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator, poolCurator
+            new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator, poolCurator,
+            mockProductCurator,
+            new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator))
         );
     }
 

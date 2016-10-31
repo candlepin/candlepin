@@ -39,6 +39,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -85,6 +86,7 @@ public class HypervisorResourceTest {
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
     @Mock private ConsumerBindUtil consumerBindUtil;
     @Mock private EventBuilder consumerEventBuilder;
+    @Mock private ProductCurator productCurator;
 
     private ConsumerResource consumerResource;
     private I18n i18n;
@@ -101,7 +103,7 @@ public class HypervisorResourceTest {
             this.userService, null, null, null, this.ownerCurator,
             this.activationKeyCurator, null, this.complianceRules,
             this.deletedConsumerCurator, null, null, new CandlepinCommonTestConfig(),
-            null, null, null, this.consumerBindUtil);
+            null, null, null, this.consumerBindUtil, productCurator);
 
         hypervisorResource = new HypervisorResource(consumerResource,
             consumerCurator, i18n, ownerCurator);

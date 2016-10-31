@@ -14,8 +14,12 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasItem;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
@@ -31,6 +35,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -584,5 +589,75 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         Product result = productCurator.find(p.getUuid());
         assertEquals(1, result.getProductContent().size());
+    }
+
+    @Test
+    public void testGetHydratedProductsByUuid() {
+        Product prod = TestUtil.createProduct("test-label-hydrated", "test-product-name-hydrated");
+        productCurator.create(prod);
+        prod.addAttribute(new ProductAttribute("testattr", "testVal"));
+
+        Set<String> uuids = new HashSet<String>();
+        uuids.add(prod.getUuid());
+        uuids.add(product.getUuid());
+
+        Map<String, Product> products = productCurator.getHydratedProductsByUuid(uuids);
+        assertEquals(2, products.size());
+    }
+
+
+    @Test
+    public void testPoolProvidedProducts() {
+        Set<String> uuids = productCurator.getPoolProvidedProducts(pool.getId());
+        assertEquals(new HashSet<String>(Arrays.asList(providedProduct.getUuid())), uuids);
+    }
+
+    @Test
+    public void testDerivedPoolProvidedProducts() {
+        Set<String> uuids = productCurator.getDerivedPoolProvidedProducts(pool.getId());
+        assertEquals(new HashSet<String>(Arrays.asList(derivedProvidedProduct.getUuid())), uuids);
+    }
+
+
+    @Test
+    public void testProvidesPoolProduct() {
+        assertTrue(productCurator.provides(pool, pool.getProductId()));
+    }
+
+    @Test
+    public void testProvidesProvidedProduct() {
+        assertTrue(productCurator.provides(pool, providedProduct.getId()));
+    }
+
+    @Test
+    public void testDoesntProvideRandomProduct() {
+        Product prod = TestUtil.createProduct("test-label-hydrated", "test-product-name-hydrated");
+        productCurator.create(prod);
+        assertFalse(productCurator.provides(pool, prod.getId()));
+    }
+
+    @Test
+    public void testProvidesDerivedPoolProduct() {
+        assertTrue(productCurator.providesDerived(pool, pool.getDerivedProduct().getId()));
+    }
+
+    @Test
+    public void testProvidesDerivedProvidedProduct() {
+        assertFalse(productCurator.providesDerived(pool, providedProduct.getId()));
+        assertTrue(productCurator.providesDerived(pool, derivedProduct.getId()));
+    }
+
+    @Test
+    public void testDoesntProvideDerivedRandomProduct() {
+        Product prod = TestUtil.createProduct("test-label-hydrated", "test-product-name-hydrated");
+        productCurator.create(prod);
+        assertFalse(productCurator.providesDerived(pool, prod.getId()));
+    }
+
+    @Test
+    public void testConsidersPlainProvidedProductWhenDerivedIsMissing() {
+        pool.setDerivedProduct(null);
+        assertFalse(productCurator.providesDerived(pool, derivedProduct.getId()));
+        assertTrue(productCurator.providesDerived(pool, providedProduct.getId()));
     }
 }

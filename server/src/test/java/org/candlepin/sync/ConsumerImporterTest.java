@@ -66,7 +66,7 @@ public class ConsumerImporterTest {
         idCertCurator = mock(IdentityCertificateCurator.class);
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         importer = new ConsumerImporter(curator, idCertCurator, i18n, serialCurator);
-        mapper = SyncUtils.getObjectMapper(new MapConfiguration(
+        mapper = TestSyncUtils.getTestSyncUtils(new MapConfiguration(
             new HashMap<String, String>() {
                 {
                     put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
@@ -90,7 +90,7 @@ public class ConsumerImporterTest {
         // Override default config to error out on unknown properties:
         Map<String, String> configProps = new HashMap<String, String>();
         configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
-        mapper = SyncUtils.getObjectMapper(new MapConfiguration(configProps));
+        mapper = TestSyncUtils.getTestSyncUtils(new MapConfiguration(configProps));
 
         ConsumerDto consumer = importer.createObject(
             mapper, new StringReader("{\"uuid\":\"test-uuid\", \"unknown\":\"notreal\"}"));
@@ -102,7 +102,7 @@ public class ConsumerImporterTest {
         // Override default config to error out on unknown properties:
         Map<String, String> configProps = new HashMap<String, String>();
         configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "true");
-        mapper = SyncUtils.getObjectMapper(new MapConfiguration(configProps));
+        mapper = TestSyncUtils.getTestSyncUtils(new MapConfiguration(configProps));
 
         importer.createObject(mapper, new StringReader(
             "{\"uuid\":\"test-uuid\", \"unknown\":\"notreal\"}"));
