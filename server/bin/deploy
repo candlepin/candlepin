@@ -186,11 +186,12 @@ init
 
 DBUSER="candlepin"
 
-while getopts ":fgtTHolmavd:" opt; do
+while getopts ":fqgtTHolmavd:" opt; do
     case $opt in
         f  ) FORCECERT="1" ;;
         g  ) GENDB="1";;
         H  ) HOSTEDTEST="hostedtest";;
+        q  ) QPID="qpid";;
         t  ) TESTDATA="1";;
         T  ) TESTDATA="MIN";;
         o  ) USE_ORACLE="1";;
@@ -286,6 +287,15 @@ else
     HOSTEDTEST=""
 fi
 
+
+if [ "$QPID" == "qpid" ]; then
+    info_msg "Enable Qpid"
+    QPID="qpid=yes"
+else
+    QPID=""
+fi
+
+
 if [ "$USE_ORACLE" == "1" ]; then
     info_msg "Building with Oracle JDBC jar"
     ENV_BUILDR="oracle"
@@ -324,7 +334,7 @@ create_var_log_candlepin
 create_var_cache_candlepin
 
 if [ "$AUTOCONF" == "1" ]; then
-  autoconf $ENV_BUILDR $LOGDRIVER $HOSTEDTEST
+  autoconf $ENV_BUILDR $LOGDRIVER $HOSTEDTEST $QPID
 fi
 
 # deploy the webapp
