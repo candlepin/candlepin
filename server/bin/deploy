@@ -133,6 +133,7 @@ usage: deploy [options]
 OPTIONS:
   -f          force cert regeneration
   -g          generate database
+  -q          Qpid enabled. Also deploys 'allmsg' queue used by spec tests
   -t          import test data
   -T          import minimal test data, some owners, users, and roles
   -H          include test resources for hosted mode
@@ -186,11 +187,12 @@ init
 
 DBUSER="candlepin"
 
-while getopts ":fgtTHolmavd:" opt; do
+while getopts ":fqgtTHolmavd:" opt; do
     case $opt in
         f  ) FORCECERT="1" ;;
         g  ) GENDB="1";;
         H  ) HOSTEDTEST="hostedtest";;
+        q  ) QPID="qpid";;
         t  ) TESTDATA="1";;
         T  ) TESTDATA="MIN";;
         o  ) USE_ORACLE="1";;
@@ -286,6 +288,26 @@ else
     HOSTEDTEST=""
 fi
 
+# Delete the allmsg Qpid queue. The error messages produced during
+# deletion are silenced
+# This deletion is attempted regardless of whether Qpid is enabled. We do that
+# to prevent the queue to grow indefinitely
+QPID_KEYS_DIR=$PROJECT_DIR/../gutterball/bin/qpid/keys
+
+qpid-config -b amqps://localhost:5671 --ssl-certificate $QPID_KEYS_DIR/qpid_ca.crt --ssl-key $QPID_KEYS_DIR/qpid_ca.key --force del queue allmsg 2 > /dev/null || true
+
+if [ "$QPID" == "qpid" ]; then
+    info_msg "Enable Qpid"
+    QPID="qpid=yes"
+
+    #Setup testing qpid queue allmsg, this will be needed by Qpid spec tests
+    qpid-config -b amqps://localhost:5671 --ssl-certificate $QPID_KEYS_DIR/qpid_ca.crt --ssl-key $QPID_KEYS_DIR/qpid_ca.key add queue allmsg --durable
+    qpid-config -b amqps://localhost:5671 --ssl-certificate $QPID_KEYS_DIR/qpid_ca.crt --ssl-key $QPID_KEYS_DIR/qpid_ca.key bind event allmsg "#"
+else
+    QPID=""
+fi
+
+
 if [ "$USE_ORACLE" == "1" ]; then
     info_msg "Building with Oracle JDBC jar"
     ENV_BUILDR="oracle"
@@ -324,7 +346,7 @@ create_var_log_candlepin
 create_var_cache_candlepin
 
 if [ "$AUTOCONF" == "1" ]; then
-  autoconf $ENV_BUILDR $LOGDRIVER $HOSTEDTEST
+  autoconf $ENV_BUILDR $LOGDRIVER $HOSTEDTEST $QPID
 fi
 
 # deploy the webapp

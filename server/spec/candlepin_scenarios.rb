@@ -1,5 +1,6 @@
 require 'candlepin_api'
 require 'hostedtest_api'
+require 'qpid_proton'
 
 require 'pp'
 require 'zip/zip'
@@ -540,5 +541,61 @@ class VirtLimitExporter < Exporter
     @candlepin_client.consume_pool(@pool3.id, {:quantity => 1})
     create_candlepin_export()
   end
+end
 
+# We assume existence of queue allmsg that is bound to event exchange
+class CandlepinQpid
+  def initialize() 
+    @address='amqps://localhost:5671/allmsg'
+    @gbcrt = "gutterball/bin/qpid/keys/qpid_ca.crt"
+    @gbkey = "gutterball/bin/qpid/keys/qpid_ca.key"
+   end 
+
+  def no_keys 
+    !File.file?(@gbcrt) or !File.file?(@gbkey)
+  end 
+
+  def stop
+    `sudo systemctl stop qpidd || sudo supervisorctl stop qpidd`
+  end 
+
+  def start
+    `sudo systemctl start qpidd || sudo supervisorctl start qpidd`
+  end 
+
+  def receive
+    @messenger = Qpid::Proton::Messenger::Messenger.new
+   
+    if (no_keys)
+      raise "The Qpid keys doesnt exist on paths: #{File.absolute_path(@gbcrt)}; #{File.absolute_path(@gbkey)}" 
+    end
+    @messenger.certificate = @gbcrt 
+    @messenger.private_key = @gbkey
+    @messenger.blocking = false
+ 
+    msgs = []
+    @messenger.start
+    @messenger.subscribe(@address)
+
+    loop do
+
+     # The receive method is non blocking but
+     # it seems you need to call it several times to
+     # establish connection to the broker
+     5.times do  
+       @messenger.receive
+       sleep(0.3)
+     end 
+
+     break if @messenger.incoming.zero? 
+     while @messenger.incoming.nonzero?
+      msg = Qpid::Proton::Message.new
+      @messenger.get(msg)
+      msgs << msg 
+     end 
+    end 
+    @messenger.stop
+
+   return msgs
+  end 
 end
