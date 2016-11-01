@@ -132,6 +132,7 @@ public class ResolverUtil {
 
         HashSet<Product> presolved = new HashSet<Product>();
 
+        pool.populateAllTransientProvidedProducts(productCurator);
         for (ProvidedProduct product : pool.getProvidedProductDtos()) {
             // TODO: Maybe add UUID resolution as well?
             presolved.add(resolveProduct(owner, product.getProductId()));

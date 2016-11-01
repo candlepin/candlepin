@@ -137,6 +137,7 @@ public class Importer {
     private I18n i18n;
     private DistributorVersionCurator distVerCurator;
     private ImportRecordCurator importRecordCurator;
+    private SyncUtils syncUtils;
 
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator,
@@ -146,7 +147,7 @@ public class Importer {
         PKIUtility pki, Configuration config, ExporterMetadataCurator emc,
         CertificateSerialCurator csc, EventSink sink, I18n i18n,
         DistributorVersionCurator distVerCurator,
-        CdnCurator cdnCurator, ImportRecordCurator importRecordCurator) {
+        CdnCurator cdnCurator, SyncUtils syncUtils, ImportRecordCurator importRecordCurator) {
 
         this.config = config;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -156,7 +157,8 @@ public class Importer {
         this.idCertCurator = idCertCurator;
         this.contentCurator = contentCurator;
         this.poolManager = pm;
-        this.mapper = SyncUtils.getObjectMapper(this.config);
+        this.syncUtils = syncUtils;
+        this.mapper = syncUtils.getObjectMapper();
         this.pki = pki;
         this.expMetaCurator = emc;
         this.csCurator = csc;
@@ -365,7 +367,6 @@ public class Importer {
         String uploadedFileName) throws ImporterException {
         Map<String, Object> result = new HashMap<String, Object>();
         try {
-
             File signature = new File(exportDir, "signature");
             if (signature.length() == 0) {
                 throw new ImportExtractionException(i18n.tr("The archive does not " +
@@ -713,7 +714,7 @@ public class Importer {
         log.debug("Importing entitlements for owner: {}", owner);
 
         EntitlementImporter importer = new EntitlementImporter(csCurator, cdnCurator,
-            i18n);
+            i18n, productCurator);
 
         Map<String, Product> productsById = new HashMap<String, Product>();
         for (Product product : products) {
@@ -888,7 +889,7 @@ public class Importer {
     private File unpackExportFile(String fileName, InputStream exportInputStream)
         throws ImportExtractionException {
         try {
-            File tmpDir = new SyncUtils(config).makeTempDir("import");
+            File tmpDir = syncUtils.makeTempDir("import");
             extractArchive(tmpDir, fileName, exportInputStream);
             return tmpDir;
         }

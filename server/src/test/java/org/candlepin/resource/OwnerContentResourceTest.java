@@ -21,6 +21,7 @@ import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Content;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
@@ -55,7 +56,8 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
     public void setup() {
         this.ownerContentResource = new OwnerContentResource(this.contentCurator, this.contentManager,
         this.environmentContentCurator, this.i18n, this.ownerCurator, this.ownerContentCurator,
-        this.poolManager, this.productCurator, new DefaultUniqueIdGenerator());
+        this.poolManager, this.productCurator, new DefaultUniqueIdGenerator(),
+        new ProductCachedSerializationModule(productCurator));
     }
 
     @Test

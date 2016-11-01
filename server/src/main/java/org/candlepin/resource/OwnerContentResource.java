@@ -19,6 +19,7 @@ import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContentCurator;
@@ -32,7 +33,6 @@ import org.candlepin.service.UniqueIdGenerator;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
@@ -43,8 +43,8 @@ import org.xnap.commons.i18n.I18n;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
-import java.util.List;
 import java.util.LinkedList;
+import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -85,12 +85,13 @@ public class OwnerContentResource {
     private PoolManager poolManager;
     private ProductCurator productCurator;
     private UniqueIdGenerator idGenerator;
+    private ProductCachedSerializationModule productCachedModule;
 
     @Inject
     public OwnerContentResource(ContentCurator contentCurator, ContentManager contentManager,
         EnvironmentContentCurator envContentCurator, I18n i18n, OwnerCurator ownerCurator,
         OwnerContentCurator ownerContentCurator, PoolManager poolManager, ProductCurator productCurator,
-        UniqueIdGenerator idGenerator) {
+        UniqueIdGenerator idGenerator,  ProductCachedSerializationModule productCachedModule) {
 
         this.contentCurator = contentCurator;
         this.contentManager = contentManager;
@@ -101,6 +102,7 @@ public class OwnerContentResource {
         this.poolManager = poolManager;
         this.productCurator = productCurator;
         this.idGenerator = idGenerator;
+        this.productCachedModule = productCachedModule;
     }
 
     /**
@@ -160,7 +162,7 @@ public class OwnerContentResource {
     public Response list(@Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
         final Owner owner = this.getOwnerByKey(ownerKey);
         final Collection<Content> contents = this.ownerContentCurator.getContentByOwner(owner);
-        final ObjectMapper mapper = new JsonProvider(true)
+        final ObjectMapper mapper = new JsonProvider(true, productCachedModule)
             .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
 
         StreamingOutput output = new StreamingOutput() {

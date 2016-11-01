@@ -680,8 +680,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
             if (e.getPool() != null) {
                 Hibernate.initialize(e.getPool().getBranding());
-                Hibernate.initialize(e.getPool().getDerivedProvidedProducts());
-                Hibernate.initialize(e.getPool().getProvidedProducts());
                 Hibernate.initialize(e.getPool().getProductAttributes());
                 Hibernate.initialize(e.getPool().getAttributes());
                 Hibernate.initialize(e.getPool().getDerivedProductAttributes());

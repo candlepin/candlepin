@@ -52,14 +52,13 @@ public class ComplianceRules {
     @Inject
     public ComplianceRules(JsRunner jsRules, EntitlementCurator entCurator,
         StatusReasonMessageGenerator generator, EventSink eventSink,
-        ConsumerCurator consumerCurator) {
+        ConsumerCurator consumerCurator, RulesObjectMapper mapper) {
         this.entCurator = entCurator;
         this.jsRules = jsRules;
         this.generator = generator;
         this.eventSink = eventSink;
         this.consumerCurator = consumerCurator;
-
-        mapper = RulesObjectMapper.instance();
+        this.mapper = mapper;
         jsRules.init("compliance_name_space");
     }
 

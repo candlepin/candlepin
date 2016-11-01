@@ -70,6 +70,7 @@ import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
@@ -238,6 +239,7 @@ public class CandlepinModule extends AbstractModule {
         bind(Principal.class).toProvider(PrincipalProvider.class);
         bind(JsRunnerProvider.class).asEagerSingleton();
         bind(JsRunner.class).toProvider(JsRunnerProvider.class);
+        bind(RulesObjectMapper.class).asEagerSingleton();
         bind(UserResource.class);
         bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
         bind(DistributorVersionResource.class);

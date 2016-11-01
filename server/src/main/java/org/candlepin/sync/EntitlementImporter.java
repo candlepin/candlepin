@@ -23,6 +23,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.model.dto.ProductData;
@@ -51,13 +52,15 @@ public class EntitlementImporter {
     private CertificateSerialCurator csCurator;
     private CdnCurator cdnCurator;
     private I18n i18n;
+    private ProductCurator productCurator;
 
     public EntitlementImporter(CertificateSerialCurator csCurator,
-        CdnCurator cdnCurator, I18n i18n) {
+        CdnCurator cdnCurator, I18n i18n, ProductCurator productCurator) {
 
         this.csCurator = csCurator;
         this.cdnCurator = cdnCurator;
         this.i18n = i18n;
+        this.productCurator = productCurator;
     }
 
     public Subscription importObject(ObjectMapper mapper, Reader reader, Owner owner,
@@ -165,6 +168,7 @@ public class EntitlementImporter {
 
         // Associate main provided products:
         Set<ProductData> providedProducts = new HashSet<ProductData>();
+        entitlement.getPool().populateAllTransientProvidedProducts(productCurator);
         for (ProvidedProduct providedProduct : entitlement.getPool().getProvidedProductDtos()) {
             Product product = this.findProduct(productsById, providedProduct.getProductId());
             providedProducts.add(product.toDTO());

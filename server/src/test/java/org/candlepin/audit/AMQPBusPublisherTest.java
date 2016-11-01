@@ -14,14 +14,19 @@
  */
 package org.candlepin.audit;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
@@ -76,8 +81,10 @@ public class AMQPBusPublisherTest {
     @Test
     public void testApply() throws IOException {
         PrincipalProvider pp = mock(PrincipalProvider.class);
+        ProductCurator productCurator = mock(ProductCurator.class);
+
         when(pp.get()).thenReturn(TestUtil.createPrincipal("admin", null, null));
-        EventFactory factory = new EventFactory(pp);
+        EventFactory factory = new EventFactory(pp, new ProductCachedSerializationModule(productCurator));
         Consumer c = TestUtil.createConsumer();
         Event e = factory.consumerCreated(c);
 
@@ -91,8 +98,10 @@ public class AMQPBusPublisherTest {
     @Test
     public void onEvent() throws JMSException {
         PrincipalProvider pp = mock(PrincipalProvider.class);
+
+        ProductCurator productCurator = mock(ProductCurator.class);
         when(pp.get()).thenReturn(TestUtil.createPrincipal("admin", null, null));
-        EventFactory factory = new EventFactory(pp);
+        EventFactory factory = new EventFactory(pp, new ProductCachedSerializationModule(productCurator));
         Consumer c = TestUtil.createConsumer();
         Event e = factory.consumerCreated(c);
         TopicPublisher tp = publisherMap.get(Target.CONSUMER).get(Type.CREATED);

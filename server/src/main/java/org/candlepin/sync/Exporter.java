@@ -32,6 +32,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -92,10 +93,10 @@ public class Exporter {
     private Configuration config;
     private ExportRules exportRules;
     private PrincipalProvider principalProvider;
-
     private ExportExtensionAdapter exportExtensionAdapter;
-
+    private ProductCurator productCurator;
     private static final String LEGACY_RULES_FILE = "/rules/default-rules.js";
+    private SyncUtils syncUtils;
 
     @Inject
     public Exporter(ConsumerTypeCurator consumerTypeCurator, MetaExporter meta,
@@ -107,10 +108,10 @@ public class Exporter {
         PKIUtility pki, Configuration config, ExportRules exportRules,
         PrincipalProvider principalProvider, DistributorVersionCurator distVerCurator,
         DistributorVersionExporter distVerExporter,
-        CdnCurator cdnCurator, CdnExporter cdnExporter, ExportExtensionAdapter extensionAdapter) {
+        CdnCurator cdnCurator, CdnExporter cdnExporter, ProductCurator productCurator,
+        SyncUtils syncUtils, ExportExtensionAdapter extensionAdapter) {
 
         this.consumerTypeCurator = consumerTypeCurator;
-
         this.meta = meta;
         this.consumerExporter = consumerExporter;
         this.consumerType = consumerType;
@@ -130,9 +131,10 @@ public class Exporter {
         this.distVerExporter = distVerExporter;
         this.cdnCurator = cdnCurator;
         this.cdnExporter = cdnExporter;
+        this.productCurator = productCurator;
+        this.syncUtils = syncUtils;
+        this.mapper = syncUtils.getObjectMapper();
         this.exportExtensionAdapter = extensionAdapter;
-
-        mapper = SyncUtils.getObjectMapper(this.config);
     }
 
     public File getFullExport(Consumer consumer) throws ExportCreationException {
@@ -153,7 +155,7 @@ public class Exporter {
     public File getFullExport(Consumer consumer, String cdnLabel, String webUrl,
         String apiUrl, Map<String, String> extensionData) throws ExportCreationException {
         try {
-            File tmpDir = new SyncUtils(config).makeTempDir("export");
+            File tmpDir = syncUtils.makeTempDir("export");
             File baseDir = new File(tmpDir.getAbsolutePath(), "export");
             baseDir.mkdir();
 
@@ -180,7 +182,7 @@ public class Exporter {
         // TODO: need to delete tmpDir (which contains the archive,
         // which we need to return...)
         try {
-            File tmpDir = new SyncUtils(config).makeTempDir("export");
+            File tmpDir = syncUtils.makeTempDir("export");
             File baseDir = new File(tmpDir.getAbsolutePath(), "export");
             baseDir.mkdir();
 
@@ -489,7 +491,7 @@ public class Exporter {
         for (Entitlement entitlement : consumer.getEntitlements()) {
             Pool pool = entitlement.getPool();
 
-            for (Product providedProduct : pool.getProvidedProducts()) {
+            for (Product providedProduct : productCurator.getPoolProvidedProductsCached(pool)) {
                 products.put(providedProduct.getId(), providedProduct);
             }
 
@@ -503,7 +505,8 @@ public class Exporter {
                 products.put(derivedProduct.getId(), derivedProduct);
             }
 
-            for (Product derivedProvidedProduct : pool.getDerivedProvidedProducts()) {
+            for (Product derivedProvidedProduct : productCurator
+                .getPoolDerivedProvidedProductsCached(pool)) {
                 products.put(derivedProvidedProduct.getId(), derivedProvidedProduct);
             }
         }

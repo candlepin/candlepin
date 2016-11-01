@@ -15,11 +15,13 @@
 package org.candlepin;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.auth.Principal;
+import org.candlepin.cache.CandlepinCache;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.guice.HttpMethodMatcher;
 import org.candlepin.common.guice.JPAInitializer;
@@ -115,6 +117,7 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.Properties;
 
+import javax.cache.Cache;
 import javax.inject.Provider;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -237,11 +240,15 @@ public class TestingModules {
         @Override
         public void configure() {
             bindScope(TestSingleton.class, TestScope.SINGLETON);
-
+            CandlepinCache mockedCandlepinCache = mock(CandlepinCache.class);
+            when(mockedCandlepinCache.getProductCache()).thenReturn(mock(Cache.class));
+            when(mockedCandlepinCache.getStatusCache()).thenReturn(mock(Cache.class));
             // This is not necessary in the normal module because the config is bound in the
             // context listener
             bind(Configuration.class).toInstance(config);
-
+            //When testing, we are using mock Candlepin cache. It's
+            //methods are basically no-op
+            bind(CandlepinCache.class).toInstance(mockedCandlepinCache);
             CandlepinRequestScope requestScope = new CandlepinRequestScope();
             bindScope(CandlepinRequestScoped.class, requestScope);
             //RequestScoped doesn't exist in unit tests, so we must

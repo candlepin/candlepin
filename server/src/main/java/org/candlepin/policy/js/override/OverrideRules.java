@@ -38,11 +38,11 @@ public class OverrideRules {
     protected Configuration config;
 
     @Inject
-    public OverrideRules(JsRunner jsRules, Configuration config) {
+    public OverrideRules(JsRunner jsRules, Configuration config, RulesObjectMapper mapper) {
         this.jsRules = jsRules;
         this.config = config;
 
-        mapper = RulesObjectMapper.instance();
+        this.mapper = mapper;
         jsRules.init("override_name_space");
     }
 

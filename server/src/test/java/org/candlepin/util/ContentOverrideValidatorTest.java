@@ -14,27 +14,33 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.ContentOverride;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.JsRunnerRequestCache;
+import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.override.OverrideRules;
 import org.candlepin.test.DatabaseTestFixture;
+
+import com.google.inject.Provider;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Provider;
 
 import java.io.InputStream;
 import java.util.Date;
@@ -53,6 +59,7 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
     private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock
     private JsRunnerRequestCache cache;
+    @Mock private ProductCurator mockProductCurator;
     private Configuration config;
 
     private ContentOverrideValidator validator;
@@ -72,7 +79,8 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         when(cacheProvider.get()).thenReturn(cache);
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
-        overrideRules = new OverrideRules(provider.get(), config);
+        overrideRules = new OverrideRules(provider.get(), config,
+                new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)));
         validator = new ContentOverrideValidator(i18n, overrideRules);
     }
 

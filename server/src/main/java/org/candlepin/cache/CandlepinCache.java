@@ -14,6 +14,7 @@
  */
 package org.candlepin.cache;
 
+import org.candlepin.model.Product;
 import org.candlepin.model.Status;
 
 import com.google.inject.Inject;
@@ -43,5 +44,14 @@ public class CandlepinCache {
      */
     public Cache<String, Status> getStatusCache() {
         return cacheManager.getCache(CacheContextListener.CACHE_STATUS, String.class, Status.class);
+    }
+
+    /**
+     * Cache for fully hydrated Product entities
+     *
+     * @return Cache for Status entity
+     */
+    public Cache<String, Product> getProductCache() {
+        return cacheManager.getCache(CacheContextListener.CACHE_PRODUCT_FULL);
     }
 }

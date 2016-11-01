@@ -44,10 +44,10 @@ public class QuantityRules {
     private static Logger log = LoggerFactory.getLogger(QuantityRules.class);
 
     @Inject
-    public QuantityRules(JsRunner jsRules) {
+    public QuantityRules(JsRunner jsRules, RulesObjectMapper mapper) {
         this.jsRules = jsRules;
 
-        mapper = RulesObjectMapper.instance();
+        this.mapper = mapper;
         jsRules.init("quantity_name_space");
     }
 

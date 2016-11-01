@@ -17,6 +17,7 @@ package org.candlepin.sync;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.jackson.ProductCachedSerializationModule;
 
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -27,6 +28,7 @@ import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
+import com.google.inject.Inject;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,17 +38,33 @@ import java.io.IOException;
  * SyncUtils
  */
 class SyncUtils {
+    private Configuration config;
+    private ProductCachedSerializationModule productCachedModule;
 
-    private final File baseDir;
-    SyncUtils(Configuration config) {
-        baseDir = new File(config.getString(ConfigProperties.SYNC_WORK_DIR));
-        if (!baseDir.exists() && !baseDir.mkdirs()) {
-            throw new IseException(
-                "Unable to create base dir for sync: " + baseDir);
-        }
+    @Inject
+    public SyncUtils(Configuration config, ProductCachedSerializationModule productCachedModule) {
+        this.config = config;
+        this.productCachedModule = productCachedModule;
     }
 
-    static ObjectMapper getObjectMapper(Configuration config) {
+
+    File makeTempDir(String baseName) throws IOException {
+        File tmp = File.createTempFile(baseName, Long.toString(System.nanoTime()), syncDir());
+
+        if (!tmp.delete()) {
+            throw new IOException("Could not delete temp file: " + tmp.getAbsolutePath());
+        }
+
+        if (!tmp.mkdirs()) {
+            throw new IOException("Could not create temp directory: " +
+                tmp.getAbsolutePath());
+        }
+
+        return (tmp);
+    }
+
+
+    public ObjectMapper getObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary =
@@ -62,7 +80,7 @@ class SyncUtils {
         filterProvider = filterProvider.addFilter("EntitlementFilter",
             SimpleBeanPropertyFilter.serializeAllExcept("consumer"));
         mapper.setFilters(filterProvider);
-
+        mapper.registerModule(productCachedModule);
         if (config != null) {
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
                 config.getBoolean(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES));
@@ -71,24 +89,17 @@ class SyncUtils {
         return mapper;
     }
 
-    File makeTempDir(String baseName) throws IOException {
-        File tmp = File.createTempFile(baseName, Long.toString(System.nanoTime()),
-            baseDir);
-
-        if (!tmp.delete()) {
-            throw new IOException("Could not delete temp file: " + tmp.getAbsolutePath());
-        }
-
-        if (!tmp.mkdirs()) {
-            throw new IOException("Could not create temp directory: " +
-                tmp.getAbsolutePath());
-        }
-
-        return (tmp);
+    File tempFileReference(String name) throws IOException {
+        return new File(syncDir(), name);
     }
 
-    File tempFileReference(String name) throws IOException {
-        return new File(baseDir, name);
+    private File syncDir() {
+        File baseDir = new File(config.getString(ConfigProperties.SYNC_WORK_DIR));
+        if (!baseDir.exists() && !baseDir.mkdirs()) {
+            throw new IseException(
+                "Unable to create base dir for sync: " + baseDir);
+        }
+        return baseDir;
     }
 
 }

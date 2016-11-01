@@ -34,6 +34,7 @@ import javax.cache.expiry.Duration;
  */
 public class CacheContextListener {
     public static final String CACHE_STATUS = "statuscache";
+    public static final String CACHE_PRODUCT_FULL = "productfullcache";
 
 
     public void contextInitialized(Injector injector) {

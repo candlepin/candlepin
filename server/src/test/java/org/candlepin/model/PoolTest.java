@@ -98,7 +98,6 @@ public class PoolTest extends DatabaseTestFixture {
         assertNotNull(lookedUp);
         assertEquals(owner.getId(), lookedUp.getOwner().getId());
         assertEquals(prod1.getId(), lookedUp.getProductId());
-        assertTrue(lookedUp.provides(prod1.getId()));
     }
 
     @Test

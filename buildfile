@@ -227,7 +227,7 @@ define "candlepin" do
   project.version = pom_version(path_to('pom.xml'))
   manifest["Copyright"] = "Red Hat, Inc. #{Date.today.strftime('%Y')}"
 
-  compile.using(:javac, :debug => true)
+  compile.using(:debug => true)
   compile.options.target = '1.6'
   compile.options.source = '1.6'
 
@@ -462,6 +462,7 @@ define "candlepin" do
       SUN_JAXB,
       SWAGGER,
     ]
+
     compile.with(compile_classpath)
     compile.with(project('common'))
     compile.with(LOGDRIVER, LOG4J_BRIDGE) if use_logdriver

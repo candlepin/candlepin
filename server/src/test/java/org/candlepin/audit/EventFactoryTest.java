@@ -20,10 +20,11 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
-
+import org.candlepin.model.ProductCurator;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,8 +41,10 @@ public class EventFactoryTest {
     public void init() throws Exception {
         principalProvider = mock(PrincipalProvider.class);
         Principal principal = mock(Principal.class);
+        ProductCurator productCurator = mock(ProductCurator.class);
         when(principalProvider.get()).thenReturn(principal);
-        eventFactory = new EventFactory(principalProvider);
+        eventFactory = new EventFactory(principalProvider,
+            new ProductCachedSerializationModule(productCurator));
     }
 
     @Test

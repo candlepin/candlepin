@@ -14,9 +14,13 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.common.config.Configuration;
@@ -31,6 +35,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.dto.ProductData;
@@ -70,6 +75,7 @@ public class PoolRulesTest {
     @Mock private Configuration configMock;
     @Mock private EntitlementCurator entCurMock;
     @Mock private OwnerProductCurator ownerProdCuratorMock;
+    @Mock private ProductCurator  productCurator;
 
     private UserPrincipal principal;
     private Owner owner;
@@ -86,7 +92,8 @@ public class PoolRulesTest {
 
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
 
-        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, ownerProdCuratorMock);
+        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, ownerProdCuratorMock,
+                productCurator);
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);
     }
@@ -480,11 +487,17 @@ public class PoolRulesTest {
         when(ownerProdCuratorMock.getProductById(owner, derivedProvidedProd2.getId()))
             .thenReturn(derivedProvidedProd2);
 
+        p.setId("mockPoolRuleTestID");
         p.getProvidedProducts().add(provided1);
         p.getProvidedProducts().add(provided2);
         p.setDerivedProduct(derivedProd);
         p.getDerivedProvidedProducts().add(derivedProvidedProd1);
         p.getDerivedProvidedProducts().add(derivedProvidedProd2);
+
+        when(productCurator.getPoolProvidedProductsCached(p))
+            .thenReturn(p.getProvidedProducts());
+        when(productCurator.getPoolDerivedProvidedProductsCached(p))
+            .thenReturn(p.getDerivedProvidedProducts());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
 
         // Should be virt_only pool for unmapped guests:
@@ -517,6 +530,9 @@ public class PoolRulesTest {
         Subscription s = createVirtLimitSubWithDerivedProducts("virtLimitProduct",
             "derivedProd", 10, 10);
         Pool p = TestUtil.copyFromSub(s);
+        p.setId("mockVirtLimitSubCreateDerived");
+        when(productCurator.getPoolDerivedProvidedProductsCached(p))
+            .thenReturn(p.getDerivedProvidedProducts());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
 
         // Should be virt_only pool for unmapped guests:
@@ -605,7 +621,6 @@ public class PoolRulesTest {
         derivedProds.add(derivedProvided1.toDTO());
         derivedProds.add(derivedProvided2.toDTO());
         s.setDerivedProvidedProducts(derivedProds);
-
         return s;
     }
 

@@ -16,6 +16,7 @@ package org.candlepin.policy.js;
 
 import static org.junit.Assert.assertFalse;
 
+import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
@@ -26,12 +27,14 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.io.InputStream;
 import java.util.Date;
@@ -46,8 +49,7 @@ import java.util.Set;
  * RulesObjectMapperTest
  */
 public class RulesObjectMapperTest {
-
-    private RulesObjectMapper objMapper = RulesObjectMapper.instance();
+    private RulesObjectMapper objMapper;
     private Map<String, Object> context;
     private Owner owner;
 
@@ -55,6 +57,9 @@ public class RulesObjectMapperTest {
     public void begin() {
         context = new HashMap<String, Object>();
         owner = new Owner("test");
+        ProductCurator productCurator = Mockito.mock(ProductCurator.class);
+        objMapper = new RulesObjectMapper(
+                new ProductCachedSerializationModule(productCurator));
     }
 
     @Test

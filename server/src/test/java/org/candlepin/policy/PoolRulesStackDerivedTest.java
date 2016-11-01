@@ -15,8 +15,11 @@
 package org.candlepin.policy;
 
 import static org.hamcrest.Matchers.hasItems;
-import static org.junit.Assert.*;
-import static org.mockito.AdditionalAnswers.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +36,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.dto.Subscription;
@@ -77,6 +81,7 @@ public class PoolRulesStackDerivedTest {
     @Mock private PoolManager poolManagerMock;
     @Mock private Configuration configMock;
     @Mock private EntitlementCurator entCurMock;
+    @Mock private ProductCurator  productCurator;
 
     private UserPrincipal principal;
     private Owner owner;
@@ -122,7 +127,8 @@ public class PoolRulesStackDerivedTest {
 
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
 
-        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, ownerProductCuratorMock);
+        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, ownerProductCuratorMock,
+            productCurator);
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);
 
@@ -157,22 +163,22 @@ public class PoolRulesStackDerivedTest {
         sub1 = createStackedVirtSub(owner, prod1, TestUtil.createDate(2010, 1, 1),
             TestUtil.createDate(2015, 1, 1));
         sub1.getProvidedProducts().add(provided1.toDTO());
-        pool1 = TestUtil.copyFromSub(sub1);
+        pool1 = copyFromSub(sub1);
 
         sub2 = createStackedVirtSub(owner, prod2, TestUtil.createDate(2011, 1, 1),
             TestUtil.createDate(2017, 1, 1));
         sub2.getProvidedProducts().add(provided2.toDTO());
-        pool2 = TestUtil.copyFromSub(sub2);
+        pool2 = copyFromSub(sub2);
 
         sub3 = createStackedVirtSub(owner, prod2, TestUtil.createDate(2012, 1, 1),
             TestUtil.createDate(2020, 1, 1));
         sub3.getProvidedProducts().add(provided3.toDTO());
-        pool3 = TestUtil.copyFromSub(sub3);
+        pool3 = copyFromSub(sub3);
 
         sub4 = createStackedVirtSub(owner, prod3, TestUtil.createDate(2012, 1, 1),
             TestUtil.createDate(2020, 1, 1));
         sub4.getProvidedProducts().add(provided4.toDTO());
-        pool4 = TestUtil.copyFromSub(sub4);
+        pool4 = copyFromSub(sub4);
 
         // Initial entitlement from one of the pools:
         stackedEnts.add(createEntFromPool(pool2));
@@ -189,7 +195,7 @@ public class PoolRulesStackDerivedTest {
         attributes.put(pool2.getId(), PoolHelper.getFlattenedAttributes(pool2));
         when(poolManagerMock.createPools(Matchers.anyListOf(Pool.class))).then(returnsFirstArg());
         List<Pool> resPools = PoolHelper.createHostRestrictedPools(poolManagerMock, consumer, reqPools,
-            entitlements, attributes);
+            entitlements, attributes, productCurator);
         stackDerivedPool = resPools.get(0);
 
         reqPools.clear();
@@ -199,7 +205,23 @@ public class PoolRulesStackDerivedTest {
         attributes.clear();
         attributes.put(pool4.getId(), PoolHelper.getFlattenedAttributes(pool4));
         stackDerivedPool2 = PoolHelper.createHostRestrictedPools(poolManagerMock, consumer, reqPools,
-            entitlements, attributes).get(0);
+            entitlements, attributes, productCurator).get(0);
+    }
+
+    private static int lastPoolId = 1;
+    /**
+     * Creates a Pool and caches stuff
+     * @param sub
+     * @return
+     */
+    private Pool copyFromSub(Subscription sub) {
+        Pool pool = TestUtil.copyFromSub(sub);
+        pool.setId("" + lastPoolId++);
+        when(productCurator.getPoolProvidedProductsCached(pool))
+            .thenReturn(pool.getProvidedProducts());
+        when(productCurator.getPoolDerivedProvidedProductsCached(pool))
+            .thenReturn(pool.getDerivedProvidedProducts());
+        return pool;
     }
 
     private Subscription createStackedVirtSub(Owner owner, Product product, Date start, Date end) {

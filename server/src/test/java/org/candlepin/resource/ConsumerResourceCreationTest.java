@@ -45,6 +45,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PermissionBlueprint;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
@@ -107,6 +108,7 @@ public class ConsumerResourceCreationTest {
     @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     @Mock private ServiceLevelValidator serviceLevelValidator;
     @Mock private ConsumerBindUtil consumerBindUtil;
+    @Mock private ProductCurator productCurator;
 
     private I18n i18n;
 
@@ -128,7 +130,8 @@ public class ConsumerResourceCreationTest {
             this.userService, null, null, this.ownerCurator,
             this.activationKeyCurator,
             null, this.complianceRules, this.deletedConsumerCurator,
-            null, null, this.config, null, null, null, this.consumerBindUtil, null);
+            null, null, this.config, null, null, null, this.consumerBindUtil,
+            productCurator, null);
 
         this.system = initSystem();
 

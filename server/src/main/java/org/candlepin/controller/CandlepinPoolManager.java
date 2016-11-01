@@ -1046,6 +1046,7 @@ public class CandlepinPoolManager implements PoolManager {
     public List<Entitlement> entitleByProductsForHost(Consumer guest, Consumer host,
         Date entitleDate, Collection<String> possiblePools)
         throws EntitlementRefusedException {
+        host = consumerCurator.lockAndLoad(host);
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
         if (!host.getOwner().equals(guest.getOwner())) {
             log.debug("Host {} and guest {} have different owners", host.getUuid(), guest.getUuid());
@@ -1153,7 +1154,7 @@ public class CandlepinPoolManager implements PoolManager {
                 for (String productId : productIds) {
                     // If this is a derived pool, we need to see if the derived product
                     // provides anything for the guest, otherwise we use the parent.
-                    if (pool.providesDerived(productId)) {
+                    if (productCurator.providesDerived(pool, productId)) {
                         log.debug("Found virt_limit pool providing product {}: {}", productId, pool);
                         providesProduct = true;
                         break;
@@ -1215,7 +1216,7 @@ public class CandlepinPoolManager implements PoolManager {
                 pool.hasAttribute(Pool.Attributes.VIRT_ONLY)) {
 
                 for (String prodId : tmpSet) {
-                    if (pool.provides(prodId)) {
+                    if (productCurator.provides(pool, prodId)) {
                         productsToRemove.add(prodId);
                     }
                 }
@@ -1283,7 +1284,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
             else {
                 for (String productId : productIds) {
-                    if (pool.provides(productId)) {
+                    if (productCurator.provides(pool, productId)) {
                         providesProduct = true;
                         break;
                     }
@@ -1661,7 +1662,6 @@ public class CandlepinPoolManager implements PoolManager {
         for (Entitlement ent : entsToRevoke) {
             //We need to trigger lazy load of provided products
             //to have access to those products later in this method.
-            ent.getPool().getProvidedProducts().size();
             Pool pool = ent.getPool();
             int entQuantity = ent.getQuantity() != null ? ent.getQuantity() : 0;
 
@@ -2225,7 +2225,7 @@ public class CandlepinPoolManager implements PoolManager {
                 poolQuantity, multiplier, sku);
         }
 
-        Subscription subscription = new Subscription(pool);
+        Subscription subscription = new Subscription(pool, productCurator);
         subscription.setQuantity(poolQuantity);
 
         return subscription;

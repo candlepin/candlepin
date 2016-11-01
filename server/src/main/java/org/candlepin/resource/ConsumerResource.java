@@ -74,6 +74,7 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.User;
 import org.candlepin.model.VirtConsumerMap;
@@ -188,6 +189,7 @@ public class ConsumerResource {
     private Configuration config;
     private CalculatedAttributesUtil calculatedAttributesUtil;
     private ConsumerBindUtil consumerBindUtil;
+    private ProductCurator productCurator;
     private ManifestManager manifestManager;
 
     @Inject
@@ -207,7 +209,8 @@ public class ConsumerResource {
         DistributorVersionCurator distributorVersionCurator,
         Configuration config, ContentCurator contentCurator,
         CdnCurator cdnCurator, CalculatedAttributesUtil calculatedAttributesUtil,
-        ConsumerBindUtil consumerBindUtil, ManifestManager manifestManager) {
+        ConsumerBindUtil consumerBindUtil, ProductCurator productCurator,
+        ManifestManager manifestManager) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -239,6 +242,7 @@ public class ConsumerResource {
         this.config = config;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
         this.consumerBindUtil = consumerBindUtil;
+        this.productCurator = productCurator;
         this.manifestManager = manifestManager;
     }
 
@@ -2118,7 +2122,7 @@ public class ConsumerResource {
         ComplianceStatus complianceStatus = complianceRules.getStatus(consumer, null, false);
 
         ConsumerInstalledProductEnricher enricher = new ConsumerInstalledProductEnricher(
-            consumer, complianceStatus, complianceRules
+            consumer, complianceStatus, complianceRules, productCurator
         );
 
         for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {

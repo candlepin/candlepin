@@ -17,6 +17,12 @@ package org.candlepin.sync;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
@@ -26,11 +32,9 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.TestUtil;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,11 +43,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * EntitlementImporterTest
@@ -57,6 +57,7 @@ public class SubscriptionReconcilerTest {
     @Mock private CertificateSerialCurator certSerialCurator;
     @Mock private CdnCurator cdnCurator;
     @Mock private ObjectMapper om;
+    @Mock private ProductCurator pc;
 
     private Owner owner;
     private EntitlementImporter importer;
@@ -71,7 +72,7 @@ public class SubscriptionReconcilerTest {
         this.reconciler = new SubscriptionReconciler();
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        this.importer = new EntitlementImporter(certSerialCurator, cdnCurator, i18n);
+        this.importer = new EntitlementImporter(certSerialCurator, cdnCurator, i18n, pc);
     }
 
     /*

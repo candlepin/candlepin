@@ -14,9 +14,20 @@
  */
 package org.candlepin.service.impl;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.TestingModules;
 import org.candlepin.common.config.Configuration;
@@ -39,8 +50,9 @@ import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
-import org.candlepin.model.dto.ProductData;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ProductContentData;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
@@ -61,20 +73,17 @@ import com.google.inject.Injector;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMReader;
-
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
-
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.ByteArrayOutputStream;
@@ -145,6 +154,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Mock private KeyPairCurator keyPairCurator;
     @Mock private PKIUtility mockedPKI;
     @Mock private ProductServiceAdapter productAdapter;
+    @Mock private ProductCurator productCurator;
 
     private Consumer consumer;
     private Product product;
@@ -213,7 +223,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             mock(EntitlementCertificateCurator.class),
             keyPairCurator, serialCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            config);
+            config, productCurator);
 
         product = TestUtil.createProduct("12345", "a product");
         product.setAttribute("version", "version");
@@ -341,7 +351,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             mock(EntitlementCertificateCurator.class),
             keyPairCurator, serialCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            config);
+            config, productCurator);
 
         X509Certificate result = certServiceAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(),
@@ -801,7 +811,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             mock(EntitlementCertificateCurator.class),
             keyPairCurator, serialCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            mockConfig);
+            mockConfig, productCurator);
 
         entAdapter.createX509Certificate(entitlement, product,
             new HashSet<Product>(),
@@ -842,7 +852,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             mock(EntitlementCertificateCurator.class),
             keyPairCurator, serialCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            mockConfig);
+            mockConfig, productCurator);
 
         entAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(),
@@ -873,7 +883,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             mock(EntitlementCertificateCurator.class),
             keyPairCurator, serialCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            mockConfig);
+            mockConfig, productCurator);
 
         entAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(),
@@ -901,7 +911,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             mock(EntitlementCertificateCurator.class),
             keyPairCurator, serialCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            mockConfig);
+            mockConfig, productCurator);
 
         entAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(),
@@ -926,7 +936,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             mock(EntitlementCertificateCurator.class),
             keyPairCurator, serialCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            mockConfig);
+            mockConfig, productCurator);
 
         entAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(),

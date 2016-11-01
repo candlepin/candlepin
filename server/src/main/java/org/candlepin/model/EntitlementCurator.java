@@ -55,14 +55,15 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     private static Logger log = LoggerFactory.getLogger(EntitlementCurator.class);
 
     private OwnerProductCurator ownerProductCurator;
-
+    private ProductCurator productCurator;
     /**
      * default ctor
      */
     @Inject
-    public EntitlementCurator(OwnerProductCurator ownerProductCurator) {
+    public EntitlementCurator(OwnerProductCurator ownerProductCurator, ProductCurator productCurator) {
         super(Entitlement.class);
         this.ownerProductCurator = ownerProductCurator;
+        this.productCurator = productCurator;
     }
 
     // TODO: handles addition of new entitlements only atm!
@@ -252,7 +253,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 continue;
             }
             entitledProductIds.add(p.getProduct().getId());
-            for (Product pp : p.getProvidedProducts()) {
+            for (Product pp : productCurator.getPoolProvidedProductsCached(p)) {
                 entitledProductIds.add(pp.getId());
             }
 
@@ -260,10 +261,9 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             // will need to be able to sync content downstream.
             if (c.getType().isManifest() && p.getDerivedProduct() != null) {
                 entitledProductIds.add(p.getDerivedProduct().getId());
-                if (p.getDerivedProvidedProducts() != null) {
-                    for (Product dpp : p.getDerivedProvidedProducts()) {
-                        entitledProductIds.add(dpp.getId());
-                    }
+
+                for (Product dpp : productCurator.getPoolDerivedProvidedProductsCached(p)) {
+                    entitledProductIds.add(dpp.getId());
                 }
             }
         }

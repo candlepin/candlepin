@@ -26,6 +26,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.version.CertVersionConflictException;
@@ -38,11 +39,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Set;
 
 
@@ -64,14 +65,16 @@ public class EntitlementCertificateGenerator {
     private EntitlementCertServiceAdapter entCertServiceAdapter;
     private EntitlementCurator entitlementCurator;
     private PoolCurator poolCurator;
-
+    private ProductCurator productCurator;
     private EventSink eventSink;
     private EventFactory eventFactory;
+
 
     @Inject
     public EntitlementCertificateGenerator(EntitlementCertificateCurator entitlementCertificateCurator,
         EntitlementCertServiceAdapter entCertServiceAdapter, EntitlementCurator entitlementCurator,
-        PoolCurator poolCurator, EventSink eventSink, EventFactory eventFactory) {
+        PoolCurator poolCurator, EventSink eventSink, EventFactory eventFactory,
+        ProductCurator productCurator) {
 
         this.entitlementCertificateCurator = entitlementCertificateCurator;
         this.entCertServiceAdapter = entCertServiceAdapter;
@@ -80,6 +83,7 @@ public class EntitlementCertificateGenerator {
 
         this.eventSink = eventSink;
         this.eventFactory = eventFactory;
+        this.productCurator = productCurator;
     }
 
     /**
@@ -313,8 +317,9 @@ public class EntitlementCertificateGenerator {
                     entsToRegen.add(entitlement);
                     continue entLoop;
                 }
-
-                for (Product provided : entitlement.getPool().getProvidedProducts()) {
+                Set<Product> providedProducts = productCurator
+                    .getPoolProvidedProductsCached(entitlement.getPool().getId());
+                for (Product provided : providedProducts) {
                     if (provided.hasContent(contentId)) {
                         entsToRegen.add(entitlement);
                         continue entLoop;

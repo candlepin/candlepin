@@ -48,3 +48,6 @@ buildconf/scripts/import_products.json
 .rvmrc
 .ruby-version
 .ruby-gemset
+
+# Vagrant 
+.vagrant/

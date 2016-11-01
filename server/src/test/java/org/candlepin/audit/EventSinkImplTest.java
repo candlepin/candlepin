@@ -14,16 +14,28 @@
  */
 package org.candlepin.audit;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.test.TestUtil;
@@ -59,6 +71,7 @@ public class EventSinkImplTest {
     @Mock private ClientMessage mockClientMessage;
     @Mock private PrincipalProvider mockPrincipalProvider;
     @Mock private ServerLocator mockLocator;
+    @Mock private ProductCurator mockProductCurator;
 
     private EventFactory factory;
     private EventFilter eventFilter;
@@ -69,7 +82,8 @@ public class EventSinkImplTest {
 
     @Before
     public void init() throws Exception {
-        this.factory = new EventFactory(mockPrincipalProvider);
+        this.factory = new EventFactory(mockPrincipalProvider,
+        new ProductCachedSerializationModule(mockProductCurator));
         this.principal = TestUtil.createOwnerPrincipal();
         eventFilter = new EventFilter(new CandlepinCommonTestConfig());
         when(mockPrincipalProvider.get()).thenReturn(this.principal);
@@ -89,8 +103,8 @@ public class EventSinkImplTest {
      * @throws Exception
      */
     private EventSinkImpl createEventSink(final ClientSessionFactory sessionFactory) throws Exception {
-        EventSinkImpl sink =
-            new EventSinkImpl(eventFilter, factory, mapper, new CandlepinCommonTestConfig()) {
+        EventSinkImpl sink = new EventSinkImpl(eventFilter, factory, mapper,
+            new CandlepinCommonTestConfig()) {
 
             @Override
             protected ClientSessionFactory createClientSessionFactory() {

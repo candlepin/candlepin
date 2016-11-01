@@ -21,11 +21,13 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RuleExecutionException;
+import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.util.DateSource;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -49,7 +51,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     public EntitlementRules(DateSource dateSource,
         JsRunner jsRules,
         I18n i18n, Configuration config, ConsumerCurator consumerCurator,
-        PoolCurator poolCurator) {
+        PoolCurator poolCurator, ProductCurator productCurator, RulesObjectMapper mapper) {
 
         this.jsRules = jsRules;
         this.dateSource = dateSource;
@@ -58,7 +60,8 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         this.config = config;
         this.consumerCurator = consumerCurator;
         this.poolCurator = poolCurator;
-
+        this.productCurator = productCurator;
+        this.objectMapper = mapper;
         log = LoggerFactory.getLogger(EntitlementRules.class);
         jsRules.init("entitlement_name_space");
     }
