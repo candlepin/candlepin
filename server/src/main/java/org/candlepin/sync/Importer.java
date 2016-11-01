@@ -30,14 +30,20 @@ import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
+import org.candlepin.model.ImportRecord;
+import org.candlepin.model.ImportRecordCurator;
+import org.candlepin.model.ImportUpstreamConsumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
+import org.candlepin.sync.file.ManifestFile;
+import org.candlepin.sync.file.ManifestFileServiceException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -56,9 +62,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -112,8 +120,6 @@ public class Importer {
     }
 
 
-
-
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductCurator productCurator;
     private ObjectMapper mapper;
@@ -130,6 +136,7 @@ public class Importer {
     private EventSink sink;
     private I18n i18n;
     private DistributorVersionCurator distVerCurator;
+    private ImportRecordCurator importRecordCurator;
     private SyncUtils syncUtils;
 
     @Inject
@@ -140,8 +147,7 @@ public class Importer {
         PKIUtility pki, Configuration config, ExporterMetadataCurator emc,
         CertificateSerialCurator csc, EventSink sink, I18n i18n,
         DistributorVersionCurator distVerCurator,
-        CdnCurator cdnCurator,
-        SyncUtils syncUtils) {
+        CdnCurator cdnCurator, SyncUtils syncUtils, ImportRecordCurator importRecordCurator) {
 
         this.config = config;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -160,6 +166,130 @@ public class Importer {
         this.i18n = i18n;
         this.distVerCurator = distVerCurator;
         this.cdnCurator = cdnCurator;
+        this.importRecordCurator = importRecordCurator;
+    }
+
+    public ImportRecord loadExport(Owner owner, File archive, ConflictOverrides overrides,
+        String uploadedFileName) throws ImporterException {
+        try {
+            return doExport(owner, unpackExportFile(archive.getName(), new FileInputStream(archive)),
+                overrides, uploadedFileName);
+        }
+        catch (FileNotFoundException e) {
+            log.error(String.format("Could not find import archive: %s", archive.getAbsolutePath()));
+            throw new ImporterException(i18n.tr("Uploaded manifest file does not exist."), e);
+        }
+    }
+
+    /**
+     * Loads a manifest from the {@link ManifestFileService}'s stored location.
+     *
+     * @param export the exported manifest file to load.
+     * @param owner the {@link Owner} to import data into.
+     * @param overrides the conflicts that are to be overridden.
+     * @param uploadedFileName the name of the file that was initially uploaded.
+     * @return the resulting {@link ImportRecord}
+     * @throws ImporterException if the export could not be loaded.
+     */
+    public ImportRecord loadStoredExport(ManifestFile export, Owner owner, ConflictOverrides overrides,
+        String uploadedFileName) throws ImporterException {
+        try {
+            ImportRecord result = doExport(owner, extractFromService(export), overrides, uploadedFileName);
+            return result;
+        }
+        catch (ManifestFileServiceException e) {
+            throw new ImporterException("Could not load stored manifest file for async import", e);
+        }
+    }
+
+    /**
+     * Records a successful import of a manifest.
+     *
+     * @param owner the owner that the manifest was imported into.
+     * @param data the data to store in this record.
+     * @param forcedConflicts the conflicts that were forced.
+     * @param filename the name of the originally uploaded file.
+     * @return the newly created {@link ImportRecord}.
+     */
+    public ImportRecord recordImportSuccess(Owner owner, Map<String, Object> data,
+        ConflictOverrides forcedConflicts, String filename) {
+
+        ImportRecord record = new ImportRecord(owner);
+        Meta meta = (Meta) data.get("meta");
+        if (meta != null) {
+            record.setGeneratedBy(meta.getPrincipalName());
+            record.setGeneratedDate(meta.getCreated());
+        }
+        record.setUpstreamConsumer(createImportUpstreamConsumer(owner, null));
+        record.setFileName(filename);
+
+        List<Subscription> subscriptions = (List<Subscription>) data.get("subscriptions");
+        boolean activeSubscriptionFound = false, expiredSubscriptionFound = false;
+        Date currentDate = new Date();
+        for (Subscription subscription : subscriptions) {
+            if (subscription.getEndDate() == null || subscription.getEndDate().after(currentDate)) {
+                activeSubscriptionFound = true;
+            }
+            else {
+                expiredSubscriptionFound = true;
+                sink.emitSubscriptionExpired(subscription);
+            }
+        }
+        String msg = i18n.tr("{0} file imported successfully.", owner.getKey());
+        if (!forcedConflicts.isEmpty()) {
+            msg = i18n.tr("{0} file imported forcibly.", owner.getKey());
+        }
+
+        if (!activeSubscriptionFound) {
+            msg += i18n.tr("No active subscriptions found in the file.");
+            record.recordStatus(ImportRecord.Status.SUCCESS_WITH_WARNING, msg);
+        }
+        else if (expiredSubscriptionFound) {
+            msg += i18n.tr("One or more inactive subscriptions found in the file.");
+            record.recordStatus(ImportRecord.Status.SUCCESS_WITH_WARNING, msg);
+        }
+        else {
+            record.recordStatus(ImportRecord.Status.SUCCESS, msg);
+        }
+
+        this.importRecordCurator.create(record);
+        return record;
+    }
+
+    public void recordImportFailure(Owner owner, Throwable error, String filename) {
+        ImportRecord record = new ImportRecord(owner);
+        log.error("Recording import failure", error);
+
+        if (error instanceof ImporterException) {
+            Meta meta = (Meta) ((ImporterException) error).getCollectedData().get("meta");
+            if (meta != null) {
+                record.setGeneratedBy(meta.getPrincipalName());
+                record.setGeneratedDate(meta.getCreated());
+            }
+        }
+        record.setUpstreamConsumer(createImportUpstreamConsumer(owner, null));
+        record.setFileName(filename);
+
+        record.recordStatus(ImportRecord.Status.FAILURE, error.getMessage());
+
+        this.importRecordCurator.create(record);
+    }
+
+    // NOTE: Some DBs, such as postgres, require large object streaming to be in a single transaction.
+    //       Because of this, we make this method transactional.
+    /**
+     * Pulls the manifest from the {@link ManifestFileService} and unpacks it. The manifest file
+     * is deleted as soon as it is extracted.
+     *
+     * @param storedFileId the manifest's file ID.
+     * @return a {@link File} pointing to the unpacked manifest directory.
+     * @throws ManifestFileServiceException
+     * @throws ImporterException
+     */
+    @Transactional
+    protected File extractFromService(ManifestFile export)
+        throws ManifestFileServiceException, ImporterException {
+        return unpackExportFile(export.getId(), export.getInputStream());
     }
 
     /**
@@ -171,8 +301,7 @@ public class Importer {
      * @throws IOException thrown if there's a problem reading the file
      * @throws ImporterException thrown if the metadata is invalid.
      */
-    public void validateMetadata(String type, Owner owner, File meta,
-        ConflictOverrides forcedConflicts)
+    protected void validateMetadata(String type, Owner owner, File meta, ConflictOverrides forcedConflicts)
         throws IOException, ImporterException {
 
         Meta m = mapper.readValue(meta, Meta.class);
@@ -234,24 +363,19 @@ public class Importer {
         }
     }
 
-    public Map<String, Object> loadExport(Owner owner, File exportFile,
-        ConflictOverrides overrides)
-        throws ImporterException {
-        File tmpDir = null;
+    private ImportRecord doExport(Owner owner, File exportDir, ConflictOverrides overrides,
+        String uploadedFileName) throws ImporterException {
         Map<String, Object> result = new HashMap<String, Object>();
         try {
-            tmpDir = syncUtils.makeTempDir("import");
-            extractArchive(tmpDir, exportFile);
-
-            File signature = new File(tmpDir, "signature");
+            File signature = new File(exportDir, "signature");
             if (signature.length() == 0) {
                 throw new ImportExtractionException(i18n.tr("The archive does not " +
                                           "contain the required signature file"));
             }
 
             boolean verifiedSignature = pki.verifySHA256WithRSAHashAgainstCACerts(
-                new File(tmpDir, "consumer_export.zip"),
-                loadSignature(new File(tmpDir, "signature")));
+                new File(exportDir, "consumer_export.zip"),
+                loadSignature(new File(exportDir, "signature")));
             if (!verifiedSignature) {
                 log.warn("Archive signature check failed.");
                 if (!overrides
@@ -273,11 +397,12 @@ public class Importer {
                 }
             }
 
-            File consumerExport = new File(tmpDir, "consumer_export.zip");
-            File exportDir = extractArchive(tmpDir, consumerExport);
+            File consumerExport = new File(exportDir, "consumer_export.zip");
+            File consumerExportDir = extractArchive(exportDir, consumerExport.getName(),
+                new FileInputStream(consumerExport));
 
             Map<String, File> importFiles = new HashMap<String, File>();
-            File[] listFiles = exportDir.listFiles();
+            File[] listFiles = consumerExportDir.listFiles();
             if (listFiles == null || listFiles.length == 0) {
                 throw new ImportExtractionException(i18n.tr("The consumer_export " +
                     "archive has no contents"));
@@ -287,7 +412,7 @@ public class Importer {
             }
 
             // Need the rules file as well which is in a nested dir:
-            File rulesFile = new File(exportDir, ImportFile.RULES_FILE.fileName());
+            File rulesFile = new File(consumerExportDir, ImportFile.RULES_FILE.fileName());
             importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFile);
 
             List<Subscription> importSubs = importObjects(owner, importFiles, overrides);
@@ -295,7 +420,9 @@ public class Importer {
                 Meta.class);
             result.put("subscriptions", importSubs);
             result.put("meta", m);
-            return result;
+
+            sink.emitImportCreated(owner);
+            return recordImportSuccess(owner, result, overrides, uploadedFileName);
         }
         catch (FileNotFoundException fnfe) {
             log.error("Archive file does not contain consumer_export.zip", fnfe);
@@ -305,27 +432,27 @@ public class Importer {
         catch (ConstraintViolationException cve) {
             log.error("Failed to import archive", cve);
             throw new ImporterException(i18n.tr("Failed to import archive"),
-                cve);
+                cve, result);
         }
         catch (PersistenceException pe) {
             log.error("Failed to import archive", pe);
             throw new ImporterException(i18n.tr("Failed to import archive"),
-                pe);
+                pe, result);
         }
         catch (IOException e) {
             log.error("Exception caught importing archive", e);
             throw new ImportExtractionException(
-                i18n.tr("Unable to extract export archive"), e);
+                i18n.tr("Unable to extract export archive"), e, result);
         }
         catch (CertificateException e) {
             log.error("Certificate exception checking archive signature", e);
             throw new ImportExtractionException(
-                i18n.tr("Certificate exception checking archive signature"), e);
+                i18n.tr("Certificate exception checking archive signature"), e, result);
         }
         finally {
-            if (tmpDir != null) {
+            if (exportDir != null) {
                 try {
-                    FileUtils.deleteDirectory(tmpDir);
+                    FileUtils.deleteDirectory(exportDir);
                 }
                 catch (IOException e) {
                     log.error("Failed to delete extracted export", e);
@@ -337,7 +464,7 @@ public class Importer {
     @Transactional(rollbackOn = {IOException.class, ImporterException.class,
         RuntimeException.class, ImportConflictException.class})
     // WARNING: Keep this method public, otherwise @Transactional is ignored:
-    List<Subscription> importObjects(Owner owner, Map<String, File> importFiles,
+    public List<Subscription> importObjects(Owner owner, Map<String, File> importFiles,
         ConflictOverrides overrides)
         throws IOException, ImporterException {
 
@@ -458,7 +585,7 @@ public class Importer {
         return importSubs;
     }
 
-    public void importRules(File rulesFile, File metadata) throws IOException {
+    protected void importRules(File rulesFile, File metadata) throws IOException {
 
         Reader reader = null;
         try {
@@ -477,7 +604,7 @@ public class Importer {
         }
     }
 
-    public void importConsumerTypes(File[] consumerTypes) throws IOException {
+    protected void importConsumerTypes(File[] consumerTypes) throws IOException {
         ConsumerTypeImporter importer = new ConsumerTypeImporter(consumerTypeCurator);
         Set<ConsumerType> consumerTypeObjs = new HashSet<ConsumerType>();
         for (File consumerType : consumerTypes) {
@@ -495,7 +622,7 @@ public class Importer {
         importer.store(consumerTypeObjs);
     }
 
-    public ConsumerDto importConsumer(Owner owner, File consumerFile,
+    protected ConsumerDto importConsumer(Owner owner, File consumerFile,
         File[] upstreamConsumer, ConflictOverrides forcedConflicts, Meta meta)
         throws IOException, SyncDataFormatException {
 
@@ -552,7 +679,7 @@ public class Importer {
         return consumer;
     }
 
-    public Set<Product> importProducts(File[] products, ProductImporter importer, Owner owner)
+    protected Set<Product> importProducts(File[] products, ProductImporter importer, Owner owner)
         throws IOException {
         Set<Product> productsToImport = new HashSet<Product>();
         for (File product : products) {
@@ -580,7 +707,7 @@ public class Importer {
         return productsToImport;
     }
 
-    public List<Subscription> importEntitlements(Owner owner, Set<Product> products, File[] entitlements,
+    protected List<Subscription> importEntitlements(Owner owner, Set<Product> products, File[] entitlements,
         ConsumerDto consumer, Meta meta)
         throws IOException, SyncDataFormatException {
 
@@ -623,7 +750,7 @@ public class Importer {
      * @param exportDir Directory where Candlepin data was exported.
      * @return File reference to the new archive tar.gz.
      */
-    private File extractArchive(File tempDir, File exportFile)
+    private File extractArchive(File tempDir, String exportFileName, InputStream exportFileStream)
         throws IOException, ImportExtractionException {
         log.debug("Extracting archive to: " + tempDir.getAbsolutePath());
         byte[] buf = new byte[1024];
@@ -631,12 +758,12 @@ public class Importer {
         ZipInputStream zipinputstream = null;
 
         try {
-            zipinputstream = new ZipInputStream(new FileInputStream(exportFile));
+            zipinputstream = new ZipInputStream(exportFileStream);
             ZipEntry zipentry = zipinputstream.getNextEntry();
 
             if (zipentry == null) {
                 throw new ImportExtractionException(i18n.tr("The archive {0} is not " +
-                    "a properly compressed file or is empty", exportFile.getName()));
+                    "a properly compressed file or is empty", exportFileName));
             }
 
             while (zipentry != null) {
@@ -707,7 +834,7 @@ public class Importer {
         }
     }
 
-    public void importDistributorVersions(File[] versionFiles) throws IOException {
+    protected void importDistributorVersions(File[] versionFiles) throws IOException {
         DistributorVersionImporter importer =
             new DistributorVersionImporter(distVerCurator);
         Set<DistributorVersion> distVers = new HashSet<DistributorVersion>();
@@ -726,7 +853,7 @@ public class Importer {
         importer.store(distVers);
     }
 
-    public void importContentDeliveryNetworks(File[] cdnFiles) throws IOException {
+    protected void importContentDeliveryNetworks(File[] cdnFiles) throws IOException {
         CdnImporter importer =
             new CdnImporter(cdnCurator);
         Set<Cdn> cdns = new HashSet<Cdn>();
@@ -744,4 +871,33 @@ public class Importer {
         }
         importer.store(cdns);
     }
+
+    private ImportUpstreamConsumer createImportUpstreamConsumer(Owner owner, UpstreamConsumer uc) {
+        ImportUpstreamConsumer iup = null;
+        if (uc == null && owner != null) {
+            uc = owner.getUpstreamConsumer();
+        }
+
+        // The owner may not have the upstream consumer set so we need
+        // to check.
+        if (uc != null) {
+            iup = new ImportUpstreamConsumer(uc);
+        }
+        return iup;
+    }
+
+    private File unpackExportFile(String fileName, InputStream exportInputStream)
+        throws ImportExtractionException {
+        try {
+            File tmpDir = syncUtils.makeTempDir("import");
+            extractArchive(tmpDir, fileName, exportInputStream);
+            return tmpDir;
+        }
+        catch (IOException e) {
+            log.error("Unable to extract export archive", e);
+            throw new ImportExtractionException(
+                i18n.tr("Unable to extract export archive"), e);
+        }
+    }
+
 }

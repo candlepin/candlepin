@@ -108,7 +108,8 @@ HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0'
              'org.javassist:javassist:jar:3.20.0-GA',
              'com.fasterxml:classmate:jar:1.3.0',
              'org.freemarker:freemarker:jar:2.3.15',
-             'c3p0:c3p0:jar:0.9.1.2',
+             'com.mchange:c3p0:jar:0.9.5.2',
+             'com.mchange:mchange-commons-java:jar:0.2.11',
              'dom4j:dom4j:jar:1.6.1',
              'org.jboss:jandex:jar:2.0.0.Final',
               'org.jboss.logging:jboss-logging:jar:3.3.0.Final'

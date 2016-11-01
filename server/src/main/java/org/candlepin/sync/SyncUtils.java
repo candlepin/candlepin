@@ -33,6 +33,7 @@ import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 
+
 /**
  * SyncUtils
  */
@@ -40,14 +41,15 @@ class SyncUtils {
     private Configuration config;
     private ProductCachedSerializationModule productCachedModule;
 
+    @Inject
+    public SyncUtils(Configuration config, ProductCachedSerializationModule productCachedModule) {
+        this.config = config;
+        this.productCachedModule = productCachedModule;
+    }
+
+
     File makeTempDir(String baseName) throws IOException {
-        File baseDir = new File(config.getString(ConfigProperties.SYNC_WORK_DIR));
-        if (!baseDir.exists() && !baseDir.mkdirs()) {
-            throw new IseException(
-                "Unable to create base dir for sync: " + baseDir);
-        }
-        File tmp = File.createTempFile(baseName, Long.toString(System.nanoTime()),
-            baseDir);
+        File tmp = File.createTempFile(baseName, Long.toString(System.nanoTime()), syncDir());
 
         if (!tmp.delete()) {
             throw new IOException("Could not delete temp file: " + tmp.getAbsolutePath());
@@ -61,11 +63,6 @@ class SyncUtils {
         return (tmp);
     }
 
-    @Inject
-    public SyncUtils(Configuration config, ProductCachedSerializationModule productCachedModule) {
-        this.config = config;
-        this.productCachedModule = productCachedModule;
-    }
 
     public ObjectMapper getObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
@@ -90,6 +87,19 @@ class SyncUtils {
         }
 
         return mapper;
+    }
+
+    File tempFileReference(String name) throws IOException {
+        return new File(syncDir(), name);
+    }
+
+    private File syncDir() {
+        File baseDir = new File(config.getString(ConfigProperties.SYNC_WORK_DIR));
+        if (!baseDir.exists() && !baseDir.mkdirs()) {
+            throw new IseException(
+                "Unable to create base dir for sync: " + baseDir);
+        }
+        return baseDir;
     }
 
 }

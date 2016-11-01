@@ -12,21 +12,12 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.sync;
+package org.candlepin.sync.file;
 
 /**
- * ExportCreationException
+ * Defines the manifest type of a stored file record.
  */
-public class ExportCreationException extends SyncException {
-
-    private static final long serialVersionUID = 1126642027355176388L;
-
-    public ExportCreationException(String msg, Throwable e) {
-        super(msg, e);
-    }
-
-    public ExportCreationException(String msg) {
-        super(msg);
-    }
-
+public enum ManifestFileType {
+    IMPORT,
+    EXPORT
 }

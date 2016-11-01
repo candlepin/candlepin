@@ -63,12 +63,14 @@ import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.resteasy.filter.StoreFactory;
 import org.candlepin.service.EntitlementCertServiceAdapter;
+import org.candlepin.service.ExportExtensionAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.impl.DefaultExportExtensionAdapter;
 import org.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultProductServiceAdapter;
@@ -76,10 +78,12 @@ import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.service.impl.stub.StubEntitlementCertServiceAdapter;
+import org.candlepin.sync.file.DBManifestService;
+import org.candlepin.sync.file.ManifestFileService;
+import org.candlepin.test.VerifyAuthorizationFilterFactory;
 import org.candlepin.test.DateSourceForTesting;
 import org.candlepin.test.EnforcerForTesting;
 import org.candlepin.test.PKIReaderForTesting;
-import org.candlepin.test.VerifyAuthorizationFilterFactory;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.Util;
@@ -276,6 +280,7 @@ public class TestingModules {
                 DefaultOwnerServiceAdapter.class);
             bind(EntitlementCertServiceAdapter.class).to(
                 StubEntitlementCertServiceAdapter.class);
+            bind(ManifestFileService.class).to(DBManifestService.class);
             bind(ScriptEngineProvider.class);
 
             bind(JobFactory.class).to(GuiceJobFactory.class);
@@ -288,6 +293,8 @@ public class TestingModules {
             bind(PrincipalProvider.class).to(TestPrincipalProvider.class);
             bind(Principal.class).toProvider(TestPrincipalProvider.class);
             bind(EventSink.class).to(NoopEventSinkImpl.class);
+
+            bind(ExportExtensionAdapter.class).to(DefaultExportExtensionAdapter.class);
 
             bind(ResourceLocatorMap.class);
             bind(StoreFactory.class);

@@ -22,9 +22,9 @@ import org.candlepin.pinsetter.tasks.CancelJobJob;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.pinsetter.tasks.ExpiredPoolsJob;
-import org.candlepin.pinsetter.tasks.ExportCleaner;
 import org.candlepin.pinsetter.tasks.ImportRecordJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
+import org.candlepin.pinsetter.tasks.ManifestCleanerJob;
 import org.candlepin.pinsetter.tasks.SweepBarJob;
 import org.candlepin.pinsetter.tasks.UnmappedGuestEntitlementCleanerJob;
 import org.candlepin.pinsetter.tasks.UnpauseJob;
@@ -168,14 +168,17 @@ public class ConfigProperties {
         CertificateRevocationListTask.class.getName(),
         JobCleaner.class.getName(),
         ImportRecordJob.class.getName(),
+        ManifestCleanerJob.class.getName(), ActiveEntitlementJob.class.getName(),
         CancelJobJob.class.getName(),
         ExpiredPoolsJob.class.getName(),
         UnpauseJob.class.getName(),
         SweepBarJob.class.getName(),
-        ExportCleaner.class.getName(),
         ActiveEntitlementJob.class.getName(),
         UnmappedGuestEntitlementCleanerJob.class.getName(),
     };
+
+    public static final String MANIFEST_CLEANER_JOB_MAX_AGE_IN_MINUTES =
+        "pinsetter.org.candlepin.pinsetter.tasks.ManifestCleanerJob.max_age_in_minutes";
 
     public static final String ENTITLER_JOB_THROTTLE =
         "pinsetter." + EntitlerJob.class.getName() + ".throttle";
@@ -184,6 +187,7 @@ public class ConfigProperties {
         "candlepin.batch.bind.number_of_pools_limit";
 
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
+
     public static final String CONSUMER_FACTS_MATCHER = "candlepin.consumer.facts.match_regex";
 
     public static final String SHARD_USERNAME = "candlepin.shard.username";
@@ -383,6 +387,10 @@ public class ConfigProperties {
             this.put(PINSETTER_ASYNC_JOB_TIMEOUT, Integer.toString(1200));
             this.put(PINSETTER_MAX_RETRIES, Integer.toString(PINSETTER_MAX_RETRIES_DEFAULT));
             this.put(SWAGGER_ENABLED, Boolean.toString(true));
+
+            // ManifestCleanerJob config
+            // Max Age: 24 hours
+            this.put(MANIFEST_CLEANER_JOB_MAX_AGE_IN_MINUTES, "1440");
         }
     };
 

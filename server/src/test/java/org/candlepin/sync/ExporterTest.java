@@ -14,13 +14,9 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.common.config.MapConfiguration;
@@ -51,6 +47,7 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
+import org.candlepin.service.ExportExtensionAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 
@@ -77,6 +74,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -108,6 +106,7 @@ public class ExporterTest {
     private CandlepinCommonTestConfig config;
     private ExportRules exportRules;
     private PrincipalProvider pprov;
+    private ExportExtensionAdapter exportExtensionAdapter;
     private ProductCurator pc;
     private SyncUtils su;
 
@@ -134,10 +133,13 @@ public class ExporterTest {
         dve = new DistributorVersionExporter();
         cdnc = mock(CdnCurator.class);
         cdne = new CdnExporter();
+
         pc = mock(ProductCurator.class);
         ProductCachedSerializationModule productCachedModule = new ProductCachedSerializationModule(pc);
         su = new SyncUtils(config, productCachedModule);
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
+
+        exportExtensionAdapter = mock(ExportExtensionAdapter.class);
     }
 
     private KeyPair createKeyPair() {
@@ -240,7 +242,8 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
+            exportExtensionAdapter);
 
         File export = e.getFullExport(consumer);
 
@@ -293,7 +296,8 @@ public class ExporterTest {
             .thenReturn("publicKey".getBytes());
 
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
+            exportExtensionAdapter);
 
         e.getFullExport(consumer);
     }
@@ -330,7 +334,8 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
+            exportExtensionAdapter);
         File export = e.getFullExport(consumer);
 
         // VERIFY
@@ -376,7 +381,8 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
+            exportExtensionAdapter);
         File export = e.getFullExport(consumer);
 
         // VERIFY
@@ -423,7 +429,8 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
+            exportExtensionAdapter);
         File export = e.getFullExport(consumer);
 
         verifyContent(export, "export/consumer.json",
@@ -477,11 +484,46 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
+            exportExtensionAdapter);
         File export = e.getFullExport(consumer);
 
         verifyContent(export, "export/distributor_version/test-dist-ver.json",
             new VerifyDistributorVersion("test-dist-ver.json"));
+    }
+
+    @Test
+    public void verifyExportExtension() throws Exception {
+        Map<String, String> extensionData = new HashMap<String, String>();
+        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
+            exportExtensionAdapter);
+
+        Principal principal = mock(Principal.class);
+        when(pprov.get()).thenReturn(principal);
+        when(principal.getUsername()).thenReturn("testUser");
+
+        Consumer consumer = mock(Consumer.class);
+
+        Rules mrules = mock(Rules.class);
+        when(mrules.getRules()).thenReturn("foobar");
+        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
+            "signature".getBytes());
+        when(rc.getRules()).thenReturn(mrules);
+
+        // specific to this test
+        IdentityCertificate idcert = new IdentityCertificate();
+        idcert.setSerial(new CertificateSerial(10L, new Date()));
+        idcert.setKey("euh0876puhapodifbvj094");
+        idcert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
+        idcert.setCreated(new Date());
+        idcert.setUpdated(new Date());
+        when(consumer.getIdCert()).thenReturn(idcert);
+
+        e.getFullExport(consumer, "cdn-key", "webapp-prefix", "api-url", extensionData);
+        // Default implementation of the ExportExtensionAdapter does nothing so
+        // we only verify that the extension method was invoked.
+        verify(exportExtensionAdapter).extendManifest(any(File.class), eq(consumer), eq(extensionData));
     }
 
     /**
