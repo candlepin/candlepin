@@ -464,7 +464,7 @@ public class Importer {
     @Transactional(rollbackOn = {IOException.class, ImporterException.class,
         RuntimeException.class, ImportConflictException.class})
     // WARNING: Keep this method public, otherwise @Transactional is ignored:
-    protected List<Subscription> importObjects(Owner owner, Map<String, File> importFiles,
+    public List<Subscription> importObjects(Owner owner, Map<String, File> importFiles,
         ConflictOverrides overrides)
         throws IOException, ImporterException {
 
