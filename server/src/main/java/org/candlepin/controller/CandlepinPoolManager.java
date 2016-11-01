@@ -1511,7 +1511,7 @@ public class CandlepinPoolManager implements PoolManager {
         );
 
         // we might have changed the bonus pool quantities, lets find out.
-        handler.handleBonusPools(poolQuantities, entitlements);
+        handler.handleBonusPools(consumer.getOwner(), poolQuantities, entitlements);
 
 
         /*
@@ -1533,10 +1533,11 @@ public class CandlepinPoolManager implements PoolManager {
      * This method will pull the bonus pools from a physical and make sure that
      *  the bonus pools are not over-consumed.
      *
+     * @param owner
      * @param consumer
      * @param pool
      */
-    private void checkBonusPoolQuantities(Map<String, PoolQuantity> poolQuantities,
+    private void checkBonusPoolQuantities(Owner owner, Map<String, PoolQuantity> poolQuantities,
         Map<String, Entitlement> entitlements) {
 
         Set<String> excludePoolIds = new HashSet<String>();
@@ -1547,7 +1548,8 @@ public class CandlepinPoolManager implements PoolManager {
             excludePoolIds.add(pool.getId());
         }
 
-        List<Pool> overConsumedPools = poolCurator.lookupOversubscribedBySubscriptionIds(subEntitlementMap);
+        List<Pool> overConsumedPools = poolCurator.lookupOversubscribedBySubscriptionIds(owner,
+            subEntitlementMap);
 
         List<Pool> derivedPools = new ArrayList<Pool>();
         for (Pool pool : overConsumedPools) {
@@ -1970,7 +1972,8 @@ public class CandlepinPoolManager implements PoolManager {
         void handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> pools,
             Map<String, Entitlement> entitlements, boolean generateUeberCert);
 
-        void handleBonusPools(Map<String, PoolQuantity> pools, Map<String, Entitlement> entitlements);
+        void handleBonusPools(Owner owner, Map<String, PoolQuantity> pools,
+            Map<String, Entitlement> entitlements);
     }
 
     /**
@@ -2047,8 +2050,9 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         @Override
-        public void handleBonusPools(Map<String, PoolQuantity> pools, Map<String, Entitlement> entitlements) {
-            checkBonusPoolQuantities(pools, entitlements);
+        public void handleBonusPools(Owner owner, Map<String, PoolQuantity> pools,
+            Map<String, Entitlement> entitlements) {
+            checkBonusPoolQuantities(owner, pools, entitlements);
         }
     }
 
@@ -2082,10 +2086,11 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
         @Override
-        public void handleBonusPools(Map<String, PoolQuantity> pools, Map<String, Entitlement> entitlements) {
+        public void handleBonusPools(Owner owner, Map<String, PoolQuantity> pools,
+            Map<String, Entitlement> entitlements) {
             // This is likely a no-op now that virt-limit is the quantity on sub-pools,
             // rather than the older virt_limit * entitlement quantity:
-            checkBonusPoolQuantities(pools, entitlements);
+            checkBonusPoolQuantities(owner, pools, entitlements);
         }
     }
 

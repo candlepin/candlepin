@@ -311,6 +311,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 "        JOIN outContent.modifiedProductIds outModProdId" +
                 "    WHERE" +
                 "        outPool.endDate >= current_date AND" +
+                "        eOut.owner = :owner AND" +
                 "        eOut NOT IN (:ein) AND" +
                 "        EXISTS (" +
                 "            SELECT eIn" +
@@ -332,7 +333,9 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             );
 
             for (List<Entitlement> block : blocks) {
-                eids.addAll(query.setParameter("ein", block).getResultList());
+                Owner sampleOwner = block.get(0).getOwner();
+                eids.addAll(query.setParameter("ein", block)
+                    .setParameter("owner", sampleOwner).getResultList());
             }
         }
 
