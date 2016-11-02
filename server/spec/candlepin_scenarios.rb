@@ -315,9 +315,13 @@ class Exporter
 
   end
 
+  def do_export(client, dest_dir, opts={}, uuid=nil)
+    client.export_consumer(dest_dir, opts, uuid)
+  end
+
   def create_candlepin_export
     export = Export.new
-    export.export_filename = @candlepin_client.export_consumer(export.tmp_dir, @opts)
+    export.export_filename = do_export(@candlepin_client, export.tmp_dir, @opts)
     export.extract()
     @exports << export
     export
@@ -326,7 +330,7 @@ class Exporter
   def create_candlepin_export_with_ro_user
     ro_user_client = user_client(@owner, random_string('CPExport_user'), true)
     export = Export.new
-    export.export_filename = ro_user_client.export_consumer(export.tmp_dir, @opts, @candlepin_client.uuid)
+    export.export_filename = do_export(ro_user_client, export.tmp_dir, @opts, @candlepin_client.uuid)
     export.extract()
     @exports << export
     export
@@ -432,7 +436,7 @@ class StandardExporter < Exporter
     create_pool_and_subscription(@owner['key'], @products[:product_up].id, 10, [], '', '12345', '6789', nil, end_date, true)
     create_pool_and_subscription(@owner['key'], @products[:product_vdc].id, 5, [], '', '12345', '6789', nil, end_date, false,
       {:derived_product_id => @products[:product_dc]['id']})
- 
+
     # Pool names is a list of names of instance variables that will be created
     pool_names = ["pool1", "pool2", "pool3", "pool4", "pool_up", "pool_vdc"]
     pool_products = [:product1, :product2, :product3, :virt_product, :product_up, :product_vdc]
@@ -539,6 +543,21 @@ class VirtLimitExporter < Exporter
 
     @candlepin_client.consume_pool(@pool3.id, {:quantity => 1})
     create_candlepin_export()
+  end
+end
+
+class AsyncStandardExporter < StandardExporter
+
+  def do_export(client, dest_dir, opts={}, uuid=nil)
+    job = client.export_consumer_async(opts, uuid)
+    # Wait a little longer here as export can take a bit of time
+    wait_for_job(job["id"], 60)
+    status = client.get_job(job["id"], true)
+    if status["state"] == "FAILED"
+      raise AsyncExportFailure.new(status)
+    end
+    result = status["resultData"]
+    client.download_consumer_export(result["exportedConsumer"], result["exportId"], dest_dir)
   end
 
 end

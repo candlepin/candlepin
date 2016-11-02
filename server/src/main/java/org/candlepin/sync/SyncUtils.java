@@ -33,6 +33,7 @@ import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 
+
 /**
  * SyncUtils
  */
@@ -90,6 +91,15 @@ class SyncUtils {
         }
 
         return mapper;
+    }
+
+    File tempFileReference(String name) throws IOException {
+        File baseDir = new File(config.getString(ConfigProperties.SYNC_WORK_DIR));
+        if (!baseDir.exists() && !baseDir.mkdirs()) {
+            throw new IseException(
+                "Unable to create base dir for sync: " + baseDir);
+        }
+        return new File(baseDir, name);
     }
 
 }

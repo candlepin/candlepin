@@ -17,17 +17,21 @@ package org.candlepin.guice;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
+import org.candlepin.service.ExportExtensionAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
+import org.candlepin.service.impl.DefaultExportExtensionAdapter;
 import org.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
+import org.candlepin.sync.file.DBManifestService;
+import org.candlepin.sync.file.ManifestFileService;
 
 import com.google.inject.AbstractModule;
 
@@ -50,8 +54,9 @@ class DefaultConfig extends AbstractModule {
             DefaultEntitlementCertServiceAdapter.class);
         bind(UserServiceAdapter.class).to(DefaultUserServiceAdapter.class);
         bind(ProductServiceAdapter.class).to(DefaultProductServiceAdapter.class);
+        bind(ManifestFileService.class).to(DBManifestService.class);
         bind(SubjectKeyIdentifierWriter.class).to(DefaultSubjectKeyIdentifierWriter.class);
-
+        bind(ExportExtensionAdapter.class).to(DefaultExportExtensionAdapter.class);
         bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
     }
 }

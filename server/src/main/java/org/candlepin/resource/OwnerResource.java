@@ -37,6 +37,7 @@ import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.paging.Paginate;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ContentManager;
+import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ProductManager;
@@ -56,7 +57,6 @@ import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
-import org.candlepin.model.ImportUpstreamConsumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfo;
@@ -81,11 +81,9 @@ import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
-import org.candlepin.sync.ImportConflictException;
-import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
-import org.candlepin.sync.Meta;
 import org.candlepin.sync.SyncDataFormatException;
+import org.candlepin.sync.file.ManifestFileServiceException;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.Util;
@@ -112,11 +110,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -162,7 +158,7 @@ public class OwnerResource {
     private EventFactory eventFactory;
     private EventAdapter eventAdapter;
     private EventCurator eventCurator;
-    private Importer importer;
+    private ManifestManager manifestManager;
     private ExporterMetadataCurator exportCurator;
     private ImportRecordCurator importRecordCurator;
     private PoolManager poolManager;
@@ -189,7 +185,7 @@ public class OwnerResource {
         EventFactory eventFactory,
         EventCurator eventCurator,
         EventAdapter eventAdapter,
-        Importer importer,
+        ManifestManager manifestManager,
         PoolManager poolManager,
         OwnerManager ownerManager,
         ExporterMetadataCurator exportCurator,
@@ -217,10 +213,10 @@ public class OwnerResource {
         this.sink = sink;
         this.eventFactory = eventFactory;
         this.eventCurator = eventCurator;
-        this.importer = importer;
         this.exportCurator = exportCurator;
         this.importRecordCurator = importRecordCurator;
         this.poolManager = poolManager;
+        this.manifestManager = manifestManager;
         this.ownerManager = ownerManager;
         this.eventAdapter = eventAdapter;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -1189,6 +1185,8 @@ public class OwnerResource {
      * This will bring in any products, content, and subscriptions that were assigned to
      * the distributor who generated the manifest.
      *
+     * @deprecated use GET /owners/:owner_key/imports/async
+     *
      * @return a ImportRecord object if the import is successful.
      * @httpcode 400
      * @httpcode 404
@@ -1200,99 +1198,111 @@ public class OwnerResource {
     @Path("{owner_key}/imports")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @ApiOperation(notes = "Imports a manifest zip file for the given organization. " +
+    @ApiOperation(
+        notes = "Imports a manifest zip file for the given organization. " +
         "This will bring in any products, content, and subscriptions that were " +
         "assigned to the distributor who generated the manifest.", value = "Import Manifest")
     @ApiResponses({ @ApiResponse(code = 400, message = ""),
         @ApiResponse(code = 404, message = "Owner not found"), @ApiResponse(code = 500, message = ""),
         @ApiResponse(code = 409, message = "") })
+    @Deprecated
     public ImportRecord importManifest(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @QueryParam("force") String[] overrideConflicts, MultipartInput input) {
+        @QueryParam("force") String[] overrideConflicts,
+        MultipartInput input) {
 
-        if (overrideConflicts.length == 1) {
-            /*
-             * For backward compatibility, look for force=true and if found,
-             * treat it just like what it used to mean, ignore an old manifest
-             * creation date.
-             */
-            if (overrideConflicts[0].equalsIgnoreCase("true")) {
-                overrideConflicts = new String [] { "MANIFEST_OLD" };
-            }
-            else if (overrideConflicts[0].equalsIgnoreCase("false")) {
-                overrideConflicts = new String [] {};
-            }
-        }
-        if (log.isDebugEnabled()) {
-            for (String s : overrideConflicts) {
-                log.debug("Forcing conflict if encountered: " + s);
-            }
-        }
+        ConflictOverrides overrides = processConflictOverrideParams(overrideConflicts);
 
-        ConflictOverrides overrides = null;
-        try {
-            overrides = new ConflictOverrides(overrideConflicts);
-        }
-        catch (IllegalArgumentException e) {
-            throw new BadRequestException(i18n.tr("Unknown conflict to force"));
-        }
-
-        String filename = "";
+        UploadMetadata fileData = new UploadMetadata();
         Owner owner = findOwner(ownerKey);
-        Map<String, Object> data = new HashMap<String, Object>();
         try {
-            InputPart part = input.getParts().get(0);
-            MultivaluedMap<String, String> headers = part.getHeaders();
-            String contDis = headers.getFirst("Content-Disposition");
-            StringTokenizer st = new StringTokenizer(contDis, ";");
-            while (st.hasMoreTokens()) {
-                String entry = st.nextToken().trim();
-                if (entry.startsWith("filename")) {
-                    filename = entry.substring(entry.indexOf("=") + 2, entry.length() - 1);
-                    break;
-                }
-            }
-            File archive = part.getBody(new GenericType<File>() {
-            });
-            log.info("Importing archive " + archive.getAbsolutePath() +
-                " for owner " + owner.getDisplayName());
-            data = importer.loadExport(owner, archive, overrides);
-
-            sink.emitImportCreated(owner);
-            return recordImportSuccess(owner, data, overrides, filename);
+            fileData = getArchiveFromResponse(input);
+            return manifestManager.importManifest(owner, fileData.getData(), fileData.getUploadedFilename(),
+                overrides);
         }
         catch (IOException e) {
             log.error("Reading error during importing", e);
-            recordImportFailure(owner, data, e, filename);
+            manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
             throw new IseException(i18n.tr("Error reading export archive"), e);
         }
         // These come back with internationalized messages, so we can transfer:
         catch (SyncDataFormatException e) {
             log.error("Format error of the data in a manifest", e);
-            recordImportFailure(owner, data, e, filename);
+            manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
             throw new BadRequestException(e.getMessage(), e);
         }
         catch (ImporterException e) {
             log.error("Problem with archive", e);
-            recordImportFailure(owner, data, e, filename);
+            manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
             throw new IseException(e.getMessage(), e);
-        }
-        catch (ImportConflictException e) {
-            //This is a normal path of operation
-            //and does not require a stack trace in the error log.
-            log.debug("Importing same manifest again", e);
-            recordImportFailure(owner, data, e, filename);
-            throw e;
         }
         // Grab candlepin exceptions to record the error and then rethrow
         // to pass on the http return code
         catch (CandlepinException e) {
             log.error("Recording import failure", e);
-            recordImportFailure(owner, data, e, filename);
+            manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
             throw e;
         }
         finally {
-            log.info("Import attempt completed for owner " + owner.getDisplayName());
+            log.info("Import attempt completed for owner {}", owner.getDisplayName());
+        }
+    }
+
+    /**
+     * Initiates an asynchronous manifest import for the given organization. The details of
+     * the started job can be obtained via the {@link JobResource}.
+     *
+     * This will bring in any products, content, and subscriptions that were assigned to
+     * the distributor who generated the manifest.
+     *
+     * @return a JobDetail object representing the newly started {@link ImportJob}.
+     * @httpcode 400
+     * @httpcode 404
+     * @httpcode 500
+     * @httpcode 200
+     * @httpcode 409
+     */
+    @POST
+    @Path("{owner_key}/imports/async")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @ApiOperation(
+        notes = "Initiates an asynchronous manifest import for the given organization. " +
+        "This will bring in any products, content, and subscriptions that were " +
+        "assigned to the distributor who generated the manifest.",
+        value = "Import Manifest Asynchronously")
+    @ApiResponses({
+        @ApiResponse(code = 400, message = ""),
+        @ApiResponse(code = 404, message = "Owner not found"),
+        @ApiResponse(code = 500, message = ""),
+        @ApiResponse(code = 409, message = "")})
+    public JobDetail importManifestAsync(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        @QueryParam("force") String[] overrideConflicts,
+        MultipartInput input) {
+
+        ConflictOverrides overrides = processConflictOverrideParams(overrideConflicts);
+
+        UploadMetadata fileData = new UploadMetadata();
+        Owner owner = findOwner(ownerKey);
+        try {
+            fileData = getArchiveFromResponse(input);
+            String archivePath = fileData.getData().getAbsolutePath();
+            log.info("Running async import of archive {} for owner {}", archivePath, owner.getDisplayName());
+            return manifestManager.importManifestAsync(owner, fileData.getData(),
+                fileData.getUploadedFilename(), overrides);
+        }
+        catch (IOException e) {
+            manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
+            throw new IseException(i18n.tr("Error reading export archive"), e);
+        }
+        catch (ManifestFileServiceException e) {
+            manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
+            throw new IseException(i18n.tr("Error storing uploaded archive for asynchronous processing."), e);
+        }
+        catch (CandlepinException e) {
+            manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
+            throw e;
         }
     }
 
@@ -1452,92 +1462,76 @@ public class OwnerResource {
         return consumerCurator.getHypervisorsBulk(hypervisorIds, ownerKey);
     }
 
-    private ImportRecord recordImportSuccess(Owner owner, Map data,
-        ConflictOverrides forcedConflicts, String filename) {
-
-        ImportRecord record = new ImportRecord(owner);
-        Meta meta = (Meta) data.get("meta");
-        if (meta != null) {
-            record.setGeneratedBy(meta.getPrincipalName());
-            record.setGeneratedDate(meta.getCreated());
-        }
-        record.setUpstreamConsumer(createImportUpstreamConsumer(owner, null));
-        record.setFileName(filename);
-
-        List<Subscription> subscriptions = (List<Subscription>) data.get("subscriptions");
-        boolean activeSubscriptionFound = false, expiredSubscriptionFound = false;
-        Date currentDate = new Date();
-        for (Subscription subscription : subscriptions) {
-            if (subscription.getEndDate() == null || subscription.getEndDate().after(currentDate)) {
-                activeSubscriptionFound = true;
+    private ConflictOverrides processConflictOverrideParams(String[] overrideConflicts) {
+        if (overrideConflicts.length == 1) {
+            /*
+             * For backward compatibility, look for force=true and if found,
+             * treat it just like what it used to mean, ignore an old manifest
+             * creation date.
+             */
+            if (overrideConflicts[0].equalsIgnoreCase("true")) {
+                overrideConflicts = new String [] { "MANIFEST_OLD" };
             }
-            else {
-                expiredSubscriptionFound = true;
-                sink.emitSubscriptionExpired(subscription);
+            else if (overrideConflicts[0].equalsIgnoreCase("false")) {
+                overrideConflicts = new String [] {};
             }
         }
-        String msg = i18n.tr("{0} file imported successfully.", owner.getKey());
-        if (!forcedConflicts.isEmpty()) {
-            msg = i18n.tr("{0} file imported forcibly.", owner.getKey());
+        if (log.isDebugEnabled()) {
+            for (String s : overrideConflicts) {
+                log.debug("Forcing conflict if encountered: " + s);
+            }
         }
 
-        if (!activeSubscriptionFound) {
-            msg += i18n.tr("No active subscriptions found in the file.");
-            record.recordStatus(ImportRecord.Status.SUCCESS_WITH_WARNING, msg);
+        ConflictOverrides overrides = null;
+        try {
+            overrides = new ConflictOverrides(overrideConflicts);
         }
-        else if (expiredSubscriptionFound) {
-            msg += i18n.tr("One or more inactive subscriptions found in the file.");
-            record.recordStatus(ImportRecord.Status.SUCCESS_WITH_WARNING, msg);
+        catch (IllegalArgumentException e) {
+            throw new BadRequestException(i18n.tr("Unknown conflict to force"));
         }
-        else {
-            record.recordStatus(ImportRecord.Status.SUCCESS, msg);
-        }
-
-        this.importRecordCurator.create(record);
-        return record;
+        return overrides;
     }
 
-    private void recordImportFailure(Owner owner, Map data, Throwable error,
-        String filename) {
-        ImportRecord record = new ImportRecord(owner);
-        Meta meta = (Meta) data.get("meta");
-        if (meta != null) {
-            record.setGeneratedBy(meta.getPrincipalName());
-            record.setGeneratedDate(meta.getCreated());
+    private UploadMetadata getArchiveFromResponse(MultipartInput input) throws IOException {
+        String filename = "";
+        InputPart part = input.getParts().get(0);
+        MultivaluedMap<String, String> headers = part.getHeaders();
+        String contDis = headers.getFirst("Content-Disposition");
+        StringTokenizer st = new StringTokenizer(contDis, ";");
+        while (st.hasMoreTokens()) {
+            String entry = st.nextToken().trim();
+            if (entry.startsWith("filename")) {
+                filename = entry.substring(entry.indexOf("=") + 2, entry.length() - 1);
+                break;
+            }
         }
-        record.setUpstreamConsumer(createImportUpstreamConsumer(owner, null));
-        record.setFileName(filename);
-
-        record.recordStatus(ImportRecord.Status.FAILURE, error.getMessage());
-
-        this.importRecordCurator.create(record);
+        return new UploadMetadata(part.getBody(new GenericType<File>() {}), filename);
     }
 
-    private void recordManifestDeletion(Owner owner, String username, UpstreamConsumer uc) {
-        ImportRecord record = new ImportRecord(owner);
-        record.setGeneratedBy(username);
-        record.setGeneratedDate(new Date());
-        String msg = i18n.tr("Subscriptions deleted by {0}", username);
-        record.recordStatus(ImportRecord.Status.DELETE, msg);
-        record.setUpstreamConsumer(createImportUpstreamConsumer(owner, uc));
+    /**
+     * A private class that stores data related to a file upload request.
+     */
+    private class UploadMetadata {
+        private File data;
+        private String uploadedFilename;
 
-        this.importRecordCurator.create(record);
-    }
+        public UploadMetadata(File data, String uploadedFilename) {
+            this.data = data;
+            this.uploadedFilename = uploadedFilename;
+        }
 
-    private ImportUpstreamConsumer createImportUpstreamConsumer(Owner owner, UpstreamConsumer uc) {
-        ImportUpstreamConsumer iup = null;
-        if (uc == null) {
-            uc = owner.getUpstreamConsumer();
+        public UploadMetadata() {
+            this.data = null;
+            this.uploadedFilename = "";
         }
-        if (uc != null) {
-            iup = new ImportUpstreamConsumer();
-            iup.setOwnerId(uc.getOwnerId());
-            iup.setName(uc.getName());
-            iup.setUuid(uc.getUuid());
-            iup.setType(uc.getType());
-            iup.setWebUrl(uc.getWebUrl());
-            iup.setApiUrl(uc.getApiUrl());
+
+        public File getData() {
+            return data;
         }
-        return iup;
+
+        public String getUploadedFilename() {
+            return uploadedFilename;
+        }
+
     }
 }

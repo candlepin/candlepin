@@ -158,4 +158,5 @@ public class ImportRecord extends AbstractHibernateObject {
     public void setUpstreamConsumer(ImportUpstreamConsumer upstreamConsumer) {
         this.upstreamConsumer = upstreamConsumer;
     }
+
 }

@@ -98,12 +98,12 @@ public class HypervisorResourceTest {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.hypervisorType = new ConsumerType(ConsumerTypeEnum.HYPERVISOR);
         this.consumerResource = new ConsumerResource(this.consumerCurator,
-            this.consumerTypeCurator, this.ownerProductCurator, this.subscriptionService,
-            null, this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
-            this.userService, null, null, null, this.ownerCurator,
+            this.consumerTypeCurator, null, this.subscriptionService, null,
+            this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
+            this.userService, null, null, this.ownerCurator,
             this.activationKeyCurator, null, this.complianceRules,
             this.deletedConsumerCurator, null, null, new CandlepinCommonTestConfig(),
-            null, null, null, this.consumerBindUtil, productCurator);
+            null, null, null, this.consumerBindUtil, productCurator, null);
 
         hypervisorResource = new HypervisorResource(consumerResource,
             consumerCurator, i18n, ownerCurator);

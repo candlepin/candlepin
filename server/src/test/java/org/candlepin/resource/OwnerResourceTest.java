@@ -37,6 +37,7 @@ import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.ContentManager;
+import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ProductManager;
@@ -67,7 +68,6 @@ import org.candlepin.resteasy.parameter.CandlepinParameterUnmarshaller;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
-import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -88,6 +88,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
+import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
@@ -110,6 +111,7 @@ import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MultivaluedMap;
+
 /**
  * OwnerResourceTest
  */
@@ -1145,101 +1147,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertFalse(owner.autobindDisabled());
     }
 
-    @Test
-    public void testImportRecordSuccessWithFilename() throws IOException, ImporterException {
-
-        MultipartInput input = mock(MultipartInput.class);
-
-        Map<String, Object> result = new HashMap<String, Object>();
-        List<Subscription> subscriptions = new ArrayList<Subscription>();
-        Subscription subscription = new Subscription();
-        //expires tomorrow
-        subscription.setEndDate(new Date((new Date()).getTime() + (1000 * 60 * 60 * 24)));
-        subscriptions.add(subscription);
-        result.put("subscriptions", subscriptions);
-        EventSink es = mock(EventSink.class);
-        OwnerResource thisOwnerResource = setUpSuccessfulImport(input, result, es);
-        thisOwnerResource.importManifest(owner.getKey(), new String [] {}, input);
-        List<ImportRecord> records = importRecordCurator.findRecords(owner);
-        ImportRecord ir = records.get(0);
-        assertEquals("test_file.zip", ir.getFileName());
-        assertEquals(owner, ir.getOwner());
-        assertEquals(ImportRecord.Status.SUCCESS, ir.getStatus());
-    }
-
-    @Test
-    public void importManifestWithNoActiveSubscriptions() throws IOException, ImporterException {
-        MultipartInput input = mock(MultipartInput.class);
-        List<Subscription> subscriptions = new ArrayList<Subscription>();
-        Map<String, Object> result = new HashMap<String, Object>();
-        result.put("subscriptions", subscriptions);
-        EventSink es = mock(EventSink.class);
-        OwnerResource thisOwnerResource = setUpSuccessfulImport(input, result, es);
-        ImportRecord record = thisOwnerResource.importManifest(owner.getKey(), new String[0], input);
-        assertEquals(ImportRecord.Status.SUCCESS_WITH_WARNING, record.getStatus());
-        assertEquals(owner.getKey() + " file imported successfully." +
-            "No active subscriptions found in the file.", record.getStatusMessage());
-    }
-
-    @Test
-    public void importManifestWithSomeActiveSubscriptions() throws IOException, ImporterException {
-        MultipartInput input = mock(MultipartInput.class);
-        Map<String, Object> result = new HashMap<String, Object>();
-        List<Subscription> subscriptions = new ArrayList<Subscription>();
-        Subscription subscription = TestUtil.createSubscription();
-        //expires tomorrow
-        subscription.setEndDate(new Date((new Date()).getTime() + (1000 * 60 * 60 * 24)));
-        subscriptions.add(subscription);
-        subscription = new Subscription();
-        //expires yesterday
-        subscription.setEndDate(new Date((new Date()).getTime() - (1000 * 60 * 60 * 24)));
-        subscriptions.add(subscription);
-        result.put("subscriptions", subscriptions);
-
-        EventSink es = mock(EventSink.class);
-        OwnerResource thisOwnerResource = setUpSuccessfulImport(input, result, es);
-        ImportRecord record = thisOwnerResource.importManifest(owner.getKey(), new String[0], input);
-        assertEquals(ImportRecord.Status.SUCCESS_WITH_WARNING, record.getStatus());
-        assertEquals(owner.getKey() + " file imported successfully." +
-            "One or more inactive subscriptions found in the file.", record.getStatusMessage());
-        verify(es).emitSubscriptionExpired(subscription);
-    }
-
-    private OwnerResource setUpSuccessfulImport(MultipartInput input, Map<String, Object> result,
-        EventSink es) throws IOException, ImporterException {
-
-        Importer importer = mock(Importer.class);
-        OwnerResource thisOwnerResource = new OwnerResource(
-            ownerCurator, null, null, i18n, es, null, null, null, importer, null, null,
-            null, null, importRecordCurator, null, null, null, null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, productManager, contentManager
-        );
-
-        InputPart part = mock(InputPart.class);
-        File archive = mock(File.class);
-        List<InputPart> parts = new ArrayList<InputPart>();
-        parts.add(part);
-        MultivaluedMap<String, String> mm = new MultivaluedMapImpl<String, String>();
-        List<String> contDis = new ArrayList<String>();
-        contDis.add("form-data; name=\"upload\"; filename=\"test_file.zip\"");
-        mm.put("Content-Disposition", contDis);
-
-        when(input.getParts()).thenReturn(parts);
-        when(part.getHeaders()).thenReturn(mm);
-        when(part.getBody(any(GenericType.class))).thenReturn(archive);
-        when(importer.loadExport(eq(owner), any(File.class), any(ConflictOverrides.class)))
-            .thenReturn(result);
-        return thisOwnerResource;
-
-    }
-
-    @Test
-    public void testImportRecordFailureWithFilename() throws IOException, ImporterException {
-        Importer importer = mock(Importer.class);
+    public void testImportManifestSynchronousSuccess() throws IOException, ImporterException {
+        ManifestManager manifestManager = mock(ManifestManager.class);
         EventSink es = mock(EventSink.class);
         OwnerResource thisOwnerResource = new OwnerResource(
-            ownerCurator, null, null, i18n, es, eventFactory, null, null, importer, null, null, null, null,
-            importRecordCurator, null, null, null, null, null, null, contentOverrideValidator,
+            ownerCurator, null, null, i18n, es, eventFactory, null, null, manifestManager, null, null, null,
+            null, importRecordCurator, null, null, null, null, null, null, contentOverrideValidator,
             serviceLevelValidator, null, null, null, productManager, contentManager
         );
 
@@ -1256,21 +1169,90 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(input.getParts()).thenReturn(parts);
         when(part.getHeaders()).thenReturn(mm);
         when(part.getBody(any(GenericType.class))).thenReturn(archive);
-        when(importer.loadExport(eq(owner), any(File.class), any(ConflictOverrides.class)))
-            .thenThrow(new ImporterException("Bad import"));
+
+        ImportRecord ir = new ImportRecord(owner);
+        when(manifestManager.importManifest(eq(owner), any(File.class), eq("test_file.zip"),
+            any(ConflictOverrides.class))).thenReturn(ir);
+
+        ImportRecord response = thisOwnerResource.importManifest(owner.getKey(), new String [] {}, input);
+        assertNotNull(response);
+        assertEquals(ir, response);
+    }
+
+    @Test
+    public void testImportManifestAsyncSuccess() throws IOException, ImporterException {
+        ManifestManager manifestManager = mock(ManifestManager.class);
+        EventSink es = mock(EventSink.class);
+        OwnerResource thisOwnerResource = new OwnerResource(
+            ownerCurator, null, null, i18n, es, eventFactory, null, null, manifestManager, null, null, null,
+            null, importRecordCurator, null, null, null, null, null, null, contentOverrideValidator,
+            serviceLevelValidator, null, null, null, productManager, contentManager
+        );
+
+        MultipartInput input = mock(MultipartInput.class);
+        InputPart part = mock(InputPart.class);
+        File archive = mock(File.class);
+        List<InputPart> parts = new ArrayList<InputPart>();
+        parts.add(part);
+        MultivaluedMap<String, String> mm = new MultivaluedMapImpl<String, String>();
+        List<String> contDis = new ArrayList<String>();
+        contDis.add("form-data; name=\"upload\"; filename=\"test_file.zip\"");
+        mm.put("Content-Disposition", contDis);
+
+        JobDetail job = mock(JobDetail.class);
+
+        when(input.getParts()).thenReturn(parts);
+        when(part.getHeaders()).thenReturn(mm);
+        when(part.getBody(any(GenericType.class))).thenReturn(archive);
+        when(manifestManager.importManifestAsync(eq(owner), any(File.class), eq("test_file.zip"),
+                any(ConflictOverrides.class))).thenReturn(job);
+
+        JobDetail response = thisOwnerResource.importManifestAsync(owner.getKey(), new String [] {}, input);
+        assertNotNull(response);
+        assertEquals(job, response);
+
+        verify(manifestManager, never()).importManifest(eq(owner), any(File.class), any(String.class),
+            any(ConflictOverrides.class));
+    }
+
+    @Test
+    public void testImportManifestFailure() throws IOException, ImporterException {
+        ManifestManager manifestManager = mock(ManifestManager.class);
+        EventSink es = mock(EventSink.class);
+        OwnerResource thisOwnerResource = new OwnerResource(
+            ownerCurator, null, null, i18n, es, eventFactory, null, null, manifestManager, null, null, null,
+            null, importRecordCurator, null, null, null, null, null, null, contentOverrideValidator,
+            serviceLevelValidator, null, null, null, productManager, contentManager
+        );
+
+        MultipartInput input = mock(MultipartInput.class);
+        InputPart part = mock(InputPart.class);
+        File archive = mock(File.class);
+        List<InputPart> parts = new ArrayList<InputPart>();
+        parts.add(part);
+        MultivaluedMap<String, String> mm = new MultivaluedMapImpl<String, String>();
+        List<String> contDis = new ArrayList<String>();
+        contDis.add("form-data; name=\"upload\"; filename=\"test_file.zip\"");
+        mm.put("Content-Disposition", contDis);
+
+        when(input.getParts()).thenReturn(parts);
+        when(part.getHeaders()).thenReturn(mm);
+        when(part.getBody(any(GenericType.class))).thenReturn(archive);
+
+        ImporterException expectedException = new ImporterException("Bad import");
+        when(manifestManager.importManifest(eq(owner), any(File.class), any(String.class),
+            any(ConflictOverrides.class))).thenThrow(expectedException);
 
         try {
             thisOwnerResource.importManifest(owner.getKey(), new String [] {}, input);
+            fail("Expected IseException was not thrown");
         }
         catch (IseException ise) {
             // expected, so we catch and go on.
         }
-        List<ImportRecord> records = importRecordCurator.findRecords(owner);
-        ImportRecord ir = records.get(0);
-        assertEquals("test_file.zip", ir.getFileName());
-        assertEquals(owner, ir.getOwner());
-        assertEquals(ImportRecord.Status.FAILURE, ir.getStatus());
-        assertEquals("Bad import", ir.getStatusMessage());
+
+        verify(manifestManager).recordImportFailure(eq(owner), eq(expectedException),
+            eq("test_file.zip"));
     }
 
     @Test

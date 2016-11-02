@@ -25,10 +25,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * UniqueByOwnerJob can by extended by jobs that should not be run concurrently
- * per owner. Additional scheduled jobs will be ignored if a similar job exists
- * for the same owner that has not started running yet. A job will wait for the
- * running job to finish before beginning execution.
+ * UniqueByEntityJob can by extended by jobs that should not be run concurrently
+ * per target entity. Additional scheduled jobs will be ignored if a similar job exists
+ * for the same target entity that has not started running yet. A job will wait for the
+ * running job to finish before beginning execution. Extending this job would be useful
+ * for cases such as making sure that only one job runs at a time for a single Owner
+ * or Consumer.
  */
 public abstract class UniqueByEntityJob extends KingpinJob {
     private static Logger log = LoggerFactory.getLogger(UniqueByEntityJob.class);

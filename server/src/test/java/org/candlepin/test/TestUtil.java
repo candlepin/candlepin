@@ -100,6 +100,10 @@ public class TestUtil {
         return createConsumer(createConsumerType(), new Owner("Test Owner " + randomInt()));
     }
 
+    public static Consumer createDistributor() {
+        return createConsumer(new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN), createOwner());
+    }
+
     /**
      * Create a consumer with a new owner
      *
