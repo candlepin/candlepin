@@ -52,12 +52,15 @@ import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Entitler;
+import org.candlepin.controller.ModeManager;
+import org.candlepin.controller.ModeManagerImpl;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.pinsetter.core.GuiceJobFactory;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterKernel;
+import org.candlepin.pinsetter.core.PinsetterTriggerListener;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.pinsetter.tasks.ExportCleaner;
@@ -113,6 +116,7 @@ import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.resteasy.filter.AuthenticationFilter;
 import org.candlepin.resteasy.filter.AuthorizationFeature;
+import org.candlepin.resteasy.filter.CandlepinSuspendModeFilter;
 import org.candlepin.resteasy.filter.PinsetterAsyncFilter;
 import org.candlepin.resteasy.filter.SecurityHoleAuthorizationFilter;
 import org.candlepin.resteasy.filter.StoreFactory;
@@ -145,6 +149,7 @@ import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
 import org.hibernate.validator.HibernateValidatorConfiguration;
 import org.quartz.JobListener;
+import org.quartz.TriggerListener;
 import org.quartz.spi.JobFactory;
 import org.xnap.commons.i18n.I18n;
 
@@ -212,6 +217,7 @@ public class CandlepinModule extends AbstractModule {
         bind(Enforcer.class).to(EntitlementRules.class);
         bind(EntitlementRulesTranslator.class);
         bind(PoolManager.class).to(CandlepinPoolManager.class);
+        bind(ModeManager.class).to(ModeManagerImpl.class).asEagerSingleton();
         bind(OwnerManager.class);
         bind(PoolRules.class);
         bind(CriteriaRules.class);
@@ -313,6 +319,7 @@ public class CandlepinModule extends AbstractModule {
     }
 
     private void configureInterceptors() {
+        bind(CandlepinSuspendModeFilter.class);
         bind(PageRequestFilter.class);
         bind(PinsetterAsyncFilter.class);
         bind(VersionResponseFilter.class);
@@ -325,6 +332,7 @@ public class CandlepinModule extends AbstractModule {
     private void configurePinsetter() {
         bind(JobFactory.class).to(GuiceJobFactory.class);
         bind(JobListener.class).to(PinsetterJobListener.class);
+        bind(TriggerListener.class).to(PinsetterTriggerListener.class);
         bind(PinsetterKernel.class);
         bind(CertificateRevocationListTask.class);
         bind(JobCleaner.class);
@@ -347,7 +355,7 @@ public class CandlepinModule extends AbstractModule {
             return;
         }
 
-        /**
+        /*
          * Using this binding, the swagger.(json|xml) will be available
          * for an authenticated user at context: URL/candlepin/swagger.json
          */

@@ -21,6 +21,10 @@ import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.util.VersionUtil;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ModeManager;
+import org.candlepin.model.CandlepinModeChange;
+import org.candlepin.model.CandlepinModeChange.Mode;
+import org.candlepin.model.CandlepinModeChange.Reason;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Status;
 import org.candlepin.policy.js.JsRunnerProvider;
@@ -34,8 +38,10 @@ import java.util.Map;
 
 import javax.cache.Cache;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import io.swagger.annotations.Api;
@@ -44,7 +50,6 @@ import io.swagger.annotations.ApiOperation;
 /**
  * Status Resource
  */
-
 @Path("/status")
 @Api("status")
 public class StatusResource {
@@ -62,6 +67,7 @@ public class StatusResource {
 
     private boolean standalone = true;
     private QpidConnection sender;
+    private ModeManager modeManager;
     private RulesCurator rulesCurator;
     private JsRunnerProvider jsProvider;
     private CandlepinCache candlepinCache;
@@ -69,10 +75,12 @@ public class StatusResource {
 
     @Inject
     public StatusResource(RulesCurator rulesCurator, Configuration config, JsRunnerProvider jsProvider,
-        CandlepinCache candlepinCache, QpidConnection sender, QpidQmf qmf) {
+        CandlepinCache candlepinCache, QpidConnection sender, QpidQmf qmf, ModeManager modeManager) {
+
         this.sender = sender;
         this.rulesCurator = rulesCurator;
         this.candlepinCache = candlepinCache;
+        this.modeManager = modeManager;
         Map<String, String> map = VersionUtil.getVersionMap();
         version = map.get("version");
         release = map.get("release");
@@ -137,6 +145,30 @@ public class StatusResource {
 
         statusCache.put(CandlepinCache.STATUS_KEY, status);
         return status;
+    }
+
+    @GET
+    @ApiOperation(value = "Get mode", notes = "Returns candlepin's mode", authorizations = {})
+    @Produces({ MediaType.APPLICATION_JSON})
+    @SecurityHole(noAuth = true, anon = true)
+    @Path("mode")
+    public CandlepinModeChange getMode() {
+        return modeManager.getLastCandlepinModeChange();
+    }
+
+    @POST
+    @ApiOperation(value = "Set mode", notes = "Sets candlepin's mode according to given parameters.",
+        authorizations = {})
+    @Produces({ MediaType.APPLICATION_JSON})
+    @SecurityHole(noAuth = true, anon = true)
+    @Path("mode")
+    //TODO: This method should be removed before merging to master, was used for testing.
+    public void changeMode(
+        @QueryParam("mode")  String mode,
+        @QueryParam("reason") String reason) {
+        Mode m = Mode.valueOf(mode);
+        Reason r = Reason.valueOf(reason);
+        modeManager.enterMode(m, r);
     }
 
     //TODO this must be removed before merging the devel branch

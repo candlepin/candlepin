@@ -27,6 +27,7 @@ import org.candlepin.audit.QpidConnection;
 import org.candlepin.audit.QpidQmf;
 import org.candlepin.cache.CandlepinCache;
 import org.candlepin.common.config.Configuration;
+import org.candlepin.controller.ModeManager;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Status;
@@ -65,6 +66,7 @@ public class StatusResourceTest {
     @Mock private Cache mockedStatusCache;
     @Mock private QpidConnection qpid;
     @Mock private QpidQmf qmf;
+    @Mock private ModeManager mockedModeManager;
 
     @Before
     public void setUp() {
@@ -82,7 +84,7 @@ public class StatusResourceTest {
         ps.println("version=${version}");
         ps.println("release=${release}");
         StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache, qpid,
-            qmf);
+            qmf, mockedModeManager);
         Status s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -97,7 +99,7 @@ public class StatusResourceTest {
             .getClassLoader().getResource("version.properties").toURI()));
         ps.println("foo");
         StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache, qpid,
-            qmf);
+            qmf, mockedModeManager);
         Status s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -114,7 +116,7 @@ public class StatusResourceTest {
         ps.println("release=${release}");
         when(rulesCurator.getUpdatedFromDB()).thenThrow(new RuntimeException());
         StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache, qpid,
-            qmf);
+            qmf, mockedModeManager);
         Status s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -137,8 +139,8 @@ public class StatusResourceTest {
             .getClassLoader().getResource("version.properties").toURI()));
         ps.println("version=${version}");
         ps.println("release=${release}");
-        StatusResource sr = new StatusResource(rulesCurator, null, jsProvider, candlepinCache, qpid,
-            qmf);
+        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache, qpid,
+            qmf, mockedModeManager);
         Status s = sr.status();
         ps.close();
 
