@@ -15,8 +15,6 @@
 package org.candlepin.audit;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -28,54 +26,36 @@ import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.io.IOException;
-import java.util.Map;
 
 import javax.jms.JMSException;
-import javax.jms.TextMessage;
-import javax.jms.TopicPublisher;
-import javax.jms.TopicSession;
 /**
  * AMQPBusPublisherTest
  */
 public class AMQPBusPublisherTest {
 
     private ObjectMapper mapper;
-    private TopicSession session;
     private AMQPBusPublisher publisher;
-    private Map<Target, Map<Type, TopicPublisher>> publisherMap;
+    private QpidConnection qpid;
 
     @Before
     public void init() {
         mapper = new ObjectMapper();
-
-        session = mock(TopicSession.class);
-
-        publisherMap = Util.newMap();
-
-        // tried using AMQPBusPubProvider to create the publisher but it
-        // tries to make a real connection to a Qpid broker which we don't
-        // want. We just want to make sure the publisher is making the
-        // correct calls. So we have mocked out what we could for testing.
-        populateTopicMap(publisherMap);
-        publisher = new AMQPBusPublisher(session, publisherMap, mapper);
+        qpid = mock(QpidConnection.class);
+        publisher = new AMQPBusPublisher(mapper, qpid);
     }
 
     @Test
     public void testClose() throws JMSException {
         publisher.close();
-        for (Target target : Target.values()) {
-            for (Type type : Type.values()) {
-                verify(publisherMap.get(target).get(type)).close();
-            }
-        }
+        verify(qpid).close();
     }
 
     @Test
@@ -104,26 +84,13 @@ public class AMQPBusPublisherTest {
         EventFactory factory = new EventFactory(pp, new ProductCachedSerializationModule(productCurator));
         Consumer c = TestUtil.createConsumer();
         Event e = factory.consumerCreated(c);
-        TopicPublisher tp = publisherMap.get(Target.CONSUMER).get(Type.CREATED);
 
         publisher.onEvent(e);
 
-        verify(session).createTextMessage(anyString());
-        verify(tp).send(any(TextMessage.class));
+
+        verify(qpid).sendTextMessage(Mockito.eq(Target.CONSUMER),
+            Mockito.eq(Type.CREATED),
+            Mockito.contains("TestConsumer"));
+
     }
-
-    // Modified from AMQPBusPubProvider.
-    public void populateTopicMap(Map<Target, Map<Type, TopicPublisher>> pm) {
-
-        for (Target target : Target.values()) {
-            Map<Type, TopicPublisher> typeToTpMap = Util.newMap();
-            for (Type type : Type.values()) {
-
-                TopicPublisher tp = mock(TopicPublisher.class);
-                typeToTpMap.put(type, tp);
-            }
-            pm.put(target, typeToTpMap);
-        }
-    }
-
 }

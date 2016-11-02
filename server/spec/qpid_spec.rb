@@ -31,4 +31,28 @@ describe 'Qpid Broker' do
      msgs[0].subject.should == 'owner.created'
   end
 
+  it 'reconnect should work' do
+     @cq.stop
+     puts "Qpid stopped, creating owner"
+     create_owner random_string("test")
+     sleep 10
+     
+     @cq.start 
+     puts "Qpid restarted, querying queues"
+     sleep 1
+     msgs = @cq.receive
+     msgs.length.should == 0
+    
+     puts "Nothing found in the queues. Reconnecting"
+     
+     @cp.get("/status/recon")
+     sleep 3
+     create_owner random_string("test")
+     sleep 3
+     msgs = @cq.receive
+     msgs.length.should == 1
+     msgs[0].subject.should == 'owner.created'
+  end
+
+
 end

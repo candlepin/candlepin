@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.audit.QpidConnection;
 import org.candlepin.cache.CandlepinCache;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
@@ -59,14 +60,15 @@ public class StatusResource {
     private String release = "Unknown";
 
     private boolean standalone = true;
-
+    private QpidConnection sender;
     private RulesCurator rulesCurator;
     private JsRunnerProvider jsProvider;
     private CandlepinCache candlepinCache;
 
     @Inject
     public StatusResource(RulesCurator rulesCurator, Configuration config, JsRunnerProvider jsProvider,
-        CandlepinCache candlepinCache) {
+        CandlepinCache candlepinCache, QpidConnection sender) {
+        this.sender = sender;
         this.rulesCurator = rulesCurator;
         this.candlepinCache = candlepinCache;
         Map<String, String> map = VersionUtil.getVersionMap();
@@ -132,6 +134,19 @@ public class StatusResource {
 
         statusCache.put(CandlepinCache.STATUS_KEY, status);
         return status;
+    }
+
+    //TODO this must be removed before merging the devel branch
+    //into master. By the time the dev branch is ready to hit
+    //master, the reconnection will be tested using other means
+    //then manually this way
+    @GET
+    @ApiOperation(value = "Reconnect", notes = "Reconnects to the Qpid broker", authorizations = {})
+    @Path("/recon")
+    @SecurityHole(noAuth = true, anon = true)
+    public String recon() throws Exception {
+        sender.connect();
+        return "{\"status\":\"OK reconnected\"}";
     }
 
 }

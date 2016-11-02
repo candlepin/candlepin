@@ -23,6 +23,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.audit.QpidConnection;
 import org.candlepin.cache.CandlepinCache;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.model.Rules;
@@ -61,6 +62,7 @@ public class StatusResourceTest {
     @Mock private JsRunnerProvider jsProvider;
     @Mock private CandlepinCache candlepinCache;
     @Mock private Cache mockedStatusCache;
+    @Mock private QpidConnection qpid;
 
     @Before
     public void setUp() {
@@ -77,7 +79,7 @@ public class StatusResourceTest {
             .getClassLoader().getResource("version.properties").toURI()));
         ps.println("version=${version}");
         ps.println("release=${release}");
-        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache);
+        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache, qpid);
         Status s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -91,7 +93,7 @@ public class StatusResourceTest {
         PrintStream ps = new PrintStream(new File(this.getClass()
             .getClassLoader().getResource("version.properties").toURI()));
         ps.println("foo");
-        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache);
+        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache, qpid);
         Status s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -107,7 +109,7 @@ public class StatusResourceTest {
         ps.println("version=${version}");
         ps.println("release=${release}");
         when(rulesCurator.getUpdatedFromDB()).thenThrow(new RuntimeException());
-        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache);
+        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache, qpid);
         Status s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -130,7 +132,7 @@ public class StatusResourceTest {
             .getClassLoader().getResource("version.properties").toURI()));
         ps.println("version=${version}");
         ps.println("release=${release}");
-        StatusResource sr = new StatusResource(rulesCurator, null, jsProvider, candlepinCache);
+        StatusResource sr = new StatusResource(rulesCurator, null, jsProvider, candlepinCache, qpid);
         Status s = sr.status();
         ps.close();
 

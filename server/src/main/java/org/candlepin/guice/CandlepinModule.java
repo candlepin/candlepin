@@ -18,6 +18,8 @@ import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
 import org.candlepin.audit.NoopEventSinkImpl;
+import org.candlepin.audit.QpidConfigBuilder;
+import org.candlepin.audit.QpidConnection;
 import org.candlepin.auth.Principal;
 import org.candlepin.cache.JCacheManagerProvider;
 import org.candlepin.common.config.Configuration;
@@ -365,7 +367,11 @@ public class CandlepinModule extends AbstractModule {
 
     private void configureAmqp() {
         // for lazy loading:
-        bind(AMQPBusPublisher.class).toProvider(AMQPBusPubProvider.class).in(Singleton.class);
+
+        bind(AMQPBusPublisher.class).in(Singleton.class);
+        //TODO make sure these two classes are always singletons
+        bind(QpidConnection.class).in(Singleton.class);
+        bind(QpidConfigBuilder.class).in(Singleton.class);
     }
 
     private void configureEventSink() {
