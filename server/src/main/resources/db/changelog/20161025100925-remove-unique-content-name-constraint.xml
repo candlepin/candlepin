@@ -6,8 +6,26 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-    <changeSet id="20161025100925-1" author="awood">
+    <changeSet id="20161025100925-1" author="awood" dbms="postgresql">
+        <!-- Add a precondition since many customers have already run this by hand -->
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">select count (*) from pg_constraint where conname='cp_content_label_key'</sqlCheck>
+        </preConditions>
         <comment>Remove unique content name constraint</comment>
+        <dropUniqueConstraint
+            tableName="cp_content"
+            constraintName="cp_content_label_key"/>
+
+        <createIndex
+            tableName="cp_content"
+            indexName="cp_content_label_key">
+            <column name="label"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20161025100925-2" author="awood" dbms="mysql,oracle,hsqldb">
+        <comment>Remove unique content name constraint</comment>
+
         <dropUniqueConstraint
             tableName="cp_content"
             constraintName="cp_content_label_key"/>
