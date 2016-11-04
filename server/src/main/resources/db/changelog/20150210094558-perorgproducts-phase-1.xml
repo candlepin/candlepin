@@ -6,10 +6,8 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="oracle,postgresql,hsqldb"/>
-    <property name="timestamp.type" value="DATETIME" dbms="mysql"/>
-
-
+    <!-- Include definitions for cert.type, timestamp.type, etc. -->
+    <include file="db/changelog/datatypes.xml"/>
 
     <!-- cp2_products -->
     <changeSet id="20150210094558-01" author="crog">
@@ -313,10 +311,10 @@
             </column>
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
-            <column name="cert" type="blob">
+            <column name="cert" type="${cert.type}">
                 <constraints nullable="false"/>
             </column>
-            <column name="privatekey" type="blob">
+            <column name="privatekey" type="${cert.type}">
                 <constraints nullable="false"/>
             </column>
             <column name="product_uuid" type="varchar(32)">

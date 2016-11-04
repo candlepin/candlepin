@@ -1,0 +1,19 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="oracle,postgresql,hsqldb"/>
+    <property name="timestamp.type" value="DATETIME" dbms="mysql"/>
+
+    <property name="date.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql,oracle,hsqldb"/>
+    <property name="date.type" value="DATETIME" dbms="mysql"/>
+
+    <property name="serial.type" value="BIGINT" dbms="oracle,mysql,hsqldb"/>
+    <property name="serial.type" value="int8" dbms="postgresql"/>
+
+    <property name="cert.type" value="BLOB" dbms="oracle,mysql,hsqldb"/>
+    <property name="cert.type" value="bytea" dbms="postgresql"/>
+</databaseChangeLog>
+
