@@ -2036,7 +2036,7 @@ public class PoolManagerTest {
 
         when(mockPoolCurator.lockAndLoadBatch(anyCollection())).thenReturn(Arrays.asList(pool));
 
-        when(mockPoolCurator.lookupOversubscribedBySubscriptionIds(anyMap()))
+        when(mockPoolCurator.lookupOversubscribedBySubscriptionIds(any(Owner.class), anyMap()))
             .thenReturn(Arrays.asList(derivedPool));
         when(mockPoolCurator.retrieveFreeEntitlementsOfPools(anyListOf(Pool.class), eq(true)))
             .thenReturn(Arrays.asList(derivedEnt));
@@ -2105,7 +2105,7 @@ public class PoolManagerTest {
 
         when(mockPoolCurator.lockAndLoadBatch(anyCollection())).thenReturn(Arrays.asList(pool));
 
-        when(mockPoolCurator.lookupOversubscribedBySubscriptionIds(anyMap())).thenReturn(
+        when(mockPoolCurator.lookupOversubscribedBySubscriptionIds(any(Owner.class), anyMap())).thenReturn(
             Arrays.asList(derivedPool, derivedPool2, derivedPool3));
         when(mockPoolCurator.retrieveFreeEntitlementsOfPools(anyListOf(Pool.class), eq(true))).thenReturn(
             Arrays.asList(derivedEnt, derivedEnt2, derivedEnt3));

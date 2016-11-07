@@ -731,11 +731,11 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Map<String, Entitlement> subMap = new HashMap<String, Entitlement>();
         subMap.put(subid, e);
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(subMap).size());
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(owner, subMap).size());
 
         e = new Entitlement(pool, consumer, 1);
         entitlementCurator.create(e);
-        assertEquals(1, poolCurator.lookupOversubscribedBySubscriptionIds(subMap).size());
+        assertEquals(1, poolCurator.lookupOversubscribedBySubscriptionIds(owner, subMap).size());
     }
 
     @Test
@@ -768,7 +768,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(overConsumedPool);
         entitlementCurator.create(new Entitlement(overConsumedPool, consumer, 2));
 
-        List<Pool> gotPools = poolCurator.lookupOversubscribedBySubscriptionIds(subIdMap);
+        List<Pool> gotPools = poolCurator.lookupOversubscribedBySubscriptionIds(owner, subIdMap);
         assertEquals(5, gotPools.size());
 
         assertThat(expectedPools, hasItems(gotPools.toArray(new Pool[0])));
@@ -807,7 +807,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Map<String, Entitlement> subMap = new HashMap<String, Entitlement>();
         subMap.put(subid, sourceEnt);
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(subMap).size());
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(owner, subMap).size());
 
         // Oversubscribe to the derived pool:
         Entitlement derivedEnt = new Entitlement(derivedPool, consumer,
@@ -815,12 +815,12 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(derivedEnt);
 
         // Passing the source entitlement should find the oversubscribed derived pool:
-        assertEquals(1, poolCurator.lookupOversubscribedBySubscriptionIds(subMap).size());
+        assertEquals(1, poolCurator.lookupOversubscribedBySubscriptionIds(owner, subMap).size());
 
         subMap.clear();
         subMap.put(subid, derivedEnt);
         // Passing the derived entitlement should not see any oversubscribed pool:
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(subMap).size());
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(owner, subMap).size());
     }
 
     @Test
@@ -838,11 +838,11 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Map<String, Entitlement> subMap = new HashMap<String, Entitlement>();
         subMap.put(subid, e);
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(subMap).size());
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(owner, subMap).size());
 
         e = new Entitlement(pool, consumer, 1);
         entitlementCurator.create(e);
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(subMap).size());
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(owner, subMap).size());
     }
 
     @Test

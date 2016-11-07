@@ -496,12 +496,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * with virt_bonus on-site subscriptions where one pool is created per
      * physical entitlement.
      *
+     * @param owner Owner - The owner of the entitlements being passed in. Scoping
+     *        this to a single owner prevents performance problems in large datasets.
      * @param subIdMap Map where key is Subscription ID of the pool, and value
      *        is the Entitlement just created or modified.
      * @return Pools with too many entitlements for their new quantity.
      */
     @SuppressWarnings("unchecked")
-    public List<Pool> lookupOversubscribedBySubscriptionIds(Map<String, Entitlement> subIdMap) {
+    public List<Pool> lookupOversubscribedBySubscriptionIds(Owner owner, Map<String, Entitlement> subIdMap) {
         List<Criterion> subIdMapCriteria = new ArrayList<Criterion>();
         Criterion[] exampleCriteria = new Criterion[0];
         for (Entry<String, Entitlement> entry : subIdMap.entrySet()) {
@@ -517,6 +519,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return currentSession()
             .createCriteria(Pool.class)
             .createAlias("sourceSubscription", "sourceSub")
+            .add(Restrictions.eq("owner", owner))
             .add(Restrictions.ge("quantity", 0L))
             .add(Restrictions.gtProperty("consumed", "quantity"))
             .add(Restrictions.or(subIdMapCriteria.toArray(exampleCriteria))).list();
