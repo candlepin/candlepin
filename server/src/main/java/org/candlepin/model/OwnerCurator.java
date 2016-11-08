@@ -29,6 +29,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import javax.persistence.LockModeType;
+
 /**
  * OwnerCurator
  */
@@ -49,6 +51,37 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     @Override
     public Owner create(Owner entity) {
         return super.create(entity);
+    }
+
+    /**
+     * Find an owner by ownerKey and lock it.
+     *
+     * @param ownerKey the target Owner's key
+     * @return the Owner with the specified key, or null if not found.
+     */
+    @Transactional
+    public Owner findAndLock(String ownerKey) {
+        List<Owner> result = getEntityManager().createQuery("select o from Owner o where key = :ownerKey",
+            Owner.class)
+            .setParameter("ownerKey", ownerKey)
+            .setMaxResults(1)
+            .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+            .getResultList();
+        if (result == null || result.isEmpty()) {
+            return null;
+        }
+        return result.get(0);
+    }
+
+    /**
+     * Refreshes the target Owner and locks it.
+     *
+     * @param owner the target owner.
+     * @return the refreshed and locked Owner.
+     */
+    public Owner lockAndLoad(Owner owner) {
+        getEntityManager().refresh(owner, LockModeType.PESSIMISTIC_WRITE);
+        return owner;
     }
 
     /**
