@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.23.4
+Version: 0.9.23.5
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -390,6 +390,10 @@ fi
 
 
 %changelog
+* Wed Nov 09 2016 Vritant Jain <adarshvritant@gmail.com> 0.9.23.5-1
+- 1388201: Add check to insure constraint has not already been dropped
+  (awood@redhat.com)
+
 * Wed Oct 26 2016 Vritant Jain <adarshvritant@gmail.com> 0.9.23.4-1
 - 1388551: Remove unique constraint on content keys; replace with index.
   (awood@redhat.com)
