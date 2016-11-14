@@ -51,9 +51,12 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_consumer_hypervisor", uniqueConstraints =
+@Table(name = HypervisorId.DB_TABLE, uniqueConstraints =
     @UniqueConstraint(name = "cp_consumer_hypervisor_ukey", columnNames = {"owner_id", "hypervisor_id"}))
 public class HypervisorId extends AbstractHibernateObject {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_consumer_hypervisor";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

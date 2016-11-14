@@ -65,18 +65,6 @@ public class ContentManagerTest extends DatabaseTestFixture {
     @Test
     public void testCreateContent() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Content content = TestUtil.createContent("c1", "content-1");
-
-        assertNull(this.ownerContentCurator.getContentById(owner, content.getId()));
-
-        Content output = this.contentManager.createContent(content, owner);
-
-        assertEquals(output, this.ownerContentCurator.getContentById(owner, content.getId()));
-    }
-
-    @Test
-    public void testCreateContentWithDTO() {
-        Owner owner = this.createOwner("test-owner", "Test Owner");
         ContentData dto = TestUtil.createContentDTO("c1", "content-1");
         dto.setLabel("test-label");
         dto.setType("test-test");
@@ -93,46 +81,23 @@ public class ContentManagerTest extends DatabaseTestFixture {
     public void testCreateContentThatAlreadyExists() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
 
-        Content content1 = TestUtil.createContent("c1", "content-1");
-        Content output = this.contentManager.createContent(content1, owner);
-
-        Content content2 = TestUtil.createContent("c1", "content-1");
-        this.contentManager.createContent(content2, owner);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testCreateContentThatAlreadyExistsWithDTO() {
-        Owner owner = this.createOwner("test-owner", "Test Owner");
-
-        Content content1 = TestUtil.createContent("c1", "content-1");
-        Content output = this.contentManager.createContent(content1, owner);
-
         ContentData dto = TestUtil.createContentDTO("c1", "content-1");
         dto.setLabel("test-label");
         dto.setType("test-test");
         dto.setVendor("test-vendor");
 
+        Content output = this.contentManager.createContent(dto, owner);
+
+        // Verify the creation worked
+        assertNotNull(output);
+        assertEquals(output, this.ownerContentCurator.getContentById(owner, dto.getId()));
+
+        // This should fail, since it already exists
         this.contentManager.createContent(dto, owner);
     }
 
     @Test
     public void testCreateContentMergeWithExisting() {
-        Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
-        Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
-
-        Content content1 = TestUtil.createContent("c1", "content-1");
-        Content content2 = this.createContent("c1", "content-1", owner2);
-
-        Content output = this.contentManager.createContent(content1, owner1);
-
-        assertEquals(output.getUuid(), content2.getUuid());
-        assertEquals(output, content2);
-        assertTrue(this.ownerContentCurator.isContentMappedToOwner(output, owner1));
-        assertTrue(this.ownerContentCurator.isContentMappedToOwner(output, owner2));
-    }
-
-    @Test
-    public void testCreateContentMergeWithExistingUsingDTO() {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
 
@@ -155,7 +120,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         product.addContent(content, true);
         product = this.productCurator.merge(product);
 
-        Content output = this.contentManager.updateContent(content, content.toDTO(), owner, true);
+        Content output = this.contentManager.updateContent(content.toDTO(), owner, true);
 
         assertEquals(output.getUuid(), content.getUuid());
         assertEquals(output, content);
@@ -173,7 +138,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         product.addContent(content, true);
         product = this.productCurator.merge(product);
 
-        Content output = this.contentManager.updateContent(content, update, owner, regenCerts);
+        Content output = this.contentManager.updateContent(update, owner, regenCerts);
 
         assertNotEquals(output.getUuid(), content.getUuid());
         assertEquals(output.getName(), update.getName());
@@ -205,7 +170,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         assertFalse(this.ownerContentCurator.isContentMappedToOwner(content1, owner2));
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content2, owner2));
 
-        Content output = this.contentManager.updateContent(content1, update, owner1, regenCerts);
+        Content output = this.contentManager.updateContent(update, owner1, regenCerts);
 
         assertEquals(content2.getUuid(), output.getUuid());
         assertFalse(this.ownerContentCurator.isContentMappedToOwner(content1, owner1));
@@ -237,7 +202,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner1));
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner2));
 
-        Content output = this.contentManager.updateContent(content, update, owner1, regenCerts);
+        Content output = this.contentManager.updateContent(update, owner1, regenCerts);
 
         assertNotEquals(output.getUuid(), content.getUuid());
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(output, owner1));
@@ -263,7 +228,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
         assertFalse(this.ownerContentCurator.isContentMappedToOwner(content, owner));
 
-        this.contentManager.updateContent(content, update, owner, false);
+        this.contentManager.updateContent(update, owner, false);
     }
 
     @Test

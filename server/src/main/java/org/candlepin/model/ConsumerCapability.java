@@ -45,9 +45,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "consumercapability")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_consumer_capability")
+@Table(name = ConsumerCapability.DB_TABLE)
 
 public class ConsumerCapability implements Serializable {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_consumer_capability";
 
     private static final long serialVersionUID = -7690166510977579116L;
 

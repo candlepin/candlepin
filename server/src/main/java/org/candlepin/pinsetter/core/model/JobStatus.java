@@ -50,8 +50,11 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_job")
+@Table(name = JobStatus.DB_TABLE)
 public class JobStatus extends AbstractHibernateObject {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_job";
 
     public static final String TARGET_TYPE = "target_type";
     public static final String TARGET_ID = "target_id";

@@ -41,10 +41,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_import_upstream_consumer")
+@Table(name = ImportUpstreamConsumer.DB_TABLE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFilter("ApiHateoas")
 public class ImportUpstreamConsumer extends AbstractHibernateObject {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_import_upstream_consumer";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

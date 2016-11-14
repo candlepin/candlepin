@@ -66,10 +66,13 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement(name = "pool")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_pool")
+@Table(name = Pool.DB_TABLE)
 @JsonFilter("PoolFilter")
 public class Pool extends AbstractHibernateObject implements Persisted, Owned, Named, Comparable<Pool>,
     Eventful {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_pool";
 
     /**
      * Common pool attributes
@@ -741,11 +744,11 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     public String toString() {
         return String.format(
-            "Pool<type=%s, product=%s, productName=%s, id=%s, quantity=%s>",
+            "Pool [id=%s, type=%s, product=%s, productName=%s, quantity=%s]",
+            this.getId(),
             this.getType(),
             this.getProductId(),
             this.getProductName(),
-            this.getId(),
             this.getQuantity()
         );
     }

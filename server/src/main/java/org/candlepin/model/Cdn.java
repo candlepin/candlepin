@@ -37,8 +37,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_cdn", uniqueConstraints = {@UniqueConstraint(columnNames = {"label"})})
+@Table(name = Cdn.DB_TABLE, uniqueConstraints = {@UniqueConstraint(columnNames = {"label"})})
 public class Cdn extends AbstractHibernateObject {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_cdn";
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -126,4 +129,10 @@ public class Cdn extends AbstractHibernateObject {
         this.cert = cert;
     }
 
+    public String toString() {
+        return String.format(
+            "Cdn [id=%s, name=%s, label=%s, url=%s]",
+            this.getId(), this.getName(), this.getLabel(), this.getUrl()
+        );
+    }
 }

@@ -61,10 +61,13 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_entitlement")
+@Table(name = Entitlement.DB_TABLE)
 @JsonFilter("EntitlementFilter")
 public class Entitlement extends AbstractHibernateObject
     implements Linkable, Owned, Named, ConsumerProperty, Comparable<Entitlement>, Eventful {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_entitlement";
 
     private static final long serialVersionUID = 1L;
 

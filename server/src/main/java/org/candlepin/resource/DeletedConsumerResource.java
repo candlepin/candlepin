@@ -55,8 +55,7 @@ public class DeletedConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<DeletedConsumer> listByDate(@QueryParam("date") String dateStr) {
         if (dateStr != null) {
-            return deletedConsumerCurator.findByDate(
-                    ResourceDateParser.parseDateString(dateStr));
+            return deletedConsumerCurator.findByDate(ResourceDateParser.parseDateString(dateStr));
         }
         else {
             return deletedConsumerCurator.listAll();

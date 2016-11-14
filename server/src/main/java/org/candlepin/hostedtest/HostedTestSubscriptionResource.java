@@ -257,7 +257,7 @@ public class HostedTestSubscriptionResource {
         Owner owner = this.getOwnerByKey(ownerKey);
         Product existing = this.fetchProduct(owner, productId);
 
-        Product updated = this.productManager.updateProduct(existing, update, owner, true);
+        Product updated = this.productManager.updateProduct(update, owner, true);
 
         return updated.toDTO();
 

@@ -96,8 +96,7 @@ public class EntitlementImporter {
         subscription.setQuantity(entitlement.getQuantity().longValue());
 
         for (Branding b : entitlement.getPool().getBranding()) {
-            subscription.getBranding().add(new Branding(b.getProductId(), b.getType(),
-                b.getName()));
+            subscription.getBranding().add(new Branding(b.getProductId(), b.getType(), b.getName()));
         }
 
         String cdnLabel = meta.getCdnLabel();
@@ -124,17 +123,20 @@ public class EntitlementImporter {
         // subscriptions have one cert
         int entcnt = 0;
         for (EntitlementCertificate cert : certs) {
-            entcnt++;
+            ++entcnt;
+
             CertificateSerial cs = new CertificateSerial();
             cs.setCollected(cert.getSerial().isCollected());
             cs.setExpiration(cert.getSerial().getExpiration());
             cs.setUpdated(cert.getSerial().getUpdated());
             cs.setCreated(cert.getSerial().getCreated());
             csCurator.create(cs);
+
             SubscriptionsCertificate sc = new SubscriptionsCertificate();
             sc.setKey(cert.getKey());
             sc.setCertAsBytes(cert.getCertAsBytes());
             sc.setSerial(cs);
+
             subscription.setCertificate(sc);
         }
 

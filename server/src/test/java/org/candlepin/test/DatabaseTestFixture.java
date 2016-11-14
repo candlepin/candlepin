@@ -173,12 +173,12 @@ public class DatabaseTestFixture {
     public void init() {
         this.config = new CandlepinCommonTestConfig();
         Module testingModule = new TestingModules.StandardTest(this.config);
-        injector = parentInjector.createChildInjector(
+        this.injector = parentInjector.createChildInjector(
             Modules.override(testingModule).with(getGuiceOverrideModule()));
 
-        locatorMap = injector.getInstance(ResourceLocatorMap.class);
+        locatorMap = this.injector.getInstance(ResourceLocatorMap.class);
         locatorMap.init();
-        securityInterceptor = injector.getInstance(TestingInterceptor.class);
+        securityInterceptor = this.injector.getInstance(TestingInterceptor.class);
 
         cpRequestScope = injector.getInstance(CandlepinRequestScope.class);
 
@@ -187,7 +187,7 @@ public class DatabaseTestFixture {
         // Exit the scope to make sure that it is clean before starting the test.
         cpRequestScope.exit();
         cpRequestScope.enter();
-        injector.injectMembers(this);
+        this.injector.injectMembers(this);
 
         dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
@@ -232,6 +232,17 @@ public class DatabaseTestFixture {
                 // NO OP
             }
         };
+    }
+
+    /**
+     * Populates the given object by injecting dependencies for its members tagged with the @Inject
+     * annotation.
+     *
+     * @param object
+     *  The object to populate
+     */
+    protected void injectMembers(Object object) {
+        this.injector.injectMembers(object);
     }
 
     protected EntityManager entityManager() {

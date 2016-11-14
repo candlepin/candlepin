@@ -48,8 +48,11 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_user")
+@Table(name = User.DB_TABLE)
 public class User extends AbstractHibernateObject {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_user";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

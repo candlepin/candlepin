@@ -34,9 +34,12 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @XmlRootElement(name = "cert")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@Table(name = "cp2_product_certificates")
+@Table(name = ProductCertificate.DB_TABLE)
 @Entity
 public class ProductCertificate extends AbstractCertificate {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp2_product_certificates";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

@@ -46,9 +46,9 @@ import org.xnap.commons.i18n.I18n;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
@@ -65,13 +65,15 @@ import javax.persistence.Query;
  * @param <E> Entity specific curator.
  */
 public abstract class AbstractHibernateCurator<E extends Persisted> {
-    // oracle has a limit of 1000
+    // Oracle has a limit of 1000
     public static final int IN_OPERATOR_BLOCK_SIZE = 999;
+    // Oracle has a limit of 255 arguments per CASE, which caps us around 100 entries.
+    public static final int CASE_OPERATOR_BLOCK_SIZE = 100;
+    public static final int BATCH_BLOCK_SIZE = 500;
 
     @Inject protected Provider<EntityManager> entityManager;
     @Inject protected I18n i18n;
     private final Class<E> entityType;
-    protected int batchSize = 500;
 
     @Inject private PrincipalProvider principalProvider;
     private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
@@ -503,69 +505,148 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return entityManager.get();
     }
 
-    public Collection<E> saveOrUpdateAll(Collection<E> entries, boolean flush) {
-        if (CollectionUtils.isNotEmpty(entries)) {
+    public Collection<E> saveAll(Collection<E> entities, boolean flush, boolean evict) {
+        if (entities != null && !entities.isEmpty()) {
             try {
-                Session session = currentSession();
-                int i = 0;
-                Iterator<E> iter = entries.iterator();
-                while (iter.hasNext()) {
-                    session.saveOrUpdate(iter.next());
-                    if (i % batchSize == 0 && flush) {
-                        session.flush();
-                        session.clear();
+                Session session = this.currentSession();
+                Iterable<List<E>> blocks = Iterables.partition(entities, BATCH_BLOCK_SIZE);
+
+                for (List<E> block : blocks) {
+                    for (E entity : block) {
+                        session.save(entity);
                     }
-                    i++;
-                }
-                if (flush) {
-                    session.flush();
-                    session.clear();
+
+                    if (flush) {
+                        session.flush();
+
+                        if (evict) {
+                            for (E entity : block) {
+                                session.evict(entity);
+                            }
+                        }
+                    }
                 }
             }
             catch (OptimisticLockException e) {
                 throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
             }
         }
-        return entries;
+
+        return entities;
     }
 
-    public Collection<E> mergeAll(Collection<E> entries, boolean flush) {
-        if (CollectionUtils.isNotEmpty(entries)) {
+    public Collection<E> updateAll(Collection<E> entities, boolean flush, boolean evict) {
+        if (entities != null && !entities.isEmpty()) {
             try {
-                Session session = currentSession();
-                int i = 0;
-                Iterator<E> iter = entries.iterator();
-                while (iter.hasNext()) {
-                    session.merge(iter.next());
-                    if (i % batchSize == 0 && flush) {
-                        session.flush();
-                        session.clear();
+                Session session = this.currentSession();
+                Iterable<List<E>> blocks = Iterables.partition(entities, BATCH_BLOCK_SIZE);
+
+                for (List<E> block : blocks) {
+                    for (E entity : block) {
+                        session.update(entity);
                     }
-                    i++;
-                }
-                if (flush) {
-                    session.flush();
-                    session.clear();
+
+                    if (flush) {
+                        session.flush();
+
+                        if (evict) {
+                            for (E entity : block) {
+                                session.evict(entity);
+                            }
+                        }
+                    }
                 }
             }
             catch (OptimisticLockException e) {
                 throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
             }
         }
-        return entries;
+
+        return entities;
     }
 
-    public void refresh(E object) {
-        getEntityManager().refresh(object);
+    public Collection<E> saveOrUpdateAll(Collection<E> entities, boolean flush, boolean evict) {
+        if (CollectionUtils.isNotEmpty(entities)) {
+            try {
+                Session session = this.currentSession();
+                Iterable<List<E>> blocks = Iterables.partition(entities, BATCH_BLOCK_SIZE);
+
+                for (List<E> block : blocks) {
+                    for (E entity : block) {
+                        session.saveOrUpdate(entity);
+                    }
+
+                    if (flush) {
+                        session.flush();
+
+                        if (evict) {
+                            for (E entity : block) {
+                                session.evict(entity);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (OptimisticLockException e) {
+                throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
+            }
+        }
+
+        return entities;
+    }
+
+    public Collection<E> mergeAll(Collection<E> entities, boolean flush) {
+        if (entities != null && !entities.isEmpty()) {
+            try {
+                Session session = this.currentSession();
+
+                if (flush) {
+                    int i = 0;
+                    for (E entity : entities) {
+                        session.merge(entity);
+
+                        if (++i % BATCH_BLOCK_SIZE == 0) {
+                            session.flush();
+                            session.clear();
+                        }
+                    }
+
+                    if (i % BATCH_BLOCK_SIZE != 0) {
+                        session.flush();
+                        session.clear();
+                    }
+                }
+                else {
+                    for (E entity : entities) {
+                        session.merge(entity);
+                    }
+                }
+            }
+            catch (OptimisticLockException e) {
+                throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
+            }
+        }
+
+        return entities;
+    }
+
+    public void refresh(E... entities) {
+        if (entities != null) {
+            EntityManager manager = this.getEntityManager();
+
+            for (E entity : entities) {
+                manager.refresh(entity);
+            }
+        }
     }
 
     public void lock(E object, LockModeType lmt) {
         this.getEntityManager().lock(object, lmt);
     }
 
-    public E evict(E object) {
-        currentSession().evict(object);
-        return object;
+    public E evict(E entity) {
+        this.currentSession().evict(entity);
+        return entity;
     }
 
     /**
@@ -599,44 +680,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     private String getConcurrentModificationMessage() {
         return i18n.tr("Request failed due to concurrent modification, please re-try.");
-    }
-
-    /**
-     * Performs a direct SQL update or delete operation with a collection by breaking the collection
-     * into chunks and repeatedly performing the update.
-     * <p></p>
-     * The parameter receiving the collection chunks must be the last parameter in the query and the
-     * provided collection must support the subList operation.
-     *
-     * @param sql
-     *  The SQL statement to execute; must be an UPDATE or DELETE operation
-     *
-     * @param collection
-     *  The collection to be broken up into chunks
-     *
-     * @return
-     *  the number of rows updated as a result of this query
-     */
-    protected int safeSQLUpdateWithCollection(String sql, Collection<?> collection, Object... params) {
-        int count = 0;
-
-        Session session = this.currentSession();
-        SQLQuery query = session.createSQLQuery(sql);
-
-        for (List<?> block : Iterables.partition(collection, IN_OPERATOR_BLOCK_SIZE)) {
-            int index = 1;
-
-            if (params != null) {
-                for (; index <= params.length; ++index) {
-                    query.setParameter(String.valueOf(index), params[index - 1]);
-                }
-            }
-            query.setParameterList(String.valueOf(index), block);
-
-            count += query.executeUpdate();
-        }
-
-        return count;
     }
 
     /**
@@ -694,4 +737,164 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return result;
     }
 
+    /**
+     * Performs a bulk update on the given table/column, setting the values from the keys of the
+     * provided map to the map's values.
+     * <p></p>
+     * <strong>Note:</strong> It's important to note that every row selected by the given criteria
+     * will be updated and included in the update count, even if the value does not change. If the
+     * number of actual changes made is significant to the caller, the criteria should also include
+     * the keySet from the given values.
+     *
+     * @param table
+     *  The name of the table to update
+     *
+     * @param column
+     *  The name of the column to update
+     *
+     * @param values
+     *  A mapping of values to apply to the table (current => new)
+     *
+     * @param criteria
+     *  A mapping of criteria to apply to the update (column name => value); applied as a
+     *  conjunction.
+     *
+     * @return
+     *  the number of rows updated as a result of this query
+     */
+    protected int bulkSQLUpdate(String table, String column, Map<Object, Object> values,
+        Map<String, Object> criteria) {
+
+        if (values == null || values.isEmpty()) {
+            return 0;
+        }
+
+        Iterable<List<Map.Entry<Object, Object>>> blocks = Iterables.partition(values.entrySet(),
+            AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE);
+
+        int count = 0;
+        int lastBlock = -1;
+
+        Session session = this.currentSession();
+        SQLQuery query = null;
+
+        for (List<Map.Entry<Object, Object>> block : blocks) {
+            if (block.size() != lastBlock) {
+                // Rebuild update block
+                int args = 0;
+                boolean whereStarted = false;
+
+                StringBuilder builder = new StringBuilder("UPDATE ").append(table).append(" SET ")
+                    .append(column).append(" = ");
+
+                // Note: block.size() should never be zero here.
+                if (block.size() > 1) {
+                    builder.append("CASE");
+
+                    for (int i = 0; i < block.size(); ++i) {
+                        builder.append(" WHEN ").append(column).append(" = ?").append(++args)
+                            .append(" THEN ?").append(++args);
+                    }
+
+                    builder.append(" ELSE ").append(column).append(" END ");
+                }
+                else {
+                    builder.append('?').append(++args).append(" WHERE ").append(column).append(" = ?")
+                        .append(++args).append(' ');
+
+                    whereStarted = true;
+                }
+
+                // Add criteria
+                if (criteria != null && !criteria.isEmpty()) {
+                    for (Map.Entry<String, Object> criterion : criteria.entrySet()) {
+                        if (criterion.getValue() instanceof Collection) {
+                            if (((Collection) criterion.getValue()).size() > 0) {
+                                int inBlocks = (int) Math.ceil((((Collection) criterion.getValue()).size() /
+                                    (float) AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE));
+
+                                builder.append(whereStarted ? " AND " : " WHERE ");
+                                whereStarted = true;
+
+                                if (inBlocks > 1) {
+                                    builder.append('(');
+
+                                    for (int i = 0; i < inBlocks; ++i) {
+                                        if (i != 0) {
+                                            builder.append(" OR ");
+                                        }
+
+                                        builder.append(criterion.getKey()).append(" IN (?").append(++args)
+                                            .append(')');
+                                    }
+
+                                    builder.append(')');
+                                }
+                                else {
+                                    builder.append(criterion.getKey()).append(" IN (?").append(++args)
+                                        .append(')');
+                                }
+                            }
+                        }
+                        else {
+                            builder.append(whereStarted ? " AND " : " WHERE ");
+                            whereStarted = true;
+
+                            builder.append(criterion.getKey()).append(" = ?").append(++args);
+                        }
+                    }
+                }
+
+                query = session.createSQLQuery(builder.toString());
+            }
+
+            // Set args
+            int args = 0;
+
+            if (block.size() > 1) {
+                for (Map.Entry<Object, Object> entry : block) {
+                    query.setParameter(String.valueOf(++args), entry.getKey())
+                        .setParameter(String.valueOf(++args), entry.getValue());
+                }
+            }
+            else {
+                Map.Entry<Object, Object> entry = block.get(0);
+
+                query.setParameter(String.valueOf(++args), entry.getValue())
+                    .setParameter(String.valueOf(++args), entry.getKey());
+            }
+
+            // Set criteria if the block size has changed
+            if (block.size() != lastBlock && criteria != null && !criteria.isEmpty()) {
+                for (Object criterion : criteria.values()) {
+                    if (criterion instanceof Collection) {
+                        Iterable<List> inBlocks = Iterables.partition((Collection) criterion,
+                            AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE);
+
+                        for (List inBlock : inBlocks) {
+                            query.setParameterList(String.valueOf(++args), inBlock);
+                        }
+                    }
+                    else {
+                        query.setParameter(String.valueOf(++args), criterion);
+                    }
+                }
+            }
+
+            int blockUpdates = query.executeUpdate();
+
+            // Impl note:
+            // Since our criteria does not change between queries, the number of rows we update
+            // should be consistent between executions. This being the case, our count will not
+            // be the cumulative update count, but the max count of any one of the queries
+            // executed. This looks odd, admittedly, but it's correct.
+            if (count == 0) {
+                count = blockUpdates;
+            }
+
+            lastBlock = block.size();
+        }
+
+        return count;
+    }
 }

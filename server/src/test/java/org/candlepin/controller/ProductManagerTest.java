@@ -61,18 +61,6 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testCreateProduct() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product product = TestUtil.createProduct("p1", "prod1");
-
-        assertNull(this.ownerProductCurator.getProductById(owner, "p1"));
-
-        Product output = this.productManager.createProduct(product, owner);
-
-        assertEquals(output, this.ownerProductCurator.getProductById(owner, "p1"));
-    }
-
-    @Test
-    public void testCreateProductWithDTO() {
-        Owner owner = this.createOwner("test-owner", "Test Owner");
         ProductData dto = TestUtil.createProductDTO("p1", "prod1");
 
         assertNull(this.ownerProductCurator.getProductById(owner, "p1"));
@@ -86,42 +74,17 @@ public class ProductManagerTest extends DatabaseTestFixture {
     public void testCreateProductThatAlreadyExists() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
 
-        Product product1 = TestUtil.createProduct("p1", "prod1");
-        Product output = this.productManager.createProduct(product1, owner);
+        ProductData dto = TestUtil.createProductDTO("p1", "prod1");
+        Product output = this.productManager.createProduct(dto, owner);
 
-        Product product2 = TestUtil.createProduct("p1", "prod1");
-        this.productManager.createProduct(product2, owner);
-    }
+        assertNotNull(output);
+        assertEquals(output, this.ownerProductCurator.getProductById(owner, dto.getId()));
 
-    @Test(expected = IllegalStateException.class)
-    public void testCreateProductThatAlreadyExistsWithDTO() {
-        Owner owner = this.createOwner("test-owner", "Test Owner");
-
-        Product product1 = TestUtil.createProduct("p1", "prod1");
-        Product output = this.productManager.createProduct(product1, owner);
-
-        ProductData product2 = TestUtil.createProductDTO("p1", "prod1");
-        this.productManager.createProduct(product2, owner);
+        this.productManager.createProduct(dto, owner);
     }
 
     @Test
     public void testCreateProductMergeWithExisting() {
-        Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
-        Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
-
-        Product product1 = TestUtil.createProduct("p1", "prod1");
-        Product product2 = this.createProduct("p1", "prod1", owner2);
-
-        Product output = this.productManager.createProduct(product1, owner1);
-
-        assertEquals(output.getUuid(), product2.getUuid());
-        assertEquals(output, product2);
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner1));
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner2));
-    }
-
-    @Test
-    public void testCreateProductMergeWithExistingUsingDTO() {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
 
@@ -141,7 +104,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         Product product = this.createProduct("p1", "prod1", owner);
 
-        Product output = this.productManager.updateProduct(product, product.toDTO(), owner, true);
+        Product output = this.productManager.updateProduct(product.toDTO(), owner, true);
 
         assertEquals(output.getUuid(), product.getUuid());
         assertEquals(output, product);
@@ -156,7 +119,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Product product = this.createProduct("p1", "prod1", owner);
         ProductData update = TestUtil.createProductDTO("p1", "new product name");
 
-        Product output = this.productManager.updateProduct(product, update, owner, regenCerts);
+        Product output = this.productManager.updateProduct(update, owner, regenCerts);
 
         assertNotEquals(output.getUuid(), product.getUuid());
         assertEquals(output.getName(), update.getName());
@@ -187,7 +150,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertFalse(this.ownerProductCurator.isProductMappedToOwner(product1, owner2));
         assertTrue(this.ownerProductCurator.isProductMappedToOwner(product2, owner2));
 
-        Product output = this.productManager.updateProduct(product1, update, owner1, regenCerts);
+        Product output = this.productManager.updateProduct(update, owner1, regenCerts);
 
         assertEquals(output.getUuid(), product2.getUuid());
         assertFalse(this.ownerProductCurator.isProductMappedToOwner(product1, owner1));
@@ -216,7 +179,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
         assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
 
-        Product output = this.productManager.updateProduct(product, update, owner1, regenCerts);
+        Product output = this.productManager.updateProduct(update, owner1, regenCerts);
 
         assertNotEquals(output.getUuid(), product.getUuid());
         assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner1));
@@ -237,12 +200,12 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test(expected = IllegalStateException.class)
     public void testUpdateProductThatDoesntExist() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product product = TestUtil.createProduct("p1", "prod1");
+        Product product = TestUtil.createProduct("p1", "new_name");
         ProductData update = TestUtil.createProductDTO("p1", "new_name");
 
         assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner));
 
-        this.productManager.updateProduct(product, update, owner, false);
+        this.productManager.updateProduct(update, owner, false);
     }
 
     @Test

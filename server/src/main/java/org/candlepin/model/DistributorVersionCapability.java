@@ -38,8 +38,11 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement(name = "distributorversioncapability")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_dist_version_capability")
+@Table(name = DistributorVersionCapability.DB_TABLE)
 public class DistributorVersionCapability {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_dist_version_capability";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

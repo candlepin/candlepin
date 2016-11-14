@@ -86,7 +86,6 @@ public class Importer {
     private static Logger log = LoggerFactory.getLogger(Importer.class);
 
     /**
-     *
      * files we use to perform import
      */
     enum ImportFile {
@@ -330,8 +329,7 @@ public class Importer {
         else {
             if (lastrun.getExported().after(m.getCreated())) {
                 if (!forcedConflicts.isForced(Importer.Conflict.MANIFEST_OLD)) {
-                    throw new ImportConflictException(i18n.tr(
-                        "Import is older than existing data"),
+                    throw new ImportConflictException(i18n.tr("Import is older than existing data"),
                         Importer.Conflict.MANIFEST_OLD);
                 }
                 else {
@@ -350,8 +348,7 @@ public class Importer {
                 long created = m.getCreated().getTime() / 1000;
                 if (exported == created) {
                     if (!forcedConflicts.isForced(Importer.Conflict.MANIFEST_SAME)) {
-                        throw new ImportConflictException(i18n.tr(
-                            "Import is the same as existing data"),
+                        throw new ImportConflictException(i18n.tr("Import is the same as existing data"),
                             Importer.Conflict.MANIFEST_SAME);
                     }
                     else {
@@ -367,21 +364,23 @@ public class Importer {
 
     private ImportRecord doExport(Owner owner, File exportDir, ConflictOverrides overrides,
         String uploadedFileName) throws ImporterException {
+
         Map<String, Object> result = new HashMap<String, Object>();
         try {
             File signature = new File(exportDir, "signature");
             if (signature.length() == 0) {
-                throw new ImportExtractionException(i18n.tr("The archive does not " +
-                                          "contain the required signature file"));
+                throw new ImportExtractionException(
+                    i18n.tr("The archive does not contain the required signature file"));
             }
 
             boolean verifiedSignature = pki.verifySHA256WithRSAHashAgainstCACerts(
                 new File(exportDir, "consumer_export.zip"),
-                loadSignature(new File(exportDir, "signature")));
+                loadSignature(new File(exportDir, "signature"))
+            );
+
             if (!verifiedSignature) {
                 log.warn("Archive signature check failed.");
-                if (!overrides
-                    .isForced(Conflict.SIGNATURE_CONFLICT)) {
+                if (!overrides.isForced(Conflict.SIGNATURE_CONFLICT)) {
 
                     /*
                      * Normally for import conflicts that can be overridden, we try to
@@ -390,8 +389,7 @@ public class Importer {
                      * a bad signature, we're going to report immediately due to the nature
                      * of what this might mean.
                      */
-                    throw new ImportConflictException(
-                        i18n.tr("Archive failed signature check"),
+                    throw new ImportConflictException(i18n.tr("Archive failed signature check"),
                         Conflict.SIGNATURE_CONFLICT);
                 }
                 else {
@@ -406,8 +404,7 @@ public class Importer {
             Map<String, File> importFiles = new HashMap<String, File>();
             File[] listFiles = consumerExportDir.listFiles();
             if (listFiles == null || listFiles.length == 0) {
-                throw new ImportExtractionException(i18n.tr("The consumer_export " +
-                    "archive has no contents"));
+                throw new ImportExtractionException(i18n.tr("The consumer_export archive has no contents"));
             }
             for (File file : listFiles) {
                 importFiles.put(file.getName(), file);
@@ -418,8 +415,8 @@ public class Importer {
             importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFile);
 
             List<Subscription> importSubs = importObjects(owner, importFiles, overrides);
-            Meta m = mapper.readValue(importFiles.get(ImportFile.META.fileName()),
-                Meta.class);
+            Meta m = mapper.readValue(importFiles.get(ImportFile.META.fileName()), Meta.class);
+
             result.put("subscriptions", importSubs);
             result.put("meta", m);
 
@@ -467,31 +464,29 @@ public class Importer {
         RuntimeException.class, ImportConflictException.class})
     // WARNING: Keep this method public, otherwise @Transactional is ignored:
     public List<Subscription> importObjects(Owner owner, Map<String, File> importFiles,
-        ConflictOverrides overrides)
-        throws IOException, ImporterException {
+        ConflictOverrides overrides) throws IOException, ImporterException {
 
         log.debug("Importing objects for owner: {}", owner);
 
         File metadata = importFiles.get(ImportFile.META.fileName());
         if (metadata == null) {
-            throw new ImporterException(i18n.tr("The archive does not contain the " +
-                                   "required meta.json file"));
+            throw new ImporterException(i18n.tr("The archive does not contain the required meta.json file"));
         }
         File consumerTypes = importFiles.get(ImportFile.CONSUMER_TYPE.fileName());
         if (consumerTypes == null) {
-            throw new ImporterException(i18n.tr("The archive does not contain the " +
-                                    "required consumer_types directory"));
+            throw new ImporterException(
+                i18n.tr("The archive does not contain the required consumer_types directory"));
         }
         File consumerFile = importFiles.get(ImportFile.CONSUMER.fileName());
         if (consumerFile == null) {
-            throw new ImporterException(i18n.tr("The archive does not contain the " +
-                "required consumer.json file"));
+            throw new ImporterException(
+                i18n.tr("The archive does not contain the required consumer.json file"));
         }
         File products = importFiles.get(ImportFile.PRODUCTS.fileName());
         File entitlements = importFiles.get(ImportFile.ENTITLEMENTS.fileName());
         if (products != null && entitlements == null) {
-            throw new ImporterException(i18n.tr("The archive does not contain the " +
-                                        "required entitlements directory"));
+            throw new ImporterException(
+                i18n.tr("The archive does not contain the required entitlements directory"));
         }
 
 
@@ -501,13 +496,12 @@ public class Importer {
          * one org imports a manifest slightly older than another org who has already
          * imported. Disabled for now. See bz #769644.
          */
-//        validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata, force);
+        // validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata, force);
 
         // If any calls find conflicts we'll assemble them into one exception detailing all
         // the conflicts which occurred, so the caller can override them all at once
         // if desired:
-        List<ImportConflictException> conflictExceptions =
-            new LinkedList<ImportConflictException>();
+        List<ImportConflictException> conflictExceptions = new LinkedList<ImportConflictException>();
 
         File rules = importFiles.get(ImportFile.RULES_FILE.fileName());
         importRules(rules, metadata);
@@ -526,8 +520,7 @@ public class Importer {
 
         // per user elements
         try {
-            validateMetadata(ExporterMetadata.TYPE_PER_USER, owner, metadata,
-                overrides);
+            validateMetadata(ExporterMetadata.TYPE_PER_USER, owner, metadata, overrides);
         }
         catch (ImportConflictException e) {
             conflictExceptions.add(e);
@@ -538,11 +531,12 @@ public class Importer {
             Meta m = mapper.readValue(metadata, Meta.class);
             File upstreamFile = importFiles.get(ImportFile.UPSTREAM_CONSUMER.fileName());
             File[] dafiles = new File[0];
+
             if (upstreamFile != null) {
                 dafiles = upstreamFile.listFiles();
             }
-            consumer = importConsumer(owner, consumerFile,
-                dafiles, overrides, m);
+
+            consumer = importConsumer(owner, consumerFile, dafiles, overrides, m);
         }
         catch (ImportConflictException e) {
             conflictExceptions.add(e);
@@ -554,6 +548,7 @@ public class Importer {
             for (ImportConflictException e : conflictExceptions) {
                 log.error("{}", e.message().getConflicts());
             }
+
             throw new ImportConflictException(conflictExceptions);
         }
 
@@ -568,8 +563,8 @@ public class Importer {
                 importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(), importer, owner
             );
 
-            importSubs = importEntitlements(owner, productsToImport,
-                    entitlements.listFiles(), consumer, meta);
+            importSubs = importEntitlements(
+                owner, productsToImport, entitlements.listFiles(), consumer, meta);
         }
         else {
             log.warn("No products found to import, skipping product import.");
@@ -578,8 +573,7 @@ public class Importer {
         }
 
         // Setup our import subscription adapter with the subscriptions imported:
-        SubscriptionServiceAdapter adapter =
-            new ImportSubscriptionServiceAdapter(importSubs);
+        SubscriptionServiceAdapter adapter = new ImportSubscriptionServiceAdapter(importSubs);
         Refresher refresher = poolManager.getRefresher(adapter);
         refresher.add(owner);
         refresher.run();
@@ -588,15 +582,16 @@ public class Importer {
     }
 
     protected void importRules(File rulesFile, File metadata) throws IOException {
-
         Reader reader = null;
+
         try {
             reader = new FileReader(rulesFile);
             rulesImporter.importObject(reader);
         }
         catch (FileNotFoundException fnfe) {
-            log.warn("Skipping rules import, manifest does not contain rules file: " +
+            log.warn("Skipping rules import, manifest does not contain rules file: {}",
                 ImportFile.RULES_FILE.fileName());
+
             return;
         }
         finally {
@@ -624,15 +619,13 @@ public class Importer {
         importer.store(consumerTypeObjs);
     }
 
-    protected ConsumerDto importConsumer(Owner owner, File consumerFile,
-        File[] upstreamConsumer, ConflictOverrides forcedConflicts, Meta meta)
-        throws IOException, SyncDataFormatException {
+    protected ConsumerDto importConsumer(Owner owner, File consumerFile, File[] upstreamConsumer,
+        ConflictOverrides forcedConflicts, Meta meta) throws IOException, SyncDataFormatException {
 
         IdentityCertificate idcert = null;
         for (File uc : upstreamConsumer) {
             if (uc.getName().endsWith(".json")) {
-                log.debug("Import upstream consumeridentity certificate: " +
-                    uc.getName());
+                log.debug("Import upstream consumeridentity certificate: {}", uc.getName());
                 Reader reader = null;
                 try {
                     reader = new FileReader(uc);
@@ -645,15 +638,14 @@ public class Importer {
                 }
             }
             else {
-                log.warn("Extra file found in upstream_consumer directory: " +
-                    uc.getName());
+                log.warn("Extra file found in upstream_consumer directory: {}", uc.getName());
             }
         }
 
-        ConsumerImporter importer = new ConsumerImporter(ownerCurator, idCertCurator,
-            i18n, csCurator);
+        ConsumerImporter importer = new ConsumerImporter(ownerCurator, idCertCurator, i18n, csCurator);
         Reader reader = null;
         ConsumerDto consumer = null;
+
         try {
             reader = new FileReader(consumerFile);
             consumer = importer.createObject(mapper, reader);
@@ -661,8 +653,7 @@ public class Importer {
             // because it could have an id not in our database. We need to
             // stick with the label. Hence we need to lookup the ACTUAL type
             // by label here before attempting to store the UpstreamConsumer
-            ConsumerType type = consumerTypeCurator.lookupByLabel(
-                consumer.getType().getLabel());
+            ConsumerType type = consumerTypeCurator.lookupByLabel(consumer.getType().getLabel());
             consumer.setType(type);
 
             // in older manifests the web app prefix will not
@@ -671,6 +662,7 @@ public class Importer {
             if (StringUtils.isEmpty(consumer.getUrlWeb())) {
                 consumer.setUrlWeb(meta.getWebAppPrefix());
             }
+
             importer.store(owner, consumer, forcedConflicts, idcert);
         }
         finally {
@@ -678,6 +670,7 @@ public class Importer {
                 reader.close();
             }
         }
+
         return consumer;
     }
 
@@ -715,10 +708,9 @@ public class Importer {
 
         log.debug("Importing entitlements for owner: {}", owner);
 
-        EntitlementImporter importer = new EntitlementImporter(csCurator, cdnCurator,
-            i18n, productCurator);
-
+        EntitlementImporter importer = new EntitlementImporter(csCurator, cdnCurator, i18n, productCurator);
         Map<String, Product> productsById = new HashMap<String, Product>();
+
         for (Product product : products) {
             log.debug("Adding product owned by {} to ID map", owner.getKey());
 
@@ -731,10 +723,10 @@ public class Importer {
         for (File entitlement : entitlements) {
             Reader reader = null;
             try {
-                log.debug("Import entitlement: " + entitlement.getName());
+                log.debug("Import entitlement: {}", entitlement.getName());
                 reader = new FileReader(entitlement);
-                subscriptionsToImport.add(importer.importObject(mapper, reader, owner,
-                    productsById, consumer, meta));
+                subscriptionsToImport.add(
+                    importer.importObject(mapper, reader, owner, productsById, consumer, meta));
             }
             finally {
                 if (reader != null) {
@@ -754,7 +746,8 @@ public class Importer {
      */
     private File extractArchive(File tempDir, String exportFileName, InputStream exportFileStream)
         throws IOException, ImportExtractionException {
-        log.debug("Extracting archive to: " + tempDir.getAbsolutePath());
+
+        log.debug("Extracting archive to: {}", tempDir.getAbsolutePath());
         byte[] buf = new byte[1024];
 
         ZipInputStream zipinputstream = null;
@@ -771,9 +764,8 @@ public class Importer {
             while (zipentry != null) {
                 //for each entry to be extracted
                 String entryName = zipentry.getName();
-                if (log.isDebugEnabled()) {
-                    log.debug("entryname " + entryName);
-                }
+                log.debug("entryname {}", entryName);
+
                 File newFile = new File(entryName);
                 String directory = newFile.getParent();
                 if (directory != null) {
@@ -818,10 +810,10 @@ public class Importer {
             int offset = 0;
             int numRead = 0;
             while (offset < signatureBytes.length && numRead >= 0) {
-                numRead = signature.read(signatureBytes, offset,
-                    signatureBytes.length - offset);
+                numRead = signature.read(signatureBytes, offset, signatureBytes.length - offset);
                 offset += numRead;
             }
+
             return signatureBytes;
         }
         finally {
@@ -837,9 +829,9 @@ public class Importer {
     }
 
     protected void importDistributorVersions(File[] versionFiles) throws IOException {
-        DistributorVersionImporter importer =
-            new DistributorVersionImporter(distVerCurator);
+        DistributorVersionImporter importer = new DistributorVersionImporter(distVerCurator);
         Set<DistributorVersion> distVers = new HashSet<DistributorVersion>();
+
         for (File verFile : versionFiles) {
             Reader reader = null;
             try {
@@ -856,9 +848,9 @@ public class Importer {
     }
 
     protected void importContentDeliveryNetworks(File[] cdnFiles) throws IOException {
-        CdnImporter importer =
-            new CdnImporter(cdnCurator);
+        CdnImporter importer = new CdnImporter(cdnCurator);
         Set<Cdn> cdns = new HashSet<Cdn>();
+
         for (File cdnFile : cdnFiles) {
             Reader reader = null;
             try {
@@ -871,6 +863,7 @@ public class Importer {
                 }
             }
         }
+
         importer.store(cdns);
     }
 

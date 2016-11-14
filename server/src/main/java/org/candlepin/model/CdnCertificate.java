@@ -37,8 +37,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_cdn_certificate")
+@Table(name = CdnCertificate.DB_TABLE)
 public class CdnCertificate extends AbstractCertificate {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_cdn_certificate";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

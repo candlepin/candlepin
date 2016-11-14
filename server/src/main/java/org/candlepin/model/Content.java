@@ -57,8 +57,11 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp2_content")
+@Table(name = Content.DB_TABLE)
 public class Content extends AbstractHibernateObject implements SharedEntity, Cloneable {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp2_content";
 
     public static final  String UEBER_CONTENT_NAME = "ueber_content";
 

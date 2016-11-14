@@ -60,6 +60,7 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -92,6 +93,7 @@ public class EntitlerTest {
     @Mock private ProductCurator productCurator;
     @Mock private ProductServiceAdapter productAdapter;
     @Mock private ProductManager productManager;
+    @Mock private ContentManager contentManager;
 
     private ValidationResult fakeOutResult(String msg) {
         ValidationResult result = new ValidationResult();
@@ -112,7 +114,84 @@ public class EntitlerTest {
         translator = new EntitlementRulesTranslator(i18n);
 
         entitler = new Entitler(pm, cc, i18n, ef, sink, translator, entitlementCurator, config,
-            ownerProductCurator, poolCurator, productCurator, productManager, productAdapter);
+            ownerProductCurator, poolCurator, productCurator, productManager, productAdapter, contentManager);
+    }
+
+    private void mockProducts(Owner owner, final Map<String, Product> products) {
+        when(ownerProductCurator.getProductById(eq(owner), any(String.class)))
+            .thenAnswer(new Answer<Product>() {
+                @Override
+                public Product answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    String pid = (String) args[1];
+
+                    return products.get(pid);
+                }
+            });
+
+        when(ownerProductCurator.getProductsByIds(eq(owner), any(Collection.class)))
+            .thenAnswer(new Answer<Collection<Product>>() {
+                @Override
+                public Collection<Product> answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    Collection<String> pids = (Collection<String>) args[1];
+                    Set<Product> output = new HashSet<Product>();
+
+                    for (String pid : pids) {
+                        Product product = products.get(pid);
+
+                        if (product != null) {
+                            output.add(product);
+                        }
+                    }
+
+                    return output;
+                }
+            });
+    }
+
+    private void mockProductImport(Owner owner, final Map<String, Product> products) {
+        when(productManager.importProducts(eq(owner), any(Map.class), any(Map.class)))
+            .thenAnswer(new Answer<Map<String, Product>>() {
+                @Override
+                public Map<String, Product> answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    Map<String, ProductData> productData = (Map<String, ProductData>) args[1];
+                    Map<String, Product> output = new HashMap<String, Product>();
+
+                    if (productData != null) {
+                        for (String pid : productData.keySet()) {
+                            Product product = products.get(pid);
+
+                            if (product != null) {
+                                output.put(product.getId(), product);
+                            }
+                        }
+                    }
+
+                    return output;
+                }
+            });
+    }
+
+    private void mockProducts(Owner owner, Product... products) {
+        Map<String, Product> productMap = new HashMap<String, Product>();
+
+        for (Product product : products) {
+            productMap.put(product.getId(), product);
+        }
+
+        this.mockProducts(owner, productMap);
+    }
+
+    private void mockProductImport(Owner owner, Product... products) {
+        Map<String, Product> productMap = new HashMap<String, Product>();
+
+        for (Product product : products) {
+            productMap.put(product.getId(), product);
+        }
+
+        this.mockProductImport(owner, productMap);
     }
 
     @Test
@@ -415,7 +494,6 @@ public class EntitlerTest {
         Date twelveHoursAgo =  new Date(new Date().getTime() - 12L * 60L * 60L * 1000L);
 
         Consumer c;
-
         c = TestUtil.createConsumer(owner1);
         c.setCreated(twelveHoursAgo);
 
@@ -464,9 +542,9 @@ public class EntitlerTest {
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
         when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProdDTOs);
-        when(productManager.updateProduct(eq(p), any(ProductData.class), eq(owner), anyBoolean()))
-            .thenReturn(p);
-        when(ownerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
+
+        this.mockProducts(owner, p);
+        this.mockProductImport(owner, p);
 
         when(pm.createPool(any(Pool.class))).thenReturn(devPool);
         when(devPool.getId()).thenReturn("test_pool_id");
@@ -520,6 +598,19 @@ public class EntitlerTest {
         entitler.bindByProducts(ad);
     }
 
+    private void mockUpdateProduct(final Product product, Owner owner) {
+        when(productManager.updateProduct(any(ProductData.class), eq(owner), anyBoolean()))
+            .thenAnswer(new Answer<Product>() {
+                @Override
+                public Product answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    ProductData pdata = (ProductData) args[0];
+
+                    return (product.getId().equals(pdata.getId())) ? product : null;
+                }
+            });
+    }
+
     @Test
     public void testDevPoolCreationAtBindFailNoSkuProduct() throws Exception {
         Owner owner = TestUtil.createOwner("o");
@@ -542,10 +633,8 @@ public class EntitlerTest {
         when(ownerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
         when(ownerProductCurator.getProductById(eq(owner), eq(ip.getId()))).thenReturn(ip);
 
-        when(productManager.updateProduct(eq(p), any(ProductData.class), any(Owner.class), anyBoolean()))
-            .thenReturn(p);
-        when(productManager.updateProduct(eq(ip), any(ProductData.class), any(Owner.class), anyBoolean()))
-            .thenReturn(ip);
+        mockUpdateProduct(p, owner);
+        mockUpdateProduct(ip, owner);
 
         AutobindData ad = new AutobindData(devSystem);
         try {
@@ -580,16 +669,8 @@ public class EntitlerTest {
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
         when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProdDTOs);
 
-        when(ownerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
-        when(ownerProductCurator.getProductById(eq(owner), eq(ip1.getId()))).thenReturn(ip1);
-        when(ownerProductCurator.getProductById(eq(owner), eq(ip2.getId()))).thenReturn(ip2);
-
-        when(productManager.updateProduct(eq(p), any(ProductData.class), any(Owner.class), anyBoolean()))
-            .thenReturn(p);
-        when(productManager.updateProduct(eq(ip1), any(ProductData.class), any(Owner.class), anyBoolean()))
-            .thenReturn(ip1);
-        when(productManager.updateProduct(eq(ip2), any(ProductData.class), any(Owner.class), anyBoolean()))
-            .thenReturn(ip2);
+        this.mockProducts(owner, p, ip1, ip2);
+        this.mockProductImport(owner, p, ip1, ip2);
 
         Pool expectedPool = entitler.assembleDevPool(devSystem, p.getId());
         when(pm.createPool(any(Pool.class))).thenReturn(expectedPool);
@@ -614,15 +695,9 @@ public class EntitlerTest {
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
         when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProdDTOs);
-        when(productManager.updateProduct(eq(p1), any(ProductData.class), eq(owner), anyBoolean()))
-            .thenReturn(p1);
-        when(productManager.updateProduct(eq(p2), any(ProductData.class), eq(owner), anyBoolean()))
-            .thenReturn(p2);
-        when(productManager.updateProduct(eq(p3), any(ProductData.class), eq(owner), anyBoolean()))
-            .thenReturn(p3);
-        when(ownerProductCurator.getProductById(eq(owner), eq(p1.getId()))).thenReturn(p1);
-        when(ownerProductCurator.getProductById(eq(owner), eq(p2.getId()))).thenReturn(p2);
-        when(ownerProductCurator.getProductById(eq(owner), eq(p3.getId()))).thenReturn(p3);
+
+        this.mockProducts(owner, p1, p2, p3);
+        this.mockProductImport(owner, p1, p2, p3);
 
         Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
         Calendar cal = Calendar.getInstance();
@@ -641,35 +716,47 @@ public class EntitlerTest {
     public void testCreatedDevSkuWithNoSla() {
         Owner owner = TestUtil.createOwner("o");
         List<ProductData> devProdDTOs = new ArrayList<ProductData>();
-        Product p1 = TestUtil.createProduct("dev-product", "Dev Product");
+        final Product p1 = TestUtil.createProduct("dev-product", "Dev Product");
         devProdDTOs.add(p1.toDTO());
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p1.getId());
 
         when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProdDTOs);
-        when(productManager.updateProduct(eq(p1), any(ProductData.class), eq(owner), anyBoolean()))
-            .thenReturn(p1);
+        mockUpdateProduct(p1, owner);
 
-        when(ownerProductCurator.getProductById(eq(owner), eq(p1.getId()))).thenReturn(p1);
-
-        when(productManager.updateProduct(eq(p1), any(ProductData.class), eq(owner), anyBoolean()))
-            .thenAnswer(new Answer<Product>() {
+        // this.mockProducts(owner, p1);
+        // this.mockProductImport(owner, p1);
+        when(productManager.importProducts(eq(owner), any(Map.class), any(Map.class)))
+            .thenAnswer(new Answer<Map<String, Product>>() {
                 @Override
-                public Product answer(InvocationOnMock invocation) throws Throwable {
+                public Map<String, Product> answer(InvocationOnMock invocation) throws Throwable {
                     Object[] args = invocation.getArguments();
-                    Product product = (Product) args[0];
-                    ProductData pdata = (ProductData) args[1];
+                    Map<String, ProductData> productData = (Map<String, ProductData>) args[1];
+                    Map<String, Product> output = new HashMap<String, Product>();
 
                     // We need to copy the attributes from the product data to the product to
                     // simulate a proper update.
-                    product.clearAttributes();
-                    if (pdata.getAttributes() != null) {
-                        for (ProductAttributeData attrib : pdata.getAttributes()) {
-                            product.setAttribute(attrib.getName(), attrib.getValue());
+                    for (ProductData pdata : productData.values()) {
+                        if (pdata != null) {
+                            if (p1.getId().equals(pdata.getId())) {
+                                p1.clearAttributes();
+                                if (pdata.getAttributes() != null) {
+                                    for (ProductAttributeData attrib : pdata.getAttributes()) {
+                                        p1.setAttribute(attrib.getName(), attrib.getValue());
+                                    }
+                                }
+
+                                output.put(p1.getId(), p1);
+                            }
+                            else {
+                                Product product = new Product(pdata.getId(), pdata.getName());
+                                // Do we care about this product? Probably not.
+                                output.put(product.getId(), product);
+                            }
                         }
                     }
 
-                    return product;
+                    return output;
                 }
             });
 

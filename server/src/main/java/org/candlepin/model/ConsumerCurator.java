@@ -90,6 +90,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     @Transactional
     public void delete(Consumer entity) {
+        log.debug("Deleting consumer: {}", entity);
+
         // save off the IDs before we delete
         DeletedConsumer dc = new DeletedConsumer(entity.getUuid(), entity.getOwner().getId(),
             entity.getOwner().getKey(), entity.getOwner().getDisplayName());

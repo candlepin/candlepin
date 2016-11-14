@@ -875,7 +875,7 @@ public class OwnerResource {
         EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.OWNER, Type.MODIFIED)
             .setOldEntity(toUpdate);
 
-        log.debug("Updating owner: " + key);
+        log.debug("Updating owner: {}", key);
 
         if (owner.getDisplayName() != null) {
             toUpdate.setDisplayName(owner.getDisplayName());
@@ -1212,7 +1212,6 @@ public class OwnerResource {
         MultipartInput input) {
 
         ConflictOverrides overrides = processConflictOverrideParams(overrideConflicts);
-
         UploadMetadata fileData = new UploadMetadata();
         Owner owner = findOwner(ownerKey);
         try {
@@ -1489,6 +1488,7 @@ public class OwnerResource {
         catch (IllegalArgumentException e) {
             throw new BadRequestException(i18n.tr("Unknown conflict to force"));
         }
+
         return overrides;
     }
 

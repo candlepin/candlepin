@@ -39,8 +39,11 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp2_pool_source_sub")
+@Table(name = SourceSubscription.DB_TABLE)
 public class SourceSubscription extends AbstractHibernateObject {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp2_pool_source_sub";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

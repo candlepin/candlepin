@@ -40,8 +40,11 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_import_record")
+@Table(name = ImportRecord.DB_TABLE)
 public class ImportRecord extends AbstractHibernateObject {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_import_record";
 
     /**
      * The result status of an import.

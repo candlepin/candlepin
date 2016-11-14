@@ -14,10 +14,12 @@
  */
 package org.candlepin.model;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.Session;
 import org.hibernate.Criteria;
+import org.hibernate.Session;
+import org.hibernate.Query;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
@@ -25,10 +27,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.LinkedList;
-import java.util.Set;
+import java.util.Map;
 
 
 
@@ -121,6 +123,34 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         return count;
     }
 
+    /**
+     * Checks if the owner has an existing version of the specified content. This lookup is
+     * different than the mapping check in that this check will find any content with the
+     * specified ID, as opposed to checking if a specific version is mapped to the owner.
+     *
+     * @param owner
+     *  The owner of the content to lookup
+     *
+     * @param contentId
+     *  The Red Hat ID of the content to lookup
+     *
+     * @return
+     *  true if the owner has a content with the given RHID; false otherwise
+     */
+    @Transactional
+    public boolean contentExists(Owner owner, String contentId) {
+        String jpql = "SELECT count(op) FROM OwnerContent op " +
+            "WHERE op.owner.id = :owner_id AND op.content.id = :content_id";
+
+        long count = (Long) this.getEntityManager()
+            .createQuery(jpql)
+            .setParameter("owner_id", owner.getId())
+            .setParameter("content_id", contentId)
+            .getSingleResult();
+
+        return count > 0;
+    }
+
     @Transactional
     public boolean isContentMappedToOwner(Content content, Owner owner) {
         String jpql = "SELECT count(op) FROM OwnerContent op " +
@@ -145,6 +175,9 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
         return false;
     }
+
+    // TODO:
+    // These pseudo-bulk operations should be updated so they're not flushing after each update.
 
     @Transactional
     public int mapContentToOwners(Content content, Owner... owners) {
@@ -221,20 +254,14 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
      * be manually evicted from the session and re-queried to ensure they will not clobber the
      * changes made by this method on persist, nor trigger any errors on refresh.
      *
-     * @param current
-     *  The current content other objects are referencing
+     * @param owner
+     *  The owner for which to apply the reference changes
      *
-     * @param updated
-     *  The content other objects should reference
-     *
-     * @param owners
-     *  A collection of owners for which to apply the reference changes
-     *
-     * @return
-     *  a reference to the updated content
+     * @param contentUuidMap
+     *  A mapping of source content UUIDs to updated content UUIDs
      */
     @Transactional
-    public Content updateOwnerContentReferences(Content current, Content updated, Collection<Owner> owners) {
+    public void updateOwnerContentReferences(Owner owner, Map<String, String> contentUuidMap) {
         // Impl note:
         // We're doing this in straight SQL because direct use of the ORM would require querying all
         // of these objects and HQL refuses to do any joining (implicit or otherwise), which
@@ -242,53 +269,38 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         // As an added bonus, it's quicker, but we'll have to be mindful of the memory vs backend
         // state divergence.
 
-        if (owners.size() > AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE) {
-            throw new UnsupportedOperationException("Large owner collections are currently unsupported");
+        if (contentUuidMap == null || contentUuidMap.isEmpty()) {
+            // Nothing to update
+            return;
         }
 
         Session session = this.currentSession();
-        Set<String> ownerIds = new HashSet<String>();
 
-        for (Owner owner : owners) {
-            ownerIds.add(owner.getId());
-        }
+        Map<String, Object> criteria = new HashMap<String, Object>();
+        Map<Object, Object> uuidMap = Map.class.cast(contentUuidMap);
+        criteria.put("content_uuid", contentUuidMap.keySet());
+        criteria.put("owner_id", owner.getId());
 
         // Owner content
-        String sql = "UPDATE cp2_owner_content SET content_uuid = ?1 " +
-            "WHERE content_uuid = ?2 AND owner_id IN (?3)";
-
-        int ocCount = session.createSQLQuery(sql)
-            .setParameter("1", updated.getUuid())
-            .setParameter("2", current.getUuid())
-            .setParameterList("3", ownerIds)
-            .executeUpdate();
-
-        log.debug("{} owner-content relations updated", ocCount);
+        int count = this.bulkSQLUpdate(OwnerContent.DB_TABLE, "content_uuid", uuidMap, criteria);
+        log.debug("{} owner-content relations updated", count);
 
         // environment content
-        sql = "SELECT ec.id " +
-            "FROM cp2_environment_content ec " +
-            "  JOIN cp_environment e ON ec.environment_id = e.id " +
-            "WHERE " +
-            "  e.owner_id IN (?1) " +
-            "  AND ec.content_uuid = ?2";
-
-        List<String> ids = session.createSQLQuery(sql)
-            .setParameterList("1", ownerIds)
-            .setParameter("2", current.getUuid())
+        List<String> ids = session.createSQLQuery("SELECT id FROM cp_environment WHERE owner_id = ?1")
+            .setParameter("1", owner.getId())
             .list();
 
-        sql = "UPDATE cp2_environment_content SET content_uuid = ?1 WHERE id IN (?2)";
+        if (ids != null && !ids.isEmpty()) {
+            criteria.clear();
+            criteria.put("content_uuid", contentUuidMap.keySet());
+            criteria.put("environment_id", ids);
 
-        int ecCount = this.safeSQLUpdateWithCollection(sql, ids, updated.getUuid());
-        log.debug("{} environment-content relations updated", ecCount);
-
-        // Impl note:
-        // We're not managing product-content references, since versioning changes require us to
-        // handle that with more explicit logic. Instead, when rely on the content manager using
-        // the product manager to fork/update products when a related content changes.
-
-        return updated;
+            count = this.bulkSQLUpdate(EnvironmentContent.DB_TABLE, "content_uuid", uuidMap, criteria);
+            log.debug("{} environment-content relations updated", count);
+        }
+        else {
+            log.debug("0 environment-content relations updated");
+        }
     }
 
     /**
@@ -307,53 +319,64 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
      * @param content
      *  The content other objects are referencing
      *
-     * @param owners
-     *  A collection of owners for which to apply the reference changes
+     * @param owner
+     *  The owner for which to apply the reference changes
      */
     @Transactional
-    public void removeOwnerContentReferences(Content content, Collection<Owner> owners) {
+    public void removeOwnerContentReferences(Content content, Owner owner) {
         // Impl note:
         // As is the case in updateOwnerContentReferences, HQL's bulk delete doesn't allow us to
         // touch anything that even looks like a join. As such, we have to do this in vanilla SQL.
 
-        if (owners.size() > AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE) {
-            throw new UnsupportedOperationException("Large owner collections are currently unsupported");
-        }
-
         Session session = this.currentSession();
-        Set<String> ownerIds = new HashSet<String>();
-
-        for (Owner owner : owners) {
-            ownerIds.add(owner.getId());
-        }
 
         // Owner content
-        String sql = "DELETE FROM cp2_owner_content WHERE content_uuid = ?1 AND owner_id IN (?2)";
+        String sql = "DELETE FROM cp2_owner_content WHERE content_uuid = ?1 AND owner_id = ?2";
 
-        int ocCount = session.createSQLQuery(sql)
+        int count = session.createSQLQuery(sql)
             .setParameter("1", content.getUuid())
-            .setParameterList("2", ownerIds)
+            .setParameter("2", owner.getId())
             .executeUpdate();
 
-        log.debug("{} owner-content relations updated", ocCount);
+        log.debug("{} owner-content relations updated", count);
 
         // environment content
-        sql = "SELECT ec.id " +
-            "FROM cp2_environment_content ec " +
-            "  JOIN cp_environment e ON ec.environment_id = e.id " +
-            "WHERE " +
-            "  e.owner_id IN (?1) " +
-            "  AND ec.content_uuid = ?2";
-
-        List<String> ids = session.createSQLQuery(sql)
-            .setParameterList("1", ownerIds)
-            .setParameter("2", content.getUuid())
+        List<String> ids = session.createSQLQuery("SELECT id FROM cp_environment WHERE owner_id = ?1")
+            .setParameter("1", owner.getId())
             .list();
 
-        sql = "DELETE FROM cp2_environment_content WHERE id IN (?1)";
+        if (ids != null && !ids.isEmpty()) {
+            int inBlocks = ids.size() / AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE + 1;
 
-        int ecCount = this.safeSQLUpdateWithCollection(sql, ids);
-        log.debug("{} environment-content relations updated", ecCount);
+            StringBuilder builder = new StringBuilder("DELETE FROM cp2_environment_content ")
+                .append("WHERE content_uuid = ?1 AND (");
+
+            for (int i = 0; i < inBlocks; ++i) {
+                if (i != 0) {
+                    builder.append(" OR ");
+                }
+
+                builder.append("environment_id IN (?").append(i + 2).append(')');
+            }
+
+            builder.append(')');
+
+            Query query = session.createSQLQuery(builder.toString())
+                .setParameter("1", content.getUuid());
+
+            int args = 1;
+            for (List<String> block : Iterables.partition(ids,
+                AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE)) {
+
+                query.setParameterList(String.valueOf(++args), block);
+            }
+
+            count = query.executeUpdate();
+            log.debug("{} environment-content relations updated", count);
+        }
+        else {
+            log.debug("0 environment-content relations updated");
+        }
 
         // Impl note:
         // We're not managing product-content references, since versioning changes require us to

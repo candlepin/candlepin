@@ -40,9 +40,12 @@ import javax.xml.bind.annotation.XmlTransient;
  * Rules
  */
 @Entity
-@Table(name = "cp_rules")
+@Table(name = Rules.DB_TABLE)
 @Embeddable
 public class Rules extends AbstractHibernateObject implements Named, Eventful {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_rules";
 
     private static final Pattern VERSION_REGEX =
         Pattern.compile("[//|#]+ *[V|v]ersion: *([0-9]+(\\.[0-9]+)*) *");

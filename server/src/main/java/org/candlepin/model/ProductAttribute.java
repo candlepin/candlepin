@@ -43,10 +43,13 @@ import javax.xml.bind.annotation.XmlTransient;
  * See Attributes interface for documentation.
  */
 @Entity
-@Table(name = "cp2_product_attributes")
+@Table(name = ProductAttribute.DB_TABLE)
 @Embeddable
 @JsonFilter("ProductAttributeFilter")
 public class ProductAttribute extends AbstractHibernateObject implements Attribute {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp2_product_attributes";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

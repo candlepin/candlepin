@@ -35,8 +35,11 @@ import javax.xml.bind.annotation.XmlTransient;
  * been promoted to that environment.
  */
 @Entity
-@Table(name = "cp2_environment_content")
+@Table(name = EnvironmentContent.DB_TABLE)
 public class EnvironmentContent extends AbstractHibernateObject {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp2_environment_content";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

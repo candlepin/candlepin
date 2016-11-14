@@ -228,7 +228,7 @@ public class OwnerContentResource {
                     throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));
                 }
 
-                entity = this.contentManager.updateContent(existing, content, owner, true);
+                entity = this.contentManager.updateContent(content, owner, true);
             }
             else {
                 entity = this.contentManager.createContent(content, owner);
@@ -288,7 +288,7 @@ public class OwnerContentResource {
             throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));
         }
 
-        existing = this.contentManager.updateContent(existing, content, owner, true);
+        existing = this.contentManager.updateContent(content, owner, true);
         return existing.toDTO();
     }
 

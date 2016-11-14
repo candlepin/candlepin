@@ -53,10 +53,13 @@ import io.swagger.annotations.ApiModelProperty;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_owner")
+@Table(name = Owner.DB_TABLE)
 @JsonFilter("OwnerFilter")
 public class Owner extends AbstractHibernateObject implements Serializable,
     Linkable, Owned, Named, Eventful {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_owner";
     private static final long serialVersionUID = -7059065874812188165L;
 
     @OneToOne

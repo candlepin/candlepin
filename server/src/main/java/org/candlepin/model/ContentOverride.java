@@ -33,10 +33,13 @@ import javax.xml.bind.annotation.XmlTransient;
  * different override types, consumer and activation key for now
  */
 @Entity
-@Table(name = "cp_content_override")
+@Table(name = ContentOverride.DB_TABLE)
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorFormula("case when key_id is null then 'consumer' ELSE 'activation_key' end")
 public class ContentOverride extends AbstractHibernateObject {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_content_override";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

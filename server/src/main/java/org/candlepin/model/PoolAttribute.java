@@ -40,10 +40,13 @@ import javax.xml.bind.annotation.XmlTransient;
  * An abstract base class for Pool attributes.
  */
 @Entity(name = "PoolAttribute")
-@Table(name = "cp_pool_attribute")
+@Table(name = PoolAttribute.DB_TABLE)
 @Embeddable
 @JsonFilter("PoolAttributeFilter")
 public class PoolAttribute extends AbstractHibernateObject implements Attribute {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_pool_attribute";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

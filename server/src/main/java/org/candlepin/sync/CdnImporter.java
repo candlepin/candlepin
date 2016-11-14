@@ -38,10 +38,8 @@ public class CdnImporter {
         this.curator = curator;
     }
 
-    public Cdn createObject(ObjectMapper mapper, Reader reader)
-        throws IOException {
-        Cdn cdn = mapper.readValue(reader,
-            Cdn.class);
+    public Cdn createObject(ObjectMapper mapper, Reader reader) throws IOException {
+        Cdn cdn = mapper.readValue(reader, Cdn.class);
         cdn.setId(null);
         return cdn;
     }
@@ -54,14 +52,14 @@ public class CdnImporter {
         for (Cdn cdn : cdnSet) {
             Cdn existing = curator.lookupByLabel(cdn.getLabel());
             if (existing == null) {
+                log.debug("Creating CDN: {}", cdn);
                 curator.create(cdn);
-                log.debug("Created CDN: " + cdn.getName());
             }
             else {
+                log.debug("Updating CDN: {}", cdn);
                 existing.setName(cdn.getName());
                 existing.setUrl(cdn.getUrl());
                 curator.merge(existing);
-                log.debug("Updating CDN: " + cdn.getName());
             }
         }
     }

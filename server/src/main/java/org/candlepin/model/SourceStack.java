@@ -43,8 +43,11 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_pool_source_stack")
+@Table(name = SourceStack.DB_TABLE)
 public class SourceStack extends AbstractHibernateObject {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_pool_source_stack";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

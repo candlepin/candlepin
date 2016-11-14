@@ -25,7 +25,9 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 
@@ -528,7 +530,10 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         assertFalse(this.isContentMappedToOwner(updated, owner1));
         assertTrue(this.isContentMappedToOwner(unmodified, owner2));
 
-        this.ownerContentCurator.updateOwnerContentReferences(original, updated, Arrays.asList(owner1));
+        Map<String, String> uuidMap = new HashMap<String, String>();
+        uuidMap.put(original.getUuid(), updated.getUuid());
+
+        this.ownerContentCurator.updateOwnerContentReferences(owner1, uuidMap);
 
         assertFalse(this.isContentMappedToOwner(original, owner1));
         assertTrue(this.isContentMappedToOwner(updated, owner1));
@@ -567,7 +572,7 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         assertTrue(this.isContentMappedToOwner(original, owner1));
         assertTrue(this.isContentMappedToOwner(unmodified, owner2));
 
-        this.ownerContentCurator.removeOwnerContentReferences(original, Arrays.asList(owner1));
+        this.ownerContentCurator.removeOwnerContentReferences(original, owner1);
 
         assertFalse(this.isContentMappedToOwner(original, owner1));
         assertTrue(this.isContentMappedToOwner(unmodified, owner2));

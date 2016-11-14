@@ -22,6 +22,8 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -39,9 +41,12 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 @Entity
-@Table(name = "cp2_owner_content")
+@Table(name = OwnerContent.DB_TABLE)
 @IdClass(OwnerContentKey.class)
 public class OwnerContent implements Persisted, Serializable {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp2_owner_content";
     private static final long serialVersionUID = -7059065874812188165L;
 
     /**
@@ -77,6 +82,7 @@ public class OwnerContent implements Persisted, Serializable {
 
     @Override
     public Serializable getId() {
+        this.applyObjectIds();
         return new OwnerContentKey(this.ownerId, this.contentUuid);
     }
 
@@ -85,14 +91,7 @@ public class OwnerContent implements Persisted, Serializable {
     }
 
     public void setOwner(Owner owner) {
-        if (owner.getId() == null) {
-            throw new IllegalStateException(
-                "Owner must be persisted before it can be linked to a content"
-            );
-        }
-
         this.owner = owner;
-        this.ownerId = owner.getId();
     }
 
     public Content getContent() {
@@ -100,14 +99,49 @@ public class OwnerContent implements Persisted, Serializable {
     }
 
     public void setContent(Content content) {
-        if (content.getUuid() == null) {
+        this.content = content;
+    }
+
+    /**
+     * Sets the database object IDs this join object uses to link owners to content. If either the
+     * owner or content are not present or have not been persisted with a valid ID or UUID, this
+     * method will throw an IllegalStateException.
+     *
+     * @throws IllegalStateException
+     *  if either owner or content are null or unpersisted
+     */
+    protected void applyObjectIds() {
+        if (this.owner == null) {
+            throw new IllegalStateException("An owner must be specified to link content");
+        }
+
+        if (this.owner.getId() == null) {
+            throw new IllegalStateException(
+                "Owner must be persisted before it can be linked to content"
+            );
+        }
+
+        if (this.content == null) {
+            throw new IllegalStateException("Content must be specified to link an owner");
+        }
+
+        if (this.content.getUuid() == null) {
             throw new IllegalStateException(
                 "Content must be persisted before it can be linked to an owner"
             );
         }
 
-        this.content = content;
+        this.ownerId = owner.getId();
         this.contentUuid = content.getUuid();
     }
 
+    @PrePersist
+    protected void onCreate() {
+        this.applyObjectIds();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.applyObjectIds();
+    }
 }

@@ -91,24 +91,23 @@ public class RefreshPoolsJob extends UniqueByEntityJob {
             while (cause != null) {
                 if (SQLException.class.isAssignableFrom(cause.getClass())) {
                     log.warn("Caught a runtime exception wrapping an SQLException.");
-                    throw new RetryJobException("RefreshPoolsJob encountered a problem.",
-                            e);
+                    throw new RetryJobException("RefreshPoolsJob encountered a problem.", e);
                 }
                 cause = cause.getCause();
             }
 
             // Otherwise throw as we would normally for any generic Exception:
             log.error("RefreshPoolsJob encountered a problem.", e);
-            context.setResult(e.getMessage());
-            throw new JobExecutionException(e.getMessage(), e, false);
+            context.setResult(e.toString());
+            throw new JobExecutionException(e.toString(), e, false);
         }
         // Catch any other exception that is fired and re-throw as a
         // JobExecutionException so that the job will be properly
         // cleaned up on failure.
         catch (Exception e) {
             log.error("RefreshPoolsJob encountered a problem.", e);
-            context.setResult(e.getMessage());
-            throw new JobExecutionException(e.getMessage(), e, false);
+            context.setResult(e.toString());
+            throw new JobExecutionException(e.toString(), e, false);
         }
     }
 

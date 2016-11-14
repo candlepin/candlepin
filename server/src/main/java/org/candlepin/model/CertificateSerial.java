@@ -33,8 +33,11 @@ import javax.validation.constraints.NotNull;
  * unique serial numbers.
  */
 @Entity
-@Table(name = "cp_cert_serial")
+@Table(name = CertificateSerial.DB_TABLE)
 public class CertificateSerial extends AbstractHibernateObject {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_cert_serial";
 
     @Id
     @GeneratedValue(generator = "serial-number")

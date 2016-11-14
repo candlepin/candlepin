@@ -42,8 +42,11 @@ import org.hibernate.annotations.GenericGenerator;
  * the implemented {@link ManifestFileService}.
  */
 @Entity
-@Table(name = "cp_manifest_file_record")
+@Table(name = ManifestFileRecord.DB_TABLE)
 public class ManifestFileRecord extends AbstractHibernateObject implements ManifestFile {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_manifest_file_record";
 
     @Id
     @GeneratedValue(generator = "system-uuid")

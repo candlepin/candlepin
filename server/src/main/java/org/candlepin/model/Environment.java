@@ -49,8 +49,11 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_environment")
+@Table(name = Environment.DB_TABLE)
 public class Environment extends AbstractHibernateObject implements Serializable, Owned {
+
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp_environment";
     private static final long serialVersionUID = 4162471699021316341L;
 
     @ManyToOne
