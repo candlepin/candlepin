@@ -24,6 +24,7 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.ProductManager;
+import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -33,6 +34,7 @@ import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -164,5 +166,26 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     public void certificateRetrievalReturnsCert() {
         EntitlementCertificate cert = or.createUeberCertificate(principal, owner.getKey());
         assertNotNull(cert);
+    }
+
+    @Test
+    public void ueberPoolCreatedWhenMissing() throws Exception {
+        EntitlementCertificate firstCert = or.createUeberCertificate(principal, owner.getKey());
+        Pool firstPool = firstCert.getEntitlement().getPool();
+        poolManager.deletePool(firstPool);
+        EntitlementCertificate newCert = or.createUeberCertificate(principal, owner.getKey());
+        assertFalse(firstPool.equals(newCert.getEntitlement().getPool()));
+    }
+
+    @Test
+    public void ueberCertRegeneratedWhenNoUeberEntsExistForConsumer() throws Exception {
+        EntitlementCertificate firstCert = or.createUeberCertificate(principal, owner.getKey());
+        assertNotNull(firstCert);
+        Consumer ueberConsumer = consumerCurator.findByName(owner, Consumer.UEBER_CERT_CONSUMER);
+        assertNotNull(ueberConsumer);
+        assertEquals(1, poolManager.revokeAllEntitlements(ueberConsumer));
+        EntitlementCertificate newCert = or.createUeberCertificate(principal, owner.getKey());
+        assertNotNull(newCert);
+        assertFalse(newCert.equals(firstCert));
     }
 }

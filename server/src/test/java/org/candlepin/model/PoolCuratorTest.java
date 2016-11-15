@@ -112,7 +112,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool);
 
-        ueberCertGenerator.generate(owner, new NoAuthPrincipal());
+        ueberCertGenerator.generate(owner.getKey(), new NoAuthPrincipal());
 
         List<Pool> results = poolCurator.listAvailableEntitlementPools(
             consumer, consumer.getOwner(), (Collection<String>) null, null, true);

@@ -126,5 +126,35 @@ describe 'Uebercert' do
     cert_content_suffix = cert_content.slice(-(exp_content_suffix.length()), exp_content_suffix.length())
     cert_content_suffix.should == exp_content_suffix
   end
+
+  it 'should handle concurrent requests to generate cert for an owner' do
+    owner = @cp.create_owner random_string("target_owner")
+    t1 = Thread.new{_generate_cert(owner)}
+    t2 = Thread.new{_generate_cert(owner)}
+    t1.join
+    t2.join
+
+    # Verify that the consumer has a single cert.
+    consumers = @cp.list_consumers({:owner => owner['key'], :type => "uebercert"})
+    consumers.should_not be_nil
+    consumers.length.should == 1
+
+    ueber_consumer = consumers[0]
+    ueber_consumer["uuid"].should_not be_nil
+    ueber_consumer["uuid"].should_not be_empty
+
+    entitlements = @cp.list_entitlements({:uuid => ueber_consumer["uuid"]})
+    entitlements.should_not be_nil
+    entitlements.length.should == 1
+    entitlements[0].should_not be_nil
+
+    # Verify that the cert can be generated again.
+    _generate_cert(owner)
+  end
+
+  def _generate_cert(owner)
+    ueber_cert = @cp.generate_ueber_cert(owner['key'])
+    ueber_cert.should_not be_nil
+  end
 end
 

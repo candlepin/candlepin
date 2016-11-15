@@ -16,6 +16,8 @@ package org.candlepin.model;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.controller.ContentManager;
+import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -24,20 +26,26 @@ import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.service.UniqueIdGenerator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.TimeZone;
 
 /**
  * UeberCertificateGenerator
  */
 public class UeberCertificateGenerator {
+
+    private static Logger log = LoggerFactory.getLogger(UeberCertificateGenerator.class);
 
     private PoolManager poolManager;
     private PoolCurator poolCurator;
@@ -46,6 +54,9 @@ public class UeberCertificateGenerator {
     private UniqueIdGenerator idGenerator;
     private ConsumerTypeCurator consumerTypeCurator;
     private ConsumerCurator consumerCurator;
+    private EntitlementCurator entitlementCurator;
+    private EntitlementCertificateCurator entitlementCertCurator;
+    private OwnerCurator ownerCurator;
     private I18n i18n;
 
     @Inject
@@ -56,6 +67,9 @@ public class UeberCertificateGenerator {
         UniqueIdGenerator idGenerator,
         ConsumerTypeCurator consumerTypeCurator,
         ConsumerCurator consumerCurator,
+        EntitlementCurator entitlementCurator,
+        EntitlementCertificateCurator entitlementCertCurator,
+        OwnerCurator ownerCurator,
         I18n i18n) {
 
         this.poolManager = poolManager;
@@ -65,19 +79,64 @@ public class UeberCertificateGenerator {
         this.idGenerator = idGenerator;
         this.consumerTypeCurator = consumerTypeCurator;
         this.consumerCurator = consumerCurator;
+        this.entitlementCurator = entitlementCurator;
+        this.entitlementCertCurator = entitlementCertCurator;
+        this.ownerCurator = ownerCurator;
         this.i18n = i18n;
     }
 
-    public EntitlementCertificate generate(Owner o, Principal principal)
-        throws EntitlementRefusedException {
+    @Transactional
+    public EntitlementCertificate generate(String ownerKey, Principal principal) {
+        Owner o = ownerCurator.findAndLock(ownerKey);
+        if (o == null) {
+            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", ownerKey));
+        }
 
-        Product ueberProduct = createUeberProduct(o);
-        Subscription ueberSubscription = createUeberSubscription(o, ueberProduct);
-        poolManager.createAndEnrichPools(ueberSubscription);
+        try {
+            Consumer ueberConsumer = consumerCurator.findByName(o, Consumer.UEBER_CERT_CONSUMER);
+
+            // ueber cert has already been generated - re-generate it now
+            if (ueberConsumer != null) {
+                List<Entitlement> ueberEntitlements = entitlementCurator.listByConsumer(ueberConsumer);
+
+                if (ueberEntitlements.size() > 0) {
+                    // Immediately revoke and regenerate ueber certificates:
+                    poolManager.regenerateCertificatesOf(ueberEntitlements.get(0), true, false);
+                    return entitlementCertCurator.listForConsumer(ueberConsumer).get(0);
+                }
+
+                // If there is a consumer without an entitlement, generate a new one. If an ueber pool
+                // does not exist, create it.
+                Pool ueberPool = poolCurator.findUeberPool(o);
+                if (ueberPool == null) {
+                    createSubscriptionAndPool(o);
+                    ueberPool = poolCurator.findUeberPool(o);
+                }
+                return generateUeberCertificate(ueberConsumer, ueberPool);
+            }
+
+            return this.generateCertificate(o, principal);
+        }
+        catch (Exception e) {
+            log.error("Problem generating ueber cert for owner: " + ownerKey, e);
+            throw new BadRequestException(i18n.tr("Problem generating ueber cert for owner {0}", ownerKey),
+                e);
+        }
+    }
+
+    private EntitlementCertificate generateCertificate(Owner o, Principal principal)
+        throws EntitlementRefusedException {
+        createSubscriptionAndPool(o);
         Consumer consumer = createUeberConsumer(principal, o);
 
         Pool ueberPool = poolCurator.findUeberPool(o);
         return generateUeberCertificate(consumer, ueberPool);
+    }
+
+    private void createSubscriptionAndPool(Owner o) {
+        Product ueberProduct = createUeberProduct(o);
+        Subscription ueberSubscription = createUeberSubscription(o, ueberProduct);
+        poolManager.createAndEnrichPools(ueberSubscription);
     }
 
     public Product createUeberProduct(Owner owner) {
