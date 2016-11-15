@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.19
+Version: 2.0.20
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,23 @@ fi
 
 #raw
 %changelog
+* Tue Nov 15 2016 Vritant Jain <adarshvritant@gmail.com> 2.0.20-1
+- 1391923: Fixed concurrent ueber cert generation issues (mstead@redhat.com)
+- 1388201: Add check to insure constraint has not already been dropped
+  (awood@redhat.com)
+- Fix cert column type to vary based on DBMS (awood@redhat.com)
+- Allow manifest exports to be extended (mstead@redhat.com)
+- 1313551: Async Import/Export Implementation (mstead@redhat.com)
+- 1388201: Remove unique constraint on content keys; replace with index.
+  (awood@redhat.com)
+- Reference caching of Product (nguyen.filip@gmail.com)
+- 1382307: Expose verify_ssl, default localhost to NONE (khowell@redhat.com)
+- 1387104: Product update changes 'updated' field (nguyen.filip@gmail.com)
+- Disable autobind at Owner level (mstead@redhat.com)
+- 1380766: Correct improper calculation of extensions delta. (awood@redhat.com)
+- Removed in-place updating for product and content (crog@redhat.com)
+- Lock the hypervisor consumer earlier to avoid over entitlement
+  (csnyder@redhat.com)
 * Thu Sep 22 2016 Vritant Jain <adarshvritant@gmail.com> 2.0.19-1
 - Revert of cp_consumer_facts_lower (nguyen.filip@gmail.com)
 - Role shouldn't be cached (nguyen.filip@gmail.com)
