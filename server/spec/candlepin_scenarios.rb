@@ -563,6 +563,18 @@ class CandlepinQpid
     `sudo systemctl start qpidd || sudo supervisorctl start qpidd`
   end 
 
+  #Create non-durable queue and bind it to an exchange
+  def create_queue(qname, args, exchange)
+    `sudo qpid-config -b amqps://localhost:5671 --ssl-certificate #{@gbcrt} --ssl-key #{@gbkey} add queue #{qname} #{args}`
+    `sudo qpid-config -b amqps://localhost:5671 --ssl-certificate #{@gbcrt} --ssl-key #{@gbkey} bind #{exchange} #{qname} "#"`
+  end 
+ 
+  #Force removes the queue
+  def delete_queue(qname)
+    `sudo qpid-config -b amqps://localhost:5671 --ssl-certificate #{@gbcrt} --ssl-key #{@gbkey} del queue #{qname} --force`
+  end 
+
+
   def receive
     @messenger = Qpid::Proton::Messenger::Messenger.new
    

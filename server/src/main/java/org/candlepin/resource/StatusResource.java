@@ -15,6 +15,7 @@
 package org.candlepin.resource;
 
 import org.candlepin.audit.QpidConnection;
+import org.candlepin.audit.QpidQmf;
 import org.candlepin.cache.CandlepinCache;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
@@ -64,10 +65,11 @@ public class StatusResource {
     private RulesCurator rulesCurator;
     private JsRunnerProvider jsProvider;
     private CandlepinCache candlepinCache;
+    private QpidQmf qmf;
 
     @Inject
     public StatusResource(RulesCurator rulesCurator, Configuration config, JsRunnerProvider jsProvider,
-        CandlepinCache candlepinCache, QpidConnection sender) {
+        CandlepinCache candlepinCache, QpidConnection sender, QpidQmf qmf) {
         this.sender = sender;
         this.rulesCurator = rulesCurator;
         this.candlepinCache = candlepinCache;
@@ -79,6 +81,7 @@ public class StatusResource {
             standalone = false;
         }
         this.jsProvider = jsProvider;
+        this.qmf = qmf;
     }
 
     /**
@@ -147,6 +150,15 @@ public class StatusResource {
     public String recon() throws Exception {
         sender.connect();
         return "{\"status\":\"OK reconnected\"}";
+    }
+
+    // TODO remove this later before merging to master.
+    @GET
+    @ApiOperation(value = "BrokerStatus", notes = "QpidStatus", authorizations = {})
+    @Path("/brokerStatus")
+    @SecurityHole(noAuth = true, anon = true)
+    public String brokerStatus() throws Exception {
+        return "{\"status\":\"" + qmf.getStatus() + "\"}";
     }
 
 }

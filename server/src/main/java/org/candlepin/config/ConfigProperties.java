@@ -146,6 +146,12 @@ public class ConfigProperties {
     public static final String AMQP_TRUSTSTORE_PASSWORD = "candlepin.amqp.truststore_password";
     public static final String AMQP_CONNECTION_RETRY_ATTEMPTS = "gutterball.amqp.connection.retry_attempts";
     public static final String AMQP_CONNECTION_RETRY_INTERVAL = "gutterball.amqp.connection.retry_interval";
+    /**
+     * Timeout that is used for QpidQmf while receiving messages. It shouldn't be necessary
+     * to modify this unless the environment and Qpid Broker is so heavily utilized, that
+     * reception takes longer.
+     */
+    public static final String QPID_QMF_RECEIVE_TIMEOUT = "candlepin.amqp.qmf.receive_timeout";
 
     // Hibernate
     public static final String DB_PASSWORD = JPA_CONFIG_PREFIX + "hibernate.connection.password";
@@ -335,6 +341,7 @@ public class ConfigProperties {
             this.put(AMQP_KEYSTORE_PASSWORD, "password");
             this.put(AMQP_TRUSTSTORE, "/etc/candlepin/certs/amqp/candlepin.truststore");
             this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
+            this.put(QPID_QMF_RECEIVE_TIMEOUT, "5000");
 
             this.put(AMQP_CONNECTION_RETRY_INTERVAL, "10"); // Every 10 seconds
             this.put(AMQP_CONNECTION_RETRY_ATTEMPTS, "1"); // Try for 10 seconds (1*10s)
@@ -385,5 +392,6 @@ public class ConfigProperties {
             this.put(SWAGGER_ENABLED, Boolean.toString(true));
         }
     };
+
 
 }

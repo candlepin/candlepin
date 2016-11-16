@@ -4,7 +4,7 @@ require 'candlepin_scenarios'
 
 # To run this spec test it is necessary to have Qpid up and configured.
 #
-# In Jenkins environment, this should be a problem. The cp-test script 
+# In Jenkins environment, this shouldn't be a problem. The cp-test script 
 # has -q switch that will run configure-qpid.sh during candlepin server
 # deploy.
 #
@@ -22,8 +22,50 @@ describe 'Qpid Broker' do
      # Clean the qpid queue
      @cq.receive
   end
+  
+  it 'detects Qpid DOWN' do
+     status = @cp.get("/status/brokerStatus") 
+     status['status'].should == 'CONNECTED'
+     @cq.stop
+     puts "Turned off QPID, status should be DOWN now"
+     status = @cp.get("/status/brokerStatus") 
+     status['status'].should == 'DOWN'
+     @cq.start  
+     puts "Started Qpid again, status should be CONNECTED now"
+     status = @cp.get("/status/brokerStatus") 
+     status['status'].should == 'CONNECTED'
+  end
+
+  it 'flow stop is detected' do
+     @cp.get("/status/recon")
+     # Create a queue that will initiate flow control after
+     # 3 messages
+     test_q = "flowStopQueue"
+     @cq.create_queue(test_q, '--flow-stop-count=3', 'event') 
+     puts "#{test_q} queue created"
+     2.times do 
+       create_owner random_string("test")
+     end
+     puts "2 owners should be successfully created now"
+     status = @cp.get("/status/brokerStatus") 
+     status['status'].should == 'CONNECTED'
+
+     puts "Creating additional owners which will FLOW_STOP #{test_q}"
+     3.times do 
+       create_owner random_string("test")
+     end
+     sleep 5 
+     status = @cp.get("/status/brokerStatus") 
+     status['status'].should == 'FLOW_STOPPED'
+
+     puts "Removing queue #{test_q}, this should unblock again"
+     @cq.delete_queue(test_q) 
+     status = @cp.get("/status/brokerStatus") 
+     status['status'].should == 'CONNECTED'
+  end 
 
   it 'should receive OWNER CREATED' do
+     @cp.get("/status/recon")
      create_owner random_string("test")
      sleep 10
      msgs = @cq.receive
