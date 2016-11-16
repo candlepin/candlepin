@@ -72,6 +72,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 import org.xnap.commons.i18n.I18n;
@@ -107,6 +108,9 @@ public class ImporterTest {
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
 
+    @Rule
+    public ExpectedException ee = ExpectedException.none();
+
     private ObjectMapper mapper;
     private I18n i18n;
     private String mockJsPath;
@@ -136,6 +140,15 @@ public class ImporterTest {
         ps.println("release=1");
         ps.close();
         mockJsPath = new File(folder.getRoot(), "empty.js").getPath();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        PrintStream ps = new PrintStream(new File(this.getClass()
+            .getClassLoader().getResource("version.properties").toURI()));
+        ps.println("version=${version}");
+        ps.println("release=${release}");
+        ps.close();
     }
 
     @Test
@@ -330,15 +343,11 @@ public class ImporterTest {
         fw.write("Just a flat file");
         fw.close();
 
-        try {
-            i.loadExport(owner, archive, co, "original_file.zip");
-        }
-        catch (ImportExtractionException e) {
-            assertEquals(e.getMessage(), i18n.tr("The archive {0} is " +
-                "not a properly compressed file or is empty", "non_zip_file.zip"));
-            return;
-        }
-        fail();
+        String m = i18n.tr("The archive {0} is not a properly compressed file or is empty",
+            "non_zip_file.zip");
+        ee.expect(ImportExtractionException.class);
+        ee.expectMessage(m);
+        i.loadExport(owner, archive, co, "original_file.zip");
     }
 
     @Test
@@ -354,15 +363,10 @@ public class ImporterTest {
         out.putNextEntry(new ZipEntry("no_content"));
         out.close();
 
-        try {
-            i.loadExport(owner, archive, co, "original_file.zip");
-        }
-        catch (ImportExtractionException e) {
-            assertEquals(e.getMessage(), i18n.tr("The archive does not " +
-                "contain the required signature file"));
-            return;
-        }
-        fail();
+        String m = i18n.tr("The archive does not contain the required signature file");
+        ee.expect(ImportExtractionException.class);
+        ee.expectMessage(m);
+        i.loadExport(owner, archive, co, "original_file.zip");
     }
 
     @Test(expected = ImportConflictException.class)
@@ -411,15 +415,9 @@ public class ImporterTest {
         addFileToArchive(out, ceArchive);
         out.close();
 
-        try {
-            i.loadExport(owner, archive, co, "original_file.zip");
-        }
-        catch (ImportExtractionException e) {
-            assertTrue(e.getMessage().contains(
-                "not a properly compressed file or is empty"));
-            return;
-        }
-        fail();
+        ee.expect(ImportExtractionException.class);
+        ee.expectMessage("not a properly compressed file or is empty");
+        i.loadExport(owner, archive, co, "original_file.zip");
     }
 
     @Test
@@ -446,14 +444,9 @@ public class ImporterTest {
         addFileToArchive(out, ceArchive);
         out.close();
 
-        try {
-            i.loadExport(owner, archive, co, "original_file.zip");
-        }
-        catch (ImportExtractionException e) {
-            assertTrue(e.getMessage().contains("consumer_export archive has no contents"));
-            return;
-        }
-        fail();
+        ee.expect(ImportExtractionException.class);
+        ee.expectMessage("consumer_export archive has no contents");
+        i.loadExport(owner, archive, co, "original_file.zip");
     }
 
     private Map<String, File> getTestImportFiles() {
@@ -469,8 +462,9 @@ public class ImporterTest {
     }
 
     @Test
-    public void testImportNoMeta() throws IOException {
-        Importer i = new Importer(null, null, null, null, null, null, null,
+    public void testImportNoMeta() throws IOException, ImporterException {
+        OwnerCurator oc = mock(OwnerCurator.class);
+        Importer i = new Importer(null, null, null, oc, null, null, null,
             null, config, null, null, null, i18n, null, null, su, null);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
@@ -478,20 +472,17 @@ public class ImporterTest {
         Map<String, File> importFiles = getTestImportFiles();
         importFiles.put(ImportFile.META.fileName(), null);
 
-        try {
-            i.importObjects(owner, importFiles, co);
-        }
-        catch (ImporterException e) {
-            assertEquals(e.getMessage(), i18n.tr("The archive does not contain the " +
-                "required meta.json file"));
-            return;
-        }
-        fail();
+        String m = i18n.tr("The archive does not contain the " +
+            "required meta.json file");
+        ee.expect(ImporterException.class);
+        ee.expectMessage(m);
+        i.importObjects(owner, importFiles, co);
     }
 
     @Test
-    public void testImportNoConsumerTypesDir() throws IOException {
-        Importer i = new Importer(null, null, null, null, null, null, null,
+    public void testImportNoConsumerTypesDir() throws IOException, ImporterException {
+        OwnerCurator oc = mock(OwnerCurator.class);
+        Importer i = new Importer(null, null, null, oc, null, null, null,
             null, config, null, null, null, i18n, null, null, su, null);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
@@ -499,20 +490,17 @@ public class ImporterTest {
 
         importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), null);
 
-        try {
-            i.importObjects(owner, importFiles, co);
-        }
-        catch (ImporterException e) {
-            assertEquals(e.getMessage(), i18n.tr("The archive does not contain the " +
-                "required consumer_types directory"));
-            return;
-        }
-        fail();
+        String m = i18n.tr("The archive does not contain the " +
+            "required consumer_types directory");
+        ee.expect(ImporterException.class);
+        ee.expectMessage(m);
+        i.importObjects(owner, importFiles, co);
     }
 
     @Test
-    public void testImportNoConsumer() throws IOException {
-        Importer i = new Importer(null, null, null, null, null, null, null,
+    public void testImportNoConsumer() throws IOException, ImporterException {
+        OwnerCurator oc = mock(OwnerCurator.class);
+        Importer i = new Importer(null, null, null, oc, null, null, null,
             null, config, null, null, null, i18n, null, null, su, null);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
@@ -520,22 +508,19 @@ public class ImporterTest {
 
         importFiles.put(ImportFile.CONSUMER.fileName(), null);
 
-        try {
-            i.importObjects(owner, importFiles, co);
-        }
-        catch (ImporterException e) {
-            assertEquals(e.getMessage(), i18n.tr("The archive does not contain the " +
-                "required consumer.json file"));
-            return;
-        }
-        fail();
+        String m = i18n.tr("The archive does not contain the " +
+            "required consumer.json file");
+        ee.expect(ImporterException.class);
+        ee.expectMessage(m);
+        i.importObjects(owner, importFiles, co);
     }
 
     @Test
     public void testImportNoProductDir()
         throws IOException, ImporterException {
         RulesImporter ri = mock(RulesImporter.class);
-        Importer i = new Importer(null, null, ri, null, null, null, null,
+        OwnerCurator oc = mock(OwnerCurator.class);
+        Importer i = new Importer(null, null, ri, oc, null, null, null,
             null, config, null, null, null, i18n, null, null, su, null);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
@@ -557,15 +542,9 @@ public class ImporterTest {
         importFiles.put(ImportFile.ENTITLEMENTS.fileName(), null);
         importFiles.put(ImportFile.UPSTREAM_CONSUMER.fileName(), mock(File.class));
 
-        try {
-            i.importObjects(owner, importFiles, co);
-        }
-        catch (RuntimeException e) {
-            assertEquals(e.getMessage(), "Done with the test");
-            return;
-        }
-        fail();
-
+        ee.expect(RuntimeException.class);
+        ee.expectMessage("Done with the test");
+        i.importObjects(owner, importFiles, co);
     }
 
     @Test
@@ -638,12 +617,12 @@ public class ImporterTest {
         assertEquals(1, subscriptions.size());
         assertEquals("prodId", subscriptions.get(0).getProduct().getId());
         assertEquals(2, subscriptions.get(0).getQuantity().longValue());
-
     }
 
     @Test
-    public void testImportProductNoEntitlementDir() throws IOException {
-        Importer i = new Importer(null, null, null, null, null, null, null,
+    public void testImportProductNoEntitlementDir() throws IOException, ImporterException {
+        OwnerCurator oc = mock(OwnerCurator.class);
+        Importer i = new Importer(null, null, null, oc, null, null, null,
             null, config, null, null, null, i18n, null, null, su, null);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
@@ -651,24 +630,11 @@ public class ImporterTest {
 
         importFiles.put(ImportFile.ENTITLEMENTS.fileName(), null);
 
-        try {
-            i.importObjects(owner, importFiles, co);
-        }
-        catch (ImporterException e) {
-            assertEquals(e.getMessage(), i18n.tr("The archive does not contain the " +
-                "required entitlements directory"));
-            return;
-        }
-        fail();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        PrintStream ps = new PrintStream(new File(this.getClass()
-            .getClassLoader().getResource("version.properties").toURI()));
-        ps.println("version=${version}");
-        ps.println("release=${release}");
-        ps.close();
+        String m = i18n.tr("The archive does not contain the " +
+            "required entitlements directory");
+        ee.expect(ImporterException.class);
+        ee.expectMessage(m);
+        i.importObjects(owner, importFiles, co);
     }
 
     private File createFile(String filename, String version, Date date,
@@ -722,19 +688,15 @@ public class ImporterTest {
             new DefaultSubjectKeyIdentifierWriter(), null);
 
         OwnerCurator oc = mock(OwnerCurator.class);
-        ConsumerTypeCurator ctc = mock(ConsumerTypeCurator.class);
         ConsumerType type = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
+        ConsumerTypeCurator ctc = mock(ConsumerTypeCurator.class);
         when(ctc.lookupByLabel(eq("candlepin"))).thenReturn(type);
 
         Importer i = new Importer(ctc, null, null, oc,
             mock(IdentityCertificateCurator.class), null, null,
             pki, null, null, mock(CertificateSerialCurator.class), null, i18n, null,
             null, su, null);
-        File[] upstream = new File[2];
-        File idcertfile = new File(classLoader.getResource("upstream/testidcert.json").toURI());
-        File kpfile = new File(classLoader.getResource("upstream/keypair.pem").toURI());
-        upstream[0] = idcertfile;
-        upstream[1] = kpfile;
+        File[] upstream = createUpstreamFiles();
         Owner owner = new Owner("admin", "Admin Owner");
         ConsumerDto consumer = new ConsumerDto("eb5e04bf-be27-44cf-abe3-0c0b1edd523e",
             "mymachine", new ConsumerType(ConsumerTypeEnum.CANDLEPIN), owner,
@@ -749,6 +711,15 @@ public class ImporterTest {
         i.importConsumer(owner, consumerfile, upstream, forcedConflicts, meta);
 
         verify(oc).merge(eq(owner));
+    }
+
+    private File[] createUpstreamFiles() throws URISyntaxException {
+        File[] upstream = new File[2];
+        File idcertfile = new File(classLoader.getResource("upstream/testidcert.json").toURI());
+        File kpfile = new File(classLoader.getResource("upstream/keypair.pem").toURI());
+        upstream[0] = idcertfile;
+        upstream[1] = kpfile;
+        return upstream;
     }
 
     private DistributorVersion createTestDistributerVersion() {
@@ -797,41 +768,44 @@ public class ImporterTest {
     public void testImportNoDistributorVersions()
         throws IOException, ImporterException {
         RulesImporter ri = mock(RulesImporter.class);
-        ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
-        Importer i = new Importer(null, null, ri, null, null, null,
-            null, null, config, emc, null, null, i18n, null, null, su, null);
-        Owner owner = mock(Owner.class);
-        ConflictOverrides co = mock(ConflictOverrides.class);
-        Map<String, File> importFiles = getTestImportFiles();
-        File ruleDir = mock(File.class);
-        File[] rulesFiles = createMockJsFile(mockJsPath);
-        when(ruleDir.listFiles()).thenReturn(rulesFiles);
-        File actualmeta = createFile("meta.json", "0.0.3", new Date(),
-            "test_user", "prefix");
-        importFiles.put(ImportFile.META.fileName(), actualmeta);
-        importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFiles[0]);
-        importFiles.put(ImportFile.PRODUCTS.fileName(), null);
-        importFiles.put(ImportFile.ENTITLEMENTS.fileName(), null);
         doNothing().when(ri).importObject(any(Reader.class));
-        importFiles.put(ImportFile.DISTRIBUTOR_VERSIONS.fileName(), null);
-        File cTypes = mock(File.class);
-        when(cTypes.listFiles()).thenReturn(new File[]{});
-        importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), cTypes);
+        ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
 
         // this is the hook to stop testing. we confirm that the dist version null test
         //  is passed and then jump out instead of trying to fake the actual file
         //  processing.
         doThrow(new RuntimeException("Done with the test")).when(emc)
             .lookupByTypeAndOwner(any(String.class), any(Owner.class));
+        OwnerCurator oc = mock(OwnerCurator.class);
+        Owner owner = mock(Owner.class);
+        ConflictOverrides co = mock(ConflictOverrides.class);
+        Map<String, File> importFiles = createAndSetImportFiles();
+        Importer i = new Importer(null, null, ri, oc, null, null,
+            null, null, config, emc, null, null, i18n, null, null, su, null);
 
-        try {
-            i.importObjects(owner, importFiles, co);
-        }
-        catch (RuntimeException e) {
-            assertEquals(e.getMessage(), "Done with the test");
-            return;
-        }
-        fail();
+        ee.expect(RuntimeException.class);
+        ee.expectMessage("Done with the test");
+        i.importObjects(owner, importFiles, co);
+    }
+
+    private Map<String, File> createAndSetImportFiles()
+        throws IOException, JsonGenerationException, JsonMappingException {
+        File[] rulesFiles = createMockJsFile(mockJsPath);
+        File ruleDir = mock(File.class);
+        when(ruleDir.listFiles()).thenReturn(rulesFiles);
+        File actualmeta = createFile("meta.json", "0.0.3", new Date(),
+            "test_user", "prefix");
+        Map<String, File> importFiles = getTestImportFiles();
+        importFiles.put(ImportFile.META.fileName(), actualmeta);
+        importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFiles[0]);
+        importFiles.put(ImportFile.PRODUCTS.fileName(), null);
+        importFiles.put(ImportFile.ENTITLEMENTS.fileName(), null);
+        importFiles.put(ImportFile.DISTRIBUTOR_VERSIONS.fileName(), null);
+        File cTypes = mock(File.class);
+        when(cTypes.listFiles()).thenReturn(new File[]{});
+        importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), cTypes);
+
+        return importFiles;
     }
 
     @Test

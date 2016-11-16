@@ -25,6 +25,7 @@ module CleanupHooks
     if (@rules)
       @cp.delete_rules
     end
+
     if !@cp.get_status()['standalone']
       begin
         @cp.delete('/hostedtest/subscriptions/', nil, true)

@@ -5,19 +5,6 @@ describe 'Import Single Pool Update', :serial => true do
 
   include CandlepinMethods
 
-  class ImportUpdateExporter < Exporter
-    attr_reader :pool
-    attr_reader :entitlement1
-
-    def initialize
-      super()
-      product = create_product(random_string("test_prod"), random_string())
-      end_date = Date.new(2025, 5, 29)
-      @pool = create_pool_and_subscription(@owner['key'], product.id, 200, [], '', '12345', '6789', nil, end_date)
-      @entitlement1 = @candlepin_client.consume_pool(@pool.id, {:quantity => 15})[0]
-    end
-  end
-
   before(:all) do
     @exporter = ImportUpdateExporter.new
   end

@@ -33,6 +33,8 @@ import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
+import com.google.inject.persist.Transactional;
+
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -92,13 +94,14 @@ public class UndoImportsJob extends UniqueByEntityJob {
      *
      * @param context the job's execution context
      */
+    @Transactional
     public void toExecute(JobExecutionContext context) throws JobExecutionException {
         try {
             JobDataMap map = context.getMergedJobDataMap();
             String ownerKey = map.getString(JobStatus.TARGET_ID);
+            Owner owner = this.ownerCurator.lookupByKeyAndLock(ownerKey);
             Boolean lazy = map.getBoolean(LAZY_REGEN);
             Principal principal = (Principal) map.get(PinsetterJobListener.PRINCIPAL_KEY);
-            Owner owner = this.ownerCurator.lookupByKey(ownerKey);
 
             // TODO: Should we check the principal again here?
 

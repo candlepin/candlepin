@@ -39,17 +39,16 @@ module CandlepinMethods
   end
 
   def create_product(id=nil, name=nil, params={})
-
     # If owner given in params, use it, if not, try to find @owner, if neither
     # is set error out.
     # NOTE: this is the owner key being passed in as a string
     if params[:owner]
-      owner = params[:owner]
+      owner_key = params[:owner]
     elsif @owner
-      owner = @owner['key']
+      owner_key = @owner['key']
     end
-    if ! owner
-      raise "Must call create_product with owner param or set @owner in spec suite."
+    if ! owner_key
+      raise "Must call create_product with owner (key) param or set @owner in spec suite."
     end
 
     # For purposes of testing, you can omit id and name to create with
@@ -61,7 +60,7 @@ module CandlepinMethods
     #Product IDs are 32 characters or less
     id = id[0..31]
 
-    product = @cp.create_product(owner, id, name, params)
+    product = @cp.create_product(owner_key, id, name, params)
     @created_products <<  product
     return product
   end
@@ -312,7 +311,6 @@ class Exporter
 
     @candlepin_client = consumer_client(owner_client, random_string('test_client'),
         "candlepin", user['username'])
-
   end
 
   def do_export(client, dest_dir, opts={}, uuid=nil)
@@ -366,6 +364,93 @@ class Exporter
 
   def tmp_dir
     @exports.last.tmp_dir
+  end
+end
+
+class ImportUpdateBrandingExporter < Exporter
+  include CandlepinMethods
+  include CleanupHooks
+
+  BRANDINGS_PER_POOL = 2
+  POOLS_COUNT = 10
+
+  attr_reader :export1_filename
+  attr_reader :export2_filename
+
+  def initialize
+    super()
+    #generate 1st (base) export
+    product = create_product(random_string(), random_string())
+
+    pools = create_pools_and_subs_with_brandings(product, @owner, candlepin_client)
+    @export1_filename = create_candlepin_export.export_filename
+
+    #generate 2nd (updated) export
+    update_pools_or_subs_on_brandings(pools)
+    @export2_filename = create_candlepin_export.export_filename
+	end
+
+  def create_pools_and_subs_with_brandings(product, owner, candlepin_client)
+    pools = Array.new
+    i = 0
+    begin
+      b = createBrandings(product['id'], BRANDINGS_PER_POOL)
+      params = {:branding => b, :quantity => 2}
+      end_date = Date.new(2025, 5, 29)
+      pool = create_pool_and_subscription(owner['key'], product.id, 200 ,
+              [] , '', '', '', nil, end_date, false, params)
+      candlepin_client.consume_pool(pool.id, {:quantity => 1})
+      pools[i] = pool
+      i += 1
+    end while i < POOLS_COUNT
+    return pools
+  end
+
+    def createBrandings(productId, countOfBrandings)
+      brandings = Array.new
+      i = 0
+      begin
+        brandings[i] = createBranding(productId)
+        i += 1
+      end while i < countOfBrandings
+      return brandings
+    end
+
+      def createBranding(productId, type=nil, name=nil)
+        b = Hash.new
+        b[:productId] = productId
+        b[:type] = type || random_string("BrandingType")
+        b[:name] = name || random_string("BrandingName")
+        return b
+      end
+
+  def update_pools_or_subs_on_brandings(pools)
+    pools.each do |pool|
+      subOrPool = get_pool_or_subscription(pool)
+      brandings = subOrPool['branding']
+      brandings.each do |b|
+        b['name'] = random_string("UPDATE-BrandingName")
+      end
+      subOrPool['branding'] = brandings
+      update_pool_or_subscription(subOrPool)
+    end
+  end
+
+  def to_s
+    "ImportUpdateExporter [#{@owner['key']}, #@export1_filename, #@export2_filename, ...]"
+  end
+end
+
+class ImportUpdateExporter < Exporter
+  attr_reader :pool
+  attr_reader :entitlement1
+
+  def initialize
+    super()
+    product = create_product(random_string("test_prod"), random_string())
+    end_date = Date.new(2025, 5, 29)
+    @pool = create_pool_and_subscription(@owner['key'], product.id, 200, [], '', '12345', '6789', nil, end_date)
+    @entitlement1 = @candlepin_client.consume_pool(@pool.id, {:quantity => 15})[0]
   end
 end
 

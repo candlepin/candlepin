@@ -37,6 +37,8 @@ import javax.persistence.LockModeType;
 
 
 
+
+
 /**
  * OwnerCurator
  */
@@ -98,6 +100,14 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
             .add(CPRestrictions.in("key", keys));
 
         return this.cpQueryFactory.<Owner>buildQuery(this.currentSession(), criteria);
+    }
+
+    public Owner lookupByKeyAndLock(String key) {
+        return getEntityManager()
+            .createQuery("select o from Owner o WHERE o.key = :key", Owner.class)
+            .setParameter("key", key)
+            .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+            .getSingleResult();
     }
 
     public Owner lookupWithUpstreamUuid(String upstreamUuid) {
