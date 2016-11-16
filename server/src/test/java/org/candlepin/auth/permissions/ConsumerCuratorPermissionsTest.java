@@ -65,7 +65,7 @@ public class ConsumerCuratorPermissionsTest extends DatabaseTestFixture {
         Consumer c2 = new Consumer("c2", "anotheruser", owner, consumerType);
         consumerCurator.create(c2);
 
-        List<Consumer> results = consumerCurator.listByOwner(owner);
+        List<Consumer> results = consumerCurator.listByOwner(owner).list();
         assertEquals(1, results.size());
         assertEquals(c1.getName(), results.get(0).getName());
     }
@@ -79,7 +79,7 @@ public class ConsumerCuratorPermissionsTest extends DatabaseTestFixture {
         Consumer c2 = new Consumer("c2", "anotheruser", owner, consumerType);
         consumerCurator.create(c2);
 
-        List<Consumer> results = consumerCurator.listByOwner(owner);
+        List<Consumer> results = consumerCurator.listByOwner(owner).list();
         assertEquals(2, results.size());
     }
 

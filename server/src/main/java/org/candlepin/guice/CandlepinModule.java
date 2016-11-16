@@ -110,6 +110,7 @@ import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.resteasy.filter.AuthenticationFilter;
 import org.candlepin.resteasy.filter.AuthorizationFeature;
+import org.candlepin.resteasy.filter.CandlepinQueryInterceptor;
 import org.candlepin.resteasy.filter.PinsetterAsyncFilter;
 import org.candlepin.resteasy.filter.SecurityHoleAuthorizationFilter;
 import org.candlepin.resteasy.filter.StoreFactory;
@@ -312,6 +313,7 @@ public class CandlepinModule extends AbstractModule {
     private void configureInterceptors() {
         bind(PageRequestFilter.class);
         bind(PinsetterAsyncFilter.class);
+        bind(CandlepinQueryInterceptor.class);
         bind(VersionResponseFilter.class);
         bind(LinkHeaderResponseFilter.class);
         bind(DynamicJsonFilter.class);

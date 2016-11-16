@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
@@ -27,21 +28,17 @@ import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.resource.dto.ActivationKeyData;
-import org.candlepin.resteasy.JsonProvider;
+import org.candlepin.util.ElementTransformer;
 import org.candlepin.util.ServiceLevelValidator;
+import org.candlepin.util.TransformedIterator;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -52,15 +49,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
+
 
 /**
  * ActivationKeyResource
@@ -112,17 +108,19 @@ public class ActivationKeyResource {
     @GET
     @Path("{activation_key_id}/pools")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Pool> getActivationKeyPools(
+    public Iterator<Pool> getActivationKeyPools(
         @PathParam("activation_key_id") String activationKeyId) {
 
         ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
-        List<Pool> pools = new ArrayList<Pool>();
 
-        for (ActivationKeyPool akp : key.getPools()) {
-            pools.add(akp.getPool());
-        }
-
-        return pools;
+        return new TransformedIterator<ActivationKeyPool, Pool>(key.getPools().iterator(),
+            new ElementTransformer<ActivationKeyPool, Pool>() {
+                @Override
+                public Pool transform(ActivationKeyPool akp) {
+                    return akp.getPool();
+                }
+            }
+        );
     }
 
     @ApiOperation(notes = "Updates an Activation Key", value = "Update Activation Key")
@@ -252,28 +250,8 @@ public class ActivationKeyResource {
     @ApiResponses({ @ApiResponse(code = 200, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response findActivationKey() {
-        // TODO: Replace this with use of a cursor/iterator
-        final List<ActivationKey> keyList = activationKeyCurator.listAll();
-        final ObjectMapper mapper = new JsonProvider(true, productCachedModule)
-            .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
-
-        StreamingOutput output = new StreamingOutput() {
-            @Override
-            public void write(OutputStream stream) throws IOException, WebApplicationException {
-                JsonGenerator generator = mapper.getJsonFactory().createGenerator(stream);
-                generator.writeStartArray();
-
-                for (ActivationKey key : keyList) {
-                    mapper.writeValue(generator, new ActivationKeyData(key));
-                }
-
-                generator.writeEndArray();
-                generator.flush();
-            }
-        };
-
-        return Response.ok(output).build();
+    public CandlepinQuery<ActivationKey> findActivationKey() {
+        return this.activationKeyCurator.listAll();
     }
 
     @ApiOperation(notes = "Removes an Activation Key", value = "deleteActivationKey")

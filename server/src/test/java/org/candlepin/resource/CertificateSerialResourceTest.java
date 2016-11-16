@@ -14,17 +14,21 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
+import org.candlepin.TestingModules;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
+import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
@@ -32,14 +36,29 @@ import java.util.List;
  */
 public class CertificateSerialResourceTest {
 
+    @Before
+    public void init() {
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.ServletEnvironmentModule(),
+            new TestingModules.StandardTest()
+        );
+
+        injector.injectMembers(this);
+    }
+
     @Test
     public void listall() {
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
         CertificateSerialCurator csc = mock(CertificateSerialCurator.class);
         CertificateSerialResource csr = new CertificateSerialResource(csc);
-        List<CertificateSerial> serials = new ArrayList<CertificateSerial>();
-        serials.add(mock(CertificateSerial.class));
-        when(csc.listAll()).thenReturn(serials);
-        assertEquals(serials, csr.getCertificateSerials());
+
+        when(csc.listAll()).thenReturn(cqmock);
+
+        CandlepinQuery<CertificateSerial> result = csr.getCertificateSerials();
+        assertSame(cqmock, result);
+
+        verify(csc, times(1)).listAll();
     }
 
     @Test

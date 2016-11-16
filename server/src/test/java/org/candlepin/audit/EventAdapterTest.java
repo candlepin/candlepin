@@ -50,6 +50,7 @@ public class EventAdapterTest {
             new TestingModules.ServletEnvironmentModule(),
             new TestingModules.StandardTest()
         );
+
         injector.injectMembers(this);
     }
 

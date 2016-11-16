@@ -55,13 +55,13 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
     @Override
     public List<User> listUsers() {
-        return this.userCurator.listAll();
+        return this.userCurator.listAll().list();
     }
 
 
     @Override
     public List<Role> listRoles() {
-        return roleCurator.listAll();
+        return roleCurator.listAll().list();
     }
 
     @Override

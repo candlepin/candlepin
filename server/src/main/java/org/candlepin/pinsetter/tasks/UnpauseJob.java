@@ -55,7 +55,7 @@ public class UnpauseJob extends KingpinJob {
         List<JobStatus> waitingJobs;
 
         try {
-            waitingJobs = jobCurator.findWaitingJobs();
+            waitingJobs = jobCurator.findWaitingJobs().list();
         }
         catch (HibernateException e) {
             log.error("Cannot execute query: ", e);

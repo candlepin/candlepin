@@ -13,6 +13,7 @@
  * in this software or its documentation.
  */
 package org.candlepin.resource;
+
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -20,8 +21,10 @@ import static org.mockito.Mockito.*;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
+import org.candlepin.model.EmptyCandlepinQuery;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
@@ -29,6 +32,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 
 import org.junit.Before;
@@ -70,6 +74,8 @@ public class ContentResourceTest {
 
     @Test
     public void listContent() {
+        when(cc.listAll()).thenReturn(new EmptyCandlepinQuery());
+
         cr.list();
         verify(cc, atLeastOnce()).listAll();
     }
@@ -84,11 +90,15 @@ public class ContentResourceTest {
     public void getContent() {
         Owner owner = mock(Owner.class);
         Content content = mock(Content.class);
+        ContentData contentData = mock(ContentData.class);
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
 
-        when(oc.listAll()).thenReturn(Arrays.asList(owner));
+        when(cqmock.list()).thenReturn(Arrays.asList(owner));
+        when(oc.listAll()).thenReturn(cqmock);
         when(cc.lookupByUuid(eq("10"))).thenReturn(content);
+        when(content.toDTO()).thenReturn(contentData);
 
-        assertEquals(content, cr.getContent("10"));
+        assertEquals(contentData, cr.getContent("10"));
     }
 
     @Test(expected = BadRequestException.class)
@@ -143,14 +153,16 @@ public class ContentResourceTest {
         Owner owner = mock(Owner.class);
         Product product = mock(Product.class);
         Content content = mock(Content.class);
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
 
         when(product.getId()).thenReturn(productId);
         when(content.getId()).thenReturn(contentId);
+        when(cqmock.list()).thenReturn(Arrays.asList(product));
 
         when(cc.find(any(String.class))).thenReturn(content);
         when(cc.merge(any(Content.class))).thenReturn(content);
         when(productCurator.getProductsWithContent(eq(owner), eq(Arrays.asList(contentId))))
-            .thenReturn(Arrays.asList(product));
+            .thenReturn(cqmock);
 
         cr.updateContent(contentId, content);
 

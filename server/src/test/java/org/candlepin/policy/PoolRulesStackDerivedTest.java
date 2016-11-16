@@ -21,12 +21,13 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -182,7 +183,10 @@ public class PoolRulesStackDerivedTest {
 
         // Initial entitlement from one of the pools:
         stackedEnts.add(createEntFromPool(pool2));
-        when(entCurMock.findByStackId(consumer, STACK)).thenReturn(stackedEnts);
+
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(stackedEnts);
+        when(entCurMock.findByStackId(consumer, STACK)).thenReturn(cqmock);
 
         pool2.setAttribute("virt_limit", "60");
         pool4.setAttribute("virt_limit", "80");
@@ -377,6 +381,8 @@ public class PoolRulesStackDerivedTest {
 
     @Test
     public void virtLimitFromFirstVirtLimitEntBatch() {
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+
         stackedEnts.clear();
         Entitlement e1 = createEntFromPool(pool1);
         e1.setQuantity(4);
@@ -386,7 +392,9 @@ public class PoolRulesStackDerivedTest {
         stackedEnts.add(e2);
         Class<Set<String>> listClass = (Class<Set<String>>) (Class) HashSet.class;
         ArgumentCaptor<Set<String>> arg = ArgumentCaptor.forClass(listClass);
-        when(entCurMock.findByStackIds(eq(consumer), arg.capture())).thenReturn(stackedEnts);
+
+        when(cqmock.iterator()).thenReturn(stackedEnts.iterator());
+        when(entCurMock.findByStackIds(eq(consumer), arg.capture())).thenReturn(cqmock);
 
         List<PoolUpdate> updates = poolRules.updatePoolsFromStack(consumer,
             Arrays.asList(stackDerivedPool, stackDerivedPool2), false);

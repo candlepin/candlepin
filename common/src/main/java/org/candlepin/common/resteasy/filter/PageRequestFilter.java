@@ -17,7 +17,6 @@ package org.candlepin.common.resteasy.filter;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.paging.PageRequest.Order;
-import org.candlepin.common.paging.Paginate;
 
 import com.google.inject.Inject;
 
@@ -31,10 +30,11 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.Provider;
 
+
+
 /**
  * DataPresentationInterceptor
  */
-@Paginate
 @Provider
 @Priority(Priorities.USER)
 public class PageRequestFilter implements ContainerRequestFilter {

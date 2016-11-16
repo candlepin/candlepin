@@ -32,6 +32,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.ResultIterator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.ExportRules;
@@ -633,27 +634,33 @@ public class Exporter {
     }
 
     private void exportContentDeliveryNetworks(File baseDir) throws IOException {
-        List<Cdn> cdns = cdnCurator.list();
-        if (cdns == null || cdns.isEmpty()) { return; }
+        ResultIterator<Cdn> iterator = this.cdnCurator.listAll().iterate();
 
-        File cdnDir = new File(baseDir.getCanonicalPath(), "content_delivery_network");
-        cdnDir.mkdir();
+        try {
+            if (iterator.hasNext()) {
+                File cdnDir = new File(baseDir.getCanonicalPath(), "content_delivery_network");
+                cdnDir.mkdir();
 
-        FileWriter writer = null;
-        for (Cdn cdn : cdns) {
-            if (log.isDebugEnabled()) {
-                log.debug("Exporting Content Delivery Network" + cdn.getName());
-            }
-            try {
-                File file = new File(cdnDir.getCanonicalPath(), cdn.getLabel() + ".json");
-                writer = new FileWriter(file);
-                cdnExporter.export(mapper, writer, cdn);
-            }
-            finally {
-                if (writer != null) {
-                    writer.close();
+                while (iterator.hasNext()) {
+                    Cdn cdn = iterator.next();
+                    log.debug("Exporting CDN: {}", cdn.getName());
+
+                    FileWriter writer = null;
+                    try {
+                        File file = new File(cdnDir.getCanonicalPath(), cdn.getLabel() + ".json");
+                        writer = new FileWriter(file);
+                        cdnExporter.export(mapper, writer, cdn);
+                    }
+                    finally {
+                        if (writer != null) {
+                            writer.close();
+                        }
+                    }
                 }
             }
+        }
+        finally {
+            iterator.close();
         }
     }
 

@@ -14,12 +14,9 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.TestingModules;
 import org.candlepin.audit.Event;
@@ -27,6 +24,7 @@ import org.candlepin.audit.EventAdapter;
 import org.candlepin.auth.PrincipalData;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.EventCurator;
 
 import com.google.inject.Guice;
@@ -38,6 +36,8 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.List;
+
+
 
 /**
  * EventResourceTest
@@ -61,8 +61,7 @@ public class EventResourceTest {
     public void getevent() {
         Event e = getEvent();
         when(ec.find(eq("8aba"))).thenReturn(e);
-        EventResource er = new EventResource(ec, null,
-            injector.getInstance(EventAdapter.class));
+        EventResource er = new EventResource(ec, null, injector.getInstance(EventAdapter.class));
         assertEquals(e, er.getEvent("8aba"));
     }
 
@@ -76,15 +75,26 @@ public class EventResourceTest {
     }
 
     @Test
-    public void listevents() {
-        when(ec.listAll()).thenReturn(null);
-        EventResource er = new EventResource(ec, null,
-            injector.getInstance(EventAdapter.class));
-        assertNull(er.listEvents());
+    public void listEventsNoEvents() {
+        EventResource er = new EventResource(ec, null, injector.getInstance(EventAdapter.class));
+        CandlepinQuery cpQueryMock = mock(CandlepinQuery.class);
+
+        when(ec.listAll()).thenReturn(cpQueryMock);
+
+        assertTrue(er.listEvents().isEmpty());
+    }
+
+    @Test
+    public void testListEvents() {
+        EventResource er = new EventResource(ec, null, injector.getInstance(EventAdapter.class));
+        CandlepinQuery cpQueryMock = mock(CandlepinQuery.class);
 
         List<Event> events = new ArrayList<Event>();
         events.add(getEvent());
-        when(ec.listAll()).thenReturn(events);
+
+        when(ec.listAll()).thenReturn(cpQueryMock);
+        when(cpQueryMock.list()).thenReturn(events);
+
         assertEquals(events, er.listEvents());
     }
 

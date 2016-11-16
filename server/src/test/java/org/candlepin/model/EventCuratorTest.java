@@ -99,7 +99,7 @@ public class EventCuratorTest extends DatabaseTestFixture {
         eventCurator.create(consumerCreatedEvent);
         eventCurator.create(consumerModifiedEvent);
 
-        List<Event> mostRecent = eventCurator.listMostRecent(3);
+        List<Event> mostRecent = eventCurator.listMostRecent(3).list();
         assertEquals(3, mostRecent.size());
 
         // We should see this sorted by timestamp (all the same), then entity, then type:

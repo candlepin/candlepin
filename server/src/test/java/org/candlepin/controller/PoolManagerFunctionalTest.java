@@ -187,7 +187,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testEntitlementPoolsCreated() {
-        List<Pool> pools = poolCurator.listByOwner(o);
+        List<Pool> pools = poolCurator.listByOwner(o).list();
         assertTrue(pools.size() > 0);
 
         Pool virtHostPool = poolCurator.listByOwnerAndProduct(o, virtHost.getId()).get(0);
@@ -215,13 +215,13 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Pool pool = createPool(o, socketLimitedProduct, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
-        List<Pool> pools = poolCurator.listByOwner(o);
-        assertEquals(5, poolCurator.listByOwner(o).size());
+        List<Pool> pools = poolCurator.listByOwner(o).list();
+        assertEquals(5, poolCurator.listByOwner(o).list().size());
         poolManager.deletePools(Arrays.asList(pool, pools.get(0)));
-        pools = poolCurator.listByOwner(o);
+        pools = poolCurator.listByOwner(o).list();
         assertEquals(3, pools.size());
         poolManager.deletePools(pools);
-        pools = poolCurator.listByOwner(o);
+        pools = poolCurator.listByOwner(o).list();
         assertTrue(pools.isEmpty());
     }
 

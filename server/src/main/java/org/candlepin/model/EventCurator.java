@@ -14,22 +14,37 @@
  */
 package org.candlepin.model;
 
-
 import org.candlepin.audit.Event;
 
-import org.hibernate.Criteria;
+import com.google.inject.Inject;
+
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
-import java.util.List;
+
 
 /**
  * AttributeCurator
  */
 public class EventCurator extends AbstractHibernateCurator<Event> {
 
+    @Inject private CandlepinQueryFactory cpQueryFactory;
+
     public EventCurator() {
         super(Event.class);
+    }
+
+    /**
+     * @param limit
+     * @return
+     */
+    private DetachedCriteria createEventCriteria() {
+        return DetachedCriteria.forClass(Event.class)
+            .addOrder(Order.desc("timestamp"))
+            .addOrder(Order.asc("target"))
+            .addOrder(Order.asc("type"))
+            .addOrder(Order.asc("entityId"));
     }
 
     /**
@@ -38,33 +53,29 @@ public class EventCurator extends AbstractHibernateCurator<Event> {
      * @return List of events.
      */
     @SuppressWarnings("unchecked")
-    public List<Event> listMostRecent(int limit) {
-        Criteria crit = createEventCriteria(limit);
-        return crit.list();
-    }
+    public CandlepinQuery<Event> listMostRecent(int limit) {
+        DetachedCriteria criteria = this.createEventCriteria();
 
-    /**
-     * @param limit
-     * @return
-     */
-    private Criteria createEventCriteria(int limit) {
-        return currentSession().createCriteria(Event.class)
-            .setMaxResults(limit).addOrder(Order.desc("timestamp"))
-            .addOrder(Order.asc("target"))
-            .addOrder(Order.asc("type"))
-            .addOrder(Order.asc("entityId"));
+        return this.cpQueryFactory.<Event>buildQuery(this.currentSession(), criteria)
+            .setMaxResults(limit);
     }
 
     @SuppressWarnings("unchecked")
-    public List<Event> listMostRecent(int limit, Owner owner) {
-        return createEventCriteria(limit).add(
-            Restrictions.eq("ownerId", owner.getId())).list();
+    public CandlepinQuery<Event> listMostRecent(int limit, Owner owner) {
+        DetachedCriteria criteria = this.createEventCriteria()
+            .add(Restrictions.eq("ownerId", owner.getId()));
+
+        return this.cpQueryFactory.<Event>buildQuery(this.currentSession(), criteria)
+            .setMaxResults(limit);
     }
 
     @SuppressWarnings("unchecked")
-    public List<Event> listMostRecent(int limit, Consumer consumer) {
-        return createEventCriteria(limit).add(
-            Restrictions.eq("consumerId", consumer.getId())).list();
+    public CandlepinQuery<Event> listMostRecent(int limit, Consumer consumer) {
+        DetachedCriteria criteria = this.createEventCriteria()
+            .add(Restrictions.eq("consumerId", consumer.getId()));
+
+        return this.cpQueryFactory.<Event>buildQuery(this.currentSession(), criteria)
+            .setMaxResults(limit);
     }
 
 }

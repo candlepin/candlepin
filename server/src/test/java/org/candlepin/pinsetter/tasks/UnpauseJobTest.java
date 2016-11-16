@@ -19,6 +19,8 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.quartz.JobBuilder.*;
 
+import org.candlepin.model.CandlepinQuery;
+import org.candlepin.model.EmptyCandlepinQuery;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterKernel;
@@ -54,7 +56,7 @@ public class UnpauseJobTest {
 
     @Test
     public void noUnPausesTest() throws JobExecutionException {
-        when(j.findWaitingJobs()).thenReturn(new ArrayList<JobStatus>());
+        when(j.findWaitingJobs()).thenReturn(new EmptyCandlepinQuery<JobStatus>());
         unpauseJob.execute(ctx);
         try {
             verify(pk, never()).addTrigger(any(JobStatus.class));
@@ -73,7 +75,11 @@ public class UnpauseJobTest {
         JobStatus js = new JobStatus(jd, true);
         List<JobStatus> jl = new ArrayList<JobStatus>();
         jl.add(js);
-        when(j.findWaitingJobs()).thenReturn(jl);
+
+        CandlepinQuery query = mock(CandlepinQuery.class);
+        when(query.list()).thenReturn(jl);
+        when(j.findWaitingJobs()).thenReturn(query);
+
         unpauseJob.execute(ctx);
         try {
             verify(pk, atLeastOnce()).addTrigger(js);

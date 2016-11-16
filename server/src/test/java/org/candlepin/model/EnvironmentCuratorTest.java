@@ -45,14 +45,14 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void create() {
-        assertEquals(1, envCurator.listAll().size());
+        assertEquals(1, envCurator.listAll().list().size());
         Environment e = envCurator.find("env1");
         assertEquals(owner, e.getOwner());
     }
 
     @Test public void delete() {
         envCurator.delete(environment);
-        assertEquals(0, envCurator.listAll().size());
+        assertEquals(0, envCurator.listAll().list().size());
     }
 
     @Test public void listForOwner() {

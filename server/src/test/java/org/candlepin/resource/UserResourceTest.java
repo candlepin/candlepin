@@ -38,10 +38,13 @@ import org.candlepin.test.TestUtil;
 import org.junit.Test;
 
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
+
+
 
 /**
  * UserResourceTest
@@ -88,10 +91,8 @@ public class UserResourceTest extends DatabaseTestFixture {
 
         Role owner1Role = new Role(owner1.getKey() + " role");
         Role owner2Role = new Role(owner2.getKey() + " role");
-        owner1Role.addPermission(new PermissionBlueprint(PermissionType.OWNER, owner1,
-            Access.ALL));
-        owner1Role.addPermission(new PermissionBlueprint(PermissionType.OWNER, owner2,
-            Access.READ_ONLY));
+        owner1Role.addPermission(new PermissionBlueprint(PermissionType.OWNER, owner1, Access.ALL));
+        owner1Role.addPermission(new PermissionBlueprint(PermissionType.OWNER, owner2, Access.READ_ONLY));
         owner1Role.addUser(user);
         owner2Role.addUser(user);
         roleCurator.create(owner1Role);
@@ -104,8 +105,12 @@ public class UserResourceTest extends DatabaseTestFixture {
 
         // Requesting the list of owners for this user should assume ALL, and not
         // return owner2:
-        List<Owner> owners = userResource.listUsersOwners(user.getUsername(),
-            userPrincipal);
+        Iterable<Owner> response = userResource.listUsersOwners(user.getUsername(), userPrincipal);
+        List<Owner> owners = new LinkedList<Owner>();
+        for (Object entity : response) {
+            owners.add((Owner) entity);
+        }
+
         assertEquals(1, owners.size());
         assertEquals(owner1.getKey(), owners.get(0).getKey());
     }
@@ -129,8 +134,12 @@ public class UserResourceTest extends DatabaseTestFixture {
         perms.add(new UsernameConsumersPermission(user, owner1));
         Principal userPrincipal = new UserPrincipal(user.getUsername(), perms, false);
 
-        List<Owner> owners = userResource.listUsersOwners(user.getUsername(),
-            userPrincipal);
+        Iterable<Owner> response = userResource.listUsersOwners(user.getUsername(), userPrincipal);
+        List<Owner> owners = new LinkedList<Owner>();
+        for (Object entity : response) {
+            owners.add((Owner) entity);
+        }
+
         assertEquals(1, owners.size());
         assertEquals(owner1.getKey(), owners.get(0).getKey());
     }

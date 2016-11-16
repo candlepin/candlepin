@@ -41,6 +41,7 @@ import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ProductManager;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -109,6 +110,7 @@ import ch.qos.logback.classic.Level;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -136,6 +138,8 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
+
 
 /**
  * Owner Resource
@@ -243,21 +247,11 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "owners")
-    @ApiOperation(notes = "Retrieves a list of Owners", value = "List Owners",
-        responseContainer = "owners")
-    public List<Owner> list(@QueryParam("key") String keyFilter) {
-
-        // For now, assuming key filter is just one key:
-        if (keyFilter != null) {
-            List<Owner> results = new LinkedList<Owner>();
-            Owner o = ownerCurator.lookupByKey(keyFilter);
-            if (o != null) {
-                results.add(o);
-            }
-            return results;
-        }
-
-        return ownerCurator.listAll();
+    @ApiOperation(notes = "Retrieves a list of Owners", value = "List Owners", responseContainer = "owners")
+    public CandlepinQuery list(@QueryParam("key") String keyFilter) {
+        return keyFilter != null ?
+            this.ownerCurator.lookupByKeys(Arrays.asList(keyFilter)) :
+            this.ownerCurator.listAll();
     }
 
     /**
@@ -804,7 +798,7 @@ public class OwnerResource {
         @Verify(Owner.class) String ownerKey) {
         Owner o = findOwner(ownerKey);
         String path = String.format("/owners/%s/atom", ownerKey);
-        Feed feed = this.eventAdapter.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT, o), path);
+        Feed feed = this.eventAdapter.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT, o).list(), path);
         feed.setTitle("Event feed for owner " + o.getDisplayName());
         return feed;
     }
@@ -824,10 +818,13 @@ public class OwnerResource {
     public List<Event> getEvents(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner o = findOwner(ownerKey);
-        List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT, o);
+
+        List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT, o).list();
+
         if (events != null) {
             eventAdapter.addMessageText(events);
         }
+
         return events;
     }
 
@@ -926,7 +923,7 @@ public class OwnerResource {
 
         List<Subscription> subscriptions = new LinkedList<Subscription>();
 
-        for (Pool pool : this.poolManager.listPoolsByOwner(owner)) {
+        for (Pool pool : this.poolManager.listPoolsByOwner(owner).list()) {
             SourceSubscription srcsub = pool.getSourceSubscription();
 
             if (srcsub != null && "master".equalsIgnoreCase(srcsub.getSubscriptionSubKey())) {
@@ -1318,7 +1315,7 @@ public class OwnerResource {
     @Path("{owner_key}/imports")
     @ApiOperation(notes = " Retrieves a list of Import Records for an Owner", value = "Get Imports")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public List<ImportRecord> getImports(
+    public CandlepinQuery<ImportRecord> getImports(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwner(ownerKey);
 
@@ -1426,13 +1423,13 @@ public class OwnerResource {
     @Path("/{owner_key}/hypervisors")
     @ApiOperation(notes = "Retrieves a list of Hypervisors for an Owner", value = "Get Hypervisors")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public List<Consumer> getHypervisors(
+    public CandlepinQuery<Consumer> getHypervisors(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("hypervisor_id") List<String> hypervisorIds) {
-        if (hypervisorIds == null || hypervisorIds.isEmpty()) {
-            return consumerCurator.getHypervisorsForOwner(ownerKey);
-        }
-        return consumerCurator.getHypervisorsBulk(hypervisorIds, ownerKey);
+
+        return (hypervisorIds == null || hypervisorIds.isEmpty()) ?
+            this.consumerCurator.getHypervisorsForOwner(ownerKey) :
+            this.consumerCurator.getHypervisorsBulk(hypervisorIds, ownerKey);
     }
 
     private ConflictOverrides processConflictOverrideParams(String[] overrideConflicts) {

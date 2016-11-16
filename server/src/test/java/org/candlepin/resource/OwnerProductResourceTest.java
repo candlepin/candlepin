@@ -22,7 +22,6 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.ProductManager;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -63,7 +62,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
     public void setup() {
         this.ownerProductResource = new OwnerProductResource(this.config, this.i18n, this.ownerCurator,
             this.ownerContentCurator, this.ownerProductCurator, this.productCertificateCurator,
-            this.productCurator, this.productManager, new ProductCachedSerializationModule(productCurator)
+            this.productCurator, this.productManager
         );
     }
 
@@ -132,10 +131,8 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         OwnerProductCurator opc = mock(OwnerProductCurator.class);
         ProductCurator pc = mock(ProductCurator.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        OwnerProductResource pr = new OwnerProductResource(
-            config, i18n, oc, null, opc, null, pc, null,
-            new ProductCachedSerializationModule(productCurator)
-        );
+
+        OwnerProductResource pr = new OwnerProductResource(config, i18n, oc, null, opc, null, pc, null);
 
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);

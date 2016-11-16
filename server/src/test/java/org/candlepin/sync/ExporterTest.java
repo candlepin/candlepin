@@ -20,10 +20,12 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.common.config.MapConfiguration;
+import org.candlepin.common.util.VersionUtil;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.jackson.ProductCachedSerializationModule;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
@@ -50,6 +52,7 @@ import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ExportExtensionAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
+import org.candlepin.test.MockResultIterator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -69,6 +72,7 @@ import java.io.OutputStream;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -220,8 +224,7 @@ public class ExporterTest {
 
         when(ent.getPool()).thenReturn(pool);
         when(mrules.getRules()).thenReturn("foobar");
-        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
-            "signature".getBytes());
+        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn("signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(consumer.getEntitlements()).thenReturn(entitlements);
         when(psa.getProductCertificate(any(Owner.class), any(String.class))).thenReturn(pcert);
@@ -238,6 +241,16 @@ public class ExporterTest {
         when(consumer.getKeyPair()).thenReturn(keyPair);
         when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
         when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
+
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
+        when(ctc.listAll()).thenReturn(cqmock);
+
+        CandlepinQuery emptyIteratorMock = mock(CandlepinQuery.class);
+        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
+        when(emptyIteratorMock.iterator()).thenReturn(Arrays.asList().iterator());
+        when(cdnc.listAll()).thenReturn(emptyIteratorMock);
+        when(ctc.listAll()).thenReturn(emptyIteratorMock);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
@@ -289,10 +302,12 @@ public class ExporterTest {
 
         KeyPair keyPair = createKeyPair();
         when(consumer.getKeyPair()).thenReturn(keyPair);
-        when(pki.getPemEncoded(keyPair.getPrivateKey()))
-            .thenReturn("privateKey".getBytes());
-        when(pki.getPemEncoded(keyPair.getPublicKey()))
-            .thenReturn("publicKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
+
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
+        when(ctc.listAll()).thenReturn(cqmock);
 
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
@@ -311,8 +326,7 @@ public class ExporterTest {
         IdentityCertificate idcert = new IdentityCertificate();
 
         when(mrules.getRules()).thenReturn("foobar");
-        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
-            "signature".getBytes());
+        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn("signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
@@ -326,10 +340,16 @@ public class ExporterTest {
 
         KeyPair keyPair = createKeyPair();
         when(consumer.getKeyPair()).thenReturn(keyPair);
-        when(pki.getPemEncoded(keyPair.getPrivateKey()))
-            .thenReturn("privateKey".getBytes());
-        when(pki.getPemEncoded(keyPair.getPublicKey()))
-            .thenReturn("publicKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
+
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
+        when(ctc.listAll()).thenReturn(cqmock);
+
+        CandlepinQuery emptyIteratorMock = mock(CandlepinQuery.class);
+        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
+        when(cdnc.listAll()).thenReturn(emptyIteratorMock);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
@@ -356,8 +376,7 @@ public class ExporterTest {
         Principal principal = mock(Principal.class);
 
         when(mrules.getRules()).thenReturn("foobar");
-        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
-            "signature".getBytes());
+        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn("signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
@@ -373,10 +392,17 @@ public class ExporterTest {
 
         KeyPair keyPair = createKeyPair();
         when(consumer.getKeyPair()).thenReturn(keyPair);
-        when(pki.getPemEncoded(keyPair.getPrivateKey()))
-            .thenReturn("privateKey".getBytes());
-        when(pki.getPemEncoded(keyPair.getPublicKey()))
-            .thenReturn("publicKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
+
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
+        when(ctc.listAll()).thenReturn(cqmock);
+
+        CandlepinQuery emptyIteratorMock = mock(CandlepinQuery.class);
+        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
+        when(emptyIteratorMock.iterator()).thenReturn(Arrays.asList().iterator());
+        when(cdnc.listAll()).thenReturn(emptyIteratorMock);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
@@ -387,8 +413,7 @@ public class ExporterTest {
         // VERIFY
         assertNotNull(export);
         assertTrue(export.exists());
-        verifyContent(export, "export/upstream_consumer/10.pem",
-            new VerifyIdentityCert("10.pem"));
+        verifyContent(export, "export/upstream_consumer/10.pem", new VerifyIdentityCert("10.pem"));
     }
 
     @Test
@@ -401,8 +426,7 @@ public class ExporterTest {
         Principal principal = mock(Principal.class);
 
         when(mrules.getRules()).thenReturn("foobar");
-        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
-            "signature".getBytes());
+        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn("signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
@@ -418,13 +442,19 @@ public class ExporterTest {
 
         KeyPair keyPair = createKeyPair();
         when(consumer.getKeyPair()).thenReturn(keyPair);
-        when(pki.getPemEncoded(keyPair.getPrivateKey()))
-            .thenReturn("privateKey".getBytes());
-        when(pki.getPemEncoded(keyPair.getPublicKey()))
-            .thenReturn("publicKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
         when(consumer.getUuid()).thenReturn("8auuid");
         when(consumer.getName()).thenReturn("consumer_name");
         when(consumer.getType()).thenReturn(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
+        when(ctc.listAll()).thenReturn(cqmock);
+
+        CandlepinQuery emptyIteratorMock = mock(CandlepinQuery.class);
+        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
+        when(cdnc.listAll()).thenReturn(emptyIteratorMock);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
@@ -432,8 +462,7 @@ public class ExporterTest {
             exportExtensionAdapter);
         File export = e.getFullExport(consumer);
 
-        verifyContent(export, "export/consumer.json",
-            new VerifyConsumer("consumer.json"));
+        verifyContent(export, "export/consumer.json", new VerifyConsumer("consumer.json"));
     }
 
     @Test
@@ -446,8 +475,7 @@ public class ExporterTest {
         Principal principal = mock(Principal.class);
 
         when(mrules.getRules()).thenReturn("foobar");
-        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
-            "signature".getBytes());
+        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn("signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
@@ -462,17 +490,14 @@ public class ExporterTest {
 
         KeyPair keyPair = createKeyPair();
         when(consumer.getKeyPair()).thenReturn(keyPair);
-        when(pki.getPemEncoded(keyPair.getPrivateKey()))
-            .thenReturn("privateKey".getBytes());
-        when(pki.getPemEncoded(keyPair.getPublicKey()))
-            .thenReturn("publicKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
         when(consumer.getUuid()).thenReturn("8auuid");
         when(consumer.getName()).thenReturn("consumer_name");
         when(consumer.getType()).thenReturn(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
 
         DistributorVersion dv = new DistributorVersion("test-dist-ver");
-        Set<DistributorVersionCapability> dvcSet =
-            new HashSet<DistributorVersionCapability>();
+        Set<DistributorVersionCapability> dvcSet = new HashSet<DistributorVersionCapability>();
         dvcSet.add(new DistributorVersionCapability(dv, "capability-1"));
         dvcSet.add(new DistributorVersionCapability(dv, "capability-2"));
         dvcSet.add(new DistributorVersionCapability(dv, "capability-3"));
@@ -480,6 +505,16 @@ public class ExporterTest {
         List<DistributorVersion> dvList = new ArrayList<DistributorVersion>();
         dvList.add(dv);
         when(dvc.findAll()).thenReturn(dvList);
+
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
+        when(ctc.listAll()).thenReturn(cqmock);
+
+        CandlepinQuery emptyIteratorMock = mock(CandlepinQuery.class);
+        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
+        when(emptyIteratorMock.iterator()).thenReturn(Arrays.asList().iterator());
+        when(cdnc.listAll()).thenReturn(emptyIteratorMock);
+        when(ctc.listAll()).thenReturn(emptyIteratorMock);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
@@ -493,6 +528,12 @@ public class ExporterTest {
 
     @Test
     public void verifyExportExtension() throws Exception {
+        CandlepinQuery emptyIteratorMock = mock(CandlepinQuery.class);
+        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
+        when(emptyIteratorMock.iterator()).thenReturn(Arrays.asList().iterator());
+        when(cdnc.listAll()).thenReturn(emptyIteratorMock);
+        when(ctc.listAll()).thenReturn(emptyIteratorMock);
+
         Map<String, String> extensionData = new HashMap<String, String>();
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
@@ -506,8 +547,7 @@ public class ExporterTest {
 
         Rules mrules = mock(Rules.class);
         when(mrules.getRules()).thenReturn("foobar");
-        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
-            "signature".getBytes());
+        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn("signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
 
         // specific to this test
@@ -652,10 +692,12 @@ public class ExporterTest {
                     }
                 }
             ));
-            Meta m = om.readValue(
-                new FileInputStream("/tmp/meta.json"), Meta.class);
+            Meta m = om.readValue(new FileInputStream("/tmp/meta.json"), Meta.class);
+
+            Map<String, String> vmap = VersionUtil.getVersionMap();
+
             assertNotNull(m);
-            assertEquals("${version}-${release}", m.getVersion());
+            assertEquals(vmap.get("version") + '-' + vmap.get("release"), m.getVersion());
             assertTrue(start.before(m.getCreated()));
         }
     }

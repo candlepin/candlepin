@@ -65,8 +65,8 @@ public class UserResource {
     private OwnerCurator ownerCurator;
 
     @Inject
-    public UserResource(UserServiceAdapter userService, I18n i18n,
-        OwnerCurator ownerCurator) {
+    public UserResource(UserServiceAdapter userService, I18n i18n, OwnerCurator ownerCurator) {
+
         this.userService = userService;
         this.i18n = i18n;
         this.ownerCurator = ownerCurator;
@@ -168,21 +168,15 @@ public class UserResource {
     @GET
     @Path("/{username}/owners")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Owner> listUsersOwners(@PathParam("username") @Verify(User.class)
-        String username,
+    public Iterable<Owner> listUsersOwners(
+        @PathParam("username") @Verify(User.class) String username,
         @Context Principal principal) {
 
-        List<Owner> owners = new LinkedList<Owner>();
         User user = userService.findByLogin(username);
-        if (user.isSuperAdmin()) {
-            owners.addAll(ownerCurator.listAll());
-        }
-        else {
-            for (Owner o : user.getOwners(SubResource.CONSUMERS, Access.CREATE)) {
-                owners.add(o);
-            }
-        }
-        return owners;
+
+        return user.isSuperAdmin() ?
+            this.ownerCurator.listAll() :
+            user.getOwners(SubResource.CONSUMERS, Access.CREATE);
     }
 
 }

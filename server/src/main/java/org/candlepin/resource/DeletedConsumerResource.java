@@ -14,13 +14,12 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.resource.util.ResourceDateParser;
 
 import com.google.inject.Inject;
-
-import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -32,6 +31,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
+
 
 /**
  * DeletedConsumerResource
@@ -53,12 +54,9 @@ public class DeletedConsumerResource {
     @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<DeletedConsumer> listByDate(@QueryParam("date") String dateStr) {
-        if (dateStr != null) {
-            return deletedConsumerCurator.findByDate(ResourceDateParser.parseDateString(dateStr));
-        }
-        else {
-            return deletedConsumerCurator.listAll();
-        }
+    public CandlepinQuery<DeletedConsumer> listByDate(@QueryParam("date") String dateStr) {
+        return dateStr != null ?
+            this.deletedConsumerCurator.findByDate(ResourceDateParser.parseDateString(dateStr)) :
+            this.deletedConsumerCurator.listAll();
     }
 }

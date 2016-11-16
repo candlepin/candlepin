@@ -16,7 +16,7 @@ package org.candlepin.model;
 
 import org.hibernate.criterion.Restrictions;
 
-import java.util.List;
+
 
 /**
  * Subscription manager.
@@ -37,16 +37,6 @@ public class CdnCurator
         return (Cdn) currentSession()
             .createCriteria(Cdn.class)
             .add(Restrictions.eq("label", label)).uniqueResult();
-    }
-
-    /**
-     * Return a list of the CDN's known .
-     *
-     * @return a list of CDN's
-     */
-    @SuppressWarnings("unchecked")
-    public List<Cdn> list() {
-        return currentSession().createCriteria(Cdn.class).list();
     }
 
 }

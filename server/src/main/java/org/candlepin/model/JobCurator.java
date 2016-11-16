@@ -26,17 +26,18 @@ import org.candlepin.pinsetter.tasks.KingpinJob;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.Criteria;
 import org.hibernate.Query;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+
+
 
 /**
  *
@@ -99,24 +100,29 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
                .executeUpdate();
     }
 
-    public List<JobStatus> findByOwnerKey(String ownerKey) {
-        return findByTarget(JobStatus.TargetType.OWNER, ownerKey);
-    }
-
-    public List<JobStatus> findByConsumerUuid(String uuid) {
-        return findByTarget(JobStatus.TargetType.CONSUMER, uuid);
-    }
-
     @SuppressWarnings("unchecked")
-    public List<JobStatus> findByPrincipalName(String principalName) {
-        return createSecureCriteria().add(Restrictions.eq("principalName", principalName)).list();
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<JobStatus> findByTarget(TargetType type, String tgtid) {
-        return createSecureCriteria()
+    private CandlepinQuery<JobStatus> findByTarget(TargetType type, String tgtid) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .add(Restrictions.eq("targetId", tgtid))
-            .add(Restrictions.eq("targetType", type)).list();
+            .add(Restrictions.eq("targetType", type));
+
+        return this.cpQueryFactory.<JobStatus>buildQuery(this.currentSession(), criteria);
+    }
+
+    public CandlepinQuery<JobStatus> findByOwnerKey(String ownerKey) {
+        return this.findByTarget(JobStatus.TargetType.OWNER, ownerKey);
+    }
+
+    public CandlepinQuery<JobStatus> findByConsumerUuid(String uuid) {
+        return this.findByTarget(JobStatus.TargetType.CONSUMER, uuid);
+    }
+
+    @SuppressWarnings("unchecked")
+    public CandlepinQuery<JobStatus> findByPrincipalName(String principalName) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
+            .add(Restrictions.eq("principalName", principalName));
+
+        return this.cpQueryFactory.<JobStatus>buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -128,23 +134,26 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
      * @return JobStatus list to have quartz job canceled
      */
     @SuppressWarnings("unchecked")
-    public List<JobStatus> findCanceledJobs(Set<String> activeJobs) {
-        if (activeJobs.isEmpty()) {
-            //query will fail with an empty list
-            return new LinkedList<JobStatus>();
+    public CandlepinQuery<JobStatus> findCanceledJobs(Set<String> activeJobs) {
+        if (activeJobs == null || activeJobs.isEmpty()) {
+            return this.cpQueryFactory.<JobStatus>buildQuery();
         }
-        Criteria c = this.currentSession().createCriteria(JobStatus.class)
+
+        DetachedCriteria criteria = DetachedCriteria.forClass(JobStatus.class)
             .add(Restrictions.eq("state", JobState.CANCELED))
             .add(Restrictions.in("id", activeJobs));
-        return c.list();
+
+        return this.cpQueryFactory.<JobStatus>buildQuery(this.currentSession(), criteria);
     }
 
     @SuppressWarnings("unchecked")
-    public List<JobStatus> findWaitingJobs() {
-        // Perhaps unique jobClass/target combinations, However
-        // we're already in a weird state if that makes a difference
-        return this.currentSession().createCriteria(JobStatus.class)
-        .add(Restrictions.eq("state", JobState.WAITING)).list();
+    public CandlepinQuery<JobStatus> findWaitingJobs() {
+        // Perhaps unique jobClass/target combinations, However we're already in a weird state if
+        // that makes a difference
+        DetachedCriteria criteria = DetachedCriteria.forClass(JobStatus.class)
+            .add(Restrictions.eq("state", JobState.WAITING));
+
+        return this.cpQueryFactory.<JobStatus>buildQuery(this.currentSession(), criteria);
     }
 
     public long findNumRunningByClassAndTarget(String target, Class<? extends KingpinJob> jobClass) {

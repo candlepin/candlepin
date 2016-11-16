@@ -97,11 +97,11 @@ public class EntitlerJob extends KingpinJob {
         catch (EntitlementRefusedException e) {
             log.error("EntitlerJob encountered a problem, translating errors", e);
             Map<String, ValidationResult> validationResults = e.getResults();
-            List<Pool> pools = poolCurator.listAllByIds(validationResults.keySet());
 
             EntitlementRulesTranslator translator = new EntitlementRulesTranslator(i18n);
             List<PoolIdAndErrors> poolErrors = new ArrayList<PoolIdAndErrors>();
-            for (Pool pool : pools) {
+
+            for (Pool pool : poolCurator.listAllByIds(validationResults.keySet())) {
                 List<String> errorMessages = new ArrayList<String>();
                 for (ValidationError error : validationResults.get(pool.getId()).getErrors()) {
                     errorMessages.add(translator.poolErrorToMessage(pool, error));

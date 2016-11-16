@@ -17,6 +17,7 @@ package org.candlepin.model;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Conjunction;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.LikeExpression;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
@@ -30,6 +31,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+
 
 /**
  * FilterBuilder
@@ -73,6 +76,12 @@ public abstract class FilterBuilder {
     }
 
     public void applyTo(Criteria parentCriteria) {
+        if (!attributeFilters.isEmpty() || !idFilters.isEmpty() || !otherCriteria.isEmpty()) {
+            parentCriteria.add(getCriteria());
+        }
+    }
+
+    public void applyTo(DetachedCriteria parentCriteria) {
         if (!attributeFilters.isEmpty() || !idFilters.isEmpty() || !otherCriteria.isEmpty()) {
             parentCriteria.add(getCriteria());
         }

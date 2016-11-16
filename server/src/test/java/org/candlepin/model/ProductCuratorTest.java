@@ -336,7 +336,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         newAttributes.add(a4);
         modified.setAttributes(newAttributes);
 
-        int initialAttrCount = productAttributeCurator.listAll().size();
+        int initialAttrCount = productAttributeCurator.listAll().list().size();
         productCurator.merge(modified);
 
         Product lookedUp = productCurator.find(original.getUuid());
@@ -349,7 +349,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         // TODO: test content merging
 
         // Old attributes should get cleaned up:
-        assertEquals(initialAttrCount, productAttributeCurator.listAll().size());
+        assertEquals(initialAttrCount, productAttributeCurator.listAll().list().size());
     }
 
     @Test
@@ -513,7 +513,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         List<String> contentIds = new LinkedList<String>();
         contentIds.add(content.getId());
-        List<Product> products = productCurator.getProductsWithContent(owner, contentIds);
+        List<Product> products = productCurator.getProductsWithContent(owner, contentIds).list();
         assertEquals(1, products.size());
         assertEquals(p, products.get(0));
     }
@@ -529,7 +529,8 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         List<String> contentUuids = new LinkedList<String>();
         contentUuids.add(content.getUuid());
-        List<Product> products = productCurator.getProductsWithContent(contentUuids);
+        log.debug("BEGINNING TEST");
+        List<Product> products = productCurator.getProductsWithContent(contentUuids).list();
         assertEquals(1, products.size());
         assertEquals(p, products.get(0));
     }

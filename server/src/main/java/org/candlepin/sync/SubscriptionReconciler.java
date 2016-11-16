@@ -191,6 +191,7 @@ public class SubscriptionReconciler {
         Map<String, Map<String, Pool>> existingSubsByUpstreamPool = new HashMap<String, Map<String, Pool>>();
 
         int idx = 0;
+
         for (Pool p : poolCurator.listByOwnerAndType(owner, PoolType.NORMAL)) {
             // if the upstream pool id is null,
             // this must be a locally controlled sub.

@@ -16,6 +16,7 @@ package org.candlepin.resource;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 
@@ -25,8 +26,6 @@ import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
-
-import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -43,6 +42,8 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
+
+
 /**
  * Access Path for consumer types
  */
@@ -55,6 +56,7 @@ public class ConsumerTypeResource {
 
     @Inject
     public ConsumerTypeResource(ConsumerTypeCurator consumerTypeCurator, I18n i18n) {
+
         this.consumerTypeCurator = consumerTypeCurator;
         this.i18n = i18n;
     }
@@ -63,8 +65,8 @@ public class ConsumerTypeResource {
     @GET
     @Produces({MediaType.APPLICATION_JSON })
     @Wrapped(element = "consumertypes")
-    public List<ConsumerType> list() {
-        return consumerTypeCurator.listAll();
+    public CandlepinQuery<ConsumerType> list() {
+        return this.consumerTypeCurator.listAll();
     }
 
     @ApiOperation(notes = "Retrieves a single Consumer Type", value = "getConsumerType")

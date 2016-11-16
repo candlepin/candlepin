@@ -25,6 +25,7 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -465,8 +466,10 @@ public class EntitlerTest {
 
         p1.setEntitlements(entitlementSet1);
 
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.iterator()).thenReturn(Arrays.asList(e1).iterator());
         when(entitlementCurator.findByPoolAttribute(eq(c), eq("unmapped_guests_only"), eq("true")))
-            .thenReturn(Arrays.asList(new Entitlement[] {e1}));
+            .thenReturn(cqmock);
 
         String[] pids = {product.getId(), "prod2"};
         when(cc.findByUuid(eq("abcd1234"))).thenReturn(c);
@@ -514,8 +517,11 @@ public class EntitlerTest {
 
         p2.setEntitlements(entitlementSet2);
 
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+
+        when(cqmock.iterator()).thenReturn(Arrays.asList(e1,  e2).iterator());
         when(entitlementCurator.findByPoolAttribute(eq("unmapped_guests_only"), eq("true")))
-            .thenReturn(Arrays.asList(new Entitlement[] {e1,  e2}));
+            .thenReturn(cqmock);
 
         int total = entitler.revokeUnmappedGuestEntitlements();
         assertEquals(1, total);

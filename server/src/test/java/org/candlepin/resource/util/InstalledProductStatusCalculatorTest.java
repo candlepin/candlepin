@@ -14,16 +14,13 @@
  */
 package org.candlepin.resource.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.jackson.ProductCachedSerializationModule;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -97,19 +94,17 @@ public class InstalledProductStatusCalculatorTest {
         MockitoAnnotations.initMocks(this);
 
         // Load the default production rules:
-        InputStream is = this.getClass().getResourceAsStream(
-            RulesCurator.DEFAULT_RULES_FILE);
+        InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is));
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         when(cacheProvider.get()).thenReturn(cache);
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
         Locale locale = new Locale("en_US");
-        i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale,
-            I18nFactory.FALLBACK);
-        compliance = new ComplianceRules(provider.get(),
-            entCurator, new StatusReasonMessageGenerator(i18n), eventSink,
-            consumerCurator, new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)));
+        i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale, I18nFactory.FALLBACK);
+        compliance = new ComplianceRules(provider.get(), entCurator, new StatusReasonMessageGenerator(i18n),
+            eventSink, consumerCurator, new RulesObjectMapper(
+                new ProductCachedSerializationModule(productCurator)));
         owner = new Owner("test");
     }
 
@@ -886,8 +881,11 @@ public class InstalledProductStatusCalculatorTest {
     }
 
     private void mockEntCurator(Consumer c, List<Entitlement> ents) {
+        CandlepinQuery mockCPQuery = mock(CandlepinQuery.class);
+        when(mockCPQuery.list()).thenReturn(ents);
+
         when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(mockCPQuery);
     }
 
     private Map<String, String> getActiveGuestAttrs() {

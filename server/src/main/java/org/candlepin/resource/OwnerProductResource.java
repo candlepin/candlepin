@@ -22,8 +22,8 @@ import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ProductManager;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Content;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
@@ -35,10 +35,8 @@ import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
-import org.candlepin.resteasy.JsonProvider;
+import org.candlepin.util.ElementTransformer;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
@@ -47,8 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -67,10 +63,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -97,13 +90,12 @@ public class OwnerProductResource {
     private ProductCertificateCurator productCertCurator;
     private ProductCurator productCurator;
     private ProductManager productManager;
-    private ProductCachedSerializationModule productCachedModule;
 
     @Inject
     public OwnerProductResource(Configuration config, I18n i18n, OwnerCurator ownerCurator,
         OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator,
         ProductCertificateCurator productCertCurator, ProductCurator productCurator,
-        ProductManager productManager, ProductCachedSerializationModule productCachedModule) {
+        ProductManager productManager) {
 
         this.config = config;
         this.i18n = i18n;
@@ -113,7 +105,6 @@ public class OwnerProductResource {
         this.productCertCurator = productCertCurator;
         this.productCurator = productCurator;
         this.productManager = productManager;
-        this.productCachedModule = productCachedModule;
     }
 
     /**
@@ -198,36 +189,26 @@ public class OwnerProductResource {
         return content;
     }
 
-    @ApiOperation(notes = "Retrieves a list of Products", value = "list")
+    @ApiOperation(notes = "Retrieves a list of Products", response = Product.class,
+        responseContainer = "List", value = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response list(
+    public CandlepinQuery<ProductData> list(
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
         @QueryParam("product") List<String> productIds) {
 
-        final Owner owner = this.getOwnerByKey(ownerKey);
-        final Collection<Product> products = productIds != null && productIds.size() > 0 ?
+        Owner owner = this.getOwnerByKey(ownerKey);
+
+        CandlepinQuery<Product> query = productIds != null && !productIds.isEmpty() ?
             this.ownerProductCurator.getProductsByIds(owner, productIds) :
             this.ownerProductCurator.getProductsByOwner(owner);
-        final ObjectMapper mapper = new JsonProvider(true, productCachedModule)
-            .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
 
-        StreamingOutput output = new StreamingOutput() {
+        return query.transform(new ElementTransformer<Product, ProductData>() {
             @Override
-            public void write(OutputStream stream) throws IOException, WebApplicationException {
-                JsonGenerator generator = mapper.getJsonFactory().createGenerator(stream);
-                generator.writeStartArray();
-
-                for (Product product : products) {
-                    mapper.writeValue(generator, product.toDTO());
-                }
-
-                generator.writeEndArray();
-                generator.flush();
+            public ProductData transform(Product element) {
+                return element.toDTO();
             }
-        };
-
-        return Response.ok(output).build();
+        });
     }
 
     @ApiOperation(notes = "Retrieves a single Product", value = "getProduct")
@@ -310,7 +291,7 @@ public class OwnerProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/batch_content")
     @Transactional
-    public Product addBatchContent(
+    public ProductData addBatchContent(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
         Map<String, Boolean> contentMap) {
@@ -331,7 +312,9 @@ public class OwnerProductResource {
             productContent.add(new ProductContent(product, content, entry.getValue()));
         }
 
-        return this.productManager.addContentToProduct(product, productContent, owner, true);
+        product = this.productManager.addContentToProduct(product, productContent, owner, true);
+
+        return product.toDTO();
     }
 
     @ApiOperation(notes = "Adds Content to a Product  Single mode", value = "addContent")
