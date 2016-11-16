@@ -76,16 +76,11 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         if (result == null || result.isEmpty()) {
             return null;
         }
-        return result.get(0);
-    }
 
-    /**
-     * Refreshes the target Owner and locks it.
-     *
-     * @param owner the target owner.
-     * @return the refreshed and locked Owner.
-     */
-    public Owner lockAndLoad(Owner owner) {
+        // For some reason or other, setting LockMode on the initial query does
+        // not seem to lock the Owner on Oracle. Refreshing the entity after
+        // looking it up seems to do the trick.
+        Owner owner = result.get(0);
         getEntityManager().refresh(owner, LockModeType.PESSIMISTIC_WRITE);
         return owner;
     }
