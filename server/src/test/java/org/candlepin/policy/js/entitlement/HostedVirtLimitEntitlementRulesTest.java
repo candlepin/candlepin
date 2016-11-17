@@ -24,6 +24,7 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.TestUtil;
@@ -86,9 +87,11 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
         ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
-        when(poolManagerMock.lookupBySubscriptionIds(captor.capture()))
+        ArgumentCaptor<Owner> ownerCaptor = ArgumentCaptor.forClass(Owner.class);
+        when(poolManagerMock.lookupBySubscriptionIds(ownerCaptor.capture(), captor.capture()))
             .thenReturn(poolList);
-        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId())))
+        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getOwner()),
+            eq(physicalPool.getSubscriptionId())))
             .thenReturn(poolList);
 
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
@@ -155,10 +158,14 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         poolList.add(virtBonusPool2);
 
         ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
-        when(poolManagerMock.lookupBySubscriptionIds(captor.capture())).thenReturn(poolList);
-        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId())))
+        ArgumentCaptor<Owner> ownerCaptor = ArgumentCaptor.forClass(Owner.class);
+        when(poolManagerMock.lookupBySubscriptionIds(ownerCaptor.capture(), captor.capture()))
             .thenReturn(poolList);
-        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool2.getSubscriptionId())))
+        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getOwner()),
+            eq(physicalPool.getSubscriptionId())))
+            .thenReturn(poolList);
+        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getOwner()),
+            eq(physicalPool2.getSubscriptionId())))
             .thenReturn(poolList2);
 
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
@@ -227,7 +234,8 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         Entitlement e = new Entitlement(physicalPool, consumer, 1);
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
-        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId())))
+        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getOwner()),
+            eq(physicalPool.getSubscriptionId())))
             .thenReturn(poolList);
 
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
@@ -303,9 +311,11 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
         ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
-        when(poolManagerMock.lookupBySubscriptionIds(captor.capture()))
+        ArgumentCaptor<Owner> ownerCaptor = ArgumentCaptor.forClass(Owner.class);
+        when(poolManagerMock.lookupBySubscriptionIds(ownerCaptor.capture(), captor.capture()))
             .thenReturn(poolList);
-        when(poolManagerMock.lookupBySubscriptionId(eq("subId"))).thenReturn(poolList);
+        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getOwner()), eq("subId")))
+            .thenReturn(poolList);
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put(physicalPool.getId(), e);
         enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null);
@@ -337,7 +347,8 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         Entitlement e = new Entitlement(virtBonusPool, consumer, 1);
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
-        when(poolManagerMock.lookupBySubscriptionId(eq(virtBonusPool.getSubscriptionId())))
+        when(poolManagerMock.lookupBySubscriptionId(eq(virtBonusPool.getOwner()),
+            eq(virtBonusPool.getSubscriptionId())))
             .thenReturn(poolList);
 
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();

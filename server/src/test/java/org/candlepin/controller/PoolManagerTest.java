@@ -1764,8 +1764,8 @@ public class PoolManagerTest {
 
     @Test
     public void testNullArgumentsDontBreakStuff() {
-        manager.lookupBySubscriptionIds(null);
-        manager.lookupBySubscriptionIds(new ArrayList<String>());
+        manager.lookupBySubscriptionIds(owner, null);
+        manager.lookupBySubscriptionIds(owner, new ArrayList<String>());
         manager.createPools(null);
         manager.createPools(new ArrayList<Pool>());
         manager.secureFind(new ArrayList<String>());
@@ -1783,8 +1783,10 @@ public class PoolManagerTest {
 
         Class<List<String>> listClass = (Class<List<String>>) (Class) ArrayList.class;
         ArgumentCaptor<List<String>> poolsArg = ArgumentCaptor.forClass(listClass);
-        when(mockPoolCurator.lookupBySubscriptionIds(poolsArg.capture())).thenReturn(pools);
-        List<Pool> found = manager.lookupBySubscriptionIds(subids);
+        ArgumentCaptor<Owner> ownerArg = ArgumentCaptor.forClass(Owner.class);
+        when(mockPoolCurator.lookupBySubscriptionIds(ownerArg.capture(), poolsArg.capture()))
+            .thenReturn(pools);
+        List<Pool> found = manager.lookupBySubscriptionIds(owner, subids);
         List<String> argument = poolsArg.getValue();
         assertEquals(pools, found);
         assertEquals(argument, subids);

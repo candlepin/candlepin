@@ -127,9 +127,9 @@ public interface PoolManager {
 
     List<Pool> secureFind(Collection<String> poolId);
 
-    List<Pool> lookupBySubscriptionId(String id);
+    List<Pool> lookupBySubscriptionId(Owner owner, String id);
 
-    List<Pool> lookupBySubscriptionIds(Collection<String> id);
+    List<Pool> lookupBySubscriptionIds(Owner owner, Collection<String> id);
 
     Refresher getRefresher(SubscriptionServiceAdapter subAdapter);
     Refresher getRefresher(SubscriptionServiceAdapter subAdapter, boolean lazy);

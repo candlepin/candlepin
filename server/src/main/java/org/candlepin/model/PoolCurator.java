@@ -462,9 +462,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return pools from the given subscription, sorted by pool.id to avoid deadlocks
      */
     @SuppressWarnings("unchecked")
-    public List<Pool> lookupBySubscriptionId(String subId) {
+    public List<Pool> lookupBySubscriptionId(Owner owner, String subId) {
         return createSecureCriteria()
             .createAlias("sourceSubscription", "sourceSub")
+            .add(Restrictions.eq("owner", owner))
             .add(Restrictions.eq("sourceSub.subscriptionId", subId))
             .addOrder(Order.asc("id")).list();
     }
@@ -475,9 +476,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *         deadlocks
      */
     @SuppressWarnings("unchecked")
-    public List<Pool> lookupBySubscriptionIds(Collection<String> subIds) {
+    public List<Pool> lookupBySubscriptionIds(Owner owner, Collection<String> subIds) {
         return createSecureCriteria()
             .createAlias("sourceSubscription", "sourceSub")
+            .add(Restrictions.eq("owner", owner))
             .add(CPRestrictions.in("sourceSub.subscriptionId", subIds))
             .addOrder(Order.asc("id"))
             .list();

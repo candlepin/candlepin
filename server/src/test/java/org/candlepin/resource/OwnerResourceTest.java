@@ -304,7 +304,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // Trigger the refresh:
         poolManager.getRefresher(subAdapter).add(owner).run();
 
-        List<Pool> pools = poolCurator.lookupBySubscriptionId(sub.getId());
+        List<Pool> pools = poolCurator.lookupBySubscriptionId(owner, sub.getId());
         assertEquals(2, pools.size());
         String bonusId =  "";
         String masterId = "";
@@ -325,7 +325,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNull("Original Master Pool should be gone", poolCurator.find(masterId));
         assertNotNull("Bonus Pool should be the same", poolCurator.find(bonusId));
         // master pool should have been recreated
-        pools = poolCurator.lookupBySubscriptionId(sub.getId());
+        pools = poolCurator.lookupBySubscriptionId(owner, sub.getId());
         assertEquals(2, pools.size());
         boolean newMaster = false;
         for (Pool p : pools) {
@@ -358,7 +358,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // Trigger the refresh:
         poolManager.getRefresher(subAdapter).add(owner).run();
 
-        List<Pool> pools = poolCurator.lookupBySubscriptionId(sub.getId());
+        List<Pool> pools = poolCurator.lookupBySubscriptionId(owner, sub.getId());
         assertEquals(2, pools.size());
         String bonusId =  "";
         String masterId = "";
@@ -379,7 +379,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNull("Original bonus pool should be gone", poolCurator.find(bonusId));
         assertNotNull("Master pool should be the same", poolCurator.find(masterId));
         // master pool should have been recreated
-        pools = poolCurator.lookupBySubscriptionId(sub.getId());
+        pools = poolCurator.lookupBySubscriptionId(owner, sub.getId());
         assertEquals(2, pools.size());
         boolean newBonus = false;
         for (Pool p : pools) {
