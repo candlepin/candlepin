@@ -69,12 +69,30 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
     }
 
     public CandlepinQuery<Owner> getOwnersByProduct(String productId) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .createAlias("product", "product")
-            .setProjection(Projections.property("owner"))
-            .add(Restrictions.eq("product.id", productId));
+        // Impl note:
+        // We have to do this in two queries due to how Hibernate processes projections here. We're
+        // working around a number of issues:
+        //  1. Hibernate does not rearrange a query based on a projection, but instead, performs a
+        //     second query (as we're doing here).
+        //  2. Because the initial query is not rearranged, we are actually pulling a collection of
+        //     join objects, so filtering/sorting via CandlepinQuery is incorrect or broken
+        //  3. The second query Hibernate performs uses the IN operator without any protection for
+        //     the MySQL/MariaDB or Oracle element limits.
+        String jpql = "SELECT op.owner.id FROM OwnerProduct op WHERE op.product.id = :product_id";
 
-        return this.cpQueryFactory.<Owner>buildQuery(this.currentSession(), criteria);
+        List<String> ids = this.getEntityManager()
+            .createQuery(jpql, String.class)
+            .setParameter("product_id", productId)
+            .getResultList();
+
+        if (ids != null && !ids.isEmpty()) {
+            DetachedCriteria criteria = this.createSecureDetachedCriteria(Owner.class, null)
+                .add(CPRestrictions.in("id", ids));
+
+            return this.cpQueryFactory.<Owner>buildQuery(this.currentSession(), criteria);
+        }
+
+        return this.cpQueryFactory.<Owner>buildQuery();
     }
 
     public CandlepinQuery<Product> getProductsByOwner(Owner owner) {
@@ -82,12 +100,22 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
     }
 
     public CandlepinQuery<Product> getProductsByOwner(String ownerId) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .createAlias("owner", "owner")
-            .setProjection(Projections.property("product"))
-            .add(Restrictions.eq("owner.id", ownerId));
+        // Impl note: See getOwnersByProduct for details on why we're doing this in two queries
+        String jpql = "SELECT op.product.uuid FROM OwnerProduct op WHERE op.owner.id = :owner_id";
 
-        return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
+        List<String> uuids = this.getEntityManager()
+            .createQuery(jpql, String.class)
+            .setParameter("owner_id", ownerId)
+            .getResultList();
+
+        if (uuids != null && !uuids.isEmpty()) {
+            DetachedCriteria criteria = this.createSecureDetachedCriteria(Product.class, null)
+                .add(CPRestrictions.in("uuid", uuids));
+
+            return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
+        }
+
+        return this.cpQueryFactory.<Product>buildQuery();
     }
 
     public CandlepinQuery<Product> getProductsByIds(Owner owner, Collection<String> productIds) {
@@ -99,14 +127,23 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             return this.cpQueryFactory.<Product>buildQuery();
         }
 
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .createAlias("owner", "owner")
-            .createAlias("product", "product")
-            .setProjection(Projections.property("product"))
-            .add(Restrictions.eq("owner.id", ownerId))
-            .add(CPRestrictions.in("product.id", productIds));
+        // Impl note: See getOwnersByProduct for details on why we're doing this in two queries
+        String jpql = "SELECT op.product.uuid FROM OwnerProduct op WHERE op.owner.id = :owner_id";
 
-        return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
+        List<String> uuids = this.getEntityManager()
+            .createQuery(jpql, String.class)
+            .setParameter("owner_id", ownerId)
+            .getResultList();
+
+        if (uuids != null && !uuids.isEmpty()) {
+            DetachedCriteria criteria = this.createSecureDetachedCriteria(Product.class, null)
+                .add(CPRestrictions.in("uuid", uuids))
+                .add(CPRestrictions.in("id", productIds));
+
+            return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
+        }
+
+        return this.cpQueryFactory.<Product>buildQuery();
     }
 
     @Transactional

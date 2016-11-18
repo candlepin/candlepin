@@ -22,6 +22,7 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.jackson.ProductCachedSerializationModule;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
@@ -33,12 +34,10 @@ import org.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
+import java.util.Collection;
 
 import javax.inject.Inject;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 
 
 
@@ -65,34 +64,27 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
         Owner owner = this.createOwner("test_owner");
         Content content = this.createContent("test_content", "test_content", owner);
 
-        Response response = this.ownerContentResource.list(owner.getKey());
+        CandlepinQuery<Content> response = this.ownerContentResource.list(owner.getKey());
 
         assertNotNull(response);
-        assertEquals(200, response.getStatus());
-        assertTrue(response.getEntity() instanceof StreamingOutput);
 
-        StreamingOutput output = (StreamingOutput) response.getEntity();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        output.write(baos);
+        Collection<Content> received = response.list();
 
-        assertNotEquals(-1, baos.toString().indexOf("test_content"));
+        assertEquals(1, received.size());
+        assertTrue(received.contains(content));
     }
 
     @Test
     public void listContentNoContent() throws Exception {
         Owner owner = this.createOwner("test_owner");
 
-        Response response = this.ownerContentResource.list(owner.getKey());
+        CandlepinQuery<Content> response = this.ownerContentResource.list(owner.getKey());
 
         assertNotNull(response);
-        assertEquals(200, response.getStatus());
-        assertTrue(response.getEntity() instanceof StreamingOutput);
 
-        StreamingOutput output = (StreamingOutput) response.getEntity();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        output.write(baos);
+        Collection<Content> received = response.list();
 
-        assertEquals("[]", baos.toString());
+        assertEquals(0, received.size());
     }
 
     @Test

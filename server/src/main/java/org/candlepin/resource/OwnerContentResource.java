@@ -20,6 +20,7 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.jackson.ProductCachedSerializationModule;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContentCurator;
@@ -28,11 +29,8 @@ import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ContentData;
-import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.service.UniqueIdGenerator;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
@@ -40,8 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -54,10 +50,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -159,28 +152,10 @@ public class OwnerContentResource {
     @ApiOperation(notes = "Retrieves list of Content", value = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response list(@Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
+    public CandlepinQuery<Content> list(@Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
         final Owner owner = this.getOwnerByKey(ownerKey);
-        final Collection<Content> contents = this.ownerContentCurator.getContentByOwner(owner);
-        final ObjectMapper mapper = new JsonProvider(true, productCachedModule)
-            .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
 
-        StreamingOutput output = new StreamingOutput() {
-            @Override
-            public void write(OutputStream stream) throws IOException, WebApplicationException {
-                JsonGenerator generator = mapper.getJsonFactory().createGenerator(stream);
-                generator.writeStartArray();
-
-                for (Content content : contents) {
-                    mapper.writeValue(generator, content.toDTO());
-                }
-
-                generator.writeEndArray();
-                generator.flush();
-            }
-        };
-
-        return Response.ok(output).build();
+        return this.ownerContentCurator.getContentByOwner(owner);
     }
 
     @ApiOperation(notes = "Retrieves a single Content", value = "getContent")

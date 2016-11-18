@@ -17,9 +17,9 @@ package org.candlepin.model;
 import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Query;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.LinkedList;
 import java.util.Map;
 
 
@@ -63,52 +62,89 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
             .uniqueResult();
     }
 
-    public Collection<Owner> getOwnersByContent(Content content) {
+    public CandlepinQuery<Owner> getOwnersByContent(Content content) {
         return this.getOwnersByContent(content.getId());
     }
 
     @Transactional
-    public Collection<Owner> getOwnersByContent(String contentId) {
-        return (List<Owner>) this.createSecureCriteria()
-            .createAlias("content", "content")
-            .setProjection(Projections.property("owner"))
-            .add(Restrictions.eq("content.id", contentId))
-            .list();
+    public CandlepinQuery<Owner> getOwnersByContent(String contentId) {
+        // Impl note:
+        // We have to do this in two queries due to how Hibernate processes projections here. We're
+        // working around a number of issues:
+        //  1. Hibernate does not rearrange a query based on a projection, but instead, performs a
+        //     second query (as we're doing here).
+        //  2. Because the initial query is not rearranged, we are actually pulling a collection of
+        //     join objects, so filtering/sorting via CandlepinQuery is incorrect or broken
+        //  3. The second query Hibernate performs uses the IN operator without any protection for
+        //     the MySQL/MariaDB or Oracle element limits.
+        String jpql = "SELECT oc.owner.id FROM OwnerContent oc WHERE oc.content.id = :content_id";
+
+        List<String> ids = this.getEntityManager()
+            .createQuery(jpql, String.class)
+            .setParameter("content_id", contentId)
+            .getResultList();
+
+        if (ids != null && !ids.isEmpty()) {
+            DetachedCriteria criteria = this.createSecureDetachedCriteria(Owner.class, null)
+                .add(CPRestrictions.in("id", ids));
+
+            return this.cpQueryFactory.<Owner>buildQuery(this.currentSession(), criteria);
+        }
+
+        return this.cpQueryFactory.<Owner>buildQuery();
     }
 
-    public Collection<Content> getContentByOwner(Owner owner) {
+    public CandlepinQuery<Content> getContentByOwner(Owner owner) {
         return this.getContentByOwner(owner.getId());
     }
 
     @Transactional
-    public Collection<Content> getContentByOwner(String ownerId) {
-        return (List<Content>) this.createSecureCriteria()
-            .createAlias("owner", "owner")
-            .setProjection(Projections.property("content"))
-            .add(Restrictions.eq("owner.id", ownerId))
-            .list();
+    public CandlepinQuery<Content> getContentByOwner(String ownerId) {
+        // Impl note: See getOwnersByContent for details on why we're doing this in two queries
+        String jpql = "SELECT oc.content.uuid FROM OwnerContent oc WHERE oc.owner.id = :owner_id";
+
+        List<String> uuids = this.getEntityManager()
+            .createQuery(jpql, String.class)
+            .setParameter("owner_id", ownerId)
+            .getResultList();
+
+        if (uuids != null && !uuids.isEmpty()) {
+            DetachedCriteria criteria = this.createSecureDetachedCriteria(Content.class, null)
+                .add(CPRestrictions.in("uuid", uuids));
+
+            return this.cpQueryFactory.<Content>buildQuery(this.currentSession(), criteria);
+        }
+
+        return this.cpQueryFactory.<Content>buildQuery();
     }
 
-    public Collection<Content> getContentByIds(Owner owner, Collection<String> contentIds) {
+    public CandlepinQuery<Content> getContentByIds(Owner owner, Collection<String> contentIds) {
         return this.getContentByIds(owner.getId(), contentIds);
     }
 
     @Transactional
-    public Collection<Content> getContentByIds(String ownerId, Collection<String> contentIds) {
-        Collection<Content> result = null;
-
-        if (contentIds != null && contentIds.size() > 0) {
-            Criteria criteria = this.createSecureCriteria()
-                .createAlias("owner", "owner")
-                .createAlias("content", "content")
-                .setProjection(Projections.property("content"))
-                .add(Restrictions.eq("owner.id", ownerId))
-                .add(CPRestrictions.in("content.id", contentIds));
-
-            result = (Collection<Content>) criteria.list();
+    public CandlepinQuery<Content> getContentByIds(String ownerId, Collection<String> contentIds) {
+        if (contentIds == null || contentIds.isEmpty()) {
+            return this.cpQueryFactory.<Content>buildQuery();
         }
 
-        return result != null ? result : new LinkedList<Content>();
+        // Impl note: See getOwnersByContent for details on why we're doing this in two queries
+        String jpql = "SELECT oc.content.uuid FROM OwnerContent oc WHERE oc.owner.id = :owner_id";
+
+        List<String> uuids = this.getEntityManager()
+            .createQuery(jpql, String.class)
+            .setParameter("owner_id", ownerId)
+            .getResultList();
+
+        if (uuids != null && !uuids.isEmpty()) {
+            DetachedCriteria criteria = this.createSecureDetachedCriteria(Content.class, null)
+                .add(CPRestrictions.in("uuid", uuids))
+                .add(CPRestrictions.in("id", contentIds));
+
+            return this.cpQueryFactory.<Content>buildQuery(this.currentSession(), criteria);
+        }
+
+        return this.cpQueryFactory.<Content>buildQuery();
     }
 
     @Transactional

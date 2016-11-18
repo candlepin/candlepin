@@ -536,24 +536,36 @@ class Candlepin
     post("/consumers/#{uuid}/entitlements")
   end
 
-  def list_products(product_ids=nil)
-    method = "/products?"
+  def list_products(product_ids=nil, params={})
+    path = "/products?"
     if product_ids
       product_ids.each { |id|
-        method << "&product=" << id
+        path << "product=#{id}&"
       }
     end
-    get(method)
+
+    # add paging params
+    path << "page=#{params[:page]}&" if params[:page]
+    path << "per_page=#{params[:per_page]}&" if params[:per_page]
+    path << "sort_by=#{params[:sort_by]}&" if params[:sort_by]
+
+    get(path)
   end
 
-  def list_products_by_owner(owner_key, product_ids=nil)
-    method = "/owners/#{owner_key}/products?"
+  def list_products_by_owner(owner_key, product_ids=nil, params={})
+    path = "/owners/#{owner_key}/products?"
     if product_ids
       product_ids.each { |id|
-        method << "&product=" << id
+        path << "product=#{id}&"
       }
     end
-    get(method)
+
+    # add paging params
+    path << "page=#{params[:page]}&" if params[:page]
+    path << "per_page=#{params[:per_page]}&" if params[:per_page]
+    path << "sort_by=#{params[:sort_by]}&" if params[:sort_by]
+
+    get(path)
   end
 
   def create_content(owner_key, name, id, label, type, vendor, params={}, post=true)
@@ -590,8 +602,15 @@ class Candlepin
     post("/owners/#{owner_key}/content/batch", contents)
   end
 
-  def list_content(owner_key)
-    get("/owners/#{owner_key}/content")
+  def list_content(owner_key, params={})
+    path = "/owners/#{owner_key}/content?"
+
+    # add paging params
+    path << "page=#{params[:page]}&" if params[:page]
+    path << "per_page=#{params[:per_page]}&" if params[:per_page]
+    path << "sort_by=#{params[:sort_by]}&" if params[:sort_by]
+
+    get(path)
   end
 
   def get_content(owner_key, content_id)

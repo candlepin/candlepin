@@ -274,6 +274,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         else {
             resultsPage = listByCriteria(query, pageRequest);
         }
+
         return resultsPage;
     }
 

@@ -19,6 +19,71 @@ describe 'Owner Content Resource' do
     @cp.add_content_to_product(@owner['key'], @product['id'], @content_id)
   end
 
+
+
+  it 'lists content in pages' do
+    @owner = create_owner random_string('test_owner')
+
+    c1_id = "test_content-1"
+    c2_id = "test_content-2"
+    c3_id = "test_content-3"
+
+    # The creation order here is important. By default, Candlepin sorts in descending order of the
+    # entity's creation time, so we need to create them backward to let the default sorting order
+    # let us page through them in ascending order.
+    c3 = @cp.create_content(@owner['key'], "c3", c3_id, "c3", "ctype", "cvendor", {}, true)
+    sleep 1
+    c2 = @cp.create_content(@owner['key'], "c2", c2_id, "c2", "ctype", "cvendor", {}, true)
+    sleep 1
+    c1 = @cp.create_content(@owner['key'], "c1", c1_id, "c1", "ctype", "cvendor", {}, true)
+
+    c1set = @cp.list_content(@owner['key'], {:page=>1, :per_page=>1})
+    expect(c1set.size).to eq(1)
+    expect(c1set[0]['id']).to eq(c1_id)
+
+    c2set = @cp.list_content(@owner['key'], {:page=>2, :per_page=>1})
+    expect(c2set.size).to eq(1)
+    expect(c2set[0]['id']).to eq(c2_id)
+
+    c3set = @cp.list_content(@owner['key'], {:page=>3, :per_page=>1})
+    expect(c3set.size).to eq(1)
+    expect(c3set[0]['id']).to eq(c3_id)
+
+    c4set = @cp.list_content(@owner['key'], {:page=>4, :per_page=>1})
+    expect(c4set.size).to eq(0)
+  end
+
+  it 'lists content in sorted pages' do
+    @owner = create_owner random_string('test_owner')
+
+    c1_id = "test_content-1"
+    c2_id = "test_content-2"
+    c3_id = "test_content-3"
+
+    # The creation order here is important so we don't accidentally setup the correct ordering by
+    # default.
+    c2 = @cp.create_content(@owner['key'], "c2", c2_id, "c2", "ctype", "cvendor", {}, true)
+    sleep 1
+    c1 = @cp.create_content(@owner['key'], "c1", c1_id, "c1", "ctype", "cvendor", {}, true)
+    sleep 1
+    c3 = @cp.create_content(@owner['key'], "c3", c3_id, "c3", "ctype", "cvendor", {}, true)
+
+    c1set = @cp.list_content(@owner['key'], {:page=>1, :per_page=>1, :sort_by=>"id"})
+    expect(c1set.size).to eq(1)
+    expect(c1set[0]['id']).to eq(c3_id)
+
+    c2set = @cp.list_content(@owner['key'], {:page=>2, :per_page=>1, :sort_by=>"id"})
+    expect(c2set.size).to eq(1)
+    expect(c2set[0]['id']).to eq(c2_id)
+
+    c3set = @cp.list_content(@owner['key'], {:page=>3, :per_page=>1, :sort_by=>"id"})
+    expect(c3set.size).to eq(1)
+    expect(c3set[0]['id']).to eq(c1_id)
+
+    c4set = @cp.list_content(@owner['key'], {:page=>4, :per_page=>1, :sort_by=>"id"})
+    expect(c4set.size).to eq(0)
+  end
+
   it 'should allow content creation' do
     # Make sure the content was really created
     result_content = @cp.get_content(@owner['key'], @content_id)

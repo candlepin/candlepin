@@ -118,8 +118,8 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         this.createOwnerContentMapping(owner1, content);
         this.createOwnerContentMapping(owner2, content);
 
-        Collection<Owner> ownersA = this.ownerContentCurator.getOwnersByContent(content);
-        Collection<Owner> ownersB = this.ownerContentCurator.getOwnersByContent(content.getId());
+        Collection<Owner> ownersA = this.ownerContentCurator.getOwnersByContent(content).list();
+        Collection<Owner> ownersB = this.ownerContentCurator.getOwnersByContent(content.getId()).list();
 
         assertTrue(ownersA.contains(owner1));
         assertTrue(ownersA.contains(owner2));
@@ -134,8 +134,8 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         Owner owner3 = this.createOwner();
         Content content = this.createContent();
 
-        Collection<Owner> ownersA = this.ownerContentCurator.getOwnersByContent(content);
-        Collection<Owner> ownersB = this.ownerContentCurator.getOwnersByContent(content.getId());
+        Collection<Owner> ownersA = this.ownerContentCurator.getOwnersByContent(content).list();
+        Collection<Owner> ownersB = this.ownerContentCurator.getOwnersByContent(content.getId()).list();
 
         assertTrue(ownersA.isEmpty());
         assertTrue(ownersB.isEmpty());
@@ -150,8 +150,8 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         this.createOwnerContentMapping(owner, content1);
         this.createOwnerContentMapping(owner, content2);
 
-        Collection<Content> contentA = this.ownerContentCurator.getContentByOwner(owner);
-        Collection<Content> contentB = this.ownerContentCurator.getContentByOwner(owner.getId());
+        Collection<Content> contentA = this.ownerContentCurator.getContentByOwner(owner).list();
+        Collection<Content> contentB = this.ownerContentCurator.getContentByOwner(owner.getId()).list();
 
         assertTrue(contentA.contains(content1));
         assertTrue(contentA.contains(content2));
@@ -166,8 +166,8 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         Content content2 = this.createContent();
         Content content3 = this.createContent();
 
-        Collection<Content> contentA = this.ownerContentCurator.getContentByOwner(owner);
-        Collection<Content> contentB = this.ownerContentCurator.getContentByOwner(owner.getId());
+        Collection<Content> contentA = this.ownerContentCurator.getContentByOwner(owner).list();
+        Collection<Content> contentB = this.ownerContentCurator.getContentByOwner(owner.getId()).list();
 
         assertTrue(contentA.isEmpty());
         assertTrue(contentB.isEmpty());
@@ -183,8 +183,8 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         this.createOwnerContentMapping(owner, content2);
 
         Collection<String> ids = Arrays.asList(content1.getId(), content2.getId(), content3.getId(), "dud");
-        Collection<Content> contentA = this.ownerContentCurator.getContentByIds(owner, ids);
-        Collection<Content> contentB = this.ownerContentCurator.getContentByIds(owner.getId(), ids);
+        Collection<Content> contentA = this.ownerContentCurator.getContentByIds(owner, ids).list();
+        Collection<Content> contentB = this.ownerContentCurator.getContentByIds(owner.getId(), ids).list();
 
         assertEquals(2, contentA.size());
         assertTrue(contentA.contains(content1));
@@ -203,8 +203,8 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         this.createOwnerContentMapping(owner, content2);
 
         Collection<String> ids = null;
-        Collection<Content> contentA = this.ownerContentCurator.getContentByIds(owner, ids);
-        Collection<Content> contentB = this.ownerContentCurator.getContentByIds(owner.getId(), ids);
+        Collection<Content> contentA = this.ownerContentCurator.getContentByIds(owner, ids).list();
+        Collection<Content> contentB = this.ownerContentCurator.getContentByIds(owner.getId(), ids).list();
 
         assertTrue(contentA.isEmpty());
         assertTrue(contentB.isEmpty());
@@ -220,8 +220,8 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         this.createOwnerContentMapping(owner, content2);
 
         Collection<String> ids = Collections.<String>emptyList();
-        Collection<Content> contentA = this.ownerContentCurator.getContentByIds(owner, ids);
-        Collection<Content> contentB = this.ownerContentCurator.getContentByIds(owner.getId(), ids);
+        Collection<Content> contentA = this.ownerContentCurator.getContentByIds(owner, ids).list();
+        Collection<Content> contentB = this.ownerContentCurator.getContentByIds(owner.getId(), ids).list();
 
         assertTrue(contentA.isEmpty());
         assertTrue(contentB.isEmpty());
