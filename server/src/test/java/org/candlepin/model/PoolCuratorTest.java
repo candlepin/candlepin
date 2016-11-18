@@ -529,7 +529,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         sub.setModified(new Date());
 
         Pool newPool = poolManager.createAndEnrichPools(sub).get(0);
-        List<Pool> pools = poolCurator.lookupBySubscriptionId(sub.getId());
+        List<Pool> pools = poolCurator.lookupBySubscriptionId(owner, sub.getId());
 
         assertEquals(160L, pools.get(0).getQuantity().longValue());
         assertEquals(newPool.getQuantity(), pools.get(0).getQuantity());
@@ -559,7 +559,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         p3.setSourceSubscription(new SourceSubscription(subId3, "master"));
         poolCurator.create(p3);
 
-        List<Pool> pools = poolCurator.lookupBySubscriptionIds(Arrays.asList(subId1, subId2));
+        List<Pool> pools = poolCurator.lookupBySubscriptionIds(owner, Arrays.asList(subId1, subId2));
         assertEquals(2, pools.size());
         assertThat(pools, hasItems(p, p2));
         assertThat(pools, not(hasItem(p3)));
@@ -575,7 +575,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             subIds.add(createPoolForCriteriaTest(product));
         }
 
-        List<Pool> pools = poolCurator.lookupBySubscriptionIds(subIds);
+        List<Pool> pools = poolCurator.lookupBySubscriptionIds(owner, subIds);
         assertEquals(30, pools.size());
 
         for (Pool pool : pools) {
@@ -681,7 +681,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
         String subid = pool.getSubscriptionId();
-        assertEquals(1, poolCurator.lookupBySubscriptionId(subid).size());
+        assertEquals(1, poolCurator.lookupBySubscriptionId(owner, subid).size());
 
         Entitlement e = new Entitlement(pool, consumer, 1);
         entitlementCurator.create(e);
@@ -787,7 +787,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
         String subid = pool.getSubscriptionId();
-        assertEquals(1, poolCurator.lookupBySubscriptionId(subid).size());
+        assertEquals(1, poolCurator.lookupBySubscriptionId(owner, subid).size());
 
 
         Entitlement e = new Entitlement(pool, consumer, 1);
@@ -1201,7 +1201,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool2.setSourceSubscription(new SourceSubscription(sourcePool.getSubscriptionId(), "derived"));
         poolCurator.create(pool2);
 
-        assertTrue(poolCurator.lookupBySubscriptionId(sub.getId()).size() == 2);
+        assertTrue(poolCurator.lookupBySubscriptionId(owner, sub.getId()).size() == 2);
         poolManager.deletePool(sourcePool);
 
         // because we check for null now, we want to verify the

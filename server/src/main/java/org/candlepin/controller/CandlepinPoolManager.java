@@ -1000,14 +1000,14 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public List<Pool> lookupBySubscriptionId(String id) {
-        return this.poolCurator.lookupBySubscriptionId(id);
+    public List<Pool> lookupBySubscriptionId(Owner owner, String id) {
+        return this.poolCurator.lookupBySubscriptionId(owner, id);
     }
 
     @Override
-    public List<Pool> lookupBySubscriptionIds(Collection<String> subscriptionIds) {
+    public List<Pool> lookupBySubscriptionIds(Owner owner, Collection<String> subscriptionIds) {
         if (CollectionUtils.isNotEmpty(subscriptionIds)) {
-            return this.poolCurator.lookupBySubscriptionIds(subscriptionIds);
+            return this.poolCurator.lookupBySubscriptionIds(owner, subscriptionIds);
         }
 
         return new ArrayList<Pool>();

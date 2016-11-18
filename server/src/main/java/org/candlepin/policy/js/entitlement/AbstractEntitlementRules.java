@@ -315,7 +315,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                 // exported, we need to add back the reduced bonus pool quantity.
                 int virtQuantity = Integer.parseInt(virtLimit) * entitlement.getQuantity();
                 if (virtQuantity > 0) {
-                    List<Pool> pools = poolManager.lookupBySubscriptionId(pool.getSubscriptionId());
+                    List<Pool> pools = poolManager.lookupBySubscriptionId(pool.getOwner(),
+                        pool.getSubscriptionId());
                     for (int idex = 0; idex < pools.size(); idex++) {
                         Pool derivedPool = pools.get(idex);
                         if (derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null) {
@@ -329,7 +330,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                 // was previously
                 // exported, we need to set the unlimited bonus pool quantity to
                 // -1.
-                List<Pool> pools = poolManager.lookupBySubscriptionId(pool.getSubscriptionId());
+                List<Pool> pools = poolManager.lookupBySubscriptionId(pool.getOwner(),
+                    pool.getSubscriptionId());
                 for (int idex = 0; idex < pools.size(); idex++) {
                     Pool derivedPool = pools.get(idex);
                     if (derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null &&
@@ -422,7 +424,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         for (Entitlement entitlement : entitlements) {
             subscriptionIds.add(entitlement.getPool().getSubscriptionId());
         }
-        List<Pool> subscriptionPools = poolManager.lookupBySubscriptionIds(subscriptionIds);
+        List<Pool> subscriptionPools = poolManager.lookupBySubscriptionIds(c.getOwner(), subscriptionIds);
         Map<String, List<Pool>> subscriptionPoolMap = new HashMap<String, List<Pool>>();
         for (Pool pool : subscriptionPools) {
             if (!subscriptionPoolMap.containsKey(pool.getSubscriptionId())) {

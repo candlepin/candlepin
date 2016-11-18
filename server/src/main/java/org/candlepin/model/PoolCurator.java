@@ -458,26 +458,34 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     /**
+     * Query pools by the subscription that generated them.
+     *
+     * @param owner The owner of the subscriptions to query
      * @param subId Subscription to look up pools by
      * @return pools from the given subscription, sorted by pool.id to avoid deadlocks
      */
     @SuppressWarnings("unchecked")
-    public List<Pool> lookupBySubscriptionId(String subId) {
+    public List<Pool> lookupBySubscriptionId(Owner owner, String subId) {
         return createSecureCriteria()
             .createAlias("sourceSubscription", "sourceSub")
+            .add(Restrictions.eq("owner", owner))
             .add(Restrictions.eq("sourceSub.subscriptionId", subId))
             .addOrder(Order.asc("id")).list();
     }
 
     /**
+     * Query pools by the subscriptions that generated them.
+     *
+     * @param owner The owner of the subscriptions to query
      * @param subIds Subscriptions to look up pools by
      * @return pools from the given subscriptions, sorted by pool.id to avoid
      *         deadlocks
      */
     @SuppressWarnings("unchecked")
-    public List<Pool> lookupBySubscriptionIds(Collection<String> subIds) {
+    public List<Pool> lookupBySubscriptionIds(Owner owner, Collection<String> subIds) {
         return createSecureCriteria()
             .createAlias("sourceSubscription", "sourceSub")
+            .add(Restrictions.eq("owner", owner))
             .add(CPRestrictions.in("sourceSub.subscriptionId", subIds))
             .addOrder(Order.asc("id"))
             .list();
