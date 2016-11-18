@@ -36,7 +36,7 @@ development:
 oracle:
   static: &oracle_static
     driver_class: "oracle.jdbc.OracleDriver"
-    dialect: "org.hibernate.dialect.Oracle10gDialect"
+    dialect: "org.candlepin.hibernate.Oracle10gDialectFollowOnLockingOff"
     quartz_driver: "org.quartz.impl.jdbcjobstore.oracle.OracleDelegate"
   server:
     <<: *common_server
