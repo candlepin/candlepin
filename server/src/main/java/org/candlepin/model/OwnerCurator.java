@@ -26,6 +26,8 @@ import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 import org.hibernate.sql.JoinType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Date;
@@ -41,6 +43,7 @@ import javax.persistence.LockModeType;
 public class OwnerCurator extends AbstractHibernateCurator<Owner> {
 
     @Inject private CandlepinQueryFactory cpQueryFactory;
+    private static Logger log = LoggerFactory.getLogger(OwnerCurator.class);
 
     public OwnerCurator() {
         super(Owner.class);
@@ -67,27 +70,15 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
      */
     @Transactional
     public Owner findAndLock(String ownerKey) {
-        List<Owner> result = getEntityManager().createQuery("select o from Owner o where key = :ownerKey",
+        List<Owner> result = getEntityManager().createQuery("select o from Owner o where o.key = :ownerKey",
             Owner.class)
             .setParameter("ownerKey", ownerKey)
-            .setMaxResults(1)
             .setLockMode(LockModeType.PESSIMISTIC_WRITE)
             .getResultList();
         if (result == null || result.isEmpty()) {
             return null;
         }
         return result.get(0);
-    }
-
-    /**
-     * Refreshes the target Owner and locks it.
-     *
-     * @param owner the target owner.
-     * @return the refreshed and locked Owner.
-     */
-    public Owner lockAndLoad(Owner owner) {
-        getEntityManager().refresh(owner, LockModeType.PESSIMISTIC_WRITE);
-        return owner;
     }
 
     /**
