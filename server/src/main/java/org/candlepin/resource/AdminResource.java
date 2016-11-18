@@ -18,8 +18,10 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.audit.QueueStatus;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SystemPrincipal;
+import org.candlepin.cache.CandlepinCache;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
+import org.candlepin.model.Product;
 import org.candlepin.model.User;
 import org.candlepin.model.UserCurator;
 import org.candlepin.service.UserServiceAdapter;
@@ -33,7 +35,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
+import javax.cache.Cache;
 import javax.ws.rs.GET;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -54,14 +58,16 @@ public class AdminResource {
     private UserCurator userCurator;
     private EventSink sink;
     private Configuration config;
+    private CandlepinCache candlepinCache;
 
     @Inject
     public AdminResource(UserServiceAdapter userService, UserCurator userCurator,
-        EventSink dispatcher, Configuration config) {
+        EventSink dispatcher, Configuration config, CandlepinCache candlepinCache) {
         this.userService = userService;
         this.userCurator = userCurator;
         this.sink = dispatcher;
         this.config = config;
+        this.candlepinCache = candlepinCache;
     }
 
     @GET
@@ -106,6 +112,18 @@ public class AdminResource {
         value = "Get Queue Stats")
     public List<QueueStatus> getQueueStats() {
         return sink.getQueueInfo();
+    }
+
+    @DELETE
+    @Path("cache/product")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+        notes = "Clears the product cache",
+        value = "Clear product cache")
+    public void clearProductCache() {
+        log.debug("Removing all from the product cache");
+        Cache<String, Product> productCache = candlepinCache.getProductCache();
+        productCache.removeAll();
     }
 
 }
