@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.20
+Version: 2.0.21
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,13 @@ fi
 
 #raw
 %changelog
+* Mon Nov 21 2016 Vritant Jain <adarshvritant@gmail.com> 2.0.21-1
+- Scope more pool queries by owner (bcourt@redhat.com)
+- Disabling follow-on locking (nguyen.filip@gmail.com)
+- Fix issue locking Owner on Oracle (mstead@redhat.com)
+- Re-aligning file location with package def (mstead@redhat.com)
+- Added cursor support to Candlepin and its curators (crog@redhat.com)
+
 * Tue Nov 15 2016 Vritant Jain <adarshvritant@gmail.com> 2.0.20-1
 - 1391923: Fixed concurrent ueber cert generation issues (mstead@redhat.com)
 - 1388201: Add check to insure constraint has not already been dropped
