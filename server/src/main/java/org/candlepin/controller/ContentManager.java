@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2016 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -315,21 +315,23 @@ public class ContentManager {
      *  A mapping of Red Hat content ID to content entities representing the imported content
      */
     @SuppressWarnings("checkstyle:methodlength")
-    public Map<String, Content> importContent(Owner owner, Map<String, ContentData> contentData,
+    public ImportResult<Content> importContent(Owner owner, Map<String, ContentData> contentData,
         Set<String> importedProductIds) {
 
         if (owner == null) {
             throw new IllegalArgumentException("owner is null");
         }
 
+        ImportResult<Content> importResult = new ImportResult<Content>();
+
         if (contentData == null || contentData.isEmpty()) {
             // Nothing to import
-            return new HashMap<String, Content>();
+            return importResult;
         }
 
-        Map<String, Content> importedContent = new HashMap<String, Content>();
-        Map<String, Content> createdContent = new HashMap<String, Content>();
-        Map<String, Content> updatedContent = new HashMap<String, Content>();
+        Map<String, Content> skippedContent = importResult.getSkippedEntities();
+        Map<String, Content> createdContent = importResult.getCreatedEntities();
+        Map<String, Content> updatedContent = importResult.getUpdatedEntities();
 
         Map<String, Integer> contentVersions = new HashMap<String, Integer>();
         Map<String, Content> sourceContent = new HashMap<String, Content>();
@@ -342,7 +344,7 @@ public class ContentManager {
 
             if (!content.isChangedBy(update)) {
                 // This content won't be changing, so we'll just pretend it's not being imported at all
-                importedContent.put(content.getId(), content);
+                skippedContent.put(content.getId(), content);
                 continue;
             }
 
@@ -357,8 +359,7 @@ public class ContentManager {
         }
 
         for (ContentData update : contentData.values()) {
-            if (!updatedContent.containsKey(update.getId()) && !importedContent.containsKey(update.getId())) {
-
+            if (!skippedContent.containsKey(update.getId()) && !updatedContent.containsKey(update.getId())) {
                 // Ensure content is minimally populated
                 if (update.getId() == null || update.getType() == null || update.getLabel() == null ||
                     update.getName() == null || update.getVendor() == null) {
@@ -388,13 +389,17 @@ public class ContentManager {
         contentVersions.clear();
         contentVersions = null;
 
+        // We're about to start modifying the maps, so we need to clone the created set before we
+        // start adding the update forks to it.
+        Map<String, Content> stagedEntities = new HashMap<String, Content>(createdContent);
+
         // Process the created group...
         // Check our created set for existing versions:
         //  - If there's an existing version, we'll remove the staged entity from the creation
         //    set, and stage an owner-content mapping for the existing version
         //  - Otherwise, we'll stage the new entity for persistence by leaving it in the created
         //    set, and stage an owner-content mapping to the new entity
-        Iterator<Content> iterator = createdContent.values().iterator();
+        Iterator<Content> iterator = stagedEntities.values().iterator();
         createdContentLoop: while (iterator.hasNext()) {
             Content created = iterator.next();
             List<Content> alternates = existingVersions.get(created.getId());
@@ -403,7 +408,7 @@ public class ContentManager {
                 for (Content alt : alternates) {
                     if (created.equals(alt)) {
                         ownerContentBuffer.add(new OwnerContent(owner, alt));
-                        importedContent.put(alt.getId(), alt);
+                        createdContent.put(alt.getId(), alt);
                         iterator.remove();
 
                         continue createdContentLoop;
@@ -438,14 +443,14 @@ public class ContentManager {
             // We need to stage the updated entity for persistence. We'll reuse the now-empty
             // createdContent map for this.
             updated.setUuid(null);
-            createdContent.put(updated.getId(), updated);
+            stagedEntities.put(updated.getId(), updated);
         }
 
         // Persist our staged entities
         // We probably don't want to evict the content yet, as they'll appear as unmanaged if
         // they're used later. However, the join objects can be evicted safely since they're only
         // really used here.
-        this.contentCurator.saveAll(createdContent.values(), true, false);
+        this.contentCurator.saveAll(stagedEntities.values(), true, false);
         this.ownerContentCurator.saveAll(ownerContentBuffer, true, true);
 
         // Fetch collection of products affected by this import that aren't being imported themselves
@@ -495,11 +500,7 @@ public class ContentManager {
 
         this.ownerContentCurator.updateOwnerContentReferences(owner, contentUuidMap);
 
-        // Compile all our changes and return
-        importedContent.putAll(createdContent);
-        importedContent.putAll(updatedContent);
-
-        return importedContent;
+        return importResult;
     }
 
     /**

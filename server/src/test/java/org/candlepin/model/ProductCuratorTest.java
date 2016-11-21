@@ -609,13 +609,13 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testPoolProvidedProducts() {
-        Set<String> uuids = productCurator.getPoolProvidedProducts(pool.getId());
+        Set<String> uuids = productCurator.getPoolProvidedProductUuids(pool.getId());
         assertEquals(new HashSet<String>(Arrays.asList(providedProduct.getUuid())), uuids);
     }
 
     @Test
     public void testDerivedPoolProvidedProducts() {
-        Set<String> uuids = productCurator.getDerivedPoolProvidedProducts(pool.getId());
+        Set<String> uuids = productCurator.getDerivedPoolProvidedProductUuids(pool.getId());
         assertEquals(new HashSet<String>(Arrays.asList(derivedProvidedProduct.getUuid())), uuids);
     }
 

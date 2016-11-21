@@ -29,6 +29,7 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
@@ -38,6 +39,7 @@ import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductAttributeData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.policy.EntitlementRefusedException;
@@ -62,6 +64,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -151,14 +154,25 @@ public class EntitlerTest {
             });
     }
 
+    private void mockProducts(Owner owner, Product... products) {
+        Map<String, Product> productMap = new HashMap<String, Product>();
+
+        for (Product product : products) {
+            productMap.put(product.getId(), product);
+        }
+
+        this.mockProducts(owner, productMap);
+    }
+
     private void mockProductImport(Owner owner, final Map<String, Product> products) {
         when(productManager.importProducts(eq(owner), any(Map.class), any(Map.class)))
-            .thenAnswer(new Answer<Map<String, Product>>() {
+            .thenAnswer(new Answer<ImportResult<Product>>() {
                 @Override
-                public Map<String, Product> answer(InvocationOnMock invocation) throws Throwable {
+                public ImportResult<Product> answer(InvocationOnMock invocation) throws Throwable {
                     Object[] args = invocation.getArguments();
                     Map<String, ProductData> productData = (Map<String, ProductData>) args[1];
-                    Map<String, Product> output = new HashMap<String, Product>();
+                    ImportResult<Product> importResult = new ImportResult<Product>();
+                    Map<String, Product> output = importResult.getCreatedEntities();
 
                     if (productData != null) {
                         for (String pid : productData.keySet()) {
@@ -170,22 +184,13 @@ public class EntitlerTest {
                         }
                     }
 
-                    return output;
+                    return importResult;
                 }
             });
     }
 
-    private void mockProducts(Owner owner, Product... products) {
-        Map<String, Product> productMap = new HashMap<String, Product>();
-
-        for (Product product : products) {
-            productMap.put(product.getId(), product);
-        }
-
-        this.mockProducts(owner, productMap);
-    }
-
     private void mockProductImport(Owner owner, Product... products) {
+        this.mockContentImport(owner, Collections.<String, Content>emptyMap());
         Map<String, Product> productMap = new HashMap<String, Product>();
 
         for (Product product : products) {
@@ -193,6 +198,41 @@ public class EntitlerTest {
         }
 
         this.mockProductImport(owner, productMap);
+    }
+
+    private void mockContentImport(Owner owner, final Map<String, Content> contents) {
+        when(contentManager.importContent(eq(owner), any(Map.class), any(Set.class)))
+            .thenAnswer(new Answer<ImportResult<Content>>() {
+                @Override
+                public ImportResult<Content> answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    Map<String, ContentData> contentData = (Map<String, ContentData>) args[1];
+                    ImportResult<Content> importResult = new ImportResult<Content>();
+                    Map<String, Content> output = importResult.getCreatedEntities();
+
+                    if (contentData != null) {
+                        for (String pid : contentData.keySet()) {
+                            Content content = contents.get(pid);
+
+                            if (content != null) {
+                                output.put(content.getId(), content);
+                            }
+                        }
+                    }
+
+                    return importResult;
+                }
+            });
+    }
+
+    private void mockContentImport(Owner owner, Content... contents) {
+        Map<String, Content> contentMap = new HashMap<String, Content>();
+
+        for (Content content : contents) {
+            contentMap.put(content.getId(), content);
+        }
+
+        this.mockContentImport(owner, contentMap);
     }
 
     @Test
@@ -551,6 +591,7 @@ public class EntitlerTest {
 
         this.mockProducts(owner, p);
         this.mockProductImport(owner, p);
+        this.mockContentImport(owner, Collections.<String, Content>emptyMap());
 
         when(pm.createPool(any(Pool.class))).thenReturn(devPool);
         when(devPool.getId()).thenReturn("test_pool_id");
@@ -641,6 +682,8 @@ public class EntitlerTest {
 
         mockUpdateProduct(p, owner);
         mockUpdateProduct(ip, owner);
+        mockProductImport(owner, p, ip);
+        mockContentImport(owner, new Content[] {});
 
         AutobindData ad = new AutobindData(devSystem);
         try {
@@ -677,6 +720,7 @@ public class EntitlerTest {
 
         this.mockProducts(owner, p, ip1, ip2);
         this.mockProductImport(owner, p, ip1, ip2);
+        this.mockContentImport(owner, Collections.<String, Content>emptyMap());
 
         Pool expectedPool = entitler.assembleDevPool(devSystem, p.getId());
         when(pm.createPool(any(Pool.class))).thenReturn(expectedPool);
@@ -704,6 +748,7 @@ public class EntitlerTest {
 
         this.mockProducts(owner, p1, p2, p3);
         this.mockProductImport(owner, p1, p2, p3);
+        this.mockContentImport(owner, Collections.<String, Content>emptyMap());
 
         Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
         Calendar cal = Calendar.getInstance();
@@ -730,15 +775,15 @@ public class EntitlerTest {
         when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProdDTOs);
         mockUpdateProduct(p1, owner);
 
-        // this.mockProducts(owner, p1);
-        // this.mockProductImport(owner, p1);
+        this.mockContentImport(owner, Collections.<String, Content>emptyMap());
         when(productManager.importProducts(eq(owner), any(Map.class), any(Map.class)))
-            .thenAnswer(new Answer<Map<String, Product>>() {
+            .thenAnswer(new Answer<ImportResult<Product>>() {
                 @Override
-                public Map<String, Product> answer(InvocationOnMock invocation) throws Throwable {
+                public ImportResult<Product> answer(InvocationOnMock invocation) throws Throwable {
                     Object[] args = invocation.getArguments();
                     Map<String, ProductData> productData = (Map<String, ProductData>) args[1];
-                    Map<String, Product> output = new HashMap<String, Product>();
+                    ImportResult<Product> importResult = new ImportResult<Product>();
+                    Map<String, Product> output = importResult.getCreatedEntities();
 
                     // We need to copy the attributes from the product data to the product to
                     // simulate a proper update.
@@ -762,7 +807,7 @@ public class EntitlerTest {
                         }
                     }
 
-                    return output;
+                    return importResult;
                 }
             });
 

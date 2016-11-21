@@ -152,7 +152,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     public Set<Product> getPoolDerivedProvidedProductsCached(String poolId) {
-        Set<String> uuids = getDerivedPoolProvidedProducts(poolId);
+        Set<String> uuids = getDerivedPoolProvidedProductUuids(poolId);
         return getProductsByUuidCached(uuids);
     }
 
@@ -161,7 +161,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     public Set<Product> getPoolProvidedProductsCached(String poolId) {
-        Set<String> providedUuids = getPoolProvidedProducts(poolId);
+        Set<String> providedUuids = getPoolProvidedProductUuids(poolId);
         return getProductsByUuidCached(providedUuids);
     }
 
@@ -171,7 +171,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @param poolId
      * @return Set of UUIDs
      */
-    public Set<String> getPoolProvidedProducts(String poolId) {
+    public Set<String> getPoolProvidedProductUuids(String poolId) {
         TypedQuery<String> query = getEntityManager().createQuery(
             "SELECT product.uuid FROM Pool p INNER JOIN p.providedProducts product where p.id = :poolid",
             String.class);
@@ -185,7 +185,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @param poolId
      * @return Set of UUIDs
      */
-    public Set<String> getDerivedPoolProvidedProducts(String poolId) {
+    public Set<String> getDerivedPoolProvidedProductUuids(String poolId) {
         TypedQuery<String> query = getEntityManager().createQuery(
             "SELECT product.uuid FROM Pool p INNER JOIN p.derivedProvidedProducts product " +
             "WHERE p.id = :poolid",

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2016 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -273,21 +273,23 @@ public class ProductManager {
      * @return
      *  A mapping of Red Hat content ID to content entities representing the imported content
      */
-    public Map<String, Product> importProducts(Owner owner, Map<String, ProductData> productData,
+    public ImportResult<Product> importProducts(Owner owner, Map<String, ProductData> productData,
         Map<String, Content> importedContent) {
 
         if (owner == null) {
             throw new IllegalArgumentException("owner is null");
         }
 
+        ImportResult<Product> importResult = new ImportResult<Product>();
+
         if (productData == null || productData.isEmpty()) {
             // Nothing to import
-            return new HashMap<String, Product>();
+            return importResult;
         }
 
-        Map<String, Product> importedProducts = new HashMap<String, Product>();
-        Map<String, Product> createdProducts = new HashMap<String, Product>();
-        Map<String, Product> updatedProducts = new HashMap<String, Product>();
+        Map<String, Product> skippedProducts = importResult.getSkippedEntities();
+        Map<String, Product> createdProducts = importResult.getCreatedEntities();
+        Map<String, Product> updatedProducts = importResult.getUpdatedEntities();
 
         Map<String, Integer> productVersions = new HashMap<String, Integer>();
         Map<String, Product> sourceProducts = new HashMap<String, Product>();
@@ -300,7 +302,7 @@ public class ProductManager {
 
             if (!product.isChangedBy(update)) {
                 // This product won't be changing, so we'll just pretend it's not being imported at all
-                importedProducts.put(product.getId(), product);
+                skippedProducts.put(product.getId(), product);
                 continue;
             }
 
@@ -312,8 +314,8 @@ public class ProductManager {
         }
 
         for (ProductData update : productData.values()) {
-            if (!updatedProducts.containsKey(update.getId()) &&
-                !importedProducts.containsKey(update.getId())) {
+            if (!skippedProducts.containsKey(update.getId()) &&
+                !updatedProducts.containsKey(update.getId())) {
 
                 // Ensure the product is minimally populated
                 if (update.getId() == null || update.getName() == null) {
@@ -341,13 +343,17 @@ public class ProductManager {
         productVersions.clear();
         productVersions = null;
 
+        // We're about to start modifying the maps, so we need to clone the created set before we
+        // start adding the update forks to it.
+        Map<String, Product> stagedEntities = new HashMap<String, Product>(createdProducts);
+
         // Process the created group...
         // Check our created set for existing versions:
         //  - If there's an existing version, we'll remove the staged entity from the creation
         //    set, and stage an owner-product mapping for the existing version
         //  - Otherwise, we'll stage the new entity for persistence by leaving it in the created
         //    set, and stage an owner-product mapping to the new entity
-        Iterator<Product> iterator = createdProducts.values().iterator();
+        Iterator<Product> iterator = stagedEntities.values().iterator();
         createdProductLoop: while (iterator.hasNext()) {
             Product created = iterator.next();
             List<Product> alternates = existingVersions.get(created.getId());
@@ -356,7 +362,7 @@ public class ProductManager {
                 for (Product alt : alternates) {
                     if (created.equals(alt)) {
                         ownerProductBuffer.add(new OwnerProduct(owner, alt));
-                        importedProducts.put(alt.getId(), alt);
+                        createdProducts.put(alt.getId(), alt);
                         iterator.remove();
 
                         continue createdProductLoop;
@@ -364,8 +370,6 @@ public class ProductManager {
                 }
             }
 
-            // TODO: If the saveAll below doesn't update these instances with a UUID, we'll have to
-            // do some work after the flush to ensure we use the instances with UUIDs.
             ownerProductBuffer.add(new OwnerProduct(owner, created));
         }
 
@@ -392,14 +396,14 @@ public class ProductManager {
             // We need to stage the updated entity for persistence. We'll reuse the now-empty
             // createdProducts map for this.
             updated.setUuid(null);
-            createdProducts.put(updated.getId(), updated);
+            stagedEntities.put(updated.getId(), updated);
         }
 
         // Persist our staged entities
         // We probably don't want to evict the products yet, as they'll appear as unmanaged if
         // they're used later. However, the join objects can be evicted safely since they're only
         // really used here.
-        this.productCurator.saveAll(createdProducts.values(), true, false);
+        this.productCurator.saveAll(stagedEntities.values(), true, false);
         this.ownerProductCurator.saveAll(ownerProductBuffer, true, true);
 
         // Perform bulk reference update
@@ -412,10 +416,7 @@ public class ProductManager {
 
         this.ownerProductCurator.updateOwnerProductReferences(owner, productUuidMap);
 
-        importedProducts.putAll(createdProducts);
-        importedProducts.putAll(updatedProducts);
-
-        return importedProducts;
+        return importResult;
     }
 
 

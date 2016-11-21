@@ -307,22 +307,16 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         Map<String, Content> importedContent = this.contentManager
-            .importContent(owner, contentMap, productMap.keySet());
-
-        // Determine which of our changes are net new
-        Set<Product> changedProducts = new HashSet<Product>();
-        Set<String> existingProductIds = this.ownerProductCurator
-            .filterUnknownProductIds(owner, productMap.keySet());
+            .importContent(owner, contentMap, productMap.keySet())
+            .getImportedEntities();
 
         log.debug("Importing {} product(s)...", productMap.size());
-        Map<String, Product> importedProducts = this.productManager
+        ImportResult<Product> importResult = this.productManager
             .importProducts(owner, productMap, importedContent);
 
-        for (String pid : existingProductIds) {
-            // FIXME: This is technically wrong, at the moment. Products which did not change will
-            // still be reported as changed if they existed in the DB prior to import.
-            changedProducts.add(importedProducts.get(pid));
-        }
+        Map<String, Product> importedProducts = importResult.getImportedEntities();
+        Set<Product> changedProducts = new HashSet<Product>();
+        changedProducts.addAll(importResult.getUpdatedEntities().values());
 
         log.debug("Refreshing {} pool(s)...", subscriptionMap.size());
         Iterator<Map.Entry<String, Subscription>> subsIterator = subscriptionMap.entrySet().iterator();
