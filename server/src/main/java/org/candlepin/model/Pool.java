@@ -27,8 +27,6 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 
 import java.util.Collection;
 import java.util.Date;
@@ -305,7 +303,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     private Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
 
     @OneToMany(mappedBy = "pool", cascade = CascadeType.ALL)
-    @LazyCollection(LazyCollectionOption.EXTRA)
     private Set<Entitlement> entitlements = new HashSet<Entitlement>();
 
     @Size(max = 255)
