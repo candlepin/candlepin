@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.14
+Version: 0.9.54.15
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,10 @@ fi
 
 #raw
 %changelog
+* Tue Nov 22 2016 Vritant Jain <adarshvritant@gmail.com> 0.9.54.15-1
+- 1391922: Fixed concurrent ueber cert generation issues
+  (michael.stead@gmail.com)
+
 * Mon Nov 07 2016 Vritant Jain <adarshvritant@gmail.com> 0.9.54.14-1
 - 1388201: Add check to insure constraint has not already been dropped
   (awood@redhat.com)
