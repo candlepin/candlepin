@@ -70,7 +70,6 @@ public class HornetqContextListener {
     }
 
     public void contextInitialized(Injector injector) {
-
         org.candlepin.common.config.Configuration candlepinConfig =
             injector.getInstance(org.candlepin.common.config.Configuration.class);
 
@@ -165,6 +164,7 @@ public class HornetqContextListener {
             throw new RuntimeException(e);
         }
 
+        setupAmqp(injector, candlepinConfig);
         cleanupOldQueues();
 
         List<String> listeners = getHornetqListeners(candlepinConfig);
@@ -189,6 +189,21 @@ public class HornetqContextListener {
         }
         catch (Exception e) {
             log.error("Failed to initialize EventSink:", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void setupAmqp(Injector injector,
+        org.candlepin.common.config.Configuration candlepinConfig) {
+        try {
+            if (candlepinConfig.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
+                //Both these classes should be singletons
+                QpidConnection conFactory = injector.getInstance(QpidConnection.class);
+                conFactory.connect();
+            }
+        }
+        catch (Exception e) {
+            log.error("Error starting AMQP client", e);
             throw new RuntimeException(e);
         }
     }
