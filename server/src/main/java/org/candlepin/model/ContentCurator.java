@@ -112,27 +112,25 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
      *  a criteria for fetching content by version
      */
     @SuppressWarnings("checkstyle:indentation")
-    public List<Content> getContentByVersions(Map<String, Integer> contentVersions) {
-        List<Content> result = null;
-
+    public CandlepinQuery<Content> getContentByVersions(Map<String, Integer> contentVersions) {
         if (contentVersions != null && !contentVersions.isEmpty()) {
-            Disjunction disjunction = Restrictions.disjunction();
-            Criteria criteria = this.createSecureCriteria().add(disjunction);
-
-            for (Map.Entry<String, Integer> entry : contentVersions.entrySet()) {
-                disjunction.add(Restrictions.and(
-                    Restrictions.eq("id", entry.getKey()),
-                    Restrictions.or(
-                        Restrictions.isNull("entityVersion"),
-                        Restrictions.eq("entityVersion", entry.getValue())
-                    )
-                ));
-            }
-
-            result = criteria.list();
+            return this.cpQueryFactory.<Content>buildQuery();
         }
 
-        return result != null ? result : new LinkedList<Content>();
+        Disjunction disjunction = Restrictions.disjunction();
+        DetachedCriteria criteria = this.createSecureDetachedCriteria().add(disjunction);
+
+        for (Map.Entry<String, Integer> entry : contentVersions.entrySet()) {
+            disjunction.add(Restrictions.and(
+                Restrictions.eq("id", entry.getKey()),
+                Restrictions.or(
+                    Restrictions.isNull("entityVersion"),
+                    Restrictions.eq("entityVersion", entry.getValue())
+                )
+            ));
+        }
+
+        return this.cpQueryFactory.<Content>buildQuery(this.currentSession(), criteria);
     }
 
     /**
