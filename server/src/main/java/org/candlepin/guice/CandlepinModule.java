@@ -56,6 +56,8 @@ import org.candlepin.controller.ModeManager;
 import org.candlepin.controller.ModeManagerImpl;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.ScheduledExecutorServiceProvider;
+import org.candlepin.controller.SuspendModeTransitioner;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.pinsetter.core.GuiceJobFactory;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
@@ -154,6 +156,7 @@ import org.quartz.spi.JobFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Properties;
+import java.util.concurrent.ScheduledExecutorService;
 
 import javax.cache.CacheManager;
 import javax.inject.Provider;
@@ -218,6 +221,8 @@ public class CandlepinModule extends AbstractModule {
         bind(EntitlementRulesTranslator.class);
         bind(PoolManager.class).to(CandlepinPoolManager.class);
         bind(ModeManager.class).to(ModeManagerImpl.class).asEagerSingleton();
+        bind(SuspendModeTransitioner.class).asEagerSingleton();
+        bind(ScheduledExecutorService.class).toProvider(ScheduledExecutorServiceProvider.class);
         bind(OwnerManager.class);
         bind(PoolRules.class);
         bind(CriteriaRules.class);

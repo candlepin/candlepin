@@ -40,9 +40,9 @@ public class QpidQmfTest {
         config.setProperty("key_store_password", "password");
         config.setProperty("retries", "0");
         config.setProperty("connectdelay", "1");
-        QpidConnection connection = new QpidConnection(new QpidConfigBuilder(config));
-        QpidQmf qmf = new QpidQmf(connection, config);
-        System.out.println(qmf.getStatus());
+//        QpidConnection connection = new QpidConnection(new QpidConfigBuilder(config));
+//        QpidQmf qmf = new QpidQmf(connection, config);
+//        System.out.println(qmf.getStatus());
     }
 
     @Test(expected = IllegalArgumentException.class)

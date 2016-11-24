@@ -14,11 +14,15 @@
  */
 package org.candlepin.controller;
 
-import com.google.inject.Singleton;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.SuspendedException;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.CandlepinModeChange;
 import org.candlepin.model.CandlepinModeChange.Mode;
 import org.candlepin.model.CandlepinModeChange.Reason;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +44,12 @@ public class ModeManagerImpl implements ModeManager {
     private CandlepinModeChange cpMode = new CandlepinModeChange(
         new Date(), Mode.NORMAL, Reason.STARTUP);
     private List<ModeChangeListener> listeners = new ArrayList<ModeChangeListener>();
+    private Configuration config;
+
+    @Inject
+    public ModeManagerImpl(Configuration config) {
+        this.config = config;
+    }
 
     @Override
     public CandlepinModeChange getLastCandlepinModeChange() {
@@ -48,6 +58,19 @@ public class ModeManagerImpl implements ModeManager {
 
     @Override
     public void enterMode(Mode m, Reason reason) {
+        /**
+         * When suspend mode is disabled, the Candlepin should never get into Suspend Mode.
+         * Candlepin is starting always in NORMAL mode, so disalowing the transition here should
+         * guarantee that.
+         *
+         * In fact, this method enterMode shouldn't be even called when SUSPEND mode is disabled.
+         * So this check here is more of a defensive programming approach.
+         */
+        if (!config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
+            log.debug("Suspend mode is disabled, ignoring mode transition");
+            return;
+        }
+
         if (reason == null) {
             String noReasonErrorString = "No reason supplied when trying to change CandlepinModeChange.";
             log.error(noReasonErrorString);

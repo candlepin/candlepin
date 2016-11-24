@@ -77,4 +77,12 @@ public class CandlepinModeChange implements Serializable {
     public Date getChangeTime() {
         return changeTime;
     }
+
+    @Override
+    public String toString() {
+        return "CandlepinModeChange [mode=" + mode + ", reason=" + reason + ", changeTime=" +
+            changeTime + "]";
+    }
+
+
 }

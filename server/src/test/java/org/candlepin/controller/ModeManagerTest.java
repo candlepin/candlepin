@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.candlepin.common.exceptions.SuspendedException;
+import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.model.CandlepinModeChange.Mode;
 import org.candlepin.model.CandlepinModeChange.Reason;
 
@@ -35,7 +36,7 @@ public class ModeManagerTest {
 
     @Before
     public void setUp() {
-        modeManager = new ModeManagerImpl();
+        modeManager = new ModeManagerImpl(new CandlepinCommonTestConfig());
         testReason = Reason.STARTUP;
         modeChanged = false;
     }

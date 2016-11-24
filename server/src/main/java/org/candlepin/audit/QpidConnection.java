@@ -17,6 +17,11 @@ package org.candlepin.audit;
 
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ModeManager;
+import org.candlepin.controller.SuspendModeTransitioner;
+import org.candlepin.model.CandlepinModeChange.Mode;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -76,8 +81,11 @@ public class QpidConnection {
     private Map<Target, Map<Type, TopicPublisher>> producerMap;
     private static Logger log = LoggerFactory.getLogger(QpidConnection.class);
     private InitialContext ctx = null;
-    private STATUS connectionStatus = STATUS.DOWN;
+    private STATUS connectionStatus = STATUS.JMS_OBJECTS_STALE;
     private QpidConfigBuilder config;
+    private SuspendModeTransitioner modeTransitioner;
+    private ModeManager modeManager;
+    private Configuration candlepinConfig;
 
     /**
      * This class is a singleton, just in case that multiple threads
@@ -92,13 +100,26 @@ public class QpidConnection {
      */
     public enum STATUS {
         CONNECTED,
-        DOWN
+        /**
+         * Represents situation when connection to Qpid was disrupted.
+         * JMS objects becomes stale and need to be recreated as per
+         * JMS specification
+         */
+        JMS_OBJECTS_STALE
+    }
+
+    public void setConnectionStatus(STATUS connectionStatus) {
+        this.connectionStatus = connectionStatus;
     }
 
     @Inject
-    public QpidConnection(QpidConfigBuilder config) {
+    public QpidConnection(QpidConfigBuilder config, SuspendModeTransitioner modeTransitioner,
+        ModeManager modeManager, Configuration candlepinConfiguration) {
         try {
             this.config = config;
+            this.modeTransitioner = modeTransitioner;
+            this.modeManager = modeManager;
+            this.candlepinConfig = candlepinConfiguration;
             ctx = new InitialContext(config.buildConfigurationProperties());
             connectionFactory = createConnectionFactory();
         }
@@ -116,23 +137,34 @@ public class QpidConnection {
      * @param target enumeration
      * @param type enumeration
      * @param msg Usually contains serialized JSON with the message
+     * @throws Exception
      */
     public void sendTextMessage(Target target, Type type, String msg) {
-        if (connectionStatus == STATUS.DOWN) {
-            throw new RuntimeException("The Qpid connection is down, " +
-                "please use connect() to reestablish connection.");
-        }
-
         try {
+            /**
+             * When Candlepin is in NORMAL mode and at the same time the
+             * JMS objects are stale, it is necessary to recreate them.
+             */
+            if (connectionStatus == STATUS.JMS_OBJECTS_STALE &&
+                modeManager.getLastCandlepinModeChange().getMode() == Mode.NORMAL) {
+                log.debug("Recreating the stale JMS objects");
+                connect();
+            }
+
             Map<Type, TopicPublisher> m = this.producerMap.get(target);
             if (m != null) {
                 TopicPublisher tp = m.get(type);
                 tp.send(session.createTextMessage(msg));
             }
         }
-        catch (JMSException ex) {
-            log.error("Unable to send event: " + msg, ex);
-            connectionStatus = STATUS.DOWN;
+        catch (Exception ex) {
+            log.error("Error sending text message");
+            connectionStatus = STATUS.JMS_OBJECTS_STALE;
+            if (!candlepinConfig
+                .getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
+                modeTransitioner.transitionAppropriately();
+            }
+
             throw new RuntimeException("Error sending event to message bus", ex);
         }
     }
@@ -173,7 +205,7 @@ public class QpidConnection {
      * Closes off all the resources held
      */
     public void close() {
-        connectionStatus = STATUS.DOWN;
+        connectionStatus = STATUS.JMS_OBJECTS_STALE;
 
         for (Entry<Target, Map<Type, TopicPublisher>> entry : this.producerMap.entrySet()) {
             for (Entry<Type, TopicPublisher> tpMap : entry.getValue().entrySet()) {
@@ -265,6 +297,4 @@ public class QpidConnection {
         TopicPublisher tp = this.session.createPublisher(topic);
         map.put(type, tp);
     }
-
-
 }

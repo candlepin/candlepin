@@ -29,6 +29,7 @@ import org.candlepin.common.config.EncryptedConfiguration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.logging.LoggingConfigurator;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.SuspendModeTransitioner;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 import org.candlepin.resteasy.ResourceLocatorMap;
@@ -150,10 +151,17 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
             }
         }
 
+        if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED) &&
+            config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
+            SuspendModeTransitioner mw = injector.getInstance(SuspendModeTransitioner.class);
+            mw.startPeriodicExecutions();
+        }
+
         if (config.getBoolean(HORNETQ_ENABLED)) {
             hornetqListener = injector.getInstance(HornetqContextListener.class);
             hornetqListener.contextInitialized(injector);
         }
+
 
         cacheListener = injector.getInstance(CacheContextListener.class);
         cacheListener.contextInitialized(injector);

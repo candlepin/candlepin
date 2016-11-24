@@ -295,6 +295,7 @@ fi
 QPID_KEYS_DIR=$PROJECT_DIR/../gutterball/bin/qpid/keys
 
 qpid-config -b amqps://localhost:5671 --ssl-certificate $QPID_KEYS_DIR/qpid_ca.crt --ssl-key $QPID_KEYS_DIR/qpid_ca.key --force del queue allmsg 2 > /dev/null || true
+qpid-config -b amqps://localhost:5671 --ssl-certificate $QPID_KEYS_DIR/qpid_ca.crt --ssl-key $QPID_KEYS_DIR/qpid_ca.key --force del queue flowStopQueue 2 > /dev/null || true
 
 if [ "$QPID" == "qpid" ]; then
     info_msg "Enable Qpid"

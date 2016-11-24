@@ -146,6 +146,11 @@ public class ConfigProperties {
     public static final String AMQP_TRUSTSTORE_PASSWORD = "candlepin.amqp.truststore_password";
     public static final String AMQP_CONNECTION_RETRY_ATTEMPTS = "gutterball.amqp.connection.retry_attempts";
     public static final String AMQP_CONNECTION_RETRY_INTERVAL = "gutterball.amqp.connection.retry_interval";
+
+    /**
+     * A possibility to enable Suspend Mode. By default, the suspend mode is enabled
+     */
+    public static final String SUSPEND_MODE_ENABLED = "candlepin.suspend_mode_enabled";
     /**
      * Candlepin will by default use QMF at startup to check if the Qpid is available. When it isn't its gonna
      * fail fast.
@@ -157,6 +162,23 @@ public class ConfigProperties {
      * reception takes longer.
      */
     public static final String QPID_QMF_RECEIVE_TIMEOUT = "candlepin.amqp.qmf.receive_timeout";
+
+    /**
+     * The delay is calculated using formula:
+     *
+     * INITIAL_DELAY * (DELAY_GROWTH ^ FAILED_ATTEMPTS)
+     *
+     * The MAX_DELAY gives ability to put upper limit to the resulting delay
+     * (-1 means unbounded). Its possible to also set the GROWTH to 1 which
+     * effectively disables "exponential back-off" and the delay
+     * becomes fixed INITIAL_DELAY
+     */
+    public static final String QPID_MODE_TANSITIONER_DELAY_GROWTH =
+        "candlepin.amqp.suspend.transitioner_delay_growth";
+    public static final String QPID_MODE_TRANSITIONER_INITIAL_DELAY =
+        "candlepin.amqp.suspend.transitioner_initial_delay";
+    public static final String QPID_MODE_TRANSITIONER_MAX_DELAY =
+        "candlepin.amqp.suspend.transitioner_max_delay";
 
     // Hibernate
     public static final String DB_PASSWORD = JPA_CONFIG_PREFIX + "hibernate.connection.password";
@@ -347,7 +369,11 @@ public class ConfigProperties {
             this.put(AMQP_TRUSTSTORE, "/etc/candlepin/certs/amqp/candlepin.truststore");
             this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
             this.put(QPID_STARTUP_CHECK_ENABLED, "true");
+            this.put(SUSPEND_MODE_ENABLED, "true");
             this.put(QPID_QMF_RECEIVE_TIMEOUT, "5000");
+            this.put(QPID_MODE_TANSITIONER_DELAY_GROWTH, "2");
+            this.put(QPID_MODE_TRANSITIONER_INITIAL_DELAY, "10");
+            this.put(QPID_MODE_TRANSITIONER_MAX_DELAY, "1200"); // 1200 seconds = 20 minutes
 
             this.put(AMQP_CONNECTION_RETRY_INTERVAL, "10"); // Every 10 seconds
             this.put(AMQP_CONNECTION_RETRY_ATTEMPTS, "1"); // Try for 10 seconds (1*10s)
@@ -398,6 +424,8 @@ public class ConfigProperties {
             this.put(SWAGGER_ENABLED, Boolean.toString(true));
         }
     };
+
+
 
 
 }

@@ -14,7 +14,9 @@
  */
 package org.candlepin.resteasy.filter;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.SuspendedException;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ModeManager;
 import org.candlepin.model.CandlepinModeChange;
 import org.candlepin.model.CandlepinModeChange.Mode;
@@ -36,10 +38,13 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class CandlepinSuspendModeFilter implements ContainerRequestFilter{
     private ModeManager modeManager;
+    private Configuration config;
 
     @Inject
-    public CandlepinSuspendModeFilter(ModeManager modeManager, ObjectMapper mapper) {
+    public CandlepinSuspendModeFilter(ModeManager modeManager, ObjectMapper mapper,
+        Configuration config) {
         this.modeManager = modeManager;
+        this.config = config;
     }
 
     /**
@@ -49,6 +54,10 @@ public class CandlepinSuspendModeFilter implements ContainerRequestFilter{
     @Override
     public void filter(ContainerRequestContext requestContext)
         throws JsonProcessingException {
+
+        if (!config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
+            return;
+        }
 
         /**
          * Allow status resource
