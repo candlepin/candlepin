@@ -1717,7 +1717,6 @@ public class CandlepinPoolManager implements PoolManager {
             int entQuantity = ent.getQuantity() != null ? ent.getQuantity() : 0;
 
             pool.setConsumed(pool.getConsumed() - entQuantity);
-            pool.getEntitlements().remove(ent);
             Consumer consumer = ent.getConsumer();
             if (consumer.getType().isManifest()) {
                 pool.setExported(pool.getExported() - entQuantity);
