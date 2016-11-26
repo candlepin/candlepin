@@ -31,7 +31,6 @@ import static org.mockito.Mockito.when;
 import org.candlepin.auth.Principal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.guice.PrincipalProvider;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -82,8 +81,7 @@ public class EventSinkImplTest {
 
     @Before
     public void init() throws Exception {
-        this.factory = new EventFactory(mockPrincipalProvider,
-        new ProductCachedSerializationModule(mockProductCurator));
+        this.factory = new EventFactory(mockPrincipalProvider);
         this.principal = TestUtil.createOwnerPrincipal();
         eventFilter = new EventFilter(new CandlepinCommonTestConfig());
         when(mockPrincipalProvider.get()).thenReturn(this.principal);

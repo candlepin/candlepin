@@ -18,7 +18,6 @@ import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.guice.PrincipalProvider;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.jackson.PoolEventFilter;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -55,8 +54,7 @@ public class EventFactory {
     private final ObjectMapper mapper;
 
     @Inject
-    public EventFactory(PrincipalProvider principalProvider,
-        ProductCachedSerializationModule productCachedModule) {
+    public EventFactory(PrincipalProvider principalProvider) {
         this.principalProvider = principalProvider;
 
         mapper = new ObjectMapper();
@@ -84,7 +82,6 @@ public class EventFactory {
         Hibernate4Module hbm = new Hibernate4Module();
         hbm.enable(Hibernate4Module.Feature.FORCE_LAZY_LOADING);
         mapper.registerModule(hbm);
-        mapper.registerModule(productCachedModule);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
