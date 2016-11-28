@@ -375,8 +375,8 @@ public class Entitler {
 
             ProductData existingProduct = productMap.get(product.getId());
             if (existingProduct != null && !existingProduct.equals(product)) {
-                log.warn("WARNING: Multiple versions of the same product received during dev pool " +
-                    "resolution; discarding duplicate: {} => {}, {}",
+                log.warn("Multiple versions of the same product received during dev pool resolution; " +
+                    "discarding duplicate: {} => {}, {}",
                     product.getId(), existingProduct, product
                 );
             }
@@ -394,8 +394,7 @@ public class Entitler {
                         // check for, and throw out, such mappings
 
                         if (pcd == null) {
-                            log.error(
-                                "ERROR: product contains a null product-content mapping: {}", product);
+                            log.error("product contains a null product-content mapping: {}", product);
                             throw new IllegalStateException(
                                 "product contains a null product-content mapping: " + product);
                         }
@@ -405,8 +404,8 @@ public class Entitler {
                         // Do some simple mapping validation. Our import method will handle minimal
                         // population validation for us.
                         if (content == null || content.getId() == null) {
-                            log.error("ERROR: product contains a null or incomplete product-content " +
-                                "mapping: {}", product);
+                            log.error("product contains a null or incomplete product-content mapping: {}",
+                                product);
                             throw new IllegalStateException("product contains a null or incomplete " +
                                 "product-content mapping: " + product);
                         }
@@ -416,8 +415,8 @@ public class Entitler {
 
                         ContentData existingContent = contentMap.get(content.getId());
                         if (existingContent != null && !existingContent.equals(content)) {
-                            log.warn("WARNING: Multiple versions of the same content received during dev " +
-                                "pool resolution; discarding duplicate: {} => {}, {}",
+                            log.warn("Multiple versions of the same content received during dev pool " +
+                                "resolution; discarding duplicate: {} => {}, {}",
                                 content.getId(), existingContent, content
                             );
                         }

@@ -124,6 +124,11 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertNotEquals(output.getUuid(), product.getUuid());
         assertEquals(output.getName(), update.getName());
 
+        // We shouldn't be able to find the original product via UUID (as we're currently treating
+        // products as immutable), but we should be able to find it via owner + RHID.
+        assertNull(this.productCurator.find(product.getUuid()));
+        assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
+
         if (regenCerts) {
             // TODO: Is there a better way to do this? We won't know the exact product instance,
             // we just know that a product should be refreshed as a result of this operation.
@@ -281,7 +286,13 @@ public class ProductManagerTest extends DatabaseTestFixture {
             product, Arrays.asList(content), owner, regenCerts
         );
         assertFalse(output.hasContent(content.getId()));
-        assertNotNull(this.productCurator.find(product.getUuid()));
+
+        // Note: This bit may be temporary. At the time of writing, product reuse is disabled, so
+        // changing the product's content triggers the creation of a new product and the deletion
+        // of the old (as no other owners are using it). As such, we should not find the product
+        // by UUID, but should find it via owner + RHID.
+        assertNull(this.productCurator.find(product.getUuid()));
+        assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
         assertNotNull(this.contentCurator.find(content.getUuid()));
 
         if (regenCerts) {

@@ -58,6 +58,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         newOwner.setId(owner.getId());
 
         this.ownerCurator.replicate(newOwner);
+        this.commitTransaction();
     }
 
     @Test(expected = PersistenceException.class)

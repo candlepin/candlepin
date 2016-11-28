@@ -108,6 +108,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -164,7 +165,6 @@ public class DatabaseTestFixture {
     protected DateSourceForTesting dateSource;
     protected I18n i18n;
 
-
     @BeforeClass
     public static void initClass() {
         parentInjector = Guice.createInjector(new TestingModules.JpaModule());
@@ -198,11 +198,25 @@ public class DatabaseTestFixture {
         when(req.getAttribute("username")).thenReturn("mock_user");
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+
+        this.beginTransaction();
     }
 
     @After
     public void shutdown() {
         cpRequestScope.exit();
+
+        // If we have any pending transactions, we should commit it before we move on
+        EntityTransaction transaction = this.entityManager().getTransaction();
+
+        if (transaction.isActive()) {
+            if (transaction.getRollbackOnly()) {
+                transaction.rollback();
+            }
+            else {
+                transaction.commit();
+            }
+        }
 
         // We are using a singleton for the principal in tests. Make sure we clear it out
         // after every test. TestPrincipalProvider controls the default behavior.
@@ -252,27 +266,51 @@ public class DatabaseTestFixture {
     }
 
     /**
-     * Helper to open a new db transaction. Pretty simple for now, but may
-     * require additional logic and error handling down the road.
-     *
-     * If you open a transaction, you'd better close it; otherwise, your test will
-     * hang forever.
+     * Opens a new transaction if a transaction has not already been opened. If a transaction is
+     * already open, this method does nothing; repeated calls are safe within the context of a
+     * single thread.
      */
     protected void beginTransaction() {
-        entityManager().getTransaction().begin();
+        EntityTransaction transaction = this.entityManager().getTransaction();
+
+        if (!transaction.isActive()) {
+            transaction.begin();
+        }
+        else {
+            log.warn("beginTransaction called with an active transaction");
+        }
     }
 
     /**
-     * Helper to commit the current db transaction. Pretty simple for now, but
-     * may require additional logic and error handling down the road.
-
+     * Commits the current transaction, flushing pending writes as necessary. If a transaction has
+     * not yet been opened, this method does nothing; repeated calls are safe within the context of
+     * a single thread.
      */
     protected void commitTransaction() {
-        entityManager().getTransaction().commit();
+        EntityTransaction transaction = this.entityManager().getTransaction();
+
+        if (transaction.isActive()) {
+            transaction.commit();
+        }
+        else {
+            log.warn("commitTransaction called without an active transaction");
+        }
     }
 
+    /**
+     * Rolls back the current transaction, discarding any pending writes. If a transaction has not
+     * yet been opened, this method does nothing; repeated calls are safe within the context of a
+     * single thread.
+     */
     protected void rollbackTransaction() {
-        entityManager().getTransaction().rollback();
+        EntityTransaction transaction = this.entityManager().getTransaction();
+
+        if (transaction.isActive()) {
+            transaction.rollback();
+        }
+        else {
+            log.warn("rollbackTransaction called without an active transaction");
+        }
     }
 
     protected Pool createPool(Owner owner, Product product) {

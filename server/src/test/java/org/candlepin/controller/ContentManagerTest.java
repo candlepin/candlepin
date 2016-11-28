@@ -143,6 +143,15 @@ public class ContentManagerTest extends DatabaseTestFixture {
         assertNotEquals(output.getUuid(), content.getUuid());
         assertEquals(output.getName(), update.getName());
 
+        // We shouldn't be able to find the original product via UUID (as we're currently treating
+        // products as immutable), but we should be able to find it via owner + RHID.
+        assertNull(this.contentCurator.find(content.getUuid()));
+        assertNotNull(this.ownerContentCurator.getContentById(owner, content.getId()));
+
+        // The product should have also changed in the same way as a result of the content change
+        assertNull(this.productCurator.find(product.getUuid()));
+        assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
+
         if (regenCerts) {
             verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
                 eq(Arrays.asList(owner)), anyCollectionOf(Product.class), anyBoolean()

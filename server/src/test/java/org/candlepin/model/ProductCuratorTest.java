@@ -251,6 +251,8 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         prod.setName("test-changed-name");
         prod = this.productCurator.merge(prod);
+        this.productCurator.flush();
+
         assertTrue(prod.getUpdated().getTime() > updated);
     }
 

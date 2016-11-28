@@ -272,8 +272,7 @@ public class PoolManagerTest {
 
         // Make sure that only the floating pool was regenerated
         expectedFloating.add(floating);
-        verify(this.manager)
-            .updateFloatingPools(eq(expectedFloating), eq(true), any(Set.class));
+        verify(this.manager).updateFloatingPools(eq(expectedFloating), eq(true), any(Map.class));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -315,11 +314,10 @@ public class PoolManagerTest {
 
         // Make sure that only the floating pool was regenerated
         expectedModified.add(p);
-        verify(this.manager)
-            .updateFloatingPools(eq(new LinkedList()), eq(true), any(Set.class));
+        verify(this.manager).updateFloatingPools(eq(new LinkedList()), eq(true), any(Map.class));
         ArgumentCaptor<Pool> argPool = ArgumentCaptor.forClass(Pool.class);
         verify(this.manager).updatePoolsForMasterPool(eq(expectedModified), argPool.capture(),
-            eq(sub.getQuantity()), eq(false), any(Set.class));
+            eq(sub.getQuantity()), eq(false), any(Map.class));
         TestUtil.assertPoolsAreEqual(TestUtil.copyFromSub(sub), argPool.getValue());
     }
 
@@ -742,7 +740,7 @@ public class PoolManagerTest {
 
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
         ArgumentCaptor<List> poolCaptor = ArgumentCaptor.forClass(List.class);
-        verify(this.poolRulesMock).updatePools(poolCaptor.capture(), any(Set.class));
+        verify(this.poolRulesMock).updatePools(poolCaptor.capture(), any(Map.class));
         assertEquals(1, poolCaptor.getValue().size());
         assertEquals(p, poolCaptor.getValue().get(0));
     }
@@ -815,7 +813,7 @@ public class PoolManagerTest {
         u.setOrderChanged(true);
         updates.add(u);
         ArgumentCaptor<Pool> argPool = ArgumentCaptor.forClass(Pool.class);
-        when(poolRulesMock.updatePools(argPool.capture(), eq(pools), eq(s.getQuantity()), any(Set.class)))
+        when(poolRulesMock.updatePools(argPool.capture(), eq(pools), eq(s.getQuantity()), any(Map.class)))
             .thenReturn(updates);
 
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);

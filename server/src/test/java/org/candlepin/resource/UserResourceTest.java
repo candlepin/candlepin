@@ -163,12 +163,15 @@ public class UserResourceTest extends DatabaseTestFixture {
         User user = new User();
         user.setUsername("henri");
         user.setPassword("password");
+        userResource.createUser(user);
 
-        user = userResource.createUser(user);
-        user.setUsername("Luke");
-        user.setHashedPassword("Skywalker");
-        user.setSuperAdmin(true);
-        User updated = userResource.updateUser("henri", user);
+        User update = new User();
+        update.setUsername("Luke");
+        update.setHashedPassword("Skywalker");
+        update.setSuperAdmin(true);
+
+        User updated = userResource.updateUser("henri", update);
+
         assertEquals("Luke", updated.getUsername());
         assertEquals("Skywalker", updated.getHashedPassword());
         assertTrue(updated.isSuperAdmin());

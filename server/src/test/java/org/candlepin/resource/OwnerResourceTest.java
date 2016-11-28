@@ -906,8 +906,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         createEntitlementWithQ(pool, retrieved, consumer, e1, "01/02/2010");
         createEntitlementWithQ(pool, retrieved, consumer1, e2, "01/01/2010");
         assertEquals(pool.getConsumed(), Long.valueOf(e1 + e2));
-        this.config.setProperty(
-            ConfigProperties.REVOKE_ENTITLEMENT_IN_FIFO_ORDER, fifo ? "true" : "false");
+        this.config.setProperty(ConfigProperties.REVOKE_ENTITLEMENT_IN_FIFO_ORDER, fifo ? "true" : "false");
 
         poolManager.getRefresher(subAdapter).add(retrieved).run();
         pool = poolCurator.find(pool.getId());

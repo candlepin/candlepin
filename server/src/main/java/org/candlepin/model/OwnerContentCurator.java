@@ -16,8 +16,11 @@ package org.candlepin.model;
 
 import com.google.inject.persist.Transactional;
 
+import org.hibernate.Criteria;
+import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
@@ -319,6 +322,128 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
             .createQuery(jpql)
             .setParameter("owner_id", owner.getId())
             .executeUpdate();
+    }
+
+    /**
+     * Fetches the number of owners currently mapped to the given contents. If a provided content
+     * UUID does not represent an existing content entity, or is not mapped to any owners, it will
+     * not be included in the output.
+     *
+     * @param contentUuids
+     *  A collection of content UUIDs for which to fetch the owner counts
+     *
+     * @return
+     *  A mapping of content UUIDs to their owner counts
+     */
+    @Transactional
+    public Map<String, Integer> getOwnerCounts(Collection<String> contentUuids) {
+        StringBuilder builder = new StringBuilder("SELECT oc.contentUuid, COUNT(oc) FROM OwnerContent oc");
+
+        if (contentUuids != null && !contentUuids.isEmpty()) {
+            builder.append(" WHERE ");
+
+            int blockCount = (int) Math.ceil(contentUuids.size() /
+                (float) AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE);
+
+            for (int i = 1; i <= blockCount; ++i) {
+                if (i > 1) {
+                    builder.append(" OR ");
+                }
+
+                builder.append("oc.contentUuid IN :content_uuids_").append(i);
+            }
+        }
+
+        builder.append(" GROUP BY oc.contentUuid");
+
+        Query query = this.currentSession().createQuery(builder.toString());
+
+        if (contentUuids != null && !contentUuids.isEmpty()) {
+            Iterable<List<String>> blocks = Iterables.partition(contentUuids,
+                AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE);
+
+            int offset = 0;
+            for (List<String> block : blocks) {
+                query.setParameterList("content_uuids_" + ++offset, block);
+            }
+        }
+
+        Map<String, Integer> result = new HashMap<String, Integer>();
+
+        ScrollableResults cursor = query.scroll();
+        while (cursor.next()) {
+            String uuid = cursor.getString(0);
+            Integer count = Integer.valueOf((int) cursor.getLong(1).longValue());
+
+            result.put(uuid, count);
+        }
+
+        cursor.close();
+
+        return result;
+    }
+
+    /**
+     * Retrieves a criteria which can be used to fetch a list of content with the specified Red Hat
+     * content ID and entity version belonging to owners other than the owner provided. If no
+     * content were found matching the given criteria, this method returns an empty list.
+     *
+     * @param owner
+     *  The owner whose content should be excluded from the results. If an owner is not provided,
+     *  no additional filtering will be performed.
+     *
+     * @param contentVersions
+     *  A mapping of Red Hat content IDs to content versions to fetch
+     *
+     * @return
+     *  a criteria for fetching content by version
+     */
+    @SuppressWarnings("checkstyle:indentation")
+    public CandlepinQuery<Content> getContentByVersions(Owner owner, Map<String, Integer> contentVersions) {
+        if (contentVersions == null || contentVersions.isEmpty()) {
+            return this.cpQueryFactory.<Content>buildQuery();
+        }
+
+        // Impl note:
+        // We perform this operation with two queries here to optimize out some unnecessary queries
+        // when pulling content information. Even when pulling content in a batch, Hibernate will
+        // pull the content collections (modified product IDs) as a separate query for each content
+        // (ugh). By breaking this into two queries -- one for getting the content UUIDs and one
+        // for pulling the actual content -- we will save upwards of two DB hits per content
+        // filtered. We will lose time in the cases where we don't filter any content, or the
+        // content we filter don't have any data in their collections; but we're only using one
+        // additional query in those cases, versus n additional in the normal case.
+
+        Disjunction disjunction = Restrictions.disjunction();
+        Criteria uuidCriteria = this.createSecureCriteria("oc")
+            .createAlias("oc.content", "c")
+            .add(disjunction)
+            .setProjection(Projections.property("c.uuid"));
+
+        for (Map.Entry<String, Integer> entry : contentVersions.entrySet()) {
+            disjunction.add(Restrictions.and(
+                Restrictions.eq("c.id", entry.getKey()),
+                Restrictions.or(
+                    Restrictions.isNull("c.entityVersion"),
+                    Restrictions.eq("c.entityVersion", entry.getValue())
+                )
+            ));
+        }
+
+        if (owner != null) {
+            uuidCriteria.add(Restrictions.not(Restrictions.eq("oc.owner", owner)));
+        }
+
+        List<String> uuids = uuidCriteria.list();
+
+        if (uuids != null && !uuids.isEmpty()) {
+            DetachedCriteria criteria = this.createSecureDetachedCriteria(Content.class, null)
+                .add(CPRestrictions.in("uuid", uuids));
+
+            return this.cpQueryFactory.<Content>buildQuery(this.currentSession(), criteria);
+        }
+
+        return this.cpQueryFactory.<Content>buildQuery();
     }
 
     /**

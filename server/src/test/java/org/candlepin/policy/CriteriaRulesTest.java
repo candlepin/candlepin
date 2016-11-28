@@ -62,6 +62,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         Pool virtPool = this.createPool(owner, targetProduct, 1L, new Date(), new Date());
         virtPool.setAttribute("virt_only", "true");
         poolCurator.merge(virtPool);
+        poolCurator.flush();
 
         List<Pool> results = poolCurator.listAvailableEntitlementPools(consumer, null,
             (Collection<String>) null, null, false);
@@ -123,6 +124,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         anotherVirtPool.setAttribute("virt_only", "true");
         anotherVirtPool.setAttribute("requires_host", "SOMEOTHERUUID");
         poolCurator.merge(anotherVirtPool);
+        poolCurator.flush();
 
         List<Pool> results = poolCurator.listAvailableEntitlementPools(consumer, null,
             (Collection<String>) null, null, false);
@@ -159,6 +161,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         virtPool.setAttribute("virt_only", "true");
         virtPool.setAttribute("requires_host", host.getUuid());
         poolCurator.merge(virtPool);
+        poolCurator.flush();
 
         List<Pool> results = poolCurator.listAvailableEntitlementPools(c, null, (Collection<String>) null,
             null, false);
@@ -182,6 +185,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         Pool virtPool = this.createPool(owner, targetProduct, 1L, new Date(), new Date());
         virtPool.setAttribute("virt_only", "true");
         poolCurator.merge(virtPool);
+        poolCurator.flush();
 
         List<Pool> results = poolCurator.listAvailableEntitlementPools(c, null, (Collection<String>) null,
             null, false);

@@ -19,10 +19,12 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
+import org.hibernate.Criteria;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Query;
 import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
@@ -414,6 +416,70 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .setParameter("owner_id", owner.getId())
             .executeUpdate();
     }
+
+    /**
+     * Retrieves a criteria which can be used to fetch a list of products with the specified Red Hat
+     * product ID and entity version belonging to owners other than the owner provided. If no
+     * products were found matching the given criteria, this method returns an empty list.
+     *
+     * @param owner
+     *  The owner whose products should be excluded from the results. If an owner is not provided,
+     *  no additional filtering will be performed.
+     *
+     * @param productVersions
+     *  A mapping of Red Hat product IDs to product versions to fetch
+     *
+     * @return
+     *  a criteria for fetching products by version
+     */
+    @SuppressWarnings("checkstyle:indentation")
+    public CandlepinQuery<Product> getProductsByVersions(Owner owner, Map<String, Integer> productVersions) {
+        if (productVersions == null || productVersions.isEmpty()) {
+            return this.cpQueryFactory.<Product>buildQuery();
+        }
+
+        // Impl note:
+        // We perform this operation with two queries here to optimize out some unnecessary queries
+        // when pulling product information. Even when pulling products in a batch, Hibernate will
+        // pull the product collections (attributes, content and dependent product IDs) as separate
+        // query for each product (ugh). By breaking this into two queries -- one for getting the
+        // product UUIDs and one for pulling the actual products -- we will save upwards of two DB
+        // hits per product filtered. We will lose time in the cases where we don't filter any
+        // products, or the products we filter don't have any data in their collections; but we're
+        // only using one additional query in those cases, versus (0-2)n in the normal case.
+
+        Disjunction disjunction = Restrictions.disjunction();
+        Criteria uuidCriteria = this.createSecureCriteria("op")
+            .createAlias("op.product", "p")
+            .add(disjunction)
+            .setProjection(Projections.property("p.uuid"));
+
+        for (Map.Entry<String, Integer> entry : productVersions.entrySet()) {
+            disjunction.add(Restrictions.and(
+                Restrictions.eq("p.id", entry.getKey()),
+                Restrictions.or(
+                    Restrictions.isNull("p.entityVersion"),
+                    Restrictions.eq("p.entityVersion", entry.getValue())
+                )
+            ));
+        }
+
+        if (owner != null) {
+            uuidCriteria.add(Restrictions.not(Restrictions.eq("op.owner", owner)));
+        }
+
+        List<String> uuids = uuidCriteria.list();
+
+        if (uuids != null && !uuids.isEmpty()) {
+            DetachedCriteria criteria = this.createSecureDetachedCriteria(Product.class, null)
+                .add(CPRestrictions.in("uuid", uuids));
+
+            return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
+        }
+
+        return this.cpQueryFactory.<Product>buildQuery();
+    }
+
 
     /**
      * Updates the product references currently pointing to the original product to instead point to

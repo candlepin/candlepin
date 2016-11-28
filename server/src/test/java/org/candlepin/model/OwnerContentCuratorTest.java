@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -44,13 +45,9 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
      * @return a new OwnerContent mapping object
      */
     private OwnerContent createOwnerContentMapping(Owner owner, Content content) {
-        this.beginTransaction();
-
         OwnerContent mapping = new OwnerContent(owner, content);
         this.entityManager().persist(mapping);
         this.entityManager().flush();
-
-        this.commitTransaction();
 
         return mapping;
     }
@@ -588,4 +585,207 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
             .getUuid());
     }
 
+    @Test
+    public void testGetOwnerCounts() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+        Owner owner3 = this.createOwner();
+
+        Content content1 = this.createContent("p1", "p1");
+        Content content2 = this.createContent("p2", "p2", owner1);
+        Content content3 = this.createContent("p3", "p3", owner1, owner2);
+        Content content4 = this.createContent("p4", "p4", owner1, owner2, owner3);
+        Content content5 = this.createContent("p5", "p5", owner1, owner2, owner3);
+
+        this.ownerContentCurator.flush();
+
+        List<String> uuids = Arrays.asList(content1.getUuid(), content2.getUuid(), content3.getUuid(),
+            content4.getUuid(), "dummy uuid");
+
+        Map<String, Integer> result = this.ownerContentCurator.getOwnerCounts(uuids);
+
+        assertEquals(3, result.size());
+        assertEquals(1, result.get(content2.getUuid()).intValue());
+        assertEquals(2, result.get(content3.getUuid()).intValue());
+        assertEquals(3, result.get(content4.getUuid()).intValue());
+        assertFalse(result.containsKey(content1.getUuid()));
+        assertFalse(result.containsKey(content5.getUuid()));
+        assertFalse(result.containsKey("dummy uuid"));
+    }
+
+    @Test
+    public void testGetOwnerCountsNoUuids() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+        Owner owner3 = this.createOwner();
+
+        Content content1 = this.createContent("p1", "p1");
+        Content content2 = this.createContent("p2", "p2", owner1);
+        Content content3 = this.createContent("p3", "p3", owner1, owner2);
+        Content content4 = this.createContent("p4", "p4", owner1, owner2, owner3);
+        Content content5 = this.createContent("p5", "p5", owner1, owner2, owner3);
+
+        this.ownerContentCurator.flush();
+
+        List<String> uuids = null;
+        Map<String, Integer> result = this.ownerContentCurator.getOwnerCounts(uuids);
+
+        assertEquals(4, result.size());
+        assertEquals(1, result.get(content2.getUuid()).intValue());
+        assertEquals(2, result.get(content3.getUuid()).intValue());
+        assertEquals(3, result.get(content4.getUuid()).intValue());
+        assertEquals(3, result.get(content5.getUuid()).intValue());
+        assertFalse(result.containsKey(content1.getUuid()));
+        assertFalse(result.containsKey("dummy uuid"));
+    }
+
+    @Test
+    public void testGetContentByVersions() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+        Owner owner3 = this.createOwner();
+
+        Content content1 = this.createContent("p1", "p1", owner1);
+        Content content2 = this.createContent("p1", "p1", owner2);
+        Content content3 = this.createContent("p1", "p1", owner3);
+        Content content4 = this.createContent("p2", "p2", owner2);
+
+        List<Content> contentList1 = this.ownerContentCurator.getContentByVersions(owner1,
+            Collections.<String, Integer>singletonMap(content1.getId(), content1.getEntityVersion())).list();
+
+        List<Content> contentList2 = this.ownerContentCurator.getContentByVersions(owner2,
+            Collections.<String, Integer>singletonMap(content2.getId(), content2.getEntityVersion())).list();
+
+        // contentList1 should contain only content2 and content3
+        // contentList2 should contain only content1 and content3
+
+        assertEquals(2, contentList1.size());
+        assertEquals(2, contentList2.size());
+
+        List<String> uuidList1 = new LinkedList<String>();
+        for (Content content : contentList1) {
+            uuidList1.add(content.getUuid());
+        }
+
+        List<String> uuidList2 = new LinkedList<String>();
+        for (Content content : contentList2) {
+            uuidList2.add(content.getUuid());
+        }
+
+        assertEquals(Arrays.asList(content2.getUuid(), content3.getUuid()), uuidList1);
+        assertEquals(Arrays.asList(content1.getUuid(), content3.getUuid()), uuidList2);
+    }
+
+    @Test
+    public void testGetContentByVersionsNoOwner() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+        Owner owner3 = this.createOwner();
+
+        Content content1 = this.createContent("p1", "p1", owner1);
+        Content content2 = this.createContent("p1", "p1", owner2);
+        Content content3 = this.createContent("p1", "p1", owner3);
+        Content content4 = this.createContent("p2", "p2", owner2);
+
+        List<Content> contentList1 = this.ownerContentCurator.getContentByVersions(null,
+            Collections.<String, Integer>singletonMap(content1.getId(), content1.getEntityVersion())).list();
+
+        List<Content> contentList2 = this.ownerContentCurator.getContentByVersions(null,
+            Collections.<String, Integer>singletonMap(content2.getId(), content2.getEntityVersion())).list();
+
+        // Both lists should contain both content1, 2 and 3
+
+        assertEquals(3, contentList1.size());
+        assertEquals(3, contentList2.size());
+
+        List<String> uuidList1 = new LinkedList<String>();
+        for (Content content : contentList1) {
+            uuidList1.add(content.getUuid());
+        }
+
+        List<String> uuidList2 = new LinkedList<String>();
+        for (Content content : contentList2) {
+            uuidList2.add(content.getUuid());
+        }
+
+        // We're counting on .equals not caring about order here
+        assertEquals(Arrays.asList(content1.getUuid(), content2.getUuid(), content3.getUuid()), uuidList1);
+        assertEquals(Arrays.asList(content1.getUuid(), content2.getUuid(), content3.getUuid()), uuidList2);
+    }
+
+    @Test
+    public void testGetContentByVersionsMultipleVersions() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+        Owner owner3 = this.createOwner();
+
+        Content p1 = this.createContent("p1", "p1", owner1);
+        Content p2 = this.createContent("p1", "p1", owner2);
+        Content p3 = this.createContent("p1", "p1", owner3);
+        Content p4 = this.createContent("p2", "p2", owner1);
+        Content p5 = this.createContent("p2", "p2", owner2);
+        Content p6 = this.createContent("p2", "p2", owner3);
+        Content p7 = this.createContent("p3", "p3", owner1);
+        Content p8 = this.createContent("p3", "p3", owner2);
+        Content p9 = this.createContent("p3", "p3", owner3);
+
+        Map<String, Integer> versions = new HashMap<String, Integer>();
+        versions.put(p1.getId(), p1.getEntityVersion());
+        versions.put(p4.getId(), p4.getEntityVersion());
+        versions.put("bad_id", p7.getEntityVersion());
+
+        List<Content> contentList1 = this.ownerContentCurator.getContentByVersions(owner1, versions).list();
+        List<Content> contentList2 = this.ownerContentCurator.getContentByVersions(owner2, versions).list();
+        List<Content> contentList3 = this.ownerContentCurator.getContentByVersions(null, versions).list();
+
+        // List 1 should contain content 2, 3, 5 and 6
+        // List 2 should contain content 1, 3, 4 and 6
+        // List 3 should contain content 1 through 6
+
+        assertEquals(4, contentList1.size());
+        assertEquals(4, contentList2.size());
+        assertEquals(6, contentList3.size());
+
+        List<String> uuidList1 = new LinkedList<String>();
+        for (Content content : contentList1) {
+            uuidList1.add(content.getUuid());
+        }
+
+        List<String> uuidList2 = new LinkedList<String>();
+        for (Content content : contentList2) {
+            uuidList2.add(content.getUuid());
+        }
+
+        List<String> uuidList3 = new LinkedList<String>();
+        for (Content content : contentList3) {
+            uuidList3.add(content.getUuid());
+        }
+
+        // We're counting on .equals not caring about order here
+        assertEquals(Arrays.asList(p2.getUuid(), p3.getUuid(), p5.getUuid(), p6.getUuid()), uuidList1);
+        assertEquals(Arrays.asList(p1.getUuid(), p3.getUuid(), p4.getUuid(), p6.getUuid()), uuidList2);
+        assertEquals(
+            Arrays.asList(p1.getUuid(), p2.getUuid(), p3.getUuid(), p4.getUuid(), p5.getUuid(), p6.getUuid()),
+            uuidList3
+        );
+    }
+
+    @Test
+    public void testGetContentByVersionsNoVersionInfo() {
+        Owner owner1 = this.createOwner();
+
+        List<Content> contentList1 = this.ownerContentCurator.getContentByVersions(owner1, null).list();
+        assertEquals(0, contentList1.size());
+
+        List<Content> contentList2 = this.ownerContentCurator.getContentByVersions(owner1,
+            Collections.<String, Integer>emptyMap()).list();
+        assertEquals(0, contentList2.size());
+
+        List<Content> contentList3 = this.ownerContentCurator.getContentByVersions(null, null).list();
+        assertEquals(0, contentList3.size());
+
+        List<Content> contentList4 = this.ownerContentCurator.getContentByVersions(null,
+            Collections.<String, Integer>emptyMap()).list();
+        assertEquals(0, contentList4.size());
+    }
 }

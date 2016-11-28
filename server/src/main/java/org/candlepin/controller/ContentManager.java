@@ -114,8 +114,8 @@ public class ContentManager {
         log.debug("Creating new content for org: {}, {}", entity, owner);
 
         // Check if we have an alternate version we can use instead.
-        List<Content> alternateVersions = this.contentCurator
-            .getContentByVersion(entity.getId(), entity.getEntityVersion())
+        List<Content> alternateVersions = this.ownerContentCurator.getContentByVersions(
+            owner, Collections.<String, Integer>singletonMap(entity.getId(), entity.getEntityVersion()))
             .list();
 
         log.debug("Checking {} alternate content versions", alternateVersions.size());
@@ -195,8 +195,8 @@ public class ContentManager {
         log.debug("Applying content update for org: {}, {}", entity, owner);
         Content updated = this.applyContentChanges((Content) entity.clone(), update);
 
-        List<Content> alternateVersions = this.contentCurator
-            .getContentByVersion(update.getId(), updated.getEntityVersion())
+        List<Content> alternateVersions = this.ownerContentCurator.getContentByVersions(
+            owner, Collections.<String, Integer>singletonMap(updated.getId(), updated.getEntityVersion()))
             .list();
 
         log.debug("Checking {} alternate content versions", alternateVersions.size());
@@ -228,6 +228,11 @@ public class ContentManager {
                         // Impl note: This should also take care of our entitlement cert regeneration
                         this.productManager.updateProduct(pdata, owner, regenerateEntitlementCerts);
                     }
+                }
+
+                // Clean up our content entity if it was orphaned
+                if (this.ownerContentCurator.getOwnerCount(entity) == 0) {
+                    this.contentCurator.delete(entity);
                 }
 
                 return alt;
@@ -291,6 +296,11 @@ public class ContentManager {
                 // Impl note: This should also take care of our entitlement cert regeneration
                 this.productManager.updateProduct(pdata, owner, regenerateEntitlementCerts);
             }
+        }
+
+        // Clean up our content entity if it was orphaned
+        if (this.ownerContentCurator.getOwnerCount(entity) == 0) {
+            this.contentCurator.delete(entity);
         }
 
         return updated;
@@ -379,7 +389,7 @@ public class ContentManager {
             }
         }
 
-        for (Content alt : this.contentCurator.getContentByVersions(contentVersions)) {
+        for (Content alt : this.ownerContentCurator.getContentByVersions(owner, contentVersions)) {
             List<Content> alternates = existingVersions.get(alt.getId());
             if (alternates == null) {
                 alternates = new LinkedList<Content>();
@@ -434,7 +444,7 @@ public class ContentManager {
             List<Content> alternates = existingVersions.get(updated.getId());
             if (alternates != null) {
                 for (Content alt : alternates) {
-                    if (updated.equals(alt)) {
+                    if (!updated.getUuid().equals(alt.getUuid()) && updated.equals(alt)) {
                         updated = alt;
                         entry.setValue(alt);
 
@@ -503,6 +513,21 @@ public class ContentManager {
 
         this.ownerContentCurator.updateOwnerContentReferences(owner, contentUuidMap);
 
+        // Kill any content objects we've orphaned as a result of this import
+        Map<String, Integer> ownerCounts = this.ownerContentCurator.getOwnerCounts(sourceContent.keySet());
+
+        for (iterator = sourceContent.values().iterator(); iterator.hasNext();) {
+            if (ownerCounts.containsKey(iterator.next().getUuid())) {
+                iterator.remove();
+            }
+        }
+
+        if (sourceContent.size() > 0) {
+            this.contentCurator.bulkDelete(sourceContent.values());
+            this.contentCurator.flush();
+        }
+
+        // Return
         return importResult;
     }
 

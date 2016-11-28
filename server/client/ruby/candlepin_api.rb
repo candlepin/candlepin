@@ -498,6 +498,7 @@ class Candlepin
       # POSTing here will delete the job once it has finished
       status = post(status['statusPath'])
     end
+
     return status['result']
   end
 
