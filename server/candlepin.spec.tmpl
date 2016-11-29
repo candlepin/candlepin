@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.15
+Version: 0.9.54.16
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,9 @@ fi
 
 #raw
 %changelog
+* Tue Nov 29 2016 Christopher Snyder <csnyder@redhat.com> 0.9.54.16-1
+- 1399768: Make pool exported count calculation lazy (bcourt@redhat.com)
+
 * Tue Nov 22 2016 Vritant Jain <adarshvritant@gmail.com> 0.9.54.15-1
 - 1391922: Fixed concurrent ueber cert generation issues
   (michael.stead@gmail.com)
