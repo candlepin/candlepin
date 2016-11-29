@@ -36,11 +36,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -330,6 +332,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @Formula("(select sum(ent.quantity) FROM cp_entitlement ent, cp_consumer cons, " +
         "cp_consumer_type ctype where ent.pool_id = id and ent.consumer_id = cons.id " +
         "and cons.type_id = ctype.id and ctype.manifest = 'Y')")
+    // Only calculate exported lazily due to join fetches from entitlements taking extraordinary
+    // amounts of time
+    @Basic(fetch = FetchType.LAZY)
     private Long exported;
 
     @OneToMany
