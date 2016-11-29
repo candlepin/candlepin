@@ -27,6 +27,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ModeManager;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.tasks.CancelJobJob;
@@ -48,6 +49,7 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.TriggerKey;
+import org.quartz.TriggerListener;
 import org.quartz.impl.JobDetailImpl;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.spi.JobFactory;
@@ -73,6 +75,8 @@ public class PinsetterKernelTest {
     private Configuration config;
     private Scheduler sched;
     private ListenerManager lm;
+    private ModeManager modeManager;
+    private TriggerListener triggerListener;
 
     @Before
     public void init() throws SchedulerException {
@@ -82,6 +86,8 @@ public class PinsetterKernelTest {
         jlistener = mock(JobListener.class);
         sfactory = mock(StdSchedulerFactory.class);
         lm = mock(ListenerManager.class);
+        modeManager = mock(ModeManager.class);
+        triggerListener = mock(PinsetterTriggerListener.class);
 
         config = new MapConfiguration(
             new HashMap<String, String>() {
@@ -101,18 +107,19 @@ public class PinsetterKernelTest {
     @Test(expected = InstantiationException.class)
     public void blowup() throws Exception {
         when(sfactory.getScheduler()).thenThrow(new SchedulerException());
-        pk = new PinsetterKernel(config, jfactory, null, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, null, jcurator, sfactory, triggerListener, modeManager);
     }
 
     @Test
     public void skipListener() throws Exception {
-        pk = new PinsetterKernel(config, jfactory, null, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, null, jcurator, sfactory, triggerListener, modeManager);
         verify(sched).setJobFactory(eq(jfactory));
         verify(lm, never()).addJobListener(eq(jlistener));
     }
     @Test
     public void ctor() throws Exception {
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         verify(sched).setJobFactory(eq(jfactory));
         verify(lm).addJobListener(eq(jlistener));
     }
@@ -120,7 +127,8 @@ public class PinsetterKernelTest {
     @SuppressWarnings("serial")
     @Test
     public void configure() throws Exception {
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         pk.startup();
         verify(sched).start();
         verify(jcurator, atMost(2)).create(any(JobStatus.class));
@@ -137,7 +145,8 @@ public class PinsetterKernelTest {
                     put(ConfigProperties.ENABLE_PINSETTER, "false");
                 }
             });
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         pk.startup();
         verify(sched).start();
         ArgumentCaptor<JobStatus> arg = ArgumentCaptor.forClass(JobStatus.class);
@@ -149,7 +158,8 @@ public class PinsetterKernelTest {
 
     @Test
     public void handleExistingJobStatus() throws Exception {
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         JobStatus status = mock(JobStatus.class);
         when(jcurator.find(startsWith(
             Util.getClassName(JobCleaner.class)))).thenReturn(status);
@@ -177,7 +187,8 @@ public class PinsetterKernelTest {
 
         when(sched.getJobKeys(eq(jobGroupEquals(crongrp)))).thenReturn(cronSet);
         when(sched.getJobKeys(eq(jobGroupEquals(singlegrp)))).thenReturn(asyncSet);
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         pk.shutdown();
 
         verify(sched, atMost(1)).standby();
@@ -192,7 +203,8 @@ public class PinsetterKernelTest {
     public void noJobsDuringShutdown() throws Exception {
         Set<JobKey> jobs = new HashSet<JobKey>();
         when(sched.getJobKeys(jobGroupEquals(anyString()))).thenReturn(jobs);
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         pk.shutdown();
 
         verify(sched, atMost(1)).standby();
@@ -203,14 +215,16 @@ public class PinsetterKernelTest {
     @Test(expected = PinsetterException.class)
     public void handleFailedShutdown() throws Exception {
         doThrow(new SchedulerException()).when(sched).standby();
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         pk.shutdown();
         verify(sched, never()).shutdown();
     }
 
     @Test
     public void scheduleByString() throws Exception {
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         pk.scheduleJob(TestJob.class, "testjob", "*/1 * * * * ?");
         ArgumentCaptor<Trigger> arg = ArgumentCaptor.forClass(Trigger.class);
         verify(jcurator, atMost(1)).create(any(JobStatus.class));
@@ -244,7 +258,8 @@ public class PinsetterKernelTest {
 
         doReturn(JobCleaner.class).when(jobDetail).getJobClass();
 
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         pk.startup();
         verify(sched).deleteJob(key);
         verify(jcurator).create(any(JobStatus.class));
@@ -277,7 +292,8 @@ public class PinsetterKernelTest {
 
         doReturn(JobCleaner.class).when(jobDetail).getJobClass();
 
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         pk.startup();
         verify(jcurator).deleteJobNoStatusReturn(eq(deletedJobId));
         verify(sched, atLeastOnce()).deleteJob(deletedKey);
@@ -311,7 +327,8 @@ public class PinsetterKernelTest {
 
         doReturn(JobCleaner.class).when(jobDetail).getJobClass();
 
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         pk.startup();
         verify(sched, times(2)).deleteJob(any(JobKey.class));
         verify(jcurator).create(any(JobStatus.class));
@@ -319,13 +336,15 @@ public class PinsetterKernelTest {
 
     @Test(expected = PinsetterException.class)
     public void handleParseException() throws Exception {
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         pk.scheduleJob(TestJob.class, "testjob", "how bout them apples");
     }
 
     @Test
     public void scheduleByTrigger() throws Exception {
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         Trigger trigger = newTrigger()
             .withIdentity("job", "grp")
             .withSchedule(cronSchedule("*/1 * * * * ?"))
@@ -347,7 +366,8 @@ public class PinsetterKernelTest {
 
         doThrow(new SchedulerException()).when(sched).scheduleJob(
             any(JobDetail.class), eq(trigger));
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         pk.scheduleJob(TestJob.class, "testjob", trigger);
         verify(jcurator, atMost(1)).create(any(JobStatus.class));
     }
@@ -360,7 +380,8 @@ public class PinsetterKernelTest {
         jobs.add(jobKey("fakejob2"));
 
         when(sched.getJobKeys(eq(jobGroupEquals(singlegrp)))).thenReturn(jobs);
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         pk.cancelJob("fakejob1", singlegrp);
         verify(sched, atMost(1)).deleteJob(eq(jobKey("fakejob1", singlegrp)));
     }
@@ -377,7 +398,8 @@ public class PinsetterKernelTest {
         when(detail.getKey()).thenReturn(jobKey);
         when(detail.getJobDataMap()).thenReturn(map);
         Mockito.doReturn(TestJob.class).when(detail).getJobClass();
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         pk.scheduleSingleJob(detail);
         verify(detail).setGroup(eq(singlegrp));
         verify(lm).addJobListenerMatcher(PinsetterJobListener.LISTENER_NAME,
@@ -388,20 +410,23 @@ public class PinsetterKernelTest {
     @Test
     public void schedulerStatus() throws Exception {
         when(sched.isInStandbyMode()).thenReturn(false);
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         assertTrue(pk.getSchedulerStatus());
     }
 
     @Test
     public void pauseScheduler() throws Exception {
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         pk.pauseScheduler();
         verify(sched, atMost(1)).standby();
     }
 
     @Test
     public void unpauseScheduler() throws Exception {
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         pk.unpauseScheduler();
         verify(jcurator).findCanceledJobs(any(Set.class));
         verify(sched).start();
@@ -427,7 +452,8 @@ public class PinsetterKernelTest {
         when(sched.getJobKeys(eq(jobGroupEquals(crongrp)))).thenReturn(jobs);
         when(sched.getJobKeys(eq(jobGroupEquals(singlegrp)))).thenReturn(jobs);
 
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         pk.shutdown();
 
         verify(sched, atMost(1)).standby();
@@ -453,7 +479,8 @@ public class PinsetterKernelTest {
         jobs.add(jobKey(JobCleaner.class.getName()));
         jobs.add(jobKey(ImportRecordJob.class.getName()));
         when(sched.getJobKeys(eq(jobGroupEquals("cron group")))).thenReturn(jobs);
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         pk.startup();
         verify(sched).start();
         verify(jcurator, atMost(2)).create(any(JobStatus.class));
@@ -472,7 +499,8 @@ public class PinsetterKernelTest {
             });
         Set<JobKey> jobs = new HashSet<JobKey>();
         when(sched.getJobKeys(eq(jobGroupEquals("cron group")))).thenReturn(jobs);
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+                sfactory, triggerListener, modeManager);
         pk.startup();
         verify(sched).start();
         verify(jcurator, atMost(2)).create(any(JobStatus.class));

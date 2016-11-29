@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.controller.ModeManager;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
@@ -72,6 +73,7 @@ public class EventSinkImplTest {
     @Mock private PrincipalProvider mockPrincipalProvider;
     @Mock private ServerLocator mockLocator;
     @Mock private ProductCurator mockProductCurator;
+    @Mock private ModeManager mockModeManager;
 
     private EventFactory factory;
     private EventFilter eventFilter;
@@ -104,7 +106,7 @@ public class EventSinkImplTest {
      */
     private EventSinkImpl createEventSink(final ClientSessionFactory sessionFactory) throws Exception {
         EventSinkImpl sink = new EventSinkImpl(eventFilter, factory, mapper,
-            new CandlepinCommonTestConfig()) {
+            new CandlepinCommonTestConfig(), mockModeManager) {
 
             @Override
             protected ClientSessionFactory createClientSessionFactory() {
