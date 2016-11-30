@@ -22,6 +22,7 @@ import org.candlepin.pki.X509CRLEntryWrapper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.persist.Transactional;
 
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.codec.binary.Base64OutputStream;
@@ -299,6 +300,7 @@ public class CrlFileUtil {
         }
     }
 
+    @Transactional
     public boolean syncCRLWithDB(File file) throws IOException {
         List<BigInteger> revoke = new LinkedList<BigInteger>();
         List<CertificateSerial> serials = this.certificateSerialCurator

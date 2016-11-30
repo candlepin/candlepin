@@ -534,6 +534,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         if (entities != null && !entities.isEmpty()) {
             try {
                 Session session = this.currentSession();
+                EntityManager em = this.getEntityManager();
                 Iterable<List<E>> blocks = Iterables.partition(entities, BATCH_BLOCK_SIZE);
 
                 for (List<E> block : blocks) {
@@ -542,7 +543,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                     }
 
                     if (flush) {
-                        session.flush();
+                        em.flush();
 
                         if (evict) {
                             for (E entity : block) {
@@ -564,6 +565,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         if (entities != null && !entities.isEmpty()) {
             try {
                 Session session = this.currentSession();
+                EntityManager em = this.getEntityManager();
                 Iterable<List<E>> blocks = Iterables.partition(entities, BATCH_BLOCK_SIZE);
 
                 for (List<E> block : blocks) {
@@ -572,7 +574,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                     }
 
                     if (flush) {
-                        session.flush();
+                        em.flush();
 
                         if (evict) {
                             for (E entity : block) {
@@ -594,6 +596,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         if (CollectionUtils.isNotEmpty(entities)) {
             try {
                 Session session = this.currentSession();
+                EntityManager em = this.getEntityManager();
                 Iterable<List<E>> blocks = Iterables.partition(entities, BATCH_BLOCK_SIZE);
 
                 for (List<E> block : blocks) {
@@ -602,7 +605,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                     }
 
                     if (flush) {
-                        session.flush();
+                        em.flush();
 
                         if (evict) {
                             for (E entity : block) {
@@ -624,6 +627,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         if (entities != null && !entities.isEmpty()) {
             try {
                 Session session = this.currentSession();
+                EntityManager em = this.getEntityManager();
 
                 if (flush) {
                     int i = 0;
@@ -631,13 +635,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                         session.merge(entity);
 
                         if (++i % BATCH_BLOCK_SIZE == 0) {
-                            session.flush();
+                            em.flush();
                             session.clear();
                         }
                     }
 
                     if (i % BATCH_BLOCK_SIZE != 0) {
-                        session.flush();
+                        em.flush();
                         session.clear();
                     }
                 }
