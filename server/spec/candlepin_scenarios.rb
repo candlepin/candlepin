@@ -147,7 +147,7 @@ module CandlepinMethods
     Candlepin.new(user_name, 'password')
   end
 
-  def user_client_with_perms(owner, username, password, perms)
+  def user_client_with_perms(username, password, perms)
     user = @cp.create_user(username, password)
     @users << user
 

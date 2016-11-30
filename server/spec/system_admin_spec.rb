@@ -21,7 +21,7 @@ describe 'System Admins' do
       }
     ]
     @username = random_string 'user'
-    @user_cp = user_client_with_perms(@owner, @username, 'password', perms)
+    @user_cp = user_client_with_perms(@username, 'password', perms)
 
     # Registered by our system admin:
     @consumer1 = @user_cp.register("someconsumer", :system, nil, {},
@@ -142,7 +142,7 @@ describe 'System admins with read-only on org' do
       }
     ]
     @username = random_string 'user'
-    @user_cp = user_client_with_perms(@owner, @username, 'password', perms)
+    @user_cp = user_client_with_perms(@username, 'password', perms)
 
     # Registered by our system admin:
     @consumer1 = @user_cp.register("someconsumer", :system, nil, {},
