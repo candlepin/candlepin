@@ -29,6 +29,8 @@ import org.hibernate.annotations.Index;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.Where;
+import org.hibernate.bytecode.internal.javassist.FieldHandled;
+import org.hibernate.bytecode.internal.javassist.FieldHandler;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -69,7 +71,11 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp_pool")
 @JsonFilter("PoolFilter")
-public class Pool extends AbstractHibernateObject implements Persisted, Owned, Named, Comparable<Pool> {
+public class Pool extends AbstractHibernateObject implements Persisted, Owned, Named, Comparable<Pool>,
+    FieldHandled {
+
+    @XmlTransient
+    private FieldHandler fieldHandler;
 
     /**
      * Attribute used to determine whether or not the pool is derived from the use of an
@@ -268,13 +274,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
              "where ent.pool_id = id)")
     private Long consumed;
 
-    
     @Formula("(select sum(ent.quantity) from cp_entitlement ent, cp_consumer cons, " +
         "cp_consumer_type ctype where ent.pool_id = id and ent.consumer_id = cons.id " +
         "and cons.type_id = ctype.id and ctype.manifest = 'Y')")
     // Only calculate exported lazily due to join fetches from entitlements taking extraordinary
     // amounts of time
-    @Basic(fetch=FetchType.LAZY)
+    @Basic(fetch = FetchType.LAZY)
     private Long exported;
 
     // TODO: May not still be needed, IIRC a temporary hack for client.
@@ -396,10 +401,18 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     /**
+     * Get the quantity currently being exported.
+     *
+     * This uses the fieldHandler in order to ensure
+     * the value is lazy loaded
+     *
      * @return quantity currently exported.
      */
     public Long getExported() {
-        return exported == null ? 0 : exported;
+        if (fieldHandler != null) {
+            fieldHandler.readObject(this, "exported", exported);
+        }
+        return exported == null ? 0L : exported;
     }
 
     /**
@@ -1093,5 +1106,16 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     protected void onUpdate() {
         super.onCreate();
         this.type = this.getType();
+    }
+
+    @Override
+    public void setFieldHandler(FieldHandler handler) {
+        this.fieldHandler = handler;
+    }
+
+    @Override
+    @XmlTransient
+    public FieldHandler getFieldHandler() {
+        return fieldHandler;
     }
 }
