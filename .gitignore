@@ -12,6 +12,8 @@
 *.swo
 *.swp
 
+*.chain
+
 **/.classpath
 # The master checkstyle configuration is in project_conf
 **/.checkstyle
