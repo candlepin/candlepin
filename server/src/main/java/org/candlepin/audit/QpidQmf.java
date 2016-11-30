@@ -233,7 +233,7 @@ public class QpidQmf {
      * @return Fully qualified names of queues
      * @throws JMSException Error connecting
      */
-    public Set<String> getExchangeBoundQueueNames(String exchangeName) throws JMSException {
+    private Set<String> getExchangeBoundQueueNames(String exchangeName) throws JMSException {
         List<Map<String, Object>> mm = runQuery("_schema_id", singularMap("_class_name", "binding"));
 
         Set<String> result = new HashSet<String>();
@@ -253,7 +253,7 @@ public class QpidQmf {
      * @return A Map that contains variuos information about the queue
      * @throws JMSException When not connected to Broker
      */
-    public Map<String, Object> getQueueInfo(String queueName) throws JMSException {
+    private Map<String, Object> getQueueInfo(String queueName) throws JMSException {
         log.debug("Getting info about queue {}", queueName);
         List<Map<String, Object>> mm =  runQuery("_object_id", singularMap("_object_name", queueName));
         if (mm.size() == 0) {
@@ -271,7 +271,7 @@ public class QpidQmf {
      * @param value
      * @return Map with one entry
      */
-    public static Map<Object, Object> singularMap(Object key, Object value) {
+    private static Map<Object, Object> singularMap(Object key, Object value) {
         Map<Object, Object> query = new HashMap<Object, Object>();
         query.put(key, value);
         return query;

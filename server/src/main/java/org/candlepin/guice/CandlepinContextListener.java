@@ -20,6 +20,8 @@ import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.HornetqContextListener;
+import org.candlepin.audit.QpidQmf;
+import org.candlepin.audit.QpidQmf.QpidStatus;
 import org.candlepin.cache.CacheContextListener;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationException;
@@ -136,6 +138,17 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         ResourceLocatorMap map = injector.getInstance(ResourceLocatorMap.class);
         map.init();
 
+        if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED) &&
+            config.getBoolean(ConfigProperties.QPID_STARTUP_CHECK_ENABLED)) {
+            QpidQmf qmf = injector.getInstance(QpidQmf.class);
+            QpidStatus status = qmf.getStatus();
+            if (status != QpidStatus.CONNECTED) {
+                log.error("Qpid is in status {}. Please fix Qpid configuration " +
+                    "and make sure Qpid is up and running. Candlepin will shutdown " +
+                    "now.", status);
+                throw new RuntimeException("Error during Startup: Qpid is in status " + status);
+            }
+        }
 
         if (config.getBoolean(HORNETQ_ENABLED)) {
             hornetqListener = injector.getInstance(HornetqContextListener.class);
