@@ -383,7 +383,7 @@ public class OwnerResource {
     @ApiOperation(notes = "Retrieves the list of Entitlements for an Owner",
         value = "List Owner Entitlements")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public List<Entitlement> ownerEntitlements(
+    public CandlepinQuery<Entitlement> ownerEntitlements(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("product") String productId,
         @QueryParam("matches") String matches,
@@ -394,13 +394,8 @@ public class OwnerResource {
         Owner owner = findOwner(ownerKey);
 
         EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
-        Page<List<Entitlement>> entitlementsPage = entitlementCurator
-            .listByOwner(owner, productId, filters, pageRequest);
 
-        // Store the page for the LinkHeaderPostInterceptor
-        ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);
-
-        return entitlementsPage.getPageData();
+        return entitlementCurator.listByOwner(owner);
     }
 
     /**
