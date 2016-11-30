@@ -709,7 +709,7 @@ describe 'Owner Resource Owner Info Tests' do
       :owner => {:key => @owner['key']},
       :access => 'READ_ONLY',
     }]
-    my_systems_user = user_client_with_perms(@owner, random_string('my_systems_user'), 'password', perms)
+    my_systems_user = user_client_with_perms(random_string('my_systems_user'), 'password', perms)
 
     installed_products = [
         {'productId' => @product.id, 'productName' => @product.name}
