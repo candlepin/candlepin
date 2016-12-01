@@ -167,7 +167,7 @@ describe 'Healing' do
       consumer_cp.consume_product()
     rescue RestClient::BadRequest => e
       exception_thrown = true
-      ex_message = "Autobind is not enabled for owner '#{owner['key']}'."
+      ex_message = "Ignoring request to auto-attach. It is disabled for org '#{owner['key']}'."
       data = JSON.parse(e.response)
       data['displayMessage'].should == ex_message
     end

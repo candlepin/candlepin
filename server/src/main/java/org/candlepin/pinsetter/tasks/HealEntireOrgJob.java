@@ -37,6 +37,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
 import java.util.List;
@@ -46,16 +47,19 @@ import java.util.List;
  */
 public class HealEntireOrgJob extends UniqueByEntityJob {
     private static Logger log = LoggerFactory.getLogger(HealEntireOrgJob.class);
+    protected static String prefix = "heal_entire_org_";
+
     protected OwnerCurator ownerCurator;
     protected Entitler entitler;
     protected ConsumerCurator consumerCurator;
-    protected static String prefix = "heal_entire_org_";
+    private I18n i18n;
 
     @Inject
-    public HealEntireOrgJob(Entitler e, ConsumerCurator c, OwnerCurator o) {
+    public HealEntireOrgJob(Entitler e, ConsumerCurator c, OwnerCurator o, I18n i18n) {
         this.entitler = e;
         this.consumerCurator = c;
         this.ownerCurator = o;
+        this.i18n = i18n;
     }
 
     @Override
@@ -65,7 +69,8 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
             String ownerId = (String) map.get("ownerId");
             Owner owner = ownerCurator.lookupByKey(ownerId);
             if (owner.autobindDisabled()) {
-                throw new BadRequestException("Autobind is disabled for owner " + owner.getKey());
+                throw new BadRequestException(i18n.tr("Auto-attach is disabled for owner {0}.",
+                    owner.getKey()));
             }
 
             Date entitleDate = (Date) map.get("entitle_date");
