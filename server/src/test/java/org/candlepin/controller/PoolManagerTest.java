@@ -57,6 +57,7 @@ import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
+import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pinsetter.core.PinsetterKernel;
@@ -258,6 +259,7 @@ public class PoolManagerTest {
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
         this.mockProducts(owner, product);
         this.mockProductImport(owner, product);
+        this.mockContentImport(owner, new Content[] {});
 
         CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(pools);
@@ -300,6 +302,7 @@ public class PoolManagerTest {
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
         this.mockProducts(owner, product);
         this.mockProductImport(owner, product);
+        this.mockContentImport(owner, new Content[] {});
 
         CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(pools);
@@ -361,14 +364,25 @@ public class PoolManagerTest {
             });
     }
 
+    private void mockProducts(Owner owner, Product... products) {
+        Map<String, Product> productMap = new HashMap<String, Product>();
+
+        for (Product product : products) {
+            productMap.put(product.getId(), product);
+        }
+
+        this.mockProducts(owner, productMap);
+    }
+
     private void mockProductImport(Owner owner, final Map<String, Product> products) {
         when(mockProductManager.importProducts(eq(owner), any(Map.class), any(Map.class)))
-            .thenAnswer(new Answer<Map<String, Product>>() {
+            .thenAnswer(new Answer<ImportResult<Product>>() {
                 @Override
-                public Map<String, Product> answer(InvocationOnMock invocation) throws Throwable {
+                public ImportResult<Product> answer(InvocationOnMock invocation) throws Throwable {
                     Object[] args = invocation.getArguments();
                     Map<String, ProductData> productData = (Map<String, ProductData>) args[1];
-                    Map<String, Product> output = new HashMap<String, Product>();
+                    ImportResult<Product> importResult = new ImportResult<Product>();
+                    Map<String, Product> output = importResult.getCreatedEntities();
 
                     if (productData != null) {
                         for (String pid : productData.keySet()) {
@@ -380,19 +394,9 @@ public class PoolManagerTest {
                         }
                     }
 
-                    return output;
+                    return importResult;
                 }
             });
-    }
-
-    private void mockProducts(Owner owner, Product... products) {
-        Map<String, Product> productMap = new HashMap<String, Product>();
-
-        for (Product product : products) {
-            productMap.put(product.getId(), product);
-        }
-
-        this.mockProducts(owner, productMap);
     }
 
     private void mockProductImport(Owner owner, Product... products) {
@@ -403,6 +407,41 @@ public class PoolManagerTest {
         }
 
         this.mockProductImport(owner, productMap);
+    }
+
+    private void mockContentImport(Owner owner, final Map<String, Content> contents) {
+        when(mockContentManager.importContent(eq(owner), any(Map.class), any(Set.class)))
+            .thenAnswer(new Answer<ImportResult<Content>>() {
+                @Override
+                public ImportResult<Content> answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    Map<String, ContentData> contentData = (Map<String, ContentData>) args[1];
+                    ImportResult<Content> importResult = new ImportResult<Content>();
+                    Map<String, Content> output = importResult.getCreatedEntities();
+
+                    if (contentData != null) {
+                        for (String pid : contentData.keySet()) {
+                            Content content = contents.get(pid);
+
+                            if (content != null) {
+                                output.put(content.getId(), content);
+                            }
+                        }
+                    }
+
+                    return importResult;
+                }
+            });
+    }
+
+    private void mockContentImport(Owner owner, Content... contents) {
+        Map<String, Content> contentMap = new HashMap<String, Content>();
+
+        for (Content content : contents) {
+            contentMap.put(content.getId(), content);
+        }
+
+        this.mockContentImport(owner, contentMap);
     }
 
     @Test
@@ -525,7 +564,8 @@ public class PoolManagerTest {
     public void testRefreshPoolsDeletesOrphanedPools() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Pool p = TestUtil.createPool(TestUtil.createProduct());
+        Product product = TestUtil.createProduct();
+        Pool p = TestUtil.createPool(product);
         p.setSourceSubscription(new SourceSubscription("112", "master"));
         pools.add(p);
 
@@ -536,6 +576,9 @@ public class PoolManagerTest {
         when(cqmock.list()).thenReturn(pools);
         when(cqmock.iterator()).thenReturn(pools.iterator());
         when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
+
+        this.mockProductImport(owner, product);
+        this.mockContentImport(owner, new Content[] {});
 
         Owner owner = getOwner();
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
@@ -548,7 +591,8 @@ public class PoolManagerTest {
     public void testRefreshPoolsDeletesOrphanedHostedVirtBonusPool() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Pool p = TestUtil.createPool(TestUtil.createProduct());
+        Product product = TestUtil.createProduct();
+        Pool p = TestUtil.createPool(product);
         p.setSourceSubscription(new SourceSubscription("112", "master"));
 
         // Make it look like a hosted virt bonus pool:
@@ -562,6 +606,9 @@ public class PoolManagerTest {
 
         Owner owner = getOwner();
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
+
+        this.mockProductImport(owner, product);
+        this.mockContentImport(owner, new Content[] {});
 
         CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(pools);
@@ -577,7 +624,8 @@ public class PoolManagerTest {
     public void testRefreshPoolsSkipsOrphanedEntitlementDerivedPools() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Pool p = TestUtil.createPool(TestUtil.createProduct());
+        Product product = TestUtil.createProduct();
+        Pool p = TestUtil.createPool(product);
         p.setSourceSubscription(new SourceSubscription("112", "master"));
 
         // Mock a pool with a source entitlement:
@@ -588,14 +636,18 @@ public class PoolManagerTest {
         pools.add(p);
         mockSubsList(subscriptions);
         mockPoolsList(pools);
+
         Owner owner = getOwner();
+        when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
+
+        this.mockProductImport(owner, product);
+        this.mockContentImport(owner, new Content[] {});
 
         CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(pools);
         when(cqmock.iterator()).thenReturn(pools.iterator());
         when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
-        when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
         verify(this.manager, never()).deletePool(same(p));
     }
@@ -604,7 +656,8 @@ public class PoolManagerTest {
     public void testRefreshPoolsSkipsOrphanedStackDerivedPools() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Pool p = TestUtil.createPool(TestUtil.createProduct());
+        Product product = TestUtil.createProduct();
+        Pool p = TestUtil.createPool(product);
         p.setSourceSubscription(new SourceSubscription("112", "master"));
 
         // Mock a pool with a source stack ID:
@@ -615,6 +668,9 @@ public class PoolManagerTest {
         pools.add(p);
         mockSubsList(subscriptions);
         mockPoolsList(pools);
+
+        this.mockProductImport(owner, product);
+        this.mockContentImport(owner, new Content[] {});
 
         CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(pools);
@@ -631,7 +687,8 @@ public class PoolManagerTest {
     public void testRefreshPoolsSkipsDevelopmentPools() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Pool p = TestUtil.createPool(TestUtil.createProduct());
+        Product product = TestUtil.createProduct();
+        Pool p = TestUtil.createPool(product);
         p.setSourceSubscription(null);
 
         // Mock a development pool
@@ -645,6 +702,9 @@ public class PoolManagerTest {
         when(cqmock.list()).thenReturn(pools);
         when(cqmock.iterator()).thenReturn(pools.iterator());
         when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
+
+        this.mockProductImport(owner, product);
+        this.mockContentImport(owner, new Content[] {});
 
         Owner owner = getOwner();
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
@@ -660,7 +720,8 @@ public class PoolManagerTest {
         List<Pool> pools = Util.newList();
 
         // Pool has no subscription ID:
-        Pool p = TestUtil.createPool(TestUtil.createProduct());
+        Product product = TestUtil.createProduct();
+        Pool p = TestUtil.createPool(product);
         p.setSourceStack(new SourceStack(new Consumer(), "a"));
 
         pools.add(p);
@@ -669,6 +730,9 @@ public class PoolManagerTest {
 
         Owner owner = getOwner();
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
+
+        this.mockProductImport(owner, product);
+        this.mockContentImport(owner, new Content[] {});
 
         CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(pools);
@@ -708,6 +772,7 @@ public class PoolManagerTest {
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
         this.mockProducts(owner, product);
         this.mockProductImport(owner, product);
+        this.mockContentImport(owner, new Content[] {});
 
         CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(pools);
@@ -755,6 +820,7 @@ public class PoolManagerTest {
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
         this.mockProducts(owner, product);
         this.mockProductImport(owner, product);
+        this.mockContentImport(owner, new Content[] {});
 
         CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(pools);
@@ -1018,6 +1084,8 @@ public class PoolManagerTest {
         when(preHelper.getResult()).thenReturn(result);
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
         this.mockProducts(owner, product);
+        this.mockProductImport(owner, product);
+        this.mockContentImport(owner, new Content[] {});
 
         CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(pools);
@@ -1215,6 +1283,7 @@ public class PoolManagerTest {
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
         this.mockProducts(owner, product);
         this.mockProductImport(owner, product);
+        this.mockContentImport(owner, new Content[] {});
 
         CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(pools);

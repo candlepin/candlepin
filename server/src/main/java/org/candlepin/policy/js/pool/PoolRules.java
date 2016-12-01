@@ -544,11 +544,9 @@ public class PoolRules {
             !currentProvided.equals(incomingProvided);
 
         // Check if the existing product is in the set of changed products
-        if (!productsChanged && changedProducts != null && existingProduct.getId() != null) {
+        if (!productsChanged && changedProducts != null && pid != null) {
             for (Product product : changedProducts) {
                 if (pid.equals(product.getId())) {
-                    // TODO: Should we maybe check if the products have actually changed, or is it
-                    // safe to assume their presence is enough?
                     productsChanged = true;
                     break;
                 }

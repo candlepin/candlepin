@@ -428,11 +428,13 @@ public class Entitler {
         }
 
         Map<String, Content> importedContent = this.contentManager
-            .importContent(owner, contentMap, productMap.keySet());
+            .importContent(owner, contentMap, productMap.keySet())
+            .getImportedEntities();
 
         log.debug("Importing {} product(s)...", productMap.size());
         Map<String, Product> importedProducts = this.productManager
-            .importProducts(owner, productMap, importedContent);
+            .importProducts(owner, productMap, importedContent)
+            .getImportedEntities();
 
         log.debug("Resolved {} dev product(s) for sku: {}", productMap.size(), sku);
         return new DeveloperProducts(sku, importedProducts);
