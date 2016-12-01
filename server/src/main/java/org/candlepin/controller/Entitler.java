@@ -46,6 +46,7 @@ import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -193,6 +194,7 @@ public class Entitler {
      * @throws AutobindDisabledForOwnerException when an autobind attempt is made and the owner
      *         has it disabled.
      */
+    @Transactional
     public List<Entitlement> bindByProducts(AutobindData data, boolean force)
         throws AutobindDisabledForOwnerException {
         Consumer consumer = data.getConsumer();
