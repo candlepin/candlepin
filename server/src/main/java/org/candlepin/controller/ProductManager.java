@@ -273,6 +273,7 @@ public class ProductManager {
      * @return
      *  A mapping of Red Hat content ID to content entities representing the imported content
      */
+    @Transactional
     public ImportResult<Product> importProducts(Owner owner, Map<String, ProductData> productData,
         Map<String, Content> importedContent) {
 

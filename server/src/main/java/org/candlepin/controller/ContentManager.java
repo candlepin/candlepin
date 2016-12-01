@@ -315,6 +315,7 @@ public class ContentManager {
      *  A mapping of Red Hat content ID to content entities representing the imported content
      */
     @SuppressWarnings("checkstyle:methodlength")
+    @Transactional
     public ImportResult<Content> importContent(Owner owner, Map<String, ContentData> contentData,
         Set<String> importedProductIds) {
 
