@@ -28,7 +28,7 @@ describe 'Autobind Disabled On Owner' do
       @consumer_cp.consume_product()
     rescue RestClient::BadRequest => e
       exception_thrown = true
-      ex_message = "Autobind is not enabled for owner '#{@owner['key']}'."
+      ex_message = "Ignoring request to auto-attach. It is disabled for org '#{@owner['key']}'."
       data = JSON.parse(e.response)
       data['displayMessage'].should == ex_message
     end
@@ -70,7 +70,7 @@ describe 'Autobind Disabled On Owner' do
       ak_consumer = @user_cp.register("foofy", :system, nil, {'cpu.cpu_socket(s)' => '8'}, nil, @owner['key'], [@activation_key['name']], [])
     rescue RestClient::BadRequest => e
       exception_thrown = true
-      ex_message = "Could not register unit with key enabling autobind. Autobind is disabled for owner '#{@owner['key']}'."
+      ex_message = "Could not register unit with key enabling auto-attach. Auto-attach is disabled for org '#{@owner['key']}'."
       data = JSON.parse(e.response)
       data['displayMessage'].should == ex_message
     end
@@ -82,7 +82,7 @@ describe 'Autobind Disabled On Owner' do
     wait_for_job(job['id'], 3)
     job = @cp.get_job(job['id'])
     job['state'].should == "FAILED"
-    job['result'].should == "Autobind is disabled for owner #{@owner['key']}"
+    job['result'].should == "Auto-attach is disabled for owner #{@owner['key']}."
   end
 
 

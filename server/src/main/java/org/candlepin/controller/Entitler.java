@@ -186,9 +186,10 @@ public class Entitler {
         Owner owner = consumer.getOwner();
 
         if (!consumer.isDev() && owner.autobindDisabled()) {
-            String errorMsg = String.format("AutoBind is disabled for owner '%s'.", owner.getKey());
-            log.info("Skipping autobind for consumer '{}'. {}", consumer, errorMsg);
-            throw new AutobindDisabledForOwnerException(errorMsg);
+            log.info("Skipping auto-attach for consumer '{}'. Auto-attach is disabled for owner {}.",
+                consumer, owner.getKey());
+            throw new AutobindDisabledForOwnerException(i18n.tr("Auto-attach is disabled for owner '{0}'.",
+                owner.getKey()));
         }
 
         // If the consumer is a guest, and has a host, try to heal the host first
