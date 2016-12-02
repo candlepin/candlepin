@@ -108,6 +108,30 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     (reasonKeys.include? 'ARCH').should == true
   end
 
+  # Covers BZ 1379849
+  it 'should revoke guest entitlements when migration happens' do
+    #New hypervisor
+    host3 = @user.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+    host3_client = Candlepin.new(nil, nil, host3['idCert']['cert'], host3['idCert']['key'])
+     # Adding a product to consumer that cannot be covered 
+    @guest1_client.update_consumer({:installedProducts => 
+       [{'productId' => 'someNonExistentProduct', 'productName' => 'nonExistentProduct'}]
+    })
+
+    # Guest 1 should be able to use the pool:
+    @guest1_client.consume_pool(@guest_pool['id'], {:quantity => 1})
+    @guest1_client.list_entitlements.length.should == 1
+
+    #Guest changes the hypervisor. This will trigger revocation of
+    #the entitlement to guest_pool (because it requires_host) and 
+    #it will also trigger unsuccessfull autobind (because the
+    #someNonExistentProduct cannot be covered)
+    host3_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]})
+
+    @guest1_client.list_entitlements.length.should == 0
+  end
+
   it 'should revoke guest entitlements when host unbinds' do
     # Guest 1 should be able to use the pool:
     @guest1_client.consume_pool(@guest_pool['id'], {:quantity => 1})

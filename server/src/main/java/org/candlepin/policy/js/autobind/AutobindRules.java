@@ -77,7 +77,9 @@ public class AutobindRules {
 
         if (pools.size() == 0) {
             List<String> fullList = new ArrayList<String>();
-            fullList.addAll(Arrays.asList(productIds));
+            if (productIds != null) {
+                fullList.addAll(Arrays.asList(productIds));
+            }
             for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
                 fullList.add(cip.getId());
             }
