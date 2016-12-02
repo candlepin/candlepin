@@ -400,7 +400,7 @@ public class HypervisorResourceTest {
             fail("Exception should have been thrown since autobind was disabled for the owner.");
         }
         catch (BadRequestException bre) {
-            assertEquals("Could not update host/guest mapping. Autobind is disabled for owner test_admin.",
+            assertEquals("Could not update host/guest mapping. Auto-attach is disabled for owner test_admin.",
                 bre.getMessage());
         }
     }

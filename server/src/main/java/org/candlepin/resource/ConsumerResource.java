@@ -482,8 +482,8 @@ public class ConsumerResource {
         }
         catch (AutobindDisabledForOwnerException e) {
             throw new BadRequestException(i18n.tr(
-                "Could not register unit with key enabling autobind. Autobind is disabled for owner ''{0}''.",
-                    consumer.getOwner().getKey()));
+                "Could not register unit with key enabling auto-attach. " +
+                "Auto-attach is disabled for org ''{0}''.", consumer.getOwner().getKey()));
         }
         catch (Exception e) {
             log.error("Problem creating unit:", e);
@@ -1180,7 +1180,7 @@ public class ConsumerResource {
                     entitler.sendEvents(ents);
                 }
                 catch (AutobindDisabledForOwnerException e) {
-                    log.info("Guest autobind skipped. {}", e.getMessage());
+                    log.warn("Guest auto-attach skipped. {}", e.getMessage());
                 }
             }
         }
@@ -1507,8 +1507,8 @@ public class ConsumerResource {
                 entitlements = entitler.bindByProducts(autobindData);
             }
             catch (AutobindDisabledForOwnerException e) {
-                throw new BadRequestException(i18n.tr("Autobind is not enabled for owner ''{0}''.",
-                    consumer.getOwner().getKey()));
+                throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
+                    "It is disabled for org ''{0}''.", consumer.getOwner().getKey()));
             }
         }
 

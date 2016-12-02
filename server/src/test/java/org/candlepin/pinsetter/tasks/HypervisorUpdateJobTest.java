@@ -285,7 +285,7 @@ public class HypervisorUpdateJobTest {
         }
         catch (JobExecutionException jee) {
             assertEquals(jee.getCause().getMessage(),
-                "Could not update host/guest mapping. Autobind is disabled for owner joe.");
+                "Could not update host/guest mapping. Auto-attach is disabled for owner joe.");
         }
     }
 }

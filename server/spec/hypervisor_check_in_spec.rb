@@ -774,7 +774,7 @@ describe 'Hypervisor Resource', :type => :virt do
     job_detail = run_async_update(owner, consumer_cp, host_name, host_hyp_id, [])
 
     job_detail['state'].should == 'FAILED'
-    job_detail['result'].should == "Could not update host/guest mapping. Autobind is disabled for owner #{owner['key']}."
+    job_detail['result'].should == "Could not update host/guest mapping. Auto-attach is disabled for owner #{owner['key']}."
   end
 
 end
