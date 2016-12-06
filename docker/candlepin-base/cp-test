@@ -14,6 +14,10 @@ set -e
 
 source /etc/profile
 
+if [ -f /root/setup-db.sh ]; then
+  source /root/setup-db.sh
+fi
+
 export HOME=/root
 
 export SUPERVISOR=1
@@ -39,19 +43,20 @@ move_artifact() {
 
 collect_artifacts() {
     # If the caller mounted a volume at /artifacts, copy server logs out:
-    if [ -d "/artifacts" ]; then
+    ARTIFACT_DIR="/candlepin-dev/artifacts/"
+    if [ -d "${ARTIFACT_DIR}" ]; then
         echo "Collecting artifacts..."
 
         # It's entirely possible for these to not exist, so we'll copy them if we can, but if we
         # fail, we shouldn't abort
-        move_artifact '/var/log/candlepin/access.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/audit.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/candlepin.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/error.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/lint.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/buildr.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/unit_tests.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/rspec.log' '/artifacts/'
+        move_artifact '/var/log/candlepin/access.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/audit.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/candlepin.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/error.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/lint.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/buildr.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/unit_tests.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/rspec.log' "${ARTIFACT_DIR}"
     fi
 }
 
@@ -232,7 +237,8 @@ if [ "$LINTER" == "1" ]; then
 fi
 
 # TODO: keep track of return code?
-cd "$CP_HOME/$PROJECT"
+PROJECT_DIR="$CP_HOME/$PROJECT"
+cd $PROJECT_DIR
 
 if [ "$UNITTEST" -gt 0 ]; then
     echo "Running unit tests $UNITTEST time(s)"
@@ -256,16 +262,22 @@ if [ "$UNITTEST" -gt 0 ]; then
 fi
 
 if [ "$QPID" == "1" ]; then
-    echo "Setting up Qpid"
-    pushd . 
-    cd ../server/bin/qpid
-    # Do a cleanup 
-    ./configure-qpid.sh -c
-    # Reconfigure
-    ./configure-qpid.sh
-    popd 
-fi
+    if [ -d "$PROJECT_DIR/bin/qpid" ]; then
+        echo "Setting up Qpid"
 
+        pushd "$PROJECT_DIR/bin/qpid"
+
+        # Do a cleanup
+        ./configure-qpid.sh -c
+        # Reconfigure
+        ./configure-qpid.sh
+
+        popd
+    else
+        echo "Qpid not configured for project: $PROJECT"
+        unset QPID
+    fi
+fi
 
 if [ "$DEPLOY" == "1" ]; then
     echo "Deploying candlepin..."
@@ -284,11 +296,16 @@ if [ "$DEPLOY" == "1" ]; then
     if [ "$VERBOSE" == "1" ]; then
         DEPLOY_FLAGS="$DEPLOY_FLAGS -v"
     fi
-    
+
     if [ "$QPID" == "1" ]; then
         DEPLOY_FLAGS="$DEPLOY_FLAGS -q"
     fi
-    
+
+
+    # set up the database from setup-db.sh
+    # only runs if function is defined
+    type -t setup_database &>/dev/null && setup_database
+
     bin/deploy $DEPLOY_FLAGS
     sleep 7
 fi

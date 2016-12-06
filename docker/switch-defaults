@@ -1,0 +1,50 @@
+#!/bin/bash
+
+DIR="$(git rev-parse --show-toplevel)/docker/"
+
+usage() {
+  cat << USAGE
+
+USAGE: switch_defaults [OPTIONS]
+
+OPTIONS:
+  -m        use mysql
+  -o        use oracle
+  -p        use postgres
+
+USAGE
+}
+
+switcher() {
+  echo "Setting default to: $1"
+  cd $DIR
+  ln --force -s docker-compose-$1.yml docker-compose.yml
+  cd - >/dev/null 2>&1
+  exit 0
+}
+
+while getopts ":mop" opt; do
+  case $opt in
+    m) switcher 'mysql';;
+    o) switcher 'oracle';;
+    p) switcher 'postgres';;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      usage
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      usage
+      exit 1
+      ;;
+    *)
+      echo "Must provide one of args: -m, -o, or -p" >&2
+      usage
+      exit 1
+  esac
+done
+
+echo "Must provide one of args: -m, -o, or -p" >&2
+usage
+exit 1

@@ -59,5 +59,8 @@ buildconf/scripts/import_products.json
 .ruby-version
 .ruby-gemset
 
-# Vagrant 
+# Vagrant
 .vagrant/
+
+# don't want to push up the oracle binary by accident
+*oracle-xe*.zip
