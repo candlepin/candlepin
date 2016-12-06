@@ -1,0 +1,21 @@
+version: '2'
+services:
+  db:
+    image: postgres:9.6.2
+    restart: always
+    environment:
+      POSTGRES_USER: candlepin
+      #POSTGRES_PASSWORD: candlepin
+      #POSTGRES_DB: candlepin
+      POSTGRES_INITDB_ARGS: "--auth='ident' --auth='trust'"
+  candlepin:
+    image: ${REGISTRY}/candlepin-base
+    environment:
+      USING_POSTGRES: "true"
+      DBHOSTNAME: db
+      #DBPASSWORD: candlepin
+    privileged: true
+    volumes:
+      - ../:/candlepin-dev
+    depends_on:
+      - db

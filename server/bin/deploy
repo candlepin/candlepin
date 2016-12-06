@@ -1,32 +1,27 @@
 #!/bin/bash
 
-if [ $(id -u) -ne 0 ]; then
-    if ( command -v sudo >/dev/null 2>&1 ) then
-        SUDO="sudo"
-    else
-        echo "WARNING: sudo is not available. This command may need to be re-run with root access to complete successfully." >&2
-    fi
-fi
+APP_DB_NAME="candlepin"
+MAX_STARTUP_WAIT_TIME=30
 
 gendb() {
     if [ "$USE_ORACLE" == "1" ]; then
-        init_oracle_jdbc "candlepin"
+        init_oracle_jdbc $APP_DB_NAME
         [ -z "$DBPASSWORD" ] && DBPASSWORD="candlepin"
     elif [ "$USE_MYSQL" == "1" ]; then
-        init_mysql_jdbc "candlepin"
+        init_mysql_jdbc $APP_DB_NAME
     else
-        init_postgresql_jdbc "candlepin"
+        init_postgresql_jdbc $APP_DB_NAME
     fi
 
     if [ "$GENDB" == "1" ]; then
         MESSAGE="Generating New Database"
         CHANGELOG="changelog-create.xml"
         if [ "$USE_ORACLE" == "1" ]; then
-            recreate_oracle "candlepin"
+            recreate_oracle $APP_DB_NAME $DBUSER
         elif [ "$USE_MYSQL" == "1" ]; then
-            recreate_mysql "candlepin"
+            recreate_mysql $APP_DB_NAME $DBUSER
         else
-            recreate_postgresql "candlepin"
+            recreate_postgresql $APP_DB_NAME $DBUSER
         fi
 
         # New database implies we probably don't want any events left laying around in the
@@ -114,7 +109,7 @@ create_var_cache_candlepin() {
 }
 
 autoconf() {
-  buildr -s -e $1 erb $2
+  buildr -s -e $1 app_db_name=$APP_DB_NAME app_db_host=${DBHOSTNAME:-localhost} erb $2
 
   if [ "$?" -ne "0" ]; then
     err_msg "ERROR: candlepin.conf generation failed!"
@@ -132,17 +127,19 @@ autoconf() {
 
 usage() {
     cat <<HELP
-    usage: deploy [options]
+usage: deploy [options]
 
-    OPTIONS:
-        -f  force cert regeneration
-        -g  generate database
-        -t  import test data
-        -o  use Oracle
-        -l  use Logdriver
-        -m  use MySQL
-        -a  auto-deploy a generated candlepin.conf
-        -v  verbose output
+OPTIONS:
+  -f          force cert regeneration
+  -g          generate database
+  -t          import test data
+  -o          use Oracle
+  -l          use Logdriver
+  -m          use MySQL
+  -a          auto-deploy a generated candlepin.conf
+  -v          verbose output
+  -d <name>   specify a database name to use when creating or updating the
+              Candlepin database
 HELP
 }
 
@@ -163,13 +160,13 @@ initialize_cp() {
 }
 
 init() {
+    # Source useful bash functions
+    source "$(buildr -s checkout_root)/bin/bash_functions"
+
     # Read in user defined variables
     if [ -f $HOME/.candlepinrc ] ; then
         source $HOME/.candlepinrc
     fi
-
-    # Source useful bash functions
-    source "$(buildr -s checkout_root)/bin/bash_functions"
 
     PROJECT_DIR="$(project_directory server)"
 
@@ -186,7 +183,7 @@ init
 
 DBUSER="candlepin"
 
-while getopts ":fgtolmav" opt; do
+while getopts ":fgtolmavd:" opt; do
     case $opt in
         f  ) FORCECERT="1" ;;
         g  ) GENDB="1";;
@@ -196,6 +193,7 @@ while getopts ":fgtolmav" opt; do
         m  ) USE_MYSQL="1";;
         a  ) AUTOCONF="1";;
         v  ) VERBOSE="1";;
+        d  ) APP_DB_NAME="${OPTARG}";;
         ?  ) usage; exit;;
     esac
 done
@@ -205,6 +203,14 @@ shift $(($OPTIND - 1))
 if [ "$USE_ORACLE" == "1" -a "$USE_MYSQL" == "1" ]; then
     err_msg "You can't use Oracle and MySQL at the same time."
     exit 1
+fi
+
+if [ $(id -u) -ne 0 ]; then
+    if ( command -v sudo >/dev/null 2>&1 ) then
+        SUDO="sudo"
+    else
+        echo "WARNING: sudo is not available. This command may need to be re-run with root access to complete successfully." >&2
+    fi
 fi
 
 if [ "$JBOSS_HOME" != "" ]; then
@@ -220,6 +226,7 @@ if [ "$JBOSS_HOME" != "" ]; then
         STOP="$SUDO /sbin/service jbossas stop"
         DEPLOY="$JBOSS_HOME/server/default/deploy/"
     fi
+
     CONTAINER_CONF_DIR="$JBOSS_HOME/conf"
     CLEAN="$JBOSS_HOME/server/default/deploy/candlepin*"
 else
@@ -266,6 +273,7 @@ else
     LOGDRIVER=""
 fi
 
+
 if [ "$USE_ORACLE" == "1" ]; then
     info_msg "Building with Oracle JDBC jar"
     ENV_BUILDR="oracle"
@@ -277,7 +285,7 @@ else
     ENV_BUILDR="development"
 fi
 
-buildr -s -e $ENV_BUILDR clean package test=no $LOGDRIVER
+buildr -s -e $ENV_BUILDR clean package test=no app_db_name=$APP_DB_NAME $LOGDRIVER
 
 if [ "$?" -ne "0" ]; then
   err_msg "ERROR: Compile failed."
@@ -312,7 +320,25 @@ deploy
 
 eval $START
 
-sleep 10
+START_TIME=$(date +%s)
+
+printf "Waiting for Candlepin to start..."
+until curl -k -s "https://localhost:8443/candlepin/status" > /dev/null
+do
+    CURRENT_TIME=$(date +%s)
+    ELAPSED_TIME=$((CURRENT_TIME - START_TIME))
+
+    if [ "$ELAPSED_TIME" -gt "$MAX_STARTUP_WAIT_TIME" ]; then
+        echo
+        err_msg "Candlepin failed to start within $MAX_STARTUP_WAIT_TIME seconds. Aborting..."
+        exit 1
+    fi
+
+    printf "."
+    sleep 1
+done
+echo
+
 initialize_cp
 
 upload_products

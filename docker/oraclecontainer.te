@@ -1,0 +1,14 @@
+
+module oraclecontainer 1.0;
+
+require {
+	type container_t;
+	type container_file_t;
+	class chr_file execute;
+}
+
+#============= container_t ==============
+
+#!!!! The file '/dev/zero' is mislabeled on your system.  
+#!!!! Fix with $ restorecon -R -v /dev/zero
+allow container_t container_file_t:chr_file execute;
