@@ -1,0 +1,1 @@
+A Candlepin environment container used for development and testing.

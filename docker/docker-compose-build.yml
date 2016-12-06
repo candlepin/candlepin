@@ -1,0 +1,20 @@
+## this is just for building the containers, meant to be used with the build-images script
+---
+version: '2'
+services:
+  oracle_db:
+    build: oracle/
+    image: ${REGISTRY}/oracle_db
+    environment:
+      ORACLE_SID: XE
+      ORACLE_PDB: ORCLPDB1
+    shm_size: 1G
+  candlepin-base:
+    build: candlepin-base/
+    image: ${REGISTRY}/candlepin-base
+  candlepin-rhel6:
+    build: candlepin-rhel6/
+    image: ${REGISTRY}/candlepin-rhel6
+  candlepin-rhel7:
+    build: candlepin-rhel7/
+    image: ${REGISTRY}/candlepin-rhel7
