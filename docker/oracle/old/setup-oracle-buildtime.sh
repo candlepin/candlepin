@@ -14,10 +14,6 @@ setup_oracle() {
     yum install -y bc net-tools
     yum install -y --nogpgcheck /root/oracle/*.rpm
 
-    cat >> /root/.candlepinrc << CANDLEPINRC
-USE_ORACLE="1"
-CANDLEPINRC
-
     cat > /etc/supervisor/conf.d/oracle.conf <<ORACLE_SUPERVISOR
 [program:oracle]
 environment=ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe,ORACLE_SID=XE

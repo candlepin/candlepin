@@ -11,6 +11,7 @@ else
 end
 
 _.jdbc_url.gsub!('$DB_NAME', ENV['app_db_name']) unless ENV['app_db_name'].nil?
+_.jdbc_url.gsub!('$DB_HOST', ENV.fetch('app_db_host', 'localhost'))
 -%>
 <%- if ENV['logdriver'] -%>
 log4j.logger.net.rkbloom.logdriver.LogPreparedStatement=DEBUG

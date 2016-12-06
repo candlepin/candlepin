@@ -1,0 +1,102 @@
+#!/bin/bash
+
+unset CDPATH
+SCRIPT_NAME=$( basename "$0" )
+SCRIPT_HOME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+ORACLE_BINARY='oracle-xe-11.2.0-1.0.x86_64.rpm.zip'
+CURRENT_DIR=$PWD
+
+# defaults
+source $SCRIPT_HOME/.env
+BUILD_ARGS="--no-cache"
+PUSH='false'
+
+evalrc() {
+    if [ "$1" -ne "0" ]; then
+        echo "$2"
+        cd $CURRENT_DIR
+        exit $1
+    fi
+}
+
+usage() {
+    cat <<HELP
+Usage: $SCRIPT_NAME [options] [IMAGE]
+  * if IMAGE is omitted, all images will be built
+
+OPTIONS:
+  -h          Prints this message.
+  -p          Push images to a repository or registry
+  -d <repo>   Specify the destination repo to receive the images; implies -p;
+              defaults to: "$REGISTRY"
+  -c          Use cached layers when building containers; defaults to false
+  -v          Enable verbose/debug output
+HELP
+}
+
+while getopts ":pd:cv" opt; do
+    case $opt in
+        h  ) usage; exit 0;;
+        p  ) PUSH='true';;
+        d  ) PUSH='true'
+             REGISTRY="${OPTARG}";;
+        c  ) BUILD_ARGS="$(echo $BUILD_ARGS | sed -e s/--no-cache//g)";;
+        v  ) set -x;;
+        \?)
+          echo "Invalid option: -$OPTARG" >&2
+          usage
+          exit 1
+          ;;
+        :)
+          echo "Option -$OPTARG requires an argument." >&2
+          usage
+          exit 1
+          ;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+# Determine image name
+if [ "$1" != "" ]; then
+    IMAGE=$1
+fi
+
+get_image_names() {
+  python -c 'import yaml,sys;y=yaml.safe_load(sys.stdin); print " ".join(y["services"].keys())' < docker-compose-build.yml
+}
+
+# get oracle binary
+update_oracle_binary() {
+  if [[ "${IMAGE:-$(get_image_names)}" =~ "oracle" ]]; then
+    cd $SCRIPT_HOME
+    if ( ! sha1sum -c oracle/oracle-xe.zip.sha1 ); then
+      wget -O $SCRIPT_HOME/oracle/$ORACLE_BINARY http://auto-services.usersys.redhat.com/rhsm/$ORACLE_BINARY
+    fi
+    cd -
+  fi
+}
+
+# tags a docker image with a version
+tag_images() {
+  TAG_IMAGES=${IMAGE:-$(get_image_names)}
+  CP_VERSION="$( git describe | cut -d- -f 2 )"
+  for IMG in ${TAG_IMAGES}; do
+    docker tag $REGISTRY/$IMG:latest $REGISTRY/$IMG:$CP_VERSION
+  done
+}
+
+echo "Building images..."
+update_oracle_binary
+cd $SCRIPT_HOME
+docker-compose -f docker-compose-build.yml build $BUILD_ARGS $IMAGE && tag_images
+evalrc $? "Build not successful."
+
+if [ $PUSH = true ]; then
+  echo "Pushing images..."
+  # pushes the version tag
+  for IMG in ${TAG_IMAGES}; do
+    docker push $REGISTRY/$IMG
+    evalrc $? "Push not successful."
+  done
+fi

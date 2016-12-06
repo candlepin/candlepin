@@ -128,55 +128,70 @@ cert_from_pkcs12() {
 recreate_postgresql() {
     local db_name="$1"
     local db_user="${2:-$db_name}"
-    # Check if candlepin db exists and drop it if so:
-    if [[ `psql -U postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"` == "1" ]]; then
-        info_msg "Database '$db_name' exists.  Dropping it."
-        dropdb -w -U "$db_user" "$db_name"
+    local db_host="${DBHOSTNAME:-'localhost'}"
+    # psql must use this env var for password passing
+    if [ -n "${DBPASSWORD}" ]; then
+     export PGPASSWORD="$DBPASSWORD"
     fi
-    createdb -w -U "$db_user" "$db_name"
+    # Check if candlepin db exists and drop it if so:
+    if [[ `psql -h $db_host -U $db_user -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"` == "1" ]]; then
+        info_msg "Database '$db_name' exists.  Dropping it."
+        dropdb -h $db_host -w -U "$db_user" "$db_name"
+    fi
+    createdb -h $db_host -w -U "$db_user" "$db_name"
     evalrc $? "createdb failed"
 }
 
 init_postgresql_jdbc() {
     local db_name="$1"
+    local db_host="${DBHOSTNAME:-'localhost'}"
     JDBC_DRIVER="org.postgresql.Driver"
     JDBC_JAR="/usr/share/java/postgresql-jdbc.jar"
-    JDBC_URL="jdbc:postgresql:$db_name"
+    JDBC_URL="jdbc:postgresql://$db_host/$db_name"
 }
 
 recreate_mysql() {
     local db_name="$1"
     local db_user="${2:-$db_name}"
+    local db_host="${DBHOSTNAME:-'localhost'}"
     local password="$DBPASSWORD"
     [ -z "$password" ] && password=''
-    mysqladmin --user="$db_user" --password="$password" --force drop "$db_name"
-    mysqladmin --user="$db_user" --password="$password" create "$db_name"
+    mysqladmin -h $db_host --user="$db_user" --password="$password" --force drop "$db_name"
+    mysqladmin -h $db_host --user="$db_user" --password="$password" create "$db_name"
     evalrc $? "mysqladmin create failed"
 }
 
 init_mysql_jdbc() {
     local db_name="$1"
+    local db_host="${DBHOSTNAME:-'localhost'}"
     JDBC_DRIVER="com.mysql.jdbc.Driver"
     JDBC_JAR="/usr/share/java/mysql-connector-java.jar"
-    JDBC_URL="jdbc:mysql:///$db_name"
+    JDBC_URL="jdbc:mysql://$db_host/$db_name"
 }
 
 recreate_oracle () {
     local db_name="$1"
     local db_user="${2:-$db_name}"
+    local db_host="${DBHOSTNAME:-'localhost'}"
     local password="${DBPASSWORD:-$db_name}"
-    sqlplus -s 'sys/password@//localhost/XE as sysdba'<<EOF
-drop user $db_name cascade;
-create user $db_user identified by $password default tablespace users;
-grant dba to $db_user;
-quit
+
+    # this may fail if the user isn't there, IF EXISTS isn't in oracle
+    sqlplus -s "sys/password@//$db_host/XE as sysdba"<<EOF
+DROP USER $db_user CASCADE;
 EOF
-    evalrc $? "Creating Candlepin user failed"
+
+    sqlplus -s "sys/password@//$db_host/XE as sysdba"<<EOF | read foo
+CREATE USER $db_user IDENTIFIED BY $password DEFAULT TABLESPACE USERS;
+GRANT CONNECT, RESOURCE, DBA TO $db_user;
+QUIT
+EOF
+
 }
 
 init_oracle_jdbc() {
     local db_name="$1"
+    local db_host="${DBHOSTNAME:-'localhost'}"
     JDBC_DRIVER="oracle.jdbc.OracleDriver"
     JDBC_JAR="/usr/lib/oracle/11.2/client64/lib/ojdbc6.jar"
-    JDBC_URL="jdbc:oracle:thin:@//localhost:1521/XE "
+    JDBC_URL="jdbc:oracle:thin:@//$db_host:1521/XE "
 }

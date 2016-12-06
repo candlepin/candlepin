@@ -1,0 +1,17 @@
+version: '2'
+services:
+  db:
+    image: centos/mysql-56-centos7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+  candlepin:
+    image: ${REGISTRY}/candlepin-base
+    environment:
+      USING_MYSQL: "true"
+      DBHOSTNAME: db
+    privileged: true
+    volumes:
+      - ../:/candlepin-dev
+    depends_on:
+      - db

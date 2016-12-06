@@ -1,0 +1,50 @@
+#!/bin/bash
+
+TEST_CMD="/usr/bin/cp-test -t -u -r"
+DIR="$(git rev-parse --show-toplevel)/docker/"
+
+usage() {
+  cat << USAGE
+
+USAGE: test [OPTIONS]
+
+OPTIONS:
+  -c CMD    sets the command to be run by the container
+              default: $TEST_CMD
+  -m        use mysql
+  -n NAME   Sets the project name for the docker-compose run
+  -o        use oracle
+  -p        use postgres
+
+USAGE
+}
+
+while getopts ":bc:dmn:op" opt; do
+  case $opt in
+    c) TEST_CMD="$OPTARG";;
+    m) COMPOSE_ARGS="-f $DIR/docker-compose-mysql.yml";;
+    n) PROJ_NAME="-p $OPTARG";;
+    o) COMPOSE_ARGS="-f $DIR/docker-compose-oracle.yml";;
+    p) COMPOSE_ARGS="-f $DIR/docker-compose-postgres.yml";;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      usage
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+# PROJ_NAME should be set in a jenkins environment. It allows multiple
+#  instaces of the compose to run without clobbering eachother.
+docker-compose $PROJ_NAME stop
+docker-compose $PROJ_NAME rm -f
+docker-compose $PROJ_NAME $COMPOSE_ARGS run --rm candlepin $TEST_CMD
+RETVAL=$?
+docker-compose $PROJ_NAME stop
+echo "return value: $RETVAL"
+exit $RETVAL

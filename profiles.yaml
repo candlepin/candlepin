@@ -18,7 +18,7 @@ postgresql: &default
   server:
     <<: *common_server
     <<: *postgresql_static
-    jdbc_url: "jdbc:postgresql:$DB_NAME"
+    jdbc_url: "jdbc:postgresql://$DB_HOST/$DB_NAME"
 
 # Buildr's default environment is "development" so
 # by default, go against postgresql.
@@ -33,7 +33,7 @@ oracle:
   server:
     <<: *common_server
     <<: *oracle_static
-    jdbc_url: "jdbc:oracle:thin:@//localhost:1521/XE"
+    jdbc_url: "jdbc:oracle:thin:@//$DB_HOST:1521/XE"
     password: "candlepin"
 
 mysql:
@@ -44,4 +44,4 @@ mysql:
   server:
     <<: *common_server
     <<: *mysql_static
-    jdbc_url: "jdbc:mysql:///$DB_NAME"
+    jdbc_url: "jdbc:mysql://$DB_HOST/$DB_NAME"
