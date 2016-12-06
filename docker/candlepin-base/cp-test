@@ -1,0 +1,336 @@
+#!/bin/bash
+#
+# Launch point for the docker container to run Candlepin tests.
+#
+# Starts supervisor to manage services, then tries to cd to the correct
+# location, either /candlepin-dev if you mounted this as a volume when
+# running your container, otherwise the included /candlepin clone which
+# we will make sure to update.
+#
+# See usage below.
+
+# Exit on any error:
+set -e
+
+source /etc/profile
+
+if [ -f /root/setup-db.sh ]; then
+  source /root/setup-db.sh
+fi
+
+export HOME=/root
+
+export SUPERVISOR=1
+export AUTOCONF=1
+export FORCECERT=1
+export UNITTEST=0
+
+trapex() {
+    target="$1"
+    shift
+
+    for sig in "$@"; do
+        trap "$target $sig" "$sig"
+        signals="$signals $sig"
+    done
+}
+
+move_artifact() {
+    if [ -f "$1" ] && [ -d "$2" ]; then
+        cp -v "$1" "$2" || true
+    fi
+}
+
+collect_artifacts() {
+    # If the caller mounted a volume at /artifacts, copy server logs out:
+    ARTIFACT_DIR="/candlepin-dev/artifacts/"
+    if [ -d "${ARTIFACT_DIR}" ]; then
+        echo "Collecting artifacts..."
+
+        # It's entirely possible for these to not exist, so we'll copy them if we can, but if we
+        # fail, we shouldn't abort
+        move_artifact '/var/log/candlepin/access.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/audit.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/candlepin.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/error.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/lint.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/buildr.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/unit_tests.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/rspec.log' "${ARTIFACT_DIR}"
+    fi
+}
+
+# Be sure to run cleanup on any error, SIGINT, or SIGTERM
+trapex cleanup SIGINT SIGTERM ERR EXIT
+CLEANUP_RUN=0
+CLEAN_CP=0
+
+cleanup() {
+    if [ "$CLEANUP_RUN" == "0" ]; then
+        CLEANUP_RUN=1
+
+        # Remove our traps so we don't keep trying to call this
+        trap - $signals
+        trap "" ERR EXIT
+
+        # Run buildr clean in our target CP directory
+        if [ "$CLEAN_CP" == "1" ]; then
+            cd $CP_HOME
+            buildr clean
+        fi
+
+        # Collect artifacts up to this point. If we're about to drop into a shell, we'll leave any
+        # additional artifact collection up to the user
+        collect_artifacts
+
+        # Remove our tee pipe, if it exists
+        rm -f /tmp/teepipe
+
+        # Errors in the script should still launch the shell, as they're likely CP config errors, not
+        # actual errors with the script
+        if [ "$1" == "" ] || [ "$1" == "ERR" ] || [ "$1" == "EXIT" ]; then
+            if [ "$LAUNCHSHELL" == "1" ]; then
+                echo "Launching shell..."
+                /bin/bash -i -l
+            fi
+        else
+            # exit, propagating any signal we received
+            kill -$1 $$
+        fi
+    fi
+}
+
+usage() {
+    cat <<HELP
+usage: cp-test [options]
+
+OPTIONS:
+  -d               deploy a live candlepin
+  -t               populate Candlepin database with test data (implies -d)
+  -r [filter]      run rspec test suite (implies -d); may be filtered by test
+                   suite and name
+  -H               run rspec tests in "hosted" mode (implies -r and -d)
+  -u               run unit test suite N number of times, where N is number
+                   of times u was specifed in the arguments
+  -l               run the linters against the code
+  -s               run a bash shell when done
+  -b <task>        execute the specified buildr task
+  -c <ref>         git reference to checkout
+  -p <project>     subproject to build (defaults to "server")
+  -j <version>     use a specific Java version instead of the auto-detected default
+  -v               enable verbose/debug output
+HELP
+}
+
+ARGV=("$@")
+while getopts ":dtqrHulsb:c:p:vj:" opt; do
+    case $opt in
+        d  ) DEPLOY="1";;
+        t  )
+            DEPLOY="1"
+            TESTDATA="1"
+            ;;
+        r  )
+            RSPEC="1"
+            DEPLOY="1"
+
+            ARG="${ARGV[$OPTIND - 1]}"
+            if [ "${ARG:0:1}" != "-" ] && [ "${ARG:0:1}" != "" ]; then
+                RSPEC_FILTER="$ARG"
+                OPTIND=$((OPTIND + 1))
+            fi
+            ;;
+        H  )
+            HOSTED="1"
+            RSPEC="1"
+            DEPLOY="1"
+            ;;
+        u  ) UNITTEST=$((UNITTEST + 1))
+
+            ARG="${ARGV[$OPTIND - 1]}"
+            if [ "${ARG:0:1}" != "-" ] && [ "${ARG:0:1}" != "" ]; then
+                UNITTEST_FILTER="$ARG"
+                OPTIND=$((OPTIND + 1))
+            fi
+            ;;
+        l  ) LINTER="1";;
+        s  ) LAUNCHSHELL="1";;
+        b  ) BUILDR_TASK="${OPTARG}";;
+        c  ) CHECKOUT="${OPTARG}";;
+        p  ) PROJECT="${OPTARG}";;
+        q  ) QPID="1";;
+        v  ) VERBOSE="1";;
+        j  ) JAVA_VERSION="${OPTARG}";;
+        ?  ) usage; exit;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+
+# Auto-detect JAVA_VERSION if necessary and set JAVA_HOME and update executable links
+# Note that alternatives doesn't update the JDK binaries properly, and doesn't order
+# versions predictably, so we'll just explicitly make the links ourself.
+if [ -z "$JAVA_VERSION" ]; then
+    JAVA_VERSION=$(java -version 2>&1 | head -1 | sed -r 's/^(java|openjdk) version \"([0-9]+\.[0-9]+\.[0-9]+).*\"/\2/')
+fi
+
+export JAVA_VERSION
+export JAVA_HOME=/usr/lib/jvm/java-$JAVA_VERSION
+
+if [ -d "$JAVA_HOME" ]; then
+    ln -sf -t /usr/bin $JAVA_HOME/bin/*
+    echo "Using Java version: $JAVA_VERSION ($JAVA_HOME)"
+else
+    echo "Java home not found for version $JAVA_VERSION: $JAVA_HOME"
+    exit 1
+fi
+
+# Set our project to test
+PROJECT=${PROJECT:-server}
+
+# WARNING: control+c while this is running will take out supervisor as well.
+/usr/bin/supervisord -c /etc/supervisord.conf
+
+# Pass volume with docker run mounted at this location if you'd like to
+# run against your source checkout.
+# i.e. -v /home/dgoodwin/src/candlepin:/candlepin-dev
+if [ -d "/candlepin-dev" ]; then
+    echo "Using mounted volume /candlepin-dev"
+
+    CP_HOME="/candlepin-dev/"
+    cd $CP_HOME
+else
+    # Otherwise we use the clone in the image and try to update it.
+    echo "Using /candlepin."
+
+    CP_HOME="/candlepin"
+    cd $CP_HOME
+
+    # In case $CP_HOME contains local changes its better to use 'clean'
+    # to remove any untracked files before proceeding
+    git fetch
+    git reset --hard
+    git clean -df
+    git merge FETCH_HEAD
+
+    if [ ! -z "$CHECKOUT" ]; then
+        echo "Checking out: $CHECKOUT"
+        git checkout "$CHECKOUT"
+    fi
+fi
+
+# Make sure we update the ruby bundle:
+bundle install
+mkdir -p /var/log/candlepin
+
+# Setup our tee pipe
+mkfifo /tmp/teepipe
+
+if [ "$LINTER" == "1" ]; then
+    echo "Running linter..."
+    CLEAN_CP=1
+
+    cd $CP_HOME
+    tee /var/log/candlepin/lint.log < /tmp/teepipe &
+    buildr lint > /tmp/teepipe 2>&1
+fi
+
+# TODO: keep track of return code?
+PROJECT_DIR="$CP_HOME/$PROJECT"
+cd $PROJECT_DIR
+
+if [ "$UNITTEST" -gt 0 ]; then
+    echo "Running unit tests $UNITTEST time(s)"
+    CLEAN_CP=1
+
+    UTCMD="test"
+
+    if [ ! -z "${UNITTEST_FILTER}" ]; then
+        UTCMD="${UTCMD}:${UNITTEST_FILTER}"
+    fi
+
+    # run $UNITTEST time(s) to increase chance of capturing
+    # non-deterministic unit test failures.
+    for (( i=1; i<=$UNITTEST; i++ ))
+    do
+        tee /var/log/candlepin/unit_tests.log < /tmp/teepipe &
+        buildr $UTCMD > /tmp/teepipe 2>&1
+        rm -f /tmp/teepipe
+        mkfifo /tmp/teepipe
+    done
+fi
+
+if [ "$QPID" == "1" ]; then
+    if [ -d "$PROJECT_DIR/bin/qpid" ]; then
+        echo "Setting up Qpid"
+
+        pushd "$PROJECT_DIR/bin/qpid"
+
+        # Do a cleanup
+        ./configure-qpid.sh -c
+        # Reconfigure
+        ./configure-qpid.sh
+
+        popd
+    else
+        echo "Qpid not configured for project: $PROJECT"
+        unset QPID
+    fi
+fi
+
+if [ "$DEPLOY" == "1" ]; then
+    echo "Deploying candlepin..."
+    CLEAN_CP=1
+
+    DEPLOY_FLAGS="-g"
+
+    if [ "$RSPEC" == "1" ] && [ "$HOSTED" == "1" ] && (bin/deploy '-?' | grep -q -- '-H'); then
+        DEPLOY_FLAGS="$DEPLOY_FLAGS -H -a"
+    fi
+
+    if [ "$TESTDATA" == "1" ]; then
+        DEPLOY_FLAGS="$DEPLOY_FLAGS -t"
+    fi
+
+    if [ "$VERBOSE" == "1" ]; then
+        DEPLOY_FLAGS="$DEPLOY_FLAGS -v"
+    fi
+
+    if [ "$QPID" == "1" ]; then
+        DEPLOY_FLAGS="$DEPLOY_FLAGS -q"
+    fi
+
+
+    # set up the database from setup-db.sh
+    # only runs if function is defined
+    type -t setup_database &>/dev/null && setup_database
+
+    bin/deploy $DEPLOY_FLAGS
+    sleep 7
+fi
+
+if [ "$RSPEC" == "1" ]; then
+    echo "Running rspec tests..."
+    CLEAN_CP=1
+
+    tee /var/log/candlepin/rspec.log < /tmp/teepipe &
+
+    BUILDR_ARGS="rspec"
+    if [ ! -z "$RSPEC_FILTER" ]; then
+        BUILDR_ARGS="rspec:${RSPEC_FILTER}"
+    fi
+
+    buildr "${BUILDR_ARGS}" > /tmp/teepipe 2>&1
+fi
+
+if [ ! -z "$BUILDR_TASK" ]; then
+    echo "Running buildr $BUILDR_TASK..."
+    CLEAN_CP=1
+
+    cd $CP_HOME
+    tee /var/log/candlepin/buildr.log < /tmp/teepipe &
+    buildr $BUILDR_TASK > /tmp/teepipe 2>&1
+fi
+
+cleanup
