@@ -36,6 +36,8 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @Embeddable
 public class ProductContent extends AbstractHibernateObject {
+    /** Name of the table backing this object in the database */
+    public static final String DB_TABLE = "cp2_product_content";
 
     @Parent
     @NotNull

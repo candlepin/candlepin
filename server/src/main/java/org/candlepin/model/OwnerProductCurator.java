@@ -14,19 +14,24 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.model.activationkeys.ActivationKey;
+
 import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
+import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Query;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.sql.JoinType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -95,12 +100,31 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         return this.cpQueryFactory.<Owner>buildQuery();
     }
 
-    public CandlepinQuery<Product> getProductsByOwner(Owner owner) {
-        return this.getProductsByOwner(owner.getId());
+    /**
+     * Fetches a collection of product UUIDs currently mapped to the given owner. If the owner is
+     * not mapped to any products, an empty collection will be returned.
+     *
+     * @param owner
+     *  The owner for which to fetch product UUIDs
+     *
+     * @return
+     *  a collection of product UUIDs belonging to the given owner
+     */
+    public Collection<String> getProductUuidsByOwner(Owner owner) {
+        return this.getProductUuidsByOwner(owner.getId());
     }
 
-    public CandlepinQuery<Product> getProductsByOwner(String ownerId) {
-        // Impl note: See getOwnersByProduct for details on why we're doing this in two queries
+    /**
+     * Fetches a collection of product UUIDs currently mapped to the given owner. If the owner is
+     * not mapped to any products, an empty collection will be returned.
+     *
+     * @param ownerId
+     *  The ID of the owner for which to fetch product UUIDs
+     *
+     * @return
+     *  a collection of product UUIDs belonging to the given owner
+     */
+    public Collection<String> getProductUuidsByOwner(String ownerId) {
         String jpql = "SELECT op.product.uuid FROM OwnerProduct op WHERE op.owner.id = :owner_id";
 
         List<String> uuids = this.getEntityManager()
@@ -108,7 +132,36 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .setParameter("owner_id", ownerId)
             .getResultList();
 
-        if (uuids != null && !uuids.isEmpty()) {
+        return uuids != null ? uuids : Collections.<String>emptyList();
+    }
+
+    /**
+     * Builds a query for fetching the products currently mapped to the given owner.
+     *
+     * @param owner
+     *  The owner for which to fetch products
+     *
+     * @return
+     *  a query for fetching the products belonging to the given owner
+     */
+    public CandlepinQuery<Product> getProductsByOwner(Owner owner) {
+        return this.getProductsByOwner(owner.getId());
+    }
+
+    /**
+     * Builds a query for fetching the products currently mapped to the given owner.
+     *
+     * @param ownerId
+     *  The ID of the owner for which to fetch products
+     *
+     * @return
+     *  a query for fetching the products belonging to the given owner
+     */
+    public CandlepinQuery<Product> getProductsByOwner(String ownerId) {
+        // Impl note: See getOwnersByProduct for details on why we're doing this in two queries
+        Collection<String> uuids = this.getProductUuidsByOwner(ownerId);
+
+        if (!uuids.isEmpty()) {
             DetachedCriteria criteria = this.createSecureDetachedCriteria(Product.class, null)
                 .add(CPRestrictions.in("uuid", uuids));
 
@@ -156,6 +209,65 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .getSingleResult();
 
         return count;
+    }
+
+    /**
+     * Fetches the number of owners currently mapped to the given products. If a provided product
+     * UUID does not represent an existing product, or is not mapped to any owners, it will not be
+     * included in the output.
+     *
+     * @param productUuids
+     *  A collection of product UUIDs for which to fetch the owner counts
+     *
+     * @return
+     *  A mapping of product UUIDs to their owner counts
+     */
+    @Transactional
+    public Map<String, Integer> getOwnerCounts(Collection<String> productUuids) {
+        StringBuilder builder = new StringBuilder("SELECT op.productUuid, COUNT(op) FROM OwnerProduct op");
+
+        if (productUuids != null && !productUuids.isEmpty()) {
+            builder.append(" WHERE ");
+
+            int blockCount = (int) Math.ceil(productUuids.size() /
+                (float) AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE);
+
+            for (int i = 1; i <= blockCount; ++i) {
+                if (i > 1) {
+                    builder.append(" OR ");
+                }
+
+                builder.append("op.productUuid IN :product_uuids_").append(i);
+            }
+        }
+
+        builder.append(" GROUP BY op.productUuid");
+
+        Query query = this.currentSession().createQuery(builder.toString());
+
+        if (productUuids != null && !productUuids.isEmpty()) {
+            Iterable<List<String>> blocks = Iterables.partition(productUuids,
+                AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE);
+
+            int offset = 0;
+            for (List<String> block : blocks) {
+                query.setParameterList("product_uuids_" + ++offset, block);
+            }
+        }
+
+        Map<String, Integer> result = new HashMap<String, Integer>();
+
+        ScrollableResults cursor = query.scroll();
+        while (cursor.next()) {
+            String uuid = cursor.getString(0);
+            Integer count = Integer.valueOf((int) cursor.getLong(1).longValue());
+
+            result.put(uuid, count);
+        }
+
+        cursor.close();
+
+        return result;
     }
 
     /**
@@ -402,7 +514,8 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
     /**
      * Removes the product references currently pointing to the specified product for the given
-     * owners.
+     * owners. This method cannot be used to remove references to products which are still mapped
+     * to pools. Attempting to do so will result in an IllegalStateException.
      * <p/></p>
      * <strong>Warning:</strong> Hibernate does not gracefully handle situations where the data
      * backing an entity changes via direct SQL or other outside influence. While, logically, a
@@ -411,14 +524,18 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      * be manually evicted from the session and re-queried to ensure they will not clobber the
      * changes made by this method on persist, nor trigger any errors on refresh.
      *
-     * @param entity
-     *  The product other objects are referencing
-     *
      * @param owner
      *  The owners for which to apply the reference changes
+     *
+     * @param productUuids
+     *  The UUIDs of the products for which to remove references
+     *
+     * @throws IllegalStateException
+     *  if the any of the products are in use by one or more pools owned by the given owner
      */
     @Transactional
-    public void removeOwnerProductReferences(Product entity, Owner owner) {
+    @SuppressWarnings("checkstyle:indentation")
+    public void removeOwnerProductReferences(Owner owner, Collection<String> productUuids) {
         // Impl note:
         // We're doing this in straight SQL because direct use of the ORM would require querying all
         // of these objects and the available HQL refuses to do any joining (implicit or otherwise),
@@ -431,54 +548,54 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         // from an owner if it is being used by a pool. As such, we shouldn't need to manually clean
         // the pool tables here.
 
-        Session session = this.currentSession();
+        if (productUuids != null && !productUuids.isEmpty()) {
+            Session session = this.currentSession();
 
-        // Owner products
-        String sql = "DELETE FROM cp2_owner_products WHERE product_uuid = ?1 AND owner_id = ?2";
+            // Ensure we aren't trying to remove product references for products still used by
+            // pools for this owner
+            Long poolCount = (Long) session.createCriteria(Pool.class)
+                .createAlias("providedProducts", "providedProd", JoinType.LEFT_OUTER_JOIN)
+                .createAlias("derivedProvidedProducts", "derivedProvidedProd", JoinType.LEFT_OUTER_JOIN)
+                .add(Restrictions.eq("owner", owner))
+                .add(Restrictions.or(
+                    CPRestrictions.in("product.uuid", productUuids),
+                    CPRestrictions.in("derivedProduct.uuid", productUuids),
+                    CPRestrictions.in("providedProd.uuid", productUuids),
+                    CPRestrictions.in("derivedProvidedProd.uuid", productUuids)))
+                .setProjection(Projections.count("id"))
+                .uniqueResult();
 
-        int count = session.createSQLQuery(sql)
-            .setParameter("1", entity.getUuid())
-            .setParameter("2", owner.getId())
-            .executeUpdate();
-
-        log.debug("{} owner-product relations removed", count);
-
-        // Activation key products
-        List<String> ids = session.createSQLQuery("SELECT id FROM cp_activation_key WHERE owner_id = ?1")
-            .setParameter("1", owner.getId())
-            .list();
-
-        if (ids != null && !ids.isEmpty()) {
-            int inBlocks = ids.size() / AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE + 1;
-
-            StringBuilder builder = new StringBuilder("DELETE FROM cp2_activation_key_products ")
-                .append("WHERE product_uuid = ?1 AND (");
-
-            for (int i = 0; i < inBlocks; ++i) {
-                if (i != 0) {
-                    builder.append(" OR ");
-                }
-
-                builder.append("key_id IN (?").append(i + 2).append(')');
+            if (poolCount != null && poolCount.longValue() > 0) {
+                throw new IllegalStateException(
+                    "One or more products are currently used by one or more pools");
             }
 
-            builder.append(')');
+            // Owner products ////////////////////////////////
+            Map<String, Object> criteria = new HashMap<String, Object>();
+            criteria.put("product_uuid", productUuids);
+            criteria.put("owner_id", owner.getId());
 
-            Query query = session.createSQLQuery(builder.toString())
-                .setParameter("1", entity.getUuid());
+            int count = this.bulkSQLDelete(OwnerProduct.DB_TABLE, criteria);
+            log.debug("{} owner-product relations removed", count);
 
-            int args = 1;
-            for (List<String> block : Iterables.partition(ids,
-                AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE)) {
+            // Activation key products ///////////////////////
+            String sql = "SELECT id FROM " + ActivationKey.DB_TABLE + " WHERE owner_id = ?1";
+            List<String> ids = session.createSQLQuery(sql)
+                .setParameter("1", owner.getId())
+                .list();
 
-                query.setParameterList(String.valueOf(++args), block);
+            if (ids != null && !ids.isEmpty()) {
+                criteria.clear();
+                criteria.put("key_id", ids);
+                criteria.put("product_uuid", productUuids);
+
+                count = this.bulkSQLDelete("cp2_activation_key_products", criteria);
+                log.debug("{} activation keys removed", count);
             }
-
-            count = query.executeUpdate();
-            log.debug("{} activation keys removed", count);
-        }
-        else {
-            log.debug("0 activation keys removed");
+            else {
+                log.debug("0 activation keys removed");
+            }
         }
     }
+
 }

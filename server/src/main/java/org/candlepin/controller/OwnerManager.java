@@ -32,7 +32,6 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.service.ContentAccessCertServiceAdapter;
@@ -44,6 +43,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+
+
 
 /**
  * Used to perform operations on Owners that need more than just the owner
@@ -70,7 +71,7 @@ public class OwnerManager {
 
     @Transactional
     public void cleanupAndDelete(Owner owner, boolean revokeCerts) {
-        log.info("Cleaning up owner: " + owner);
+        log.info("Cleaning up owner: {}", owner);
 
         List<String> ids = ownerCurator.getConsumerUuids(owner.getKey()).list();
         List<Consumer> consumers = consumerCurator.lockAndLoadBatch(ids);
@@ -128,6 +129,7 @@ public class OwnerManager {
             log.info("Deleting export metadata: {}", m);
             exportCurator.delete(m);
         }
+
         for (ImportRecord record : importRecordCurator.findRecords(owner)) {
             log.info("Deleting import record:  {}", record);
             importRecordCurator.delete(record);
@@ -139,10 +141,8 @@ public class OwnerManager {
             permissionCurator.delete(perm);
         }
 
-        for (Product p : this.ownerProductCurator.getProductsByOwner(owner)) {
-            log.info("Deleting product: {}", p);
-            this.prodManager.removeProduct(p, owner);
-        }
+        log.info("Deleting all products...");
+        this.prodManager.removeAllProducts(owner);
 
         /*
          * contents might have been deleted due to cascades above.

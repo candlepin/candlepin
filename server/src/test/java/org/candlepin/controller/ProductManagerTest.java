@@ -215,10 +215,12 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner));
 
-        this.productManager.removeProduct(product, owner);
+        this.productManager.removeProduct(owner, product);
 
+        // The product will be orphaned, but should still exist
         assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner));
-        assertNull(this.productCurator.find(product.getUuid()));
+        assertNotNull(this.productCurator.find(product.getUuid()));
+        assertEquals(0, this.ownerProductCurator.getOwnerCount(product));
 
         verifyZeroInteractions(this.mockEntCertGenerator);
     }
@@ -232,11 +234,12 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
         assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
 
-        this.productManager.removeProduct(product, owner1);
+        this.productManager.removeProduct(owner1, product);
 
         assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
         assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
         assertNotNull(this.productCurator.find(product.getUuid()));
+        assertEquals(1, this.ownerProductCurator.getOwnerCount(product));
 
         verifyZeroInteractions(this.mockEntCertGenerator);
     }
@@ -248,7 +251,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner));
 
-        this.productManager.removeProduct(product, owner);
+        this.productManager.removeProduct(owner, product);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -259,7 +262,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Product product = this.createProduct("p1", "prod1", owner);
         Pool pool = this.createPool(owner, product, 1L, new Date(now - 86400), new Date(now + 86400));
 
-        this.productManager.removeProduct(product, owner);
+        this.productManager.removeProduct(owner, product);
     }
 
     @Test

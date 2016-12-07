@@ -439,13 +439,13 @@ public class ProductManager {
      * @throws IllegalArgumentException
      *  if entity or owner is null
      */
-    public void removeProduct(Product entity, Owner owner) {
-        if (entity == null) {
-            throw new IllegalArgumentException("entity is null");
-        }
-
+    public void removeProduct(Owner owner, Product entity) {
         if (owner == null) {
             throw new IllegalArgumentException("owner is null");
+        }
+
+        if (entity == null) {
+            throw new IllegalArgumentException("entity is null");
         }
 
         // This has to fetch a new instance, or we'll be unable to compare the objects
@@ -455,20 +455,78 @@ public class ProductManager {
             throw new IllegalStateException("Product has not yet been created");
         }
 
-        if (this.productCurator.productHasSubscriptions(existing, owner)) {
-            throw new IllegalStateException("Product is currently in use by one or more pools");
+        this.removeProductsByUuids(owner, Arrays.asList(existing.getUuid()));
+    }
+
+    /**
+     * Removes all products from the specified owner. Products which are shared will have any
+     * references to the owner removed, while unshared products will be deleted entirely.
+     *
+     * @param owner
+     *  The owner from which to remove all products
+     *
+     * @throws IllegalArgumentException
+     *  if owner is null
+     */
+    @Transactional
+    public void removeAllProducts(Owner owner) {
+        this.removeProductsByUuids(owner, this.ownerProductCurator.getProductUuidsByOwner(owner));
+    }
+
+    /**
+     * Removes the specified products from the given owner. Products which are shared will have any
+     * references to the owner removed, while unshared products will be deleted entirely.
+     *
+     * @param owner
+     *  The owner from which to remove products
+     *
+     * @param products
+     *  A collection of products to remove from the owner
+     *
+     * @throws IllegalArgumentException
+     *  if owner is null
+     *
+     * @throws IllegalStateException
+     *  if any of the given products are still associated with one or more subscriptions
+     */
+    public void removeProducts(Owner owner, Collection<Product> products) {
+        if (products != null && !products.isEmpty()) {
+            Map<String, Product> productMap = new HashMap<String, Product>();
+            for (Product product : products) {
+                productMap.put(product.getUuid(), product);
+            }
+
+            this.removeProductsByUuids(owner, productMap.keySet());
+        }
+    }
+
+    /**
+     * Removes the specified products from the given owner. Products which are shared will have any
+     * references to the owner removed, while unshared products will be deleted entirely.
+     *
+     * @param owner
+     *  The owner from which to remove products
+     *
+     * @param productUuids
+     *  A collection of product UUIDs representing the products to remove from the owner
+     *
+     * @throws IllegalArgumentException
+     *  if owner is null
+     *
+     * @throws IllegalStateException
+     *  if any of the given products are still associated with one or more subscriptions
+     */
+    public void removeProductsByUuids(Owner owner, Collection<String> productUuids) {
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
         }
 
-        log.debug("Removing product from owner: {}, {}", existing, owner);
+        if (productUuids != null && !productUuids.isEmpty()) {
+            log.debug("Removing products from owner: {}, {}", owner, productUuids);
 
-        this.ownerProductCurator.removeOwnerFromProduct(existing, owner);
-        if (this.ownerProductCurator.getOwnerCount(existing) == 0) {
-            // No one is using this product anymore; delete the entity
-            this.productCurator.delete(existing);
-        }
-        else {
-            // Clean up any dangling references to content
-            this.ownerProductCurator.removeOwnerProductReferences(existing, owner);
+            // Remove owner references to all the products. This will leave the products orphaned,
+            // to be eventually deleted by the orphan removal job
+            this.ownerProductCurator.removeOwnerProductReferences(owner, productUuids);
         }
     }
 

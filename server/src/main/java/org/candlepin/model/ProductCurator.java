@@ -435,16 +435,28 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         currentSession().delete(toDelete);
     }
 
-    public boolean productHasSubscriptions(Product prod, Owner owner) {
+    /**
+     * Checks if any of the provided product is linked to one or more pools for the given owner.
+     *
+     * @param owner
+     *  The owner to use for finding pools/subscriptions
+     *
+     * @param product
+     *  The product to check for subscriptions
+     *
+     * @return
+     *  true if the product is linked to one or more subscriptions; false otherwise.
+     */
+    public boolean productHasSubscriptions(Owner owner, Product product) {
         return ((Long) currentSession().createCriteria(Pool.class)
             .createAlias("providedProducts", "providedProd", JoinType.LEFT_OUTER_JOIN)
             .createAlias("derivedProvidedProducts", "derivedProvidedProd", JoinType.LEFT_OUTER_JOIN)
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.or(
-                Restrictions.eq("product.uuid", prod.getUuid()),
-                Restrictions.eq("derivedProduct.uuid", prod.getUuid()),
-                Restrictions.eq("providedProd.uuid", prod.getUuid()),
-                Restrictions.eq("derivedProvidedProd.uuid", prod.getUuid())))
+                Restrictions.eq("product.uuid", product.getUuid()),
+                Restrictions.eq("derivedProduct.uuid", product.getUuid()),
+                Restrictions.eq("providedProd.uuid", product.getUuid()),
+                Restrictions.eq("derivedProvidedProd.uuid", product.getUuid())))
             .setProjection(Projections.count("id"))
             .uniqueResult()) > 0;
     }

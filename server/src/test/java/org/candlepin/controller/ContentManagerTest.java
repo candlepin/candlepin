@@ -245,7 +245,8 @@ public class ContentManagerTest extends DatabaseTestFixture {
         this.contentManager.removeContent(content, owner, regenCerts);
 
         assertFalse(this.ownerContentCurator.isContentMappedToOwner(content, owner));
-        assertNull(this.contentCurator.find(content.getUuid()));
+        assertNotNull(this.contentCurator.find(content.getUuid()));
+        assertEquals(0, this.ownerContentCurator.getOwnerCount(content));
 
         if (regenCerts) {
             verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(

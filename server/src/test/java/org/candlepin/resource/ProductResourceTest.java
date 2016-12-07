@@ -135,7 +135,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Set<Subscription> subs = new HashSet<Subscription>();
         Subscription s = mock(Subscription.class);
         subs.add(s);
-        when(pc.productHasSubscriptions(eq(p), eq(o))).thenReturn(true);
+        when(pc.productHasSubscriptions(eq(o), eq(p))).thenReturn(true);
 
         pr.deleteProduct("10");
     }

@@ -76,9 +76,9 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = Product.DB_TABLE)
 public class Product extends AbstractHibernateObject implements SharedEntity, Linkable, Cloneable {
-
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp2_products";
+
     /**
      * Commonly used/recognized product attributes
      */

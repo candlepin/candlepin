@@ -562,15 +562,8 @@ public class ContentManager {
             }
         }
 
-        this.ownerContentCurator.removeOwnerFromContent(existing, owner);
-        if (this.ownerContentCurator.getOwnerCount(existing) == 0) {
-            // No one is using this product anymore; delete the entity (should clean up everything)
-            this.contentCurator.delete(existing);
-        }
-        else {
-            // Clean up any dangling references to content
-            this.ownerContentCurator.removeOwnerContentReferences(existing, owner);
-        }
+        // Clean up any dangling references to content
+        this.ownerContentCurator.removeOwnerContentReferences(owner, Arrays.asList(existing.getUuid()));
     }
 
     /**

@@ -319,7 +319,12 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
         // Owner content
         int count = this.bulkSQLUpdate(OwnerContent.DB_TABLE, "content_uuid", uuidMap, criteria);
-        log.debug("{} owner-content relations updated", count);
+        log.info("{} owner-content relations updated", count);
+
+        // Impl note:
+        // We're not managing product-content references, since versioning changes require us to
+        // handle that with more explicit logic. Instead, we rely on the content manager using
+        // the product manager to fork/update products when a related content entity changes.
 
         // environment content
         List<String> ids = session.createSQLQuery("SELECT id FROM cp_environment WHERE owner_id = ?1")
@@ -328,14 +333,14 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
         if (ids != null && !ids.isEmpty()) {
             criteria.clear();
-            criteria.put("content_uuid", contentUuidMap.keySet());
             criteria.put("environment_id", ids);
+            criteria.put("content_uuid", contentUuidMap.keySet());
 
             count = this.bulkSQLUpdate(EnvironmentContent.DB_TABLE, "content_uuid", uuidMap, criteria);
-            log.debug("{} environment-content relations updated", count);
+            log.info("{} environment-content relations updated", count);
         }
         else {
-            log.debug("0 environment-content relations updated");
+            log.info("0 environment-content relations updated");
         }
     }
 
@@ -359,7 +364,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
      *  The owner for which to apply the reference changes
      */
     @Transactional
-    public void removeOwnerContentReferences(Content content, Owner owner) {
+    public void removeOwnerContentReferences(Owner owner, Collection<String> contentUuids) {
         // Impl note:
         // As is the case in updateOwnerContentReferences, HQL's bulk delete doesn't allow us to
         // touch anything that even looks like a join. As such, we have to do this in vanilla SQL.
@@ -367,57 +372,53 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         Session session = this.currentSession();
 
         // Owner content
-        String sql = "DELETE FROM cp2_owner_content WHERE content_uuid = ?1 AND owner_id = ?2";
+        Map<String, Object> criteria = new HashMap<String, Object>();
+        criteria.put("owner_id", owner.getId());
+        criteria.put("content_uuid", contentUuids);
 
-        int count = session.createSQLQuery(sql)
-            .setParameter("1", content.getUuid())
-            .setParameter("2", owner.getId())
-            .executeUpdate();
+        int count = this.bulkSQLDelete(OwnerContent.DB_TABLE, criteria);
+        log.info("{} owner-content relations removed", count);
 
-        log.debug("{} owner-content relations updated", count);
+        // product content
+        // Impl note:
+        // We're not managing product-content references, since versioning changes require us to
+        // handle that with more explicit logic. Instead, we rely on the content manager using
+        // the product manager to fork/update products when a related content entity changes.
+
+        // String sql = "SELECT product_uuid FROM " + OwnerProducts.DB_TABLE + " WHERE owner_id = ?1";
+        // List<String> ids = session.createSQLQuery(sql)
+        //     .setParameter("1", owner.getId())
+        //     .list();
+
+        // if (ids != null && !ids.isEmpty()) {
+        //     criteria.clear();
+        //     criteria.put("product_uuid", ids);
+        //     criteria.put("content_uuid", contentUuids);
+
+        //     count = this.bulkSQLDelete(ProductContent.DB_TABLE, criteria);
+        //     log.info("{} product-content relations removed", count);
+        // }
+        // else {
+        //     log.info("0 product-content relations updated");
+        // }
 
         // environment content
-        List<String> ids = session.createSQLQuery("SELECT id FROM cp_environment WHERE owner_id = ?1")
+        String sql = "SELECT id FROM " + Environment.DB_TABLE + " WHERE owner_id = ?1";
+        List<String> ids = session.createSQLQuery(sql)
             .setParameter("1", owner.getId())
             .list();
 
         if (ids != null && !ids.isEmpty()) {
-            int inBlocks = ids.size() / AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE + 1;
+            criteria.clear();
+            criteria.put("environment_id", ids);
+            criteria.put("content_uuid", contentUuids);
 
-            StringBuilder builder = new StringBuilder("DELETE FROM cp2_environment_content ")
-                .append("WHERE content_uuid = ?1 AND (");
-
-            for (int i = 0; i < inBlocks; ++i) {
-                if (i != 0) {
-                    builder.append(" OR ");
-                }
-
-                builder.append("environment_id IN (?").append(i + 2).append(')');
-            }
-
-            builder.append(')');
-
-            Query query = session.createSQLQuery(builder.toString())
-                .setParameter("1", content.getUuid());
-
-            int args = 1;
-            for (List<String> block : Iterables.partition(ids,
-                AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE)) {
-
-                query.setParameterList(String.valueOf(++args), block);
-            }
-
-            count = query.executeUpdate();
-            log.debug("{} environment-content relations updated", count);
+            count = this.bulkSQLDelete(EnvironmentContent.DB_TABLE, criteria);
+            log.info("{} environment-content relations updated", count);
         }
         else {
-            log.debug("0 environment-content relations updated");
+            log.info("0 environment-content relations updated");
         }
-
-        // Impl note:
-        // We're not managing product-content references, since versioning changes require us to
-        // handle that with more explicit logic. Instead, when rely on the content manager using
-        // the product manager to fork/update products when a related content changes.
     }
 
 }

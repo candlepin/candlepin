@@ -585,7 +585,7 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
 
         assertTrue(this.isProductMappedToOwner(original, owner));
 
-        this.ownerProductCurator.removeOwnerProductReferences(original, owner);
+        this.ownerProductCurator.removeOwnerProductReferences(owner, Arrays.asList(original.getUuid()));
 
         assertFalse(this.isProductMappedToOwner(original, owner));
 
