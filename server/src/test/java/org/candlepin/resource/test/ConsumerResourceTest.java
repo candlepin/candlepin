@@ -74,6 +74,7 @@ import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ServiceLevelValidator;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -538,7 +539,6 @@ public class ConsumerResourceTest {
         Owner o = mock(Owner.class);
         UserPrincipal up = mock(UserPrincipal.class);
         OwnerCurator oc = mock(OwnerCurator.class);
-        ConsumerTypeCurator ctc = mock(ConsumerTypeCurator.class);
         ConsumerType cType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ConsumerResource consumerResource = new ConsumerResource(
             null, null, null, null, null, null,
@@ -548,27 +548,15 @@ public class ConsumerResourceTest {
             null, null, null);
 
         String ownerKey = "testOwner";
-        when(o.getKey()).thenReturn(ownerKey);
         when(oc.lookupByKey(eq(ownerKey))).thenReturn(o);
+        when(o.getKey()).thenReturn(ownerKey);
         when(c.getType()).thenReturn(cType);
-        when(c.getName()).thenReturn(generateNameLongerThan255());
-        when(ctc.lookupByLabel(eq("system"))).thenReturn(cType);
+        String s = RandomStringUtils.randomAlphanumeric(max + 1);
+        when(c.getName()).thenReturn(s);
         when(up.canAccess(eq(o), eq(SubResource.CONSUMERS), eq(Access.CREATE))).
             thenReturn(true);
 
         consumerResource.create(c, up, null, ownerKey, null);
-    }
-
-    private String generateNameLongerThan255() {
-        String name255 =
-            "qwert12345qwert12345qwert12345qwert12345qwert12345" +
-            "qwert12345qwert12345qwert12345qwert12345qwert12345" +
-            "qwert12345qwert12345qwert12345qwert12345qwert12345" +
-            "qwert12345qwert12345qwert12345qwert12345qwert12345" +
-            "qwert12345qwert12345qwert12345qwert12345qwert12345" +
-            "qwert";
-        name255 += TestUtil.randomInt();
-        return name255;
     }
 
     @Test
