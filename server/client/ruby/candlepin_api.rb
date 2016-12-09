@@ -487,7 +487,8 @@ class Candlepin
 
     return status if immediate
     # otherwise poll the server to make this call synchronous
-    while status['state'].downcase != 'finished'
+    finished_states = ['FINISHED', 'CANCELED', 'FAILED']
+    while !finished_states.include? status['state'].upcase
       sleep 1
       # POSTing here will delete the job once it has finished
       status = post(status['statusPath'])

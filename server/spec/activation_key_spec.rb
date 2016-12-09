@@ -8,19 +8,18 @@ describe 'Activation Keys' do
 
   before(:each) do
     @owner = create_owner random_string('test_owner')
-    @some_product = create_product(nil, random_string('some_product'))
-    @some_product_2 = create_product(nil, random_string('some_product'))
+    @product = create_product(nil, random_string('some_product'))
+    @product2 = create_product(nil, random_string('some_product'))
 
     #this owner is used to test restrictions
     mallory = create_owner random_string('test_owner')
     @mallory_client = user_client(mallory, random_string('testuser'))
 
-    create_pool_and_subscription(@owner['key'], @some_product.id, 37,
-				[], '', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner['key'], @some_product_2.id, 37)
+    create_pool_and_subscription(@owner['key'], @product.id, 37, [], '', '', '', nil, nil, true)
+    create_pool_and_subscription(@owner['key'], @product2.id, 37)
 
-    @pool = @cp.list_pools(:owner => @owner.id, :product => @some_product['id']).first
-    @pool_2 = @cp.list_pools(:owner => @owner.id, :product => @some_product_2['id']).first
+    @pool = @cp.list_pools(:owner => @owner.id, :product => @product['id']).first
+    @pool2 = @cp.list_pools(:owner => @owner.id, :product => @product2['id']).first
 
     @activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'))
     @activation_key['id'].should_not be_nil
@@ -105,10 +104,10 @@ describe 'Activation Keys' do
   end
 
   it 'should allow product ids to be added to and removed from activation keys' do
-    @cp.add_prod_id_to_key(@activation_key['id'], @some_product['id'])
+    @cp.add_prod_id_to_key(@activation_key['id'], @product['id'])
     key = @cp.get_activation_key(@activation_key['id'])
     key['products'].length.should == 1
-    @cp.remove_prod_id_from_key(@activation_key['id'], @some_product['id'])
+    @cp.remove_prod_id_from_key(@activation_key['id'], @product['id'])
     key = @cp.get_activation_key(@activation_key['id'])
     key['products'].length.should == 0
   end
@@ -179,8 +178,7 @@ describe 'Activation Keys' do
     product2 = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:support_level => 'Ultra-VIP'}})
-    create_pool_and_subscription(@owner['key'], product1.id, 30,
-				[], '', '', '', nil, nil, true)
+    create_pool_and_subscription(@owner['key'], product1.id, 30, [], '', '', '', nil, nil, true)
     create_pool_and_subscription(@owner['key'], product2.id, 30)
 
     service_activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'), 'VIP')
@@ -207,9 +205,9 @@ describe 'Activation Keys' do
     @activation_key['name'] = "ObiWan"
     @activation_key['pools'] = [
       {:poolId => @pool['id'], :quantity => nil},
-      {:poolId => @pool_2['id'], :quantity => 5},
+      {:poolId => @pool2['id'], :quantity => 5},
     ]
-    @activation_key['products'] = [{:productId => @some_product['id'] }]
+    @activation_key['products'] = [{:productId => @product['id'] }]
     @activation_key['contentOverrides'] = [{:contentLabel => 'hello', :name => 'value', :value => '123' }]
 
     output = @cp.update_activation_key(@activation_key)
@@ -248,5 +246,57 @@ describe 'Activation Keys' do
     lambda {
       @cp.update_activation_key(@activation_key)
     }.should raise_exception(RestClient::BadRequest)
+  end
+
+  it 'should list activation keys with populated entity collections' do
+    # Add both products and pools to the pre-generated key
+    @cp.add_prod_id_to_key(@activation_key['id'], @product['id'])
+    @cp.add_prod_id_to_key(@activation_key['id'], @product2['id'])
+    @cp.add_pool_to_key(@activation_key['id'], @pool['id'], 1)
+    @cp.add_pool_to_key(@activation_key['id'], @pool2['id'], 1)
+
+    # Generate some more activation keys so we have multiple keys to list
+    actkey2 = @cp.create_activation_key(@owner['key'], random_string('key2'))
+    @cp.add_prod_id_to_key(actkey2['id'], @product['id'])
+    @cp.add_prod_id_to_key(actkey2['id'], @product2['id'])
+
+    actkey3 = @cp.create_activation_key(@owner['key'], random_string('key3'))
+    @cp.add_pool_to_key(actkey3['id'], @pool['id'], 1)
+    @cp.add_pool_to_key(actkey3['id'], @pool2['id'], 1)
+
+    actkey4 = @cp.create_activation_key(@owner['key'], random_string('key4'))
+
+    # List keys. We should get all four keys back without error
+    keys = @cp.list_activation_keys()
+    expect(keys.length).to be >= 4
+
+    processed = []
+    keys.each do |key|
+      if processed.include? key['id']
+        fail("duplicate activation keys received: #{key['id']}")
+      end
+
+      case key['id']
+        when @activation_key['id']
+          expect(key['products'].length).to eq(2)
+          expect(key['pools'].length).to eq(2)
+
+        when actkey2['id']
+          expect(key['products'].length).to eq(2)
+          expect(key['pools'].length).to eq(0)
+
+        when actkey3['id']
+          expect(key['products'].length).to eq(0)
+          expect(key['pools'].length).to eq(2)
+
+        when actkey4['id']
+          expect(key['products'].length).to eq(0)
+          expect(key['pools'].length).to eq(0)
+
+        # else: unexpected (preexisting) key, ignore it
+      end
+
+      processed.push(key['id'])
+    end
   end
 end
