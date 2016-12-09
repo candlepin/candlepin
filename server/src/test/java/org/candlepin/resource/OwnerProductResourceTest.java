@@ -125,6 +125,36 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         assertEquals(contentData, result.getProductContent().iterator().next().getContent());
     }
 
+    @Test
+    public void testUpdateProductWithoutId() {
+        Owner owner = this.createOwner("Update-Product-Owner");
+        ProductData productData = this.buildTestProductDTO();
+
+        ProductData product = this.ownerProductResource.createProduct(owner.getKey(), productData);
+        ProductData update = new ProductData();
+        update.setName(product.getName());
+        update.setAttribute("attri", "bute");
+        ProductData updated = this.ownerProductResource.updateProduct(
+            owner.getKey(),
+            product.getId(),
+            update);
+        assertEquals("bute", updated.getAttribute("attri").getValue());
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testUpdateProductIdMismatch() {
+        Owner owner = this.createOwner("Update-Product-Owner");
+        ProductData productData = this.buildTestProductDTO();
+
+        ProductData product = this.ownerProductResource.createProduct(owner.getKey(), productData);
+        ProductData update = this.buildTestProductDTO();
+        update.setId("TaylorSwift");
+        ProductData updated = this.ownerProductResource.updateProduct(
+            owner.getKey(),
+            product.getId(),
+            update);
+    }
+
     @Test(expected = BadRequestException.class)
     public void testDeleteProductWithSubscriptions() {
         OwnerCurator oc = mock(OwnerCurator.class);
