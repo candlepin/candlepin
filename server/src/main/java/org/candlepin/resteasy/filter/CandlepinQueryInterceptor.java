@@ -86,7 +86,7 @@ public class CandlepinQueryInterceptor implements PostProcessInterceptor {
 
             // Use a separate session so we aren't at risk of lazy loading or interceptors closing
             // our cursor mid-stream.
-            // query.useSession(session);
+            query.useSession(session);
 
             // Apply any paging config we may have
             if (pageRequest != null) {
