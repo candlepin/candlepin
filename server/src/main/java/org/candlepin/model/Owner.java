@@ -20,6 +20,8 @@ import org.candlepin.resteasy.InfoProperty;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
@@ -103,6 +105,22 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     @Column(nullable = true)
     @Size(max = 32)
     private String logLevel;
+
+    private static final String DEFAULT_CONTENT_ACCESS_MODE = "entitlement";
+
+    /**
+     * Determines the behavior of the content access.
+     *
+     */
+    @Column(name = "content_access_mode")
+    private String contentAccessMode;
+
+    /**
+     * Determines the allowable modes of the content access.
+     *
+     */
+    @Column(name = "content_access_mode_list")
+    private String contentAccessModeList;
 
     /**
      * Default constructor
@@ -282,6 +300,10 @@ public class Owner extends AbstractHibernateObject implements Serializable,
             !this.contentPrefix.equals(other.contentPrefix)) {
             return false;
         }
+        if ((this.contentAccessMode == null) ? (other.contentAccessMode != null) :
+            !this.contentAccessMode.equals(other.contentAccessMode)) {
+            return false;
+        }
         return true;
     }
 
@@ -396,5 +418,58 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     @XmlTransient
     public String getName() {
         return getDisplayName();
+    }
+
+    /**
+     * Utility method that defaults to 'entitlement'.
+     *  This covers legacy owners
+     *
+     * @return access mode.
+     */
+    @XmlTransient
+    public String contentAccessMode() {
+        return StringUtils.isEmpty(getContentAccessMode()) ?
+            DEFAULT_CONTENT_ACCESS_MODE : getContentAccessMode();
+    }
+
+    /**
+     * Returns the value of the contentAccessMode setting.
+     *
+     * @return String the value
+     */
+    public String getContentAccessMode() {
+        return contentAccessMode;
+    }
+
+    public void setContentAccessMode(String contentAccessMode) {
+        this.contentAccessMode = contentAccessMode;
+    }
+
+    /**
+     * Returns the value of the contentAccessModeList setting.
+     *
+     * @return String the value
+     */
+    public String getContentAccessModeList() {
+        return contentAccessModeList;
+    }
+
+    public void setContentAccessModeList(String contentAccessModeList) {
+        this.contentAccessModeList = contentAccessModeList;
+    }
+
+    @XmlTransient
+    public boolean isAllowedContentAccessMode(String mode) {
+        if (StringUtils.isEmpty(mode)) {
+            return true;
+        }
+        if (mode.equals(DEFAULT_CONTENT_ACCESS_MODE)) {
+            return true;
+        }
+        if (StringUtils.isEmpty(contentAccessModeList)) {
+            return false;
+        }
+        String[] list = contentAccessModeList.split(",");
+        return ArrayUtils.contains(list, mode);
     }
 }

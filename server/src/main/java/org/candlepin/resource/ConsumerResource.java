@@ -485,6 +485,7 @@ public class ConsumerResource {
             hvsrId.setConsumer(consumer);
         }
 
+        validateContentAccessMode(consumer);
         consumerBindUtil.validateServiceLevel(owner, consumer.getServiceLevel());
 
         try {
@@ -515,6 +516,17 @@ public class ConsumerResource {
             log.error("Problem creating unit:", e);
             throw new BadRequestException(i18n.tr(
                 "Problem creating unit {0}", consumer));
+        }
+    }
+
+    private void validateContentAccessMode(Consumer consumer) throws BadRequestException {
+        if (!consumer.getOwner().isAllowedContentAccessMode(consumer.getContentAccessMode())) {
+            throw new BadRequestException(i18n.tr(
+                "The consumer cannot use the supplied content access mode."));
+        }
+        if (consumer.getContentAccessMode() != null && !consumer.getType().isManifest()) {
+            throw new BadRequestException(i18n.tr(
+                "The consumer cannot be assigned a content access mode."));
         }
     }
 
@@ -901,6 +913,21 @@ public class ConsumerResource {
             // get the new name into the id cert
             IdentityCertificate ic = generateIdCert(toUpdate, true);
             toUpdate.setIdCert(ic);
+        }
+
+        if (!StringUtils.isEmpty(updated.getContentAccessMode()) && !toUpdate.getType().isManifest()) {
+            throw new BadRequestException(i18n.tr(
+                "The consumer cannot be assigned a content access mode."));
+        }
+        if (updated.getContentAccessMode() != null &&
+            !updated.getContentAccessMode().equals(toUpdate.getContentAccessMode()) &&
+            toUpdate.getType().isManifest()) {
+            if (!toUpdate.getOwner().isAllowedContentAccessMode(updated.getContentAccessMode())) {
+                throw new BadRequestException(i18n.tr(
+                    "The consumer cannot use the supplied content access mode."));
+            }
+            toUpdate.setContentAccessMode(updated.getContentAccessMode());
+            changesMade = true;
         }
 
         if (updated.getLastCheckin() != null) {

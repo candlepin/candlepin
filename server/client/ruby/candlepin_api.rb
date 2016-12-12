@@ -135,6 +135,7 @@ class Candlepin
     consumer[:serviceLevel] = params[:serviceLevel] if params.has_key?(:serviceLevel)
     consumer[:capabilities] = params[:capabilities].collect { |name| {'name' => name} } if params[:capabilities]
     consumer[:hypervisorId] = {:hypervisorId => params[:hypervisorId]} if params[:hypervisorId]
+    consumer['contentAccessMode'] = params['contentAccessMode'] if params.has_key?('contentAccessMode')
 
     path = get_path("consumers")
     put("#{path}/#{uuid}", consumer)
@@ -235,10 +236,14 @@ class Candlepin
     parent = params[:parent] || nil
     name = params['name'] || key
     displayName = params['displayName'] || name
+    contentAccessModeList = params['contentAccessModeList'] || nil
+    contentAccessMode = params['contentAccessMode'] || nil
     owner = {
       'key' => key,
       'displayName' => displayName
     }
+    owner['contentAccessModeList'] = contentAccessModeList if !contentAccessModeList.nil?
+    owner['contentAccessMode'] = contentAccessMode if !contentAccessMode.nil?
     owner['parentOwner'] = parent if !parent.nil?
     post('/owners', owner)
   end

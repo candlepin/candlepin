@@ -422,6 +422,7 @@ public class ExporterTest {
             .thenReturn("publicKey".getBytes());
         when(consumer.getUuid()).thenReturn("8auuid");
         when(consumer.getName()).thenReturn("consumer_name");
+        when(consumer.getContentAccessMode()).thenReturn("access_mode");
         when(consumer.getType()).thenReturn(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
 
         // FINALLY test this badboy
@@ -750,6 +751,7 @@ public class ExporterTest {
             assertEquals("localhost:8443/weburl", c.getUrlWeb());
             assertEquals("8auuid", c.getUuid());
             assertEquals("consumer_name", c.getName());
+            assertEquals("access_mode", c.getContentAccessMode());
             assertEquals(new ConsumerType(ConsumerTypeEnum.CANDLEPIN), c.getType());
         }
     }

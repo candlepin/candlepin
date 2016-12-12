@@ -287,7 +287,8 @@
         },
         {
             "name": "snowwhite",
-            "displayName": "Snow White"
+            "displayName": "Snow White",
+            "contentAccessModeList": "org_environment"
         },
         {
             "name": "donaldduck",
