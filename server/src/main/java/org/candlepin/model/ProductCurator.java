@@ -204,6 +204,10 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @return Fully hydrated Product objects
      */
     public Set<Product> getProductsByUuidCached(Set<String> productUuids) {
+        if (productUuids.size() == 0) {
+            return new HashSet<Product>();
+        }
+
         Set<Product> products = new HashSet<Product>();
         Set<String> notInCache = new HashSet<String>();
         Cache<String, Product> productCache = candlepinCache.getProductCache();
