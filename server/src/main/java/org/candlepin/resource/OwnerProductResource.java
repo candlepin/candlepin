@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import org.apache.commons.lang3.StringUtils;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
@@ -272,6 +273,19 @@ public class OwnerProductResource {
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
         ProductData update) {
+
+        if (StringUtils.isEmpty(update.getId())) {
+            update.setId(productId);
+        }
+        else if (!StringUtils.equals(update.getId(), productId)) {
+            throw new BadRequestException(
+                    i18n.tr(
+                        "Contradictory ids in update request: {0}, {1}",
+                        productId,
+                        update.getId()
+                    )
+            );
+        }
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Product existing = this.fetchProduct(owner, productId);
