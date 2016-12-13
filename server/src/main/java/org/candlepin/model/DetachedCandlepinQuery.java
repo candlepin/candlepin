@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2016 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -27,17 +27,20 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.Projections;
-
-// Potentially temporary entries. Sort these into the above blob if we're keeping them.
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.loader.criteria.CriteriaQueryTranslator;
 import org.hibernate.type.Type;
 
+import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 
 
@@ -53,12 +56,10 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
     protected Session session;
     protected DetachedCriteria criteria;
 
+    protected CriteriaImpl initialState;
+
     protected int offset;
     protected int limit;
-
-    // TODO:
-    // Add support for stateless sessions (which requires some workarounds because stateless sessions
-    // and sessions don't have a common parent class)
 
     /**
      * Creates a new DetachedCandlepinQuery instance using the specified criteria and session.
@@ -84,8 +85,56 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
         this.session = session;
         this.criteria = criteria;
 
+        // Make a copy of the initial state. We'll restore this every time we generate an
+        // executable criteria to simulate a copy and, hopefully, not carry state between calls
+        this.initialState = new CriteriaImpl(null, null, null);
+        this.copyFields((CriteriaImpl) criteria.getExecutableCriteria(session), this.initialState, false);
+
         this.offset = -1;
         this.limit = -1;
+    }
+
+    /**
+     * Worker method which copies the state from one criteria to another.
+     *
+     * @param source
+     *  The source criteria from which the state should be copied
+     *
+     * @param dest
+     *  The destination criteria to receive the copied state
+     *
+     * @param copyCollections
+     *  True if the collections (maps, lists, etc.) should be copied instead of referenced
+     */
+    private void copyFields(CriteriaImpl source, CriteriaImpl dest, boolean copyCollections) {
+        try {
+            // Impl note:
+            // We currently only perform shallow copies since most things are either immutable, or
+            // are only modifiable by accessing the criteria object directly. As more functionality
+            // is added to the CandlepinQuery interface, we'll need to evaluate whether or not more
+            // explicit state copying is needed here.
+
+            for (Field field : CriteriaImpl.class.getDeclaredFields()) {
+                boolean accessible = field.isAccessible();
+                field.setAccessible(true);
+
+                if (copyCollections && Collection.class.isAssignableFrom(field.getType())) {
+                    field.set(dest, new ArrayList((Collection) field.get(source)));
+                }
+                else if (copyCollections && Map.class.isAssignableFrom(field.getType())) {
+                    field.set(dest, new HashMap((Map) field.get(source)));
+                }
+                else {
+                    field.set(dest, field.get(source));
+                }
+
+                field.setAccessible(accessible);
+            }
+        }
+        catch (IllegalAccessException e) {
+            // This shouldn't happen
+            throw new RuntimeException("Illegal access exception", e);
+        }
     }
 
     /**
@@ -102,25 +151,18 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
         // calls.
         CriteriaImpl executable = (CriteriaImpl) this.criteria.getExecutableCriteria(this.session);
 
-        // These values can be safely passed through and are checked by Hibernate before actually
-        // applying them.
-        executable.setCacheMode(null);
+        // Restore our initial state
+        this.copyFields(this.initialState, executable, true);
 
-        // WARNING:
-        // These values cannot be reset without using reflection. Once they're set, they can only
-        // be changed. We'll try to use reasonable pseudo-defaults, but only if we need to.
+        // Set the session again since we just clobbered it.
+        executable.setSession((SessionImplementor) this.session);
+
         if (this.offset > -1) {
             executable.setFirstResult(this.offset);
-        }
-        else if (executable.getFirstResult() != null) {
-            executable.setFirstResult(0);
         }
 
         if (this.limit > -1) {
             executable.setMaxResults(this.limit);
-        }
-        else if (executable.getMaxResults() != null) {
-            executable.setMaxResults(Integer.MAX_VALUE);
         }
 
         // TODO: Add read-only when we have a requirement to do so.
@@ -355,8 +397,6 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
     @SuppressWarnings({"unchecked", "checkstyle:indentation"})
     public int getRowCount() {
         CriteriaImpl executable = (CriteriaImpl) this.getExecutableCriteria();
-        Projection projection = executable.getProjection();
-        List<Order> ordering = new LinkedList<Order>();
 
         // Impl note:
         // We're using the projection method here over using a cursor to scroll the results due to
@@ -367,12 +407,12 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
 
         // Remove any ordering that may be applied (since we almost certainly won't have the field
         // available anymore)
-        Iterator iterator = executable.iterateOrderings();
-        while (iterator.hasNext()) {
-            ordering.add(((CriteriaImpl.OrderEntry) iterator.next()).getOrder());
+        for (Iterator iterator = executable.iterateOrderings(); iterator.hasNext();) {
+            iterator.next();
             iterator.remove();
         }
 
+        Projection projection = executable.getProjection();
         if (projection != null && projection.isGrouped()) {
             // We have a projection that alters the grouping of the query. We need to rebuild the
             // projection such that it gets our row count and properly applies the group by
@@ -405,14 +445,6 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
         }
 
         Long count = (Long) executable.uniqueResult();
-
-        // Restore projection and ordering...
-        executable.setProjection(projection);
-
-        for (Order order : ordering) {
-            executable.addOrder(order);
-        }
-
         return count != null ? count.intValue() : 0;
     }
 }
