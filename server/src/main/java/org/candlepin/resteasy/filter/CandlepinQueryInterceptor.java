@@ -22,10 +22,13 @@ import org.candlepin.model.ResultIterator;
 import org.candlepin.resteasy.JsonProvider;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Order;
 
 import org.jboss.resteasy.annotations.interception.ServerInterceptor;
@@ -38,10 +41,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import javax.persistence.EntityManager;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
-import javax.ws.rs.ext.Provider;
 
 
 
@@ -49,16 +52,25 @@ import javax.ws.rs.ext.Provider;
  * The CandlepinQueryInterceptor handles the streaming of a query and applies any paging
  * configuration.
  */
-@Provider
+@javax.ws.rs.ext.Provider
 @ServerInterceptor
 public class CandlepinQueryInterceptor implements PostProcessInterceptor {
     private static Logger log = LoggerFactory.getLogger(CandlepinQueryInterceptor.class);
 
     protected JsonProvider jsonProvider;
+    protected Provider<EntityManager> emProvider;
 
     @Inject
-    public CandlepinQueryInterceptor(JsonProvider jsonProvider) {
+    public CandlepinQueryInterceptor(JsonProvider jsonProvider, Provider<EntityManager> emProvider) {
         this.jsonProvider = jsonProvider;
+        this.emProvider = emProvider;
+    }
+
+    protected Session openSession() {
+        Session currentSession = (Session) this.emProvider.get().getDelegate();
+        SessionFactory factory = currentSession.getSessionFactory();
+
+        return factory.openSession();
     }
 
     @Override
@@ -67,9 +79,14 @@ public class CandlepinQueryInterceptor implements PostProcessInterceptor {
 
         if (entity instanceof CandlepinQuery) {
             final PageRequest pageRequest = ResteasyProviderFactory.getContextData(PageRequest.class);
+            final Session session = this.openSession();
             final CandlepinQuery query = (CandlepinQuery) entity;
             final ObjectMapper mapper = this.jsonProvider
                 .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
+
+            // Use a separate session so we aren't at risk of lazy loading or interceptors closing
+            // our cursor mid-stream.
+            query.useSession(session);
 
             // Apply any paging config we may have
             if (pageRequest != null) {
@@ -121,6 +138,8 @@ public class CandlepinQueryInterceptor implements PostProcessInterceptor {
                     generator.close();
 
                     iterator.close();
+
+                    session.close();
                 }
             });
         }

@@ -541,6 +541,34 @@ describe 'Owner Resource' do
     owner['autobindDisabled'].should == true
   end
 
+  it 'lists owners with populated entity collections' do
+    owner1 = create_owner(random_string("owner1"))
+
+    owner2 = create_owner(random_string("owner2"))
+    @cp.create_activation_key(owner2['key'], random_string("actkey1"))
+    @cp.create_activation_key(owner2['key'], random_string("actkey2"))
+
+    owner3 = create_owner(random_string("owner3"))
+    @cp.create_activation_key(owner3['key'], random_string("actkey1"))
+    @cp.create_activation_key(owner3['key'], random_string("actkey2"))
+    @cp.register(random_string("consumer1"), :system, nil, {}, random_string("consumer1"), owner3['key'])
+    @cp.register(random_string("consumer2"), :system, nil, {}, random_string("consumer2"), owner3['key'])
+
+    owner4 = create_owner(random_string("owner4"))
+    @cp.create_activation_key(owner4['key'], random_string("actkey1"))
+    @cp.create_activation_key(owner4['key'], random_string("actkey2"))
+    @cp.register(random_string("consumer1"), :system, nil, {}, random_string("consumer1"), owner4['key'])
+    @cp.register(random_string("consumer2"), :system, nil, {}, random_string("consumer2"), owner4['key'])
+    @cp.create_environment(owner4['key'], random_string("env1"), random_string("env1"))
+    @cp.create_environment(owner4['key'], random_string("env2"), random_string("env2"))
+
+    owners = @cp.list_owners()
+    expect(owners.length).to be >= 4
+
+    # At the time of writing, we don't actually include any of the above objects in the serialized
+    # output for owners, so we don't need to verify their presence.
+  end
+
 end
 
 describe 'Owner Resource Pool Filter Tests' do
@@ -566,8 +594,7 @@ describe 'Owner Resource Pool Filter Tests' do
       }
     )
 
-    create_pool_and_subscription(@owner['key'], @product1.id, 10,
-				[], '', '', '', nil, nil, true)
+    create_pool_and_subscription(@owner['key'], @product1.id, 10, [], '', '', '', nil, nil, true)
     create_pool_and_subscription(@owner['key'], @product2.id, 10)
 
     pools = @cp.list_owner_pools(@owner['key'])

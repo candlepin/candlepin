@@ -31,6 +31,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
+import com.google.inject.Provider;
+
 import org.hibernate.criterion.Order;
 
 import org.jboss.resteasy.core.ServerResponse;
@@ -47,6 +49,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
@@ -56,6 +59,7 @@ import javax.ws.rs.core.StreamingOutput;
 public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
     private static Logger log = LoggerFactory.getLogger(CandlepinQueryInterceptorTest.class);
 
+    protected Provider<EntityManager> emProvider;
     protected JsonProvider mockJsonProvider;
     protected JsonFactory mockJsonFactory;
     protected JsonGenerator mockJsonGenerator;
@@ -64,6 +68,8 @@ public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
 
     @Before
     public void setup() throws Exception {
+        this.emProvider = this.injector.getProvider(EntityManager.class);
+
         this.mockJsonProvider = mock(JsonProvider.class);
         this.mockJsonFactory = mock(JsonFactory.class);
         this.mockJsonGenerator = mock(JsonGenerator.class);
@@ -91,7 +97,7 @@ public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
     public void testWriteCandlepinQueryContents() throws IOException {
         List<Owner> owners = this.ownerCurator.listAll().list();
 
-        CandlepinQueryInterceptor cqi = new CandlepinQueryInterceptor(this.mockJsonProvider);
+        CandlepinQueryInterceptor cqi = new CandlepinQueryInterceptor(this.mockJsonProvider, this.emProvider);
         ServerResponse response = new ServerResponse();
         response.setEntity(this.ownerCurator.listAll());
 
@@ -139,7 +145,7 @@ public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
         pageRequest.setSortBy(sortBy);
         pageRequest.setOrder(order);
 
-        CandlepinQueryInterceptor cqi = new CandlepinQueryInterceptor(this.mockJsonProvider);
+        CandlepinQueryInterceptor cqi = new CandlepinQueryInterceptor(this.mockJsonProvider, this.emProvider);
         ServerResponse response = new ServerResponse();
         response.setEntity(this.ownerCurator.listAll());
 
@@ -171,7 +177,7 @@ public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
         // List of entities
         List<Owner> owners = this.ownerCurator.listAll().list();
 
-        CandlepinQueryInterceptor cqi = new CandlepinQueryInterceptor(this.mockJsonProvider);
+        CandlepinQueryInterceptor cqi = new CandlepinQueryInterceptor(this.mockJsonProvider, this.emProvider);
         ServerResponse response = new ServerResponse();
         response.setEntity(owners);
 

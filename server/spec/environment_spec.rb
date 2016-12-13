@@ -8,8 +8,7 @@ describe 'Environments' do
     @expected_env_id = random_string('testenv1')
     @owner = create_owner random_string('test_owner')
     @org_admin = user_client(@owner, random_string('guy'))
-    @env = @org_admin.create_environment(@owner['key'], @expected_env_id,
-      "My Test Env 1", "For test systems only.")
+    @env = @org_admin.create_environment(@owner['key'], @expected_env_id, "My Test Env 1", "For test systems only.")
   end
 
   it 'can be created by owner admin' do
@@ -214,11 +213,9 @@ describe 'Environments' do
   end
 
   it 'regenerates certificates after promoting/demoting content' do
-    consumer = @org_admin.register(random_string('testsystem'), :system, nil, {},
-        nil, nil, [], [], @env['id'])
+    consumer = @org_admin.register(random_string('testsystem'), :system, nil, {}, nil, nil, [], [], @env['id'])
     consumer['environment'].should_not be_nil
-    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
-      consumer['idCert']['key'])
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
 
     product = create_product
     content = create_content # promoted
@@ -267,6 +264,55 @@ describe 'Environments' do
     extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content2['id']}.1").should_not be true
     another_serial = ent['certificates'][0]['serial']['serial']
     another_serial.should_not == new_serial
+  end
+
+  it 'lists environments with populated entity collections' do
+    content1 = create_content()
+    content2 = create_content()
+
+    # We'll use @env as env1 with nothing on it
+
+    env2 = @cp.create_environment(@owner['key'], random_string("env2"), random_string("env2"))
+    job = @cp.promote_content(env2['id'], [{:contentId => content1['id']}])
+    wait_for_job(job['id'], 15)
+    job = @cp.promote_content(env2['id'], [{:contentId => content2['id']}])
+    wait_for_job(job['id'], 15)
+
+    env3 = @cp.create_environment(@owner['key'], random_string("env3"), random_string("env3"))
+    job = @cp.promote_content(env3['id'], [{:contentId => content1['id']}])
+    wait_for_job(job['id'], 15)
+    job = @cp.promote_content(env3['id'], [{:contentId => content2['id']}])
+    wait_for_job(job['id'], 15)
+    @cp.register(random_string("consumer1"), :system, nil, {}, random_string("consumer1"), @owner['key'], [], [], env3['id'])
+    @cp.register(random_string("consumer2"), :system, nil, {}, random_string("consumer2"), @owner['key'], [], [], env3['id'])
+
+    environments = @cp.list_environments(@owner['key'])
+    expect(environments.length).to be >= 3
+
+    # At the time of writing, we're only including environment content in the serialized output, so
+    # that's all we can verify
+
+    processed = []
+    environments.each do |environment|
+      if processed.include? environment['id']
+        fail("duplicate environments received: #{environment['id']}")
+      end
+
+      case environment['id']
+        when @env['id']
+          expect(environment['environmentContent'].length).to eq(0)
+
+        when env2['id']
+          expect(environment['environmentContent'].length).to eq(2)
+
+        when env3['id']
+          expect(environment['environmentContent'].length).to eq(2)
+
+        # else: unexpected (preexisting) environment, ignore it
+      end
+
+      processed.push(environment['id'])
+    end
   end
 
 end
