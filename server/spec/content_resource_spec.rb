@@ -56,4 +56,18 @@ describe 'Content Resource' do
     # Verify the serial has changed (the entitlement has been regenerated)
     original_serial.should_not == new_serial
   end
+
+  it 'should handle concurrent content creates' do
+    threads = []
+    300.times do
+      threads << Thread.new do
+        @cp.create_content("cname", nil, random_string("clabel"), "ctype", "cvendor", {}, true)
+      end
+    end
+    threads.each do |thread|
+      thread.join
+    end
+
+  end
+
 end

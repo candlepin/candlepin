@@ -15,6 +15,7 @@
 package org.candlepin.service.impl;
 
 import org.candlepin.service.UniqueIdGenerator;
+import org.candlepin.util.Util;
 
 import java.util.Date;
 
@@ -28,6 +29,9 @@ public class DefaultUniqueIdGenerator implements UniqueIdGenerator {
      */
     @Override
     public String generateId() {
-        return "" + (new Date()).getTime();
+        String randomLong = Long.toString(Util.generateUniqueLong());
+
+        return (new Date()).getTime() +
+            randomLong.substring(Math.max(randomLong.length() - 10, 0));
     }
 }
