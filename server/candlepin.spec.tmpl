@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.17
+Version: 0.9.54.18
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,13 @@ fi
 
 #raw
 %changelog
+* Wed Dec 14 2016 Vritant Jain <adarshvritant@gmail.com> 0.9.54.18-1
+- 1378593: Fix ConstraintViolationException when creating repos concurrently
+  (adarshvritant@gmail.com)
+- 1390214: NPE on product list (adarshvritant@gmail.com)
+- Updating autobind disabled strings (mstead@redhat.com)
+- 1390214: Internal Server Error During Guest Migration
+  (nguyen.filip@gmail.com)
 * Wed Nov 30 2016 Christopher Snyder <csnyder@redhat.com> 0.9.54.17-1
 - 1399768: Use FieldHandler to force Lazy eval (bcourt@redhat.com)
 
