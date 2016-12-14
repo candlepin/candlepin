@@ -402,8 +402,10 @@ class Candlepin
     post("/jobs/scheduler", status)
   end
 
-  def trigger_job(job)
-    post("/jobs/schedule/#{job}")
+  def trigger_job(job, async=false)
+    return async_call(!async) do
+      post("/jobs/schedule/#{job}")
+    end
   end
 
   def create_consumer_type(type_label, manifest=false)
@@ -624,6 +626,10 @@ class Candlepin
     get("/owners/#{owner_key}/content/#{content_id}")
   end
 
+  def get_content_by_uuid(content_uuid)
+    get("/content/#{content_uuid}")
+  end
+
   def delete_content(owner_key, content_id)
     delete("/owners/#{owner_key}/content/#{content_id}")
   end
@@ -759,6 +765,10 @@ class Candlepin
 
   def get_product(owner_key, product_id)
     get("/owners/#{owner_key}/products/#{product_id}")
+  end
+
+  def get_product_by_uuid(product_uuid)
+    get("/products/#{product_uuid}")
   end
 
   def delete_product(owner_key, product_id)

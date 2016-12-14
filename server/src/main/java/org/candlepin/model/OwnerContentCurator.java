@@ -17,7 +17,6 @@ package org.candlepin.model;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
-import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
@@ -325,65 +324,6 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
     }
 
     /**
-     * Fetches the number of owners currently mapped to the given contents. If a provided content
-     * UUID does not represent an existing content entity, or is not mapped to any owners, it will
-     * not be included in the output.
-     *
-     * @param contentUuids
-     *  A collection of content UUIDs for which to fetch the owner counts
-     *
-     * @return
-     *  A mapping of content UUIDs to their owner counts
-     */
-    @Transactional
-    public Map<String, Integer> getOwnerCounts(Collection<String> contentUuids) {
-        StringBuilder builder = new StringBuilder("SELECT oc.contentUuid, COUNT(oc) FROM OwnerContent oc");
-
-        if (contentUuids != null && !contentUuids.isEmpty()) {
-            builder.append(" WHERE ");
-
-            int blockCount = (int) Math.ceil(contentUuids.size() /
-                (float) AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE);
-
-            for (int i = 1; i <= blockCount; ++i) {
-                if (i > 1) {
-                    builder.append(" OR ");
-                }
-
-                builder.append("oc.contentUuid IN :content_uuids_").append(i);
-            }
-        }
-
-        builder.append(" GROUP BY oc.contentUuid");
-
-        Query query = this.currentSession().createQuery(builder.toString());
-
-        if (contentUuids != null && !contentUuids.isEmpty()) {
-            Iterable<List<String>> blocks = Iterables.partition(contentUuids,
-                AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE);
-
-            int offset = 0;
-            for (List<String> block : blocks) {
-                query.setParameterList("content_uuids_" + ++offset, block);
-            }
-        }
-
-        Map<String, Integer> result = new HashMap<String, Integer>();
-
-        ScrollableResults cursor = query.scroll();
-        while (cursor.next()) {
-            String uuid = cursor.getString(0);
-            Integer count = Integer.valueOf((int) cursor.getLong(1).longValue());
-
-            result.put(uuid, count);
-        }
-
-        cursor.close();
-
-        return result;
-    }
-
-    /**
      * Retrieves a criteria which can be used to fetch a list of content with the specified Red Hat
      * content ID and entity version belonging to owners other than the owner provided. If no
      * content were found matching the given criteria, this method returns an empty list.
@@ -438,6 +378,37 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
         if (uuids != null && !uuids.isEmpty()) {
             DetachedCriteria criteria = this.createSecureDetachedCriteria(Content.class, null)
+                .add(CPRestrictions.in("uuid", uuids));
+
+            return this.cpQueryFactory.<Content>buildQuery(this.currentSession(), criteria);
+        }
+
+        return this.cpQueryFactory.<Content>buildQuery();
+    }
+
+    /**
+     * Builds a query which can be used to fetch the current collection of orphaned content. Due
+     * to the nature of this request, it is highly advised that this query be run within a
+     * transaction, with a pessimistic lock mode set.
+     *
+     * @return
+     *  A CandlepinQuery for fetching the orphaned content
+     */
+    public CandlepinQuery<Content> getOrphanedContent() {
+        // As with many of the owner=>content lookups, we have to do this in two queries. Since
+        // we need to start from content and do a left join back to owner content, we have to use
+        // a native query instead of any of the ORM query languages
+
+        String sql = "SELECT c.uuid " +
+            "FROM cp2_content c LEFT JOIN cp2_owner_content oc ON c.uuid = oc.content_uuid " +
+            "WHERE oc.owner_id IS NULL";
+
+        List<String> uuids = this.getEntityManager()
+            .createNativeQuery(sql)
+            .getResultList();
+
+        if (uuids != null && !uuids.isEmpty()) {
+            DetachedCriteria criteria = DetachedCriteria.forClass(Content.class)
                 .add(CPRestrictions.in("uuid", uuids));
 
             return this.cpQueryFactory.<Content>buildQuery(this.currentSession(), criteria);

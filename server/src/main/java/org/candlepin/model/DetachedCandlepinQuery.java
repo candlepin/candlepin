@@ -42,6 +42,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
+import javax.persistence.LockModeType;
+
 
 
 /**
@@ -60,6 +62,7 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
 
     protected int offset;
     protected int limit;
+    protected LockMode lockMode;
 
     /**
      * Creates a new DetachedCandlepinQuery instance using the specified criteria and session.
@@ -92,6 +95,7 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
 
         this.offset = -1;
         this.limit = -1;
+        this.lockMode = null;
     }
 
     /**
@@ -165,6 +169,10 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
             executable.setMaxResults(this.limit);
         }
 
+        if (this.lockMode != null) {
+            executable.setLockMode(this.lockMode);
+        }
+
         // TODO: Add read-only when we have a requirement to do so.
 
         return executable;
@@ -211,6 +219,22 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
         }
 
         this.criteria.addOrder(order);
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CandlepinQuery<T> setLockMode(LockModeType lockMode) {
+        // Translate the given lock mode to a Hibernate lock mode
+        if (lockMode != null) {
+            this.lockMode = LockMode.valueOf(lockMode.name());
+        }
+        else {
+            this.lockMode = null;
+        }
+
         return this;
     }
 

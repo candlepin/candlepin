@@ -20,6 +20,12 @@ describe 'Owner Product Resource' do
       })
   end
 
+  it 'should fail when fetching non-existing products' do
+    lambda do
+      @cp.get_product(@owner['key'], "some bad product id")
+    end.should raise_exception(RestClient::ResourceNotFound)
+  end
+
   it 'updates individual product fields' do
     prod = create_product(nil, 'tacos', {:multiplier => 2, :dependentProductIds => [2, 4]})
     #Ensure the dates are at least one second different

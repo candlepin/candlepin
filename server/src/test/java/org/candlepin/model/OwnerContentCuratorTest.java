@@ -586,60 +586,6 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetOwnerCounts() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-        Owner owner3 = this.createOwner();
-
-        Content content1 = this.createContent("p1", "p1");
-        Content content2 = this.createContent("p2", "p2", owner1);
-        Content content3 = this.createContent("p3", "p3", owner1, owner2);
-        Content content4 = this.createContent("p4", "p4", owner1, owner2, owner3);
-        Content content5 = this.createContent("p5", "p5", owner1, owner2, owner3);
-
-        this.ownerContentCurator.flush();
-
-        List<String> uuids = Arrays.asList(content1.getUuid(), content2.getUuid(), content3.getUuid(),
-            content4.getUuid(), "dummy uuid");
-
-        Map<String, Integer> result = this.ownerContentCurator.getOwnerCounts(uuids);
-
-        assertEquals(3, result.size());
-        assertEquals(1, result.get(content2.getUuid()).intValue());
-        assertEquals(2, result.get(content3.getUuid()).intValue());
-        assertEquals(3, result.get(content4.getUuid()).intValue());
-        assertFalse(result.containsKey(content1.getUuid()));
-        assertFalse(result.containsKey(content5.getUuid()));
-        assertFalse(result.containsKey("dummy uuid"));
-    }
-
-    @Test
-    public void testGetOwnerCountsNoUuids() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-        Owner owner3 = this.createOwner();
-
-        Content content1 = this.createContent("p1", "p1");
-        Content content2 = this.createContent("p2", "p2", owner1);
-        Content content3 = this.createContent("p3", "p3", owner1, owner2);
-        Content content4 = this.createContent("p4", "p4", owner1, owner2, owner3);
-        Content content5 = this.createContent("p5", "p5", owner1, owner2, owner3);
-
-        this.ownerContentCurator.flush();
-
-        List<String> uuids = null;
-        Map<String, Integer> result = this.ownerContentCurator.getOwnerCounts(uuids);
-
-        assertEquals(4, result.size());
-        assertEquals(1, result.get(content2.getUuid()).intValue());
-        assertEquals(2, result.get(content3.getUuid()).intValue());
-        assertEquals(3, result.get(content4.getUuid()).intValue());
-        assertEquals(3, result.get(content5.getUuid()).intValue());
-        assertFalse(result.containsKey(content1.getUuid()));
-        assertFalse(result.containsKey("dummy uuid"));
-    }
-
-    @Test
     public void testGetContentByVersions() {
         Owner owner1 = this.createOwner();
         Owner owner2 = this.createOwner();

@@ -20,7 +20,6 @@ import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
-import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Query;
 import org.hibernate.criterion.DetachedCriteria;
@@ -214,65 +213,6 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
     }
 
     /**
-     * Fetches the number of owners currently mapped to the given products. If a provided product
-     * UUID does not represent an existing product, or is not mapped to any owners, it will not be
-     * included in the output.
-     *
-     * @param productUuids
-     *  A collection of product UUIDs for which to fetch the owner counts
-     *
-     * @return
-     *  A mapping of product UUIDs to their owner counts
-     */
-    @Transactional
-    public Map<String, Integer> getOwnerCounts(Collection<String> productUuids) {
-        StringBuilder builder = new StringBuilder("SELECT op.productUuid, COUNT(op) FROM OwnerProduct op");
-
-        if (productUuids != null && !productUuids.isEmpty()) {
-            builder.append(" WHERE ");
-
-            int blockCount = (int) Math.ceil(productUuids.size() /
-                (float) AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE);
-
-            for (int i = 1; i <= blockCount; ++i) {
-                if (i > 1) {
-                    builder.append(" OR ");
-                }
-
-                builder.append("op.productUuid IN :product_uuids_").append(i);
-            }
-        }
-
-        builder.append(" GROUP BY op.productUuid");
-
-        Query query = this.currentSession().createQuery(builder.toString());
-
-        if (productUuids != null && !productUuids.isEmpty()) {
-            Iterable<List<String>> blocks = Iterables.partition(productUuids,
-                AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE);
-
-            int offset = 0;
-            for (List<String> block : blocks) {
-                query.setParameterList("product_uuids_" + ++offset, block);
-            }
-        }
-
-        Map<String, Integer> result = new HashMap<String, Integer>();
-
-        ScrollableResults cursor = query.scroll();
-        while (cursor.next()) {
-            String uuid = cursor.getString(0);
-            Integer count = Integer.valueOf((int) cursor.getLong(1).longValue());
-
-            result.put(uuid, count);
-        }
-
-        cursor.close();
-
-        return result;
-    }
-
-    /**
      * Checks if the owner has an existing version of the specified product. This lookup is
      * different than the mapping check in that this check will find any product with the
      * specified ID, as opposed to checking if a specific version is mapped to the owner.
@@ -415,6 +355,37 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .createQuery(jpql)
             .setParameter("owner_id", owner.getId())
             .executeUpdate();
+    }
+
+    /**
+     * Builds a query which can be used to fetch the current collection of orphaned products. Due
+     * to the nature of this request, it is highly advised that this query be run within a
+     * transaction, with a pessimistic lock mode set.
+     *
+     * @return
+     *  A CandlepinQuery for fetching the orphaned products
+     */
+    public CandlepinQuery<Product> getOrphanedProducts() {
+        // As with many of the owner=>product lookups, we have to do this in two queries. Since
+        // we need to start from product and do a left join back to owner products, we have to use
+        // a native query instead of any of the ORM query languages
+
+        String sql = "SELECT p.uuid " +
+            "FROM cp2_products p LEFT JOIN cp2_owner_products op ON p.uuid = op.product_uuid " +
+            "WHERE op.owner_id IS NULL";
+
+        List<String> uuids = this.getEntityManager()
+            .createNativeQuery(sql)
+            .getResultList();
+
+        if (uuids != null && !uuids.isEmpty()) {
+            DetachedCriteria criteria = DetachedCriteria.forClass(Product.class)
+                .add(CPRestrictions.in("uuid", uuids));
+
+            return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
+        }
+
+        return this.cpQueryFactory.<Product>buildQuery();
     }
 
     /**

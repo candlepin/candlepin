@@ -230,11 +230,6 @@ public class ContentManager {
                     }
                 }
 
-                // Clean up our content entity if it was orphaned
-                if (this.ownerContentCurator.getOwnerCount(entity) == 0) {
-                    this.contentCurator.delete(entity);
-                }
-
                 return alt;
             }
         }
@@ -296,11 +291,6 @@ public class ContentManager {
                 // Impl note: This should also take care of our entitlement cert regeneration
                 this.productManager.updateProduct(pdata, owner, regenerateEntitlementCerts);
             }
-        }
-
-        // Clean up our content entity if it was orphaned
-        if (this.ownerContentCurator.getOwnerCount(entity) == 0) {
-            this.contentCurator.delete(entity);
         }
 
         return updated;
@@ -512,20 +502,6 @@ public class ContentManager {
         }
 
         this.ownerContentCurator.updateOwnerContentReferences(owner, contentUuidMap);
-
-        // Kill any content objects we've orphaned as a result of this import
-        Map<String, Integer> ownerCounts = this.ownerContentCurator.getOwnerCounts(sourceContent.keySet());
-
-        for (iterator = sourceContent.values().iterator(); iterator.hasNext();) {
-            if (ownerCounts.containsKey(iterator.next().getUuid())) {
-                iterator.remove();
-            }
-        }
-
-        if (sourceContent.size() > 0) {
-            this.contentCurator.bulkDelete(sourceContent.values());
-            this.contentCurator.flush();
-        }
 
         // Return
         return importResult;

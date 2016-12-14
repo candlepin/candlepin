@@ -25,6 +25,7 @@ import org.candlepin.pinsetter.tasks.ExpiredPoolsJob;
 import org.candlepin.pinsetter.tasks.ImportRecordJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
 import org.candlepin.pinsetter.tasks.ManifestCleanerJob;
+import org.candlepin.pinsetter.tasks.OrphanCleanupJob;
 import org.candlepin.pinsetter.tasks.SweepBarJob;
 import org.candlepin.pinsetter.tasks.UnmappedGuestEntitlementCleanerJob;
 import org.candlepin.pinsetter.tasks.UnpauseJob;
@@ -198,16 +199,17 @@ public class ConfigProperties {
     public static final int PINSETTER_MAX_RETRIES_DEFAULT = 10;
 
     public static final String[] DEFAULT_TASK_LIST = new String[] {
-        CertificateRevocationListTask.class.getName(),
-        JobCleaner.class.getName(),
-        ImportRecordJob.class.getName(),
-        CancelJobJob.class.getName(),
-        ExpiredPoolsJob.class.getName(),
-        UnpauseJob.class.getName(),
-        SweepBarJob.class.getName(),
-        ManifestCleanerJob.class.getName(),
         ActiveEntitlementJob.class.getName(),
+        CancelJobJob.class.getName(),
+        CertificateRevocationListTask.class.getName(),
+        ExpiredPoolsJob.class.getName(),
+        ImportRecordJob.class.getName(),
+        JobCleaner.class.getName(),
+        ManifestCleanerJob.class.getName(),
+        OrphanCleanupJob.class.getName(),
+        SweepBarJob.class.getName(),
         UnmappedGuestEntitlementCleanerJob.class.getName(),
+        UnpauseJob.class.getName(),
     };
 
     public static final String MANIFEST_CLEANER_JOB_MAX_AGE_IN_MINUTES =

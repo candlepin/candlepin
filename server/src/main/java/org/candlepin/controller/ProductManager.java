@@ -211,11 +211,6 @@ public class ProductManager {
                     );
                 }
 
-                // Clean up our product entity if it was orphaned
-                if (this.ownerProductCurator.getOwnerCount(entity) == 0) {
-                    this.productCurator.delete(entity);
-                }
-
                 return alt;
             }
         }
@@ -253,11 +248,6 @@ public class ProductManager {
             this.entitlementCertGenerator.regenerateCertificatesOf(
                 Arrays.asList(owner), Arrays.asList(updated), true
             );
-        }
-
-        // Clean up our product entity if it was orphaned
-        if (this.ownerProductCurator.getOwnerCount(entity) == 0) {
-            this.productCurator.delete(entity);
         }
 
         return updated;
@@ -426,20 +416,6 @@ public class ProductManager {
         }
 
         this.ownerProductCurator.updateOwnerProductReferences(owner, productUuidMap);
-
-        // Kill any product objects we've orphaned as a result of this import
-        Map<String, Integer> ownerCounts = this.ownerProductCurator.getOwnerCounts(productUuidMap.keySet());
-
-        for (iterator = sourceProducts.values().iterator(); iterator.hasNext();) {
-            if (ownerCounts.containsKey(iterator.next().getUuid())) {
-                iterator.remove();
-            }
-        }
-
-        if (sourceProducts.size() > 0) {
-            this.productCurator.bulkDelete(sourceProducts.values());
-            this.productCurator.flush();
-        }
 
         // Return
         return importResult;

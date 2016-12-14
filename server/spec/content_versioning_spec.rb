@@ -184,7 +184,6 @@ describe 'Content Versioning' do
     label = "shared content"
     type = "shared_content_type"
     vendor = "generous vendor"
-    updated_upstream = Date.today
 
     content1 = @cp.create_content(owner1["key"], name, id, label, type, vendor)
     content2 = @cp.create_content(owner2["key"], name, id, label, type, vendor)
@@ -203,6 +202,101 @@ describe 'Content Versioning' do
     content = @cp.list_content(owner2["key"])
     content.size.should eq(1)
     content[0]["uuid"].should eq(content2["uuid"])
+  end
+
+  it "should not converge with an orphaned content" do
+    # NOTE:
+    # This test should be removed/disabled if in-place updating/converging is reenabled, as orphans
+    # will not be created in such a case
+
+    owner1 = create_owner random_string('test_owner')
+    owner2 = create_owner random_string('test_owner')
+
+    id = random_string('test_content')
+    label = "shared content"
+    type = "shared_content_type"
+    vendor = "generous vendor"
+
+    orphan = @cp.create_content(owner1["key"], id, id, label, type, vendor)
+    content1 = @cp.update_content(owner1["key"], id, { :name => "#{id}-update" })
+    content2 = @cp.create_content(owner2["key"], id, id, label, type, vendor)
+
+    expect(orphan['uuid']).to_not eq(content1['uuid'])
+    expect(orphan['uuid']).to_not eq(content2['uuid'])
+    expect(content1['uuid']).to_not eq(content2['uuid'])
+
+    expect(@cp.get_content_by_uuid(orphan['uuid'])).to_not be_nil
+    expect(@cp.get_content_by_uuid(content1['uuid'])).to_not be_nil
+    expect(@cp.get_content_by_uuid(content2['uuid'])).to_not be_nil
+  end
+
+  it 'should cleanup orphans without interfering with normal actions' do
+    # NOTE:
+    # This test takes advantage of the immutable nature of contents with the in-place update branch
+    # disabled. If in-place updates are ever reenabled, we'll need a way to generate large numbers
+    # of orphaned contents for this test.
+
+    owner1 = create_owner(random_string('test_owner-1'))
+    owner2 = create_owner(random_string('test_owner-2'))
+
+    prefix = "test-content-"
+    label = "shared content"
+    type = "shared_content_type"
+    vendor = "generous vendor"
+
+    offset = 10000
+    length = 100
+
+    # Repeat this test a few(ish) times to hopefully catch any synchronization error
+    (1..5).each do
+      o1_uuids = []
+      o2_uuids = []
+
+      # Create a bunch of dummy contents
+      (offset..(offset + length - 1)).each do |i|
+        id = "#{prefix}#{i}"
+
+        # create content and immediately update it to generate an orphaned content
+        @cp.create_content(owner1["key"], id, id, label, type, vendor)
+      end
+
+      # Attempt to update and create new contents to get into some funky race conditions with
+      # convergence and orphanization
+      updater = Thread.new do
+        (offset..(offset + length - 1)).each do |i|
+          id = "#{prefix}#{i}"
+          content = @cp.update_content(owner1["key"], id, { :name => "#{id}-update" })
+          o1_uuids << content['uuid']
+        end
+      end
+
+      generator = Thread.new do
+        (offset..(offset + length - 1)).each do |i|
+          id = "#{prefix}#{i}"
+          content = @cp.create_content(owner2["key"], id, id, label, type, vendor)
+          o2_uuids << content['uuid']
+        end
+      end
+
+      sleep 1
+      @cp.trigger_job("OrphanCleanupJob");
+
+      updater.join
+      generator.join
+
+      # Verify the contents created/updated still exist
+      o1_uuids.each do |uuid|
+        content = @cp.get_content_by_uuid(uuid)
+        expect(content).to_not be_nil
+      end
+
+      o2_uuids.each do |uuid|
+        content = @cp.get_content_by_uuid(uuid)
+        expect(content).to_not be_nil
+      end
+
+      offset += length
+    end
   end
 
 end

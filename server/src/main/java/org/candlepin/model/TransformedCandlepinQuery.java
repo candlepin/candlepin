@@ -23,6 +23,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.LinkedList;
 
+import javax.persistence.LockModeType;
+
 
 
 /**
@@ -150,6 +152,15 @@ public class TransformedCandlepinQuery<I, O> implements CandlepinQuery<O> {
     @Override
     public CandlepinQuery<O> addOrder(Order order) {
         this.query.addOrder(order);
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CandlepinQuery<O> setLockMode(LockModeType lockMode) {
+        this.query.setLockMode(lockMode);
         return this;
     }
 

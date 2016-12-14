@@ -592,60 +592,6 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetOwnerCounts() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-        Owner owner3 = this.createOwner();
-
-        Product product1 = this.createProduct("p1", "p1");
-        Product product2 = this.createProduct("p2", "p2", owner1);
-        Product product3 = this.createProduct("p3", "p3", owner1, owner2);
-        Product product4 = this.createProduct("p4", "p4", owner1, owner2, owner3);
-        Product product5 = this.createProduct("p5", "p5", owner1, owner2, owner3);
-
-        this.ownerProductCurator.flush();
-
-        List<String> uuids = Arrays.asList(product1.getUuid(), product2.getUuid(), product3.getUuid(),
-            product4.getUuid(), "dummy uuid");
-
-        Map<String, Integer> result = this.ownerProductCurator.getOwnerCounts(uuids);
-
-        assertEquals(3, result.size());
-        assertEquals(1, result.get(product2.getUuid()).intValue());
-        assertEquals(2, result.get(product3.getUuid()).intValue());
-        assertEquals(3, result.get(product4.getUuid()).intValue());
-        assertFalse(result.containsKey(product1.getUuid()));
-        assertFalse(result.containsKey(product5.getUuid()));
-        assertFalse(result.containsKey("dummy uuid"));
-    }
-
-    @Test
-    public void testGetOwnerCountsNoUuids() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-        Owner owner3 = this.createOwner();
-
-        Product product1 = this.createProduct("p1", "p1");
-        Product product2 = this.createProduct("p2", "p2", owner1);
-        Product product3 = this.createProduct("p3", "p3", owner1, owner2);
-        Product product4 = this.createProduct("p4", "p4", owner1, owner2, owner3);
-        Product product5 = this.createProduct("p5", "p5", owner1, owner2, owner3);
-
-        this.ownerProductCurator.flush();
-
-        List<String> uuids = null;
-        Map<String, Integer> result = this.ownerProductCurator.getOwnerCounts(uuids);
-
-        assertEquals(4, result.size());
-        assertEquals(1, result.get(product2.getUuid()).intValue());
-        assertEquals(2, result.get(product3.getUuid()).intValue());
-        assertEquals(3, result.get(product4.getUuid()).intValue());
-        assertEquals(3, result.get(product5.getUuid()).intValue());
-        assertFalse(result.containsKey(product1.getUuid()));
-        assertFalse(result.containsKey("dummy uuid"));
-    }
-
-    @Test
     public void testGetProductsByVersions() {
         Owner owner1 = this.createOwner();
         Owner owner2 = this.createOwner();
