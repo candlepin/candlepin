@@ -75,11 +75,17 @@ public class AutobindRules {
         log.debug("pools.size() before V1 certificate filter: {}, after: {}",
                 poolsBeforeContentFilter, pools.size());
 
+        List<String> productIdList;
+        if (productIds == null) {
+            productIdList = new ArrayList<String>();
+        }
+        else {
+            productIdList = Arrays.asList(productIds);
+        }
+
         if (pools.size() == 0) {
             List<String> fullList = new ArrayList<String>();
-            if (productIds != null) {
-                fullList.addAll(Arrays.asList(productIds));
-            }
+            fullList.addAll(productIdList);
             for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
                 fullList.add(cip.getId());
             }
@@ -89,7 +95,7 @@ public class AutobindRules {
 
         if (log.isDebugEnabled()) {
             log.debug("Selecting best entitlement pool for products: " +
-                Arrays.toString(productIds));
+                productIdList);
             if (poolsBeforeContentFilter != pools.size()) {
                 log.debug((poolsBeforeContentFilter - pools.size()) + " pools filtered " +
                     "due to too much content");
@@ -128,7 +134,7 @@ public class AutobindRules {
 
         if (pools.size() > 0 && (result == null || result.isEmpty())) {
             List<String> fullList = new ArrayList<String>();
-            fullList.addAll(Arrays.asList(productIds));
+            fullList.addAll(productIdList);
             for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
                 fullList.add(cip.getId());
             }
