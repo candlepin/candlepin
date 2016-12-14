@@ -74,15 +74,23 @@ public class AutobindRules {
         log.debug("pools.size() before V1 certificate filter: {}, after: {}",
                 poolsBeforeContentFilter, pools.size());
 
+        String productIdsString;
+        if (productIds == null) {
+            productIdsString = "None";
+        }
+        else {
+            productIdsString = Arrays.toString(productIds);
+        }
+
         // per dgoodwin, this needs to throw an exception for legacy clients
         if (pools.size() == 0) {
             throw new RuntimeException("No entitlements for products: " +
-                Arrays.toString(productIds));
+                productIdsString);
         }
 
         if (log.isDebugEnabled()) {
             log.debug("Selecting best entitlement pool for products: " +
-                Arrays.toString(productIds));
+                productIdsString);
             if (poolsBeforeContentFilter != pools.size()) {
                 log.debug((poolsBeforeContentFilter - pools.size()) + " pools filtered " +
                     "due to too much content");
@@ -121,7 +129,7 @@ public class AutobindRules {
 
         if (pools.size() > 0 && (result == null || result.isEmpty())) {
             throw new RuleExecutionException(
-                "Rule did not select a pool for products: " + Arrays.toString(productIds));
+                "Rule did not select a pool for products: " + productIdsString);
         }
 
         List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
