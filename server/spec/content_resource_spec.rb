@@ -59,16 +59,15 @@ describe 'Content Resource' do
 
   it 'should handle concurrent content creates' do
     threads = []
-    for i in 0..300
-      threads << Thread.new{_create_content()}
+    300.times do
+      threads << Thread.new do
+        @cp.create_content("cname", nil, random_string("clabel"), "ctype", "cvendor", {}, true)
+      end
     end
     threads.each do |thread|
       thread.join
     end
-  end
 
-  def _create_content()
-    content = @cp.create_content("cname", nil, random_string("clabel"), "ctype", "cvendor", {}, true)
   end
 
 end
