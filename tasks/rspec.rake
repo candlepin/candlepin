@@ -88,7 +88,7 @@ module ModifiedRSpec
       opts.concat(ruby_includes)
 
       @signifiers.each do |signifier|
-        unless signifier =~ /\d+/
+        unless signifier =~ /^\d+$/
           opts.concat(%W(-e "#{signifier}"))
         end
       end
@@ -154,7 +154,7 @@ module ModifiedRSpec
       end
 
       @signifiers.each do |signifier|
-        if signifier =~ /\d+/
+        if signifier =~ /^\d+$/
           if specs_to_run.length == 1
             specs_to_run.map! { |s| "#{s}:#{signifier}" }
           else
