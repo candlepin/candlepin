@@ -157,21 +157,56 @@ public class PoolHelper {
     }
 
     /**
-     * Copies the provided products from a source pool to a derived pool.
-     * It assumes that source Pool is already in database and that the provided Products or
-     * derived provided Products are linked with the Pool in the database!
+     * Copies the provided products from a source pool to a bonus pool. The
+     * logic is not completely straightforward.
+     *
+     * The source has so called 'main product' (source.getProduct()) and also
+     * derived product source.getDerivedProduct(). It also has 'main provided products'
+     * source.getProvidedProducts().
+     *
+     * During the copy, the following takes place.
+     *
+     * If the source has derived product, then the destination will receive source's
+     * derived product as main product (destination.getProduct). Also, it will receive
+     * source's derived provided products as destination main provided products.
+     * In other words:
+     *
+     * IF source.getDerivedProduct is null
+     *
+     *     source.product  >>>   destination.product
+     *     source.providedProducts >>> destionation.providedProducts
+     *
+     * IF source.getDerivedProduct is not null
+     *
+     *     source.derivedProduct >>> destination.product
+     *     source.derivedProvidedProducts >>> destination.providedProducts
+     *
      * @param source subscription
-     * @param destination pool
+     * @param destination bonus pool
      */
     private static void copyProvidedProducts(Pool source, Pool destination,
         OwnerProductCurator curator, ProductCurator productCurator) {
         Set<Product> products;
 
-        if (source.getDerivedProduct() != null) {
-            products = productCurator.getPoolDerivedProvidedProductsCached(source);
+        // If the source pool has id filled, we assume that it is stored in the
+        // database and also assume that the provided Products or
+        // derived provided Products are linked with the Pool in the database!
+        if (source.getId() != null) {
+            if (source.getDerivedProduct() != null) {
+                products = productCurator.getPoolDerivedProvidedProductsCached(source);
+            }
+            else {
+                products = productCurator.getPoolProvidedProductsCached(source);
+            }
         }
+        // Otherwise we just use the products attached directly on the entity
         else {
-            products = productCurator.getPoolProvidedProductsCached(source);
+            if (source.getDerivedProduct() != null) {
+                products = source.getDerivedProvidedProducts();
+            }
+            else {
+                products = source.getProvidedProducts();
+            }
         }
 
         for (Product product : products) {
