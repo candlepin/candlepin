@@ -114,7 +114,7 @@ public class EventSinkImpl implements EventSink {
             catch (HornetQException e) {
                 throw new RuntimeException(e);
             }
-            log.info("Created new HornetQ session.");
+            log.debug("Created new HornetQ session.");
             sessions.set(session);
         }
         return session;
