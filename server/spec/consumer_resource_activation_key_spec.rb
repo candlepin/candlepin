@@ -179,4 +179,28 @@ describe 'Consumer Resource Activation Key' do
     @cp.list_entitlements(:uuid => consumer5.uuid).size.should == 0
   end
 
+  it 'should bind to subs when service level varies' do
+      rhel_product = create_product(random_string('product'),
+                                    random_string('product'),
+                                    {:attributes => {:support_level => 'VIP'}})
+      product = create_product(random_string('product'), random_string('product'))
+      create_pool_and_subscription(@owner['key'], rhel_product.id, 37)
+      create_pool_and_subscription(@owner['key'], product.id, 33)
+
+      ak = random_string('test_token');
+      activation_key = @cp.create_activation_key(@owner['key'], ak, 'VIP')
+
+      rhel_pool = @cp.list_pools(:owner => @owner.id, :product => rhel_product['id']).first
+      pool = @cp.list_pools(:owner => @owner.id, :product => product['id']).first
+
+      @cp.add_pool_to_key(activation_key['id'], rhel_pool['id'], 1)
+      @cp.add_pool_to_key(activation_key['id'], pool['id'], 1)
+
+      consumer = @client.register(random_string('machine'), :system, nil, {}, nil,
+          @owner['key'], [ak])
+
+      @cp.list_pools(:owner => @owner['id']).size.should == 2
+      @cp.list_entitlements(:uuid => consumer.uuid).size.should == 2
+  end
+
 end
