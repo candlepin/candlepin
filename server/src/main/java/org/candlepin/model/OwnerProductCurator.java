@@ -549,6 +549,8 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         // the pool tables here.
 
         if (productUuids != null && !productUuids.isEmpty()) {
+            log.info("Removing owner-product references for owner: {}, {}", owner, productUuids);
+
             Session session = this.currentSession();
 
             // Ensure we aren't trying to remove product references for products still used by
@@ -576,7 +578,25 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             criteria.put("owner_id", owner.getId());
 
             int count = this.bulkSQLDelete(OwnerProduct.DB_TABLE, criteria);
-            log.debug("{} owner-product relations removed", count);
+            log.info("{} owner-product relations removed", count);
+
+            // Product content ///////////////////////////////
+            // String sql = "SELECT content_uuid FROM " + OwnerContent.DB_TABLE + " WHERE owner_id = ?1";
+            // List<String> ids = session.createSQLQuery(sql)
+            //     .setParameter("1", owner.getId())
+            //     .list();
+
+            // if (ids != null && !ids.isEmpty()) {
+            //     criteria.clear();
+            //     criteria.put("content_uuid", ids);
+            //     criteria.put("product_uuid", productUuids);
+
+            //     count = this.bulkSQLDelete(ProductContent.DB_TABLE, criteria);
+            //     log.info("{} product-content relations removed", count);
+            // }
+            // else {
+            //     log.info("0 owner-product relations removed");
+            // }
 
             // Activation key products ///////////////////////
             String sql = "SELECT id FROM " + ActivationKey.DB_TABLE + " WHERE owner_id = ?1";
@@ -590,10 +610,10 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
                 criteria.put("product_uuid", productUuids);
 
                 count = this.bulkSQLDelete("cp2_activation_key_products", criteria);
-                log.debug("{} activation keys removed", count);
+                log.info("{} activation key products removed", count);
             }
             else {
-                log.debug("0 activation keys removed");
+                log.info("0 activation key products removed");
             }
         }
     }

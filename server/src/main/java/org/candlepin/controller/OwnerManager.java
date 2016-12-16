@@ -61,7 +61,7 @@ public class OwnerManager {
     @Inject private ImportRecordCurator importRecordCurator;
     @Inject private PermissionBlueprintCurator permissionCurator;
     @Inject private OwnerProductCurator ownerProductCurator;
-    @Inject private ProductManager prodManager;
+    @Inject private ProductManager productManager;
     @Inject private OwnerContentCurator ownerContentCurator;
     @Inject private ContentManager contentManager;
     @Inject private OwnerCurator ownerCurator;
@@ -142,16 +142,11 @@ public class OwnerManager {
         }
 
         log.info("Deleting all products...");
-        this.prodManager.removeAllProducts(owner);
+        this.productManager.removeAllProducts(owner);
 
-        /*
-         * contents might have been deleted due to cascades above.
-         */
-        ownerContentCurator.flush();
-        for (Content c : ownerContentCurator.getContentByOwner(owner)) {
-            log.info("Deleting content: {}", c);
-            this.contentManager.removeContent(c, owner, false);
-        }
+        log.info("Deleting all content...");
+        this.contentManager.removeAllContent(owner, false);
+
 
         log.info("Deleting owner: {}", owner);
         ownerCurator.delete(owner);

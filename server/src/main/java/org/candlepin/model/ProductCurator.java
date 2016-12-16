@@ -461,12 +461,12 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .uniqueResult()) > 0;
     }
 
-    public CandlepinQuery<Product> getProductsWithContent(Owner owner, Collection<String> contentIds) {
-        return this.getProductsWithContent(owner, contentIds, null);
+    public CandlepinQuery<Product> getProductsByContent(Owner owner, Collection<String> contentIds) {
+        return this.getProductsByContent(owner, contentIds, null);
     }
 
     @SuppressWarnings("unchecked")
-    public CandlepinQuery<Product> getProductsWithContent(Owner owner, Collection<String> contentIds,
+    public CandlepinQuery<Product> getProductsByContent(Owner owner, Collection<String> contentIds,
         Collection<String> productsToOmit) {
         if (owner != null && contentIds != null && !contentIds.isEmpty()) {
             // Impl note:
@@ -506,7 +506,31 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     @SuppressWarnings("unchecked")
-    public CandlepinQuery<Product> getProductsWithContent(Collection<String> contentUuids) {
+    public CandlepinQuery<Product> getProductsByContentUuids(Collection<String> contentUuids) {
+        if (contentUuids != null && !contentUuids.isEmpty()) {
+            // See note above in getProductsByContent for details on why we do two queries here
+            // instead of one.
+            Criteria idCriteria = this.createSecureCriteria()
+                .createAlias("productContent", "pcontent")
+                .createAlias("pcontent.content", "content")
+                .add(CPRestrictions.in("content.uuid", contentUuids))
+                .setProjection(Projections.distinct(Projections.id()));
+
+            List<String> productUuids = idCriteria.list();
+
+            if (productUuids != null && !productUuids.isEmpty()) {
+                DetachedCriteria criteria = this.createSecureDetachedCriteria()
+                    .add(CPRestrictions.in("uuid", productUuids));
+
+                return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
+            }
+        }
+
+        return this.cpQueryFactory.<Product>buildQuery();
+    }
+
+    @SuppressWarnings("unchecked")
+    public CandlepinQuery<Product> getProductsByContentUuids(Owner owner, Collection<String> contentUuids) {
         if (contentUuids != null && !contentUuids.isEmpty()) {
             // See note above in getProductsWithContent for details on why we do two queries here
             // instead of one.

@@ -426,11 +426,11 @@ public class ProductManager {
      * owners, the product will not actually be deleted, but, instead, will simply by removed from
      * the given owner's visibility.
      *
-     * @param entity
-     *  The product entity to remove
-     *
      * @param owner
      *  The owner for which to remove the product
+     *
+     * @param entity
+     *  The product entity to remove
      *
      * @throws IllegalStateException
      *  if this method is called with an entity does not exist in the backing database for the given

@@ -287,7 +287,7 @@ public class OwnerContentResource {
             throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", content.getId()));
         }
 
-        this.contentManager.removeContent(content, owner, true);
+        this.contentManager.removeContent(owner, content, true);
         ownerManager.refreshOwnerForContentAccess(owner);
     }
 }

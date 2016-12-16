@@ -242,7 +242,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner));
 
-        this.contentManager.removeContent(content, owner, regenCerts);
+        this.contentManager.removeContent(owner, content, regenCerts);
 
         assertFalse(this.ownerContentCurator.isContentMappedToOwner(content, owner));
         assertNotNull(this.contentCurator.find(content.getUuid()));
@@ -271,7 +271,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner1));
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner2));
 
-        this.contentManager.removeContent(content, owner1, regenCerts);
+        this.contentManager.removeContent(owner1, content, regenCerts);
 
         assertFalse(this.ownerContentCurator.isContentMappedToOwner(content, owner1));
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner2));
@@ -294,7 +294,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
         assertFalse(this.ownerContentCurator.isContentMappedToOwner(content, owner));
 
-        this.contentManager.removeContent(content, owner, true);
+        this.contentManager.removeContent(owner, content, true);
     }
 
 

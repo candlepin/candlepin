@@ -161,14 +161,14 @@ public class ContentResourceTest {
 
         when(cc.find(any(String.class))).thenReturn(content);
         when(cc.merge(any(Content.class))).thenReturn(content);
-        when(productCurator.getProductsWithContent(eq(owner), eq(Arrays.asList(contentId))))
+        when(productCurator.getProductsByContent(eq(owner), eq(Arrays.asList(contentId))))
             .thenReturn(cqmock);
 
         cr.updateContent(contentId, content);
 
         verify(cc, never()).find(eq(contentId));
         verify(cc, never()).merge(eq(content));
-        verify(productCurator, never()).getProductsWithContent(owner, Arrays.asList(contentId));
+        verify(productCurator, never()).getProductsByContent(owner, Arrays.asList(contentId));
     }
 
     @Test(expected = BadRequestException.class)

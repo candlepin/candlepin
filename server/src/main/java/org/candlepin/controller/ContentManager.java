@@ -32,8 +32,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -204,7 +206,7 @@ public class ContentManager {
 
                 // Make sure every product using the old version/entity are updated to use the new one
                 List<Product> affectedProducts = this.productCurator
-                    .getProductsWithContent(owner, Arrays.asList(updated.getId()))
+                    .getProductsByContent(owner, Arrays.asList(updated.getId()))
                     .list();
 
                 this.ownerContentCurator.updateOwnerContentReferences(owner,
@@ -244,7 +246,7 @@ public class ContentManager {
             if (regenerateEntitlementCerts) {
                 // Every owner with a pool using any of the affected products needs an update.
                 List<Product> affectedProducts = this.productCurator
-                    .getProductsWithContent(Arrays.asList(updated.getUuid()))
+                    .getProductsByContent(Arrays.asList(updated.getUuid()))
                     .list();
 
                 this.entitlementCertGenerator.regenerateCertificatesOf(
@@ -260,7 +262,7 @@ public class ContentManager {
 
         // Get products that currently use this content...
         List<Product> affectedProducts = this.productCurator
-            .getProductsWithContent(owner, Arrays.asList(updated.getId()))
+            .getProductsByContent(owner, Arrays.asList(updated.getId()))
             .list();
 
         // Clear the UUID so Hibernate doesn't think our copy is a detached entity
@@ -456,7 +458,7 @@ public class ContentManager {
 
         // Fetch collection of products affected by this import that aren't being imported themselves
         List<Product> affectedProducts = this.productCurator
-            .getProductsWithContent(owner, sourceContent.keySet(), importedProductIds)
+            .getProductsByContent(owner, sourceContent.keySet(), importedProductIds)
             .list();
 
         if (affectedProducts != null && !affectedProducts.isEmpty()) {
@@ -505,13 +507,13 @@ public class ContentManager {
     }
 
     /**
-     * Removes the specified content from the given owner, deleting the content instance if able.
-     *
-     * @param entity
-     *  The content entity to remove
+     * Removes the specified content from the given owner.
      *
      * @param owner
      *  The owner for which to remove the content
+     *
+     * @param entity
+     *  The content entity to remove
      *
      * @param regenerateEntitlementCerts
      *  Whether or not changes made to the content should trigger the regeneration of entitlement
@@ -525,45 +527,140 @@ public class ContentManager {
      *  if entity or owner is null
      */
     @Transactional
-    public void removeContent(Content entity, Owner owner, boolean regenerateEntitlementCerts) {
-        if (entity == null) {
-            throw new IllegalArgumentException("entity is null");
-        }
-
+    public void removeContent(Owner owner, Content entity, boolean regenerateEntitlementCerts) {
         if (owner == null) {
             throw new IllegalArgumentException("owner is null");
         }
 
-        log.debug("Removing content from owner: {}, {}", entity, owner);
+        if (entity == null) {
+            throw new IllegalArgumentException("entity is null");
+        }
 
         // This has to fetch a new instance, or we'll be unable to compare the objects
         Content existing = this.ownerContentCurator.getContentById(owner, entity.getId());
-
         if (existing == null) {
             // If we're doing an exclusive update, this should be an error condition
             throw new IllegalStateException("Content has not yet been created");
         }
 
-        List<Product> affectedProducts = this.productCurator
-            .getProductsWithContent(owner, Arrays.asList(existing.getId()))
-            .list();
+        this.removeContentByUuids(owner, Arrays.asList(existing.getUuid()), regenerateEntitlementCerts);
+    }
 
-        // Update affected products and regenerate their certs
-        List<Content> contentList = Arrays.asList(existing);
-
-        log.debug("Updating {} affected products", affectedProducts.size());
-        for (Product product : affectedProducts) {
-            log.debug("Updating affected product: {}", product);
-            ProductData pdata = product.toDTO();
-
-            if (pdata.removeContent(existing.getId())) {
-                // Impl note: This should also take care of our entitlement cert regeneration
-                this.productManager.updateProduct(pdata, owner, regenerateEntitlementCerts);
+    /**
+     * Removes the specified content from the given owner.
+     *
+     * @param owner
+     *  The owner for which to remove the content
+     *
+     * @param entity
+     *  The content entity to remove
+     *
+     * @param regenerateEntitlementCerts
+     *  Whether or not changes made to the content should trigger the regeneration of entitlement
+     *  certificates for affected consumers
+     *
+     * @throws IllegalArgumentException
+     *  if entity or owner is null
+     */
+    public void removeContent(Owner owner, Collection<Content> content, boolean regenerateEntitlementCerts) {
+        if (content != null && !content.isEmpty()) {
+            Map<String, Content> contentMap = new HashMap<String, Content>();
+            for (Content entity : content) {
+                contentMap.put(entity.getUuid(), entity);
             }
+
+            this.removeContentByUuids(owner, contentMap.keySet(), regenerateEntitlementCerts);
+        }
+    }
+
+    /**
+     * Removes all content from the given owner.
+     *
+     * @param owner
+     *  The owner from which to remove content
+     *
+     * @param regenerateEntitlementCerts
+     *  Whether or not changes made to the content should trigger the regeneration of entitlement
+     *  certificates for affected consumers
+     *
+     * @throws IllegalArgumentException
+     *  if owner is null
+     */
+    public void removeAllContent(Owner owner, boolean regenerateEntitlementCerts) {
+        this.removeContentByUuids(owner, this.ownerContentCurator.getContentUuidsByOwner(owner),
+            regenerateEntitlementCerts);
+    }
+
+    /**
+     * Removes all content with the provided UUIDs from the given owner.
+     *
+     * @param owner
+     *  The owner from which to remove content
+     *
+     * @param contentUuids
+     *  A collection of UUIDs representing the content to remove
+     *
+     * @param regenerateEntitlementCerts
+     *  Whether or not changes made to the content should trigger the regeneration of entitlement
+     *  certificates for affected consumers
+     *
+     * @throws IllegalArgumentException
+     *  if owner is null
+     */
+    public void removeContentByUuids(Owner owner, Collection<String> contentUuids,
+        boolean regenerateEntitlementCerts) {
+
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
         }
 
-        // Clean up any dangling references to content
-        this.ownerContentCurator.removeOwnerContentReferences(owner, Arrays.asList(existing.getUuid()));
+        if (contentUuids != null && !contentUuids.isEmpty()) {
+            List<Product> affectedProducts = this.productCurator
+                .getProductsByContentUuids(owner, contentUuids)
+                .list();
+
+            if (!affectedProducts.isEmpty()) {
+                if (!(contentUuids instanceof Set)) {
+                    // Convert this to a set so our filtering lookups aren't painfully slow
+                    contentUuids = new HashSet<String>(contentUuids);
+                }
+
+                // Get the collection of content those products use, throwing out the ones we'll be
+                // removing shortly
+                Map<String, Content> affectedProductsContent = new HashMap<String, Content>();
+                for (Content content : this.contentCurator.getContentByProducts(affectedProducts)) {
+                    if (!contentUuids.contains(content.getUuid())) {
+                        affectedProductsContent.put(content.getId(), content);
+                    }
+                }
+
+                // Convert our affectedProducts into DTOs (hoping Hibernate uses its entity cache
+                // instead of pulling down the content list for each product...)
+                Map<String, ProductData> affectedProductData = new HashMap<String, ProductData>();
+                for (Product product : affectedProducts) {
+                    ProductData pdata = product.toDTO();
+
+                    for (ProductContentData pcd : pdata.getProductContent()) {
+                        ContentData cdata = pcd.getContent();
+
+                        if (!affectedProductsContent.containsKey(cdata.getId())) {
+                            pdata.removeProductContent(pcd);
+                        }
+                    }
+                }
+
+                // Perform a micro-import for these products using the content map we just built
+                this.productManager.importProducts(owner, affectedProductData, affectedProductsContent);
+
+                if (regenerateEntitlementCerts) {
+                    this.entitlementCertGenerator.regenerateCertificatesOf(
+                        Arrays.asList(owner), affectedProducts, true);
+                }
+            }
+
+            // Remove content references
+            this.ownerContentCurator.removeOwnerContentReferences(owner, contentUuids);
+        }
     }
 
     /**

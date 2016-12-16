@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +67,6 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         return this.getOwnersByContent(content.getId());
     }
 
-    @Transactional
     public CandlepinQuery<Owner> getOwnersByContent(String contentId) {
         // Impl note:
         // We have to do this in two queries due to how Hibernate processes projections here. We're
@@ -94,13 +94,31 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         return this.cpQueryFactory.<Owner>buildQuery();
     }
 
-    public CandlepinQuery<Content> getContentByOwner(Owner owner) {
-        return this.getContentByOwner(owner.getId());
+    /**
+     * Fetches a collection of content UUIDs currently mapped to the given owner. If the owner is
+     * not mapped to any content, an empty collection will be returned.
+     *
+     * @param owner
+     *  The owner for which to fetch content UUIDs
+     *
+     * @return
+     *  a collection of content UUIDs belonging to the given owner
+     */
+    public Collection<String> getContentUuidsByOwner(Owner owner) {
+        return this.getContentUuidsByOwner(owner.getId());
     }
 
-    @Transactional
-    public CandlepinQuery<Content> getContentByOwner(String ownerId) {
-        // Impl note: See getOwnersByContent for details on why we're doing this in two queries
+    /**
+     * Fetches a collection of content UUIDs currently mapped to the given owner. If the owner is
+     * not mapped to any content, an empty collection will be returned.
+     *
+     * @param ownerId
+     *  The ID of the owner for which to fetch content UUIDs
+     *
+     * @return
+     *  a collection of content UUIDs belonging to the given owner
+     */
+    public Collection<String> getContentUuidsByOwner(String ownerId) {
         String jpql = "SELECT oc.content.uuid FROM OwnerContent oc WHERE oc.owner.id = :owner_id";
 
         List<String> uuids = this.getEntityManager()
@@ -108,7 +126,36 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
             .setParameter("owner_id", ownerId)
             .getResultList();
 
-        if (uuids != null && !uuids.isEmpty()) {
+        return uuids != null ? uuids : Collections.<String>emptyList();
+    }
+
+    /**
+     * Builds a query for fetching the content currently mapped to the given owner.
+     *
+     * @param owner
+     *  The owner for which to fetch content
+     *
+     * @return
+     *  a query for fetching the content belonging to the given owner
+     */
+    public CandlepinQuery<Content> getContentByOwner(Owner owner) {
+        return this.getContentByOwner(owner.getId());
+    }
+
+    /**
+     * Builds a query for fetching the content currently mapped to the given owner.
+     *
+     * @param ownerId
+     *  The ID of the owner for which to fetch content
+     *
+     * @return
+     *  a query for fetching the content belonging to the given owner
+     */
+    public CandlepinQuery<Content> getContentByOwner(String ownerId) {
+        // Impl note: See getOwnersByContent for details on why we're doing this in two queries
+        Collection<String> uuids = this.getContentUuidsByOwner(ownerId);
+
+        if (!uuids.isEmpty()) {
             DetachedCriteria criteria = this.createSecureDetachedCriteria(Content.class, null)
                 .add(CPRestrictions.in("uuid", uuids));
 
@@ -122,7 +169,6 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         return this.getContentByIds(owner.getId(), contentIds);
     }
 
-    @Transactional
     public CandlepinQuery<Content> getContentByIds(String ownerId, Collection<String> contentIds) {
         if (contentIds == null || contentIds.isEmpty()) {
             return this.cpQueryFactory.<Content>buildQuery();
