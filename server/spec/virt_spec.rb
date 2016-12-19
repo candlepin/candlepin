@@ -207,6 +207,8 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     @guest2_client.consume_pool(@guest_pool['id'], {:quantity => 1})
     @guest2_client.list_entitlements.length.should == 1
 
+    sleep 3
+
     # Host 2 reports the new guest before Host 1 reports it removed.
     # this is where the error would occur without the 786730 fix
     @host2_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]})
