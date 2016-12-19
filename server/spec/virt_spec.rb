@@ -207,6 +207,8 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     @guest2_client.consume_pool(@guest_pool['id'], {:quantity => 1})
     @guest2_client.list_entitlements.length.should == 1
 
+    sleep 3
+
     # Host 2 reports the new guest before Host 1 reports it removed.
     # this is where the error would occur without the 786730 fix
     @host2_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]})
@@ -454,6 +456,33 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     pool = @guest1_client.list_pools(:product => @instance_based.id,
         :consumer => @guest1_client.uuid).first
     @guest1_client.consume_pool(pool.id, {:quantity => 3})
+  end
+
+  # Covers BZ 1390215
+  it 'should revoke guest entitlements when migration happens' do
+    #New hypervisor
+    host3 = @user.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+    host3_client = Candlepin.new(nil, nil, host3['idCert']['cert'], host3['idCert']['key'])
+     # Adding a product to consumer that cannot be covered
+    @guest1_client.update_consumer({:installedProducts =>
+       [{'productId' => 'someNonExistentProduct', 'productName' => 'nonExistentProduct'}]
+    })
+
+    # Guest 1 should be able to use the pool:
+    @guest1_client.consume_pool(@guest_pool['id'], {:quantity => 1})
+    @guest1_client.list_entitlements.length.should == 1
+
+    #Guest changes the hypervisor. This will trigger revocation of
+    #the entitlement to guest_pool (because it requires_host) and
+    #it will also trigger unsuccessfull autobind (because the
+    #someNonExistentProduct cannot be covered)
+    begin
+      host3_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]})
+    rescue RestClient::Exception
+    else
+      assert(fail, "expected an exception for legacy clients")
+    end
   end
 
 end
