@@ -19,6 +19,9 @@ import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.util.VersionUtil;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ModeManager;
+import org.candlepin.model.CandlepinModeChange;
+import org.candlepin.model.CandlepinModeChange.Mode;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Status;
 import org.candlepin.policy.js.JsRunnerProvider;
@@ -63,10 +66,12 @@ public class StatusResource {
     private RulesCurator rulesCurator;
     private JsRunnerProvider jsProvider;
     private CandlepinCache candlepinCache;
+    private ModeManager modeManager;
 
     @Inject
     public StatusResource(RulesCurator rulesCurator, Configuration config, JsRunnerProvider jsProvider,
-        CandlepinCache candlepinCache) {
+        CandlepinCache candlepinCache, ModeManager modeManager) {
+        this.modeManager = modeManager;
         this.rulesCurator = rulesCurator;
         this.candlepinCache = candlepinCache;
         Map<String, String> map = VersionUtil.getVersionMap();
@@ -127,11 +132,17 @@ public class StatusResource {
             good = false;
         }
 
+        CandlepinModeChange modeChange = modeManager.getLastCandlepinModeChange();
+
+        if (modeChange.getMode() != Mode.NORMAL) {
+            good = false;
+        }
+
         Status status = new Status(good, version, release, standalone,
-            jsProvider.getRulesVersion(), jsProvider.getRulesSource());
+            jsProvider.getRulesVersion(), jsProvider.getRulesSource(),
+            modeChange.getMode(), modeChange.getReason(), modeChange.getChangeTime());
 
         statusCache.put(CandlepinCache.STATUS_KEY, status);
         return status;
     }
-
 }

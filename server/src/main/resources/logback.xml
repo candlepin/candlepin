@@ -39,6 +39,12 @@
     </appender>
 
     <logger name="org.candlepin" level="INFO"/>
+     
+    <!-- With each attempt to connect Qpid, we get a warning message: 
+          Exception received while trying to verify hostname 
+         We decide to silence this in logs because it shouldn't have any significance to
+         our usage of Qpid -->
+    <logger name="org.apache.qpid.transport.network.security.ssl.SSLUtil" level="ERROR"/>
 
     <root level="WARN">
         <appender-ref ref="CandlepinAppender" />
