@@ -526,7 +526,7 @@ public class ConsumerResourceTest {
             null, i18n, null, null, null, null,
             null, null, null, null, oc, null, null, null,
             null, null, null, new CandlepinCommonTestConfig(), null, null, null,
-            null, null, null);
+            null);
 
         String ownerKey = "testOwner";
         when(oc.lookupByKey(eq(ownerKey))).thenReturn(o);

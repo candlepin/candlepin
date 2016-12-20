@@ -342,6 +342,11 @@ describe 'One Sub Pool Per Stack' do
     @guest_client.consume_pool(sub_pool['id'], {:quantity => 1})
     @guest_client.list_entitlements.length.should == 1
 
+    # MySQL before 5.6.4 doesn't store fractional seconds on timestamps
+    # and getHost() method in ConsumerCurator (which is what tells us which
+    # host a guest is associated with) sorts results by updated time.
+    sleep 2
+
     # Simulate migration
     @host2_client.update_consumer({:guestIds => [{'guestId' => @guest_uuid}]})
 
