@@ -597,18 +597,11 @@ public class ConsumerResource {
      */
     private void checkConsumerName(Consumer consumer) {
         // for now this applies to both types consumer
-        if (consumer.getName() != null) {
-            if (consumer.getName().indexOf('#') == 0) {
-                // this is a bouncycastle restriction
-                throw new BadRequestException(
-                    i18n.tr("System name cannot begin with # character"));
-            }
-
-            int max = Consumer.MAX_LENGTH_OF_CONSUMER_NAME;
-            if (consumer.getName().length() > max) {
-                String m = "Name of the consumer should be shorter than {0} characters.";
-                throw new BadRequestException(i18n.tr(m, Integer.toString(max)));
-            }
+        if (consumer.getName() != null &&
+            consumer.getName().indexOf('#') == 0) {
+            // this is a bouncycastle restriction
+            throw new BadRequestException(
+                i18n.tr("System name cannot begin with # character"));
         }
     }
 
