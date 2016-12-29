@@ -131,7 +131,7 @@ describe 'vCPU Limiting' do
 
     # Perform healing
     ents = system.consume_product()
-    ents.should == nil
+    ents.should == []
   end
 
 end

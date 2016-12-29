@@ -70,6 +70,8 @@ public class AutobindRules {
         List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride,
         Set<String> exemptLevels, boolean considerDerived) {
 
+        List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
+
         int poolsBeforeContentFilter = pools.size();
         pools = filterPoolsForV1Certificates(consumer, pools);
         log.debug("pools.size() before V1 certificate filter: {}, after: {}",
@@ -90,7 +92,7 @@ public class AutobindRules {
                 fullList.add(cip.getId());
             }
             log.info("No pools available to rules for products: " + fullList);
-            return null;
+            return bestPools;
         }
 
         if (log.isDebugEnabled()) {
@@ -139,10 +141,9 @@ public class AutobindRules {
                 fullList.add(cip.getId());
             }
             log.info("Rules did not select a pools for products: " + fullList);
-            return null;
+            return bestPools;
         }
 
-        List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
         for (Pool p : pools) {
             for (Entry<String, Integer> entry : result.entrySet()) {
                 if (p.getId().equals(entry.getKey())) {
@@ -156,10 +157,7 @@ public class AutobindRules {
             }
         }
 
-        if (bestPools.size() > 0) {
-            return bestPools;
-        }
-        return null;
+        return bestPools;
     }
 
     /**

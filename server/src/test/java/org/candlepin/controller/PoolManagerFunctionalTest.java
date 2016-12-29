@@ -184,7 +184,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         }
 
         // The cert should specify 5 monitoring entitlements, taking a 6th should fail:
-        assertEquals(null, poolManager.entitleByProducts(data));
+        assertEquals(0, poolManager.entitleByProducts(data).size());
 
         assertEquals(Long.valueOf(5), monitoringPool.getConsumed());
     }

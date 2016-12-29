@@ -204,7 +204,7 @@ describe 'RAM Limiting' do
 
     # Perform healing
     ents = system.consume_product()
-    ents.should == nil
+    ents.should == []
   end
 
   it 'can heal when both RAM and socket limited' do
