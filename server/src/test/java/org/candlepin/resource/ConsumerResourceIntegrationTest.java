@@ -36,9 +36,11 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.GuestId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.Role;
@@ -196,6 +198,72 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals(standardSystemType.getLabel(), submitted.getType()
             .getLabel());
         assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
+    }
+
+    @Test
+    @SuppressWarnings("checkstyle:indentation")
+    public void testUpdateConsumer() {
+        Consumer guest1 = new Consumer("guest1", "guest1", null,
+                standardSystemType);
+        guest1.setFact("virt.uuid", "guest1");
+        guest1.setFact("virt.is_guest", "true");
+        consumerResource.create(guest1, principal, null,
+                    owner.getKey(), null, true);
+
+        pool = createPool(owner, product, 10L,
+                TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
+        pool.addAttribute(new PoolAttribute(Pool.Attributes.REQUIRES_HOST, "someHostId"));
+        consumerResource.bind(guest1.getUuid(), pool.getId(),
+            null, 1, null, null, false, null, null, null, principal);
+
+        Set<Entitlement> ents = consumerResource.getConsumer(guest1.getUuid()).getEntitlements();
+        assertEquals(1, ents.size());
+        Entitlement ent = ents.iterator().next();
+        assertEquals("someHostId", ent.getPool().getAttributeValue(Pool.Attributes.REQUIRES_HOST));
+
+        Consumer guest2 = new Consumer("guest2", "guest2", null,
+                standardSystemType);
+        guest2.setFact("virt.uuid", "guest2");
+        guest2.setFact("virt.is_guest", "true");
+        consumerResource.create(guest2, principal, null,
+                    owner.getKey(), null, true);
+
+        pool = createPool(owner, product, 10L,
+                TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
+        pool.addAttribute(new PoolAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true"));
+        consumerResource.bind(guest2.getUuid(), pool.getId(),
+            null, 1, null, null, false, null, null, null, principal);
+
+        ents = consumerResource.getConsumer(guest2.getUuid()).getEntitlements();
+        assertEquals(1, ents.size());
+        ent = ents.iterator().next();
+        assertTrue(ent.getPool().isUnmappedGuestPool());
+
+        Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, null,
+            standardSystemType);
+        toSubmit.addGuestId(new GuestId("guest1"));
+        Consumer created = consumerResource.create(toSubmit, principal, null,
+                owner.getKey(), null, true);
+
+        assertNotNull(created);
+        assertEquals(1, created.getGuestIds().size());
+        assertEquals("guest1", created.getGuestIds().get(0).getGuestId());
+        Consumer toUpdate = new Consumer(CONSUMER_NAME, USER_NAME, null,
+            standardSystemType);
+        toUpdate.setUuid(created.getUuid());
+        toUpdate.addGuestId(new GuestId("guest2"));
+        consumerResource.updateConsumer(created.getUuid(), toUpdate);
+        Consumer updated = consumerResource.getConsumer(created.getUuid());
+        assertEquals(1, updated.getGuestIds().size());
+        assertEquals("guest2", updated.getGuestIds().get(0).getGuestId());
+
+        // verify host specific pools are removed from previously associated guests.
+        ents = consumerResource.getConsumer(guest1.getUuid()).getEntitlements();
+        assertEquals(0, ents.size());
+
+        // verify unmapped guest pools are removed from currently associated guests.
+        ents = consumerResource.getConsumer(guest2.getUuid()).getEntitlements();
+        assertEquals(0, ents.size());
     }
 
     @Test

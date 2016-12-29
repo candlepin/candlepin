@@ -83,6 +83,7 @@ import org.hibernate.mapping.Collection;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -126,6 +127,7 @@ public class ConsumerResourceTest {
     @Mock private EventBuilder eventBuilder;
     @Mock private ConsumerBindUtil consumerBindUtil;
     @Mock private ProductCurator productCurator;
+    @Mock private EventSink eventSink;
 
     @Before
     public void setUp() {
@@ -759,6 +761,7 @@ public class ConsumerResourceTest {
         VirtConsumerMap guestConsumerMap = new VirtConsumerMap();
         Owner o = mock(Owner.class);
         Consumer host = new Consumer();
+        host.setOwner(o);
 
         Consumer cOne = new Consumer();
         cOne.setFact("virt.is_guest", "true");
@@ -785,10 +788,54 @@ public class ConsumerResourceTest {
         updatedGuests.add(three);
         guestConsumerMap.add(cThree.getFact("virt.uuid"), cThree);
 
+        when(mockedConsumerCurator.getGuestConsumersMap(eq(o), any(Set.class))).thenReturn(guestConsumerMap);
         cr.checkForGuestsMigration(host, startGuests, updatedGuests, guestConsumerMap);
-        verify(cr).checkForGuestMigration(host, cOne);
         verify(cr).checkForGuestMigration(host, cTwo);
         verify(cr).checkForGuestMigration(host, cThree);
+        verify(cr).checkForGuestMigration(null, cOne);
+    }
+
+    @Test
+    public void testUpdateGuestMigration() {
+        ConsumerResource cr = Mockito.spy(new ConsumerResource(mockedConsumerCurator, null,
+            null, null, null, null, null, i18n, eventSink, eventFactory, null,
+            null, null, null, null, null, null, null, mockedComplianceRules,
+            null, null, null, new CandlepinCommonTestConfig(),
+            null, null, null, null, productCurator, null));
+        VirtConsumerMap guestConsumerMap = new VirtConsumerMap();
+        Owner o = mock(Owner.class);
+
+        Consumer cOne = new Consumer();
+        cOne.setFact("virt.is_guest", "true");
+        cOne.setFact("virt.uuid", cOne.getUuid() + "-vuuid");
+        cOne.setOwner(o);
+        GuestId one = new GuestId(cOne.getFact("virt.uuid"));
+        cOne.addGuestId(one);
+        guestConsumerMap.add(cOne.getFact("virt.uuid"), cOne);
+
+        Consumer cTwo = new Consumer();
+        cTwo.setFact("virt.is_guest", "true");
+        cTwo.setFact("virt.uuid", cTwo.getUuid() + "-vuuid");
+        cTwo.setOwner(o);
+        GuestId two = new GuestId(cTwo.getFact("virt.uuid"));
+        cTwo.addGuestId(one);
+        cTwo.addGuestId(two);
+        guestConsumerMap.add(cTwo.getFact("virt.uuid"), cTwo);
+
+        when(mockedConsumerCurator.verifyAndLookupConsumer(eq(cOne.getUuid()))).thenReturn(cOne);
+        when(mockedConsumerCurator.getGuestConsumersMap(eq(o), any(Set.class))).thenReturn(guestConsumerMap);
+        cr.updateConsumer(cOne.getUuid(), cTwo);
+        verify(mockedConsumerCurator).update(eq(cOne));
+        Class<List<GuestId>> listClass = (Class<List<GuestId>>) (Class) ArrayList.class;
+        ArgumentCaptor<List<GuestId>> startIds = ArgumentCaptor.forClass(listClass);
+        ArgumentCaptor<List<GuestId>> updated = ArgumentCaptor.forClass(listClass);
+        verify(cr).checkForGuestsMigration(eq(cOne),
+            startIds.capture(),
+            updated.capture(),
+            any(VirtConsumerMap.class));
+        List<GuestId> startIdArg = startIds.getValue();
+        List<GuestId> updateIdArg = updated.getValue();
+        assertNotEquals(startIdArg, updateIdArg);
     }
 
     @Test

@@ -118,6 +118,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -785,7 +786,10 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         Consumer consumer) {
         Consumer toUpdate = consumerCurator.verifyAndLookupConsumer(uuid);
-        List<GuestId> startGuests = toUpdate.getGuestIds();
+        List<GuestId> startGuests = new ArrayList<GuestId>();
+        if (toUpdate != null && toUpdate.getGuestIds() != null) {
+            startGuests.addAll(toUpdate.getGuestIds());
+        }
         VirtConsumerMap guestConsumerMap = new VirtConsumerMap();
         if (consumer.getGuestIds() != null) {
             Set<String> allGuestIds = new HashSet<String>();
@@ -821,18 +825,25 @@ public class ConsumerResource {
      */
     public void checkForGuestsMigration(Consumer host, List<GuestId> startGuests, List<GuestId> updatedGuests,
         VirtConsumerMap guestConsumerMap) {
-        Set<GuestId> toCheck = new HashSet<GuestId>();
-        if (startGuests != null) {
-            toCheck.addAll(startGuests);
-        }
+        Set<String> updatedIds = new HashSet<String>();
         if (updatedGuests != null) {
-            toCheck.addAll(updatedGuests);
+            for (GuestId updatedGuest: updatedGuests) {
+                updatedIds.add(updatedGuest.getGuestId());
+            }
         }
-        for (GuestId guestId : toCheck) {
-            Consumer guest = guestConsumerMap == null ?
-                null : guestConsumerMap.get(guestId.getGuestId());
-            if (guest != null) {
-                checkForGuestMigration(host, guest);
+        checkForGuestsMigrationIfInMap(host, updatedIds, guestConsumerMap);
+        // run check for guests that are no longer with this hypervisor
+        if (startGuests != null) {
+            Set<String> removedIds = new HashSet<String>();
+            for (GuestId startGuest: startGuests) {
+                if (!updatedIds.contains(startGuest.getGuestId())) {
+                    removedIds.add(startGuest.getGuestId());
+                }
+            }
+            if (removedIds.size() > 0) {
+                VirtConsumerMap removedGuestConsumerMap
+                    = consumerCurator.getGuestConsumersMap(host.getOwner(), removedIds);
+                checkForGuestsMigrationIfInMap(null, removedIds, removedGuestConsumerMap);
             }
         }
     }
@@ -1112,6 +1123,18 @@ public class ConsumerResource {
         List<GuestId> removedGuests = new ArrayList<GuestId>(ids1);
         removedGuests.removeAll(ids2);
         return removedGuests;
+    }
+
+    public void checkForGuestsMigrationIfInMap(Consumer host,
+        Collection<String> guestIds, VirtConsumerMap guestConsumerMap) {
+        if (guestConsumerMap != null && guestConsumerMap.size() > 0) {
+            for (String guestId: guestIds) {
+                Consumer guest = guestConsumerMap.get(guestId);
+                if (guest != null) {
+                    checkForGuestMigration(host, guest);
+                }
+            }
+        }
     }
 
     /*
