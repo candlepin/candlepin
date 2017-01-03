@@ -73,6 +73,11 @@ describe 'Hypervisor Resource', :type => :virt do
     # Test lookup with nonexistant hypervisor id
     hypervisors = @user.get_owner_hypervisors(@owner['key'], ["probably not a hypervisor"])
     hypervisors.size.should == 0
+    # verify last checkin time is updated
+    last_check_in = result.created[0].lastCheckin
+    last_check_in.should_not be_nil
+    consumer = @cp.get_consumer result.created[0].uuid
+    consumer.lastCheckin.should == last_check_in
   end
 
 
@@ -100,6 +105,11 @@ describe 'Hypervisor Resource', :type => :virt do
     result.failedUpdate.size.should == 0
     # verify our created consumer is correct.
     result.created[0].name.should == host_name
+    # verify last checkin time is updated
+    last_check_in = result.created[0].lastCheckin
+    last_check_in.should_not be_nil
+    consumer = @cp.get_consumer result.created[0].uuid
+    consumer.lastCheckin.should == last_check_in
   end
 
   it 'should not add new consumer when create_missing is false' do
@@ -128,18 +138,24 @@ describe 'Hypervisor Resource', :type => :virt do
 
   it 'should add consumer to updated when guest ids are updated' do
     mapping = get_host_guest_mapping(@expected_host_hyp_id, ['g1', 'g2'])
+    old_check_in = @cp.get_consumer(@host_uuid)
+    #because mysql
+    sleep 2
     result = @consumer.hypervisor_check_in(@owner['key'], mapping)
-    should_add_consumer_to_updated_when_guest_ids_are_updated(result)
+    should_add_consumer_to_updated_when_guest_ids_are_updated(result, old_check_in)
   end
 
   it 'should add consumer to updated when guest ids are updated - async' do
+    old_check_in = @cp.get_consumer(@host_uuid)
+    #because mysql
+    sleep 2
     job_detail = async_update_hypervisor(@owner, @consumer, @expected_host_name, @expected_host_hyp_id,  ['g1', 'g2'])
     job_detail['result'].should == 'Created: 0, Updated: 1, Unchanged:0, Failed: 0'
     result_data = job_detail['resultData']
-    should_add_consumer_to_updated_when_guest_ids_are_updated(result_data)
+    should_add_consumer_to_updated_when_guest_ids_are_updated(result_data, old_check_in)
   end
 
-  def should_add_consumer_to_updated_when_guest_ids_are_updated(result)
+  def should_add_consumer_to_updated_when_guest_ids_are_updated(result, old_check_in)
     # Should only  have a result entry for updated.
     result.created.size.should == 0
     result.updated.size.should == 1
@@ -147,22 +163,30 @@ describe 'Hypervisor Resource', :type => :virt do
     result.failedUpdate.size.should == 0
     # verify our created consumer is correct.
     result.updated[0].name.should == @expected_host_name
+    # verify last checkin time is updated
+    last_check_in = result.updated[0].lastCheckin
+    last_check_in.should_not be_nil
+    last_check_in.should_not == old_check_in
+    consumer = @cp.get_consumer result.updated[0].uuid
+    consumer.lastCheckin.should == last_check_in
   end
 
   it 'should add consumer to unchanged when same guest ids are sent' do
     mapping = get_host_guest_mapping(@expected_host_hyp_id, @expected_guest_ids)
+    old_check_in = @cp.get_consumer(@host_uuid)
     result = @consumer.hypervisor_check_in(@owner['key'], mapping)
-    should_add_consumer_to_unchanged_when_same_guest_ids_are_sent(result)
+    should_add_consumer_to_unchanged_when_same_guest_ids_are_sent(result, old_check_in)
   end
 
   it 'should add consumer to unchanged when same guest ids are sent - async' do
+    old_check_in = @cp.get_consumer(@host_uuid)
     job_detail = async_update_hypervisor(@owner, @consumer, @expected_host_name, @expected_host_hyp_id, @expected_guest_ids)
     job_detail['result'].should == 'Created: 0, Updated: 0, Unchanged:1, Failed: 0'
     result_data = job_detail['resultData']
-    should_add_consumer_to_unchanged_when_same_guest_ids_are_sent(result_data)
+    should_add_consumer_to_unchanged_when_same_guest_ids_are_sent(result_data, old_check_in)
   end
 
-  def should_add_consumer_to_unchanged_when_same_guest_ids_are_sent(result)
+  def should_add_consumer_to_unchanged_when_same_guest_ids_are_sent(result, old_check_in)
     # Should only  have a result entry for unchanged.
     result.created.size.should == 0
     result.updated.size.should == 0
@@ -170,6 +194,12 @@ describe 'Hypervisor Resource', :type => :virt do
     result.failedUpdate.size.should == 0
     # verify our created consumer is correct.
     result.unchanged[0].name.should == @expected_host_name
+    # verify last checkin time is updated
+    last_check_in = result.unchanged[0].lastCheckin
+    last_check_in.should_not be_nil
+    last_check_in.should_not == old_check_in
+    consumer = @cp.get_consumer(result.unchanged[0].uuid)
+    consumer.lastCheckin.should == last_check_in
   end
 
   it 'should add consumer to unchanged when comparing empty guest id lists' do

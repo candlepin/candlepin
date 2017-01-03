@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -238,7 +239,7 @@ public class HypervisorUpdateJob extends KingpinJob {
                         consumerResource.performConsumerUpdates(incoming, newHost, guestConsumersMap, false);
                         consumerResource.create(newHost, principal, null, owner.getKey(), null, false);
                         hypervisorConsumersMap.add(hypervisorId, newHost);
-                        result.created(newHost);
+                        result.created(updateCheckinTime(newHost));
                         reportedOnConsumer = newHost;
                     }
                 }
@@ -256,10 +257,10 @@ public class HypervisorUpdateJob extends KingpinJob {
                     if (consumerResource.performConsumerUpdates(incoming, knownHost, guestConsumersMap,
                         false)) {
                         consumerCurator.update(knownHost);
-                        result.updated(knownHost);
+                        result.updated(updateCheckinTime(knownHost));
                     }
                     else {
-                        result.unchanged(knownHost);
+                        result.unchanged(updateCheckinTime(knownHost));
                     }
                 }
                 consumerResource.checkForGuestsMigration(knownHost, startGuests,
@@ -384,4 +385,10 @@ public class HypervisorUpdateJob extends KingpinJob {
         }
     }
 
+    public Consumer updateCheckinTime(Consumer consumer) {
+        Date now = new Date();
+        consumerCurator.updateLastCheckin(consumer, now);
+        consumer.setLastCheckin(now);
+        return consumer;
+    }
 }
