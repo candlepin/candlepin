@@ -49,8 +49,8 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
      */
     private OwnerProduct createOwnerProductMapping(Owner owner, Product product) {
         OwnerProduct mapping = new OwnerProduct(owner, product);
-        this.entityManager().persist(mapping);
-        this.entityManager().flush();
+        this.getEntityManager().persist(mapping);
+        this.getEntityManager().flush();
 
         return mapping;
     }
@@ -59,7 +59,7 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         String jpql = "SELECT count(op) FROM OwnerProduct op " +
             "WHERE op.owner.id = :owner_id AND op.product.uuid = :product_uuid";
 
-        long count = (Long) this.entityManager()
+        long count = (Long) this.getEntityManager()
             .createQuery(jpql)
             .setParameter("owner_id", owner.getId())
             .setParameter("product_uuid", product.getUuid())

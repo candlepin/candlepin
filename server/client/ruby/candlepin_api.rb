@@ -1385,11 +1385,13 @@ class Candlepin
   end
 
   def post_file(uri, file=nil)
+    puts ("POST #{uri} #{file}") if @verbose
     response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(:import => file)
     return JSON.parse(response.body) unless response.body.empty?
   end
 
   def post_text(uri, data=nil, accept='text/plain')
+    puts ("POST #{uri} #{data} #{accept}") if @verbose
     response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(data, :content_type => 'text/plain', :accept => accept )
     return response.body
   end

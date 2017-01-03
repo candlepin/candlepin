@@ -50,7 +50,10 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
     private Session session;
 
     @Before
-    public void setUp() {
+    @Override
+    public void init() {
+        super.init();
+
         for (int i = 0; i < 10; i++) {
             Owner o = new Owner();
             o.setDisplayName(String.valueOf(i));
@@ -58,7 +61,7 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
             ownerCurator.create(o);
         }
 
-        session = (Session) entityManager().getDelegate();
+        session = (Session) this.getEntityManager().getDelegate();
     }
 
     @Test

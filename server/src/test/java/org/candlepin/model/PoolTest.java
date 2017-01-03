@@ -94,7 +94,7 @@ public class PoolTest extends DatabaseTestFixture {
 
     @Test
     public void testCreate() {
-        Pool lookedUp = entityManager().find(Pool.class, pool.getId());
+        Pool lookedUp = this.getEntityManager().find(Pool.class, pool.getId());
         assertNotNull(lookedUp);
         assertEquals(owner.getId(), lookedUp.getOwner().getId());
         assertEquals(prod1.getId(), lookedUp.getProductId());
@@ -112,7 +112,7 @@ public class PoolTest extends DatabaseTestFixture {
         p.setDerivedProvidedProducts(derivedProducts);
         poolCurator.create(p);
 
-        Pool lookedUp = entityManager().find(Pool.class, p.getId());
+        Pool lookedUp = this.getEntityManager().find(Pool.class, p.getId());
         assertEquals(1, lookedUp.getProvidedProducts().size());
         assertEquals(prod2.getId(), lookedUp.getProvidedProducts().iterator().next().getId());
         assertEquals(1, lookedUp.getDerivedProvidedProducts().size());

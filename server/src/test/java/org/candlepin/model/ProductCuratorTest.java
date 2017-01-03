@@ -114,7 +114,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Product prod = new Product("cptest-label", "My Product");
         productCurator.create(prod);
 
-        List<Product> results = entityManager().createQuery("select p from Product as p").getResultList();
+        List<Product> results = this.getEntityManager().createQuery("select p from Product as p")
+            .getResultList();
+
         assertEquals(5, results.size());
     }
 

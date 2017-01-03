@@ -31,11 +31,13 @@ public class ConsumerTypeTest extends DatabaseTestFixture {
         beginTransaction();
 
         ConsumerType ct = new ConsumerType("standard-system");
-        entityManager().persist(ct);
+        this.getEntityManager().persist(ct);
 
         commitTransaction();
 
-        List<?> results = entityManager().createQuery("select ct from ConsumerType as ct").getResultList();
+        List<?> results = this.getEntityManager().createQuery("select ct from ConsumerType as ct")
+            .getResultList();
+
         assertEquals(1, results.size());
     }
 

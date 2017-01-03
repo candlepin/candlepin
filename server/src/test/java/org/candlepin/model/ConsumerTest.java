@@ -202,18 +202,18 @@ public class ConsumerTest extends DatabaseTestFixture {
         Owner o = createOwner();
         Product newProduct = this.createProduct(o);
 
-        Pool pool = createPool(o, newProduct,
-            1000L, TestUtil.createDate(2009, 11, 30),
+        Pool pool = createPool(o, newProduct, 1000L, TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));
-        entityManager().persist(pool.getOwner());
-        entityManager().persist(pool);
+
+        this.getEntityManager().persist(pool.getOwner());
+        this.getEntityManager().persist(pool);
 
         Entitlement e1 = createEntitlement(pool, consumer);
         Entitlement e2 = createEntitlement(pool, consumer);
         Entitlement e3 = createEntitlement(pool, consumer);
-        entityManager().persist(e1);
-        entityManager().persist(e2);
-        entityManager().persist(e3);
+        this.getEntityManager().persist(e1);
+        this.getEntityManager().persist(e2);
+        this.getEntityManager().persist(e3);
 
         consumer.addEntitlement(e1);
         consumer.addEntitlement(e2);

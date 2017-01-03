@@ -38,7 +38,7 @@ public class ColumnarResultIteratorTest extends DatabaseTestFixture {
 
     @Before
     public void setup() {
-        this.session = (Session) this.entityManager().getDelegate();
+        this.session = (Session) this.getEntityManager().getDelegate();
     }
 
     @Test

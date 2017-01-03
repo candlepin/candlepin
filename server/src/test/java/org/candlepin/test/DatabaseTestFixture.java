@@ -207,7 +207,8 @@ public class DatabaseTestFixture {
         cpRequestScope.exit();
 
         // If we have any pending transactions, we should commit it before we move on
-        EntityTransaction transaction = this.entityManager().getTransaction();
+        EntityManager manager = this.getEntityManager();
+        EntityTransaction transaction = manager.getTransaction();
 
         if (transaction.isActive()) {
             if (transaction.getRollbackOnly()) {
@@ -221,8 +222,7 @@ public class DatabaseTestFixture {
         // We are using a singleton for the principal in tests. Make sure we clear it out
         // after every test. TestPrincipalProvider controls the default behavior.
         TestPrincipalProviderSetter.get().setPrincipal(null);
-        EntityManager em = parentInjector.getInstance(EntityManager.class);
-        em.clear();
+        manager.clear();
 
         reset(parentInjector.getInstance(HttpServletRequest.class));
         reset(parentInjector.getInstance(HttpServletResponse.class));
@@ -231,11 +231,13 @@ public class DatabaseTestFixture {
     @AfterClass
     public static void destroy() {
         parentInjector.getInstance(PersistFilter.class).destroy();
-        EntityManager em = parentInjector.getInstance(EntityManager.class);
-        if (em.isOpen()) {
-            em.close();
+
+        EntityManager manager = parentInjector.getInstance(EntityManager.class);
+        if (manager.isOpen()) {
+            manager.close();
         }
-        EntityManager emf = parentInjector.getInstance(EntityManager.class);
+
+        EntityManagerFactory emf = parentInjector.getInstance(EntityManagerFactory.class);
         if (emf.isOpen()) {
             emf.close();
         }
@@ -261,8 +263,12 @@ public class DatabaseTestFixture {
         this.injector.injectMembers(object);
     }
 
-    protected EntityManager entityManager() {
-        return injector.getProvider(EntityManager.class).get();
+    protected com.google.inject.Provider<EntityManager> getEntityManagerProvider() {
+        return this.injector.getProvider(EntityManager.class);
+    }
+
+    protected EntityManager getEntityManager() {
+        return this.getEntityManagerProvider().get();
     }
 
     /**
@@ -271,7 +277,7 @@ public class DatabaseTestFixture {
      * single thread.
      */
     protected void beginTransaction() {
-        EntityTransaction transaction = this.entityManager().getTransaction();
+        EntityTransaction transaction = this.getEntityManager().getTransaction();
 
         if (!transaction.isActive()) {
             transaction.begin();
@@ -287,7 +293,7 @@ public class DatabaseTestFixture {
      * a single thread.
      */
     protected void commitTransaction() {
-        EntityTransaction transaction = this.entityManager().getTransaction();
+        EntityTransaction transaction = this.getEntityManager().getTransaction();
 
         if (transaction.isActive()) {
             transaction.commit();
@@ -303,7 +309,7 @@ public class DatabaseTestFixture {
      * single thread.
      */
     protected void rollbackTransaction() {
-        EntityTransaction transaction = this.entityManager().getTransaction();
+        EntityTransaction transaction = this.getEntityManager().getTransaction();
 
         if (transaction.isActive()) {
             transaction.rollback();

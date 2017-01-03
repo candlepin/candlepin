@@ -39,9 +39,9 @@ public class OwnerTest extends DatabaseTestFixture {
         o.setContentPrefix(prefix);
         ownerCurator.create(o);
 
-        Owner result = (Owner) entityManager().createQuery(
-            "select o from Owner o where o.key = :key").setParameter(
-            "key", ownerName).getSingleResult();
+        Owner result = (Owner) this.getEntityManager().createQuery("select o from Owner o where o.key = :key")
+            .setParameter("key", ownerName)
+            .getSingleResult();
 
         assertNotNull(result);
         assertEquals(ownerName, result.getKey());
@@ -53,14 +53,18 @@ public class OwnerTest extends DatabaseTestFixture {
 
     @Test
     public void testList() throws Exception {
-        int beforeCount = entityManager().createQuery(
-            "select o from Owner as o").getResultList().size();
+        int beforeCount = this.getEntityManager().createQuery("select o from Owner as o")
+            .getResultList()
+            .size();
 
         for (int i = 0; i < 10; i++) {
             this.createOwner("Corp " + i);
         }
 
-        int afterCount = entityManager().createQuery("select o from Owner as o").getResultList().size();
+        int afterCount = this.getEntityManager().createQuery("select o from Owner as o")
+            .getResultList()
+            .size();
+
         assertEquals(10, afterCount - beforeCount);
     }
 

@@ -46,8 +46,8 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
      */
     private OwnerContent createOwnerContentMapping(Owner owner, Content content) {
         OwnerContent mapping = new OwnerContent(owner, content);
-        this.entityManager().persist(mapping);
-        this.entityManager().flush();
+        this.getEntityManager().persist(mapping);
+        this.getEntityManager().flush();
 
         return mapping;
     }
@@ -56,7 +56,7 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         String jpql = "SELECT count(op) FROM OwnerContent op " +
             "WHERE op.owner.id = :owner_id AND op.content.uuid = :content_uuid";
 
-        long count = (Long) this.entityManager()
+        long count = (Long) this.getEntityManager()
             .createQuery(jpql)
             .setParameter("owner_id", owner.getId())
             .setParameter("content_uuid", content.getUuid())

@@ -74,8 +74,10 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumerCurator.create(consumer);
 
-        List<Consumer> results = entityManager().createQuery(
-            "select c from Consumer as c", Consumer.class).getResultList();
+        List<Consumer> results = this.getEntityManager()
+            .createQuery("select c from Consumer as c", Consumer.class)
+            .getResultList();
+
         assertEquals(1, results.size());
     }
 

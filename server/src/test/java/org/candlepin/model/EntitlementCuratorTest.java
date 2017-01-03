@@ -96,7 +96,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Entitlement entitlement = createEntitlement(owner, c, p, cert);
         entitlementCurator.create(entitlement);
         commitTransaction();
-        entityManager().clear();
+        this.getEntityManager().clear();
 
         beginTransaction();
         c = consumerCurator.find(c.getId());
