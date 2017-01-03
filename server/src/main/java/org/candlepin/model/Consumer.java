@@ -84,6 +84,8 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
 
+    public static final int MAX_LENGTH_OF_CONSUMER_NAME = 255;
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -97,7 +99,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     private String uuid;
 
     @Column(nullable = false)
-    @Size(max = 255)
+    @Size(max = MAX_LENGTH_OF_CONSUMER_NAME)
     @NotNull
     private String name;
 
