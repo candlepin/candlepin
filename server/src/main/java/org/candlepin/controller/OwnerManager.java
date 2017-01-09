@@ -16,8 +16,6 @@ package org.candlepin.controller;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.Content;
-import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.ExporterMetadata;
@@ -146,7 +144,6 @@ public class OwnerManager {
 
         log.info("Deleting all content...");
         this.contentManager.removeAllContent(owner, false);
-
 
         log.info("Deleting owner: {}", owner);
         ownerCurator.delete(owner);

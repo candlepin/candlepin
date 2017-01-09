@@ -14,11 +14,9 @@
  */
 package org.candlepin.model;
 
-import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Session;
-import org.hibernate.Query;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -403,11 +401,11 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
      * be manually evicted from the session and re-queried to ensure they will not clobber the
      * changes made by this method on persist, nor trigger any errors on refresh.
      *
-     * @param content
-     *  The content other objects are referencing
-     *
      * @param owner
      *  The owner for which to apply the reference changes
+     *
+     * @param contentUuids
+     *  A collection of content UUIDs representing the content entities to orphan
      */
     @Transactional
     public void removeOwnerContentReferences(Owner owner, Collection<String> contentUuids) {

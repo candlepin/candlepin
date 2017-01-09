@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.UniqueIdGenerator;
+import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -27,7 +28,6 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -406,7 +406,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      *  the modified product IDs of the content
      */
     public Set<String> getModifiedProductIds() {
-        return Collections.unmodifiableSet(this.modifiedProductIds);
+        return new SetView(this.modifiedProductIds);
     }
 
     /**

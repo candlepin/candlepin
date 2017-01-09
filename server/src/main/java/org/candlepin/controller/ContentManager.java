@@ -552,7 +552,7 @@ public class ContentManager {
      * @param owner
      *  The owner for which to remove the content
      *
-     * @param entity
+     * @param content
      *  The content entity to remove
      *
      * @param regenerateEntitlementCerts
@@ -615,11 +615,15 @@ public class ContentManager {
         }
 
         if (contentUuids != null && !contentUuids.isEmpty()) {
+            log.debug("Deleting content with UUIDs: {}", contentUuids);
+
             List<Product> affectedProducts = this.productCurator
                 .getProductsByContentUuids(owner, contentUuids)
                 .list();
 
             if (!affectedProducts.isEmpty()) {
+                log.debug("Updating {} affected products", affectedProducts.size());
+
                 if (!(contentUuids instanceof Set)) {
                     // Convert this to a set so our filtering lookups aren't painfully slow
                     contentUuids = new HashSet<String>(contentUuids);
@@ -640,16 +644,18 @@ public class ContentManager {
                 for (Product product : affectedProducts) {
                     ProductData pdata = product.toDTO();
 
-                    for (ProductContentData pcd : pdata.getProductContent()) {
-                        ContentData cdata = pcd.getContent();
+                    Iterator<ProductContentData> pcd = pdata.getProductContent().iterator();
+                    while (pcd.hasNext()) {
+                        ContentData cdata = pcd.next().getContent();
 
                         if (!affectedProductsContent.containsKey(cdata.getId())) {
-                            pdata.removeProductContent(pcd);
+                            pcd.remove();
                         }
                     }
                 }
 
                 // Perform a micro-import for these products using the content map we just built
+                log.debug("Performing micro-import for products: {}", affectedProductData);
                 this.productManager.importProducts(owner, affectedProductData, affectedProductsContent);
 
                 if (regenerateEntitlementCerts) {
@@ -659,6 +665,7 @@ public class ContentManager {
             }
 
             // Remove content references
+            log.debug("Removing owner content references");
             this.ownerContentCurator.removeOwnerContentReferences(owner, contentUuids);
         }
     }
