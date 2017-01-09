@@ -16,10 +16,12 @@ package org.candlepin.model;
 
 import org.candlepin.common.jackson.HateoasArrayExclude;
 import org.candlepin.common.jackson.HateoasInclude;
+import org.candlepin.jackson.StringTrimmingConverter;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.BatchSize;
@@ -173,6 +175,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     //FIXME A cascade shouldn't be necessary here as ElementCollections cascade by default
     //See http://stackoverflow.com/a/7696147
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
+    @JsonDeserialize(contentConverter = StringTrimmingConverter.class)
     private Map<String, String> facts;
 
     @OneToOne(cascade = CascadeType.ALL)
