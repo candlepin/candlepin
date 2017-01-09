@@ -192,7 +192,7 @@ describe 'Core Limiting' do
 
     # Perform healing
     ents = system.consume_product()
-    ents.should == nil
+    ents.should == []
   end
 
   it 'can heal when both core and socket limited' do

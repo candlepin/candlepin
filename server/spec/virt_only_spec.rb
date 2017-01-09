@@ -36,7 +36,7 @@ describe 'Virt Only Pools' do
     })
 
     entitlement = guest.consume_product(virt_product.id)
-    entitlement.should be_nil
+    entitlement.should == []
   end
 
   it 'virt_only product should result in virt_only pool' do

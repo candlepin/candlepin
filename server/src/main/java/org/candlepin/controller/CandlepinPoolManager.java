@@ -818,9 +818,7 @@ public class CandlepinPoolManager implements PoolManager {
             productIds, filteredPools, compliance, serviceLevelOverride,
             poolCurator.retrieveServiceLevelsForOwner(owner, true), false);
         // Sort the resulting pools to avoid deadlocks
-        if (enforced != null) {
-            Collections.sort(enforced);
-        }
+        Collections.sort(enforced);
         return enforced;
     }
 
