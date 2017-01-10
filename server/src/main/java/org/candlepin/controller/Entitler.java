@@ -219,7 +219,12 @@ public class Entitler {
             if (host != null && (force || host.isAutoheal())) {
                 log.info("Attempting to heal host machine with UUID \"{}\" for guest with UUID \"{}\"",
                     host.getUuid(), consumer.getUuid());
-
+                if (!StringUtils.equals(host.getServiceLevel(), consumer.getServiceLevel())) {
+                    log.warn("Host with UUID \"{}\" has a service level \"{}\" that does not match" +
+                        " that of the guest with UUID \"{}\" and service level \"{}\"",
+                        host.getUuid(), host.getServiceLevel(),
+                        consumer.getUuid(), consumer.getServiceLevel());
+                }
                 try {
                     List<Entitlement> hostEntitlements = poolManager.entitleByProductsForHost(
                         consumer, host, data.getOnDate(), data.getPossiblePools());
