@@ -532,13 +532,16 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     @SuppressWarnings("unchecked")
     public CandlepinQuery<Product> getProductsByContentUuids(Owner owner, Collection<String> contentUuids) {
         if (contentUuids != null && !contentUuids.isEmpty()) {
-            // See note above in getProductsWithContent for details on why we do two queries here
+            // See note above in getProductsByContent for details on why we do two queries here
             // instead of one.
-            Criteria idCriteria = this.createSecureCriteria()
-                .createAlias("productContent", "pcontent")
+            Criteria idCriteria = this.createSecureCriteria(OwnerProduct.class, null)
+                .createAlias("product", "product")
+                .createAlias("product.productContent", "pcontent")
                 .createAlias("pcontent.content", "content")
+                .createAlias("owner", "owner")
+                .add(Restrictions.eq("owner.id", owner.getId()))
                 .add(CPRestrictions.in("content.uuid", contentUuids))
-                .setProjection(Projections.distinct(Projections.id()));
+                .setProjection(Projections.distinct(Projections.property("product.uuid")));
 
             List<String> productUuids = idCriteria.list();
 

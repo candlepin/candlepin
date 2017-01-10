@@ -652,6 +652,8 @@ public class ContentManager {
                             pcd.remove();
                         }
                     }
+
+                    affectedProductData.put(pdata.getId(), pdata);
                 }
 
                 // Perform a micro-import for these products using the content map we just built
@@ -665,7 +667,6 @@ public class ContentManager {
             }
 
             // Remove content references
-            log.debug("Removing owner content references");
             this.ownerContentCurator.removeOwnerContentReferences(owner, contentUuids);
         }
     }

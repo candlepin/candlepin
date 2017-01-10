@@ -522,8 +522,6 @@ public class ProductManager {
         }
 
         if (productUuids != null && !productUuids.isEmpty()) {
-            log.debug("Removing products from owner: {}, {}", owner, productUuids);
-
             // Remove owner references to all the products. This will leave the products orphaned,
             // to be eventually deleted by the orphan removal job
             this.ownerProductCurator.removeOwnerProductReferences(owner, productUuids);

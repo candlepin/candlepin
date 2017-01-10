@@ -16,7 +16,7 @@ package org.candlepin.controller;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.Environment;
+import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
@@ -101,10 +101,9 @@ public class OwnerManager {
             log.info("Deleting activation key: {}", key);
             activationKeyCurator.delete(key);
         }
-        for (Environment e : owner.getEnvironments()) {
-            log.info("Deleting environment: {}", e.getId());
-            envCurator.delete(e);
-        }
+
+        log.debug("Deleting environments for owner: {}", owner);
+        envCurator.deleteEnvironmentsForOwner(owner);
 
         for (Pool p : poolManager.listPoolsByOwner(owner)) {
             log.info("Deleting pool: {}", p);

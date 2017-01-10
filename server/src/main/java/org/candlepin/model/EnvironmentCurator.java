@@ -16,13 +16,21 @@ package org.candlepin.model;
 
 import org.hibernate.criterion.Restrictions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+
 
 /**
  * EnvironmentCurator
  */
 public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
+    private static Logger log = LoggerFactory.getLogger(OwnerContentCurator.class);
 
     public EnvironmentCurator() {
         super(Environment.class);
@@ -47,5 +55,46 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
             .createCriteria("content")
             .add(Restrictions.in("id", contentIds))
             .list();
+    }
+
+    /**
+     * Performs a bulk deletion of all environment objects for the given owner.
+     *
+     * @param owner
+     *  The owner for which to delete environments
+     *
+     * @return
+     *  the number of environments deleted
+     */
+    public int deleteEnvironmentsForOwner(Owner owner) {
+        String jpql = "SELECT e.id FROM Environment e WHERE e.owner.id = :owner_id";
+
+        List<String> ids = this.getEntityManager()
+            .createQuery(jpql, String.class)
+            .setParameter("owner_id", owner.getId())
+            .getResultList();
+
+        int count = 0;
+
+        if (ids != null && !ids.isEmpty()) {
+            // We have some matching content, delete environment content first...
+            Map<String, Object> criteria = new HashMap<String, Object>();
+            criteria.put("environment_id", owner.getId());
+
+            count = this.bulkSQLDelete(EnvironmentContent.DB_TABLE, criteria);
+            log.info("{} environment-content relations updated", count);
+
+            // Cleanup the environment objects themselves...
+            criteria.clear();
+            criteria.put("id", ids);
+
+            count = this.bulkSQLDelete(Environment.DB_TABLE, criteria);
+            log.info("{} environments deleted", count);
+        }
+        else {
+            log.info("0 environments deleted");
+        }
+
+        return count;
     }
 }

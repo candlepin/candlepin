@@ -580,23 +580,10 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             int count = this.bulkSQLDelete(OwnerProduct.DB_TABLE, criteria);
             log.info("{} owner-product relations removed", count);
 
-            // Product content ///////////////////////////////
-            // String sql = "SELECT content_uuid FROM " + OwnerContent.DB_TABLE + " WHERE owner_id = ?1";
-            // List<String> ids = session.createSQLQuery(sql)
-            //     .setParameter("1", owner.getId())
-            //     .list();
-
-            // if (ids != null && !ids.isEmpty()) {
-            //     criteria.clear();
-            //     criteria.put("content_uuid", ids);
-            //     criteria.put("product_uuid", productUuids);
-
-            //     count = this.bulkSQLDelete(ProductContent.DB_TABLE, criteria);
-            //     log.info("{} product-content relations removed", count);
-            // }
-            // else {
-            //     log.info("0 owner-product relations removed");
-            // }
+            // Impl note:
+            // Even though there's a valid argument to be made here to do so, we do not unlink
+            // content from a product. This may cause headaches in the future when a product object
+            // is unlinked from an owner, but one or more of its contents are not.
 
             // Activation key products ///////////////////////
             String sql = "SELECT id FROM " + ActivationKey.DB_TABLE + " WHERE owner_id = ?1";
