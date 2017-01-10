@@ -34,8 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -79,22 +77,18 @@ public class AutobindRules {
                 log.info("Consumer is compliant and does not require more entitlements.");
             }
             else {
-                Set<String> fullList = new HashSet<String>();
-                fullList.addAll(Arrays.asList(productIds));
-                for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
-                    fullList.add(cip.getProductId());
-                }
-                log.info("No pools available to complete compliance for the set of proudcts: " + fullList);
+                logProducts("No pools available to complete compliance for the set of products: {}" +
+                    " and consumer installed products: {}", productIds, consumer, false);
             }
             return bestPools;
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("Selecting best entitlement pool for products: " +
-                Arrays.toString(productIds));
+            logProducts("Selecting best entitlement pool for products: {}" +
+                "and consumer installed products: {}", productIds, consumer, true);
             if (poolsBeforeContentFilter != pools.size()) {
-                log.debug((poolsBeforeContentFilter - pools.size()) + " pools filtered " +
-                    "due to too much content");
+                log.debug("{} pools filtered due to too much content",
+                    (poolsBeforeContentFilter - pools.size()));
             }
         }
 
@@ -129,13 +123,9 @@ public class AutobindRules {
         }
 
         if (pools.size() > 0 && (result == null || result.isEmpty())) {
-            List<String> fullList = new ArrayList<String>();
-            fullList.addAll(Arrays.asList(productIds));
-            for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
-                fullList.add(cip.getId());
-            }
-            log.info("Rules did not select a pools for products: " + fullList);
-            return null;
+            logProducts("Rules did not select a pool for products: {} and consumer installed products: {}",
+                productIds, consumer, false);
+            return bestPools;
         }
 
         for (Pool p : pools) {
@@ -152,6 +142,22 @@ public class AutobindRules {
         }
 
         return bestPools;
+    }
+
+    private void logProducts(String message, String[] productIds, Consumer consumer, boolean debug) {
+
+        List<String> consumerProducts = new LinkedList<String>();
+        if (consumer != null && consumer.getInstalledProducts() != null) {
+            for (ConsumerInstalledProduct product: consumer.getInstalledProducts()) {
+                consumerProducts.add(product.getProductId());
+            }
+        }
+        if (debug) {
+            log.debug(message, productIds, consumerProducts);
+        }
+        else {
+            log.info(message, productIds, consumerProducts);
+        }
     }
 
     /**
