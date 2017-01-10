@@ -153,7 +153,8 @@ describe 'Entitlements' do
     @system.consume_product @super_awesome.id
 
     entitlements = @system.consume_product @super_awesome.id
-    entitlements.should be_nil
+    entitlements.should == []
+
   end
 
   it 'should not allow consuming two entitlements in same pool' do

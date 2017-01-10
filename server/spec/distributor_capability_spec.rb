@@ -143,7 +143,7 @@ describe 'Distributor Capability' do
 
     consumer = @user.register(random_string("consumer"), :candlepin, nil, {})
     entitlements = @cp.consume_product(@product.id, {:uuid => consumer.uuid})
-    nil.should == entitlements
+    entitlements.should == []
 
     name = random_string("WidgetvBillion")
     create_distributor_version(name,
