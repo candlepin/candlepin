@@ -45,13 +45,11 @@ import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialDto;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
@@ -62,6 +60,8 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
+import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -530,9 +530,8 @@ public class ConsumerResourceTest {
     @Test
     public void testCreateConsumerShouldFailOnMaxLengthOfName() {
         thrown.expect(BadRequestException.class);
-        int max = Consumer.MAX_LENGTH_OF_CONSUMER_NAME;
         String m = String.format("Name of the consumer " +
-            "should be shorter than %d characters.", max);
+            "should be shorter than %d characters.", (Consumer.MAX_LENGTH_OF_CONSUMER_NAME + 1));
         thrown.expectMessage(m);
 
         Consumer c = mock(Consumer.class);
@@ -551,10 +550,9 @@ public class ConsumerResourceTest {
         when(oc.lookupByKey(eq(ownerKey))).thenReturn(o);
         when(o.getKey()).thenReturn(ownerKey);
         when(c.getType()).thenReturn(cType);
-        String s = RandomStringUtils.randomAlphanumeric(max + 1);
+        String s = RandomStringUtils.randomAlphanumeric(Consumer.MAX_LENGTH_OF_CONSUMER_NAME + 1);
         when(c.getName()).thenReturn(s);
-        when(up.canAccess(eq(o), eq(SubResource.CONSUMERS), eq(Access.CREATE))).
-            thenReturn(true);
+        when(up.canAccess(eq(o), eq(SubResource.CONSUMERS), eq(Access.CREATE))).thenReturn(true);
 
         consumerResource.create(c, up, null, ownerKey, null);
     }
