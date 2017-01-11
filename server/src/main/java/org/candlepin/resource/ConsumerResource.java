@@ -606,7 +606,7 @@ public class ConsumerResource {
             int max = Consumer.MAX_LENGTH_OF_CONSUMER_NAME;
             if (consumer.getName().length() > max) {
                 String m = "Name of the consumer should be shorter than {0} characters.";
-                throw new BadRequestException(i18n.tr(m, Integer.toString(max)));
+                throw new BadRequestException(i18n.tr(m, Integer.toString(max + 1)));
             }
         }
     }
