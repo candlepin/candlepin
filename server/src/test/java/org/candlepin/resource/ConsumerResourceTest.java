@@ -14,10 +14,18 @@
  */
 package org.candlepin.resource;
 
-import static org.candlepin.test.TestUtil.*;
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.candlepin.test.TestUtil.createIdCert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -511,10 +519,8 @@ public class ConsumerResourceTest {
     @Test
     public void testCreateConsumerShouldFailOnMaxLengthOfName() {
         thrown.expect(BadRequestException.class);
-        int max = Consumer.MAX_LENGTH_OF_CONSUMER_NAME;
-        String m = String.format("Name of the consumer " +
-            "should be shorter than %d characters.", max);
-        thrown.expectMessage(m);
+        thrown.expectMessage(String.format("Name of the consumer " +
+            "should be shorter than %d characters.", Consumer.MAX_LENGTH_OF_CONSUMER_NAME + 1));
 
         Consumer c = mock(Consumer.class);
         Owner o = mock(Owner.class);
@@ -527,7 +533,7 @@ public class ConsumerResourceTest {
         when(oc.lookupByKey(eq(ownerKey))).thenReturn(o);
         when(o.getKey()).thenReturn(ownerKey);
         when(c.getType()).thenReturn(cType);
-        String s = RandomStringUtils.randomAlphanumeric(max + 1);
+        String s = RandomStringUtils.randomAlphanumeric(Consumer.MAX_LENGTH_OF_CONSUMER_NAME + 1);
         when(c.getName()).thenReturn(s);
         when(up.canAccess(eq(o), eq(SubResource.CONSUMERS), eq(Access.CREATE))).
             thenReturn(true);
