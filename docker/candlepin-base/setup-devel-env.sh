@@ -30,6 +30,8 @@ PACKAGES=(
     openssl
     gettext
     tmux
+    qpid-proton-c
+    qpid-proton-c-devel
 )
 
 yum install -y ${PACKAGES[@]}
