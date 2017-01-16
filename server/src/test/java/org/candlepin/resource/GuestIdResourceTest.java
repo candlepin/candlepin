@@ -121,7 +121,7 @@ public class GuestIdResourceTest {
     }
 
     @Test
-    public void updateGuests() {
+    public void updateGuests() throws GuestMigrationException {
         List<GuestId> guestIds = new LinkedList<GuestId>();
         guestIds.add(new GuestId("1"));
         when(consumerResource.performConsumerUpdates(any(Consumer.class),
@@ -136,7 +136,7 @@ public class GuestIdResourceTest {
     }
 
     @Test
-    public void updateGuestsNoUpdate() {
+    public void updateGuestsNoUpdate() throws GuestMigrationException {
         List<GuestId> guestIds = new LinkedList<GuestId>();
         guestIds.add(new GuestId("1"));
 

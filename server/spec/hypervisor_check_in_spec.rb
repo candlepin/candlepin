@@ -48,12 +48,114 @@ describe 'Hypervisor Resource', :type => :virt do
     host_hyp_id = random_string('host')
     host_name = random_string('name')
     job_detail = async_update_hypervisor(@owner, @consumer, host_name, host_hyp_id, [])
-    job_detail['result'].should == 'Created: 1, Updated: 0, Unchanged:0, Failed: 0'
+    job_detail['result'].should == 'Created: 1, Updated: 0, Unchanged:0, Failed: 0, Partial: false'
     result_data = job_detail['resultData']
     hyp_consumer = @cp.get_consumer(result_data.created[0]['uuid'])
     hyp_consumer.facts['test_fact'].should == 'fact_value'
     should_add_consumer_to_created_when_new_host_id_and_no_guests_reported(result_data, host_name, host_hyp_id)
   end
+
+  it 'should create first host even if second fails - async' do
+    data = {"hypervisors" => [
+         {"name" => "h1", 
+           "hypervisorId" => {"hypervisorId" => "h1id"}, 
+           "guestIds" => [{"guestId" => "g1"}],
+           "facts" => {"test_fact" => "t1"}
+         },
+         {"name" => "h2", 
+           "hypervisorId" => {"hypervisorId" => "h2id"}, 
+           "guestIds" => [{"guestId" => "g2"}], 
+           "facts" => {"test_fact" => "EXCEPTION_HYPERVISOR"}
+         }
+      ]}
+
+    job_detail = JSON.parse(@consumer.hypervisor_update(@owner['key'], data.to_json))
+    wait_for_job(job_detail['id'], 60)
+    job_detail = @cp.get_job(job_detail['id'], true)
+    job_detail['state'].should == 'FINISHED'
+    job_detail['result'].should_not be_nil
+    job_detail['result'].should == 'Created: 1, Updated: 0, Unchanged:0, Failed: 0, Partial: true'
+    partial_data = job_detail['resultData']['partialSuccessDetails']
+    partial_data.should_not be_nil
+    partial_data['failedConsumer']['name'].should == 'h2'
+  end
+
+  it 'should update two hosts even if third has failures during guest migration - async' do
+    user = user_client(@owner, random_string("user"))
+    ["g1", "g2", "g3", "g4", "g5"].each do |x| 
+        user.register(random_string('guest'), :system, nil,
+        {'virt.uuid' => x, 'virt.is_guest' => 'true'}, nil, @owner['key'], [], [])
+    end
+    ex_guest = user.register(random_string('guest'), :system, nil,
+        {'virt.uuid' => "EXCEPTION_INJECTED_GUEST", 'virt.is_guest' => 'true'}, nil, @owner['key'], [], [])
+ 
+    data = {"hypervisors" => [
+         {"name" => "h1", 
+           "hypervisorId" => {"hypervisorId" => "h1id"}, 
+           "guestIds" => [{"guestId" => "g1"}],
+         },
+         {"name" => "h2", 
+           "hypervisorId" => {"hypervisorId" => "h2id"}, 
+           "guestIds" => [{"guestId" => "g2"}], 
+         },
+         {"name" => "h3", 
+           "hypervisorId" => {"hypervisorId" => "h3id"}, 
+           "guestIds" => [{"guestId" => "g3"}], 
+         },
+         {"name" => "h4", 
+           "hypervisorId" => {"hypervisorId" => "h4id"}, 
+           "guestIds" => [{"guestId" => "g4"}], 
+         },
+         {"name" => "h5", 
+           "hypervisorId" => {"hypervisorId" => "h5id"}, 
+           "guestIds" => [{"guestId" => "g5"}], 
+         }
+      ]}
+
+    job_detail = JSON.parse(@consumer.hypervisor_update(@owner['key'], data.to_json))
+    wait_for_job(job_detail['id'], 60)
+    job_detail = @cp.get_job(job_detail['id'], true)
+    job_detail['state'].should == 'FINISHED'
+    job_detail['result'].should_not be_nil
+    job_detail['result'].should == 'Created: 5, Updated: 0, Unchanged:0, Failed: 0, Partial: false'
+   
+     data = {"hypervisors" => [
+         {"name" => "h1", 
+           "hypervisorId" => {"hypervisorId" => "h1id"}, 
+           "guestIds" => [{"guestId" => "g2"}, {"guestId" => "g3"}],
+         },
+         {"name" => "h2", 
+           "hypervisorId" => {"hypervisorId" => "h2id"}, 
+           "guestIds" => [{"guestId" => "g1"}], 
+         },
+         {"name" => "h3", 
+           "hypervisorId" => {"hypervisorId" => "h3id"}, 
+           "guestIds" => [{"guestId" => "EXCEPTION_INJECTED_GUEST"}], 
+         },
+         {"name" => "h4", 
+           "hypervisorId" => {"hypervisorId" => "h4id"}, 
+           "guestIds" => [{"guestId" => "g5"}], 
+         },
+         {"name" => "h5", 
+           "hypervisorId" => {"hypervisorId" => "h5id"}, 
+           "guestIds" => [{"guestId" => "g4"}], 
+         }
+      ]}
+
+
+    job_detail = JSON.parse(@consumer.hypervisor_update(@owner['key'], data.to_json))
+    wait_for_job(job_detail['id'], 60)
+    job_detail = @cp.get_job(job_detail['id'], true)
+    job_detail['state'].should == 'FINISHED'
+    job_detail['result'].should_not be_nil
+    # 3 hypervisors will be updated. But during the migration of the third hypervisor,
+    # the exception will be thrown, so no further hypervisors will be updated
+    job_detail['result'].should == 'Created: 0, Updated: 3, Unchanged:0, Failed: 0, Partial: true'
+    partial_data = job_detail['resultData']['partialSuccessDetails']
+    partial_data.should_not be_nil
+    partial_data['failedConsumer']['uuid'].should == ex_guest.uuid
+  end
+
 
   def should_add_consumer_to_created_when_new_host_id_and_no_guests_reported(result, host_name, host_hyp_id)
     # Should only  have a result entry for created.
@@ -92,7 +194,7 @@ describe 'Hypervisor Resource', :type => :virt do
     host_hyp_id = random_string('host')
     host_name = random_string('name')
     job_detail = async_update_hypervisor(@owner, @consumer, host_name, host_hyp_id, ['g1'])
-    job_detail['result'].should == 'Created: 1, Updated: 0, Unchanged:0, Failed: 0'
+    job_detail['result'].should == 'Created: 1, Updated: 0, Unchanged:0, Failed: 0, Partial: false'
     result_data = job_detail['resultData']
     should_add_consumer_to_created_when_new_host_id_and_guests_were_reported(result_data, host_name)
   end
@@ -123,7 +225,7 @@ describe 'Hypervisor Resource', :type => :virt do
     host_hyp_id = random_string('host')
     host_name = random_string('name')
     job_detail = async_update_hypervisor(@owner, @consumer, host_name, host_hyp_id, ['g1'], false)
-    job_detail['result'].should == 'Created: 0, Updated: 0, Unchanged:0, Failed: 1'
+    job_detail['result'].should == 'Created: 0, Updated: 0, Unchanged:0, Failed: 1, Partial: false'
     result_data = job_detail['resultData']
     should_not_add_new_consumer_when_create_missing_is_false(result_data)
   end
@@ -150,7 +252,7 @@ describe 'Hypervisor Resource', :type => :virt do
     #because mysql
     sleep 2
     job_detail = async_update_hypervisor(@owner, @consumer, @expected_host_name, @expected_host_hyp_id,  ['g1', 'g2'])
-    job_detail['result'].should == 'Created: 0, Updated: 1, Unchanged:0, Failed: 0'
+    job_detail['result'].should == 'Created: 0, Updated: 1, Unchanged:0, Failed: 0, Partial: false'
     result_data = job_detail['resultData']
     should_add_consumer_to_updated_when_guest_ids_are_updated(result_data, old_check_in)
   end
@@ -181,7 +283,7 @@ describe 'Hypervisor Resource', :type => :virt do
   it 'should add consumer to unchanged when same guest ids are sent - async' do
     old_check_in = @cp.get_consumer(@host_uuid)
     job_detail = async_update_hypervisor(@owner, @consumer, @expected_host_name, @expected_host_hyp_id, @expected_guest_ids)
-    job_detail['result'].should == 'Created: 0, Updated: 0, Unchanged:1, Failed: 0'
+    job_detail['result'].should == 'Created: 0, Updated: 0, Unchanged:1, Failed: 0, Partial: false'
     result_data = job_detail['resultData']
     should_add_consumer_to_unchanged_when_same_guest_ids_are_sent(result_data, old_check_in)
   end
@@ -218,7 +320,7 @@ describe 'Hypervisor Resource', :type => :virt do
     host_hyp_id = random_string('host')
     host_name = random_string('host')
     job_detail = async_update_hypervisor(@owner, @consumer, host_name, host_hyp_id, [])
-    job_detail['result'].should == 'Created: 1, Updated: 0, Unchanged:0, Failed: 0'
+    job_detail['result'].should == 'Created: 1, Updated: 0, Unchanged:0, Failed: 0, Partial: false'
     result_data = job_detail['resultData']
     result_data.created.size.should == 1
     result_data.created[0].name.should == host_name

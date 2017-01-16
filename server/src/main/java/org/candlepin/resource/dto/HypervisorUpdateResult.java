@@ -38,6 +38,8 @@ public class HypervisorUpdateResult implements Serializable {
     private Set<Consumer> updated;
     private Set<Consumer> unchanged;
     private Set<String> failed;
+    private String errorMessage;
+    private PartialSuccessDetails partialSuccessDetails;
 
     public HypervisorUpdateResult() {
         this.created = new HashSet<Consumer>();
@@ -79,9 +81,29 @@ public class HypervisorUpdateResult implements Serializable {
         return failed;
     }
 
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
+    public PartialSuccessDetails getPartialSuccessDetails() {
+        return partialSuccessDetails;
+    }
+
+    public void setPartialSuccessDetails(PartialSuccessDetails partialSuccessDetails) {
+        this.partialSuccessDetails = partialSuccessDetails;
+    }
+
     @Override
     public String toString() {
         return "Created: " + created.size() + ", Updated: " + updated.size() +
-                ", Unchanged:" + unchanged.size() + ", Failed: " + failed.size();
+                ", Unchanged:" + unchanged.size() + ", Failed: " + failed.size() +
+                ", Partial: " + Boolean.toString(partialSuccessDetails != null);
     }
+
+
+
 }

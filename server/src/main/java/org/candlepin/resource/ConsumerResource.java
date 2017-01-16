@@ -825,9 +825,10 @@ public class ConsumerResource {
      * @param startGuests
      * @param updatedGuests
      * @param guestConsumerMap
+     * @throws GuestMigrationException in case that the migration fails
      */
     public void checkForGuestsMigration(Consumer host, List<GuestId> startGuests, List<GuestId> updatedGuests,
-        VirtConsumerMap guestConsumerMap) {
+        VirtConsumerMap guestConsumerMap) throws GuestMigrationException {
         Set<GuestId> toCheck = new HashSet<GuestId>();
         if (startGuests != null) {
             toCheck.addAll(startGuests);
@@ -839,7 +840,12 @@ public class ConsumerResource {
             Consumer guest = guestConsumerMap == null ?
                 null : guestConsumerMap.get(guestId.getGuestId());
             if (guest != null) {
-                checkForGuestMigration(host, guest);
+                try {
+                    checkForGuestMigration(host, guest);
+                }
+                catch (Exception e) {
+                    throw new GuestMigrationException(guest, e);
+                }
             }
         }
     }
@@ -1128,6 +1134,7 @@ public class ConsumerResource {
      * db. If autobind has been disabled for the guest's owner, the host_restricted entitlements
      * from the old host are still removed, but no auto-bind occurs.
      */
+    @Transactional
     public void checkForGuestMigration(Consumer host, Consumer guest) {
         if (!"true".equalsIgnoreCase(guest.getFact("virt.is_guest"))) {
             // This isn't a guest, skip this entire step.
@@ -1138,6 +1145,10 @@ public class ConsumerResource {
         }
 
         String guestVirtUuid = guest.getFact("virt.uuid");
+
+        if ("EXCEPTION_INJECTED_GUEST".equals(guestVirtUuid)) {
+            throw new NullPointerException("EXCEPTION_INJECTED_GUEST");
+        }
 
         // Consumer host = consumerCurator.getHost(guestVirtUuid, guest.getOwner());
 

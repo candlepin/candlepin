@@ -801,7 +801,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testcheckForGuestsMigration() {
+    public void testcheckForGuestsMigration() throws GuestMigrationException {
         ConsumerResource cr = Mockito.spy(new ConsumerResource(mockedConsumerCurator, null,
             null, null, null, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null, null,
