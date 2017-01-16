@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -128,7 +129,11 @@ public class GuestIdResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         List<GuestId> guestIds) {
         Consumer toUpdate = consumerCurator.findByUuid(consumerUuid);
-        List<GuestId> startGuests = toUpdate.getGuestIds();
+        List<GuestId> startGuests = new ArrayList<GuestId>();
+        if (toUpdate != null && toUpdate.getGuestIds() != null) {
+            startGuests.addAll(toUpdate.getGuestIds());
+        }
+
 
         // Create a skeleton consumer for consumerResource.performConsumerUpdates
         Consumer consumer = new Consumer();

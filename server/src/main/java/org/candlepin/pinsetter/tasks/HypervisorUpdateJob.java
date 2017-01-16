@@ -244,7 +244,9 @@ public class HypervisorUpdateJob extends KingpinJob {
                     }
                 }
                 else {
-                    startGuests = knownHost.getGuestIds();
+                    if (knownHost.getGuestIds() != null) {
+                        startGuests.addAll(knownHost.getGuestIds());
+                    }
                     reportedOnConsumer = knownHost;
                     if (jobReporterId != null && knownHost.getHypervisorId() != null &&
                         hypervisorId.equalsIgnoreCase(knownHost.getHypervisorId().getHypervisorId()) &&

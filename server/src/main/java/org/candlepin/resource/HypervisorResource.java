@@ -203,7 +203,10 @@ public class HypervisorResource {
                 else {
                     consumer = hypervisorConsumersMap.get(hypervisorId);
                 }
-                List<GuestId> startGuests =  consumer.getGuestIds();
+                List<GuestId> startGuests = new ArrayList<GuestId>();
+                if (consumer.getGuestIds() != null) {
+                    startGuests.addAll(consumer.getGuestIds());
+                }
                 boolean guestIdsUpdated = addGuestIds(consumer, hostEntry.getValue(), guestConsumersMap);
 
                 if (guestIdsUpdated) {

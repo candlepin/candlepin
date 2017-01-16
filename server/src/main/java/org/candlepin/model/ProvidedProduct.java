@@ -18,6 +18,8 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
+import java.io.Serializable;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -29,7 +31,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @JsonFilter("ProvidedProductFilter")
-public class ProvidedProduct {
+public class ProvidedProduct implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private String productId;
     private String productName;
