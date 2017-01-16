@@ -72,9 +72,11 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pinsetter.tasks.HealEntireOrgJob;
+import org.candlepin.pinsetter.tasks.ImportJob;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.pinsetter.tasks.UndoImportsJob;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
+import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resource.util.ResourceDateParser;
@@ -180,6 +182,7 @@ public class OwnerResource {
     private ResolverUtil resolverUtil;
     private ProductManager productManager;
     private ContentManager contentManager;
+    private ConsumerTypeValidator consumerTypeValidator;
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator,
@@ -208,7 +211,8 @@ public class OwnerResource {
         Configuration config,
         ResolverUtil resolverUtil,
         ProductManager productManager,
-        ContentManager contentManager) {
+        ContentManager contentManager,
+        ConsumerTypeValidator consumerTypeValidator) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -237,6 +241,7 @@ public class OwnerResource {
         this.resolverUtil = resolverUtil;
         this.productManager = productManager;
         this.contentManager = contentManager;
+        this.consumerTypeValidator = consumerTypeValidator;
     }
 
     /**
@@ -676,10 +681,7 @@ public class OwnerResource {
         @Context PageRequest pageRequest) {
 
         Owner owner = findOwner(ownerKey);
-        List<ConsumerType> types = null;
-        if (typeLabels != null && !typeLabels.isEmpty()) {
-            types = consumerTypeCurator.lookupConsumerTypes(typeLabels);
-        }
+        List<ConsumerType> types = consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
 
         Page<List<Consumer>> page = consumerCurator.searchOwnerConsumers(
             owner, userName, types, uuids, hypervisorIds, attrFilters, skus,
@@ -690,6 +692,26 @@ public class OwnerResource {
         return page.getPageData();
     }
 
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/consumers/count")
+    @SuppressWarnings("checkstyle:indentation")
+    @ApiOperation(notes = "Retrieve a count of Consumers for the Owner", value = "consumers count")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found"),
+        @ApiResponse(code = 400, message = "Invalid request")})
+    public int countConsumers(
+        @PathParam("owner_key")
+        @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey,
+        @QueryParam("type") Set<String> typeLabels,
+        @QueryParam("sku") List<String> skus,
+        @QueryParam("subscription_id") List<String> subscriptionIds,
+        @QueryParam("contract") List<String> contracts) {
+
+        findOwner(ownerKey);
+        consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
+
+        return consumerCurator.countConsumers(ownerKey, typeLabels, skus, subscriptionIds, contracts);
+    }
 
     /**
      * Retrieves a list of Pools for an Owner

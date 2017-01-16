@@ -14,15 +14,10 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.common.exceptions.BadRequestException;
-
-import org.apache.commons.lang.StringUtils;
 import org.hibernate.criterion.Restrictions;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 /**
  * ConsumerTypeCurator
@@ -55,22 +50,5 @@ public class ConsumerTypeCurator extends AbstractHibernateCurator<ConsumerType> 
     public List<ConsumerType> lookupByLabels(Collection<String> labels) {
         return (List<ConsumerType>) currentSession().createCriteria(ConsumerType.class)
             .add(Restrictions.in("label", labels)).list();
-    }
-
-    public List<ConsumerType> lookupConsumerTypes(Set<String> labels) {
-        List<ConsumerType> types = this.lookupByLabels(labels);
-        // Since the type labels are unique, our sizes must match.
-        if (labels.size() != types.size()) {
-            List<String> invalidLabels = new ArrayList<String>(labels);
-            for (ConsumerType type : types) {
-                String label = type.getLabel();
-                if (labels.contains(label)) {
-                    invalidLabels.remove(label);
-                }
-            }
-            throw new BadRequestException(i18n.tr("No such unit type(s): {0}",
-                StringUtils.join(invalidLabels, ", ")));
-        }
-        return types;
     }
 }

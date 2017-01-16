@@ -782,11 +782,11 @@ class Candlepin
   end
 
   # TODO: Should we change these to bind to better match terminology?
-  def consume_pool(pool, params={})
+  def consume_pool(pool_id, params={})
     quantity = params[:quantity] || nil
     uuid = params[:uuid] || @uuid
     async = params[:async] || nil
-    path = "/consumers/#{uuid}/entitlements?pool=#{pool}"
+    path = "/consumers/#{uuid}/entitlements?pool=#{pool_id}"
     path << "&quantity=#{quantity}" if quantity
     path << "&async=#{async}" if async
 
@@ -913,7 +913,30 @@ class Candlepin
     facts.each do |fact|
       query << "&fact=%s" % [fact]
     end
+
     get(query)
+  end
+
+  def count_owner_consumers(owner_key, consumer_types=[], skus=[], subscription_ids=[], contracts=[])
+    query = "/owners/#{owner_key}/consumers/count?"
+
+    if !consumer_types.empty?
+      query += "&type=" + consumer_types.join("&type=")
+    end
+
+    if !skus.empty?
+      query += "&sku=" + skus.join("&sku=")
+    end
+
+    if !subscription_ids.empty?
+      query += "&subscription_id=" + subscription_ids.join("&subscription_id=")
+    end
+
+    if !contracts.empty?
+      query += "&contract=" + contracts.join("&contract=")
+    end
+
+    get(query,accept_header=:json, dont_parse=true)
   end
 
   def get_consumer(consumer_id=nil)

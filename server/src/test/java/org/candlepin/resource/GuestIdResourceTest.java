@@ -14,8 +14,10 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventFactory;
@@ -266,7 +268,7 @@ public class GuestIdResourceTest {
             super(null, null, null, null, null, null, null, null, null,
                   null, null, null, null, null, null, null, null,
                   null, null, null, null, null, null, null, null, null, null, productCurator,
-                  null, null, null);
+                  null, null, null, null);
         }
 
         public void checkForMigration(Consumer host, Consumer guest) {
