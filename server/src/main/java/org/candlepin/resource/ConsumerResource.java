@@ -792,7 +792,7 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         Consumer consumer) {
         Consumer toUpdate = consumerCurator.verifyAndLookupConsumer(uuid);
-        List<GuestId> startGuests = toUpdate.getGuestIds();
+
         VirtConsumerMap guestConsumerMap = new VirtConsumerMap();
         if (consumer.getGuestIds() != null) {
             Set<String> allGuestIds = new HashSet<String>();
@@ -806,7 +806,6 @@ public class ConsumerResource {
         if (performConsumerUpdates(consumer, toUpdate, guestConsumerMap)) {
             try {
                 consumerCurator.update(toUpdate);
-                checkForGuestsMigration(toUpdate, startGuests, toUpdate.getGuestIds(), guestConsumerMap);
             }
             catch (CandlepinException ce) {
                 // If it is one of ours, rethrow it.
@@ -816,30 +815,6 @@ public class ConsumerResource {
                 log.error("Problem updating unit:", e);
                 throw new BadRequestException(i18n.tr(
                     "Problem updating unit {0}", consumer));
-            }
-        }
-    }
-
-    /**
-     * We need to ensure that the guests don't have entitlements for other hosts
-     * @param startGuests
-     * @param updatedGuests
-     * @param guestConsumerMap
-     */
-    public void checkForGuestsMigration(Consumer host, List<GuestId> startGuests, List<GuestId> updatedGuests,
-        VirtConsumerMap guestConsumerMap) {
-        Set<GuestId> toCheck = new HashSet<GuestId>();
-        if (startGuests != null) {
-            toCheck.addAll(startGuests);
-        }
-        if (updatedGuests != null) {
-            toCheck.addAll(updatedGuests);
-        }
-        for (GuestId guestId : toCheck) {
-            Consumer guest = guestConsumerMap == null ?
-                null : guestConsumerMap.get(guestId.getGuestId());
-            if (guest != null) {
-                checkForGuestMigration(host, guest);
             }
         }
     }
@@ -1128,7 +1103,7 @@ public class ConsumerResource {
      * db. If autobind has been disabled for the guest's owner, the host_restricted entitlements
      * from the old host are still removed, but no auto-bind occurs.
      */
-    public void checkForGuestMigration(Consumer host, Consumer guest) {
+    protected void checkForGuestMigration(Consumer guest) {
         if (!"true".equalsIgnoreCase(guest.getFact("virt.is_guest"))) {
             // This isn't a guest, skip this entire step.
             return;
@@ -1139,7 +1114,7 @@ public class ConsumerResource {
 
         String guestVirtUuid = guest.getFact("virt.uuid");
 
-        // Consumer host = consumerCurator.getHost(guestVirtUuid, guest.getOwner());
+        Consumer host = consumerCurator.getHost(guestVirtUuid, guest.getOwner());
 
         // we need to create a list of entitlements to delete before actually
         // deleting, otherwise we are tampering with the loop iterator (BZ #786730)
@@ -1157,7 +1132,7 @@ public class ConsumerResource {
 
             if (pool.hasAttribute(Pool.Attributes.REQUIRES_HOST)) {
                 String requiredHost = getRequiredHost(pool);
-                if (host == null || !requiredHost.equals(host.getUuid())) {
+                if (host != null && !requiredHost.equals(host.getUuid())) {
                     log.debug("Removing entitlement {} from guest {} due to host mismatch.",
                         entitlement.getId(), guest.getUuid());
                     deletableGuestEntitlements.add(entitlement);
@@ -1249,6 +1224,7 @@ public class ConsumerResource {
 
         log.debug("Getting client certificates for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        checkForGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(consumer);
 
         Set<Long> serialSet = this.extractSerials(serials);
@@ -1276,6 +1252,8 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("serials") String serials) {
 
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        checkForGuestMigration(consumer);
         Set<Long> serialSet = this.extractSerials(serials);
         // filtering requires a null set, so make this null if it is
         // empty
@@ -1285,7 +1263,7 @@ public class ConsumerResource {
 
         File archive;
         try {
-            archive = manifestManager.generateEntitlementArchive(consumerUuid, serialSet);
+            archive = manifestManager.generateEntitlementArchive(consumer, serialSet);
             response.addHeader("Content-Disposition", "attachment; filename=" +
                 archive.getName());
 
@@ -1336,6 +1314,7 @@ public class ConsumerResource {
 
         log.debug("Getting client certificate serials for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        checkForGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(consumer);
 
         List<CertificateSerialDto> allCerts = new LinkedList<CertificateSerialDto>();
@@ -1606,6 +1585,10 @@ public class ConsumerResource {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
+        if (regen) {
+            checkForGuestMigration(consumer);
+        }
+
         EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
         Page<List<Entitlement>> entitlementsPage = entitlementCurator.listByConsumer(consumer, productId,
             filters, pageRequest);
@@ -1656,10 +1639,6 @@ public class ConsumerResource {
         // FIXME: just a stub, needs CertifcateService (and/or a
         // CertificateCurator) to lookup by serialNumber
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-
-        if (consumer == null) {
-            throw new NotFoundException(i18n.tr("Unit with ID ''{0}'' could not be found.", consumerUuid));
-        }
 
         int total = poolManager.revokeAllEntitlements(consumer);
         log.debug("Revoked {} entitlements from {}", total, consumerUuid);
