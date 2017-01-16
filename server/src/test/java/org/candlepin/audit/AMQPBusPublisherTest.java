@@ -22,9 +22,7 @@ import static org.mockito.Mockito.when;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.guice.PrincipalProvider;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,10 +59,9 @@ public class AMQPBusPublisherTest {
     @Test
     public void testApply() throws IOException {
         PrincipalProvider pp = mock(PrincipalProvider.class);
-        ProductCurator productCurator = mock(ProductCurator.class);
-
         when(pp.get()).thenReturn(TestUtil.createPrincipal("admin", null, null));
-        EventFactory factory = new EventFactory(pp, new ProductCachedSerializationModule(productCurator));
+
+        EventFactory factory = new EventFactory(pp);
         Consumer c = TestUtil.createConsumer();
         Event e = factory.consumerCreated(c);
 
@@ -78,10 +75,9 @@ public class AMQPBusPublisherTest {
     @Test
     public void onEvent() throws JMSException {
         PrincipalProvider pp = mock(PrincipalProvider.class);
-
-        ProductCurator productCurator = mock(ProductCurator.class);
         when(pp.get()).thenReturn(TestUtil.createPrincipal("admin", null, null));
-        EventFactory factory = new EventFactory(pp, new ProductCachedSerializationModule(productCurator));
+
+        EventFactory factory = new EventFactory(pp);
         Consumer c = TestUtil.createConsumer();
         Event e = factory.consumerCreated(c);
 

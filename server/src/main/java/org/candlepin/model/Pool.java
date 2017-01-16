@@ -304,7 +304,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @BatchSize(size = 1000)
     private Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
 
-    @OneToMany(mappedBy = "pool", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "pool")
     @LazyCollection(LazyCollectionOption.EXTRA)
     private Set<Entitlement> entitlements = new HashSet<Entitlement>();
 

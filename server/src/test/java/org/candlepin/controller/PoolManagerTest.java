@@ -1717,7 +1717,6 @@ public class PoolManagerTest {
         List<Entitlement> entsDeleted = arg.getValue();
         assertThat(entsDeleted, hasItem(derivedEnt));
         assertEquals(2, derivedPool.getConsumed().intValue());
-        assertEquals(0, derivedPool.getEntitlements().size());
     }
 
     @Test
@@ -1763,9 +1762,7 @@ public class PoolManagerTest {
 
         // before
         assertEquals(3, derivedPool.getConsumed().intValue());
-        assertEquals(2, derivedPool.getEntitlements().size());
         assertEquals(2, derivedPool2.getConsumed().intValue());
-        assertEquals(1, derivedPool2.getEntitlements().size());
         assertEquals(2, derivedPool2.getConsumed().intValue());
 
         when(mockPoolCurator.lockAndLoadBatch(anyCollection())).thenReturn(Arrays.asList(pool));
@@ -1788,9 +1785,7 @@ public class PoolManagerTest {
         assertThat(entsDeleted, hasItems(derivedEnt, derivedEnt2, derivedEnt3));
 
         assertEquals(1, derivedPool.getConsumed().intValue());
-        assertEquals(0, derivedPool.getEntitlements().size());
         assertEquals(1, derivedPool2.getConsumed().intValue());
-        assertEquals(0, derivedPool2.getEntitlements().size());
         assertEquals(2, derivedPool3.getConsumed().intValue());
     }
 
