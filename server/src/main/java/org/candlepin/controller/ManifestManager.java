@@ -377,15 +377,14 @@ public class ManifestManager {
     /**
      * Generates an archive of the specified consumer's entitlements.
      *
-     * @param consumerUuid the target consumer
+     * @param consumer the target consumer
      * @param serials the entitlement serials to export.
      * @return an archive to the specified consumer's entitlements.
      * @throws ExportCreationException if the archive could not be created.
      */
-    public File generateEntitlementArchive(String consumerUuid, Set<Long> serials)
+    public File generateEntitlementArchive(Consumer consumer, Set<Long> serials)
         throws ExportCreationException {
-        log.debug("Getting client certificate zip file for consumer: {}", consumerUuid);
-        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        log.debug("Getting client certificate zip file for consumer: {}", consumer.getUuid());
         poolManager.regenerateDirtyEntitlements(
             entitlementCurator.listByConsumer(consumer));
 

@@ -62,14 +62,12 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.GuestId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.dto.PoolIdAndQuantity;
@@ -801,47 +799,46 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testcheckForGuestsMigration() {
-        ConsumerResource cr = Mockito.spy(new ConsumerResource(mockedConsumerCurator, null,
-            null, null, null, null, null, i18n, null, null, null,
-            null, null, null, null, null, null, null, null,
-            null, null, null, new CandlepinCommonTestConfig(),
-            null, null, null, null, productCurator, null));
-        List<GuestId> startGuests  = new ArrayList<GuestId>();
-        List<GuestId> updatedGuests  = new ArrayList<GuestId>();
-        VirtConsumerMap guestConsumerMap = new VirtConsumerMap();
-        Owner o = mock(Owner.class);
-        Consumer host = new Consumer();
+    public void testcheckForGuestsMigrationSerialList() {
+        Consumer consumer = createConsumer();
+        List<EntitlementCertificate> certificates = createEntitlementCertificates();
 
-        Consumer cOne = new Consumer();
-        cOne.setFact("virt.is_guest", "true");
-        cOne.setFact("virt.uuid", cOne.getUuid() + "-vuuid");
-        cOne.setOwner(o);
-        GuestId one = new GuestId(cOne.getFact("virt.uuid"));
-        startGuests.add(one);
-        guestConsumerMap.add(cOne.getFact("virt.uuid"), cOne);
+        when(mockedEntitlementCertServiceAdapter.listForConsumer(consumer)) .thenReturn(certificates);
+        when(mockedConsumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
+        when(mockedEntitlementCurator.listByConsumer(consumer)).thenReturn(new ArrayList<Entitlement>());
 
-        Consumer cTwo = new Consumer();
-        cTwo.setFact("virt.is_guest", "true");
-        cTwo.setFact("virt.uuid", cTwo.getUuid() + "-vuuid");
-        cTwo.setOwner(o);
-        GuestId two = new GuestId(cTwo.getFact("virt.uuid"));
-        startGuests.add(two);
-        updatedGuests.add(two);
-        guestConsumerMap.add(cTwo.getFact("virt.uuid"), cTwo);
+        ConsumerResource consumerResource = Mockito.spy(new ConsumerResource(
+            mockedConsumerCurator, null, null, null, mockedEntitlementCurator, null,
+            mockedEntitlementCertServiceAdapter, null, null, null, null, null,
+            null, mockedPoolManager, null, null, null, null, null,
+            null, null, null, new CandlepinCommonTestConfig(), null, null, null,
+            consumerBindUtil, productCurator, null));
 
-        Consumer cThree = new Consumer();
-        cThree.setFact("virt.is_guest", "true");
-        cThree.setFact("virt.uuid", cThree.getUuid() + "-vuuid");
-        cThree.setOwner(o);
-        GuestId three = new GuestId(cThree.getFact("virt.uuid"));
-        updatedGuests.add(three);
-        guestConsumerMap.add(cThree.getFact("virt.uuid"), cThree);
+        List<CertificateSerialDto> serials = consumerResource
+            .getEntitlementCertificateSerials(consumer.getUuid());
+        verify(consumerResource).checkForGuestMigration(consumer);
+    }
 
-        cr.checkForGuestsMigration(host, startGuests, updatedGuests, guestConsumerMap);
-        verify(cr).checkForGuestMigration(host, cOne);
-        verify(cr).checkForGuestMigration(host, cTwo);
-        verify(cr).checkForGuestMigration(host, cThree);
+    @Test
+    public void testCheckForGuestsMigrationCertList() {
+        Consumer consumer = createConsumer();
+        List<EntitlementCertificate> certificates = createEntitlementCertificates();
+
+        when(mockedEntitlementCertServiceAdapter.listForConsumer(consumer)) .thenReturn(certificates);
+        when(mockedConsumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
+        when(mockedEntitlementCurator.listByConsumer(consumer)).thenReturn(new ArrayList<Entitlement>());
+
+        ConsumerResource consumerResource = Mockito.spy(new ConsumerResource(
+            mockedConsumerCurator, null, null, null, mockedEntitlementCurator, null,
+            mockedEntitlementCertServiceAdapter, null, null, null, null, null,
+            null, mockedPoolManager, null, null, null, null, null,
+            null, null, null, new CandlepinCommonTestConfig(), null, null, null,
+            consumerBindUtil, productCurator, null));
+
+        Set<Long> serials = new HashSet<Long>();
+        List<EntitlementCertificate> certs = consumerResource
+            .getEntitlementCertificates(consumer.getUuid(), "123");
+        verify(consumerResource).checkForGuestMigration(consumer);
     }
 
     @Test
