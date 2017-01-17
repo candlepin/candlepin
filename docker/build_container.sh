@@ -65,7 +65,7 @@ if [ -f custom.sh ]; then
 fi
 
 if [ "$PUSH" == "1" ]; then
-    docker tag -f candlepin/$IMAGE_NAME:latest $PUSH_DEST/$IMAGE_NAME:latest
+    docker tag candlepin/$IMAGE_NAME:latest $PUSH_DEST/$IMAGE_NAME:latest
 
     CP_VERSION="$(docker run -i --rm candlepin/$IMAGE_NAME:latest rpm -q --queryformat '%{VERSION}' candlepin)"
     if (! echo $CP_VERSION | grep -E -q --regex="^[0-9]+\.[0-9]+.*") then
@@ -74,7 +74,7 @@ if [ "$PUSH" == "1" ]; then
     fi
 
     if (echo $CP_VERSION | grep -E -q --regex="^[0-9]+\.[0-9]+.*") then
-        docker tag -f candlepin/$IMAGE_NAME:latest $PUSH_DEST/$IMAGE_NAME:$CP_VERSION
+        docker tag candlepin/$IMAGE_NAME:latest $PUSH_DEST/$IMAGE_NAME:$CP_VERSION
     else
         echo "WARNING: Unable to determine Candlepin version for tagging image $IMAGE_NAME" >&2
     fi
