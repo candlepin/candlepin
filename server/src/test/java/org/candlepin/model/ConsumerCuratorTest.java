@@ -651,8 +651,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer3.setUuid("3");
         consumer3 = consumerCurator.create(consumer3);
 
-        List<Consumer> results = consumerCurator.findByUuids(
-            Arrays.asList(new String[] {"1", "2"}));
+        List<Consumer> results = consumerCurator.findByUuids(Arrays.asList("1", "2")).list();
         assertTrue(results.contains(consumer));
         assertTrue(results.contains(consumer2));
         assertFalse(results.contains(consumer3));
@@ -675,8 +674,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer3.setUuid("3");
         consumer3 = consumerCurator.create(consumer3);
 
-        List<Consumer> results = consumerCurator.findByUuidsAndOwner(
-            Arrays.asList(new String[] {"2"}), owner2);
+        List<Consumer> results = consumerCurator.findByUuidsAndOwner(Arrays.asList("2"), owner2).list();
         assertTrue(results.contains(consumer2));
         assertFalse(results.contains(consumer));
         assertFalse(results.contains(consumer3));

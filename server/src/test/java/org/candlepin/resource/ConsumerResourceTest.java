@@ -42,14 +42,13 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Certificate;
@@ -712,10 +711,14 @@ public class ConsumerResourceTest {
         consumers.add(c);
         consumers.add(c2);
 
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(consumers);
+        when(cqmock.iterator()).thenReturn(consumers.iterator());
+
         List<String> uuids = new ArrayList<String>();
         uuids.add("1");
         uuids.add("2");
-        when(mockedConsumerCurator.findByUuids(eq(uuids))).thenReturn(consumers);
+        when(mockedConsumerCurator.findByUuids(eq(uuids))).thenReturn(cqmock);
 
         ComplianceStatus status = new ComplianceStatus();
         when(mockedComplianceRules.getStatus(any(Consumer.class), any(Date.class)))
@@ -772,16 +775,18 @@ public class ConsumerResourceTest {
             null, null, null, null, null, null, null, null,
             null, null, null, this.config, null, null, null, null,
             productCurator, null, null, this.factValidator, new ConsumerTypeValidator(null, null));
-        Page<List<Consumer>> page = new Page<List<Consumer>>();
-        ArrayList<Consumer> consumers = new ArrayList<Consumer>();
-        page.setPageData(consumers);
 
+        ArrayList<Consumer> consumers = new ArrayList<Consumer>();
+
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(consumers);
+        when(cqmock.iterator()).thenReturn(consumers.iterator());
         when(mockedConsumerCurator.searchOwnerConsumers(
             any(Owner.class), anyString(), (java.util.Collection<ConsumerType>) any(Collection.class),
             any(List.class), any(List.class), any(List.class), any(List.class), any(List.class),
-            any(List.class), any(PageRequest.class))).thenReturn(page);
+            any(List.class))).thenReturn(cqmock);
 
-        List<Consumer> result = cr.list("TaylorSwift", null, null, null, null, null, null);
+        List<Consumer> result = cr.list("TaylorSwift", null, null, null, null, null, null).list();
         assertEquals(consumers, result);
     }
 
@@ -791,16 +796,19 @@ public class ConsumerResourceTest {
             null, null, null, null, mockedOwnerCurator, null, null, null,
             null, null, null, this.config, null, null, null, null,
             productCurator, null, null, this.factValidator, null);
-        Page<List<Consumer>> page = new Page<List<Consumer>>();
+
         ArrayList<Consumer> consumers = new ArrayList<Consumer>();
-        page.setPageData(consumers);
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(consumers);
+        when(cqmock.iterator()).thenReturn(consumers.iterator());
 
         when(mockedOwnerCurator.lookupByKey(eq("taylorOwner"))).thenReturn(new Owner());
         when(mockedConsumerCurator.searchOwnerConsumers(
             any(Owner.class), anyString(), (java.util.Collection<ConsumerType>) any(Collection.class),
             any(List.class), any(List.class), any(List.class), any(List.class), any(List.class),
-            any(List.class), any(PageRequest.class))).thenReturn(page);
-        List<Consumer> result = cr.list(null, null, "taylorOwner", null, null, null, null);
+            any(List.class))).thenReturn(cqmock);
+
+        List<Consumer> result = cr.list(null, null, "taylorOwner", null, null, null, null).list();
         assertEquals(consumers, result);
     }
 
@@ -811,7 +819,8 @@ public class ConsumerResourceTest {
             null, null, null, null, null, null, null, null,
             null, null, null, this.config, null, null, null, null,
             productCurator, null, null, this.factValidator, null);
-        List<Consumer> result = cr.list(null, null, null, new ArrayList<String>(), null, null, null);
+
+        cr.list(null, null, null, new ArrayList<String>(), null, null, null);
     }
 
     @Test
@@ -821,17 +830,19 @@ public class ConsumerResourceTest {
             null, null, null, null, null, null, null, null,
             null, null, null, this.config, null, null, null, null,
             productCurator, null, null, this.factValidator, new ConsumerTypeValidator(null, null));
-        Page<List<Consumer>> page = new Page<List<Consumer>>();
+
         ArrayList<Consumer> consumers = new ArrayList<Consumer>();
-        page.setPageData(consumers);
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(consumers);
+        when(cqmock.iterator()).thenReturn(consumers.iterator());
+
         when(mockedConsumerCurator.searchOwnerConsumers(
                 any(Owner.class), anyString(), (java.util.Collection<ConsumerType>) any(Collection.class),
                 any(List.class), any(List.class), any(List.class),
-                any(List.class), any(List.class), any(List.class),
-                any(PageRequest.class))).thenReturn(page);
+                any(List.class), any(List.class), any(List.class))).thenReturn(cqmock);
         List<String> uuids = new ArrayList<String>();
         uuids.add("swiftuuid");
-        List<Consumer> result = cr.list(null, null, null, uuids, null, null, null);
+        List<Consumer> result = cr.list(null, null, null, uuids, null, null, null).list();
         assertEquals(consumers, result);
     }
 

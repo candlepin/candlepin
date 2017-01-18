@@ -666,7 +666,7 @@ public class OwnerResource {
     @ApiOperation(notes = "Retrieve a list of Consumers for the Owner", value = "List Consumers")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found"),
             @ApiResponse(code = 400, message = "Invalid request")})
-    public List<Consumer> listConsumers(
+    public CandlepinQuery<Consumer> listConsumers(
         @PathParam("owner_key")
         @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey,
         @QueryParam("username") String userName,
@@ -683,13 +683,9 @@ public class OwnerResource {
         Owner owner = findOwner(ownerKey);
         List<ConsumerType> types = consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
 
-        Page<List<Consumer>> page = consumerCurator.searchOwnerConsumers(
+        return this.consumerCurator.searchOwnerConsumers(
             owner, userName, types, uuids, hypervisorIds, attrFilters, skus,
-            subscriptionIds, contracts, pageRequest);
-
-        // Store the page for the LinkHeaderResponseFilter
-        ResteasyProviderFactory.pushContext(Page.class, page);
-        return page.getPageData();
+            subscriptionIds, contracts);
     }
 
     @GET
