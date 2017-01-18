@@ -65,6 +65,7 @@ import org.candlepin.resource.ProductResource;
 import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.resteasy.filter.StoreFactory;
+import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ExportExtensionAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
@@ -74,6 +75,7 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.impl.DefaultExportExtensionAdapter;
+import org.candlepin.service.impl.DefaultContentAccessCertServiceAdapter;
 import org.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultProductServiceAdapter;
@@ -280,6 +282,8 @@ public class TestingModules {
             bind(OwnerServiceAdapter.class).to(DefaultOwnerServiceAdapter.class);
             bind(EntitlementCertServiceAdapter.class).to(StubEntitlementCertServiceAdapter.class);
             bind(ManifestFileService.class).to(DBManifestService.class);
+            bind(ContentAccessCertServiceAdapter.class).to(
+                DefaultContentAccessCertServiceAdapter.class);
             bind(ScriptEngineProvider.class);
 
             bind(JobFactory.class).to(GuiceJobFactory.class);

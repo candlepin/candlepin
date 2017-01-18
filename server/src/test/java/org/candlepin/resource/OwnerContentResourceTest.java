@@ -14,12 +14,11 @@
  */
 package org.candlepin.resource;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.ContentManager;
+import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.CandlepinQuery;
@@ -48,6 +47,7 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
 
     @Inject protected ContentManager contentManager;
     @Inject protected PoolManager poolManager;
+    @Inject protected OwnerManager ownerManager;
 
     private OwnerContentResource ownerContentResource;
 
@@ -56,7 +56,7 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
         this.ownerContentResource = new OwnerContentResource(this.contentCurator, this.contentManager,
         this.environmentContentCurator, this.i18n, this.ownerCurator, this.ownerContentCurator,
         this.poolManager, this.productCurator, new DefaultUniqueIdGenerator(),
-        new ProductCachedSerializationModule(productCurator));
+        new ProductCachedSerializationModule(productCurator), ownerManager);
     }
 
     @Test

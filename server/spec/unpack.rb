@@ -77,22 +77,22 @@ module Unpack
           next
         end
         if multi_count
-          # print "Multicount\n"
+          # puts "Multicount\n"
           node_count = node_count << 8
-          # print "Node count #{node_count}\n"
+          # puts "Node count #{node_count}\n"
           node_count += byte
-          # print "Node count #{node_count}\n"
+          # puts "Node count #{node_count}\n"
           byte_count = byte_count - 1
-          # print "Byte count #{byte_count}\n"
+          # puts "Byte count #{byte_count}\n"
           multi_count = byte_count > 0
-          # print "Multicount #{multi_count}\n"
+          # puts "Multicount #{multi_count}\n"
           if multi_count
             next
           end
         else
           node_count += byte
         end
-        # print "Node Count: #{node_count}\n"
+        # puts "Node Count: #{node_count}\n"
         node_dict = []
         node_count.times { node_dict << Node.new() }
         node_trie = build_huffman_for_nodes(node_dict)
@@ -130,6 +130,7 @@ module Unpack
           path_bits = bit_list[bit_start..bit_end]
           bit_end += 1
           lookup_value = node_trie.decode(path_bits)
+          # puts ("lookup_value %s" % lookup_value)
           if !lookup_value.to_s.empty?
             node_value = lookup_value
             node.add_child(NodeChild.new({:name => name_value, :connection => node_value}))
@@ -138,6 +139,7 @@ module Unpack
         end
       end
     end
+    # puts(node_dict[0].inspect())
     node_dict[0]
   end
 
@@ -177,11 +179,15 @@ module Unpack
   end
 
   def can_find_path(chunks, parent)
+    # puts("parent: %s" % parent.inspect())
+    # puts("parent.children.length: %s" % parent.children.length)
+    # puts("chunks.length: %s" % chunks.length)
     if parent.children.length == 0 and chunks.length == 0
       return true
     end
     parent.children.each do |child|
       name = child.name.strip || child.name
+      # puts("Node name: %s" % name)
       if name == chunks[0]
         return can_find_path(chunks[1..-1], child.connection)
       end

@@ -92,7 +92,6 @@ public class X509V3ExtensionUtil extends X509Util {
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_VERSION_KEY), false, thisVersion);
 
         toReturn.add(versionExtension);
-
         return toReturn;
     }
 
@@ -291,7 +290,7 @@ public class X509V3ExtensionUtil extends X509Util {
         return toReturn;
     }
 
-    private org.candlepin.model.dto.Product mapProduct(Product engProduct, Product sku,
+    public org.candlepin.model.dto.Product mapProduct(Product engProduct, Product sku,
         String contentPrefix, Map<String, EnvironmentContent> promotedContent,
         Consumer consumer, Entitlement ent, Set<String> entitledProductIds) {
 
@@ -717,9 +716,22 @@ public class X509V3ExtensionUtil extends X509Util {
                         pos = i;
                         break;
                     }
+                    if (count == result.get(i).getParents().size()) {
+                        if (pn.getId() < result.get(i).getId()) {
+                            pos = i;
+                        }
+                        else {
+                            pos = i + 1;
+                        }
+                        break;
+                    }
                 }
                 result.add(pos, pn);
             }
+        }
+        // single node plus term node. We need to have one more for huffman trie
+        if (result.size() == 2) {
+            result.add(new PathNode());
         }
         if (treeDebug) {
             log.debug("{}", result);
@@ -991,10 +1003,11 @@ public class X509V3ExtensionUtil extends X509Util {
 
         // populate the PathNodes so we can rebuild the cool url tree
         Set<PathNode> pathNodes =  populatePathNodes(nodeDictionary, pathTrie, nodeTrie, nodeBits);
-        // find the root, he has no parents
+        // find the root, he has no parents. He does have children
+        // added child check because we have a blank placeholder node for the single segment case
         PathNode root = null;
         for (PathNode pn : pathNodes) {
-            if (pn.getParents().size() == 0) {
+            if (pn.getParents().size() == 0 && pn.getChildren().size() > 0) {
                 root = pn;
                 break;
             }

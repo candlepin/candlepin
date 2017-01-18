@@ -43,6 +43,7 @@ import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.CdnCurator;
+import org.candlepin.model.Certificate;
 import org.candlepin.model.CertificateSerialDto;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
@@ -51,6 +52,7 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.DeleteResult;
 import org.candlepin.model.DeletedConsumer;
@@ -87,13 +89,16 @@ import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.consumer.ConsumerRules;
 import org.candlepin.resource.dto.AutobindData;
+import org.candlepin.resource.dto.ContentAccessListing;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerInstalledProductEnricher;
 import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.ResourceDateParser;
+import org.candlepin.resteasy.DateFormat;
 import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
+import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -106,6 +111,7 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -135,6 +141,7 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HEAD;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -170,6 +177,7 @@ public class ConsumerResource {
     private EntitlementCurator entitlementCurator;
     private IdentityCertServiceAdapter identityCertService;
     private EntitlementCertServiceAdapter entCertService;
+    private ContentAccessCertServiceAdapter contentAccessCertService;
     private UserServiceAdapter userService;
     private I18n i18n;
     private EventSink sink;
@@ -211,7 +219,8 @@ public class ConsumerResource {
         CdnCurator cdnCurator, CalculatedAttributesUtil calculatedAttributesUtil,
         ConsumerBindUtil consumerBindUtil,
         ProductCurator productCurator,
-        ManifestManager manifestManager) {
+        ManifestManager manifestManager,
+        ContentAccessCertServiceAdapter contentAccessCertService) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -245,6 +254,7 @@ public class ConsumerResource {
         this.consumerBindUtil = consumerBindUtil;
         this.productCurator = productCurator;
         this.manifestManager = manifestManager;
+        this.contentAccessCertService = contentAccessCertService;
     }
 
     @ApiOperation(notes = "Retrieves a list of the Consumers", value = "list")
@@ -374,15 +384,7 @@ public class ConsumerResource {
             throw new ForbiddenException(i18n.tr("Insufficient permissions"));
         }
 
-        if (!keyStrings.isEmpty()) {
-            if (ownerKey == null) {
-                throw new BadRequestException(i18n.tr(
-                        "Must specify an org to register with activation keys."));
-            }
-            if (userName != null) {
-                throw new BadRequestException(i18n.tr("Cannot specify username with activation keys."));
-            }
-        }
+        validateOnKeyStrings(keyStrings, ownerKey, userName);
 
         Owner owner = setupOwner(principal, ownerKey);
         // Raise an exception if none of the keys specified exist for this owner.
@@ -440,7 +442,7 @@ public class ConsumerResource {
             // If a hypervisorId is supplied, make sure the consumer and owner are correct
             hvsrId.setConsumer(consumer);
         }
-
+        validateContentAccessMode(consumer);
         consumerBindUtil.validateServiceLevel(owner, consumer.getServiceLevel());
 
         try {
@@ -460,7 +462,6 @@ public class ConsumerResource {
                 IdentityCertificate idCert = generateIdCert(consumer, false);
                 consumer.setIdCert(idCert);
             }
-
             sink.emitConsumerCreated(consumer);
 
             if (keys.size() > 0) {
@@ -489,6 +490,28 @@ public class ConsumerResource {
             log.error("Problem creating unit:", e);
             throw new BadRequestException(i18n.tr(
                 "Problem creating unit {0}", consumer));
+        }
+    }
+
+    private void validateContentAccessMode(Consumer consumer) throws BadRequestException {
+        if (!consumer.getOwner().isAllowedContentAccessMode(consumer.getContentAccessMode())) {
+            throw new BadRequestException(i18n.tr(
+                "The consumer cannot use the supplied content access mode."));
+        }
+        if (consumer.getContentAccessMode() != null && !consumer.getType().isManifest()) {
+            throw new BadRequestException(i18n.tr(
+                "The consumer cannot be assigned a content access mode."));
+        }
+    }
+
+    private void validateOnKeyStrings(Set<String> keyStrings, String ownerKey, String userName) {
+        if (!keyStrings.isEmpty()) {
+            if (ownerKey == null) {
+                throw new BadRequestException(i18n.tr("Org required to register with activation keys."));
+            }
+            if (userName != null) {
+                throw new BadRequestException(i18n.tr("Cannot specify username with activation keys."));
+            }
         }
     }
 
@@ -912,6 +935,21 @@ public class ConsumerResource {
             }
         }
 
+        if (updated.getContentAccessMode() != null &&
+            !updated.getContentAccessMode().equals(toUpdate.getContentAccessMode()) &&
+            toUpdate.getType().isManifest()) {
+            if (!toUpdate.getOwner().isAllowedContentAccessMode(updated.getContentAccessMode())) {
+                throw new BadRequestException(i18n.tr(
+                    "The consumer cannot use the supplied content access mode."));
+            }
+            toUpdate.setContentAccessMode(updated.getContentAccessMode());
+            changesMade = true;
+        }
+        if (!StringUtils.isEmpty(updated.getContentAccessMode()) && !toUpdate.getType().isManifest()) {
+            throw new BadRequestException(i18n.tr(
+                "The consumer cannot be assigned a content access mode."));
+        }
+
         if (updated.getLastCheckin() != null) {
             log.info("Updating to specific last checkin time: {}", updated.getLastCheckin());
             toUpdate.setLastCheckin(updated.getLastCheckin());
@@ -1218,7 +1256,7 @@ public class ConsumerResource {
     @GET
     @Path("{consumer_uuid}/certificates")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<EntitlementCertificate> getEntitlementCertificates(
+    public List<Certificate> getEntitlementCertificates(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("serials") String serials) {
 
@@ -1229,7 +1267,7 @@ public class ConsumerResource {
 
         Set<Long> serialSet = this.extractSerials(serials);
 
-        List<EntitlementCertificate> returnCerts = new LinkedList<EntitlementCertificate>();
+        List<Certificate> returnCerts = new LinkedList<Certificate>();
         List<EntitlementCertificate> allCerts = entCertService
             .listForConsumer(consumer);
         for (EntitlementCertificate cert : allCerts) {
@@ -1238,7 +1276,68 @@ public class ConsumerResource {
                 returnCerts.add(cert);
             }
         }
+        // we want to insert the content access cert to this list
+        if (!consumer.getOwner().contentAccessMode()
+            .equals(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE)) {
+            try {
+                Certificate cert = contentAccessCertService.getCertificate(consumer);
+                if (cert != null) {
+                    returnCerts.add(cert);
+                }
+            }
+            catch (IOException ioe) {
+                throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), ioe);
+            }
+            catch (GeneralSecurityException gse) {
+                throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), gse);
+            }
+        }
         return returnCerts;
+    }
+
+    @ApiOperation(notes = "Retrieves the body of the Content Access Certificate for the Consumer",
+        value = "getContentAccessBody")
+    @ApiResponses({ @ApiResponse(code = 404, message = ""), @ApiResponse(code = 304, message = "") })
+    @GET
+    @Path("{consumer_uuid}/accessible_content")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getContentAccessBody(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        @HeaderParam("If-Modified-Since") @DateFormat ("EEE, dd MMM yyyy HH:mm:ss z") Date since) {
+        log.debug("Getting content access certificate for consumer: {}", consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        if (consumer.getOwner().contentAccessMode()
+            .equals(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE)) {
+            throw new BadRequestException(i18n.tr("No content access mode assigned"));
+        }
+        if (!contentAccessCertService.hasCertChangedSince(consumer, since)) {
+            return Response.status(Response.Status.NOT_MODIFIED)
+                .entity("Not modified since date supplied.").build();
+        }
+        ContentAccessListing result = new ContentAccessListing();
+
+        try {
+            ContentAccessCertificate cac = contentAccessCertService.getCertificate(consumer);
+            if (cac == null) {
+                throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"));
+            }
+
+            String cert = cac.getCert();
+            String certificate = cert.substring(0, cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
+            String json = cert.substring(cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
+            List<String> pieces = new ArrayList<String>();
+            pieces.add(certificate);
+            pieces.add(json);
+            result.setContentListing(cac.getSerial().getId(), pieces);
+            result.setLastUpdate(cac.getUpdated());
+        }
+        catch (IOException ioe) {
+            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), ioe);
+        }
+        catch (GeneralSecurityException gse) {
+            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate", gse));
+        }
+        return Response.ok(result, MediaType.APPLICATION_JSON).build();
     }
 
     @ApiOperation(notes = "Retrieves a Compressed File of Entitlement Certificates",
@@ -1318,11 +1417,25 @@ public class ConsumerResource {
         poolManager.regenerateDirtyEntitlements(consumer);
 
         List<CertificateSerialDto> allCerts = new LinkedList<CertificateSerialDto>();
-        for (EntitlementCertificate cert : entCertService
-            .listForConsumer(consumer)) {
-            allCerts.add(new CertificateSerialDto(cert.getSerial().getId()));
+        for (Long id : entCertService.listEntitlementSerialIds(consumer)) {
+            allCerts.add(new CertificateSerialDto(id));
         }
-
+        // add content access cert if needed
+        if (!consumer.getOwner().contentAccessMode()
+            .equals(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE)) {
+            try {
+                ContentAccessCertificate cac = contentAccessCertService.getCertificate(consumer);
+                if (cac != null) {
+                    allCerts.add(new CertificateSerialDto(cac.getSerial().getId()));
+                }
+            }
+            catch (IOException ioe) {
+                throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), ioe);
+            }
+            catch (GeneralSecurityException gse) {
+                throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate", gse));
+            }
+        }
         return allCerts;
     }
 

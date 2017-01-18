@@ -140,6 +140,7 @@ public class PoolManagerTest {
     @Mock private OwnerCurator mockOwnerCurator;
     @Mock private OwnerContentCurator mockOwnerContentCurator;
     @Mock private OwnerProductCurator mockOwnerProductCurator;
+    @Mock private OwnerManager mockOwnerManager;
     @Mock private PinsetterKernel pinsetterKernel;
 
     @Captor private ArgumentCaptor<Map<String, Entitlement>> entMapCaptor;
@@ -177,7 +178,7 @@ public class PoolManagerTest {
             entitlementCurator, consumerCuratorMock, certCuratorMock, mockECGenerator,
             complianceRules, autobindRules, activationKeyRules, mockProductCurator, mockProductManager,
             mockContentManager, mockOwnerContentCurator, mockOwnerCurator, mockOwnerProductCurator,
-            pinsetterKernel, i18n
+            mockOwnerManager, pinsetterKernel, i18n
         ));
 
         Map<String, EntitlementCertificate> entCerts = new HashMap<String, EntitlementCertificate>();

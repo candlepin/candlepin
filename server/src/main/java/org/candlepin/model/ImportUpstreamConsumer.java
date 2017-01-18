@@ -76,13 +76,17 @@ public class ImportUpstreamConsumer extends AbstractHibernateObject {
     @NotNull
     private String ownerId;
 
-    @Column(length = 255, name = "prefix_url_web")
+    @Column(name = "prefix_url_web")
     @Size(max = 255)
     private String prefixUrlWeb;
 
-    @Column(length = 255, name = "prefix_url_api")
+    @Column(name = "prefix_url_api")
     @Size(max = 255)
     private String prefixUrlApi;
+
+    @Column(name = "content_access_mode")
+    @Size(max = 255)
+    private String contentAccessMode;
 
     public ImportUpstreamConsumer() {
         // needed for Hibernate
@@ -95,6 +99,7 @@ public class ImportUpstreamConsumer extends AbstractHibernateObject {
         this.setType(uc.getType());
         this.setWebUrl(uc.getWebUrl());
         this.setApiUrl(uc.getApiUrl());
+        this.setContentAccessMode(uc.getContentAccessMode());
     }
 
     /**
@@ -200,5 +205,21 @@ public class ImportUpstreamConsumer extends AbstractHibernateObject {
      */
     public void setApiUrl(String url) {
         prefixUrlApi = url;
+    }
+
+    /**
+    *
+    * @return the Content Access Mode
+    */
+    public String getContentAccessMode() {
+        return this.contentAccessMode;
+    }
+
+    /**
+     *
+     * @param contentAccessMode
+     */
+    public void setContentAccessMode(String contentAccessMode) {
+        this.contentAccessMode = contentAccessMode;
     }
 }

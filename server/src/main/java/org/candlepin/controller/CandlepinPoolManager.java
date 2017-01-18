@@ -123,6 +123,7 @@ public class CandlepinPoolManager implements PoolManager {
     private OwnerCurator ownerCurator;
     private OwnerProductCurator ownerProductCurator;
     private PinsetterKernel pinsetterKernel;
+    private OwnerManager ownerManager;
 
     /**
      * @param poolCurator
@@ -152,6 +153,7 @@ public class CandlepinPoolManager implements PoolManager {
         OwnerContentCurator ownerContentCurator,
         OwnerCurator ownerCurator,
         OwnerProductCurator ownerProductCurator,
+        OwnerManager ownerManager,
         PinsetterKernel pinsetterKernel,
         I18n i18n) {
 
@@ -175,6 +177,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.ownerContentCurator = ownerContentCurator;
         this.ownerCurator = ownerCurator;
         this.ownerProductCurator = ownerProductCurator;
+        this.ownerManager = ownerManager;
         this.pinsetterKernel = pinsetterKernel;
         this.i18n = i18n;
     }
@@ -2004,7 +2007,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public Refresher getRefresher(SubscriptionServiceAdapter subAdapter, boolean lazy) {
-        return new Refresher(this, subAdapter, lazy);
+        return new Refresher(this, subAdapter, ownerManager, lazy);
     }
 
     /**

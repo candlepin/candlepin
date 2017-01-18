@@ -12,7 +12,6 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.model;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
@@ -33,18 +32,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
- * Represents certificate used to identify a consumer
+ * Represents certificate used to entitle a consumer
  */
-@XmlRootElement
+@XmlRootElement(name = "cert")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = IdentityCertificate.DB_TABLE)
-@JsonFilter("IdentityCertificateFilter")
-public class IdentityCertificate extends AbstractCertificate implements Certificate {
-
-    /** Name of the table backing this object in the database */
-    public static final String DB_TABLE = "cp_id_cert";
-
+@Table(name = "cp_cont_access_cert")
+@JsonFilter("ContentAccessCertificateFilter")
+public class ContentAccessCertificate extends AbstractCertificate implements Certificate {
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -66,18 +61,13 @@ public class IdentityCertificate extends AbstractCertificate implements Certific
         this.serial = serialNumber;
     }
 
+    @Override
     public String getId() {
         return id;
     }
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public void update(IdentityCertificate other) {
-        this.setKey(other.getKey());
-        this.setCert(other.getCert());
-        this.setSerial(other.getSerial());
     }
 
     @XmlTransient
@@ -89,4 +79,25 @@ public class IdentityCertificate extends AbstractCertificate implements Certific
         this.consumer = consumer;
     }
 
+    @Override
+    public int hashCode() {
+        return this.id == null ? 0 : id.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || (getClass() != obj.getClass())) {
+            return false;
+        }
+        ContentAccessCertificate other = (ContentAccessCertificate) obj;
+        if (id == other.id &&
+            other.getConsumer().getId().equals(this.getConsumer().getId())) {
+
+            return true;
+        }
+        return false;
+    }
 }

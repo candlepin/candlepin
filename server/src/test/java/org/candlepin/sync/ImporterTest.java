@@ -598,7 +598,7 @@ public class ImporterTest {
 
         ConsumerDto consumer = new ConsumerDto("eb5e04bf-be27-44cf-abe3-0c0b1edd523e", "mymachine",
             new ConsumerType(ConsumerTypeEnum.CANDLEPIN), owner, "foo.example.com/subscription",
-            "/candlepin");
+            "/candlepin", "");
         File consumerFile = new File(folder.getRoot(), "consumer.json");
         mapper.writeValue(consumerFile, consumer);
         importFiles.put(ImportFile.CONSUMER.fileName(), consumerFile);
@@ -738,7 +738,7 @@ public class ImporterTest {
         Owner owner = new Owner("admin", "Admin Owner");
         ConsumerDto consumer = new ConsumerDto("eb5e04bf-be27-44cf-abe3-0c0b1edd523e",
             "mymachine", new ConsumerType(ConsumerTypeEnum.CANDLEPIN), owner,
-            "foo.example.com/subscription", "/candlepin");
+            "foo.example.com/subscription", "/candlepin", "access_mode");
         File consumerfile = new File(folder.getRoot(), "consumer.json");
         mapper.writeValue(consumerfile, consumer);
         ConflictOverrides forcedConflicts = mock(ConflictOverrides.class);
@@ -871,6 +871,7 @@ public class ImporterTest {
 
         UpstreamConsumer uc = new UpstreamConsumer("uc", owner,
             new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN), "uuid");
+        uc.setContentAccessMode("mode");
         owner.setUpstreamConsumer(uc);
 
         EventSink eventSinkMock = mock(EventSink.class);
@@ -894,6 +895,7 @@ public class ImporterTest {
         assertEquals(uc.getType(), iuc.getType());
         assertEquals(uc.getWebUrl(), iuc.getWebUrl());
         assertEquals(uc.getApiUrl(), iuc.getApiUrl());
+        assertEquals(uc.getContentAccessMode(), iuc.getContentAccessMode());
 
         verify(importRecordCurator).create(eq(record));
     }

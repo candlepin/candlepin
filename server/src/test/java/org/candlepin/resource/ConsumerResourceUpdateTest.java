@@ -109,7 +109,8 @@ public class ConsumerResourceUpdateTest {
             this.userService, poolManager, null, null,
             this.activationKeyCurator, this.entitler, this.complianceRules,
             this.deletedConsumerCurator, this.environmentCurator, null,
-            new CandlepinCommonTestConfig(), null, null, null, this.consumerBindUtil, productCurator, null);
+            new CandlepinCommonTestConfig(), null, null, null, this.consumerBindUtil, productCurator,
+            null, null);
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class),
                 any(Boolean.class), any(Boolean.class)))
             .thenReturn(new ComplianceStatus(new Date()));

@@ -35,6 +35,7 @@ import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.service.BaseEntitlementCertServiceAdapter;
 import org.candlepin.util.CertificateSizeException;
+import org.candlepin.util.OIDUtil;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
 import org.candlepin.util.X509Util;
@@ -323,6 +324,9 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         String contentPrefix, Map<String, EnvironmentContent> promotedContent) {
         Set<X509ExtensionWrapper> result = v3extensionUtil.getExtensions(ent,
             contentPrefix, promotedContent);
+        X509ExtensionWrapper typeExtension = new X509ExtensionWrapper(OIDUtil.REDHAT_OID + "." +
+            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_TYPE_KEY), false, "Basic");
+        result.add(typeExtension);
         return result;
     }
 
@@ -452,6 +456,12 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     private String createDN(Entitlement ent) {
         StringBuilder sb = new StringBuilder("CN=");
         sb.append(ent.getId());
+        sb.append(", O=");
+        sb.append(ent.getOwner().getKey());
         return sb.toString();
+    }
+
+    public List<Long> listEntitlementSerialIds(Consumer consumer) {
+        return serialCurator.listEntitlementSerialIds(consumer);
     }
 }

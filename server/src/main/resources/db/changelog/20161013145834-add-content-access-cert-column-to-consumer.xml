@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="oracle"/>
+    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql"/>
+    <property name="timestamp.type" value="DATETIME" dbms="mysql"/>
+    <property name="cert.type" value="BLOB" dbms="oracle"/>
+    <property name="cert.type" value="bytea" dbms="postgresql"/>
+    <property name="cert.type" value="BLOB" dbms="mysql"/>
+
+    <changeSet id="20161013145834-1" author="wpoteat">
+        <createTable tableName="cp_cont_access_cert">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_cont_access_cert_pkey"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+            <column name="cert" type="${cert.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="privatekey" type="${cert.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="serial_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20161013145834-2" author="wpoteat">
+        <comment>Adds content_access_cert column to cp_consumer table.</comment>
+        <addColumn tableName="cp_consumer">
+            <column name="cont_acc_cert_id" type="varchar(32)" />
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20161013145834-3" author="wpoteat">
+        <comment>Foreign key for content access cert</comment>
+        <addForeignKeyConstraint
+            baseTableName="cp_consumer"
+            baseColumnNames="cont_acc_cert_id"
+            constraintName="fk_cont_acc_cert"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="NO ACTION"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_cont_access_cert"
+            referencesUniqueColumn="false"
+	/>
+    </changeSet>
+
+    <changeSet author="wpoteat" id="20161013145834-4">
+        <comment>Foreign key for serial</comment>
+        <addForeignKeyConstraint
+             baseColumnNames="serial_id"
+             baseTableName="cp_cont_access_cert"
+             constraintName="cont_acc_serial_fk"
+             deferrable="false"
+             initiallyDeferred="false"
+             onDelete="NO ACTION"
+             onUpdate="NO ACTION"
+             referencedColumnNames="id"
+             referencedTableName="cp_cert_serial" />
+    </changeSet>
+
+    <changeSet id="20161013145834-5" author="wpoteat" dbms="oracle">
+        <comment>Add indexes for foreign keys in oracle</comment>
+        <createIndex indexName="cont_acc_cert_fk" tableName="cp_consumer" unique="false">
+            <column name="cont_acc_cert_id"/>
+        </createIndex>
+        <createIndex indexName="cont_acc_cert_serial_fk" tableName="cp_cont_access_cert" unique="false">
+            <column name="serial_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

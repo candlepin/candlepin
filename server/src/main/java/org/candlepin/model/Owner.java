@@ -17,9 +17,12 @@ package org.candlepin.model;
 import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.resteasy.InfoProperty;
+import org.candlepin.service.ContentAccessCertServiceAdapter;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
@@ -122,6 +125,27 @@ public class Owner extends AbstractHibernateObject implements Serializable,
      */
     @Column(name = "autobind_disabled")
     private Boolean autobindDisabled;
+
+    /**
+     * Determines the behavior of the content access.
+     *
+     */
+    @Column(name = "content_access_mode")
+    private String contentAccessMode;
+
+    /**
+     * Determines the allowable modes of the content access.
+     *
+     */
+    @Column(name = "content_access_mode_list")
+    private String contentAccessModeList;
+
+    /**
+     * Has the content access mode changed on owner update.
+     *
+     */
+    @Column(name = "content_access_mode_dirty")
+    private boolean contentAccessModeDirty;
 
     /**
      * Default constructor
@@ -302,6 +326,10 @@ public class Owner extends AbstractHibernateObject implements Serializable,
             !this.autobindDisabled.equals(other.autobindDisabled)) {
             return false;
         }
+        if ((this.contentAccessMode == null) ? (other.contentAccessMode != null) :
+            !this.contentAccessMode.equals(other.contentAccessMode)) {
+            return false;
+        }
         return true;
     }
 
@@ -442,4 +470,72 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     public void setAutobindDisabled(Boolean autobindDisabled) {
         this.autobindDisabled = autobindDisabled;
     }
+
+    /**
+     * Utility method that defaults to 'entitlement'.
+     *  This covers legacy owners
+     *
+     * @return access mode.
+     */
+    @XmlTransient
+    public String contentAccessMode() {
+        return StringUtils.isEmpty(getContentAccessMode()) ?
+            ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE : getContentAccessMode();
+    }
+
+    /**
+     * Returns the value of the contentAccessMode setting.
+     *
+     * @return String the value
+     */
+    public String getContentAccessMode() {
+        return contentAccessMode;
+    }
+
+    public void setContentAccessMode(String contentAccessMode) {
+        this.contentAccessMode = contentAccessMode;
+    }
+
+    /**
+     * Returns the value of the contentAccessModeList setting.
+     *
+     * @return String the value
+     */
+    public String getContentAccessModeList() {
+        return this.contentAccessModeList;
+    }
+
+    public void setContentAccessModeList(String contentAccessModeList) {
+        this.contentAccessModeList = contentAccessModeList;
+    }
+
+    @XmlTransient
+    public boolean isAllowedContentAccessMode(String mode) {
+        if (StringUtils.isEmpty(mode)) {
+            return true;
+        }
+        if (mode.equals(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE)) {
+            return true;
+        }
+        if (StringUtils.isEmpty(contentAccessModeList)) {
+            return false;
+        }
+        String[] list = contentAccessModeList.split(",");
+        return ArrayUtils.contains(list, mode);
+    }
+
+    /**
+     * Returns the value of the contentAccessMode setting.
+     *
+     * @return String the value
+     */
+    @XmlTransient
+    public boolean isContentAccessModeDirty() {
+        return contentAccessModeDirty;
+    }
+
+    public void setContentAccessModeDirty(boolean contentAccessModeDirty) {
+        this.contentAccessModeDirty = contentAccessModeDirty;
+    }
+
 }

@@ -18,6 +18,7 @@ import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.ContentManager;
+import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.CandlepinQuery;
@@ -79,12 +80,14 @@ public class OwnerContentResource {
     private ProductCurator productCurator;
     private UniqueIdGenerator idGenerator;
     private ProductCachedSerializationModule productCachedModule;
+    private OwnerManager ownerManager;
 
     @Inject
     public OwnerContentResource(ContentCurator contentCurator, ContentManager contentManager,
         EnvironmentContentCurator envContentCurator, I18n i18n, OwnerCurator ownerCurator,
         OwnerContentCurator ownerContentCurator, PoolManager poolManager, ProductCurator productCurator,
-        UniqueIdGenerator idGenerator,  ProductCachedSerializationModule productCachedModule) {
+        UniqueIdGenerator idGenerator,  ProductCachedSerializationModule productCachedModule,
+        OwnerManager ownerManager) {
 
         this.contentCurator = contentCurator;
         this.contentManager = contentManager;
@@ -96,6 +99,7 @@ public class OwnerContentResource {
         this.productCurator = productCurator;
         this.idGenerator = idGenerator;
         this.productCachedModule = productCachedModule;
+        this.ownerManager = ownerManager;
     }
 
     /**
@@ -209,7 +213,6 @@ public class OwnerContentResource {
                 entity = this.contentManager.createContent(content, owner);
             }
         }
-
         return entity;
     }
 
@@ -223,6 +226,7 @@ public class OwnerContentResource {
         Owner owner = this.getOwnerByKey(ownerKey);
         Content entity = this.createContentImpl(owner, content);
 
+        ownerManager.refreshOwnerForContentAccess(owner);
         return entity.toDTO();
     }
 
@@ -243,7 +247,7 @@ public class OwnerContentResource {
 
             result.add(entity.toDTO());
         }
-
+        ownerManager.refreshOwnerForContentAccess(owner);
         return result;
     }
 
@@ -264,6 +268,8 @@ public class OwnerContentResource {
         }
 
         existing = this.contentManager.updateContent(content, owner, true);
+
+        ownerManager.refreshOwnerForContentAccess(owner);
         return existing.toDTO();
     }
 
@@ -282,5 +288,6 @@ public class OwnerContentResource {
         }
 
         this.contentManager.removeContent(content, owner, true);
+        ownerManager.refreshOwnerForContentAccess(owner);
     }
 }
