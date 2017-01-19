@@ -29,7 +29,7 @@ class AbstractBaseEditor(object):
         self.doc = doc
 
     @abc.abstractproperty
-    def insertion_xpath(self):
+    def parent_xpath(self):
         """The XPath expression to find the parent of the element you wish to edit.
         This is necessary because we need to check if the element to edit already exists
         under the parent."""
@@ -38,11 +38,13 @@ class AbstractBaseEditor(object):
     @abc.abstractproperty
     def search_xpath(self):
         """The XPath expression to find the element you wish to edit.
-        Should be relative to insertion_xpath."""
+        Should be relative to parent_xpath."""
         pass
 
     @abc.abstractproperty
-    def element(self):
+    def new_node(self):
+        """A new node to operate on.  Be careful not to create a new node every
+        time this function is called.  Memoize the object or create it in __init__."""
         pass
 
     @abc.abstractproperty
@@ -60,7 +62,7 @@ class AbstractBaseEditor(object):
         for property in node.properties:
             if property.type == "attribute":
                 current_attributes[property.name] = property.content
-        return node.name != self.element or current_attributes != dict(self.attributes)
+        return node.name != self.new_node.name or current_attributes != dict(self.attributes)
 
     def _update(self, existing_nodes):
         different_nodes = filter(self._is_different, existing_nodes)
@@ -74,38 +76,55 @@ class AbstractBaseEditor(object):
             self._add_attributes(match, self.attributes)
 
     def _create(self, parent):
-        logger.info("Creating %s under %s on line %s" % (self.element, parent.name, parent.lineNo()))
-        new_element = libxml2.newNode(self.element)
-        self._add_attributes(new_element, self.attributes)
+        logger.info("Creating %s under %s on line %s" % (self.new_node, parent.name, parent.lineNo()))
+        self._add_attributes(self.new_node, self.attributes)
         first_child = parent.firstElementChild()
         if first_child:
             # Insert the new node at the top so the output doesn't look like rubbish
-            first_child.addPrevSibling(new_element)
+            first_child.addPrevSibling(self.new_node)
             # Add a new line at the end of the new element
             first_child.addPrevSibling(libxml2.newText("\n\n"))
         else:
-            parent.addChild(new_element)
+            parent.addChild(self.new_node)
             parent.addChild(libxml2.newText("\n\n"))
 
+    def _delete(self, existing_nodes, parent):
+        for match in existing_nodes:
+            logger.info("Deleting %s on line %s" % (match.name, match.lineNo()))
+            comment_node = libxml2.newComment(" Removed by update-server-xml.py: %s " % str(match))
+            match.addNextSibling(comment_node)
+            match.unlinkNode()
+            match.freeNode()
+
     def insert(self):
-        insertion_points = self.doc.xpathEval(self.insertion_xpath)
+        insertion_points = self.doc.xpathEval(self.parent_xpath)
         for parent in insertion_points:
             existing_nodes = parent.xpathEval(self.search_xpath)
             logger.debug("Found %d nodes matching %s under %s" %
-                    (len(existing_nodes), self.search_xpath, self.insertion_xpath))
+                    (len(existing_nodes), self.search_xpath, self.parent_xpath))
             if existing_nodes:
                 self._update(existing_nodes)
             else:
                 self._create(parent)
+
+    def remove(self):
+        removal_points = self.doc.xpathEval(self.parent_xpath)
+        for parent in removal_points:
+            existing_nodes = parent.xpathEval(self.search_xpath)
+            logger.debug("Found %d nodes matching %s under %s" %
+                    (len(existing_nodes), self.search_xpath, self.parent_xpath))
+            if existing_nodes:
+                self._delete(existing_nodes, parent)
 
 
 class SslContextEditor(AbstractBaseEditor):
     def __init__(self, *args, **kwargs):
         super(SslContextEditor, self).__init__(*args, **kwargs)
         self.port = "8443"
+        self._element = libxml2.newNode("Connector")
 
     @property
-    def insertion_xpath(self):
+    def parent_xpath(self):
         return "/Server/Service"
 
     @property
@@ -113,8 +132,8 @@ class SslContextEditor(AbstractBaseEditor):
         return "./Connector[@port='%s']" % self.port
 
     @property
-    def element(self):
-        return "Connector"
+    def new_node(self):
+        return self._element
 
     @property
     def attributes(self):
@@ -153,9 +172,10 @@ class AccessValveEditor(AbstractBaseEditor):
     def __init__(self, *args, **kwargs):
         super(AccessValveEditor, self).__init__(*args, **kwargs)
         self.access_valve_class = "org.apache.catalina.valves.AccessLogValve"
+        self._element = libxml2.newNode("Valve")
 
     @property
-    def insertion_xpath(self):
+    def parent_xpath(self):
         return "/Server/Service/Engine/Host"
 
     @property
@@ -163,8 +183,8 @@ class AccessValveEditor(AbstractBaseEditor):
         return "./Valve[@className='%s']" % self.access_valve_class
 
     @property
-    def element(self):
-        return "Valve"
+    def new_node(self):
+        return self._element
 
     @property
     def attributes(self):
@@ -177,6 +197,38 @@ class AccessValveEditor(AbstractBaseEditor):
             ("pattern", '%h %l %u %t "%r" %s %b "" "%{user-agent}i sm/%{x-subscription-manager-version}i" "req_time=%T,req=%{requestUuid}r"'),
             ("resolveHosts", "false"),
         ]
+
+
+class AprListenerDeleter(AbstractBaseEditor):
+    """The AprLifecycleListener attempts to load the Apache Portable Runtime (APR).  The
+    APR is a native library used to speed up certain operations.  In our case, loading the
+    APR causes an issue because the APR requires additional attributes in the Connector element
+    (e.g. SSLCertificateFile) since the APR uses OpenSSL and PEM files instead of Java and JKS
+    files.  See https://tomcat.apache.org/tomcat-8.0-doc/apr.html
+
+    In Fedora, the tomcat-native package installs the APR and the tomcat package pulls in
+    tomcat-native as a suggested dependency.  Rather than break developers every time they update
+    Tomcat, the easier approach is just to disable the AprLifecycleListener."""
+
+    def __init__(self, *args, **kwargs):
+        super(AprListenerDeleter, self).__init__(*args, **kwargs)
+        self.listener_class = "org.apache.catalina.core.AprLifecycleListener"
+
+    @property
+    def parent_xpath(self):
+        return "/Server"
+
+    @property
+    def search_xpath(self):
+        return "./Listener[@className='%s']" % self.listener_class
+
+    @property
+    def new_node(self):
+        raise NotImplementedError
+
+    @property
+    def attributes(self):
+        raise NotImplementedError
 
 
 def parse_options():
@@ -209,6 +261,7 @@ def main():
     with open_xml(xml_file) as doc:
         SslContextEditor(doc).insert()
         AccessValveEditor(doc).insert()
+        AprListenerDeleter(doc).remove()
 
         if options.stdout:
             print doc.serialize()
