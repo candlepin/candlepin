@@ -399,7 +399,7 @@ public class OwnerProductResource {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
         }
 
-        if (this.productCurator.productHasSubscriptions(product, owner)) {
+        if (this.productCurator.productHasSubscriptions(owner, product)) {
             throw new BadRequestException(
                 i18n.tr(
                     "Product with ID ''{0}'' cannot be deleted while subscriptions exist.",
@@ -408,7 +408,7 @@ public class OwnerProductResource {
             );
         }
 
-        this.productManager.removeProduct(product, owner);
+        this.productManager.removeProduct(owner, product);
     }
 
     @ApiOperation(notes = "Refreshes Pools by Product", value = "refreshPoolsForProduct")

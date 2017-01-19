@@ -435,26 +435,38 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         currentSession().delete(toDelete);
     }
 
-    public boolean productHasSubscriptions(Product prod, Owner owner) {
+    /**
+     * Checks if any of the provided product is linked to one or more pools for the given owner.
+     *
+     * @param owner
+     *  The owner to use for finding pools/subscriptions
+     *
+     * @param product
+     *  The product to check for subscriptions
+     *
+     * @return
+     *  true if the product is linked to one or more subscriptions; false otherwise.
+     */
+    public boolean productHasSubscriptions(Owner owner, Product product) {
         return ((Long) currentSession().createCriteria(Pool.class)
             .createAlias("providedProducts", "providedProd", JoinType.LEFT_OUTER_JOIN)
             .createAlias("derivedProvidedProducts", "derivedProvidedProd", JoinType.LEFT_OUTER_JOIN)
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.or(
-                Restrictions.eq("product.uuid", prod.getUuid()),
-                Restrictions.eq("derivedProduct.uuid", prod.getUuid()),
-                Restrictions.eq("providedProd.uuid", prod.getUuid()),
-                Restrictions.eq("derivedProvidedProd.uuid", prod.getUuid())))
+                Restrictions.eq("product.uuid", product.getUuid()),
+                Restrictions.eq("derivedProduct.uuid", product.getUuid()),
+                Restrictions.eq("providedProd.uuid", product.getUuid()),
+                Restrictions.eq("derivedProvidedProd.uuid", product.getUuid())))
             .setProjection(Projections.count("id"))
             .uniqueResult()) > 0;
     }
 
-    public CandlepinQuery<Product> getProductsWithContent(Owner owner, Collection<String> contentIds) {
-        return this.getProductsWithContent(owner, contentIds, null);
+    public CandlepinQuery<Product> getProductsByContent(Owner owner, Collection<String> contentIds) {
+        return this.getProductsByContent(owner, contentIds, null);
     }
 
     @SuppressWarnings("unchecked")
-    public CandlepinQuery<Product> getProductsWithContent(Owner owner, Collection<String> contentIds,
+    public CandlepinQuery<Product> getProductsByContent(Owner owner, Collection<String> contentIds,
         Collection<String> productsToOmit) {
         if (owner != null && contentIds != null && !contentIds.isEmpty()) {
             // Impl note:
@@ -494,15 +506,42 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     @SuppressWarnings("unchecked")
-    public CandlepinQuery<Product> getProductsWithContent(Collection<String> contentUuids) {
+    public CandlepinQuery<Product> getProductsByContentUuids(Collection<String> contentUuids) {
         if (contentUuids != null && !contentUuids.isEmpty()) {
-            // See note above in getProductsWithContent for details on why we do two queries here
+            // See note above in getProductsByContent for details on why we do two queries here
             // instead of one.
             Criteria idCriteria = this.createSecureCriteria()
                 .createAlias("productContent", "pcontent")
                 .createAlias("pcontent.content", "content")
                 .add(CPRestrictions.in("content.uuid", contentUuids))
                 .setProjection(Projections.distinct(Projections.id()));
+
+            List<String> productUuids = idCriteria.list();
+
+            if (productUuids != null && !productUuids.isEmpty()) {
+                DetachedCriteria criteria = this.createSecureDetachedCriteria()
+                    .add(CPRestrictions.in("uuid", productUuids));
+
+                return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
+            }
+        }
+
+        return this.cpQueryFactory.<Product>buildQuery();
+    }
+
+    @SuppressWarnings("unchecked")
+    public CandlepinQuery<Product> getProductsByContentUuids(Owner owner, Collection<String> contentUuids) {
+        if (contentUuids != null && !contentUuids.isEmpty()) {
+            // See note above in getProductsByContent for details on why we do two queries here
+            // instead of one.
+            Criteria idCriteria = this.createSecureCriteria(OwnerProduct.class, null)
+                .createAlias("product", "product")
+                .createAlias("product.productContent", "pcontent")
+                .createAlias("pcontent.content", "content")
+                .createAlias("owner", "owner")
+                .add(Restrictions.eq("owner.id", owner.getId()))
+                .add(CPRestrictions.in("content.uuid", contentUuids))
+                .setProjection(Projections.distinct(Projections.property("product.uuid")));
 
             List<String> productUuids = idCriteria.list();
 

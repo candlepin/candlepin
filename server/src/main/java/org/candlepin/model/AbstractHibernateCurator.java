@@ -460,17 +460,15 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         currentSession().delete(toDelete);
     }
 
-    public void bulkDelete(List<E> entities) {
+    public void bulkDelete(Collection<E> entities) {
         for (E entity : entities) {
             delete(entity);
         }
     }
 
     @Transactional
-    public void bulkDeleteTransactional(List<E> entities) {
-        for (E entity : entities) {
-            delete(entity);
-        }
+    public void bulkDeleteTransactional(Collection<E> entities) {
+        this.bulkDelete(entities);
     }
 
     /**
@@ -824,7 +822,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         for (List<Map.Entry<Object, Object>> block : blocks) {
             if (block.size() != lastBlock) {
                 // Rebuild update block
-                int args = 0;
+                int param = 0;
                 boolean whereStarted = false;
 
                 StringBuilder builder = new StringBuilder("UPDATE ").append(table).append(" SET ")
@@ -835,15 +833,15 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                     builder.append("CASE");
 
                     for (int i = 0; i < block.size(); ++i) {
-                        builder.append(" WHEN ").append(column).append(" = ?").append(++args)
-                            .append(" THEN ?").append(++args);
+                        builder.append(" WHEN ").append(column).append(" = ?").append(++param)
+                            .append(" THEN ?").append(++param);
                     }
 
                     builder.append(" ELSE ").append(column).append(" END ");
                 }
                 else {
-                    builder.append('?').append(++args).append(" WHERE ").append(column).append(" = ?")
-                        .append(++args).append(' ');
+                    builder.append('?').append(++param).append(" WHERE ").append(column).append(" = ?")
+                        .append(++param).append(' ');
 
                     whereStarted = true;
                 }
@@ -867,14 +865,14 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                                             builder.append(" OR ");
                                         }
 
-                                        builder.append(criterion.getKey()).append(" IN (?").append(++args)
+                                        builder.append(criterion.getKey()).append(" IN (?").append(++param)
                                             .append(')');
                                     }
 
                                     builder.append(')');
                                 }
                                 else {
-                                    builder.append(criterion.getKey()).append(" IN (?").append(++args)
+                                    builder.append(criterion.getKey()).append(" IN (?").append(++param)
                                         .append(')');
                                 }
                             }
@@ -883,7 +881,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                             builder.append(whereStarted ? " AND " : " WHERE ");
                             whereStarted = true;
 
-                            builder.append(criterion.getKey()).append(" = ?").append(++args);
+                            builder.append(criterion.getKey()).append(" = ?").append(++param);
                         }
                     }
                 }
@@ -891,20 +889,20 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                 query = session.createSQLQuery(builder.toString());
             }
 
-            // Set args
-            int args = 0;
+            // Set params
+            int param = 0;
 
             if (block.size() > 1) {
                 for (Map.Entry<Object, Object> entry : block) {
-                    query.setParameter(String.valueOf(++args), entry.getKey())
-                        .setParameter(String.valueOf(++args), entry.getValue());
+                    query.setParameter(String.valueOf(++param), entry.getKey())
+                        .setParameter(String.valueOf(++param), entry.getValue());
                 }
             }
             else {
                 Map.Entry<Object, Object> entry = block.get(0);
 
-                query.setParameter(String.valueOf(++args), entry.getValue())
-                    .setParameter(String.valueOf(++args), entry.getKey());
+                query.setParameter(String.valueOf(++param), entry.getValue())
+                    .setParameter(String.valueOf(++param), entry.getKey());
             }
 
             // Set criteria if the block size has changed
@@ -915,11 +913,11 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                             AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE);
 
                         for (List inBlock : inBlocks) {
-                            query.setParameterList(String.valueOf(++args), inBlock);
+                            query.setParameterList(String.valueOf(++param), inBlock);
                         }
                     }
                     else {
-                        query.setParameter(String.valueOf(++args), criterion);
+                        query.setParameter(String.valueOf(++param), criterion);
                     }
                 }
             }
@@ -939,5 +937,87 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
 
         return count;
+    }
+
+    /**
+     * Performs an SQL delete on the given table, using the given criteria map to filter rows to
+     * delete.
+     *
+     * @param table
+     *  The name of the table to update
+     *
+     * @param criteria
+     *  A mapping of criteria to apply to the deletion (column name => value); applied as a
+     *  conjunction.
+     *
+     * @return
+     *  the number of rows deleted as a result of this query
+     */
+    protected int bulkSQLDelete(String table, Map<String, Object> criteria) {
+        StringBuilder builder = new StringBuilder("DELETE FROM ").append(table);
+
+        // Add criteria
+        if (criteria != null && !criteria.isEmpty()) {
+            boolean whereStarted = false;
+            int param = 0;
+
+            for (Map.Entry<String, Object> criterion : criteria.entrySet()) {
+                if (criterion.getValue() instanceof Collection) {
+                    if (((Collection) criterion.getValue()).size() > 0) {
+                        int inBlocks = (int) Math.ceil((((Collection) criterion.getValue()).size() /
+                            (float) AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE));
+
+                        builder.append(whereStarted ? " AND " : " WHERE ");
+                        whereStarted = true;
+
+                        if (inBlocks > 1) {
+                            builder.append('(');
+
+                            for (int i = 0; i < inBlocks; ++i) {
+                                if (i != 0) {
+                                    builder.append(" OR ");
+                                }
+
+                                builder.append(criterion.getKey()).append(" IN (?").append(++param)
+                                    .append(')');
+                            }
+
+                            builder.append(')');
+                        }
+                        else {
+                            builder.append(criterion.getKey()).append(" IN (?").append(++param) .append(')');
+                        }
+                    }
+                }
+                else {
+                    builder.append(whereStarted ? " AND " : " WHERE ");
+                    whereStarted = true;
+
+                    builder.append(criterion.getKey()).append(" = ?").append(++param);
+                }
+            }
+        }
+
+        SQLQuery query = this.currentSession().createSQLQuery(builder.toString());
+
+        if (criteria != null && !criteria.isEmpty()) {
+            int param = 0;
+
+            for (Object criterion : criteria.values()) {
+                if (criterion instanceof Collection) {
+                    Iterable<List> inBlocks = Iterables.partition((Collection) criterion,
+                        AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE);
+
+                    for (List inBlock : inBlocks) {
+                        query.setParameterList(String.valueOf(++param), inBlock);
+                    }
+                }
+                else {
+                    query.setParameter(String.valueOf(++param), criterion);
+                }
+            }
+        }
+
+        return query.executeUpdate();
     }
 }

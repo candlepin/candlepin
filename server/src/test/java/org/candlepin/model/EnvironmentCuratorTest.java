@@ -14,18 +14,20 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
+
 
 
 public class EnvironmentCuratorTest extends DatabaseTestFixture {
@@ -85,5 +87,44 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
 
         assertEquals(1, envs.size());
         assertEquals(environment, envs.get(0));
+    }
+
+    @Test
+    public void testDeleteEnvironmentForOwner() {
+        Owner owner1 = this.createOwner("owner1");
+        Owner owner2 = this.createOwner("owner2");
+        Content content1 = this.createContent("c1", "c1", owner1);
+        Content content2 = this.createContent("c2", "c2", owner1);
+        Content content3 = this.createContent("c3", "c3", owner2);
+
+        Environment environment1 = this.createEnvironment(
+            owner1, "test_env-1", "test_env-1", null, null, Arrays.asList(content1)
+        );
+
+        Environment environment2 = this.createEnvironment(
+            owner1, "test_env-2", "test_env-2", null, null, Arrays.asList(content2)
+        );
+
+        Environment environment3 = this.createEnvironment(
+            owner2, "test_env-3", "test_env-3", null, null, Arrays.asList(content3)
+        );
+
+        int output = this.environmentCurator.deleteEnvironmentsForOwner(owner1);
+        assertEquals(2, output);
+
+        this.environmentCurator.evict(environment1);
+        this.environmentCurator.evict(environment2);
+        this.environmentCurator.evict(environment3);
+        environment1 = this.environmentCurator.find(environment1.getId());
+        environment2 = this.environmentCurator.find(environment2.getId());
+        environment3 = this.environmentCurator.find(environment3.getId());
+
+        assertNull(environment1);
+        assertNull(environment2);
+        assertNotNull(environment3);
+
+        assertEquals(1, environment3.getEnvironmentContent().size());
+        assertEquals(content3.getUuid(), environment3.getEnvironmentContent().iterator().next().getContent()
+            .getUuid());
     }
 }

@@ -15,6 +15,7 @@
 package org.candlepin.model.dto;
 
 import org.candlepin.model.Content;
+import org.candlepin.util.SetView;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -25,7 +26,6 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -474,9 +474,7 @@ public class ContentData extends CandlepinDTO {
      *  been defined
      */
     public Collection<String> getModifiedProductIds() {
-        return this.modifiedProductIds != null ?
-            Collections.unmodifiableSet(this.modifiedProductIds) :
-            null;
+        return this.modifiedProductIds != null ? new SetView(this.modifiedProductIds) : null;
     }
 
     /**

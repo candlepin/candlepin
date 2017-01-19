@@ -18,6 +18,8 @@ import org.candlepin.model.dto.ProductAttributeData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.service.UniqueIdGenerator;
+import org.candlepin.util.ListView;
+import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
 
 import org.hibernate.annotations.BatchSize;
@@ -36,7 +38,6 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
@@ -76,9 +77,9 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = Product.DB_TABLE)
 public class Product extends AbstractHibernateObject implements SharedEntity, Linkable, Cloneable {
-
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp2_products";
+
     /**
      * Commonly used/recognized product attributes
      */
@@ -512,7 +513,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  a collection containing the attributes of the product
      */
     public Collection<ProductAttribute> getAttributes() {
-        return Collections.unmodifiableList(this.attributes);
+        return new ListView(this.attributes);
     }
 
     /**
@@ -790,7 +791,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  the product content associated with this product
      */
     public Collection<ProductContent> getProductContent() {
-        return Collections.unmodifiableList(this.productContent);
+        return new ListView(this.productContent);
     }
 
     /**
@@ -1055,7 +1056,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  the dependent product IDs of this product
      */
     public Collection<String> getDependentProductIds() {
-        return Collections.unmodifiableSet(this.dependentProductIds);
+        return new SetView(this.dependentProductIds);
     }
 
     /**

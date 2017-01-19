@@ -18,6 +18,8 @@ import org.candlepin.model.Content;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
+import org.candlepin.util.ListView;
+import org.candlepin.util.SetView;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -26,7 +28,6 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -257,12 +258,16 @@ public class ProductData extends CandlepinDTO {
     /**
      * Retrieves a view of the attributes for the product represented by this DTO. If the product
      * attributes have not yet been defined, this method returns null.
+     * <p></p>
+     * Note that the collection returned by this method is a view of the collection backing this
+     * product data. Elements cannot be added to the collection, but elements may be removed.
+     * Changes made to the collection will be reflected by this product data instance.
      *
      * @return
      *  the attributes of the product, or null if the attributes have not yet been defined
      */
     public Collection<ProductAttributeData> getAttributes() {
-        return this.attributes != null ? Collections.unmodifiableList(this.attributes) : null;
+        return this.attributes != null ? new ListView(this.attributes) : null;
     }
 
     /**
@@ -510,12 +515,16 @@ public class ProductData extends CandlepinDTO {
     /**
      * Retrieves the content of the product represented by this DTO. If the product content has not
      * yet been defined, this method returns null.
+     * <p></p>
+     * Note that the collection returned by this method is a view of the collection backing this
+     * product data. Elements cannot be added to the collection, but elements may be removed.
+     * Changes made to the collection will be reflected by this product data instance.
      *
      * @return
      *  the content of the product, or null if the content not yet been defined
      */
     public Collection<ProductContentData> getProductContent() {
-        return this.content != null ? Collections.unmodifiableCollection(this.content.values()) : null;
+        return this.content != null ? this.content.values() : null;
     }
 
     /**
@@ -826,15 +835,17 @@ public class ProductData extends CandlepinDTO {
     /**
      * Retrieves the dependent product IDs of the product represented by this DTO. If the product
      * dependent product IDs have not yet been defined, this method returns null.
+     * <p></p>
+     * Note that the collection returned by this method is a view of the collection backing this
+     * product data. Elements cannot be added to the collection, but elements may be removed.
+     * Changes made to the collection will be reflected by this product data instance.
      *
      * @return
      *  the dependent product IDs of the product, or null if the dependent product IDs have not yet
      *  been defined
      */
     public Collection<String> getDependentProductIds() {
-        return this.dependentProductIds != null ?
-            Collections.unmodifiableCollection(this.dependentProductIds) :
-            null;
+        return this.dependentProductIds != null ? new SetView(this.dependentProductIds) : null;
     }
 
     /**

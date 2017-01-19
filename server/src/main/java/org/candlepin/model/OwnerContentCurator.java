@@ -14,11 +14,9 @@
  */
 package org.candlepin.model;
 
-import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Session;
-import org.hibernate.Query;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -27,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +65,6 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         return this.getOwnersByContent(content.getId());
     }
 
-    @Transactional
     public CandlepinQuery<Owner> getOwnersByContent(String contentId) {
         // Impl note:
         // We have to do this in two queries due to how Hibernate processes projections here. We're
@@ -94,13 +92,31 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         return this.cpQueryFactory.<Owner>buildQuery();
     }
 
-    public CandlepinQuery<Content> getContentByOwner(Owner owner) {
-        return this.getContentByOwner(owner.getId());
+    /**
+     * Fetches a collection of content UUIDs currently mapped to the given owner. If the owner is
+     * not mapped to any content, an empty collection will be returned.
+     *
+     * @param owner
+     *  The owner for which to fetch content UUIDs
+     *
+     * @return
+     *  a collection of content UUIDs belonging to the given owner
+     */
+    public Collection<String> getContentUuidsByOwner(Owner owner) {
+        return this.getContentUuidsByOwner(owner.getId());
     }
 
-    @Transactional
-    public CandlepinQuery<Content> getContentByOwner(String ownerId) {
-        // Impl note: See getOwnersByContent for details on why we're doing this in two queries
+    /**
+     * Fetches a collection of content UUIDs currently mapped to the given owner. If the owner is
+     * not mapped to any content, an empty collection will be returned.
+     *
+     * @param ownerId
+     *  The ID of the owner for which to fetch content UUIDs
+     *
+     * @return
+     *  a collection of content UUIDs belonging to the given owner
+     */
+    public Collection<String> getContentUuidsByOwner(String ownerId) {
         String jpql = "SELECT oc.content.uuid FROM OwnerContent oc WHERE oc.owner.id = :owner_id";
 
         List<String> uuids = this.getEntityManager()
@@ -108,7 +124,36 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
             .setParameter("owner_id", ownerId)
             .getResultList();
 
-        if (uuids != null && !uuids.isEmpty()) {
+        return uuids != null ? uuids : Collections.<String>emptyList();
+    }
+
+    /**
+     * Builds a query for fetching the content currently mapped to the given owner.
+     *
+     * @param owner
+     *  The owner for which to fetch content
+     *
+     * @return
+     *  a query for fetching the content belonging to the given owner
+     */
+    public CandlepinQuery<Content> getContentByOwner(Owner owner) {
+        return this.getContentByOwner(owner.getId());
+    }
+
+    /**
+     * Builds a query for fetching the content currently mapped to the given owner.
+     *
+     * @param ownerId
+     *  The ID of the owner for which to fetch content
+     *
+     * @return
+     *  a query for fetching the content belonging to the given owner
+     */
+    public CandlepinQuery<Content> getContentByOwner(String ownerId) {
+        // Impl note: See getOwnersByContent for details on why we're doing this in two queries
+        Collection<String> uuids = this.getContentUuidsByOwner(ownerId);
+
+        if (!uuids.isEmpty()) {
             DetachedCriteria criteria = this.createSecureDetachedCriteria(Content.class, null)
                 .add(CPRestrictions.in("uuid", uuids));
 
@@ -122,7 +167,6 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         return this.getContentByIds(owner.getId(), contentIds);
     }
 
-    @Transactional
     public CandlepinQuery<Content> getContentByIds(String ownerId, Collection<String> contentIds) {
         if (contentIds == null || contentIds.isEmpty()) {
             return this.cpQueryFactory.<Content>buildQuery();
@@ -319,7 +363,12 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
         // Owner content
         int count = this.bulkSQLUpdate(OwnerContent.DB_TABLE, "content_uuid", uuidMap, criteria);
-        log.debug("{} owner-content relations updated", count);
+        log.info("{} owner-content relations updated", count);
+
+        // Impl note:
+        // We're not managing product-content references, since versioning changes require us to
+        // handle that with more explicit logic. Instead, we rely on the content manager using
+        // the product manager to fork/update products when a related content entity changes.
 
         // environment content
         List<String> ids = session.createSQLQuery("SELECT id FROM cp_environment WHERE owner_id = ?1")
@@ -328,14 +377,14 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
         if (ids != null && !ids.isEmpty()) {
             criteria.clear();
-            criteria.put("content_uuid", contentUuidMap.keySet());
             criteria.put("environment_id", ids);
+            criteria.put("content_uuid", contentUuidMap.keySet());
 
             count = this.bulkSQLUpdate(EnvironmentContent.DB_TABLE, "content_uuid", uuidMap, criteria);
-            log.debug("{} environment-content relations updated", count);
+            log.info("{} environment-content relations updated", count);
         }
         else {
-            log.debug("0 environment-content relations updated");
+            log.info("0 environment-content relations updated");
         }
     }
 
@@ -352,72 +401,54 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
      * be manually evicted from the session and re-queried to ensure they will not clobber the
      * changes made by this method on persist, nor trigger any errors on refresh.
      *
-     * @param content
-     *  The content other objects are referencing
-     *
      * @param owner
      *  The owner for which to apply the reference changes
+     *
+     * @param contentUuids
+     *  A collection of content UUIDs representing the content entities to orphan
      */
     @Transactional
-    public void removeOwnerContentReferences(Content content, Owner owner) {
+    public void removeOwnerContentReferences(Owner owner, Collection<String> contentUuids) {
         // Impl note:
         // As is the case in updateOwnerContentReferences, HQL's bulk delete doesn't allow us to
         // touch anything that even looks like a join. As such, we have to do this in vanilla SQL.
 
-        Session session = this.currentSession();
+        if (contentUuids != null && !contentUuids.isEmpty()) {
+            log.info("Removing owner-content references for owner: {}, {}", owner, contentUuids);
 
-        // Owner content
-        String sql = "DELETE FROM cp2_owner_content WHERE content_uuid = ?1 AND owner_id = ?2";
+            Session session = this.currentSession();
 
-        int count = session.createSQLQuery(sql)
-            .setParameter("1", content.getUuid())
-            .setParameter("2", owner.getId())
-            .executeUpdate();
+            // Owner content
+            Map<String, Object> criteria = new HashMap<String, Object>();
+            criteria.put("owner_id", owner.getId());
+            criteria.put("content_uuid", contentUuids);
 
-        log.debug("{} owner-content relations updated", count);
+            int count = this.bulkSQLDelete(OwnerContent.DB_TABLE, criteria);
+            log.info("{} owner-content relations removed", count);
 
-        // environment content
-        List<String> ids = session.createSQLQuery("SELECT id FROM cp_environment WHERE owner_id = ?1")
-            .setParameter("1", owner.getId())
-            .list();
+            // Impl note:
+            // We're not managing product-content references, since versioning changes require us to
+            // handle that with more explicit logic. Instead, we rely on the content manager using
+            // the product manager to fork/update products when a related content entity changes.
 
-        if (ids != null && !ids.isEmpty()) {
-            int inBlocks = ids.size() / AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE + 1;
+            // environment content
+            String sql = "SELECT id FROM " + Environment.DB_TABLE + " WHERE owner_id = ?1";
+            List<String> ids = session.createSQLQuery(sql)
+                .setParameter("1", owner.getId())
+                .list();
 
-            StringBuilder builder = new StringBuilder("DELETE FROM cp2_environment_content ")
-                .append("WHERE content_uuid = ?1 AND (");
+            if (ids != null && !ids.isEmpty()) {
+                criteria.clear();
+                criteria.put("environment_id", ids);
+                criteria.put("content_uuid", contentUuids);
 
-            for (int i = 0; i < inBlocks; ++i) {
-                if (i != 0) {
-                    builder.append(" OR ");
-                }
-
-                builder.append("environment_id IN (?").append(i + 2).append(')');
+                count = this.bulkSQLDelete(EnvironmentContent.DB_TABLE, criteria);
+                log.info("{} environment-content relations updated", count);
             }
-
-            builder.append(')');
-
-            Query query = session.createSQLQuery(builder.toString())
-                .setParameter("1", content.getUuid());
-
-            int args = 1;
-            for (List<String> block : Iterables.partition(ids,
-                AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE)) {
-
-                query.setParameterList(String.valueOf(++args), block);
+            else {
+                log.info("0 environment-content relations updated");
             }
-
-            count = query.executeUpdate();
-            log.debug("{} environment-content relations updated", count);
         }
-        else {
-            log.debug("0 environment-content relations updated");
-        }
-
-        // Impl note:
-        // We're not managing product-content references, since versioning changes require us to
-        // handle that with more explicit logic. Instead, when rely on the content manager using
-        // the product manager to fork/update products when a related content changes.
     }
 
 }

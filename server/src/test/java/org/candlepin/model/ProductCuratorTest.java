@@ -135,7 +135,6 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void nameNonUnique() {
-
         Product prod = new Product("label1", "name");
         productCurator.create(prod);
 
@@ -144,17 +143,6 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         assertEquals(prod.getName(), prod2.getName());
         assertFalse(prod.getUuid().equals(prod2.getUuid()));
-    }
-
-    @Test
-    public void testEquality() {
-        // TODO:
-        // This should probably be updated.
-
-        assertEquals(new Product("label", "name"), new Product("label", "name"));
-        assertFalse(new Product("label", "name").equals(null));
-        assertFalse(new Product("label", "name").equals(new Product("label", "another_name")));
-        assertFalse(new Product("label", "name").equals(new Product("another_label", "name")));
     }
 
     @Test
@@ -513,7 +501,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         List<String> contentIds = new LinkedList<String>();
         contentIds.add(content.getId());
-        List<Product> products = productCurator.getProductsWithContent(owner, contentIds).list();
+        List<Product> products = productCurator.getProductsByContent(owner, contentIds).list();
         assertEquals(1, products.size());
         assertEquals(p, products.get(0));
     }
@@ -529,37 +517,36 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         List<String> contentUuids = new LinkedList<String>();
         contentUuids.add(content.getUuid());
-        log.debug("BEGINNING TEST");
-        List<Product> products = productCurator.getProductsWithContent(contentUuids).list();
+
+        List<Product> products = productCurator.getProductsByContentUuids(contentUuids).list();
         assertEquals(1, products.size());
         assertEquals(p, products.get(0));
     }
 
     @Test
     public void ensureProductHasSubscription() {
-        assertTrue(productCurator.productHasSubscriptions(product, owner));
+        assertTrue(productCurator.productHasSubscriptions(owner, product));
     }
 
     @Test
     public void ensureProvidedProductHasSubscription() {
-        assertTrue(productCurator.productHasSubscriptions(providedProduct, owner));
+        assertTrue(productCurator.productHasSubscriptions(owner, providedProduct));
     }
 
     @Test
     public void ensureDerivedProductHasSubscription() {
-        assertTrue(productCurator.productHasSubscriptions(derivedProduct, owner));
+        assertTrue(productCurator.productHasSubscriptions(owner, derivedProduct));
     }
 
     @Test
     public void ensureDerivedProvidedProductHasSubscription() {
-        assertTrue(productCurator.productHasSubscriptions(derivedProvidedProduct, owner));
+        assertTrue(productCurator.productHasSubscriptions(owner, derivedProvidedProduct));
     }
 
     @Test
     public void ensureDoesNotHaveSubscription() {
-        Product doesNotHave = TestUtil.createProduct();
-        productCurator.create(doesNotHave);
-        assertFalse(productCurator.productHasSubscriptions(doesNotHave, owner));
+        Product noSub = this.createProduct("p1", "p1", owner);
+        assertFalse(productCurator.productHasSubscriptions(owner, noSub));
     }
 
     @Test

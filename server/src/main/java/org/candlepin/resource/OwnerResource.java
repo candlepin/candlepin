@@ -249,7 +249,7 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "owners")
     @ApiOperation(notes = "Retrieves a list of Owners", value = "List Owners", responseContainer = "owners")
-    public CandlepinQuery list(@QueryParam("key") String keyFilter) {
+    public CandlepinQuery<Owner> list(@QueryParam("key") String keyFilter) {
         return keyFilter != null ?
             this.ownerCurator.lookupByKeys(Arrays.asList(keyFilter)) :
             this.ownerCurator.listAll();

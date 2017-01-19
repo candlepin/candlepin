@@ -17,7 +17,7 @@ package org.candlepin.model;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.Criteria;
+import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Projections;
@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -143,16 +142,26 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
      *  A collection of content used by the specified products
      */
     @SuppressWarnings("unchecked")
-    public List<Content> getContentByProducts(Collection<Product> products) {
-        if (products == null || products.isEmpty()) {
-            return new LinkedList<Content>();
+    public CandlepinQuery<Content> getContentByProducts(Collection<Product> products) {
+        if (products != null && !products.isEmpty()) {
+            // We're doing this in two queries because (a) that's what Hibernate's doing already due
+            // to the projection and (b) DISTINCT_ROOT_ENTITY only works when listing, not when
+            // scrolling.
+            Session session = this.currentSession();
+
+            List<String> uuids = session.createCriteria(ProductContent.class)
+                .add(CPRestrictions.in("product", products))
+                .setProjection(Projections.distinct(Projections.property("content.uuid")))
+                .list();
+
+            if (uuids != null && !uuids.isEmpty()) {
+                DetachedCriteria criteria = this.createSecureDetachedCriteria()
+                    .add(CPRestrictions.in("uuid", uuids));
+
+                return this.cpQueryFactory.<Content>buildQuery(session, criteria);
+            }
         }
 
-        return this.createSecureCriteria(ProductContent.class, "productContent")
-                .createAlias("content", "content")
-                .add(CPRestrictions.in("product", products))
-                .setProjection(Projections.property("content"))
-                .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
-                .list();
+        return this.cpQueryFactory.<Content>buildQuery();
     }
 }

@@ -572,7 +572,7 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         assertTrue(this.isContentMappedToOwner(original, owner1));
         assertTrue(this.isContentMappedToOwner(unmodified, owner2));
 
-        this.ownerContentCurator.removeOwnerContentReferences(original, owner1);
+        this.ownerContentCurator.removeOwnerContentReferences(owner1, Arrays.asList(original.getUuid()));
 
         assertFalse(this.isContentMappedToOwner(original, owner1));
         assertTrue(this.isContentMappedToOwner(unmodified, owner2));
