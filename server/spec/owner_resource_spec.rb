@@ -821,5 +821,53 @@ describe 'Owner Resource Entitlement List Tests' do
     end
     found_attr.should == true
   end
+end
+
+describe 'Owner Resource Future Pool Tests' do
+
+  include CandlepinMethods
+
+  before(:each) do
+    @owner = create_owner random_string 'test_owner'
+    @product1 = create_product(random_string('product'), random_string('product'),{:owner => @owner['key']})
+    @product2 = create_product(random_string('product'), random_string('product'),{:owner => @owner['key']})
+    @current_pool = create_pool_and_subscription(@owner['key'], @product1.id, 10)
+    start1 = Date.today + 400
+    start2 = Date.today + 800
+    @future_pool1 = create_pool_and_subscription(@owner['key'], @product2.id, 10, [], '', '', '', start1)
+    @future_pool2 = create_pool_and_subscription(@owner['key'], @product2.id, 10, [], '', '', '', start2)
+  end
+
+  # active_only is true by default
+  it 'can fetch current pools' do
+    pools = @cp.list_owner_pools(@owner['key'])
+    pools.length.should eq(1)
+    pools[0].id.should eq(@current_pool.id)
+  end
+
+  it 'can fetch current and future pools' do
+    pools = @cp.list_owner_pools(@owner['key'],{:add_future => "true"})
+    pools.length.should eq(3)
+  end
+
+  it 'can fetch future pools' do
+    pools = @cp.list_owner_pools(@owner['key'],{:only_future => "true"})
+    pools.length.should eq(2)
+    pools[0].id.should_not eq(@current_pool.id)
+    pools[1].id.should_not eq(@current_pool.id)
+  end
+
+  it 'can fetch future pools based on activeon date' do
+    test_date = Date.today + 500
+    pools = @cp.list_owner_pools(@owner['key'],{:only_future => "true", :activeon => test_date})
+    pools.length.should eq(1)
+    pools[0].id.should eq(@future_pool2.id)
+  end
+
+  it 'cannot use both add_future and only_future flags' do
+    lambda do
+        pools = @cp.list_owner_pools(@owner['key'],{:only_future => "true", :add_future => "true"})
+     end.should raise_exception(RestClient::BadRequest)
+  end
 
 end

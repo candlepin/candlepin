@@ -961,8 +961,8 @@ public class PoolManagerTest {
         when(page.getPageData()).thenReturn(pools);
         when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
             any(Owner.class), any(String.class), any(String.class), eq(now), anyBoolean(),
-            any(PoolFilterBuilder.class), any(PageRequest.class),
-            anyBoolean())).thenReturn(page);
+            any(PoolFilterBuilder.class), any(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean()))
+            .thenReturn(page);
 
         when(mockPoolCurator.lockAndLoadBatch(any(List.class))).thenReturn(Arrays.asList(pool1));
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),
@@ -1009,7 +1009,8 @@ public class PoolManagerTest {
         when(page.getPageData()).thenReturn(pools);
         when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class), any(Owner.class),
             any(String.class), any(String.class), eq(now), anyBoolean(),
-            any(PoolFilterBuilder.class), any(PageRequest.class), anyBoolean())).thenReturn(page);
+            any(PoolFilterBuilder.class), any(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean()))
+            .thenReturn(page);
 
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
         when(mockPoolCurator.lockAndLoadBatch(any(List.class))).thenReturn(Arrays.asList(pool1));
@@ -1218,7 +1219,7 @@ public class PoolManagerTest {
         when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
             any(Owner.class), anyString(), anyString(), eq(now),
             anyBoolean(), any(PoolFilterBuilder.class),
-            any(PageRequest.class), anyBoolean()))
+            any(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean()))
                 .thenReturn(page);
 
         when(mockPoolCurator.lockAndLoadBatch(anyListOf(String.class))).thenReturn(pools);

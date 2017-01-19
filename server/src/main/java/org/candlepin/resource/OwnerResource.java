@@ -723,6 +723,8 @@ public class OwnerResource {
         @QueryParam("matches") String matches,
         @QueryParam("attribute") @CandlepinParam(type = KeyValueParameter.class)
             List<KeyValueParameter> attrFilters,
+        @QueryParam("add_future") @DefaultValue("false") boolean addFuture,
+        @QueryParam("only_future") @DefaultValue("false") boolean onlyFuture,
         @Context Principal principal,
         @Context PageRequest pageRequest) {
 
@@ -762,6 +764,10 @@ public class OwnerResource {
             }
         }
 
+        if (addFuture && onlyFuture) {
+            throw new BadRequestException(
+                i18n.tr("The flags add_future and only_future cannot be used at the same time."));
+        }
         // Process the filters passed for the attributes
         PoolFilterBuilder poolFilters = new PoolFilterBuilder();
         for (KeyValueParameter filterParam : attrFilters) {
@@ -772,8 +778,8 @@ public class OwnerResource {
         }
 
         Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(
-            c, key, owner, productId, subscriptionId, activeOnDate, true, listAll, poolFilters, pageRequest
-        );
+            c, key, owner, productId, subscriptionId, activeOnDate, true, listAll, poolFilters, pageRequest,
+        addFuture, onlyFuture);
         List<Pool> poolList = page.getPageData();
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);
         calculatedAttributesUtil.setQuantityAttributes(poolList, c, activeOnDate);
