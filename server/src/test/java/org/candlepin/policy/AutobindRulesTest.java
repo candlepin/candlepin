@@ -141,14 +141,14 @@ public class AutobindRulesTest {
         List<PoolQuantity> poolQs = autobindRules.selectBestPools(consumer,
             new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
             false);
-        assertEquals(null, poolQs);
+        assertEquals(0, poolQs.size());
 
         // Try again with explicitly setting the consumer to cert v1:
         consumer.setFact("system.certificate_version", "1.0");
         poolQs = autobindRules.selectBestPools(consumer,
             new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
             false);
-        assertEquals(null, poolQs);
+        assertEquals(0, poolQs.size());
     }
 
     @Test
@@ -484,9 +484,9 @@ public class AutobindRulesTest {
     @Test
     public void testSelectBestPoolNoPools() {
         // There are no pools for the product in this case:
-        assertEquals(null, autobindRules.selectBestPools(consumer,
+        assertEquals(0, autobindRules.selectBestPools(consumer,
             new String[] {HIGHEST_QUANTITY_PRODUCT}, new LinkedList<Pool>(), compliance,
-            null, new HashSet<String>(), false));
+            null, new HashSet<String>(), false).size());
     }
 
     @Test
@@ -614,9 +614,9 @@ public class AutobindRulesTest {
         pools.get(0).setQuantity(7L); // Only 7 available
         setupConsumer("8", false);
 
-        assertEquals(null, autobindRules.selectBestPools(consumer,
+        assertEquals(0, autobindRules.selectBestPools(consumer,
             new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
-            false));
+            false).size());
     }
 
     @Test
@@ -625,9 +625,9 @@ public class AutobindRulesTest {
         pools.get(0).setQuantity(4L); // Only 4 available
         setupConsumer("8", false);
 
-        assertEquals(null, autobindRules.selectBestPools(consumer,
+        assertEquals(0, autobindRules.selectBestPools(consumer,
             new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
-            false));
+            false).size());
     }
 
     @Test
@@ -822,9 +822,9 @@ public class AutobindRulesTest {
         pools.add(serverPool);
         pools.add(hyperPool);
 
-        assertEquals(null, autobindRules.selectBestPools(consumer,
+        assertEquals(0, autobindRules.selectBestPools(consumer,
             new String[]{ server.getUuid() }, pools, compliance, null,
-            new HashSet<String>(), false));
+            new HashSet<String>(), false).size());
     }
 
     /*

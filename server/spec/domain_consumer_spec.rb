@@ -21,7 +21,7 @@ describe 'Domain Consumer' do
     consumer = consumer_client(@user, 'guest_consumer', :domain)
 
     entitlements = consumer.consume_product @monitoring.id
-    entitlements.should be_nil
+    entitlements.should == []
   end
 
   it 'should be able to consume domain products' do
@@ -35,7 +35,7 @@ describe 'Domain Consumer' do
     system = consumer_client(@user, 'non-domain')
 
     entitlements = system.consume_product(@domain_product.id)
-    entitlements.should be_nil
+    entitlements.should == []
   end
 
 end
