@@ -20,6 +20,12 @@ describe 'Product Resource' do
       })
   end
 
+  it 'should fail when fetching non-existing products' do
+    lambda do
+      @cp.get_product_by_uuid("some bad product uuid")
+    end.should raise_exception(RestClient::ResourceNotFound)
+  end
+
   it 'throws exception on write operations' do
     lambda do
       @cp.post("/products", {})

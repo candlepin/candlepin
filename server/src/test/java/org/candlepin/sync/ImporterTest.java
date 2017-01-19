@@ -118,6 +118,7 @@ public class ImporterTest {
     private ClassLoader classLoader = getClass().getClassLoader();
     private SyncUtils su;
     private ProductCurator pc;
+    private SubscriptionReconciler mockSubReconciler;
 
     @Before
     public void init() throws URISyntaxException, IOException {
@@ -134,12 +135,14 @@ public class ImporterTest {
         pc = Mockito.mock(ProductCurator.class);
         ProductCachedSerializationModule productCachedModule = new ProductCachedSerializationModule(pc);
         su = new SyncUtils(config, productCachedModule);
-        PrintStream ps = new PrintStream(new File(this.getClass()
-            .getClassLoader().getResource("version.properties").toURI()));
+        PrintStream ps = new PrintStream(
+            new File(this.getClass().getClassLoader().getResource("version.properties").toURI()));
         ps.println("version=0.0.3");
         ps.println("release=1");
         ps.close();
         mockJsPath = new File(folder.getRoot(), "empty.js").getPath();
+
+        this.mockSubReconciler = Mockito.mock(SubscriptionReconciler.class);
     }
 
     @After
@@ -172,7 +175,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null,
-            null, null, null, emc, null, null, i18n, null, null, su, null);
+            null, null, null, emc, null, null, i18n, null, null, su, null, this.mockSubReconciler);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actual,
             new ConflictOverrides());
 
@@ -196,7 +199,7 @@ public class ImporterTest {
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, null, null, null, null,
-            null, null, null, emc, null, null, i18n, null, null, su, null);
+            null, null, null, emc, null, null, i18n, null, null, su, null, this.mockSubReconciler);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
             new ConflictOverrides());
         assertTrue(f.delete());
@@ -217,7 +220,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null,
-            null, null, null, emc, null, null, i18n, null, null, su, null);
+            null, null, null, emc, null, null, i18n, null, null, su, null, this.mockSubReconciler);
         try {
             i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
                 new ConflictOverrides());
@@ -245,7 +248,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null,
-            null, null, null, emc, null, null, i18n, null, null, su, null);
+            null, null, null, emc, null, null, i18n, null, null, su, null, this.mockSubReconciler);
         try {
             i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
                 new ConflictOverrides());
@@ -293,7 +296,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null,
-            null, null, null, emc, null, null, i18n, null, null, su, null);
+            null, null, null, emc, null, null, i18n, null, null, su, null, this.mockSubReconciler);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
             new ConflictOverrides());
         assertEquals(importDate, em.getExported());
@@ -305,7 +308,7 @@ public class ImporterTest {
             "test_user", "prefix");
         try {
             Importer i = new Importer(null, null, null, null, null, null,
-                null, null, null, null, null, null, i18n, null, null, su, null);
+                null, null, null, null, null, null, i18n, null, null, su, null, this.mockSubReconciler);
 
             // null Type should cause exception
             i.validateMetadata(null, null, actualmeta, new ConflictOverrides());
@@ -323,7 +326,7 @@ public class ImporterTest {
         when(emc.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, null))
             .thenReturn(null);
         Importer i = new Importer(null, null, null, null, null, null,
-            null, null, null, emc, null, null, i18n, null, null, su, null);
+            null, null, null, emc, null, null, i18n, null, null, su, null, this.mockSubReconciler);
 
         // null Type should cause exception
         i.validateMetadata(ExporterMetadata.TYPE_PER_USER, null, actualmeta,
@@ -335,7 +338,7 @@ public class ImporterTest {
     public void testImportWithNonZipArchive()
         throws IOException, ImporterException {
         Importer i = new Importer(null, null, null, null, null, null,
-            null, null, config, null, null, null, i18n, null, null, su, null);
+            null, null, config, null, null, null, i18n, null, null, su, null, this.mockSubReconciler);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         File archive = new File(folder.getRoot(), "non_zip_file.zip");
@@ -354,7 +357,7 @@ public class ImporterTest {
     public void testImportZipArchiveNoContent()
         throws IOException, ImporterException {
         Importer i = new Importer(null, null, null, null, null, null,
-            null, null, config, null, null, null, i18n, null, null, su, null);
+            null, null, config, null, null, null, i18n, null, null, su, null, this.mockSubReconciler);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
 
@@ -374,7 +377,7 @@ public class ImporterTest {
         throws IOException, ImporterException {
         PKIUtility pki = mock(PKIUtility.class);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            pki, config, null, null, null, i18n, null, null, su, null);
+            pki, config, null, null, null, i18n, null, null, su, null, this.mockSubReconciler);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
 
@@ -396,7 +399,7 @@ public class ImporterTest {
     public void testImportBadConsumerZip() throws Exception {
         PKIUtility pki = mock(PKIUtility.class);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            pki, config, null, null, null, i18n, null, null, su, null);
+            pki, config, null, null, null, i18n, null, null, su, null, this.mockSubReconciler);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
 
@@ -425,7 +428,7 @@ public class ImporterTest {
         throws Exception {
         PKIUtility pki = mock(PKIUtility.class);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            pki, config, null, null, null, i18n, null, null, su, null);
+            pki, config, null, null, null, i18n, null, null, su, null, this.mockSubReconciler);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
 
@@ -465,7 +468,7 @@ public class ImporterTest {
     public void testImportNoMeta() throws IOException, ImporterException {
         OwnerCurator oc = mock(OwnerCurator.class);
         Importer i = new Importer(null, null, null, oc, null, null, null,
-            null, config, null, null, null, i18n, null, null, su, null);
+            null, config, null, null, null, i18n, null, null, su, null, this.mockSubReconciler);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
 
@@ -483,7 +486,7 @@ public class ImporterTest {
     public void testImportNoConsumerTypesDir() throws IOException, ImporterException {
         OwnerCurator oc = mock(OwnerCurator.class);
         Importer i = new Importer(null, null, null, oc, null, null, null,
-            null, config, null, null, null, i18n, null, null, su, null);
+            null, config, null, null, null, i18n, null, null, su, null, this.mockSubReconciler);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = getTestImportFiles();
@@ -501,7 +504,7 @@ public class ImporterTest {
     public void testImportNoConsumer() throws IOException, ImporterException {
         OwnerCurator oc = mock(OwnerCurator.class);
         Importer i = new Importer(null, null, null, oc, null, null, null,
-            null, config, null, null, null, i18n, null, null, su, null);
+            null, config, null, null, null, i18n, null, null, su, null, this.mockSubReconciler);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = getTestImportFiles();
@@ -521,7 +524,7 @@ public class ImporterTest {
         RulesImporter ri = mock(RulesImporter.class);
         OwnerCurator oc = mock(OwnerCurator.class);
         Importer i = new Importer(null, null, ri, oc, null, null, null,
-            null, config, null, null, null, i18n, null, null, su, null);
+            null, config, null, null, null, i18n, null, null, su, null, this.mockSubReconciler);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = getTestImportFiles();
@@ -611,7 +614,7 @@ public class ImporterTest {
         ConflictOverrides co = mock(ConflictOverrides.class);
 
         Importer i = new Importer(ctc, pc, ri, oc, null, null, pm,
-            null, config, emc, null, null, i18n, null, null, su, null);
+            null, config, emc, null, null, i18n, null, null, su, null, this.mockSubReconciler);
         List<Subscription> subscriptions = i.importObjects(owner, importFiles, co);
 
         assertEquals(1, subscriptions.size());
@@ -623,7 +626,7 @@ public class ImporterTest {
     public void testImportProductNoEntitlementDir() throws IOException, ImporterException {
         OwnerCurator oc = mock(OwnerCurator.class);
         Importer i = new Importer(null, null, null, oc, null, null, null,
-            null, config, null, null, null, i18n, null, null, su, null);
+            null, config, null, null, null, i18n, null, null, su, null, this.mockSubReconciler);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = getTestImportFiles();
@@ -695,7 +698,7 @@ public class ImporterTest {
         Importer i = new Importer(ctc, null, null, oc,
             mock(IdentityCertificateCurator.class), null, null,
             pki, null, null, mock(CertificateSerialCurator.class), null, i18n, null,
-            null, su, null);
+            null, su, null, this.mockSubReconciler);
         File[] upstream = createUpstreamFiles();
         Owner owner = new Owner("admin", "Admin Owner");
         ConsumerDto consumer = new ConsumerDto("eb5e04bf-be27-44cf-abe3-0c0b1edd523e",
@@ -736,7 +739,7 @@ public class ImporterTest {
     public void importDistributorVersionCreate() throws Exception {
         DistributorVersionCurator dvc = mock(DistributorVersionCurator.class);
         Importer i = new Importer(null, null, null, null, null, null,
-            null, null, null, null, null, null, i18n, dvc, null, su, null);
+            null, null, null, null, null, null, i18n, dvc, null, su, null, this.mockSubReconciler);
         File[] distVer = new File[1];
         distVer[0] = new File(folder.getRoot(), "dist-ver.json");
         mapper.writeValue(distVer[0], createTestDistributerVersion());
@@ -751,7 +754,7 @@ public class ImporterTest {
     public void importDistributorVersionUpdate() throws Exception {
         DistributorVersionCurator dvc = mock(DistributorVersionCurator.class);
         Importer i = new Importer(null, null, null, null, null, null,
-            null, null, null, null, null, null, i18n, dvc, null, su, null);
+            null, null, null, null, null, null, i18n, dvc, null, su, null, this.mockSubReconciler);
         when(dvc.findByName("test-dist-ver")).thenReturn(
             new DistributorVersion("test-dist-ver"));
         File[] distVer = new File[1];
@@ -781,7 +784,7 @@ public class ImporterTest {
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = createAndSetImportFiles();
         Importer i = new Importer(null, null, ri, oc, null, null,
-            null, null, config, emc, null, null, i18n, null, null, su, null);
+            null, null, config, emc, null, null, i18n, null, null, su, null, this.mockSubReconciler);
 
         ee.expect(RuntimeException.class);
         ee.expectMessage("Done with the test");
@@ -816,7 +819,7 @@ public class ImporterTest {
         EventSink eventSinkMock = mock(EventSink.class);
         ImportRecordCurator importRecordCurator = mock(ImportRecordCurator.class);
         Importer importer = new Importer(null, null, null, null, null, null, null, null, config, null,
-            null, eventSinkMock, i18n, null, null, su, importRecordCurator);
+            null, eventSinkMock, i18n, null, null, su, importRecordCurator, this.mockSubReconciler);
 
         Meta meta = new Meta("1.0", new Date(), "test-user", "candlepin", "testcdn");
 
@@ -851,7 +854,7 @@ public class ImporterTest {
         EventSink eventSinkMock = mock(EventSink.class);
         ImportRecordCurator importRecordCurator = mock(ImportRecordCurator.class);
         Importer importer = new Importer(null, null, null, null, null, null, null, null, config, null,
-            null, eventSinkMock, i18n, null, null, su, importRecordCurator);
+            null, eventSinkMock, i18n, null, null, su, importRecordCurator, this.mockSubReconciler);
 
         Meta meta = new Meta("1.0", new Date(), "test-user", "candlepin", "testcdn");
 
@@ -882,7 +885,7 @@ public class ImporterTest {
         EventSink eventSinkMock = mock(EventSink.class);
         ImportRecordCurator importRecordCurator = mock(ImportRecordCurator.class);
         Importer importer = new Importer(null, null, null, null, null, null, null, null, config, null,
-            null, eventSinkMock, i18n, null, null, su, importRecordCurator);
+            null, eventSinkMock, i18n, null, null, su, importRecordCurator, this.mockSubReconciler);
 
         Meta meta = new Meta("1.0", new Date(), "test-user", "candlepin", "testcdn");
 
@@ -903,7 +906,7 @@ public class ImporterTest {
         EventSink eventSinkMock = mock(EventSink.class);
         ImportRecordCurator importRecordCurator = mock(ImportRecordCurator.class);
         Importer importer = new Importer(null, null, null, null, null, null, null, null, config, null,
-            null, eventSinkMock, i18n, null, null, su, importRecordCurator);
+            null, eventSinkMock, i18n, null, null, su, importRecordCurator, this.mockSubReconciler);
 
         Map<String, Object> data = new HashMap<String, Object>();
         List<Subscription> subscriptions = new ArrayList<Subscription>();
@@ -935,7 +938,7 @@ public class ImporterTest {
         EventSink eventSinkMock = mock(EventSink.class);
         ImportRecordCurator importRecordCurator = mock(ImportRecordCurator.class);
         Importer importer = new Importer(null, null, null, null, null, null, null, null, config, null,
-            null, eventSinkMock, i18n, null, null, su, importRecordCurator);
+            null, eventSinkMock, i18n, null, null, su, importRecordCurator, this.mockSubReconciler);
 
         Map<String, Object> data = new HashMap<String, Object>();
         data.put("subscriptions", new ArrayList<Subscription>());

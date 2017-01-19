@@ -114,8 +114,8 @@ public class ContentManager {
         log.debug("Creating new content for org: {}, {}", entity, owner);
 
         // Check if we have an alternate version we can use instead.
-        List<Content> alternateVersions = this.contentCurator
-            .getContentByVersion(entity.getId(), entity.getEntityVersion())
+        List<Content> alternateVersions = this.ownerContentCurator.getContentByVersions(
+            owner, Collections.<String, Integer>singletonMap(entity.getId(), entity.getEntityVersion()))
             .list();
 
         log.debug("Checking {} alternate content versions", alternateVersions.size());
@@ -195,8 +195,8 @@ public class ContentManager {
         log.debug("Applying content update for org: {}, {}", entity, owner);
         Content updated = this.applyContentChanges((Content) entity.clone(), update);
 
-        List<Content> alternateVersions = this.contentCurator
-            .getContentByVersion(update.getId(), updated.getEntityVersion())
+        List<Content> alternateVersions = this.ownerContentCurator.getContentByVersions(
+            owner, Collections.<String, Integer>singletonMap(updated.getId(), updated.getEntityVersion()))
             .list();
 
         log.debug("Checking {} alternate content versions", alternateVersions.size());
@@ -379,7 +379,7 @@ public class ContentManager {
             }
         }
 
-        for (Content alt : this.contentCurator.getContentByVersions(contentVersions)) {
+        for (Content alt : this.ownerContentCurator.getContentByVersions(owner, contentVersions)) {
             List<Content> alternates = existingVersions.get(alt.getId());
             if (alternates == null) {
                 alternates = new LinkedList<Content>();
@@ -434,7 +434,7 @@ public class ContentManager {
             List<Content> alternates = existingVersions.get(updated.getId());
             if (alternates != null) {
                 for (Content alt : alternates) {
-                    if (updated.equals(alt)) {
+                    if (!updated.getUuid().equals(alt.getUuid()) && updated.equals(alt)) {
                         updated = alt;
                         entry.setValue(alt);
 
@@ -503,6 +503,7 @@ public class ContentManager {
 
         this.ownerContentCurator.updateOwnerContentReferences(owner, contentUuidMap);
 
+        // Return
         return importResult;
     }
 

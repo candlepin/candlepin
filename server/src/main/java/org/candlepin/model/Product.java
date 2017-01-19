@@ -1140,7 +1140,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
     @Override
     public String toString() {
-        return String.format("Product [id = %s, name = %s]", this.id, this.name);
+        return String.format("Product [uuid: %s, id: %s, name: %s]", this.uuid, this.id, this.name);
     }
 
     @XmlTransient

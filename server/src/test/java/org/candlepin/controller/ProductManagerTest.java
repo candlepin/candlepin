@@ -124,6 +124,12 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertNotEquals(output.getUuid(), product.getUuid());
         assertEquals(output.getName(), update.getName());
 
+        // We expect the original to be kept around as an orphan until the orphan removal job
+        // gets around to removing them
+        assertNotNull(this.productCurator.find(product.getUuid()));
+        assertEquals(0, this.ownerProductCurator.getOwnerCount(product));
+        assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
+
         if (regenCerts) {
             // TODO: Is there a better way to do this? We won't know the exact product instance,
             // we just know that a product should be refreshed as a result of this operation.
@@ -281,7 +287,14 @@ public class ProductManagerTest extends DatabaseTestFixture {
             product, Arrays.asList(content), owner, regenCerts
         );
         assertFalse(output.hasContent(content.getId()));
+
+        // When we change the content associated with a product, we're making a net change to the
+        // product itself, which should trigger the creation of a new product object (since reuse
+        // is currently disabled). The old product will still, temporarily, exist as an orphan
+        // until the orphan cleanup job has a chance to run and remove them.
         assertNotNull(this.productCurator.find(product.getUuid()));
+        assertEquals(0, this.ownerProductCurator.getOwnerCount(product));
+        assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
         assertNotNull(this.contentCurator.find(content.getUuid()));
 
         if (regenCerts) {

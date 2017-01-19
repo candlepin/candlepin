@@ -114,7 +114,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Product prod = new Product("cptest-label", "My Product");
         productCurator.create(prod);
 
-        List<Product> results = entityManager().createQuery("select p from Product as p").getResultList();
+        List<Product> results = this.getEntityManager().createQuery("select p from Product as p")
+            .getResultList();
+
         assertEquals(5, results.size());
     }
 
@@ -251,6 +253,8 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         prod.setName("test-changed-name");
         prod = this.productCurator.merge(prod);
+        this.productCurator.flush();
+
         assertTrue(prod.getUpdated().getTime() > updated);
     }
 

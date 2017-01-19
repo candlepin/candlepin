@@ -26,7 +26,7 @@ import com.google.inject.persist.UnitOfWork;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -147,7 +147,8 @@ public class Refresher {
              * dirty, they will never get regenerated
              */
             Pool masterPool = poolManager.convertToMasterPool(subscription);
-            poolManager.refreshPoolsForMasterPool(masterPool, true, lazy, new HashSet<Product>());
+            poolManager.refreshPoolsForMasterPool(masterPool, true, lazy,
+                Collections.<String, Product>emptyMap());
         }
 
         for (Owner owner : this.owners.values()) {

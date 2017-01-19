@@ -108,11 +108,11 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
 
     public Date getUpdatedFromDB() {
         return (Date) this.currentSession().createCriteria(Rules.class)
-                .setCacheable(true)
-                .setCacheRegion(CandlepinCacheRegions.FIVE_SECONDS_QUERY_CACHE)
-            .setProjection(Projections.projectionList()
-                .add(Projections.max("updated")))
-                .uniqueResult();
+            .setCacheable(true)
+            .setCacheRegion(CandlepinCacheRegions.FIVE_SECONDS_QUERY_CACHE)
+        .setProjection(Projections.projectionList()
+            .add(Projections.max("updated")))
+            .uniqueResult();
     }
 
     /**

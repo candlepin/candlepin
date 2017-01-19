@@ -119,7 +119,6 @@ public class Importer {
         MANIFEST_OLD, MANIFEST_SAME, DISTRIBUTOR_CONFLICT, SIGNATURE_CONFLICT
     }
 
-
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductCurator productCurator;
     private ObjectMapper mapper;
@@ -138,18 +137,15 @@ public class Importer {
     private DistributorVersionCurator distVerCurator;
     private SyncUtils syncUtils;
     private ImportRecordCurator importRecordCurator;
+    private SubscriptionReconciler subscriptionReconciler;
 
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator,
-        RulesImporter rulesImporter, OwnerCurator ownerCurator,
-        IdentityCertificateCurator idCertCurator,
-        ContentCurator contentCurator, PoolManager pm,
-        PKIUtility pki, Configuration config, ExporterMetadataCurator emc,
-        CertificateSerialCurator csc, EventSink sink, I18n i18n,
-        DistributorVersionCurator distVerCurator,
-        CdnCurator cdnCurator,
-        SyncUtils syncUtils,
-        ImportRecordCurator importRecordCurator) {
+        RulesImporter rulesImporter, OwnerCurator ownerCurator, IdentityCertificateCurator idCertCurator,
+        ContentCurator contentCurator, PoolManager pm, PKIUtility pki, Configuration config,
+        ExporterMetadataCurator emc, CertificateSerialCurator csc, EventSink sink, I18n i18n,
+        DistributorVersionCurator distVerCurator, CdnCurator cdnCurator, SyncUtils syncUtils,
+        ImportRecordCurator importRecordCurator, SubscriptionReconciler subscriptionReconciler) {
 
         this.config = config;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -169,6 +165,7 @@ public class Importer {
         this.distVerCurator = distVerCurator;
         this.cdnCurator = cdnCurator;
         this.importRecordCurator = importRecordCurator;
+        this.subscriptionReconciler = subscriptionReconciler;
     }
 
     public ImportRecord loadExport(Owner owner, File archive, ConflictOverrides overrides,
@@ -736,6 +733,9 @@ public class Importer {
                 }
             }
         }
+
+        // Reconcile the subscriptions so they line up with pools we're tracking
+        this.subscriptionReconciler.reconcile(owner, subscriptionsToImport);
 
         return subscriptionsToImport;
     }

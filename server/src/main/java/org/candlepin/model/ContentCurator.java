@@ -19,7 +19,6 @@ import com.google.inject.persist.Transactional;
 
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
@@ -28,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 
 
@@ -71,65 +69,6 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
     public Content lookupByUuid(String uuid) {
         return (Content) currentSession().createCriteria(Content.class).setCacheable(true)
             .add(Restrictions.eq("uuid", uuid)).uniqueResult();
-    }
-
-    /**
-     * Retrieves a criteria which can be used to fetch a list of content with the specified Red Hat
-     * content ID and entity version. If no content were found matching the given criteria, this
-     * method returns an empty list.
-     *
-     * @param contentId
-     *  The Red Hat content ID
-     *
-     * @param hashcode
-     *  The hash code representing the content version
-     *
-     * @return
-     *  a criteria for fetching content by version
-     */
-    @SuppressWarnings("checkstyle:indentation")
-    public CandlepinQuery<Content> getContentByVersion(String contentId, int hashcode) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .add(Restrictions.eq("id", contentId))
-            .add(Restrictions.or(
-                Restrictions.isNull("entityVersion"),
-                Restrictions.eq("entityVersion", hashcode)
-            ));
-
-        return this.cpQueryFactory.<Content>buildQuery(this.currentSession(), criteria);
-    }
-
-    /**
-     * Retrieves a criteria which can be used to fetch a list of content with the specified Red Hat
-     * content ID and entity version. If no content were found matching the given criteria, this
-     * method returns an empty list.
-     *
-     * @param contentVersions
-     *  A mapping of Red Hat content IDs to content versions to fetch
-     *
-     * @return
-     *  a criteria for fetching content by version
-     */
-    @SuppressWarnings("checkstyle:indentation")
-    public CandlepinQuery<Content> getContentByVersions(Map<String, Integer> contentVersions) {
-        if (contentVersions != null && !contentVersions.isEmpty()) {
-            return this.cpQueryFactory.<Content>buildQuery();
-        }
-
-        Disjunction disjunction = Restrictions.disjunction();
-        DetachedCriteria criteria = this.createSecureDetachedCriteria().add(disjunction);
-
-        for (Map.Entry<String, Integer> entry : contentVersions.entrySet()) {
-            disjunction.add(Restrictions.and(
-                Restrictions.eq("id", entry.getKey()),
-                Restrictions.or(
-                    Restrictions.isNull("entityVersion"),
-                    Restrictions.eq("entityVersion", entry.getValue())
-                )
-            ));
-        }
-
-        return this.cpQueryFactory.<Content>buildQuery(this.currentSession(), criteria);
     }
 
     /**

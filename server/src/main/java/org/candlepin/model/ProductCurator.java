@@ -25,7 +25,6 @@ import com.google.inject.persist.Transactional;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
@@ -256,65 +255,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         }
 
         return productsByUuid;
-    }
-
-    /**
-     * Retrieves a criteria which can be used to fetch a list of products with the specified Red
-     * Hat product ID and entity version. If no products were found matching the given criteria,
-     * this method returns an empty list.
-     *
-     * @param productId
-     *  The Red Hat product ID
-     *
-     * @param hashcode
-     *  The hash code representing the product version
-     *
-     * @return
-     *  a criteria for fetching product by version
-     */
-    @SuppressWarnings("checkstyle:indentation")
-    public CandlepinQuery<Product> getProductsByVersion(String productId, int hashcode) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .add(Restrictions.eq("id", productId))
-            .add(Restrictions.or(
-                Restrictions.isNull("entityVersion"),
-                Restrictions.eq("entityVersion", hashcode)
-            ));
-
-        return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
-    }
-
-    /**
-     * Retrieves a criteria which can be used to fetch a list of products with the specified Red Hat
-     * product ID and entity version. If no products were found matching the given criteria, this
-     * method returns an empty list.
-     *
-     * @param productVersions
-     *  A mapping of Red Hat product IDs to product versions to fetch
-     *
-     * @return
-     *  a criteria for fetching products by version
-     */
-    @SuppressWarnings("checkstyle:indentation")
-    public CandlepinQuery<Product> getProductByVersions(Map<String, Integer> productVersions) {
-        if (productVersions == null || productVersions.isEmpty()) {
-            return this.cpQueryFactory.<Product>buildQuery();
-        }
-
-        Disjunction disjunction = Restrictions.disjunction();
-        DetachedCriteria criteria = this.createSecureDetachedCriteria().add(disjunction);
-
-        for (Map.Entry<String, Integer> entry : productVersions.entrySet()) {
-            disjunction.add(Restrictions.and(
-                Restrictions.eq("id", entry.getKey()),
-                Restrictions.or(
-                    Restrictions.isNull("entityVersion"),
-                    Restrictions.eq("entityVersion", entry.getValue())
-                )
-            ));
-        }
-
-        return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
     }
 
     // TODO:

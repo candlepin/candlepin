@@ -22,6 +22,8 @@ import org.hibernate.criterion.Order;
 import java.util.List;
 import java.util.Iterator;
 
+import javax.persistence.LockModeType;
+
 
 
 /**
@@ -85,6 +87,18 @@ public interface CandlepinQuery<T> extends Iterable<T> {
      *  this query instance
      */
     CandlepinQuery<T> addOrder(Order order);
+
+    /**
+     * Sets the locking mode for the query. The lock mode will be applied to the database rows
+     * representing the entities returned by this query.
+     *
+     * @param lockMode
+     *  The lock mode to apply when executing this query
+     *
+     * @return
+     *  this query instance
+     */
+    CandlepinQuery<T> setLockMode(LockModeType lockMode);
 
     /**
      * Returns a CandlepinQuery instance that transforms the results using the given element

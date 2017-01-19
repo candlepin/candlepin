@@ -811,6 +811,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         for (Entitlement entitlement : entitlements) {
             this.entitlementCurator.merge(entitlement);
         }
+        this.poolCurator.flush();
 
         this.poolManager.cleanupExpiredPools();
 

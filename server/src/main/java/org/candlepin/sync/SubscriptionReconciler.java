@@ -20,6 +20,8 @@ import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.dto.Subscription;
 
+import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +49,13 @@ import java.util.Set;
 public class SubscriptionReconciler {
 
     private static Logger log = LoggerFactory.getLogger(SubscriptionReconciler.class);
+
+    private PoolCurator poolCurator;
+
+    @Inject
+    public SubscriptionReconciler(PoolCurator poolCurator) {
+        this.poolCurator = poolCurator;
+    }
 
     /**
      *  Reconciles incoming entitlements to existing pools to attempt to limit
@@ -77,17 +86,12 @@ public class SubscriptionReconciler {
      * @param subsToImport
      *  A collection of subscriptions which are being imported
      *
-     * @param poolCurator
-     *  The PoolCurator to use for pool lookup and resolution
-     *
      * @return
      *  The collection of reconciled subscriptions
      */
-    public Collection<Subscription> reconcile(Owner owner, Collection<Subscription> subsToImport,
-        PoolCurator poolCurator) {
+    public Collection<Subscription> reconcile(Owner owner, Collection<Subscription> subsToImport) {
 
-        Map<String, Map<String, Pool>> existingPoolsByUpstreamPool =
-            mapPoolsByUpstreamPool(owner, poolCurator);
+        Map<String, Map<String, Pool>> existingPoolsByUpstreamPool = this.mapPoolsByUpstreamPool(owner);
 
         // if we can match to the entitlement id do it.
         // we need a new list to hold the ones that are left
@@ -187,12 +191,12 @@ public class SubscriptionReconciler {
     /*
      * Maps upstream pool ID to a map of upstream entitlement ID to Subscription.
      */
-    private Map<String, Map<String, Pool>> mapPoolsByUpstreamPool(Owner owner, PoolCurator poolCurator) {
+    private Map<String, Map<String, Pool>> mapPoolsByUpstreamPool(Owner owner) {
         Map<String, Map<String, Pool>> existingSubsByUpstreamPool = new HashMap<String, Map<String, Pool>>();
 
         int idx = 0;
 
-        for (Pool p : poolCurator.listByOwnerAndType(owner, PoolType.NORMAL)) {
+        for (Pool p : this.poolCurator.listByOwnerAndType(owner, PoolType.NORMAL)) {
             // if the upstream pool id is null,
             // this must be a locally controlled sub.
             if (p.getUpstreamPoolId() == null) {

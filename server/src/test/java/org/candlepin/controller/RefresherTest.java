@@ -33,7 +33,9 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+
+
 
 /**
  * RefresherTest
@@ -114,7 +116,7 @@ public class RefresherTest {
 
         verify(poolManager, times(1)).refreshPoolsWithRegeneration(eq(subAdapter), eq(owner), eq(false));
         verify(poolManager, times(0)).updatePoolsForMasterPool(any(List.class),
-            any(Pool.class), eq(pool.getQuantity()), eq(false), any(Set.class));
+            any(Pool.class), eq(pool.getQuantity()), eq(false), any(Map.class));
     }
 
     @Test
@@ -153,6 +155,6 @@ public class RefresherTest {
         refresher.run();
 
         verify(poolManager, times(1)).refreshPoolsForMasterPool(eq(mainPool), eq(true), eq(false),
-            any(Set.class));
+            any(Map.class));
     }
 }

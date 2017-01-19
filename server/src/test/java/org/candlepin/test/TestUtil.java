@@ -55,11 +55,15 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+
+
 
 /**
  * TestUtil for creating various testing objects. Objects backed by the database
@@ -629,10 +633,10 @@ public class TestUtil {
         }
     }
 
-    public static Set<Product> stubChangedProducts(Product ... products) {
-        Set<Product> result = new HashSet<Product>();
+    public static Map<String, Product> stubChangedProducts(Product ... products) {
+        Map<String, Product> result = new HashMap<String, Product>();
         for (Product p : products) {
-            result.add(p);
+            result.put(p.getId(), p);
         }
         return result;
     }

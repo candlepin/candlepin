@@ -143,6 +143,17 @@ public class ContentManagerTest extends DatabaseTestFixture {
         assertNotEquals(output.getUuid(), content.getUuid());
         assertEquals(output.getName(), update.getName());
 
+        // We expect the original to be kept around as an orphan until the orphan removal job
+        // gets around to removing them
+        assertNotNull(this.contentCurator.find(content.getUuid()));
+        assertEquals(0, this.ownerContentCurator.getOwnerCount(content));
+        assertNotNull(this.ownerContentCurator.getContentById(owner, content.getId()));
+
+        // The product should have also changed in the same way as a result of the content change
+        assertNotNull(this.productCurator.find(product.getUuid()));
+        assertEquals(0, this.ownerProductCurator.getOwnerCount(product));
+        assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
+
         if (regenCerts) {
             verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
                 eq(Arrays.asList(owner)), anyCollectionOf(Product.class), anyBoolean()

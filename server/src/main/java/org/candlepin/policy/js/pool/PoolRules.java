@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -234,7 +235,7 @@ public class PoolRules {
      * @param floatingPools pools with no subscription ID
      * @return pool updates
      */
-    public List<PoolUpdate> updatePools(List<Pool> floatingPools, Set<Product> changedProducts) {
+    public List<PoolUpdate> updatePools(List<Pool> floatingPools, Map<String, Product> changedProducts) {
         List<PoolUpdate> updates = new LinkedList<PoolUpdate>();
         for (Pool p : floatingPools) {
 
@@ -263,7 +264,7 @@ public class PoolRules {
     }
 
     public List<PoolUpdate> updatePools(Pool masterPool, List<Pool> existingPools, Long originalQuantity,
-        Set<Product> changedProducts) {
+        Map<String, Product> changedProducts) {
         //local.setCertificate(subscription.getCertificate());
 
         log.debug("Refreshing pools for existing master pool: {}", masterPool);
@@ -334,7 +335,7 @@ public class PoolRules {
      * @param changedProducts
      * @return pool update specifics
      */
-    public PoolUpdate updatePoolFromStack(Pool pool, Set<Product> changedProducts) {
+    public PoolUpdate updatePoolFromStack(Pool pool, Map<String, Product> changedProducts) {
         List<Entitlement> stackedEnts = this.entCurator
             .findByStackId(pool.getSourceConsumer(), pool.getSourceStackId())
             .list();
@@ -386,7 +387,7 @@ public class PoolRules {
             List<Entitlement> entitlements = entitlementMap.get(pool.getSourceStackId());
             if (CollectionUtils.isNotEmpty(entitlements)) {
                 result.add(this.updatePoolFromStackedEntitlements(pool, entitlements,
-                    new HashSet<Product>()));
+                    Collections.<String, Product>emptyMap()));
             }
             else if (deleteIfNoStackedEnts) {
                 poolsToDelete.add(pool);
@@ -401,7 +402,7 @@ public class PoolRules {
     }
 
     public PoolUpdate updatePoolFromStackedEntitlements(Pool pool, List<Entitlement> stackedEnts,
-        Set<Product> changedProducts) {
+        Map<String, Product> changedProducts) {
         PoolUpdate update = new PoolUpdate(pool);
 
         // Nothing to do if there were no entitlements found.
@@ -531,7 +532,7 @@ public class PoolRules {
     }
 
     private boolean checkForChangedProducts(Product incomingProduct, Set<Product> incomingProvided,
-        Pool existingPool, Set<Product> changedProducts) {
+        Pool existingPool, Map<String, Product> changedProducts) {
 
         Product existingProduct = existingPool.getProduct();
         Set<Product> currentProvided = productCurator.getPoolProvidedProductsCached(existingPool);
@@ -545,12 +546,7 @@ public class PoolRules {
 
         // Check if the existing product is in the set of changed products
         if (!productsChanged && changedProducts != null && pid != null) {
-            for (Product product : changedProducts) {
-                if (pid.equals(product.getId())) {
-                    productsChanged = true;
-                    break;
-                }
-            }
+            productsChanged = (changedProducts.get(pid) != null);
         }
 
         if (productsChanged) {
@@ -562,19 +558,19 @@ public class PoolRules {
     }
 
     private boolean checkForChangedDerivedProducts(Pool pool, Pool existingPool,
-        Set<Product> changedProducts) {
+        Map<String, Product> changedProducts) {
 
         boolean productsChanged = false;
         if (pool.getDerivedProduct() != null) {
             productsChanged = !pool.getDerivedProduct().getId()
-                    .equals(existingPool.getDerivedProduct().getId());
+                .equals(existingPool.getDerivedProduct().getId());
+
             productsChanged = productsChanged ||
-                    (changedProducts != null && changedProducts.contains(pool.getDerivedProduct()));
+                (changedProducts != null && changedProducts.containsKey(pool.getDerivedProduct().getId()));
         }
 
         // Build expected set of ProvidedProducts and compare:
-        Set<Product> currentProvided = productCurator
-            .getPoolDerivedProvidedProductsCached(existingPool);
+        Set<Product> currentProvided = productCurator.getPoolDerivedProvidedProductsCached(existingPool);
         Set<Product> incomingProvided = new HashSet<Product>();
 
         /**
@@ -586,6 +582,7 @@ public class PoolRules {
                 incomingProvided.add(p);
             }
         }
+
         productsChanged = productsChanged || !currentProvided.equals(incomingProvided);
 
         if (productsChanged) {
@@ -605,19 +602,19 @@ public class PoolRules {
                 existingPool.getDerivedProvidedProducts().addAll(incomingProvided);
             }
         }
+
         return productsChanged;
     }
 
     private boolean checkForDateChange(Date start, Date end, Pool existingPool) {
-
-        boolean datesChanged = (!start.equals(
-            existingPool.getStartDate())) ||
+        boolean datesChanged = (!start.equals(existingPool.getStartDate())) ||
             (!end.equals(existingPool.getEndDate()));
 
         if (datesChanged) {
             existingPool.setStartDate(start);
             existingPool.setEndDate(end);
         }
+
         return datesChanged;
     }
 

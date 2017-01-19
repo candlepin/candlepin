@@ -16,8 +16,10 @@ package org.candlepin.model;
 
 import com.google.inject.persist.Transactional;
 
+import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
@@ -319,6 +321,100 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
             .createQuery(jpql)
             .setParameter("owner_id", owner.getId())
             .executeUpdate();
+    }
+
+    /**
+     * Retrieves a criteria which can be used to fetch a list of content with the specified Red Hat
+     * content ID and entity version belonging to owners other than the owner provided. If no
+     * content were found matching the given criteria, this method returns an empty list.
+     *
+     * @param owner
+     *  The owner whose content should be excluded from the results. If an owner is not provided,
+     *  no additional filtering will be performed.
+     *
+     * @param contentVersions
+     *  A mapping of Red Hat content IDs to content versions to fetch
+     *
+     * @return
+     *  a criteria for fetching content by version
+     */
+    @SuppressWarnings("checkstyle:indentation")
+    public CandlepinQuery<Content> getContentByVersions(Owner owner, Map<String, Integer> contentVersions) {
+        if (contentVersions == null || contentVersions.isEmpty()) {
+            return this.cpQueryFactory.<Content>buildQuery();
+        }
+
+        // Impl note:
+        // We perform this operation with two queries here to optimize out some unnecessary queries
+        // when pulling content information. Even when pulling content in a batch, Hibernate will
+        // pull the content collections (modified product IDs) as a separate query for each content
+        // (ugh). By breaking this into two queries -- one for getting the content UUIDs and one
+        // for pulling the actual content -- we will save upwards of two DB hits per content
+        // filtered. We will lose time in the cases where we don't filter any content, or the
+        // content we filter don't have any data in their collections; but we're only using one
+        // additional query in those cases, versus n additional in the normal case.
+
+        Disjunction disjunction = Restrictions.disjunction();
+        Criteria uuidCriteria = this.createSecureCriteria("oc")
+            .createAlias("oc.content", "c")
+            .add(disjunction)
+            .setProjection(Projections.property("c.uuid"));
+
+        for (Map.Entry<String, Integer> entry : contentVersions.entrySet()) {
+            disjunction.add(Restrictions.and(
+                Restrictions.eq("c.id", entry.getKey()),
+                Restrictions.or(
+                    Restrictions.isNull("c.entityVersion"),
+                    Restrictions.eq("c.entityVersion", entry.getValue())
+                )
+            ));
+        }
+
+        if (owner != null) {
+            uuidCriteria.add(Restrictions.not(Restrictions.eq("oc.owner", owner)));
+        }
+
+        List<String> uuids = uuidCriteria.list();
+
+        if (uuids != null && !uuids.isEmpty()) {
+            DetachedCriteria criteria = this.createSecureDetachedCriteria(Content.class, null)
+                .add(CPRestrictions.in("uuid", uuids));
+
+            return this.cpQueryFactory.<Content>buildQuery(this.currentSession(), criteria);
+        }
+
+        return this.cpQueryFactory.<Content>buildQuery();
+    }
+
+    /**
+     * Builds a query which can be used to fetch the current collection of orphaned content. Due
+     * to the nature of this request, it is highly advised that this query be run within a
+     * transaction, with a pessimistic lock mode set.
+     *
+     * @return
+     *  A CandlepinQuery for fetching the orphaned content
+     */
+    public CandlepinQuery<Content> getOrphanedContent() {
+        // As with many of the owner=>content lookups, we have to do this in two queries. Since
+        // we need to start from content and do a left join back to owner content, we have to use
+        // a native query instead of any of the ORM query languages
+
+        String sql = "SELECT c.uuid " +
+            "FROM cp2_content c LEFT JOIN cp2_owner_content oc ON c.uuid = oc.content_uuid " +
+            "WHERE oc.owner_id IS NULL";
+
+        List<String> uuids = this.getEntityManager()
+            .createNativeQuery(sql)
+            .getResultList();
+
+        if (uuids != null && !uuids.isEmpty()) {
+            DetachedCriteria criteria = DetachedCriteria.forClass(Content.class)
+                .add(CPRestrictions.in("uuid", uuids));
+
+            return this.cpQueryFactory.<Content>buildQuery(this.currentSession(), criteria);
+        }
+
+        return this.cpQueryFactory.<Content>buildQuery();
     }
 
     /**

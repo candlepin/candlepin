@@ -70,7 +70,7 @@ public class SubscriptionReconcilerTest {
     @Before
     public void init() {
         this.owner = new Owner();
-        this.reconciler = new SubscriptionReconciler();
+        this.reconciler = new SubscriptionReconciler(this.poolCurator);
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.importer = new EntitlementImporter(certSerialCurator, cdnCurator, i18n, pc);
@@ -112,7 +112,7 @@ public class SubscriptionReconcilerTest {
         Subscription testSub1 = createSubscription(owner, "test-prod-1", "up1", "ue1", "uc1", 25);
         createPoolsFor(testSub1);
 
-        reconciler.reconcile(owner, Arrays.asList(testSub1), poolCurator);
+        reconciler.reconcile(owner, Arrays.asList(testSub1));
 
         assertUpstream(testSub1, testSub1.getId());
     }
@@ -124,7 +124,7 @@ public class SubscriptionReconcilerTest {
 
         createPoolsFor(testSub2);
 
-        reconciler.reconcile(owner, Arrays.asList(testSub2, testSub3), poolCurator);
+        reconciler.reconcile(owner, Arrays.asList(testSub2, testSub3));
         assertUpstream(testSub2, testSub2.getId());
         assertUpstream(testSub3, testSub3.getId());
     }
@@ -136,7 +136,7 @@ public class SubscriptionReconcilerTest {
 
         createPoolsFor(testSub2, testSub3);
 
-        reconciler.reconcile(owner, Arrays.asList(testSub3), poolCurator);
+        reconciler.reconcile(owner, Arrays.asList(testSub3));
         assertUpstream(testSub3, testSub3.getId());
     }
 
@@ -149,7 +149,7 @@ public class SubscriptionReconcilerTest {
 
         createPoolsFor(testSub2, testSub3, testSub4);
 
-        reconciler.reconcile(owner, Arrays.asList(testSub2, testSub4, testSub5), poolCurator);
+        reconciler.reconcile(owner, Arrays.asList(testSub2, testSub4, testSub5));
         assertUpstream(testSub2, testSub2.getId());
         assertUpstream(testSub4, testSub4.getId());
         // Should assume subscription 3's ID:
@@ -168,7 +168,7 @@ public class SubscriptionReconcilerTest {
 
         createPoolsFor(testSub3, testSub4, testSub5);
 
-        reconciler.reconcile(owner, Arrays.asList(testSub6, testSub7, testSub8), poolCurator);
+        reconciler.reconcile(owner, Arrays.asList(testSub6, testSub7, testSub8));
         assertUpstream(testSub6, testSub3.getId());
         assertUpstream(testSub7, testSub4.getId());
         assertUpstream(testSub8, testSub5.getId());
@@ -184,7 +184,7 @@ public class SubscriptionReconcilerTest {
 
         createPoolsFor(testSub3, testSub4, testSub5);
 
-        reconciler.reconcile(owner, Arrays.asList(testSub6, testSub8), poolCurator);
+        reconciler.reconcile(owner, Arrays.asList(testSub6, testSub8));
         assertUpstream(testSub6, testSub3.getId());
         assertUpstream(testSub8, testSub5.getId());
     }
@@ -199,7 +199,7 @@ public class SubscriptionReconcilerTest {
 
         createPoolsFor(testSub3, testSub4);
 
-        reconciler.reconcile(owner, Arrays.asList(testSub6, testSub7, testSub8), poolCurator);
+        reconciler.reconcile(owner, Arrays.asList(testSub6, testSub7, testSub8));
         assertUpstream(testSub6, testSub3.getId());
         assertUpstream(testSub7, testSub4.getId());
         assertUpstream(testSub8, testSub8.getId());
@@ -216,7 +216,7 @@ public class SubscriptionReconcilerTest {
 
         createPoolsFor(testSub9, testSub10, testSub11);
 
-        reconciler.reconcile(owner, Arrays.asList(testSub3, testSub4, testSub5), poolCurator);
+        reconciler.reconcile(owner, Arrays.asList(testSub3, testSub4, testSub5));
         assertUpstream(testSub3, testSub9.getId());
         assertUpstream(testSub4, testSub10.getId());
         assertUpstream(testSub5, testSub11.getId());
@@ -233,7 +233,7 @@ public class SubscriptionReconcilerTest {
 
         createPoolsFor(testSub1, testSub2, testSub3);
 
-        reconciler.reconcile(owner, Arrays.asList(testSub12, testSub13, testSub14), poolCurator);
+        reconciler.reconcile(owner, Arrays.asList(testSub12, testSub13, testSub14));
 
         // Quantities 25, 20, 15 should be replaced by new pools with 23, 17, 10:
         assertUpstream(testSub12, testSub1.getId());
@@ -252,7 +252,7 @@ public class SubscriptionReconcilerTest {
 
         createPoolsFor(testSub2, testSub3, testSub4, testSub5);
 
-        reconciler.reconcile(owner, Arrays.asList(testSub12, testSub14), poolCurator);
+        reconciler.reconcile(owner, Arrays.asList(testSub12, testSub14));
 
         assertUpstream(testSub12, testSub2.getId());
         assertUpstream(testSub14, testSub4.getId());
@@ -266,7 +266,7 @@ public class SubscriptionReconcilerTest {
 
         createPoolsFor(testSub3, testSub15);
 
-        reconciler.reconcile(owner, Arrays.asList(testSub3, testSub16), poolCurator);
+        reconciler.reconcile(owner, Arrays.asList(testSub3, testSub16));
 
         // Quantities 25, 20, 15 should be replaced by new pools with 23, 17, 10:
         assertUpstream(testSub3, testSub3.getId());
@@ -294,7 +294,7 @@ public class SubscriptionReconcilerTest {
             testSub24);
 
         reconciler.reconcile(owner, Arrays.asList(testSub1, testSub2, testSub3, testSub4, testSub5, testSub30,
-            testSub31, testSub32, testSub33, testSub34), poolCurator);
+            testSub31, testSub32, testSub33, testSub34));
 
         // 20-24 have no matchup with 30-34 due to different upstream pool ID:
         assertUpstream(testSub1, testSub1.getId());

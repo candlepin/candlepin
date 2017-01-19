@@ -73,6 +73,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
         assertFalse("valid".equals(consumer.getEntitlementStatus()));
 
         job.toExecute(null);
+        consumerCurator.flush();
         consumerCurator.refresh(consumer);
         assertEquals("valid", consumer.getEntitlementStatus());
 

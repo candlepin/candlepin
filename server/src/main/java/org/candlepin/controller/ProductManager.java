@@ -113,8 +113,8 @@ public class ProductManager {
         log.debug("Creating new product for org: {}, {}", entity, owner);
 
         // Check if we have an alternate version we can use instead.
-        List<Product> alternateVersions = this.productCurator
-            .getProductsByVersion(entity.getId(), entity.getEntityVersion())
+        List<Product> alternateVersions = this.ownerProductCurator.getProductsByVersions(
+            owner, Collections.<String, Integer>singletonMap(entity.getId(), entity.getEntityVersion()))
             .list();
 
         for (Product alt : alternateVersions) {
@@ -193,8 +193,8 @@ public class ProductManager {
         // the caller), we can just point the given orgs to the new product instead of giving them
         // their own version.
         // This is probably going to be a very expensive operation, though.
-        List<Product> alternateVersions = this.productCurator
-            .getProductsByVersion(update.getId(), updated.getEntityVersion())
+        List<Product> alternateVersions = this.ownerProductCurator.getProductsByVersions(
+            owner, Collections.<String, Integer>singletonMap(updated.getId(), updated.getEntityVersion()))
             .list();
 
         log.debug("Checking {} alternate product versions", alternateVersions.size());
@@ -331,7 +331,7 @@ public class ProductManager {
             }
         }
 
-        for (Product alt : this.productCurator.getProductByVersions(productVersions)) {
+        for (Product alt : this.ownerProductCurator.getProductsByVersions(owner, productVersions)) {
             List<Product> alternates = existingVersions.get(alt.getId());
             if (alternates == null) {
                 alternates = new LinkedList<Product>();
@@ -417,9 +417,9 @@ public class ProductManager {
 
         this.ownerProductCurator.updateOwnerProductReferences(owner, productUuidMap);
 
+        // Return
         return importResult;
     }
-
 
     /**
      * Removes the specified product from the given owner. If the product is in use by multiple

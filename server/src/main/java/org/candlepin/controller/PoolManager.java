@@ -232,10 +232,11 @@ public interface PoolManager {
     /**
      * Updates the pool based on the entitlements in the specified stack.
      * @param pool
+     * @param changedProducts
      *
      * @return pool update specifics
      */
-    PoolUpdate updatePoolFromStack(Pool pool, Set<Product> changedProducts);
+    PoolUpdate updatePoolFromStack(Pool pool, Map<String, Product> changedProducts);
 
     /**
      * Updates the pools based on the entitlements in the specified stack.

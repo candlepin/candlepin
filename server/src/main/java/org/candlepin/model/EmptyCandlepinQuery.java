@@ -23,6 +23,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import javax.persistence.LockModeType;
+
 
 
 /**
@@ -116,6 +118,19 @@ public class EmptyCandlepinQuery<T> implements CandlepinQuery<T> {
      */
     @Override
     public CandlepinQuery<T> addOrder(Order order) {
+        return this;
+    }
+
+    /**
+     * Returns a reference to this CandlepinQuery instance.
+     *
+     * @param lockMode
+     *
+     * @return
+     *  this query instance
+     */
+    @Override
+    public CandlepinQuery<T> setLockMode(LockModeType lockMode) {
         return this;
     }
 

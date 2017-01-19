@@ -64,7 +64,6 @@ import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.sync.SubscriptionReconciler;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -199,21 +198,20 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Resolve all our subscriptions, products and content to ensure we don't have bad or
         // duplicate inbound data
-
-        SubscriptionReconciler reconciler = new SubscriptionReconciler();
-        for (Subscription subscription : reconciler.reconcile(owner, subAdapter.getSubscriptions(owner),
-            poolCurator)) {
-
+        for (Subscription subscription : subAdapter.getSubscriptions(owner)) {
             if (subscription == null) {
                 continue;
             }
 
-            // At present, we should be safe from invalid subscriptions, as the reconciler should
-            // be handling validation and reconciliation for us.
+            if (subscription.getId() == null) {
+                log.error("subscription does not contain a mappable ID: {}", subscription);
+                throw new IllegalStateException("subscription does not contain a mappable ID: " +
+                    subscription);
+            }
 
             Subscription existingSub = subscriptionMap.get(subscription.getId());
             if (existingSub != null && !existingSub.equals(subscription)) {
-                log.warn("WARNING: Multiple versions of the same subscription received during refresh; " +
+                log.warn("Multiple versions of the same subscription received during refresh; " +
                     "discarding duplicate: {} => {}, {}", subscription.getId(), existingSub, subscription);
 
                 continue;
@@ -236,7 +234,7 @@ public class CandlepinPoolManager implements PoolManager {
                 }
 
                 if (product.getId() == null) {
-                    log.error("ERROR: product does not contain a mappable Red Hat ID: {}", product);
+                    log.error("product does not contain a mappable Red Hat ID: {}", product);
                     throw new IllegalStateException("product does not contain a mappable Red Hat ID: " +
                         product);
                 }
@@ -247,7 +245,7 @@ public class CandlepinPoolManager implements PoolManager {
 
                 ProductData existingProduct = productMap.get(product.getId());
                 if (existingProduct != null && !existingProduct.equals(product)) {
-                    log.warn("WARNING: Multiple versions of the same product received during refresh; " +
+                    log.warn("Multiple versions of the same product received during refresh; " +
                         "discarding duplicate: {} => {}, {}", product.getId(), existingProduct, product);
                 }
                 else {
@@ -264,8 +262,7 @@ public class CandlepinPoolManager implements PoolManager {
                             // check for, and throw out, such mappings
 
                             if (pcd == null) {
-                                log.error(
-                                    "ERROR: product contains a null product-content mapping: {}", product);
+                                log.error("product contains a null product-content mapping: {}", product);
                                 throw new IllegalStateException(
                                     "product contains a null product-content mapping: " + product);
                             }
@@ -275,8 +272,8 @@ public class CandlepinPoolManager implements PoolManager {
                             // Do some simple mapping validation. Our import method will handle minimal
                             // population validation for us.
                             if (content == null || content.getId() == null) {
-                                log.error("ERROR: product contains a null or incomplete product-content " +
-                                    "mapping: {}", product);
+                                log.error("product contains a null or incomplete product-content mapping: {}",
+                                    product);
                                 throw new IllegalStateException("product contains a null or incomplete " +
                                     "product-content mapping: " + product);
                             }
@@ -286,8 +283,8 @@ public class CandlepinPoolManager implements PoolManager {
 
                             ContentData existingContent = contentMap.get(content.getId());
                             if (existingContent != null && !existingContent.equals(content)) {
-                                log.warn("WARNING: Multiple versions of the same content received during " +
-                                    "refresh; discarding duplicate: {} => {}, {}",
+                                log.warn("Multiple versions of the same content received during refresh; " +
+                                    "discarding duplicate: {} => {}, {}",
                                     content.getId(), existingContent, content
                                 );
                             }
@@ -318,8 +315,7 @@ public class CandlepinPoolManager implements PoolManager {
             .importProducts(owner, productMap, importedContent);
 
         Map<String, Product> importedProducts = importResult.getImportedEntities();
-        Set<Product> changedProducts = new HashSet<Product>();
-        changedProducts.addAll(importResult.getUpdatedEntities().values());
+        Map<String, Product> updatedProducts = importResult.getUpdatedEntities();
 
         log.debug("Refreshing {} pool(s)...", subscriptionMap.size());
         Iterator<Map.Entry<String, Subscription>> subsIterator = subscriptionMap.entrySet().iterator();
@@ -337,7 +333,7 @@ public class CandlepinPoolManager implements PoolManager {
             log.debug("Processing subscription: {}", sub);
 
             Pool pool = this.convertToMasterPoolImpl(sub, owner, importedProducts);
-            this.refreshPoolsForMasterPool(pool, false, lazy, changedProducts);
+            this.refreshPoolsForMasterPool(pool, false, lazy, updatedProducts);
         }
 
         Pool ueberPool = this.findUeberPool(owner);
@@ -359,7 +355,7 @@ public class CandlepinPoolManager implements PoolManager {
         // TODO: break this call into smaller pieces. There may be lots of floating pools
         log.debug("Updating floating pools...");
         List<Pool> floatingPools = poolCurator.getOwnersFloatingPools(owner);
-        updateFloatingPools(floatingPools, lazy, changedProducts);
+        updateFloatingPools(floatingPools, lazy, updatedProducts);
 
         log.info("Refresh pools for owner: {} completed in: {}ms", owner.getKey(),
             System.currentTimeMillis() - start);
@@ -396,7 +392,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Transactional
     void refreshPoolsForMasterPool(Pool pool, boolean updateStackDerived, boolean lazy,
-        Set<Product> changedProducts) {
+        Map<String, Product> changedProducts) {
 
         // These don't all necessarily belong to this owner
         List<Pool> subscriptionPools = poolCurator.getPoolsBySubscriptionId(pool.getSubscriptionId());
@@ -404,6 +400,28 @@ public class CandlepinPoolManager implements PoolManager {
         if (log.isDebugEnabled()) {
             for (Pool p : subscriptionPools) {
                 log.debug("    owner={} - {}", p.getOwner().getKey(), p);
+            }
+        }
+
+        // Update product references on the pools, I guess
+        // TODO: Should this be performed by poolRules? Seems like that should be a thing.
+        for (Pool subPool : subscriptionPools) {
+            Product product = subPool.getProduct();
+            if (product != null) {
+                Product update = changedProducts.get(product.getId());
+
+                if (update != null) {
+                    subPool.setProduct(update);
+                }
+            }
+
+            product = subPool.getDerivedProduct();
+            if (product != null) {
+                Product update = changedProducts.get(product.getId());
+
+                if (update != null) {
+                    subPool.setDerivedProduct(update);
+                }
             }
         }
 
@@ -556,7 +574,7 @@ public class CandlepinPoolManager implements PoolManager {
      *        derived pools
      */
     Set<String> updatePoolsForMasterPool(List<Pool> existingPools, Pool pool, Long originalQuantity,
-        boolean updateStackDerived, Set<Product> changedProducts) {
+        boolean updateStackDerived, Map<String, Product> changedProducts) {
 
         /*
          * Rules need to determine which pools have changed, but the Java must
@@ -648,8 +666,7 @@ public class CandlepinPoolManager implements PoolManager {
             if (updatedPool.getDatesChanged() ||
                 updatedPool.getProductsChanged() ||
                 updatedPool.getBrandingChanged()) {
-                List<String> entitlements = poolCurator
-                    .retrieveFreeEntitlementIdsOfPool(existingPool, true);
+                List<String> entitlements = poolCurator.retrieveFreeEntitlementIdsOfPool(existingPool, true);
                 entitlementsToRegen.addAll(entitlements);
             }
 
@@ -673,7 +690,7 @@ public class CandlepinPoolManager implements PoolManager {
      * @return
      */
     @Transactional
-    void updateFloatingPools(List<Pool> floatingPools, boolean lazy, Set<Product> changedProducts) {
+    void updateFloatingPools(List<Pool> floatingPools, boolean lazy, Map<String, Product> changedProducts) {
         /*
          * Rules need to determine which pools have changed, but the Java must
          * send out the events. Create an event for each pool that could change,
@@ -697,12 +714,12 @@ public class CandlepinPoolManager implements PoolManager {
      */
     @Override
     public List<Pool> createAndEnrichPools(Subscription sub) {
-        return createAndEnrichPools(sub, new LinkedList<Pool>());
+        return createAndEnrichPools(sub, Collections.<Pool>emptyList());
     }
 
     public List<Pool> createAndEnrichPools(Subscription sub, List<Pool> existingPools) {
         List<Pool> pools = poolRules.createAndEnrichPools(sub, existingPools);
-        log.debug("Creating {} pools for subscription: ", pools.size());
+        log.debug("Creating {} pools for subscription: {}", pools.size(), sub);
         for (Pool pool : pools) {
             createPool(pool);
         }
@@ -712,7 +729,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public Pool createAndEnrichPools(Pool pool) {
-        return createAndEnrichPools(pool, new LinkedList<Pool>());
+        return createAndEnrichPools(pool, Collections.<Pool>emptyList());
     }
 
     @Override
@@ -766,7 +783,7 @@ public class CandlepinPoolManager implements PoolManager {
             this.deletePoolsForSubscriptions(subscriptions);
         }
         else {
-            this.refreshPoolsForMasterPool(pool, false, true, Collections.<Product>emptySet());
+            this.refreshPoolsForMasterPool(pool, false, true, Collections.<String, Product>emptyMap());
         }
     }
 
@@ -2320,7 +2337,7 @@ public class CandlepinPoolManager implements PoolManager {
         return poolCurator.listByOwner(owner);
     }
 
-    public PoolUpdate updatePoolFromStack(Pool pool, Set<Product> changedProducts) {
+    public PoolUpdate updatePoolFromStack(Pool pool, Map<String, Product> changedProducts) {
         return poolRules.updatePoolFromStack(pool, changedProducts);
     }
 
