@@ -57,6 +57,7 @@ public class ConsumerExporterTest {
         consumer.setUuid("test-uuid");
         consumer.setName("testy consumer");
         consumer.setType(ctype);
+        consumer.setContentAccessMode("access_mode");
 
         exporter.export(mapper, writer, consumer, "/subscriptions", "/candlepin");
 
@@ -69,7 +70,8 @@ public class ConsumerExporterTest {
         json.append("\"manifest\":").append(ctype.isManifest()).append("},");
         json.append("\"owner\":null,");
         json.append("\"urlWeb\":\"/subscriptions\",");
-        json.append("\"urlApi\":\"/candlepin\"}");
+        json.append("\"urlApi\":\"/candlepin\",");
+        json.append("\"contentAccessMode\":\"access_mode\"}");
         assertTrue(TestUtil.isJsonEqual(json.toString(), writer.toString()));
 
         // change sibling order to ensure that isJsonEqual can reconcile
@@ -82,7 +84,8 @@ public class ConsumerExporterTest {
         json.append("\"owner\":null,");
         json.append("\"name\":\"").append(consumer.getName()).append("\",");
         json.append("\"urlApi\":\"/candlepin\",");
-        json.append("\"urlWeb\":\"/subscriptions\"}");
+        json.append("\"urlWeb\":\"/subscriptions\",");
+        json.append("\"contentAccessMode\":\"access_mode\"}");
         assertTrue(TestUtil.isJsonEqual(json.toString(), writer.toString()));
     }
 }

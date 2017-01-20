@@ -8,10 +8,12 @@ module CandlepinMethods
   # Wrapper for ruby API so we can track all owners we created and clean them
   # up. Note that this entails cleanup of all objects beneath that owner, so
   # most other objects can be created using the ruby API.
-  def create_owner(owner_name, parent=nil)
-    owner = @cp.create_owner(owner_name, {:parent => parent})
+  def create_owner(owner_name, parent=nil, params={})
+    params[:parent] = parent
+    # this will only affect the ability to set the mode on the owner
+    params['contentAccessModeList'] = 'org_environment,test_access_mode'
+    owner = @cp.create_owner(owner_name, params)
     @owners << owner
-
     return owner
   end
 
@@ -272,6 +274,7 @@ class Exporter
   include CleanupHooks
 
   attr_reader :candlepin_client
+  attr_reader :owner
 
   # Creating an export is fairly expensive, so we generally build them
   # in before(:all) blocks and use them throughout the various tests.

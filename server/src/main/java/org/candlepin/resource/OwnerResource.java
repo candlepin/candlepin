@@ -926,6 +926,17 @@ public class OwnerResource {
             }
         }
 
+        // Update the contentAccess field if the incoming value is not null.
+        if (owner.getContentAccessMode() != null) {
+            if (toUpdate.isAllowedContentAccessMode(owner.contentAccessMode())) {
+                toUpdate.setContentAccessMode(owner.getContentAccessMode());
+            }
+            else {
+                throw new BadRequestException(
+                    i18n.tr("The content access mode is not allowed for this owner."));
+            }
+        }
+
         ownerCurator.merge(toUpdate);
         Event e = eventBuilder.setNewEntity(toUpdate).buildEvent();
         sink.queueEvent(e);

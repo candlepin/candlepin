@@ -569,7 +569,7 @@ public class EntitlementImporterTest {
     public void importObject() throws Exception {
         Consumer consumer = TestUtil.createConsumer(owner);
         ConsumerDto consumerDto = new ConsumerDto(consumer.getUuid(), consumer.getName(),
-            consumer.getType(), consumer.getOwner(), "", "");
+            consumer.getType(), consumer.getOwner(), "", "", "");
 
         Product parentProduct = TestUtil.createProduct();
         ProvidedProduct pp1 = TestUtil.createProvidedProduct();

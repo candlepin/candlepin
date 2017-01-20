@@ -133,6 +133,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @JoinColumn(name = "consumer_idcert_id")
     private IdentityCertificate idCert;
 
+    // This is normally used from the owner setting. If this consumer is manifest then it
+    // can have a different setting as long as it exists in the owner's mode list.
+    @Column(name = "content_access_mode")
+    private String contentAccessMode;
+
     @ManyToOne
     @JoinColumn(nullable = false)
     @ForeignKey(name = "fk_consumer_consumer_type")
@@ -702,4 +707,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         return !StringUtils.isEmpty(getFact("dev_sku"));
     }
 
+    public String getContentAccessMode() {
+        return this.contentAccessMode;
+    }
+
+    public void setContentAccessMode(String contentAccessMode) {
+        this.contentAccessMode = contentAccessMode;
+    }
 }

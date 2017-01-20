@@ -85,4 +85,6 @@
     <include file="db/changelog/20150818110722-upgrade-to-quartz-2-dot-2.xml"/>
     <include file="db/changelog/20150820140403-revert-to-lastcheckin-column.xml"/>
     <include file="db/changelog/20161025100925-remove-unique-content-name-constraint.xml"/>
+    <include file="db/changelog/20161012144719-add-content-access-mode-column-to-owner.xml"/>
+    <include file="db/changelog/20161129104417-add-content-access-mode-column-to-consumer.xml"/>
 </databaseChangeLog>
