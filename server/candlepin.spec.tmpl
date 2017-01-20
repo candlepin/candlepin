@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.21
+Version: 2.0.22
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,53 @@ fi
 
 #raw
 %changelog
+* Fri Jan 20 2017 Vritant Jain <adarshvritant@gmail.com> 2.0.22-1
+- Fixed deadlock stemming from transaction management during testing
+  (crog@redhat.com)
+- Added the OrphanCleanupJob and improved state management in CandlepinQuery
+  (crog@redhat.com)
+- The Product and Content managers now clean up orphaned entities
+  (crog@redhat.com)
+- 1390214: NPE on empty product list (adarshvritant@gmail.com)
+- 1411775: NPE when selectBestPools returns no pools and debug logging is on
+  (adarshvritant@gmail.com)
+- Fixed a desync bug when deleting owners with environment content
+  (crog@redhat.com)
+- Added bulk content removal to ContentManager (crog@redhat.com)
+- Added bulk product removal to ProductManager (crog@redhat.com)
+- Golden Ticket (wpoteat@redhat.com)
+- Revert guest checkin to 0.9.54 implementation (adarshvritant@gmail.com)
+- 1411778: log on service level mismatch between guest and host
+  (adarshvritant@gmail.com)
+- 1371009: clearer error message (fixed typo) (pjonasti@redhat.com)
+- 1405125: Remove null byte from end of any fact value. (awood@redhat.com)
+- 1371009:  Need clearer error message when register with system name exceeding
+  max characters. -throwing new exceptions with clear description + adding new
+  constant to Consumer -adding unit test (pjonasti@redhat.com)
+- Fail Fast (nguyen.filip@gmail.com)
+- Batch Revoke Performance Fix (mstead@redhat.com)
+- 1354619: update checkin_time when Hypervisor is checked in via virt-who
+  (adarshvritant@gmail.com)
+- Reduce log level aquiring HornetQ session (mstead@redhat.com)
+- DetachedCandlepinQuery now better restores Criteria state (crog@redhat.com)
+- 1372467: Activation keys and service levels (wpoteat@redhat.com)
+- 1394401: List of provided products empty on Bonus Pools
+  (nguyen.filip@gmail.com)
+- 1314042: bug caused by import and undo manifest run in parallel
+  (pjonasti@redhat.com)
+- Uncommented query.useSession (nguyen.filip@gmail.com)
+- CandlepinQueryInterceptor now uses a separate session for cursors
+  (crog@redhat.com)
+- 1403160: update product without id in the body (adarshvritant@gmail.com)
+- Updating autobind disabled strings (mstead@redhat.com)
+- Add API to clear productfullcache (csnyder@redhat.com)
+- Added missing @Transactional annotations (crog@redhat.com)
+- 1399356: No transaction in syncCRLWithDB caused immediate rollback
+  (awood@redhat.com)
+- Fixed a bug that would treat unchanged entities as updated (crog@redhat.com)
+- Refactoring spec tests and spec utility (pjonasti@redhat.com)
+- Fixed a crash when paging certain requests (crog@redhat.com)
+
 * Mon Nov 21 2016 Vritant Jain <adarshvritant@gmail.com> 2.0.21-1
 - Scope more pool queries by owner (bcourt@redhat.com)
 - Disabling follow-on locking (nguyen.filip@gmail.com)
