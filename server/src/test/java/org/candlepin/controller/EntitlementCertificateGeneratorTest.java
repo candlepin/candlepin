@@ -18,7 +18,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -286,7 +285,7 @@ public class EntitlementCertificateGeneratorTest {
         pool.setEntitlements(entitlements);
 
         when(this.mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class), eq(owner),
-            eq(product.getId()), any(Date.class), anyBoolean())).thenReturn(Arrays.asList(pool));
+            eq(product.getId()), any(Date.class))).thenReturn(Arrays.asList(pool));
 
         this.ecGenerator.regenerateCertificatesOf(owner, product.getId(), true);
 
@@ -310,7 +309,7 @@ public class EntitlementCertificateGeneratorTest {
         ecMap.put(pool.getId(), new EntitlementCertificate());
 
         when(this.mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class), eq(owner),
-            eq(product.getId()), any(Date.class), anyBoolean())).thenReturn(Arrays.asList(pool));
+            eq(product.getId()), any(Date.class))).thenReturn(Arrays.asList(pool));
         when(this.mockEntCertAdapter.generateEntitlementCerts(any(Consumer.class), any(Map.class),
             any(Map.class))).thenReturn(ecMap);
 

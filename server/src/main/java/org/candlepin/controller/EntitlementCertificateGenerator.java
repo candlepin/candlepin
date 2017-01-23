@@ -348,7 +348,7 @@ public class EntitlementCertificateGenerator {
     @Transactional
     public void regenerateCertificatesOf(Owner owner, String productId, boolean lazy) {
         List<Pool> pools = this.poolCurator.listAvailableEntitlementPools(
-            null, owner, productId, new Date(), false
+            null, owner, productId, new Date()
         );
 
         for (Pool pool : pools) {
@@ -408,7 +408,7 @@ public class EntitlementCertificateGenerator {
         // do this without hitting the DB several times over.
         for (Owner owner : owners) {
             pools.addAll(
-                this.poolCurator.listAvailableEntitlementPools(null, owner, productIds, now, false)
+                this.poolCurator.listAvailableEntitlementPools(null, owner, productIds, now)
             );
         }
 

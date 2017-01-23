@@ -181,7 +181,6 @@ public interface PoolManager {
      * @param productId only entitlements which provide this product are included.
      * @param activeOn Indicates to return only pools valid on this date.
      *        Set to null for no date filtering.
-     * @param activeOnly if true, only active entitlements are included.
      * @param includeWarnings When filtering by consumer, include pools that
      *        triggered a rule warning. (errors will still be excluded)
      * @param filterBuilder builds and applies all filters when looking up pools.
@@ -189,7 +188,7 @@ public interface PoolManager {
      * @return List of entitlement pools.
      */
     Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer, ActivationKey key,
-        Owner owner, String productId, String subscriptionId, Date activeOn, boolean activeOnly,
+        Owner owner, String productId, String subscriptionId, Date activeOn,
         boolean includeWarnings, PoolFilterBuilder filterBuilder, PageRequest pageRequest,
         boolean addFuture, boolean onlyFuture);
 

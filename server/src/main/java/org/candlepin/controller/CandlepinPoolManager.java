@@ -1158,14 +1158,14 @@ public class CandlepinPoolManager implements PoolManager {
         PoolFilterBuilder poolFilter = new PoolFilterBuilder();
         poolFilter.addIdFilters(fromPools);
         List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
-            host, null, owner, (String) null, null, activePoolDate, true, false,
+            host, null, owner, (String) null, null, activePoolDate, false,
             poolFilter, null, false, false).getPageData();
         log.debug("Found {} total pools in org.", allOwnerPools.size());
         logPools(allOwnerPools);
 
         List<Pool> allOwnerPoolsForGuest = this.listAvailableEntitlementPools(
             guest, null, owner, (String) null, null, activePoolDate,
-            true, false, poolFilter,
+            false, poolFilter,
             null, false, false).getPageData();
         log.debug("Found {} total pools already available for guest", allOwnerPoolsForGuest.size());
         logPools(allOwnerPoolsForGuest);
@@ -1302,7 +1302,7 @@ public class CandlepinPoolManager implements PoolManager {
         PoolFilterBuilder poolFilter = new PoolFilterBuilder();
         poolFilter.addIdFilters(fromPools);
         List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
-            consumer, null, owner, (String) null, null, activePoolDate, true, false,
+            consumer, null, owner, (String) null, null, activePoolDate, false,
             poolFilter, null, false, false).getPageData();
         List<Pool> filteredPools = new LinkedList<Pool>();
 
@@ -2148,7 +2148,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer,
         ActivationKey key, Owner owner, String productId, String subscriptionId, Date activeOn,
-        boolean activeOnly, boolean includeWarnings, PoolFilterBuilder filters,
+        boolean includeWarnings, PoolFilterBuilder filters,
         PageRequest pageRequest, boolean addFuture, boolean onlyFuture) {
 
         // Only postfilter if we have to
@@ -2158,7 +2158,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         Page<List<Pool>> page = this.poolCurator.listAvailableEntitlementPools(consumer,
-            owner, productId, subscriptionId, activeOn, activeOnly, filters, pageRequest, postFilter,
+            owner, productId, subscriptionId, activeOn, filters, pageRequest, postFilter,
             addFuture, onlyFuture);
 
         if (consumer == null && key == null) {

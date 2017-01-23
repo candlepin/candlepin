@@ -186,7 +186,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @Transactional
     public List<Pool> listByConsumer(Consumer c) {
-        return listAvailableEntitlementPools(c, c.getOwner(), (Set<String>) null, null, true);
+        return listAvailableEntitlementPools(c, c.getOwner(), (Set<String>) null, null);
     }
 
     /**
@@ -198,7 +198,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @Transactional
     public List<Pool> listByOwnerAndProduct(Owner owner, String productId) {
-        return listAvailableEntitlementPools(null, owner, productId, null, false);
+        return listAvailableEntitlementPools(null, owner, productId, null);
     }
 
     /**
@@ -252,38 +252,37 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     @SuppressWarnings("unchecked")
     @Transactional
-    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o, String productId, Date activeOn,
-        boolean activeOnly) {
+    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o, String productId, Date activeOn) {
 
         return listAvailableEntitlementPools(c, o,
             (productId != null ? Arrays.asList(productId) : (Collection<String>) null), null, activeOn,
-            activeOnly, new PoolFilterBuilder(), null, false, false, false).getPageData();
+            new PoolFilterBuilder(), null, false, false, false).getPageData();
     }
 
     @SuppressWarnings("unchecked")
     @Transactional
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o, Collection<String> productIds,
-        Date activeOn, boolean activeOnly) {
+        Date activeOn) {
 
-        return listAvailableEntitlementPools(c, o, productIds, null, activeOn, activeOnly,
+        return listAvailableEntitlementPools(c, o, productIds, null, activeOn,
             new PoolFilterBuilder(), null, false, false, false).getPageData();
     }
 
     @Transactional
     public List<Pool> listByFilter(PoolFilterBuilder filters) {
         return listAvailableEntitlementPools(
-            null, null, (Set<String>) null, null, null, false, filters, null, false,
+            null, null, (Set<String>) null, null, null, filters, null, false,
             false, false).getPageData();
     }
 
     @Transactional
     public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o, String productId,
-        String subscriptionId, Date activeOn, boolean activeOnly, PoolFilterBuilder filters,
+        String subscriptionId, Date activeOn, PoolFilterBuilder filters,
         PageRequest pageRequest, boolean postFilter, boolean addFuture, boolean onlyFuture) {
 
         return this.listAvailableEntitlementPools(c, o,
             (productId != null ? Arrays.asList(productId) : (Collection<String>) null), subscriptionId,
-            activeOn, activeOnly, filters, pageRequest, postFilter, addFuture, onlyFuture);
+            activeOn, filters, pageRequest, postFilter, addFuture, onlyFuture);
     }
 
     /**
@@ -296,7 +295,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param productIds only entitlements which provide these products are included.
      * @param activeOn Indicates to return only pools valid on this date.
      *        Set to null for no date filtering.
-     * @param activeOnly if true, only active entitlements are included.
      * @param filters filter builder with set filters to apply to the criteria.
      * @param pageRequest used to specify paging criteria.
      * @param postFilter if you plan on filtering the list in java
@@ -305,7 +303,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @SuppressWarnings("unchecked")
     @Transactional
     public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o, Collection<String> productIds,
-        String subscriptionId, Date activeOn, boolean activeOnly, PoolFilterBuilder filters,
+        String subscriptionId, Date activeOn, PoolFilterBuilder filters,
         PageRequest pageRequest, boolean postFilter, boolean addFuture, boolean onlyFuture) {
 
         if (o == null && c != null) {
@@ -324,9 +322,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .createAlias("product", "product")
             .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 
-        if (activeOnly) {
-            crit.add(Restrictions.eq("activeSubscription", Boolean.TRUE));
-        }
         if (c != null) {
             crit.add(Restrictions.eq("owner", c.getOwner()));
 

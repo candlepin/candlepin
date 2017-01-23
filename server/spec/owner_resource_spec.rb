@@ -838,7 +838,6 @@ describe 'Owner Resource Future Pool Tests' do
     @future_pool2 = create_pool_and_subscription(@owner['key'], @product2.id, 10, [], '', '', '', start2)
   end
 
-  # active_only is true by default
   it 'can fetch current pools' do
     pools = @cp.list_owner_pools(@owner['key'])
     pools.length.should eq(1)
