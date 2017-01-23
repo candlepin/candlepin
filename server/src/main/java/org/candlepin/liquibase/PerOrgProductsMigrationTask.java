@@ -168,6 +168,81 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
         }
     }
 
+
+    /**
+     * Checks for any pools or subscriptions which contain bad data (typically products which do
+     * not exist).
+     *
+     * @param orgid
+     *  The id of the owner/organization for which to migrate product data
+     */
+    protected void checkForMalformedPoolsAndSubscriptions(String orgid) throws DatabaseException,
+        SQLException {
+
+        ResultSet badProductRefs = this.executeQuery(
+            "SELECT DISTINCT u.product_id, u.pool_id, u.subscription_id " +
+            "FROM (SELECT p.product_id_old AS product_id, p.id AS pool_id, NULL as subscription_id " +
+            "    FROM cp_pool p " +
+            "    WHERE p.owner_id = ? " +
+            "      AND NOT NULLIF(p.product_id_old, '') IS NULL " +
+            "  UNION " +
+            "  SELECT p.derived_product_id_old, p.id, NULL " +
+            "    FROM cp_pool p " +
+            "    WHERE p.owner_id = ? " +
+            "      AND NOT NULLIF(p.derived_product_id_old, '') IS NULL " +
+            "  UNION " +
+            "  SELECT pp.product_id, p.id, NULL " +
+            "    FROM cp_pool p " +
+            "    JOIN cp_pool_products pp " +
+            "      ON p.id = pp.pool_id " +
+            "    WHERE p.owner_id = ? " +
+            "      AND NOT NULLIF(pp.product_id, '') IS NULL " +
+            "  UNION " +
+            "  SELECT s.product_id, NULL, s.id " +
+            "    FROM cp_subscription s " +
+            "    WHERE s.owner_id = ? " +
+            "      AND NOT NULLIF(s.product_id, '') IS NULL " +
+            "  UNION " +
+            "  SELECT s.derivedproduct_id, NULL, s.id " +
+            "    FROM cp_subscription s " +
+            "    WHERE s.owner_id = ? " +
+            "      AND NOT NULLIF(s.derivedproduct_id, '') IS NULL " +
+            "  UNION " +
+            "  SELECT sp.product_id, NULL, s.id " +
+            "    FROM cp_subscription_products sp " +
+            "    JOIN cp_subscription s " +
+            "      ON s.id = sp.subscription_id " +
+            "    WHERE s.owner_id = ? " +
+            "      AND NOT NULLIF(sp.product_id, '') IS NULL " +
+            "  UNION " +
+            "  SELECT sdp.product_id, NULL, s.id " +
+            "    FROM cp_sub_derivedprods sdp " +
+            "    JOIN cp_subscription s " +
+            "      ON s.id = sdp.subscription_id " +
+            "    WHERE s.owner_id = ? " +
+            "      AND NOT NULLIF(sdp.product_id, '') IS NULL) u " +
+            "LEFT JOIN cp_product p " +
+            "  ON u.product_id = p.id " +
+            "WHERE p.id IS NULL",
+            orgid, orgid, orgid, orgid, orgid, orgid, orgid
+        );
+
+        while (badProductRefs.next()) {
+            String productId = badProductRefs.getString(1);
+            String poolId = badProductRefs.getString(2);
+            String subscriptionId = badProductRefs.getString(3);
+
+            if (poolId != null) {
+                this.logger.warn("  Pool \"%s\" references a non-existent product: %s",
+                    poolId, productId);
+            }
+            else if (subscriptionId != null) {
+                this.logger.warn("  Subscription \"%s\" references a non-existent product: %s",
+                    subscriptionId, productId);
+            }
+        }
+    }
+
     /**
      * Migrates product data. Must be called per-org.
      *
@@ -177,6 +252,9 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
     @SuppressWarnings("checkstyle:methodlength")
     protected void migrateProductData(String orgid) throws DatabaseException, SQLException {
         this.logger.info("  Migrating product data...");
+
+        // Check for malformed pools/subscriptions which may end up in a pseudo-dead state.
+        this.checkForMalformedPoolsAndSubscriptions(orgid);
 
         List<Object[]> productRows = new LinkedList<Object[]>();
         Set<String> uuidCache = new HashSet<String>();
